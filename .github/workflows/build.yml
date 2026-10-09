@@ -27,10 +27,12 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - uses: android-actions/setup-android@v3
-
+      # The runner image ships the Android SDK (ANDROID_HOME); only the NDK is added.
       - name: Install NDK
-        run: sdkmanager --install "ndk;27.0.12077973"
+        run: |
+          SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKM" --licenses > /dev/null || true
+          "$SDKM" --install "ndk;27.0.12077973" "platforms;android-36" > /dev/null
 
       - uses: gradle/actions/setup-gradle@v4
 
