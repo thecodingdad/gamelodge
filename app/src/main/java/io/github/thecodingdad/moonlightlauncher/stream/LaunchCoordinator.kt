@@ -15,6 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.UUID
 
@@ -128,9 +129,16 @@ class LaunchCoordinator(private val container: AppContainer) {
             val prefs = PreferenceConfiguration.readPreferences(activity)
             val vDisplay = prefs.useVirtualDisplay && host.details.vDisplaySupported && host.details.vDisplayDriverReady
             val intent = ServerHelper.createStartIntent(activity, app, host.details, binder, vDisplay)
-            container.playtime.start(entry.item.id, target.id, StreamProfiles.active("").name.ifEmpty { null })
+            val profileName = StreamProfiles.active("").name.ifEmpty { null }
+            container.playtime.start(entry.item.id, target.id, profileName)
             activity.startActivity(intent)
             _state.value = LaunchState.Idle
+            container.scope.launch {
+                container.ha.fireLauncherEvent(
+                    "stream_started",
+                    mapOf("game" to entry.item.title, "host" to host.name, "profile" to profileName, "app_id" to appId.toString()),
+                )
+            }
         } catch (e: Exception) {
             Log.e("Stream start failed", e)
             restoreProfile()

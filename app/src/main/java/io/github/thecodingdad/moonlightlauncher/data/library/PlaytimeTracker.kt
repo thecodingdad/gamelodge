@@ -21,12 +21,13 @@ class PlaytimeTracker(
         db.libraryDao().setLastPlayed(itemId, now)
     }
 
-    /** Called whenever the launcher returns to the foreground. */
-    suspend fun finishOpenSession() {
-        val open = db.sessionDao().getOpenSession() ?: return
+    /** Called whenever the launcher returns to the foreground; returns the session it closed. */
+    suspend fun finishOpenSession(): PlaySessionEntity? {
+        val open = db.sessionDao().getOpenSession() ?: return null
         val now = clock()
         db.sessionDao().close(open.id, now)
         val duration = now - open.startedAt
         if (duration >= minimumSessionMs) db.libraryDao().addPlaytime(open.itemId, duration / 1000)
+        return open.copy(endedAt = now)
     }
 }

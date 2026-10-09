@@ -264,4 +264,32 @@
     <string name="stats_last_days">Playtime per day</string>
     <string name="stats_most_played">Most played</string>
     <string name="stats_recent_sessions">Recent sessions</string>
+
+    <!-- Home Assistant -->
+    <string name="ha_unavailable">Unavailable</string>
+    <string name="ha_on">On</string>
+    <string name="ha_off">Off</string>
+    <string name="ha_locked">Locked</string>
+    <string name="ha_unlocked">Unlocked</string>
+    <string name="ha_run">Run</string>
+    <string name="ha_not_configured">Not set up</string>
+    <string name="ha_disconnected">Disconnected</string>
+    <string name="ha_connecting">Connecting…</string>
+    <string name="ha_connected">Connected</string>
+    <string name="ha_auth_failed">Login expired – please sign in again</string>
+    <string name="ha_panel_empty">Add Home Assistant entities as tiles to control them from anywhere with Y.</string>
+    <string name="ha_setup">Set up</string>
+    <string name="ha_hint_toggle">Switch · ◀▶ adjust</string>
+    <string name="ha_status">Status</string>
+    <string name="ha_url">Home Assistant URL</string>
+    <string name="ha_login">Sign in</string>
+    <string name="ha_relogin">Sign in again</string>
+    <string name="ha_logout">Sign out</string>
+    <string name="ha_login_waiting">Finish the sign-in in the browser…</string>
+    <string name="ha_tiles">Tiles</string>
+    <string name="ha_show_home_row">Show favourite tiles on the start screen</string>
+    <string name="ha_add_tile">Add tile</string>
+    <string name="ha_on_home">On start screen</string>
+    <string name="ha_not_on_home">Not on start screen</string>
+    <string name="ha_events_help">For automations the launcher fires the events moonlight_launcher_stream_started and moonlight_launcher_stream_stopped (with game, host and profile).</string>
 </resources>

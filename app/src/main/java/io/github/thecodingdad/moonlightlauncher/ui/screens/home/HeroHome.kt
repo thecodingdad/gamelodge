@@ -66,6 +66,7 @@ fun HeroHome(
     rows: HomeRows,
     callbacks: HomeCallbacks,
     collectionRows: List<Pair<String, List<LibraryEntry>>>,
+    haRow: (@Composable () -> Unit)?,
     emptyContent: @Composable () -> Unit,
 ) {
     val actions = LocalEntryActions.current
@@ -129,6 +130,7 @@ fun HeroHome(
                 }
                 homeRow("continue", R.string.home_continue, rows.continuePlaying, callbacks, firstRow = rows.running.isEmpty(), onFocus = { focused = it }, actions = actions)
                 homeRow("favorites", R.string.home_favorites, rows.favorites, callbacks, firstRow = rows.running.isEmpty() && rows.continuePlaying.isEmpty(), onFocus = { focused = it }, actions = actions)
+                if (haRow != null) item(key = "ha") { haRow() }
                 collectionRows.forEach { (name, list) ->
                     homeRow("collection:$name", 0, list, callbacks, firstRow = false, onFocus = { focused = it }, actions = actions, titleText = name)
                 }

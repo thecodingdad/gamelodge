@@ -12,6 +12,9 @@ import io.github.thecodingdad.moonlightlauncher.data.remote.HostRepository
 import io.github.thecodingdad.moonlightlauncher.data.settings.SecretStore
 import io.github.thecodingdad.moonlightlauncher.data.settings.SettingsRepository
 import io.github.thecodingdad.moonlightlauncher.stream.LaunchCoordinator
+import io.github.thecodingdad.moonlightlauncher.ha.HaAuth
+import io.github.thecodingdad.moonlightlauncher.ha.HaClient
+import io.github.thecodingdad.moonlightlauncher.ha.HaRepository
 import io.github.thecodingdad.moonlightlauncher.metadata.MetadataService
 import kotlinx.coroutines.CoroutineScope
 import okhttp3.OkHttpClient
@@ -46,4 +49,10 @@ class AppContainer(context: Context) {
             .build()
     }
     val metadata: MetadataService by lazy { MetadataService(database, secrets, settings, http, scope) }
+
+    val haAuth: HaAuth by lazy { HaAuth(appContext, http, secrets) }
+    val ha: HaRepository by lazy {
+        val wsHttp = http.newBuilder().pingInterval(30, TimeUnit.SECONDS).build()
+        HaRepository(HaClient(wsHttp, haAuth, { haAuth.baseUrl }, scope), haAuth, database)
+    }
 }

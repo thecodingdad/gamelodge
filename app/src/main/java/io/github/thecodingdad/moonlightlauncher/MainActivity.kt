@@ -45,10 +45,12 @@ class MainActivity : ComponentActivity() {
     override fun onStart() {
         super.onStart()
         container.hosts.startPolling()
+        container.ha.client.start()
     }
 
     override fun onStop() {
         container.hosts.stopPolling()
+        container.ha.client.stop()
         super.onStop()
     }
 
@@ -57,7 +59,15 @@ class MainActivity : ComponentActivity() {
         // Back from a game or stream: close the play session, undo a one-off profile.
         container.launcher.restoreProfile()
         lifecycleScope.launch {
-            container.playtime.finishOpenSession()
+            val closed = container.playtime.finishOpenSession()
+            if (closed != null && closed.targetId.startsWith("remote:")) {
+                val title = container.database.libraryDao().getItem(closed.itemId)?.title
+                val host = container.database.libraryDao().getTarget(closed.targetId)?.hostName
+                container.ha.fireLauncherEvent(
+                    "stream_stopped",
+                    mapOf("game" to title, "host" to host, "duration_seconds" to (((closed.endedAt ?: 0) - closed.startedAt) / 1000).toString()),
+                )
+            }
             // If the user made us the home app (also via Android settings), launcher mode is on.
             val mode = LauncherMode(this@MainActivity)
             if (mode.isDefaultHome && !vm.settings.value.launcherMode) {

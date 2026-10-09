@@ -34,6 +34,12 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.key.utf16CodePoint
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -137,17 +143,35 @@ private val urlRow = listOf("https://", "http://", ".", "/", ":", ".local", "-")
 @Composable
 fun ControllerKeyboardHost(controller: KeyboardController) {
     val request = controller.request
+    var text by remember(request) { mutableStateOf(request?.initial.orEmpty()) }
+    var cursor by remember(request) { mutableIntStateOf(request?.initial.orEmpty().length) }
+    var shift by remember(request) { mutableStateOf(false) }
+    var symbolMode by remember(request) { mutableStateOf(false) }
+    // A hardware keyboard (Bluetooth, adb) can type directly while the keyboard is open.
+    val hardwareKeys = Modifier.onPreviewKeyEvent { e ->
+        if (request == null || e.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+        when {
+            e.key == Key.Backspace -> {
+                if (cursor > 0) { text = text.removeRange(cursor - 1, cursor); cursor-- }
+                true
+            }
+            e.key == Key.Enter || e.key == Key.NumPadEnter -> { request.onDone(text); controller.close(); true }
+            e.nativeKeyEvent.isPrintingKey && e.utf16CodePoint > 31 -> {
+                text = text.substring(0, cursor) + e.utf16CodePoint.toChar() + text.substring(cursor)
+                cursor++
+                true
+            }
+            else -> false
+        }
+    }
     Modal(
         visible = request != null,
         onDismiss = controller::close,
         title = request?.title,
         maxWidth = 1100.dp,
+        modifier = hardwareKeys,
     ) {
         if (request == null) return@Modal
-        var text by remember(request) { mutableStateOf(request.initial) }
-        var cursor by remember(request) { mutableIntStateOf(request.initial.length) }
-        var shift by remember(request) { mutableStateOf(false) }
-        var symbolMode by remember(request) { mutableStateOf(false) }
         val german = LocalConfiguration.current.locales[0].language == "de"
 
         fun insert(s: String) {

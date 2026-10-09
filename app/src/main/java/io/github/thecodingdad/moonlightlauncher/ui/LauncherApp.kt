@@ -64,6 +64,9 @@ import io.github.thecodingdad.moonlightlauncher.ui.input.PadAction
 import io.github.thecodingdad.moonlightlauncher.ui.input.PadButton
 import io.github.thecodingdad.moonlightlauncher.ui.screens.apps.AppsScreen
 import io.github.thecodingdad.moonlightlauncher.ui.screens.detail.DetailScreen
+import io.github.thecodingdad.moonlightlauncher.ui.screens.ha.HaHomeRow
+import io.github.thecodingdad.moonlightlauncher.ui.screens.ha.HaPanel
+import io.github.thecodingdad.moonlightlauncher.ui.screens.ha.HaSettings
 import io.github.thecodingdad.moonlightlauncher.ui.screens.home.CarouselHome
 import io.github.thecodingdad.moonlightlauncher.ui.screens.home.GridHome
 import io.github.thecodingdad.moonlightlauncher.ui.screens.home.HeroHome
@@ -127,6 +130,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
         )
     }
 
+    var haPanel by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         vm.homePressed.collect {
             nav.popBackStack(Routes.MAIN, inclusive = false)
@@ -134,6 +138,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
             entryActions.pick = null
             entryActions.contextMenuFor = null
             keyboard.close()
+            haPanel = false
         }
     }
     var collectionsFor by remember { mutableStateOf<io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry?>(null) }
@@ -240,6 +245,9 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                     onRetry = { entry -> vm.dismissLaunch(); entryActions.play(entry) },
                     onConfirmQuit = { c -> vm.launch(activity, c.entry, c.target, c.override, quitRunning = true) },
                 )
+                // Y opens the smart home panel everywhere (screens can't override it).
+                PadAction(PadButton.Y) { haPanel = !haPanel }
+                HaPanel(visible = haPanel, onDismiss = { haPanel = false }, openSettings = { nav.navigate(Routes.settings(SettingsPageId.HOME_ASSISTANT)) })
                 ControllerKeyboardHost(keyboard)
             }
         }
@@ -316,14 +324,20 @@ private fun MainShell(vm: LauncherViewModel, nav: NavHostController, openStats: 
                             listOf(
                                 ButtonHint(PadButton.A, stringResource(R.string.hint_open)),
                                 ButtonHint(PadButton.X, stringResource(R.string.hint_options)),
+                                ButtonHint(PadButton.Y, stringResource(R.string.settings_home_assistant)),
                                 ButtonHint(PadButton.L1, stringResource(R.string.hint_tabs)),
                             ),
                         )
                         val empty: @Composable () -> Unit = { EmptyHome { tab = MainTab.SETTINGS.ordinal } }
                         when (settings.homeLayout) {
-                            HomeLayout.HERO -> HeroHome(rows, callbacks, collections.mapNotNull { (c, ids) ->
-                                games.filter { it.item.id in ids }.takeIf { it.isNotEmpty() }?.let { c.name to it }
-                            }, empty)
+                            HomeLayout.HERO -> HeroHome(
+                                rows, callbacks,
+                                collections.mapNotNull { (c, ids) ->
+                                    games.filter { it.item.id in ids }.takeIf { it.isNotEmpty() }?.let { c.name to it }
+                                },
+                                haRow = if (settings.showHaRowOnHome) ({ HaHomeRow() }) else null,
+                                emptyContent = empty,
+                            )
                             HomeLayout.GRID -> GridHome(games, callbacks, empty)
                             HomeLayout.CAROUSEL -> CarouselHome(rows, callbacks, openTab = { tab = it }, emptyContent = empty)
                         }
@@ -406,6 +420,7 @@ private fun SettingsPageContent(page: SettingsPageId, vm: LauncherViewModel, ope
             ProfilesList(profiles, active, openProfile)
         }
         SettingsPageId.LAUNCHER -> LauncherModeSettings(settings, vm::updateSettings)
+        SettingsPageId.HOME_ASSISTANT -> HaSettings(settings, vm::updateSettings)
         else -> SettingsPage(stringResource(R.string.coming_soon)) {}
     }
 }

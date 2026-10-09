@@ -262,4 +262,32 @@
     <string name="stats_last_days">Spielzeit pro Tag</string>
     <string name="stats_most_played">Meistgespielt</string>
     <string name="stats_recent_sessions">Letzte Sitzungen</string>
+
+    <!-- Home Assistant -->
+    <string name="ha_unavailable">Nicht verfügbar</string>
+    <string name="ha_on">An</string>
+    <string name="ha_off">Aus</string>
+    <string name="ha_locked">Verriegelt</string>
+    <string name="ha_unlocked">Entriegelt</string>
+    <string name="ha_run">Ausführen</string>
+    <string name="ha_not_configured">Nicht eingerichtet</string>
+    <string name="ha_disconnected">Getrennt</string>
+    <string name="ha_connecting">Verbinde …</string>
+    <string name="ha_connected">Verbunden</string>
+    <string name="ha_auth_failed">Anmeldung abgelaufen – bitte neu anmelden</string>
+    <string name="ha_panel_empty">Füge Home-Assistant-Entitäten als Kacheln hinzu, um sie überall mit Y zu steuern.</string>
+    <string name="ha_setup">Einrichten</string>
+    <string name="ha_hint_toggle">Schalten · ◀▶ einstellen</string>
+    <string name="ha_status">Status</string>
+    <string name="ha_url">Home-Assistant-URL</string>
+    <string name="ha_login">Anmelden</string>
+    <string name="ha_relogin">Neu anmelden</string>
+    <string name="ha_logout">Abmelden</string>
+    <string name="ha_login_waiting">Anmeldung im Browser abschließen …</string>
+    <string name="ha_tiles">Kacheln</string>
+    <string name="ha_show_home_row">Favoriten-Kacheln auf dem Startbildschirm zeigen</string>
+    <string name="ha_add_tile">Kachel hinzufügen</string>
+    <string name="ha_on_home">Auf Startbildschirm</string>
+    <string name="ha_not_on_home">Nicht auf Startbildschirm</string>
+    <string name="ha_events_help">Für Automationen sendet der Launcher die Events moonlight_launcher_stream_started und moonlight_launcher_stream_stopped (mit Spiel, Host und Profil).</string>
 </resources>
