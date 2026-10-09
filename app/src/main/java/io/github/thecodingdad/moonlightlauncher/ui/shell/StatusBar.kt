@@ -44,7 +44,12 @@ import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.rememberCoroutineScope
+import io.github.thecodingdad.moonlightlauncher.container
 import io.github.thecodingdad.moonlightlauncher.data.remote.HostState
+import io.github.thecodingdad.moonlightlauncher.vpn.VpnStatus
+import kotlinx.coroutines.launch
 import io.github.thecodingdad.moonlightlauncher.data.remote.HostStatus
 import io.github.thecodingdad.moonlightlauncher.ui.components.StatusDot
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
@@ -145,7 +150,22 @@ fun StatusCluster(
                 )
             }
         }
-        if (status.vpn) StatusIcon(Icons.Filled.VpnLock)
+        val context = LocalContext.current
+        val vpn = context.container.vpn
+        val tunnels by vpn.tunnels.collectAsState()
+        val vpnState by vpn.state.collectAsState()
+        val scope = rememberCoroutineScope()
+        if (tunnels.isNotEmpty()) {
+            Icon(
+                Icons.Filled.VpnLock, null,
+                tint = if (vpnState.status == VpnStatus.UP) colors.success else colors.onSurfaceMuted,
+                modifier = Modifier.size(22.dp).focusProperties { canFocus = false }.clickable {
+                    if (vpn.consentIntent() == null) scope.launch { vpn.toggle() }
+                },
+            )
+        } else if (status.vpn) {
+            StatusIcon(Icons.Filled.VpnLock)
+        }
         StatusIcon(if (status.wifi) Icons.Filled.Wifi else Icons.Filled.WifiOff)
         Row(verticalAlignment = Alignment.CenterVertically) {
             StatusIcon(

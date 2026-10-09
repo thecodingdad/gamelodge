@@ -333,4 +333,26 @@
     <string name="controller_builtin">Eingebaut</string>
     <string name="controller_battery">Akku %d %%</string>
     <string name="controller_vibrate_test">A = Vibrationstest</string>
+
+    <!-- VPN -->
+    <string name="vpn_down">Getrennt</string>
+    <string name="vpn_connecting">Verbinde …</string>
+    <string name="vpn_up">Verbunden</string>
+    <string name="vpn_error">Fehler</string>
+    <string name="vpn_tunnels">Tunnel</string>
+    <string name="vpn_default_tunnel">Standard-Tunnel</string>
+    <string name="vpn_import_file">Datei importieren</string>
+    <string name="vpn_import_clipboard">Aus Zwischenablage</string>
+    <string name="vpn_delete">%s löschen</string>
+    <string name="vpn_imported">Tunnel importiert.</string>
+    <string name="vpn_import_help">Exportiere die WireGuard-Konfiguration (.conf) aus deinem Router, z. B. FRITZ!Box → Internet → Freigaben → VPN (WireGuard).</string>
+    <string name="vpn_auto">Automatisch verbinden</string>
+    <string name="vpn_auto_unreachable">Wenn der Host nicht erreichbar ist</string>
+    <string name="vpn_auto_unreachable_sub">Vor einem Stream: verbinden und erneut versuchen</string>
+    <string name="vpn_auto_outside">Außerhalb des Heim-WLANs</string>
+    <string name="vpn_auto_outside_sub">Braucht Standortzugriff, um den WLAN-Namen zu lesen</string>
+    <string name="vpn_disconnect_home">Im Heim-WLAN trennen</string>
+    <string name="vpn_home_remove">Heim-WLAN · A entfernt es</string>
+    <string name="vpn_add_home">„%s“ als Heim-WLAN hinzufügen</string>
+    <string name="vpn_ssid_unknown">Aktueller WLAN-Name nicht verfügbar (Standort aus oder kein WLAN).</string>
 </resources>

@@ -335,4 +335,26 @@
     <string name="controller_builtin">Built-in</string>
     <string name="controller_battery">Battery %d %%</string>
     <string name="controller_vibrate_test">A = vibration test</string>
+
+    <!-- VPN -->
+    <string name="vpn_down">Disconnected</string>
+    <string name="vpn_connecting">Connecting…</string>
+    <string name="vpn_up">Connected</string>
+    <string name="vpn_error">Error</string>
+    <string name="vpn_tunnels">Tunnels</string>
+    <string name="vpn_default_tunnel">Default tunnel</string>
+    <string name="vpn_import_file">Import file</string>
+    <string name="vpn_import_clipboard">Paste from clipboard</string>
+    <string name="vpn_delete">Delete %s</string>
+    <string name="vpn_imported">Tunnel imported.</string>
+    <string name="vpn_import_help">Export the WireGuard config (.conf) from your router, e.g. FRITZ!Box → Internet → Permit Access → VPN (WireGuard).</string>
+    <string name="vpn_auto">Connect automatically</string>
+    <string name="vpn_auto_unreachable">When the host is unreachable</string>
+    <string name="vpn_auto_unreachable_sub">Before a stream: connect and try again</string>
+    <string name="vpn_auto_outside">Outside home Wi-Fi</string>
+    <string name="vpn_auto_outside_sub">Needs location access to read the Wi-Fi name</string>
+    <string name="vpn_disconnect_home">Disconnect in home Wi-Fi</string>
+    <string name="vpn_home_remove">Home Wi-Fi · A removes it</string>
+    <string name="vpn_add_home">Add \\"%s\\" as home Wi-Fi</string>
+    <string name="vpn_ssid_unknown">Current Wi-Fi name not available (location off or not on Wi-Fi).</string>
 </resources>

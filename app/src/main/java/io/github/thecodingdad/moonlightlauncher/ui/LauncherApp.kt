@@ -443,6 +443,7 @@ private fun SettingsPageContent(
         }
         SettingsPageId.LAUNCHER -> LauncherModeSettings(settings, vm::updateSettings)
         SettingsPageId.HOME_ASSISTANT -> HaSettings(settings, vm::updateSettings)
+        SettingsPageId.VPN -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.VpnSettings(settings, vm::updateSettings)
         else -> SettingsPage(stringResource(R.string.coming_soon)) {}
     }
 }

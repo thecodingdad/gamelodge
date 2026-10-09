@@ -18,6 +18,7 @@ import io.github.thecodingdad.moonlightlauncher.ha.HaAuth
 import io.github.thecodingdad.moonlightlauncher.ha.HaClient
 import io.github.thecodingdad.moonlightlauncher.ha.HaRepository
 import io.github.thecodingdad.moonlightlauncher.metadata.MetadataService
+import io.github.thecodingdad.moonlightlauncher.vpn.VpnManager
 import kotlinx.coroutines.CoroutineScope
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
@@ -41,7 +42,8 @@ class AppContainer(context: Context) {
         LibraryRepository(database, LibrarySync(database), localApps, hosts, boxArt, scope)
     }
     val playtime: PlaytimeTracker by lazy { PlaytimeTracker(database) }
-    val launcher: LaunchCoordinator by lazy { LaunchCoordinator(this) }
+    val vpn: VpnManager by lazy { VpnManager(appContext, secrets, settings, scope) }
+    val launcher: LaunchCoordinator by lazy { LaunchCoordinator(this).also { it.vpn = vpn } }
     val hostActions: HostActions by lazy { HostActions(hosts, library) }
 
     val http: OkHttpClient by lazy {

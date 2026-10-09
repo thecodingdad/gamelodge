@@ -6,6 +6,10 @@
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
     <uses-feature android:name="android.software.leanback" android:required="false" />
 
+    <!-- Reading the Wi-Fi name (SSID) for "connect VPN outside home Wi-Fi" requires location. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
     <!-- Package visibility (Android 11+): list every launchable app for the library. -->
     <queries>
         <intent>

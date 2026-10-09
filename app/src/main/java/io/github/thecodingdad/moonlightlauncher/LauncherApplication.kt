@@ -23,6 +23,7 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
         container.hosts.bind()
         container.library.start()
         container.metadata.start()
+        container.vpn.startNetworkWatch()
         // Host polling is driven by MainActivity's lifecycle: Artemis' stream activity runs in
         // this process too, and polling must not compete with an active stream.
     }
