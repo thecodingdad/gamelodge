@@ -7,9 +7,11 @@ import io.github.thecodingdad.moonlightlauncher.data.library.LibrarySync
 import io.github.thecodingdad.moonlightlauncher.data.library.PlaytimeTracker
 import io.github.thecodingdad.moonlightlauncher.data.local.LocalAppScanner
 import io.github.thecodingdad.moonlightlauncher.data.remote.BoxArtCache
+import io.github.thecodingdad.moonlightlauncher.data.remote.HostActions
 import io.github.thecodingdad.moonlightlauncher.data.remote.HostRepository
 import io.github.thecodingdad.moonlightlauncher.data.settings.SecretStore
 import io.github.thecodingdad.moonlightlauncher.data.settings.SettingsRepository
+import io.github.thecodingdad.moonlightlauncher.stream.LaunchCoordinator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.Dispatchers
@@ -31,4 +33,6 @@ class AppContainer(context: Context) {
         LibraryRepository(database, LibrarySync(database), localApps, hosts, boxArt, scope)
     }
     val playtime: PlaytimeTracker by lazy { PlaytimeTracker(database) }
+    val launcher: LaunchCoordinator by lazy { LaunchCoordinator(this) }
+    val hostActions: HostActions by lazy { HostActions(hosts, library) }
 }

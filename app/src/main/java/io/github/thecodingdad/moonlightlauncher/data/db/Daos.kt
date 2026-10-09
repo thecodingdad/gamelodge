@@ -33,8 +33,11 @@ interface LibraryDao {
     @Query("SELECT * FROM library_items WHERE id = :id")
     suspend fun getItem(id: String): LibraryItemEntity?
 
-    @Query("SELECT * FROM library_items WHERE normalizedTitle = :normalized LIMIT 1")
-    suspend fun findByNormalizedTitle(normalized: String): LibraryItemEntity?
+    @Query("SELECT * FROM library_items WHERE normalizedTitle = :normalized")
+    suspend fun findByNormalizedTitle(normalized: String): List<LibraryItemEntity>
+
+    @Query("SELECT * FROM launch_targets WHERE itemId = :itemId")
+    suspend fun getTargetsForItem(itemId: String): List<LaunchTargetEntity>
 
     @Query("SELECT * FROM library_items WHERE metadataState IN (:states)")
     suspend fun getItemsWithMetadataState(states: List<MetadataState>): List<LibraryItemEntity>

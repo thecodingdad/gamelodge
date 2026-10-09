@@ -1,7 +1,205 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="action_hosts">Hosts</string>
-    <string name="action_stream_settings">Stream-Einstellungen</string>
-    <string name="action_profiles">Stream-Profile</string>
-    <string name="phase0_hint">Phase 0 – Artemis eingebunden</string>
+    <!-- Tabs -->
+    <string name="tab_home">Start</string>
+    <string name="tab_library">Bibliothek</string>
+    <string name="tab_apps">Apps</string>
+    <string name="tab_settings">Einstellungen</string>
+
+    <!-- Common actions -->
+    <string name="action_cancel">Abbrechen</string>
+    <string name="action_close">Schließen</string>
+    <string name="action_retry">Erneut versuchen</string>
+    <string name="action_play">Spielen</string>
+    <string name="action_play_with">Starten mit …</string>
+    <string name="action_details">Details</string>
+    <string name="action_favorite">Zu Favoriten</string>
+    <string name="action_unfavorite">Aus Favoriten entfernen</string>
+    <string name="action_mark_app">Das ist eine App</string>
+    <string name="action_mark_game">Das ist ein Spiel</string>
+    <string name="action_hide">Ausblenden</string>
+    <string name="off">Aus</string>
+    <string name="minutes_short">%d Min.</string>
+    <string name="coming_soon">Kommt bald</string>
+
+    <!-- Button hints -->
+    <string name="hint_select">Auswählen</string>
+    <string name="hint_back">Zurück</string>
+    <string name="hint_open">Öffnen</string>
+    <string name="hint_start">Starten</string>
+    <string name="hint_options">Optionen</string>
+    <string name="hint_tabs">Tab wechseln</string>
+    <string name="hint_search">Suche</string>
+    <string name="hint_profile">Profil wechseln</string>
+    <string name="hint_hold_to_confirm">Gedrückt halten</string>
+
+    <!-- Home -->
+    <string name="home_running">Läuft gerade</string>
+    <string name="home_continue">Weiterspielen</string>
+    <string name="home_favorites">Favoriten</string>
+    <string name="home_recently_added">Zuletzt hinzugefügt</string>
+    <string name="home_empty_title">Deine Bibliothek ist leer</string>
+    <string name="home_empty_message">Füge einen Streaming-Host hinzu oder installiere Spiele auf diesem Gerät.</string>
+    <string name="running_on">Läuft auf %s</string>
+    <string name="never_played">Noch nie gespielt</string>
+    <plurals name="playtime_hours">
+        <item quantity="one">%d Stunde gespielt</item>
+        <item quantity="other">%d Stunden gespielt</item>
+    </plurals>
+    <plurals name="playtime_minutes">
+        <item quantity="one">%d Minute gespielt</item>
+        <item quantity="other">%d Minuten gespielt</item>
+    </plurals>
+
+    <!-- Library -->
+    <string name="filter_all">Alle</string>
+    <string name="filter_local">Auf diesem Gerät</string>
+    <string name="filter_favorites">Favoriten</string>
+    <string name="filter_never_played">Nie gespielt</string>
+    <string name="filter_review">Bitte prüfen</string>
+    <string name="filter_hidden">Ausgeblendet</string>
+    <string name="sort_title">Sortierung: Name</string>
+    <string name="sort_last_played">Sortierung: Zuletzt gespielt</string>
+    <string name="sort_added">Sortierung: Hinzugefügt</string>
+    <string name="sort_playtime">Sortierung: Spielzeit</string>
+    <string name="library_empty_filter">Hier ist nichts.</string>
+
+    <!-- Apps -->
+    <string name="apps_empty">Keine Apps gefunden.</string>
+    <string name="apps_on_device">Auf diesem Gerät</string>
+    <string name="apps_on_host">Auf %s</string>
+
+    <!-- Detail -->
+    <string name="detail_developer">Entwickler</string>
+    <string name="detail_genres">Genres</string>
+    <string name="detail_rating">Bewertung</string>
+    <string name="detail_available">Verfügbar</string>
+    <string name="detail_last_played">Zuletzt gespielt</string>
+    <string name="detail_sessions">Sitzungen</string>
+
+    <!-- Launch flow -->
+    <string name="target_local">Auf diesem Gerät</string>
+    <string name="target_remote">Stream von %s</string>
+    <string name="launch_where">Wo möchtest du spielen?</string>
+    <string name="launch_profile">Stream-Profil</string>
+    <string name="launch_failed_title">Start nicht möglich</string>
+    <string name="launch_running_title">Ein anderes Spiel läuft</string>
+    <string name="launch_running_message">%1$s läuft noch auf dem Host. Beenden und %2$s starten?</string>
+    <string name="launch_quit_and_start">Beenden und starten</string>
+    <string name="step_waking_host">Host wird aufgeweckt …</string>
+    <string name="step_connecting_vpn">VPN wird verbunden …</string>
+    <string name="step_checking_network">Verbindung wird geprüft …</string>
+    <string name="step_quitting">Laufendes Spiel wird beendet …</string>
+    <string name="step_starting">Stream wird gestartet …</string>
+    <string name="error_host_offline">Der Host ist offline oder nicht erreichbar.</string>
+    <string name="error_not_paired">Dieses Gerät ist noch nicht mit dem Host gekoppelt. Koppeln unter Einstellungen → Hosts.</string>
+    <string name="error_app_missing">Die App ist nicht mehr installiert.</string>
+    <string name="error_start_failed">Der Stream konnte nicht gestartet werden.</string>
+    <string name="error_quit_failed">Das laufende Spiel konnte nicht beendet werden.</string>
+    <string name="profile_default">Standard</string>
+
+    <!-- On-screen keyboard -->
+    <string name="keyboard_done">Fertig</string>
+    <string name="keyboard_delete">Löschen</string>
+    <string name="keyboard_space">Leerzeichen</string>
+    <string name="keyboard_shift">Groß</string>
+    <string name="keyboard_symbols">Symbole</string>
+
+    <!-- Settings overview -->
+    <string name="settings_hosts">Hosts</string>
+    <string name="settings_hosts_sub">Streaming-PCs, Koppeln, Aufwecken</string>
+    <string name="settings_profiles">Stream-Profile</string>
+    <string name="settings_profiles_sub">Auflösung, Bildrate, Bitrate, HDR</string>
+    <string name="settings_appearance">Darstellung</string>
+    <string name="settings_appearance_sub">Startbildschirm, Theme, Artwork</string>
+    <string name="settings_controls">Steuerung</string>
+    <string name="settings_controls_sub">Tastenbelegung, Sounds, Vibration</string>
+    <string name="settings_controllers">Controller</string>
+    <string name="settings_controllers_sub">Verbundene Controller und Spielerreihenfolge</string>
+    <string name="settings_metadata">Bibliothek &amp; Artwork</string>
+    <string name="settings_metadata_sub">SteamGridDB, IGDB, Metadaten prüfen</string>
+    <string name="settings_home_assistant">Home Assistant</string>
+    <string name="settings_home_assistant_sub">Verbindung und Smart-Home-Kacheln</string>
+    <string name="settings_vpn">VPN</string>
+    <string name="settings_vpn_sub">WireGuard-Tunnel und Auto-Verbinden</string>
+    <string name="settings_launcher">Launcher-Modus</string>
+    <string name="settings_launcher_sub">Als Startbildschirm verwenden</string>
+    <string name="settings_backup">Backup</string>
+    <string name="settings_backup_sub">Einrichtung exportieren und wiederherstellen</string>
+    <string name="settings_language">Sprache</string>
+    <string name="settings_about">Info</string>
+
+    <!-- Appearance -->
+    <string name="setting_home_layout">Startbildschirm</string>
+    <string name="layout_hero">Hero + Reihen</string>
+    <string name="layout_grid">Bibliotheksraster</string>
+    <string name="layout_carousel">Karussell</string>
+    <string name="setting_theme">Theme</string>
+    <string name="theme_dark">Dunkel</string>
+    <string name="theme_black">Schwarz (OLED)</string>
+    <string name="theme_light">Hell</string>
+    <string name="setting_accent">Akzentfarbe</string>
+    <string name="accent_cover">Aus Cover</string>
+    <string name="accent_fixed">Fest</string>
+    <string name="setting_accent_color">Feste Akzentfarbe</string>
+    <string name="color_blue">Blau</string>
+    <string name="color_green">Grün</string>
+    <string name="color_orange">Orange</string>
+    <string name="color_pink">Pink</string>
+    <string name="color_purple">Lila</string>
+    <string name="color_yellow">Gelb</string>
+    <string name="color_teal">Türkis</string>
+    <string name="setting_card_size">Kartengröße</string>
+    <string name="size_small">Klein</string>
+    <string name="size_medium">Mittel</string>
+    <string name="size_large">Groß</string>
+    <string name="setting_animated_artwork">Animiertes Artwork</string>
+    <string name="setting_reduce_motion">Animationen reduzieren</string>
+    <string name="setting_screensaver">Bildschirmschoner nach</string>
+
+    <!-- Controls -->
+    <string name="setting_button_layout">Tastenbelegung</string>
+    <string name="setting_button_layout_sub">Nintendo tauscht Bestätigen/Zurück (A/B) und X/Y</string>
+    <string name="button_layout_xbox">Xbox</string>
+    <string name="button_layout_nintendo">Nintendo</string>
+    <string name="setting_ui_sounds">Oberflächen-Sounds</string>
+    <string name="setting_ui_volume">Sound-Lautstärke</string>
+    <string name="setting_haptics">Vibration</string>
+
+    <!-- Language -->
+    <string name="language_system">Systemsprache</string>
+
+    <!-- About -->
+    <string name="about_streaming">Streaming</string>
+    <string name="about_license">Lizenz</string>
+    <string name="about_source">Quellcode</string>
+
+    <!-- Hosts -->
+    <string name="hosts_empty">Noch keine Hosts. Hosts im Netzwerk erscheinen automatisch.</string>
+    <string name="hosts_refresh">Aktualisieren</string>
+    <string name="hosts_discovery_hint">Hosts mit Sunshine, Apollo oder Vibepollo im selben Netzwerk werden automatisch gefunden. Für Hosts in anderen Netzwerken „Host hinzufügen“ verwenden.</string>
+    <string name="host_add">Host hinzufügen</string>
+    <string name="host_add_title">Host-Adresse (IP oder Name)</string>
+    <string name="host_added">Host hinzugefügt.</string>
+    <string name="host_invalid_address">Das sieht nicht nach einer gültigen Adresse aus.</string>
+    <string name="host_unreachable">Der Host ist nicht erreichbar.</string>
+    <string name="host_pair">Koppeln</string>
+    <string name="host_unpair">Entkoppeln</string>
+    <string name="host_wake">Aufwecken</string>
+    <string name="host_remove">Entfernen</string>
+    <string name="host_settings">Host-Einstellungen</string>
+    <string name="host_paired">Gekoppelt</string>
+    <string name="host_not_paired">Nicht gekoppelt</string>
+    <string name="host_status_online">Online</string>
+    <string name="host_status_offline">Offline</string>
+    <string name="host_status_streaming">Streamt</string>
+    <string name="host_status_unknown">Wird geprüft …</string>
+    <string name="pair_title">Host koppeln</string>
+    <string name="pair_instructions">Öffne die Weboberfläche von %s (Sunshine / Apollo / Vibepollo) und gib diese PIN ein:</string>
+    <string name="pair_waiting">Warte auf die PIN-Eingabe am Host …</string>
+    <string name="pair_success">Erfolgreich gekoppelt. Deine Spiele erscheinen gleich in der Bibliothek.</string>
+    <string name="pair_wrong_pin">Die am Host eingegebene PIN war falsch. Bitte erneut versuchen.</string>
+    <string name="pair_in_game">Auf dem Host läuft ein Spiel. Beende es und versuche es erneut.</string>
+    <string name="pair_in_progress">Ein anderes Gerät koppelt gerade mit diesem Host.</string>
+    <string name="pair_failed">Koppeln fehlgeschlagen.</string>
 </resources>

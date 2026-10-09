@@ -9,6 +9,7 @@ data class ClassificationInput(
     val remoteAppUuid: String? = null,
     /** Android: ApplicationInfo.category == CATEGORY_GAME or FLAG_IS_GAME. */
     val androidGameFlag: Boolean = false,
+    val packageName: String? = null,
     /** Vibepollo: entry was synced from Playnite. */
     val hasPlayniteId: Boolean = false,
     /** Metadata lookup found a confident game match. */
@@ -32,14 +33,24 @@ object Classifier {
         "mstsc", "remote desktop", "sleep", "shutdown", "restart", "lock",
     )
 
+    /** Streaming clients and launchers flag themselves as games but are tools. */
+    private val nonGamePackagePrefixes = listOf(
+        "com.limelight", "com.moonlight", "io.github.thecodingdad", "com.valvesoftware.steamlink",
+        "com.retroarch", "org.es_de", "com.teslacoilsw.launcher", "com.odin.",
+    )
+
+    /** True when the entry is a known tool regardless of any other signal. */
+    fun isKnownApp(input: ClassificationInput): Boolean {
+        if (input.hasPlayniteId) return false
+        if (input.packageName != null && nonGamePackagePrefixes.any { input.packageName.startsWith(it) }) return true
+        if (!input.isRemote) return false
+        return input.remoteAppUuid.equals(REMOTE_INPUT_UUID, ignoreCase = true) ||
+            TitleNormalizer.normalize(input.title) in knownRemoteApps
+    }
+
     fun classify(input: ClassificationInput): ItemKind {
         if (input.hasPlayniteId) return ItemKind.GAME
-
-        val normalized = TitleNormalizer.normalize(input.title)
-        if (input.isRemote) {
-            if (input.remoteAppUuid.equals(REMOTE_INPUT_UUID, ignoreCase = true)) return ItemKind.APP
-            if (normalized in knownRemoteApps) return ItemKind.APP
-        }
+        if (isKnownApp(input)) return ItemKind.APP
 
         if (input.androidGameFlag) return ItemKind.GAME
         if (input.confidentGameMatch) return ItemKind.GAME

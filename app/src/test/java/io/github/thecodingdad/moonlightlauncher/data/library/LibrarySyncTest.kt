@@ -95,6 +95,12 @@ class LibrarySyncTest {
     }
 
     @Test
+    fun `same-named entries of one host stay separate`() = runTest {
+        sync.syncHost("h1", listOf(remote("h1", 1, "Desktop"), remote("h1", 2, "Desktop")))
+        assertEquals(2, entries().size)
+    }
+
+    @Test
     fun `host tools are classified as apps`() = runTest {
         sync.syncHost("h1", listOf(remote("h1", 1, "Desktop"), remote("h1", 2, "Elden Ring")))
         val kinds = entries().associate { it.item.title to it.item.kind }

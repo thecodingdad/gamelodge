@@ -66,7 +66,7 @@ class LibrarySync(
                 val known = existing[entry.targetId]
                 val itemId = if (known != null) {
                     reclassifyIfAuto(known.itemId, entry)
-                    known.itemId
+                    splitIfSharedWithSameSource(known, entry, now)
                 } else {
                     findOrCreateItem(entry, now)
                 }
@@ -83,7 +83,14 @@ class LibrarySync(
     private suspend fun findOrCreateItem(entry: SourceEntry, now: Long): String {
         val kind = Classifier.classify(entry.toClassificationInput())
         val normalized = TitleNormalizer.normalize(entry.name)
-        dao.findByNormalizedTitle(normalized)?.let { existing ->
+        // Merge with an item of the same title from *another* source. Two same-named entries
+        // of one host (e.g. two "Desktop" apps) are different apps and stay separate.
+        val sameSource: (LaunchTargetEntity) -> Boolean = { t ->
+            t.type == entry.type && (entry.type == TargetType.LOCAL || t.hostUuid == entry.hostUuid)
+        }
+        val candidate = dao.findByNormalizedTitle(normalized)
+            .firstOrNull { item -> dao.getTargetsForItem(item.id).none(sameSource) }
+        candidate?.let { existing ->
             // Same title from another source: merge. Many Android games lack the game flag,
             // so if any source says "game" an automatically classified item becomes a game.
             if (existing.kindSource == KindSource.AUTO && kind == ItemKind.GAME && existing.kind != ItemKind.GAME) {
@@ -103,13 +110,40 @@ class LibrarySync(
         return item.id
     }
 
+    /**
+     * Repairs items that hold two targets of the same source (older merge rule): the target
+     * with the larger id moves to an item of its own. Returns the item the target belongs to.
+     */
+    private suspend fun splitIfSharedWithSameSource(known: LaunchTargetEntity, entry: SourceEntry, now: Long): String {
+        val siblings = dao.getTargetsForItem(known.itemId).filter {
+            it.id != known.id && it.type == known.type && (known.type == TargetType.LOCAL || it.hostUuid == known.hostUuid)
+        }
+        if (siblings.none { it.id < known.id }) return known.itemId
+        val source = dao.getItem(known.itemId)
+        val item = LibraryItemEntity(
+            id = UUID.randomUUID().toString(),
+            title = entry.name,
+            normalizedTitle = TitleNormalizer.normalize(entry.name),
+            kind = source?.kind ?: Classifier.classify(entry.toClassificationInput()),
+            kindSource = source?.kindSource ?: KindSource.AUTO,
+            addedAt = now,
+        )
+        dao.upsertItem(item)
+        return item.id
+    }
+
     /** New facts (e.g. a Playnite id appearing) may change an automatic decision. */
     private suspend fun reclassifyIfAuto(itemId: String, entry: SourceEntry) {
         val item = dao.getItem(itemId) ?: return
         if (item.kindSource != KindSource.AUTO) return
-        val kind = Classifier.classify(entry.toClassificationInput())
-        // Never downgrade a merged game because one of its sources looks like an app.
-        if (kind == ItemKind.GAME && item.kind != ItemKind.GAME) dao.setKind(itemId, kind, KindSource.AUTO)
+        val input = entry.toClassificationInput()
+        val kind = Classifier.classify(input)
+        when {
+            // Never downgrade a merged game just because one source looks like an app...
+            kind == ItemKind.GAME && item.kind != ItemKind.GAME -> dao.setKind(itemId, kind, KindSource.AUTO)
+            // ...unless it is a known tool (e.g. a streaming client flagged as game).
+            Classifier.isKnownApp(input) && item.kind != ItemKind.APP -> dao.setKind(itemId, ItemKind.APP, KindSource.AUTO)
+        }
     }
 
     private fun SourceEntry.toClassificationInput() = ClassificationInput(
@@ -118,6 +152,7 @@ class LibrarySync(
         remoteAppUuid = appUuid,
         androidGameFlag = androidGameFlag,
         hasPlayniteId = hasPlayniteId,
+        packageName = packageName,
     )
 
     private fun SourceEntry.toTarget(itemId: String, boxArtPath: String?, now: Long) = LaunchTargetEntity(
