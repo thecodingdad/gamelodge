@@ -1,5 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
 import androidx.activity.ComponentActivity
@@ -31,6 +32,12 @@ class MainActivity : ComponentActivity() {
         }
         feedback = UiFeedback(this).also { it.load() }
         setContent { LauncherApp(vm, dispatcher, feedback) }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        // Home pressed while we are the home app: back to the start screen.
+        if (intent.hasCategory(Intent.CATEGORY_HOME)) vm.homePressed.tryEmit(Unit)
     }
 
     override fun onStart() {

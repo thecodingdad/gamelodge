@@ -233,4 +233,35 @@
     <string name="metadata_review_help">These matches were uncertain. Confirm them or pick the right game.</string>
     <string name="metadata_review_done">All matches reviewed.</string>
     <string name="metadata_matched_as">Matched as \\"%1$s\\" (%2$d %%)</string>
+
+    <!-- Phase 4: profiles, launcher mode, collections, stats -->
+    <string name="profile_new_name">Profile name</string>
+    <string name="profile_edit">Edit</string>
+    <string name="profile_set_active">Set active</string>
+    <string name="profiles_intro">The active profile is used for every stream. \\"Start with…\\" (X) picks another one for a single launch.</string>
+    <string name="profile_base_sub">Base settings; new profiles start from here</string>
+    <string name="profile_active">Active</string>
+    <string name="profile_new">New profile</string>
+    <string name="profile_rename">Rename</string>
+    <string name="profile_delete">Delete</string>
+    <string name="profile_essentials">Most important</string>
+    <string name="launcher_intro">Use Moonlight Launcher as your home screen. You can switch back at any time; the app keeps working as a normal app too.</string>
+    <string name="launcher_enable">Use as home screen</string>
+    <string name="launcher_enable_sub">Shows up as a launcher choice; Android asks to make it the default</string>
+    <string name="launcher_is_default">Default home screen</string>
+    <string name="launcher_make_default">Make default home screen</string>
+    <string name="launcher_system_settings">Android home screen settings</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="action_collections">Collections…</string>
+    <string name="collections_title">Collections</string>
+    <string name="collection_new">New collection</string>
+    <string name="collection_new_name">Collection name</string>
+    <string name="stats_title">Statistics</string>
+    <string name="stats_total">Total playtime</string>
+    <string name="stats_sessions">Sessions</string>
+    <string name="stats_week">Last 7 days</string>
+    <string name="stats_last_days">Playtime per day</string>
+    <string name="stats_most_played">Most played</string>
+    <string name="stats_recent_sessions">Recent sessions</string>
 </resources>

@@ -1,7 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher.ui
 
 import android.app.Activity
-import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
@@ -37,7 +36,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.limelight.ProfilesActivity
 import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.container
 import io.github.thecodingdad.moonlightlauncher.data.db.MetadataState
@@ -65,7 +63,15 @@ import io.github.thecodingdad.moonlightlauncher.ui.input.PadAction
 import io.github.thecodingdad.moonlightlauncher.ui.input.PadButton
 import io.github.thecodingdad.moonlightlauncher.ui.screens.apps.AppsScreen
 import io.github.thecodingdad.moonlightlauncher.ui.screens.detail.DetailScreen
+import io.github.thecodingdad.moonlightlauncher.ui.screens.home.CarouselHome
+import io.github.thecodingdad.moonlightlauncher.ui.screens.home.GridHome
 import io.github.thecodingdad.moonlightlauncher.ui.screens.home.HeroHome
+import io.github.thecodingdad.moonlightlauncher.ui.screens.profiles.ProfileEditor
+import io.github.thecodingdad.moonlightlauncher.ui.screens.profiles.ProfilesList
+import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.LauncherModeSettings
+import io.github.thecodingdad.moonlightlauncher.ui.screens.stats.StatsScreen
+import io.github.thecodingdad.moonlightlauncher.ui.shell.CollectionsDialog
+import androidx.compose.runtime.LaunchedEffect
 import io.github.thecodingdad.moonlightlauncher.ui.screens.home.HomeCallbacks
 import io.github.thecodingdad.moonlightlauncher.ui.screens.home.HomeRows
 import io.github.thecodingdad.moonlightlauncher.ui.screens.library.LibraryScreen
@@ -92,6 +98,9 @@ private object Routes {
     const val DETAIL = "detail/{id}"
     const val SETTINGS = "settings/{page}"
     const val REVIEW = "review"
+    const val STATS = "stats"
+    const val PROFILE = "profile/{uuid}"
+    fun profile(uuid: java.util.UUID?) = "profile/${uuid ?: "base"}"
     fun detail(id: String) = "detail/$id"
     fun settings(page: SettingsPageId) = "settings/${page.name}"
 }
@@ -117,6 +126,17 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
         )
     }
 
+    LaunchedEffect(Unit) {
+        vm.homePressed.collect {
+            nav.popBackStack(Routes.MAIN, inclusive = false)
+            vm.tab = 0
+            entryActions.pick = null
+            entryActions.contextMenuFor = null
+            keyboard.close()
+        }
+    }
+    var collectionsFor by remember { mutableStateOf<io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry?>(null) }
+
     LauncherTheme(settings) {
         CompositionLocalProvider(
             LocalInputDispatcher provides dispatcher,
@@ -128,7 +148,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
         ) {
             Box(Modifier.fillMaxSize().background(LauncherTheme.colors.background)) {
                 NavHost(nav, startDestination = Routes.MAIN) {
-                    composable(Routes.MAIN) { MainShell(vm, nav) }
+                    composable(Routes.MAIN) { MainShell(vm, nav, openStats = { nav.navigate(Routes.STATS) }) }
                     composable(Routes.DETAIL) { backStack ->
                         val id = backStack.arguments?.getString("id").orEmpty()
                         val entry by remember(id) { vm.entry(id) }.collectAsState(null)
@@ -153,7 +173,25 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                     }
                     composable(Routes.SETTINGS) { backStack ->
                         val page = SettingsPageId.valueOf(backStack.arguments?.getString("page") ?: SettingsPageId.ABOUT.name)
-                        ShellFrame(hints) { SettingsPageContent(page, vm, openReview = { nav.navigate(Routes.REVIEW) }) }
+                        ShellFrame(hints) {
+                            SettingsPageContent(
+                                page, vm,
+                                openReview = { nav.navigate(Routes.REVIEW) },
+                                openProfile = { nav.navigate(Routes.profile(it)) },
+                            )
+                        }
+                    }
+                    composable(Routes.STATS) {
+                        val all by vm.allEntries.collectAsState()
+                        val sessions by vm.finishedSessions.collectAsState()
+                        ShellFrame(hints) { StatsScreen(all, sessions) }
+                    }
+                    composable(Routes.PROFILE) { backStack ->
+                        val raw = backStack.arguments?.getString("uuid")
+                        val uuid = raw?.takeIf { it != "base" }?.let(java.util.UUID::fromString)
+                        val profiles by vm.profiles.collectAsState()
+                        val name = profiles.firstOrNull { it.uuid == uuid }?.name ?: stringResource(R.string.profile_default)
+                        ShellFrame(hints) { ProfileEditor(uuid, name, onDeleted = { nav.popBackStack() }) }
                     }
                     composable(Routes.REVIEW) {
                         val all by vm.allEntries.collectAsState()
@@ -184,6 +222,15 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                     onFavorite = vm::setFavorite,
                     onKind = vm::setKind,
                     onHide = { vm.setHidden(it, true) },
+                    onCollections = { collectionsFor = it },
+                )
+                val collections by vm.collections.collectAsState()
+                CollectionsDialog(
+                    entry = collectionsFor,
+                    collections = collections,
+                    onToggle = { id, member -> collectionsFor?.let { vm.setInCollection(it.item.id, id, member) } },
+                    onCreate = { name -> vm.createCollection(name, collectionsFor?.item?.id) },
+                    onDismiss = { collectionsFor = null },
                 )
                 val launchState by vm.launchState.collectAsState()
                 LaunchOverlay(
@@ -208,7 +255,7 @@ private fun ShellFrame(hints: HintHolder, content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun MainShell(vm: LauncherViewModel, nav: NavHostController) {
+private fun MainShell(vm: LauncherViewModel, nav: NavHostController, openStats: () -> Unit) {
     val settings by vm.settings.collectAsState()
     val hostsMap by vm.hosts.collectAsState()
     val games by vm.games.collectAsState()
@@ -220,8 +267,9 @@ private fun MainShell(vm: LauncherViewModel, nav: NavHostController) {
     val hints = LocalHintHolder.current
     val entryActions = LocalEntryActions.current
     val activity = LocalContext.current as Activity
-    var tab by rememberSaveable { mutableIntStateOf(0) }
+    var tab by vm.tabState
     val tabs = MainTab.entries
+    val collections by vm.collections.collectAsState()
     val hosts = hostsMap.values.sortedBy { it.name }
 
     PadAction(PadButton.L1) { tab = (tab - 1).mod(tabs.size) }
@@ -270,11 +318,16 @@ private fun MainShell(vm: LauncherViewModel, nav: NavHostController) {
                                 ButtonHint(PadButton.L1, stringResource(R.string.hint_tabs)),
                             ),
                         )
+                        val empty: @Composable () -> Unit = { EmptyHome { tab = MainTab.SETTINGS.ordinal } }
                         when (settings.homeLayout) {
-                            HomeLayout.HERO, HomeLayout.GRID, HomeLayout.CAROUSEL -> HeroHome(rows, callbacks) { EmptyHome { tab = MainTab.SETTINGS.ordinal } }
+                            HomeLayout.HERO -> HeroHome(rows, callbacks, collections.mapNotNull { (c, ids) ->
+                                games.filter { it.item.id in ids }.takeIf { it.isNotEmpty() }?.let { c.name to it }
+                            }, empty)
+                            HomeLayout.GRID -> GridHome(games, callbacks, empty)
+                            HomeLayout.CAROUSEL -> CarouselHome(rows, callbacks, openTab = { tab = it }, emptyContent = empty)
                         }
                     }
-                    MainTab.LIBRARY -> LibraryScreen(allEntries, hosts, settings.animatedArtwork, vm.lastFocusedKey) { vm.lastFocusedKey = it }
+                    MainTab.LIBRARY -> LibraryScreen(allEntries, hosts, collections, settings.animatedArtwork, vm.lastFocusedKey, openStats) { vm.lastFocusedKey = it }
                     MainTab.APPS -> AppsScreen(apps, vm.lastFocusedKey) { vm.lastFocusedKey = it }
                     MainTab.SETTINGS -> {
                         io.github.thecodingdad.moonlightlauncher.ui.shell.ScreenHints(
@@ -330,7 +383,7 @@ private fun EmptyHome(openSettings: () -> Unit) {
 }
 
 @Composable
-private fun SettingsPageContent(page: SettingsPageId, vm: LauncherViewModel, openReview: () -> Unit) {
+private fun SettingsPageContent(page: SettingsPageId, vm: LauncherViewModel, openReview: () -> Unit, openProfile: (java.util.UUID?) -> Unit) {
     val settings by vm.settings.collectAsState()
     val hosts by vm.hosts.collectAsState()
     val all by vm.allEntries.collectAsState()
@@ -347,10 +400,11 @@ private fun SettingsPageContent(page: SettingsPageId, vm: LauncherViewModel, ope
         SettingsPageId.LANGUAGE -> LanguageSettings(settings, vm::updateSettings)
         SettingsPageId.ABOUT -> AboutSettings()
         SettingsPageId.PROFILES -> {
-            // Interim: Artemis' profile editor until the own editor lands.
-            androidx.compose.runtime.LaunchedEffect(Unit) { context.startActivity(Intent(context, ProfilesActivity::class.java)) }
-            SettingsPage(stringResource(R.string.settings_profiles)) {}
+            val profiles by vm.profiles.collectAsState()
+            val active by vm.activeProfile.collectAsState()
+            ProfilesList(profiles, active, openProfile)
         }
+        SettingsPageId.LAUNCHER -> LauncherModeSettings(settings, vm::updateSettings)
         else -> SettingsPage(stringResource(R.string.coming_soon)) {}
     }
 }

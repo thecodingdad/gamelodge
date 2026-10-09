@@ -62,7 +62,12 @@ class HomeCallbacks(
 
 /** PS5/Netflix style: large artwork of the focused game on top, rows below. */
 @Composable
-fun HeroHome(rows: HomeRows, callbacks: HomeCallbacks, emptyContent: @Composable () -> Unit) {
+fun HeroHome(
+    rows: HomeRows,
+    callbacks: HomeCallbacks,
+    collectionRows: List<Pair<String, List<LibraryEntry>>>,
+    emptyContent: @Composable () -> Unit,
+) {
     val actions = LocalEntryActions.current
     var focused by remember { mutableStateOf<LibraryEntry?>(null) }
     var shown by remember { mutableStateOf<LibraryEntry?>(null) }
@@ -124,6 +129,9 @@ fun HeroHome(rows: HomeRows, callbacks: HomeCallbacks, emptyContent: @Composable
                 }
                 homeRow("continue", R.string.home_continue, rows.continuePlaying, callbacks, firstRow = rows.running.isEmpty(), onFocus = { focused = it }, actions = actions)
                 homeRow("favorites", R.string.home_favorites, rows.favorites, callbacks, firstRow = rows.running.isEmpty() && rows.continuePlaying.isEmpty(), onFocus = { focused = it }, actions = actions)
+                collectionRows.forEach { (name, list) ->
+                    homeRow("collection:$name", 0, list, callbacks, firstRow = false, onFocus = { focused = it }, actions = actions, titleText = name)
+                }
                 homeRow(
                     "recent", R.string.home_recently_added, rows.recentlyAdded, callbacks,
                     firstRow = rows.running.isEmpty() && rows.continuePlaying.isEmpty() && rows.favorites.isEmpty(),
@@ -142,10 +150,11 @@ private fun androidx.compose.foundation.lazy.LazyListScope.homeRow(
     firstRow: Boolean,
     onFocus: (LibraryEntry) -> Unit,
     actions: io.github.thecodingdad.moonlightlauncher.ui.shell.EntryActions,
+    titleText: String? = null,
 ) {
     if (entries.isEmpty()) return
     item(key = key) {
-        RowTitle(stringResource(title))
+        RowTitle(titleText ?: stringResource(title))
         LazyRow(
             contentPadding = PaddingValues(horizontal = 40.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),

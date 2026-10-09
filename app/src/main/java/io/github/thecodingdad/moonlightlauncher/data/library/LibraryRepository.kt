@@ -1,5 +1,7 @@
 package io.github.thecodingdad.moonlightlauncher.data.library
 
+import io.github.thecodingdad.moonlightlauncher.data.db.CollectionEntity
+import io.github.thecodingdad.moonlightlauncher.data.db.ItemCollectionCrossRef
 import io.github.thecodingdad.moonlightlauncher.data.db.ItemKind
 import io.github.thecodingdad.moonlightlauncher.data.db.KindSource
 import io.github.thecodingdad.moonlightlauncher.data.db.LauncherDatabase
@@ -18,6 +20,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -117,6 +120,23 @@ class LibraryRepository(
     suspend fun setFavorite(id: String, favorite: Boolean) = dao.setFavorite(id, favorite)
 
     suspend fun setHidden(id: String, hidden: Boolean) = dao.setHidden(id, hidden)
+
+    val collections = db.collectionDao().observeCollections()
+    val memberships = db.collectionDao().observeMemberships()
+
+    suspend fun createCollection(name: String): String {
+        val id = java.util.UUID.randomUUID().toString()
+        val order = (db.collectionDao().observeCollections().first().maxOfOrNull { it.sortOrder } ?: -1) + 1
+        db.collectionDao().upsert(CollectionEntity(id, name, order))
+        return id
+    }
+
+    suspend fun deleteCollection(collection: CollectionEntity) = db.collectionDao().delete(collection)
+
+    suspend fun setInCollection(itemId: String, collectionId: String, member: Boolean) {
+        val ref = ItemCollectionCrossRef(itemId, collectionId)
+        if (member) db.collectionDao().addItem(ref) else db.collectionDao().removeItem(ref)
+    }
 
     /** User correction "this is a game / an app"; survives every future sync. */
     suspend fun setKind(id: String, kind: ItemKind) = dao.setKind(id, kind, KindSource.MANUAL)

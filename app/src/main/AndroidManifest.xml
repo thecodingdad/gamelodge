@@ -35,6 +35,19 @@
             </intent-filter>
         </activity>
 
+        <!-- Launcher mode: enabled at runtime from Settings -> Launcher mode. -->
+        <activity-alias
+            android:name=".HomeAlias"
+            android:targetActivity=".MainActivity"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity-alias>
+
         <!-- Artemis' host list stays reachable from inside the launcher, but must not
              show up as a second icon in the app drawer. -->
         <activity

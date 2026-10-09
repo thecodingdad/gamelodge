@@ -1,0 +1,139 @@
+package io.github.thecodingdad.moonlightlauncher.ui.screens.home
+
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.VideoLibrary
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusRestorer
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import io.github.thecodingdad.moonlightlauncher.R
+import io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry
+import io.github.thecodingdad.moonlightlauncher.ui.components.CoverCard
+import io.github.thecodingdad.moonlightlauncher.ui.components.FocusSurface
+import io.github.thecodingdad.moonlightlauncher.ui.components.PublishAccentFrom
+import io.github.thecodingdad.moonlightlauncher.ui.components.WideCard
+import io.github.thecodingdad.moonlightlauncher.ui.components.coverModel
+import io.github.thecodingdad.moonlightlauncher.ui.components.heroModel
+import io.github.thecodingdad.moonlightlauncher.ui.components.restoreFocusIf
+import io.github.thecodingdad.moonlightlauncher.ui.input.PadAction
+import io.github.thecodingdad.moonlightlauncher.ui.input.PadButton
+import io.github.thecodingdad.moonlightlauncher.ui.shell.LocalEntryActions
+import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
+
+/** Switch / Steam Deck style: one big row of recent games plus round quick buttons. */
+@Composable
+fun CarouselHome(
+    rows: HomeRows,
+    callbacks: HomeCallbacks,
+    openTab: (Int) -> Unit,
+    emptyContent: @Composable () -> Unit,
+) {
+    val actions = LocalEntryActions.current
+    val items = remember(rows) {
+        (rows.continuePlaying + rows.favorites + rows.recentlyAdded).distinctBy { it.item.id }.take(24)
+    }
+    if (items.isEmpty() && rows.running.isEmpty()) {
+        emptyContent()
+        return
+    }
+    var focused by remember { mutableStateOf<LibraryEntry?>(null) }
+    val shown = focused ?: items.firstOrNull()
+    PublishAccentFrom(shown?.coverModel())
+    PadAction(PadButton.X) { focused?.let(actions::context) }
+    val listState = rememberLazyListState()
+
+    Column(Modifier.fillMaxSize().padding(top = 4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        LazyRow(
+            state = listState,
+            contentPadding = PaddingValues(horizontal = 48.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.focusRestorer(),
+        ) {
+            items(rows.running, key = { "run:" + it.host.uuid }) { session ->
+                WideCard(
+                    title = session.appName,
+                    subtitle = stringResource(R.string.running_on, session.host.name),
+                    image = session.entry?.heroModel(),
+                    onClick = { callbacks.onResume(session) },
+                    onFocused = { focused = session.entry },
+                    modifier = Modifier.width(340.dp).height(225.dp).restoreFocusIf(callbacks.lastFocusedKey == null),
+                )
+            }
+            items(items, key = { it.item.id }) { entry ->
+                val key = "carousel:${entry.item.id}"
+                val isFocused = focused?.item?.id == entry.item.id
+                val width by animateDpAsState(if (isFocused) 150.dp else 112.dp, label = "carouselWidth")
+                CoverCard(
+                    entry = entry,
+                    width = width,
+                    onClick = { actions.open(entry) },
+                    onLongClick = { actions.context(entry) },
+                    onFocused = { focused = entry; callbacks.onFocusKey(key) },
+                    animated = callbacks.animatedArtwork,
+                    modifier = Modifier.restoreFocusIf(
+                        callbacks.lastFocusedKey == key ||
+                            (rows.running.isEmpty() && callbacks.lastFocusedKey?.startsWith("carousel:") != true && entry === items.first()),
+                    ),
+                )
+            }
+        }
+        shown?.let {
+            Column(Modifier.padding(horizontal = 48.dp)) {
+                Text(it.item.title, style = MaterialTheme.typography.headlineSmall, color = LauncherTheme.colors.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                MetaLine(it)
+            }
+        }
+        Spacer(Modifier.weight(1f))
+        Row(Modifier.fillMaxWidth().padding(bottom = 6.dp), horizontalArrangement = Arrangement.Center) {
+            Row(horizontalArrangement = Arrangement.spacedBy(28.dp)) {
+                QuickButton(Icons.Filled.VideoLibrary, stringResource(R.string.tab_library)) { openTab(1) }
+                QuickButton(Icons.Filled.Apps, stringResource(R.string.tab_apps)) { openTab(2) }
+                QuickButton(Icons.Filled.Settings, stringResource(R.string.tab_settings)) { openTab(3) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun QuickButton(icon: ImageVector, label: String, onClick: () -> Unit) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        FocusSurface(onClick = onClick, shape = CircleShape, color = LauncherTheme.colors.surfaceRaised, modifier = Modifier.size(64.dp), focusScale = 1.12f) {
+            Box(Modifier.fillMaxSize().background(LauncherTheme.colors.surfaceRaised), contentAlignment = Alignment.Center) {
+                Icon(icon, label, tint = LauncherTheme.colors.onSurface)
+            }
+        }
+        Text(label, style = MaterialTheme.typography.labelMedium, color = LauncherTheme.colors.onSurfaceMuted, modifier = Modifier.padding(top = 6.dp))
+    }
+}

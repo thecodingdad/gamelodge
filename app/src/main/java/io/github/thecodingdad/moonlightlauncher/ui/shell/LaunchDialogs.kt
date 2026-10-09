@@ -12,6 +12,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Cloud
+import androidx.compose.material.icons.filled.CollectionsBookmark
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Info
@@ -225,11 +229,15 @@ fun EntryContextMenu(
     onFavorite: (LibraryEntry, Boolean) -> Unit,
     onKind: (LibraryEntry, ItemKind) -> Unit,
     onHide: (LibraryEntry) -> Unit,
+    onCollections: (LibraryEntry) -> Unit,
 ) {
     Modal(visible = entry != null, onDismiss = onDismiss, title = entry?.item?.title, maxWidth = 520.dp) {
         val e = entry ?: return@Modal
         fun act(block: () -> Unit) = { onDismiss(); block() }
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(
+            Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
             LauncherButton(stringResource(R.string.action_play), act { onPlay(e) }, Modifier.fillMaxWidth(), Icons.Filled.PlayArrow, primary = true)
             if (e.remoteTargets.isNotEmpty()) {
                 LauncherButton(stringResource(R.string.action_play_with), act { onPlayWith(e) }, Modifier.fillMaxWidth(), Icons.Filled.Tune)
@@ -245,6 +253,7 @@ fun EntryContextMenu(
             } else {
                 LauncherButton(stringResource(R.string.action_mark_game), act { onKind(e, ItemKind.GAME) }, Modifier.fillMaxWidth(), Icons.Filled.SportsEsports)
             }
+            LauncherButton(stringResource(R.string.action_collections), act { onCollections(e) }, Modifier.fillMaxWidth(), Icons.Filled.CollectionsBookmark)
             LauncherButton(stringResource(R.string.action_hide), act { onHide(e) }, Modifier.fillMaxWidth(), Icons.Filled.VisibilityOff)
         }
     }

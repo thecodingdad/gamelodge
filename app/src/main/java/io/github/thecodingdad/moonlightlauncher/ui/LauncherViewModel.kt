@@ -6,7 +6,9 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.container
+import io.github.thecodingdad.moonlightlauncher.data.db.CollectionEntity
 import io.github.thecodingdad.moonlightlauncher.data.db.ItemKind
+import io.github.thecodingdad.moonlightlauncher.data.db.PlaySessionEntity
 import io.github.thecodingdad.moonlightlauncher.data.db.LaunchTargetEntity
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry
 import io.github.thecodingdad.moonlightlauncher.data.remote.HostState
@@ -73,6 +75,40 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         c.library.allEntries.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     fun sessions(itemId: String) = c.database.sessionDao().observeForItem(itemId)
+
+    val finishedSessions: StateFlow<List<PlaySessionEntity>> =
+        c.database.sessionDao().observeFinished().stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+    /** Collections with their member item ids. */
+    val collections: StateFlow<List<Pair<CollectionEntity, Set<String>>>> =
+        combine(c.library.collections, c.library.memberships) { cols, refs ->
+            val byCollection = refs.groupBy({ it.collectionId }, { it.itemId })
+            cols.map { it to byCollection[it.id].orEmpty().toSet() }
+        }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    fun createCollection(name: String, addItem: String? = null) {
+        viewModelScope.launch {
+            val id = c.library.createCollection(name)
+            if (addItem != null) c.library.setInCollection(addItem, id, true)
+        }
+    }
+
+    fun setInCollection(itemId: String, collectionId: String, member: Boolean) {
+        viewModelScope.launch { c.library.setInCollection(itemId, collectionId, member) }
+    }
+
+    fun deleteCollection(collection: CollectionEntity) {
+        viewModelScope.launch { c.library.deleteCollection(collection) }
+    }
+
+    /** Selected main tab; lives here so the Home button can reset it from the activity. */
+    val tabState = androidx.compose.runtime.mutableIntStateOf(0)
+    var tab: Int
+        get() = tabState.intValue
+        set(value) { tabState.intValue = value }
+
+    /** Emits when the Home button is pressed while the launcher is the home app. */
+    val homePressed = kotlinx.coroutines.flow.MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
     fun launch(activity: Activity, entry: LibraryEntry, target: LaunchTargetEntity, override: StreamProfile? = null, quitRunning: Boolean = false) {
         viewModelScope.launch { c.launcher.launch(activity, entry, target, override, quitRunning) }

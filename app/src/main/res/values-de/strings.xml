@@ -231,4 +231,35 @@
     <string name="metadata_review_help">Diese Treffer waren unsicher. Bestätige sie oder wähle das richtige Spiel.</string>
     <string name="metadata_review_done">Alle Treffer geprüft.</string>
     <string name="metadata_matched_as">Zugeordnet als „%1$s“ (%2$d %%)</string>
+
+    <!-- Phase 4: profiles, launcher mode, collections, stats -->
+    <string name="profile_new_name">Profilname</string>
+    <string name="profile_edit">Bearbeiten</string>
+    <string name="profile_set_active">Aktiv setzen</string>
+    <string name="profiles_intro">Das aktive Profil gilt für jeden Stream. Mit „Starten mit …“ (X) wählst du für einen einzelnen Start ein anderes.</string>
+    <string name="profile_base_sub">Basis-Einstellungen, neue Profile starten von hier</string>
+    <string name="profile_active">Aktiv</string>
+    <string name="profile_new">Neues Profil</string>
+    <string name="profile_rename">Umbenennen</string>
+    <string name="profile_delete">Löschen</string>
+    <string name="profile_essentials">Wichtigste Einstellungen</string>
+    <string name="launcher_intro">Moonlight Launcher als Startbildschirm verwenden. Du kannst jederzeit zurückwechseln, die App funktioniert auch weiter als normale App.</string>
+    <string name="launcher_enable">Als Startbildschirm verwenden</string>
+    <string name="launcher_enable_sub">Erscheint als Launcher-Auswahl, Android fragt nach dem Standard</string>
+    <string name="launcher_is_default">Standard-Startbildschirm</string>
+    <string name="launcher_make_default">Als Standard festlegen</string>
+    <string name="launcher_system_settings">Android-Startbildschirm-Einstellungen</string>
+    <string name="yes">Ja</string>
+    <string name="no">Nein</string>
+    <string name="action_collections">Sammlungen …</string>
+    <string name="collections_title">Sammlungen</string>
+    <string name="collection_new">Neue Sammlung</string>
+    <string name="collection_new_name">Name der Sammlung</string>
+    <string name="stats_title">Statistik</string>
+    <string name="stats_total">Gesamte Spielzeit</string>
+    <string name="stats_sessions">Sitzungen</string>
+    <string name="stats_week">Letzte 7 Tage</string>
+    <string name="stats_last_days">Spielzeit pro Tag</string>
+    <string name="stats_most_played">Meistgespielt</string>
+    <string name="stats_recent_sessions">Letzte Sitzungen</string>
 </resources>

@@ -57,6 +57,7 @@ sealed interface LibraryFilter {
     data object NeverPlayed : LibraryFilter
     data object Review : LibraryFilter
     data object Hidden : LibraryFilter
+    data class Collection(val id: String, val name: String, val members: Set<String>) : LibraryFilter
 }
 
 enum class LibrarySort { TITLE, LAST_PLAYED, ADDED, PLAYTIME }
@@ -81,6 +82,7 @@ fun applyLibraryQuery(
                 LibraryFilter.NeverPlayed -> it.item.lastPlayedAt == null
                 LibraryFilter.Review -> it.item.metadataState == MetadataState.REVIEW
                 LibraryFilter.Hidden -> it.item.hidden
+                is LibraryFilter.Collection -> it.item.id in filter.members
             }
         }
         .filter { query.isEmpty() || it.item.normalizedTitle.contains(query) }
@@ -99,8 +101,10 @@ fun applyLibraryQuery(
 fun LibraryScreen(
     allEntries: List<LibraryEntry>,
     hosts: List<HostState>,
+    collections: List<Pair<io.github.thecodingdad.moonlightlauncher.data.db.CollectionEntity, Set<String>>>,
     animatedArtwork: Boolean,
     lastFocusedKey: String?,
+    openStats: () -> Unit,
     onFocusKey: (String) -> Unit,
 ) {
     val actions = LocalEntryActions.current
@@ -118,6 +122,7 @@ fun LibraryScreen(
         hosts.forEach { add(LibraryFilter.Host(it.uuid, it.name) to it.name) }
         add(LibraryFilter.Favorites to stringResource(R.string.filter_favorites))
         add(LibraryFilter.NeverPlayed to stringResource(R.string.filter_never_played))
+        collections.forEach { (c, members) -> add(LibraryFilter.Collection(c.id, c.name, members) to c.name) }
         if (games.any { it.item.metadataState == MetadataState.REVIEW }) add(LibraryFilter.Review to stringResource(R.string.filter_review))
         if (games.any { it.item.hidden }) add(LibraryFilter.Hidden to stringResource(R.string.filter_hidden))
     }
@@ -170,6 +175,7 @@ fun LibraryScreen(
             items(filters, key = { it.second }) { (f, label) ->
                 Chip(label, selected = f == filter, onClick = { filter = f })
             }
+            item { Chip(stringResource(R.string.stats_title), selected = false, onClick = openStats) }
         }
         if (shown.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
