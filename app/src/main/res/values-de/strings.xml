@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_hosts">Hosts</string>
+    <string name="action_stream_settings">Stream-Einstellungen</string>
+    <string name="action_profiles">Stream-Profile</string>
+    <string name="phase0_hint">Phase 0 – Artemis eingebunden</string>
+</resources>

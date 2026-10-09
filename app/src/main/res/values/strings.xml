@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="launcher_name" translatable="false">Moonlight Launcher</string>
+    <string name="action_hosts">Hosts</string>
+    <string name="action_stream_settings">Stream settings</string>
+    <string name="action_profiles">Stream profiles</string>
+    <string name="phase0_hint">Phase 0 – Artemis integrated</string>
+</resources>
