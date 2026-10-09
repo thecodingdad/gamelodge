@@ -39,6 +39,15 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.limelight.ProfilesActivity
 import io.github.thecodingdad.moonlightlauncher.R
+import io.github.thecodingdad.moonlightlauncher.container
+import io.github.thecodingdad.moonlightlauncher.data.db.MetadataState
+import io.github.thecodingdad.moonlightlauncher.ui.screens.metadata.ArtworkPickerDialog
+import io.github.thecodingdad.moonlightlauncher.ui.screens.metadata.FixMetadataDialog
+import io.github.thecodingdad.moonlightlauncher.ui.screens.metadata.MetadataActions
+import io.github.thecodingdad.moonlightlauncher.ui.screens.metadata.MetadataSettings
+import io.github.thecodingdad.moonlightlauncher.ui.screens.metadata.ReviewScreen
+import androidx.compose.runtime.mutableStateOf
+import kotlinx.coroutines.launch
 import io.github.thecodingdad.moonlightlauncher.data.settings.HomeLayout
 import io.github.thecodingdad.moonlightlauncher.ui.components.ButtonHint
 import io.github.thecodingdad.moonlightlauncher.ui.components.ButtonHintBar
@@ -82,6 +91,7 @@ private object Routes {
     const val MAIN = "main"
     const val DETAIL = "detail/{id}"
     const val SETTINGS = "settings/{page}"
+    const val REVIEW = "review"
     fun detail(id: String) = "detail/$id"
     fun settings(page: SettingsPageId) = "settings/${page.name}"
 }
@@ -125,13 +135,30 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                         val sessions by remember(id) { vm.sessions(id) }.collectAsState(emptyList())
                         ShellFrame(hints) {
                             entry?.let { e ->
-                                DetailScreen(e, sessions, settings.animatedArtwork, onFavorite = { vm.setFavorite(e, it) })
+                                var fixing by remember { mutableStateOf(false) }
+                                var artwork by remember { mutableStateOf(false) }
+                                val scope = rememberCoroutineScope()
+                                DetailScreen(e, sessions, settings.animatedArtwork, onFavorite = { vm.setFavorite(e, it) }) {
+                                    MetadataActions(
+                                        entry = e,
+                                        onFix = { fixing = true },
+                                        onArtwork = { artwork = true },
+                                        onConfirm = { scope.launch { activity.container.metadata.confirm(e.item.id) } },
+                                    )
+                                }
+                                FixMetadataDialog(if (fixing) e.item else null) { fixing = false }
+                                ArtworkPickerDialog(if (artwork) e.item else null) { artwork = false }
                             }
                         }
                     }
                     composable(Routes.SETTINGS) { backStack ->
                         val page = SettingsPageId.valueOf(backStack.arguments?.getString("page") ?: SettingsPageId.ABOUT.name)
-                        ShellFrame(hints) { SettingsPageContent(page, vm) }
+                        ShellFrame(hints) { SettingsPageContent(page, vm, openReview = { nav.navigate(Routes.REVIEW) }) }
+                    }
+                    composable(Routes.REVIEW) {
+                        val all by vm.allEntries.collectAsState()
+                        val review = remember(all) { all.filter { it.item.metadataState == MetadataState.REVIEW } }
+                        ShellFrame(hints) { ReviewScreen(review) }
                     }
                 }
 
@@ -303,11 +330,17 @@ private fun EmptyHome(openSettings: () -> Unit) {
 }
 
 @Composable
-private fun SettingsPageContent(page: SettingsPageId, vm: LauncherViewModel) {
+private fun SettingsPageContent(page: SettingsPageId, vm: LauncherViewModel, openReview: () -> Unit) {
     val settings by vm.settings.collectAsState()
     val hosts by vm.hosts.collectAsState()
+    val all by vm.allEntries.collectAsState()
     val context = LocalContext.current
     when (page) {
+        SettingsPageId.METADATA -> MetadataSettings(
+            settings, vm::updateSettings,
+            reviewCount = all.count { it.item.metadataState == MetadataState.REVIEW },
+            openReview = openReview,
+        )
         SettingsPageId.HOSTS -> HostsSettings(hosts.values.toList(), openHostConfig = {})
         SettingsPageId.APPEARANCE -> AppearanceSettings(settings, vm::updateSettings)
         SettingsPageId.CONTROLS -> ControlsSettings(settings, vm::updateSettings, openControllers = {})

@@ -202,4 +202,33 @@
     <string name="pair_in_game">Auf dem Host läuft ein Spiel. Beende es und versuche es erneut.</string>
     <string name="pair_in_progress">Ein anderes Gerät koppelt gerade mit diesem Host.</string>
     <string name="pair_failed">Koppeln fehlgeschlagen.</string>
+
+    <!-- Metadata -->
+    <string name="metadata_fix_title">Treffer korrigieren</string>
+    <string name="metadata_not_configured">Hinterlege zuerst einen SteamGridDB-API-Key oder IGDB-Zugangsdaten unter Einstellungen → Bibliothek &amp; Artwork.</string>
+    <string name="metadata_no_results">Keine Treffer.</string>
+    <string name="metadata_sgdb_required">Die Artwork-Auswahl braucht einen SteamGridDB-API-Key.</string>
+    <string name="artwork_title">Artwork ändern</string>
+    <string name="artwork_cover">Cover</string>
+    <string name="artwork_hero">Hintergrund</string>
+    <string name="artwork_logo">Logo</string>
+    <string name="artwork_switch_kind">Typ wechseln</string>
+    <string name="metadata_intro">Cover, Hintergründe und Logos kommen von SteamGridDB, Beschreibungen und Genres von IGDB. Beide sind kostenlos, die Keys legst du selbst an (siehe unten).</string>
+    <string name="metadata_auto">Metadaten automatisch abrufen</string>
+    <string name="metadata_review_list">Bitte prüfen</string>
+    <string name="metadata_review_count">%d Spiele mit unsicherem Treffer</string>
+    <string name="metadata_progress">Metadaten werden abgerufen: %1$d von %2$d</string>
+    <string name="metadata_auth_error">Zugangsdaten abgelehnt: %s</string>
+    <string name="metadata_fetch_now">Jetzt abrufen</string>
+    <string name="metadata_refetch_all">Alles neu abrufen</string>
+    <string name="metadata_sgdb_help">Key erstellen unter steamgriddb.com → Preferences → API.</string>
+    <string name="metadata_igdb_help">App unter dev.twitch.tv/console registrieren (Kategorie: Application Integration) und Client-ID und Secret kopieren.</string>
+    <string name="metadata_api_key">API-Key</string>
+    <string name="metadata_client_id">Client-ID</string>
+    <string name="metadata_client_secret">Client-Secret</string>
+    <string name="metadata_choose_game">Spiel wählen</string>
+    <string name="metadata_confirm">Treffer stimmt</string>
+    <string name="metadata_review_help">Diese Treffer waren unsicher. Bestätige sie oder wähle das richtige Spiel.</string>
+    <string name="metadata_review_done">Alle Treffer geprüft.</string>
+    <string name="metadata_matched_as">Zugeordnet als „%1$s“ (%2$d %%)</string>
 </resources>

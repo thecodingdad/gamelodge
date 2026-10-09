@@ -204,4 +204,33 @@
     <string name="pair_in_game">The host is busy with a game. Quit it and try again.</string>
     <string name="pair_in_progress">Another device is pairing with this host right now.</string>
     <string name="pair_failed">Pairing failed.</string>
+
+    <!-- Metadata -->
+    <string name="metadata_fix_title">Fix match</string>
+    <string name="metadata_not_configured">Add a SteamGridDB API key or IGDB credentials under Settings → Library &amp; artwork first.</string>
+    <string name="metadata_no_results">No results.</string>
+    <string name="metadata_sgdb_required">Artwork selection needs a SteamGridDB API key.</string>
+    <string name="artwork_title">Change artwork</string>
+    <string name="artwork_cover">Cover</string>
+    <string name="artwork_hero">Background</string>
+    <string name="artwork_logo">Logo</string>
+    <string name="artwork_switch_kind">Switch type</string>
+    <string name="metadata_intro">Covers, backgrounds and logos come from SteamGridDB, descriptions and genres from IGDB. Both are free; create your own keys with the links below.</string>
+    <string name="metadata_auto">Fetch metadata automatically</string>
+    <string name="metadata_review_list">Needs review</string>
+    <string name="metadata_review_count">%d games with uncertain matches</string>
+    <string name="metadata_progress">Fetching metadata: %1$d of %2$d</string>
+    <string name="metadata_auth_error">Credentials rejected: %s</string>
+    <string name="metadata_fetch_now">Fetch now</string>
+    <string name="metadata_refetch_all">Re-fetch all</string>
+    <string name="metadata_sgdb_help">Create a key at steamgriddb.com → Preferences → API.</string>
+    <string name="metadata_igdb_help">Register an app at dev.twitch.tv/console (category: Application Integration) and copy client ID and secret.</string>
+    <string name="metadata_api_key">API key</string>
+    <string name="metadata_client_id">Client ID</string>
+    <string name="metadata_client_secret">Client secret</string>
+    <string name="metadata_choose_game">Choose game</string>
+    <string name="metadata_confirm">Match is correct</string>
+    <string name="metadata_review_help">These matches were uncertain. Confirm them or pick the right game.</string>
+    <string name="metadata_review_done">All matches reviewed.</string>
+    <string name="metadata_matched_as">Matched as \\"%1$s\\" (%2$d %%)</string>
 </resources>

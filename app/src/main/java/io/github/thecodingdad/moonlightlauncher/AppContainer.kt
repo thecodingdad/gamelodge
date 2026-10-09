@@ -12,7 +12,10 @@ import io.github.thecodingdad.moonlightlauncher.data.remote.HostRepository
 import io.github.thecodingdad.moonlightlauncher.data.settings.SecretStore
 import io.github.thecodingdad.moonlightlauncher.data.settings.SettingsRepository
 import io.github.thecodingdad.moonlightlauncher.stream.LaunchCoordinator
+import io.github.thecodingdad.moonlightlauncher.metadata.MetadataService
 import kotlinx.coroutines.CoroutineScope
+import okhttp3.OkHttpClient
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.Dispatchers
 
@@ -35,4 +38,12 @@ class AppContainer(context: Context) {
     val playtime: PlaytimeTracker by lazy { PlaytimeTracker(database) }
     val launcher: LaunchCoordinator by lazy { LaunchCoordinator(this) }
     val hostActions: HostActions by lazy { HostActions(hosts, library) }
+
+    val http: OkHttpClient by lazy {
+        OkHttpClient.Builder()
+            .connectTimeout(15, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .build()
+    }
+    val metadata: MetadataService by lazy { MetadataService(database, secrets, settings, http, scope) }
 }
