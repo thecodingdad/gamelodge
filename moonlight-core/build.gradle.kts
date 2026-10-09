@@ -68,6 +68,9 @@ android {
     lint {
         disable += "MissingTranslation"
         lintConfig = rootProject.file("artemis/app/lint.xml")
+        // Upstream code: report, but don't fail our build on Artemis' existing issues.
+        abortOnError = false
+        checkReleaseBuilds = false
     }
 }
 
