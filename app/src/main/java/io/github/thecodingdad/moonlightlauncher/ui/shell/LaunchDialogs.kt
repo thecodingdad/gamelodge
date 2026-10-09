@@ -21,6 +21,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Bedtime
+import androidx.compose.material.icons.filled.StopCircle
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.CollectionsBookmark
 import androidx.compose.material.icons.filled.Favorite
@@ -50,6 +52,8 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.thecodingdad.moonlightlauncher.R
+import io.github.thecodingdad.moonlightlauncher.container
+import kotlinx.coroutines.launch
 import io.github.thecodingdad.moonlightlauncher.data.db.ItemKind
 import io.github.thecodingdad.moonlightlauncher.data.db.LaunchTargetEntity
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry
@@ -248,6 +252,8 @@ private fun errorText(error: LaunchError) = stringResource(
 @Composable
 fun EntryContextMenu(
     entry: LibraryEntry?,
+    session: io.github.thecodingdad.moonlightlauncher.ui.RunningSession?,
+    onResume: (io.github.thecodingdad.moonlightlauncher.ui.RunningSession) -> Unit,
     onDismiss: () -> Unit,
     onPlay: (LibraryEntry) -> Unit,
     onPlayWith: (LibraryEntry) -> Unit,
@@ -257,14 +263,18 @@ fun EntryContextMenu(
     onHide: (LibraryEntry) -> Unit,
     onCollections: (LibraryEntry) -> Unit,
 ) {
-    Modal(visible = entry != null, onDismiss = onDismiss, title = entry?.item?.title, maxWidth = 520.dp) {
-        val e = entry ?: return@Modal
+    Modal(
+        visible = entry != null || session != null, onDismiss = onDismiss,
+        title = entry?.item?.title ?: session?.appName, maxWidth = 520.dp,
+    ) {
         fun act(block: () -> Unit) = { onDismiss(); block() }
         Column(
             Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            LauncherButton(stringResource(R.string.action_play), act { onPlay(e) }, Modifier.fillMaxWidth(), Icons.Filled.PlayArrow, primary = true)
+            if (session != null) RunningSessionActions(session, onResume = act { onResume(session) }, onDone = onDismiss)
+            val e = entry ?: return@Column
+            if (session == null) LauncherButton(stringResource(R.string.action_play), act { onPlay(e) }, Modifier.fillMaxWidth(), Icons.Filled.PlayArrow, primary = true)
             if (e.remoteTargets.isNotEmpty()) {
                 LauncherButton(stringResource(R.string.action_play_with), act { onPlayWith(e) }, Modifier.fillMaxWidth(), Icons.Filled.Tune)
             }
@@ -283,4 +293,37 @@ fun EntryContextMenu(
             LauncherButton(stringResource(R.string.action_hide), act { onHide(e) }, Modifier.fillMaxWidth(), Icons.Filled.VisibilityOff)
         }
     }
+}
+
+/** Stream section of the context menu for a game that is running on a host. */
+@Composable
+private fun RunningSessionActions(
+    session: io.github.thecodingdad.moonlightlauncher.ui.RunningSession,
+    onResume: () -> Unit,
+    onDone: () -> Unit,
+) {
+    val c = androidx.compose.ui.platform.LocalContext.current.container
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    var config by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<io.github.thecodingdad.moonlightlauncher.data.db.HostConfigEntity?>(null) }
+    androidx.compose.runtime.LaunchedEffect(session.host.uuid) { config = c.hostPower.config(session.host.uuid) }
+
+    Text(stringResource(R.string.qm_running_on, session.appName, session.host.name), style = MaterialTheme.typography.labelLarge, color = LauncherTheme.colors.accent)
+    LauncherButton(stringResource(R.string.qm_resume), onResume, Modifier.fillMaxWidth(), Icons.Filled.PlayArrow, primary = true)
+    HoldToConfirmButton(
+        stringResource(R.string.qm_quit_game),
+        onConfirmed = {
+            scope.launch {
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { runCatching { c.hosts.http(session.host).quitApp() } }
+                c.hosts.invalidate(session.host.uuid)
+                onDone()
+            }
+        },
+        modifier = Modifier.fillMaxWidth(),
+        icon = Icons.Filled.StopCircle,
+    )
+    config?.let { cfg ->
+        if (cfg.haSleepEntity != null) HoldToConfirmButton(stringResource(R.string.power_sleep), { scope.launch { c.hostPower.power(cfg.hostUuid, io.github.thecodingdad.moonlightlauncher.stream.PowerAction.SLEEP); onDone() } }, Modifier.fillMaxWidth(), Icons.Filled.Bedtime)
+        if (cfg.haShutdownEntity != null) HoldToConfirmButton(stringResource(R.string.power_shutdown), { scope.launch { c.hostPower.power(cfg.hostUuid, io.github.thecodingdad.moonlightlauncher.stream.PowerAction.SHUTDOWN); onDone() } }, Modifier.fillMaxWidth(), Icons.Filled.PowerSettingsNew)
+    }
+    androidx.compose.foundation.layout.Spacer(Modifier.height(6.dp))
 }

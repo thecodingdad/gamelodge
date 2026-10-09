@@ -1,6 +1,7 @@
 package io.github.thecodingdad.moonlightlauncher
 
 import android.content.Context
+import io.github.thecodingdad.moonlightlauncher.data.backup.BackupManager
 import io.github.thecodingdad.moonlightlauncher.data.db.LauncherDatabase
 import io.github.thecodingdad.moonlightlauncher.data.library.LibraryRepository
 import io.github.thecodingdad.moonlightlauncher.data.library.LibrarySync
@@ -61,4 +62,5 @@ class AppContainer(context: Context) {
     }
     val hostPower: HostPower by lazy { HostPower(database.hostConfigDao(), hosts, hostActions, ha) }
     val autoSleep: AutoSleep by lazy { AutoSleep(appContext, database.hostConfigDao()) }
+    val backup: BackupManager by lazy { BackupManager(appContext, database, settings, secrets) }
 }

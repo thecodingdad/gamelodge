@@ -101,6 +101,13 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch { c.library.deleteCollection(collection) }
     }
 
+    /** Time of the last user input; drives the screensaver. */
+    val lastInteraction = kotlinx.coroutines.flow.MutableStateFlow(System.currentTimeMillis())
+
+    fun touch() {
+        lastInteraction.value = System.currentTimeMillis()
+    }
+
     /** Selected main tab; lives here so the Home button can reset it from the activity. */
     val tabState = androidx.compose.runtime.mutableIntStateOf(0)
     var tab: Int

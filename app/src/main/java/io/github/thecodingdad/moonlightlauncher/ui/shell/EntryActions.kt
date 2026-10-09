@@ -21,6 +21,18 @@ class EntryActions(
 ) {
     var pick by mutableStateOf<LaunchPick?>(null)
     var contextMenuFor by mutableStateOf<LibraryEntry?>(null)
+    /** Running session the context menu was opened for (resume card); adds stream options. */
+    var contextSession by mutableStateOf<io.github.thecodingdad.moonlightlauncher.ui.RunningSession?>(null)
+
+    fun contextForSession(session: io.github.thecodingdad.moonlightlauncher.ui.RunningSession) {
+        contextSession = session
+        contextMenuFor = session.entry
+    }
+
+    fun closeContext() {
+        contextMenuFor = null
+        contextSession = null
+    }
 
     /** A on a tile: games open their detail page, apps start right away. */
     fun open(entry: LibraryEntry) {

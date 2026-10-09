@@ -22,6 +22,7 @@ enum class ButtonLayout { XBOX, NINTENDO }
 enum class NetworkCheckMode { OFF, OUTSIDE_HOME, ALWAYS }
 enum class AutoVpnTrigger { HOST_UNREACHABLE, OUTSIDE_HOME }
 
+@kotlinx.serialization.Serializable
 data class LauncherSettings(
     // Appearance
     val homeLayout: HomeLayout = HomeLayout.HERO,

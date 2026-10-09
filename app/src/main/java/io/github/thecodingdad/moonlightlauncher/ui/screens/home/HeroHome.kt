@@ -71,6 +71,7 @@ fun HeroHome(
 ) {
     val actions = LocalEntryActions.current
     var focused by remember { mutableStateOf<LibraryEntry?>(null) }
+    var focusedSession by remember { mutableStateOf<RunningSession?>(null) }
     var shown by remember { mutableStateOf<LibraryEntry?>(null) }
     // Avoid reloading artwork for every item while the user scrolls fast.
     val fallback = rows.running.firstOrNull()?.entry ?: rows.continuePlaying.firstOrNull()
@@ -80,7 +81,10 @@ fun HeroHome(
         shown = focused ?: fallback
     }
     PublishAccentFrom(shown?.coverModel())
-    PadAction(PadButton.X) { focused?.let(actions::context) }
+    PadAction(PadButton.X) {
+        val session = focusedSession
+        if (session != null) callbacks.onRunningMenu(session) else focused?.let(actions::context)
+    }
 
     Box(Modifier.fillMaxSize()) {
         Crossfade(shown, animationSpec = tween(400), label = "hero") { entry ->
@@ -120,7 +124,7 @@ fun HeroHome(
                                     image = session.entry?.heroModel(),
                                     onClick = { callbacks.onResume(session) },
                                     onLongClick = { callbacks.onRunningMenu(session) },
-                                    onFocused = { focused = session.entry; callbacks.onFocusKey(key) },
+                                    onFocused = { focused = session.entry; focusedSession = session; callbacks.onFocusKey(key) },
                                     modifier = Modifier.width(300.dp).height(170.dp)
                                         .restoreFocusIf(callbacks.lastFocusedKey == key || callbacks.lastFocusedKey == null),
                                 )
@@ -128,16 +132,16 @@ fun HeroHome(
                         }
                     }
                 }
-                homeRow("continue", R.string.home_continue, rows.continuePlaying, callbacks, firstRow = rows.running.isEmpty(), onFocus = { focused = it }, actions = actions)
-                homeRow("favorites", R.string.home_favorites, rows.favorites, callbacks, firstRow = rows.running.isEmpty() && rows.continuePlaying.isEmpty(), onFocus = { focused = it }, actions = actions)
+                homeRow("continue", R.string.home_continue, rows.continuePlaying, callbacks, firstRow = rows.running.isEmpty(), onFocus = { focused = it; focusedSession = null }, actions = actions)
+                homeRow("favorites", R.string.home_favorites, rows.favorites, callbacks, firstRow = rows.running.isEmpty() && rows.continuePlaying.isEmpty(), onFocus = { focused = it; focusedSession = null }, actions = actions)
                 if (haRow != null) item(key = "ha") { haRow() }
                 collectionRows.forEach { (name, list) ->
-                    homeRow("collection:$name", 0, list, callbacks, firstRow = false, onFocus = { focused = it }, actions = actions, titleText = name)
+                    homeRow("collection:$name", 0, list, callbacks, firstRow = false, onFocus = { focused = it; focusedSession = null }, actions = actions, titleText = name)
                 }
                 homeRow(
                     "recent", R.string.home_recently_added, rows.recentlyAdded, callbacks,
                     firstRow = rows.running.isEmpty() && rows.continuePlaying.isEmpty() && rows.favorites.isEmpty(),
-                    onFocus = { focused = it }, actions = actions,
+                    onFocus = { focused = it; focusedSession = null }, actions = actions,
                 )
             }
         }

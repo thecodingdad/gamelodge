@@ -54,8 +54,14 @@ class MainActivity : ComponentActivity() {
         super.onStop()
     }
 
+    override fun onUserInteraction() {
+        super.onUserInteraction()
+        vm.touch()
+    }
+
     override fun onResume() {
         super.onResume()
+        vm.touch()
         // Back from a game or stream: close the play session, undo a one-off profile.
         container.launcher.restoreProfile()
         lifecycleScope.launch {

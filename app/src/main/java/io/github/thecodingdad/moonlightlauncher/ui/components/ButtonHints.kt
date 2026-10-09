@@ -90,6 +90,6 @@ private fun glyphFor(button: PadButton, layout: ButtonLayout): Pair<String, Colo
         PadButton.R2 -> "RT" to shoulder
         PadButton.START -> "☰" to shoulder
         PadButton.SELECT -> "⧉" to shoulder
-        PadButton.SELECT_HOLD -> "⧉ ⏵" to shoulder
+        PadButton.SELECT_HOLD -> "⧉" to shoulder
     }
 }

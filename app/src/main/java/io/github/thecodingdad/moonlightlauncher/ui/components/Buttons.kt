@@ -136,12 +136,15 @@ fun HoldToConfirmButton(
             }
             .focusable(interactionSource = interaction),
     ) {
-        Box(
-            Modifier
-                .fillMaxHeight()
-                .fillMaxWidth(progress.value)
-                .background(colors.danger.copy(alpha = 0.55f)),
-        )
+        // The fill follows the button's own size (fillMaxHeight would stretch it in scrolling parents).
+        Box(Modifier.matchParentSize()) {
+            Box(
+                Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth(progress.value)
+                    .background(colors.danger.copy(alpha = 0.55f)),
+            )
+        }
         Row(
             modifier = Modifier.align(Alignment.Center).padding(horizontal = 22.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,

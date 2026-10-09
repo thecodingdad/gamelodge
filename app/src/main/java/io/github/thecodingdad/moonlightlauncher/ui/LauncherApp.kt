@@ -143,7 +143,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
             nav.popBackStack(Routes.MAIN, inclusive = false)
             vm.tab = 0
             entryActions.pick = null
-            entryActions.contextMenuFor = null
+            entryActions.closeContext()
             keyboard.close()
             haPanel = false
             quickMenu = false
@@ -235,9 +235,19 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                         vm.launch(activity, entry, target, profile)
                     },
                 )
+                val runningForMenu by vm.runningSessions.collectAsState()
                 EntryContextMenu(
                     entry = entryActions.contextMenuFor,
-                    onDismiss = { entryActions.contextMenuFor = null },
+                    // A game running on a host gets the stream options, wherever its menu is opened.
+                    session = entryActions.contextSession ?: entryActions.contextMenuFor?.let { e ->
+                        runningForMenu.firstOrNull { it.entry?.item?.id == e.item.id }
+                    },
+                    onResume = { session ->
+                        val entry = session.entry
+                        val target = entry?.remoteTargets?.firstOrNull { it.hostUuid == session.host.uuid && it.appId == session.host.runningAppId }
+                        if (entry != null && target != null) vm.launch(activity, entry, target)
+                    },
+                    onDismiss = entryActions::closeContext,
                     onPlay = entryActions::play,
                     onPlayWith = entryActions::playWith,
                     onDetails = entryActions::showDetail,
@@ -283,6 +293,20 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                     },
                 )
                 ControllerKeyboardHost(keyboard)
+
+                // Screensaver after the configured idle time (also protects the OLED panel).
+                var idle by remember { mutableStateOf(false) }
+                val lastInput by vm.lastInteraction.collectAsState()
+                LaunchedEffect(lastInput, settings.screensaverMinutes) {
+                    idle = false
+                    if (settings.screensaverMinutes <= 0) return@LaunchedEffect
+                    kotlinx.coroutines.delay(settings.screensaverMinutes * 60_000L)
+                    idle = true
+                }
+                if (idle) {
+                    val games by vm.games.collectAsState()
+                    io.github.thecodingdad.moonlightlauncher.ui.shell.Screensaver(games) { idle = false; vm.touch() }
+                }
             }
         }
     }
@@ -349,7 +373,7 @@ private fun MainShell(vm: LauncherViewModel, nav: NavHostController, openStats: 
                                 val target = entry?.remoteTargets?.firstOrNull { it.hostUuid == session.host.uuid && it.appId == session.host.runningAppId }
                                 if (entry != null && target != null) vm.launch(activity, entry, target)
                             },
-                            onRunningMenu = { session -> session.entry?.let(entryActions::context) },
+                            onRunningMenu = entryActions::contextForSession,
                             lastFocusedKey = vm.lastFocusedKey,
                             onFocusKey = { vm.lastFocusedKey = it },
                             animatedArtwork = settings.animatedArtwork,
@@ -359,7 +383,7 @@ private fun MainShell(vm: LauncherViewModel, nav: NavHostController, openStats: 
                                 ButtonHint(PadButton.A, stringResource(R.string.hint_open)),
                                 ButtonHint(PadButton.X, stringResource(R.string.hint_options)),
                                 ButtonHint(PadButton.Y, stringResource(R.string.settings_home_assistant)),
-                                ButtonHint(PadButton.SELECT_HOLD, stringResource(R.string.quick_menu)),
+                                ButtonHint(PadButton.SELECT_HOLD, stringResource(R.string.quick_menu_hold)),
                                 ButtonHint(PadButton.L1, stringResource(R.string.hint_tabs)),
                             ),
                         )
@@ -463,6 +487,7 @@ private fun SettingsPageContent(
         }
         SettingsPageId.LAUNCHER -> LauncherModeSettings(settings, vm::updateSettings)
         SettingsPageId.HOME_ASSISTANT -> HaSettings(settings, vm::updateSettings)
+        SettingsPageId.BACKUP -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.BackupSettings(settings, vm::updateSettings)
         SettingsPageId.VPN -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.VpnSettings(settings, vm::updateSettings)
         else -> SettingsPage(stringResource(R.string.coming_soon)) {}
     }

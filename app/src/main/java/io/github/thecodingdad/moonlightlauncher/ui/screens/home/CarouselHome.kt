@@ -87,6 +87,7 @@ fun CarouselHome(
                     subtitle = stringResource(R.string.running_on, session.host.name),
                     image = session.entry?.heroModel(),
                     onClick = { callbacks.onResume(session) },
+                    onLongClick = { callbacks.onRunningMenu(session) },
                     onFocused = { focused = session.entry },
                     modifier = Modifier.width(340.dp).height(225.dp).restoreFocusIf(callbacks.lastFocusedKey == null),
                 )
