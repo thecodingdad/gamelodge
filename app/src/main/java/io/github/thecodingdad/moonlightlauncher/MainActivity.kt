@@ -33,11 +33,28 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import com.limelight.PcView
 import com.limelight.ProfilesActivity
 import com.limelight.preferences.StreamSettings
 
 class MainActivity : ComponentActivity() {
+    override fun onStart() {
+        super.onStart()
+        container.hosts.startPolling()
+    }
+
+    override fun onStop() {
+        container.hosts.stopPolling()
+        super.onStop()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        lifecycleScope.launch { container.playtime.finishOpenSession() }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
