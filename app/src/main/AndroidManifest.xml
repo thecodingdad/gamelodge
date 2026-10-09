@@ -8,6 +8,8 @@
 
     <!-- Reading the Wi-Fi name (SSID) for "connect VPN outside home Wi-Fi" requires location. -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- System brightness slider in the quick menu (granted by the user in system settings). -->
+    <uses-permission android:name="android.permission.WRITE_SETTINGS" tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <!-- Package visibility (Android 11+): list every launchable app for the library. -->

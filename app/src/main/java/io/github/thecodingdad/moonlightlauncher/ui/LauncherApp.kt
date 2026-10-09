@@ -77,6 +77,7 @@ import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.HostConfigSc
 import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.LauncherModeSettings
 import io.github.thecodingdad.moonlightlauncher.ui.screens.stats.StatsScreen
 import io.github.thecodingdad.moonlightlauncher.ui.shell.CollectionsDialog
+import io.github.thecodingdad.moonlightlauncher.ui.shell.QuickMenu
 import androidx.compose.runtime.LaunchedEffect
 import io.github.thecodingdad.moonlightlauncher.ui.screens.home.HomeCallbacks
 import io.github.thecodingdad.moonlightlauncher.ui.screens.home.HomeRows
@@ -136,6 +137,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
     }
 
     var haPanel by remember { mutableStateOf(false) }
+    var quickMenu by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         vm.homePressed.collect {
             nav.popBackStack(Routes.MAIN, inclusive = false)
@@ -144,6 +146,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
             entryActions.contextMenuFor = null
             keyboard.close()
             haPanel = false
+            quickMenu = false
         }
     }
     var collectionsFor by remember { mutableStateOf<io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry?>(null) }
@@ -263,6 +266,22 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                 // Y opens the smart home panel everywhere (screens can't override it).
                 PadAction(PadButton.Y) { haPanel = !haPanel }
                 HaPanel(visible = haPanel, onDismiss = { haPanel = false }, openSettings = { nav.navigate(Routes.settings(SettingsPageId.HOME_ASSISTANT)) })
+                // Holding Select opens the quick menu everywhere.
+                PadAction(PadButton.SELECT_HOLD) { quickMenu = !quickMenu }
+                val running by vm.runningSessions.collectAsState()
+                QuickMenu(
+                    visible = quickMenu,
+                    onDismiss = { quickMenu = false },
+                    profiles = profiles,
+                    activeProfile = activeProfile,
+                    onProfile = vm::setActiveProfile,
+                    running = running,
+                    onResume = { session ->
+                        val entry = session.entry
+                        val target = entry?.remoteTargets?.firstOrNull { it.hostUuid == session.host.uuid && it.appId == session.host.runningAppId }
+                        if (entry != null && target != null) vm.launch(activity, entry, target)
+                    },
+                )
                 ControllerKeyboardHost(keyboard)
             }
         }
@@ -340,6 +359,7 @@ private fun MainShell(vm: LauncherViewModel, nav: NavHostController, openStats: 
                                 ButtonHint(PadButton.A, stringResource(R.string.hint_open)),
                                 ButtonHint(PadButton.X, stringResource(R.string.hint_options)),
                                 ButtonHint(PadButton.Y, stringResource(R.string.settings_home_assistant)),
+                                ButtonHint(PadButton.SELECT_HOLD, stringResource(R.string.quick_menu)),
                                 ButtonHint(PadButton.L1, stringResource(R.string.hint_tabs)),
                             ),
                         )

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- German translations for Artemis texts shown during a stream that upstream does not
+     translate yet. They override the English Artemis strings for German only. -->
+<resources>
+    <string name="clipboard_sync_unsupported">Dieser Server unterstützt keine Zwischenablage-Synchronisierung. Bitte installiere oder aktualisiere Apollo auf die neueste Version.</string>
+    <string name="error_msg_permission_denied">Zugriff verweigert</string>
+    <string name="error_msg_timeout">Zeitüberschreitung der Verbindung</string>
+    <string name="game_dialog_message_quit_confirm">Stelle sicher, dass kein ungespeicherter Fortschritt verloren geht. Beim Beenden der Sitzung wird die laufende Anwendung geschlossen.</string>
+    <string name="game_dialog_message_server_cmd_empty">Stelle sicher, dass Apollo als Server-Software läuft und diesem Client das Recht „Server-Befehle“ gewährt wurde.</string>
+    <string name="game_dialog_title_quit_confirm">Wirklich beenden?</string>
+    <string name="game_dialog_title_server_cmd_empty">Keine Server-Befehle</string>
+    <string name="game_menu_advanced">Erweitertes Menü</string>
+    <string name="game_menu_cancel">Abbrechen</string>
+    <string name="game_menu_disable_zoom_mode">Schwenken/Zoomen ausschalten</string>
+    <string name="game_menu_disconnect">Trennen</string>
+    <string name="game_menu_enable_zoom_mode">Schwenken/Zoomen einschalten</string>
+    <string name="game_menu_fetch_clipboard">Zwischenablage abrufen</string>
+    <string name="game_menu_quit_session">Sitzung beenden</string>
+    <string name="game_menu_rotate_screen">Bildschirm drehen</string>
+    <string name="game_menu_select_mouse_mode">Mausmodus wählen</string>
+    <string name="game_menu_send_keys">Sondertasten senden</string>
+    <string name="game_menu_send_keys_ctrl_alt_shift_f1">Strg+Alt+Umschalt+F1 (Monitor wechseln)</string>
+    <string name="game_menu_send_keys_ctrl_alt_shift_f12">Strg+Alt+Umschalt+F12 (Monitor wechseln)</string>
+    <string name="game_menu_send_keys_ctrl_alt_tab">Strg + Alt + Tab</string>
+    <string name="game_menu_send_keys_ctrl_v">Strg + V</string>
+    <string name="game_menu_send_keys_shift_tab">Umschalt + Tab (Steam-Overlay)</string>
+    <string name="game_menu_send_keys_win_shift_left">Win + Umschalt + Links (App zwischen Desktops verschieben)</string>
+    <string name="game_menu_server_cmd">Server-Befehle</string>
+    <string name="game_menu_switch_touch_sensitivity_model">Touch-Empfindlichkeit wechseln</string>
+    <string name="game_menu_task_manager">Task-Manager öffnen</string>
+    <string name="game_menu_toggle_floating_button">Schwebende Schaltfläche umschalten</string>
+    <string name="game_menu_toggle_hud">Leistungsanzeige umschalten</string>
+    <string name="game_menu_toggle_keyboard">Bildschirmtastatur anzeigen</string>
+    <string name="game_menu_toggle_keyboard_model">Sondertasten umschalten</string>
+    <string name="game_menu_toggle_mouse_off">Controller-Mausemulation ausschalten</string>
+    <string name="game_menu_toggle_mouse_on">Controller-Mausemulation einschalten</string>
+    <string name="game_menu_toggle_virtual_keyboard_model">Vollständige Bildschirmtastatur umschalten</string>
+    <string name="game_menu_toggle_virtual_model">Bildschirm-Controller umschalten</string>
+    <string name="game_menu_upload_clipboard">Zwischenablage senden</string>
+    <string name="get_clipboard_failed">Zwischenablage konnte nicht abgerufen werden: </string>
+    <string name="get_clipboard_success">Zwischenablage abgerufen</string>
+    <string name="mouse_mode_disabled">Aus</string>
+    <string name="mouse_mode_track_pad_gaming">Trackpad (Gaming / lang drücken zum Ziehen)</string>
+    <string name="mouse_mode_track_pad_natural">Trackpad (natürlich / doppelt tippen zum Ziehen)</string>
+    <string name="pan_zoom_mode_disabled">Schwenken/Zoomen ausgeschaltet</string>
+    <string name="pan_zoom_mode_enabled">Schwenken/Zoomen eingeschaltet</string>
+    <string name="permission_launch_app">Apps starten</string>
+    <string name="quick_menu_title">Schnellmenü</string>
+    <string name="send_clipboard_failed">Zwischenablage konnte nicht gesendet werden: </string>
+    <string name="send_clipboard_success">Zwischenablage gesendet</string>
+    <string name="toggle_local_mouse_cursor">Lokalen Mauszeiger umschalten (physische Maus nötig)</string>
+    <string name="unlocking_or_starting">Der Server startet oder der Computer wird entsperrt, bitte warten …</string>
+    <string name="wrong_import_format">Falsches Importformat, bitte prüfen!</string>
+</resources>

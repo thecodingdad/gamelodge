@@ -357,4 +357,16 @@
     <string name="vpn_home_remove">Home Wi-Fi · A removes it</string>
     <string name="vpn_add_home">Add \\"%s\\" as home Wi-Fi</string>
     <string name="vpn_ssid_unknown">Current Wi-Fi name not available (location off or not on Wi-Fi).</string>
+
+    <!-- Quick menu -->
+    <string name="quick_menu">Quick menu</string>
+    <string name="qm_volume">Volume</string>
+    <string name="qm_brightness">Brightness</string>
+    <string name="qm_brightness_permission">Allow brightness control</string>
+    <string name="qm_wifi">Wi-Fi</string>
+    <string name="qm_bluetooth">Bluetooth</string>
+    <string name="qm_android_settings">Android settings</string>
+    <string name="qm_running_on">%1$s on %2$s</string>
+    <string name="qm_resume">Resume</string>
+    <string name="qm_quit_game">Quit game</string>
 </resources>

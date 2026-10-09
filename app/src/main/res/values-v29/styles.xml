@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Overrides Artemis' base theme (same name, app module wins) so every Artemis dialog shown
+     during a stream - game menu, quit confirmation, connection errors - uses the launcher look. -->
+<resources>
+    <style name="AppBaseTheme" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:forceDarkAllowed">false</item>
+        <item name="colorPrimary">@color/launcher_accent</item>
+        <item name="colorSurface">@color/launcher_surface</item>
+        <item name="android:colorAccent">@color/launcher_accent</item>
+        <item name="android:alertDialogTheme">@style/LauncherDialog</item>
+        <item name="alertDialogTheme">@style/LauncherDialog</item>
+    </style>
+
+    <style name="SettingsTheme" parent="AppTheme" />
+
+    <style name="LauncherDialog" parent="android:Theme.Material.Dialog.Alert">
+        <item name="android:windowBackground">@drawable/launcher_dialog_background</item>
+        <item name="android:colorBackground">@color/launcher_surface</item>
+        <item name="android:colorAccent">@color/launcher_accent</item>
+        <item name="android:colorPrimary">@color/launcher_accent</item>
+        <item name="android:buttonBarButtonStyle">@style/LauncherDialogButton</item>
+        <item name="android:buttonBarPositiveButtonStyle">@style/LauncherDialogButton</item>
+        <item name="android:buttonBarNegativeButtonStyle">@style/LauncherDialogButton</item>
+        <item name="android:buttonBarNeutralButtonStyle">@style/LauncherDialogButton</item>
+        <item name="android:listSelector">@drawable/launcher_dialog_button</item>
+        <item name="android:textColorPrimary">@color/launcher_on_surface</item>
+        <item name="android:textColorSecondary">@color/launcher_on_surface_muted</item>
+        <item name="android:textColorAlertDialogListItem">@color/launcher_on_surface</item>
+        <item name="android:textAppearanceLarge">@style/LauncherDialogTitle</item>
+        <item name="android:textAppearanceListItem">@style/LauncherDialogItem</item>
+        <item name="android:listPreferredItemHeight">64dp</item>
+        <item name="android:windowMinWidthMajor">50%</item>
+        <item name="android:windowMinWidthMinor">80%</item>
+        <item name="android:backgroundDimAmount">0.75</item>
+    </style>
+
+    <style name="LauncherDialogButton" parent="android:Widget.Material.Button.Borderless.Colored">
+        <item name="android:textColor">@color/launcher_accent</item>
+        <item name="android:textSize">17sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:minHeight">52dp</item>
+        <item name="android:paddingStart">22dp</item>
+        <item name="android:paddingEnd">22dp</item>
+        <item name="android:background">@drawable/launcher_dialog_button</item>
+    </style>
+
+    <style name="LauncherDialogTitle" parent="android:TextAppearance.Material.Title">
+        <item name="android:textSize">24sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/launcher_on_surface</item>
+    </style>
+
+    <style name="LauncherDialogItem" parent="android:TextAppearance.Material.Subhead">
+        <item name="android:textSize">19sp</item>
+        <item name="android:textColor">@color/launcher_on_surface</item>
+    </style>
+</resources>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dialog button background: clear focus ring for controller navigation, ripple for touch. -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android" android:color="#33FFFFFF">
+    <item>
+        <selector>
+            <item android:state_focused="true">
+                <shape android:shape="rectangle">
+                    <solid android:color="#26FFFFFF" />
+                    <stroke android:width="3dp" android:color="@color/launcher_on_surface" />
+                    <corners android:radius="22dp" />
+                </shape>
+            </item>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="@android:color/transparent" />
+                    <corners android:radius="22dp" />
+                </shape>
+            </item>
+        </selector>
+    </item>
+</ripple>

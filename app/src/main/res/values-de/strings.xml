@@ -355,4 +355,16 @@
     <string name="vpn_home_remove">Heim-WLAN · A entfernt es</string>
     <string name="vpn_add_home">„%s“ als Heim-WLAN hinzufügen</string>
     <string name="vpn_ssid_unknown">Aktueller WLAN-Name nicht verfügbar (Standort aus oder kein WLAN).</string>
+
+    <!-- Quick menu -->
+    <string name="quick_menu">Schnellmenü</string>
+    <string name="qm_volume">Lautstärke</string>
+    <string name="qm_brightness">Helligkeit</string>
+    <string name="qm_brightness_permission">Helligkeitssteuerung erlauben</string>
+    <string name="qm_wifi">WLAN</string>
+    <string name="qm_bluetooth">Bluetooth</string>
+    <string name="qm_android_settings">Android-Einstellungen</string>
+    <string name="qm_running_on">%1$s auf %2$s</string>
+    <string name="qm_resume">Fortsetzen</string>
+    <string name="qm_quit_game">Spiel beenden</string>
 </resources>
