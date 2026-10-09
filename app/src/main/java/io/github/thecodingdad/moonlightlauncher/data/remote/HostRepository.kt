@@ -37,8 +37,11 @@ data class HostState(
     val macAddress: String?,
     val virtualDisplaySupported: Boolean,
     val serverCommands: List<String>,
+    /** Apollo/Vibepollo permission bits for this client; -1 when unknown (Sunshine). */
+    val permission: Int,
     val details: ComputerDetails,
 ) {
+    val missingPermissions: List<HostPermission> get() = HostPermission.missingEssential(permission)
     val isStreaming: Boolean get() = runningAppId != 0
 }
 
@@ -142,6 +145,7 @@ class HostRepository(
             macAddress = details.macAddress,
             virtualDisplaySupported = details.vDisplaySupported,
             serverCommands = details.serverCommands?.toList().orEmpty(),
+            permission = details.permission,
             details = details,
         )
         _hosts.update { it + (uuid to state) }

@@ -152,6 +152,8 @@ fun LaunchOverlay(
     onDismiss: () -> Unit,
     onRetry: (LibraryEntry) -> Unit,
     onConfirmQuit: (LaunchState.ConfirmQuitRunning) -> Unit,
+    profiles: List<StreamProfile>,
+    onContinueDespiteNetwork: (LaunchState.NetworkWarning, StreamProfile?) -> Unit,
 ) {
     AnimatedVisibility(state is LaunchState.Working, enter = fadeIn(), exit = fadeOut()) {
         val working = state as? LaunchState.Working ?: return@AnimatedVisibility
@@ -175,6 +177,28 @@ fun LaunchOverlay(
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             LauncherButton(stringResource(R.string.action_retry), onClick = { onRetry(failed.entry) }, primary = true)
             LauncherButton(stringResource(R.string.action_close), onClick = onDismiss)
+        }
+    }
+
+    val warning = state as? LaunchState.NetworkWarning
+    Modal(visible = warning != null, onDismiss = onDismiss, title = stringResource(R.string.network_warning_title)) {
+        if (warning == null) return@Modal
+        Text(
+            stringResource(R.string.network_warning_message, warning.result.rttMs, warning.result.jitterMs),
+            style = MaterialTheme.typography.bodyLarge, color = LauncherTheme.colors.onSurface,
+        )
+        Spacer(Modifier.height(18.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            LauncherButton(
+                stringResource(R.string.network_continue), onClick = { onContinueDespiteNetwork(warning, warning.override) },
+                primary = true, modifier = Modifier.fillMaxWidth(), icon = Icons.Filled.PlayArrow,
+            )
+            profiles.forEach { p ->
+                LauncherButton(
+                    stringResource(R.string.network_start_with, p.name), onClick = { onContinueDespiteNetwork(warning, p) },
+                    modifier = Modifier.fillMaxWidth(), icon = Icons.Filled.Tune,
+                )
+            }
         }
     }
 
@@ -211,6 +235,8 @@ private fun stepText(step: LaunchStep) = stringResource(
 private fun errorText(error: LaunchError) = stringResource(
     when (error) {
         LaunchError.HOST_OFFLINE -> R.string.error_host_offline
+        LaunchError.WAKE_FAILED -> R.string.error_wake_failed
+        LaunchError.NO_LAUNCH_PERMISSION -> R.string.error_no_launch_permission
         LaunchError.NOT_PAIRED -> R.string.error_not_paired
         LaunchError.APP_NOT_INSTALLED -> R.string.error_app_missing
         LaunchError.START_FAILED -> R.string.error_start_failed

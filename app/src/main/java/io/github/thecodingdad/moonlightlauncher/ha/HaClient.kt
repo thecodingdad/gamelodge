@@ -78,7 +78,9 @@ class HaClient(
     private var subscriptionId = -1
 
     fun start() {
-        if (loop?.isActive == true) return
+        // A loop sitting in its reconnect backoff is restarted so the user doesn't wait a minute.
+        if (loop?.isActive == true && _connection.value != HaConnection.DISCONNECTED) return
+        loop?.cancel()
         loop = scope.launch {
             var backoff = 2_000L
             while (true) {
@@ -124,10 +126,12 @@ class HaClient(
         socket = http.newWebSocket(Request.Builder().url(wsUrl).build(), object : WebSocketListener() {
             override fun onMessage(webSocket: WebSocket, text: String) = handle(webSocket, text, token)
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+                Log.w("HA websocket failure (HTTP ${response?.code})", t)
                 failPending()
                 closed.complete(Unit)
             }
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+                Log.i("HA websocket closed: $code $reason")
                 failPending()
                 closed.complete(Unit)
             }

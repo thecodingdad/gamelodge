@@ -110,8 +110,15 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     /** Emits when the Home button is pressed while the launcher is the home app. */
     val homePressed = kotlinx.coroutines.flow.MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
-    fun launch(activity: Activity, entry: LibraryEntry, target: LaunchTargetEntity, override: StreamProfile? = null, quitRunning: Boolean = false) {
-        viewModelScope.launch { c.launcher.launch(activity, entry, target, override, quitRunning) }
+    fun launch(
+        activity: Activity,
+        entry: LibraryEntry,
+        target: LaunchTargetEntity,
+        override: StreamProfile? = null,
+        quitRunning: Boolean = false,
+        skipNetworkCheck: Boolean = false,
+    ) {
+        viewModelScope.launch { c.launcher.launch(activity, entry, target, override, quitRunning, skipNetworkCheck) }
     }
 
     fun dismissLaunch() = c.launcher.dismiss()

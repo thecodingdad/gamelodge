@@ -292,4 +292,47 @@
     <string name="ha_on_home">On start screen</string>
     <string name="ha_not_on_home">Not on start screen</string>
     <string name="ha_events_help">For automations the launcher fires the events moonlight_launcher_stream_started and moonlight_launcher_stream_stopped (with game, host and profile).</string>
+
+    <!-- Phase 6: host features -->
+    <string name="error_wake_failed">The host did not wake up. Check the wake settings of the host (Wake-on-LAN / Home Assistant).</string>
+    <string name="error_no_launch_permission">This device may not start apps on the host. Allow \\"Launch apps\\" (and \\"Controller input\\") for this client in the host\'s web interface (Apollo/Vibepollo → Clients).</string>
+    <string name="network_warning_title">Weak connection</string>
+    <string name="network_warning_message">Latency %1$d ms, jitter %2$d ms. Streaming may stutter; a lighter profile helps.</string>
+    <string name="network_continue">Start anyway</string>
+    <string name="network_start_with">Start with \\"%s\\"</string>
+
+    <!-- HA additions -->
+    <string name="ha_login_first">Sign in to Home Assistant first.</string>
+
+    <!-- Host config, controllers -->
+    <string name="perm_launch">Launch apps</string>
+    <string name="perm_controller">Controller input</string>
+    <string name="perm_list">List apps</string>
+    <string name="perm_other">Other</string>
+    <string name="perm_missing">The host does not allow: %s. Enable it for this client in the host\'s web interface (Apollo/Vibepollo → Clients).</string>
+    <string name="host_wake_section">Wake up</string>
+    <string name="host_wake_method">Wake method</string>
+    <string name="host_wake_method_sub">Used automatically when you start a game on an offline host</string>
+    <string name="wake_none">None</string>
+    <string name="wake_wol">Wake-on-LAN</string>
+    <string name="wake_ha">Home Assistant</string>
+    <string name="wake_both">Both</string>
+    <string name="host_ha_wake">Home Assistant wake action</string>
+    <string name="host_power_section">Power</string>
+    <string name="host_ha_sleep">Sleep action</string>
+    <string name="host_ha_shutdown">Shut down action</string>
+    <string name="host_ha_restart">Restart action</string>
+    <string name="host_auto_sleep">Put host to sleep after streaming</string>
+    <string name="host_auto_sleep_sub">After the last stream ended (uses the sleep or shut down action)</string>
+    <string name="host_pick_action">Choose a Home Assistant entity</string>
+    <string name="not_set">Not set</string>
+    <string name="power_sleep">Sleep</string>
+    <string name="power_restart">Restart</string>
+    <string name="power_shutdown">Shut down</string>
+    <string name="controllers_intro">In a stream every controller is passed to the host as its own gamepad. The first controller to press a button becomes player 1.</string>
+    <string name="controllers_none">No controllers connected.</string>
+    <string name="controller_external">External</string>
+    <string name="controller_builtin">Built-in</string>
+    <string name="controller_battery">Battery %d %%</string>
+    <string name="controller_vibrate_test">A = vibration test</string>
 </resources>

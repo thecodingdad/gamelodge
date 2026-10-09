@@ -290,4 +290,47 @@
     <string name="ha_on_home">Auf Startbildschirm</string>
     <string name="ha_not_on_home">Nicht auf Startbildschirm</string>
     <string name="ha_events_help">Für Automationen sendet der Launcher die Events moonlight_launcher_stream_started und moonlight_launcher_stream_stopped (mit Spiel, Host und Profil).</string>
+
+    <!-- Phase 6: host features -->
+    <string name="error_wake_failed">Der Host ist nicht aufgewacht. Prüfe die Aufweck-Einstellungen des Hosts (Wake-on-LAN / Home Assistant).</string>
+    <string name="error_no_launch_permission">Dieses Gerät darf auf dem Host keine Apps starten. Erlaube in der Weboberfläche des Hosts (Apollo/Vibepollo → Clients) für diesen Client „Apps starten“ (und „Controller-Eingabe“).</string>
+    <string name="network_warning_title">Schwache Verbindung</string>
+    <string name="network_warning_message">Latenz %1$d ms, Jitter %2$d ms. Der Stream könnte ruckeln, ein leichteres Profil hilft.</string>
+    <string name="network_continue">Trotzdem starten</string>
+    <string name="network_start_with">Mit „%s“ starten</string>
+
+    <!-- HA additions -->
+    <string name="ha_login_first">Melde dich zuerst bei Home Assistant an.</string>
+
+    <!-- Host config, controllers -->
+    <string name="perm_launch">Apps starten</string>
+    <string name="perm_controller">Controller-Eingabe</string>
+    <string name="perm_list">Apps auflisten</string>
+    <string name="perm_other">Sonstiges</string>
+    <string name="perm_missing">Der Host erlaubt nicht: %s. Gib es in der Weboberfläche des Hosts für diesen Client frei (Apollo/Vibepollo → Clients).</string>
+    <string name="host_wake_section">Aufwecken</string>
+    <string name="host_wake_method">Aufweck-Methode</string>
+    <string name="host_wake_method_sub">Wird automatisch genutzt, wenn du ein Spiel auf einem ausgeschalteten Host startest</string>
+    <string name="wake_none">Keine</string>
+    <string name="wake_wol">Wake-on-LAN</string>
+    <string name="wake_ha">Home Assistant</string>
+    <string name="wake_both">Beides</string>
+    <string name="host_ha_wake">Home-Assistant-Aktion zum Aufwecken</string>
+    <string name="host_power_section">Energie</string>
+    <string name="host_ha_sleep">Aktion für Schlafen</string>
+    <string name="host_ha_shutdown">Aktion für Herunterfahren</string>
+    <string name="host_ha_restart">Aktion für Neustart</string>
+    <string name="host_auto_sleep">Host nach dem Streamen schlafen legen</string>
+    <string name="host_auto_sleep_sub">Nach dem Ende des letzten Streams (nutzt die Schlaf- oder Herunterfahren-Aktion)</string>
+    <string name="host_pick_action">Home-Assistant-Entität wählen</string>
+    <string name="not_set">Nicht festgelegt</string>
+    <string name="power_sleep">Schlafen</string>
+    <string name="power_restart">Neu starten</string>
+    <string name="power_shutdown">Herunterfahren</string>
+    <string name="controllers_intro">Im Stream wird jeder Controller als eigenes Gamepad an den Host gereicht. Der Controller, der zuerst eine Taste drückt, wird Spieler 1.</string>
+    <string name="controllers_none">Keine Controller verbunden.</string>
+    <string name="controller_external">Extern</string>
+    <string name="controller_builtin">Eingebaut</string>
+    <string name="controller_battery">Akku %d %%</string>
+    <string name="controller_vibrate_test">A = Vibrationstest</string>
 </resources>

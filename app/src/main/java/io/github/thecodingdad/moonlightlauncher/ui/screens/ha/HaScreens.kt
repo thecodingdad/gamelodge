@@ -84,6 +84,7 @@ fun HaPanel(visible: Boolean, onDismiss: () -> Unit, openSettings: () -> Unit) {
     val entities by ha.client.entities.collectAsState()
     val connection by ha.client.connection.collectAsState()
 
+    androidx.compose.runtime.LaunchedEffect(visible) { if (visible) ha.client.start() }
     SidePanel(visible = visible, onDismiss = onDismiss, width = 470.dp) {
         Text(stringResource(R.string.settings_home_assistant), style = MaterialTheme.typography.headlineSmall, color = LauncherTheme.colors.onSurface)
         Text(connectionLabel(connection), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
@@ -124,6 +125,7 @@ fun HaSettings(settings: LauncherSettings, update: ((LauncherSettings) -> Launch
     var busy by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var picking by remember { mutableStateOf(false) }
+    androidx.compose.runtime.LaunchedEffect(Unit) { ha.client.start() }
 
     SettingsPage(stringResource(R.string.settings_home_assistant)) {
         InfoRow(stringResource(R.string.ha_status), connectionLabel(connection))
@@ -165,9 +167,15 @@ fun HaSettings(settings: LauncherSettings, update: ((LauncherSettings) -> Launch
         }
         LauncherButton(
             stringResource(R.string.ha_add_tile), icon = Icons.Filled.Add,
-            enabled = connection == HaConnection.CONNECTED,
-            onClick = { picking = true },
+            enabled = ha.auth.isLoggedIn,
+            onClick = {
+                ha.client.start()
+                picking = true
+            },
         )
+        if (!ha.auth.isLoggedIn) {
+            Text(stringResource(R.string.ha_login_first), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+        }
         Text(stringResource(R.string.ha_events_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
     }
 
@@ -204,6 +212,13 @@ private fun EntityPicker(visible: Boolean, entities: List<HaEntity>, onPick: (Ha
     Modal(visible = visible, onDismiss = onDismiss, title = stringResource(R.string.ha_add_tile), maxWidth = 760.dp) {
         LauncherTextField(stringResource(R.string.hint_search), query, { query = it })
         Spacer(Modifier.height(12.dp))
+        if (entities.isEmpty()) {
+            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                CircularProgressIndicator(color = LauncherTheme.colors.accent)
+                Text("  " + stringResource(R.string.ha_connecting), color = LauncherTheme.colors.onSurfaceMuted)
+            }
+            return@Modal
+        }
         val q = TitleNormalizer.normalize(query)
         val shown = entities
             .filter { q.isEmpty() || TitleNormalizer.normalize(it.name).contains(q) || it.id.contains(query.trim(), ignoreCase = true) }

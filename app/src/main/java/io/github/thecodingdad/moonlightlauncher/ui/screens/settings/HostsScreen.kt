@@ -206,6 +206,7 @@ private fun HostCard(
                 )
             }
         }
+        if (host.paired) MissingPermissionsNote(host)
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             if (!host.paired) {
                 LauncherButton(

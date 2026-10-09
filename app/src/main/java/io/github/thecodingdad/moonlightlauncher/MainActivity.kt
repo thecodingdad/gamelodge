@@ -62,7 +62,9 @@ class MainActivity : ComponentActivity() {
             val closed = container.playtime.finishOpenSession()
             if (closed != null && closed.targetId.startsWith("remote:")) {
                 val title = container.database.libraryDao().getItem(closed.itemId)?.title
-                val host = container.database.libraryDao().getTarget(closed.targetId)?.hostName
+                val target = container.database.libraryDao().getTarget(closed.targetId)
+                val host = target?.hostName
+                target?.hostUuid?.let { container.autoSleep.scheduleAfterStream(it) }
                 container.ha.fireLauncherEvent(
                     "stream_stopped",
                     mapOf("game" to title, "host" to host, "duration_seconds" to (((closed.endedAt ?: 0) - closed.startedAt) / 1000).toString()),

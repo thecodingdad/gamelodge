@@ -8,33 +8,44 @@ import io.github.thecodingdad.moonlightlauncher.AppContainer
 import io.github.thecodingdad.moonlightlauncher.data.db.LaunchTargetEntity
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry
 import io.github.thecodingdad.moonlightlauncher.data.db.TargetType
+import io.github.thecodingdad.moonlightlauncher.data.remote.HostPermission
 import io.github.thecodingdad.moonlightlauncher.data.remote.HostState
 import io.github.thecodingdad.moonlightlauncher.data.remote.HostStatus
+import io.github.thecodingdad.moonlightlauncher.data.settings.NetworkCheckMode
 import io.github.thecodingdad.moonlightlauncher.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import java.util.UUID
 
 /** What the launch overlay shows. */
 sealed interface LaunchState {
     data object Idle : LaunchState
     data class Working(val entry: LibraryEntry, val step: LaunchStep) : LaunchState
-    data class Failed(val entry: LibraryEntry, val reason: LaunchError) : LaunchState
+    data class Failed(val entry: LibraryEntry, val reason: LaunchError, val detail: String? = null) : LaunchState
     /** Another app runs on the host; the user must confirm quitting it. */
     data class ConfirmQuitRunning(val entry: LibraryEntry, val target: LaunchTargetEntity, val runningName: String, val override: StreamProfile?) : LaunchState
+    /** The connection looks weak; the user may continue or pick a lighter profile. */
+    data class NetworkWarning(val entry: LibraryEntry, val target: LaunchTargetEntity, val result: NetworkCheckResult, val override: StreamProfile?) : LaunchState
 }
 
 enum class LaunchStep { WAKING_HOST, CONNECTING_VPN, CHECKING_NETWORK, QUITTING_RUNNING, STARTING }
 
-enum class LaunchError { HOST_OFFLINE, NOT_PAIRED, APP_NOT_INSTALLED, START_FAILED, QUIT_FAILED }
+enum class LaunchError { HOST_OFFLINE, WAKE_FAILED, NOT_PAIRED, NO_LAUNCH_PERMISSION, APP_NOT_INSTALLED, START_FAILED, QUIT_FAILED }
+
+/** Optional VPN hook, filled by the VPN module: connects if needed, returns true when it did. */
+fun interface VpnAutoConnect {
+    suspend fun connectIfNeeded(host: HostState?): Boolean
+}
 
 /**
- * Starts local apps and streams. Pre-launch steps (wake, VPN, network check) plug in here
- * so every entry point (home, library, detail, resume card) behaves identically.
+ * Starts local apps and streams. All pre-launch steps (wake, VPN, permissions, network check)
+ * live here so every entry point (home, library, detail, resume card) behaves identically.
  */
 class LaunchCoordinator(private val container: AppContainer) {
     private val _state = MutableStateFlow<LaunchState>(LaunchState.Idle)
@@ -43,24 +54,27 @@ class LaunchCoordinator(private val container: AppContainer) {
     /** Profile that was active before a one-off "start with…"; restored when we return. */
     private var profileToRestore: Pair<Boolean, UUID?> = false to null
 
-    /** Hooks for later steps (host wake, VPN, network check); each may suspend or fail. */
-    var preStreamSteps: List<suspend (LibraryEntry, HostState?, (LaunchStep) -> Unit) -> LaunchError?> = emptyList()
+    var vpn: VpnAutoConnect = VpnAutoConnect { false }
 
     fun dismiss() {
         _state.value = LaunchState.Idle
     }
 
-    /** [override]: profile for this launch only ("start with…"); null keeps the active profile. */
+    /**
+     * [override]: profile for this launch only ("start with…"); null keeps the active profile.
+     * [quitRunning]/[skipNetworkCheck]: answers to earlier confirmation dialogs.
+     */
     suspend fun launch(
         activity: Activity,
         entry: LibraryEntry,
         target: LaunchTargetEntity,
         override: StreamProfile? = null,
         quitRunning: Boolean = false,
+        skipNetworkCheck: Boolean = false,
     ) {
         when (target.type) {
             TargetType.LOCAL -> launchLocal(activity, entry, target)
-            TargetType.REMOTE -> launchRemote(activity, entry, target, override, quitRunning)
+            TargetType.REMOTE -> launchRemote(activity, entry, target, override, quitRunning, skipNetworkCheck)
         }
     }
 
@@ -75,25 +89,33 @@ class LaunchCoordinator(private val container: AppContainer) {
         _state.value = LaunchState.Idle
     }
 
+    private fun host(uuid: String) = container.hosts.hosts.value[uuid]
+
     private suspend fun launchRemote(
         activity: Activity,
         entry: LibraryEntry,
         target: LaunchTargetEntity,
         override: StreamProfile?,
         quitRunning: Boolean,
+        skipNetworkCheck: Boolean,
     ) {
         val hostUuid = target.hostUuid ?: return
-        var host = container.hosts.hosts.value[hostUuid]
+        val appId = target.appId ?: return
 
-        for (step in preStreamSteps) {
-            val error = step(entry, host) { s -> _state.value = LaunchState.Working(entry, s) }
-            if (error != null) {
-                _state.value = LaunchState.Failed(entry, error)
-                return
+        // 1. Wake the host when it is offline.
+        if (host(hostUuid)?.status != HostStatus.ONLINE) {
+            _state.value = LaunchState.Working(entry, LaunchStep.WAKING_HOST)
+            if (!wakeAndWait(hostUuid)) {
+                // 2. Maybe it's only unreachable from here: try the VPN, then wait again.
+                _state.value = LaunchState.Working(entry, LaunchStep.CONNECTING_VPN)
+                val vpnUp = runCatching { vpn.connectIfNeeded(host(hostUuid)) }.getOrDefault(false)
+                if (!vpnUp || !waitOnline(hostUuid, 30_000)) {
+                    _state.value = LaunchState.Failed(entry, LaunchError.HOST_OFFLINE)
+                    return
+                }
             }
-            host = container.hosts.hosts.value[hostUuid]
         }
-
+        val host = host(hostUuid)
         if (host == null || host.status != HostStatus.ONLINE || host.details.activeAddress == null) {
             _state.value = LaunchState.Failed(entry, LaunchError.HOST_OFFLINE)
             return
@@ -102,9 +124,25 @@ class LaunchCoordinator(private val container: AppContainer) {
             _state.value = LaunchState.Failed(entry, LaunchError.NOT_PAIRED)
             return
         }
+        // 3. Permissions (Apollo/Vibepollo): resuming the running app only needs "view".
+        val resuming = host.isStreaming && host.runningAppId == appId
+        if (!resuming && !HostPermission.has(host.permission, HostPermission.LAUNCH_APPS)) {
+            _state.value = LaunchState.Failed(entry, LaunchError.NO_LAUNCH_PERMISSION)
+            return
+        }
 
-        val appId = target.appId ?: return
-        if (host.isStreaming && host.runningAppId != appId) {
+        // 4. Network check.
+        if (!skipNetworkCheck && shouldCheckNetwork(host)) {
+            _state.value = LaunchState.Working(entry, LaunchStep.CHECKING_NETWORK)
+            val result = NetworkCheck.measure(container.hosts, host)
+            if (result != null && !result.isGood) {
+                _state.value = LaunchState.NetworkWarning(entry, target, result, override)
+                return
+            }
+        }
+
+        // 5. Another app is running.
+        if (host.isStreaming && !resuming) {
             if (!quitRunning) {
                 val runningName = container.hosts.appLists.value[hostUuid]
                     ?.firstOrNull { it.app.appId == host.runningAppId }?.app?.appName ?: "?"
@@ -122,6 +160,7 @@ class LaunchCoordinator(private val container: AppContainer) {
 
         _state.value = LaunchState.Working(entry, LaunchStep.STARTING)
         if (override != null) applyOneOffProfile(override.uuid)
+        container.autoSleep.cancel(hostUuid)
 
         try {
             val binder = container.hosts.awaitBinder()
@@ -142,8 +181,30 @@ class LaunchCoordinator(private val container: AppContainer) {
         } catch (e: Exception) {
             Log.e("Stream start failed", e)
             restoreProfile()
-            _state.value = LaunchState.Failed(entry, LaunchError.START_FAILED)
+            _state.value = LaunchState.Failed(entry, LaunchError.START_FAILED, e.message)
         }
+    }
+
+    /** Sends the configured wake actions and waits until the host answers. */
+    private suspend fun wakeAndWait(hostUuid: String): Boolean {
+        if (!container.hostPower.wake(hostUuid)) return false
+        return waitOnline(hostUuid, 120_000)
+    }
+
+    private suspend fun waitOnline(hostUuid: String, timeoutMs: Long): Boolean {
+        container.hosts.invalidate(hostUuid)
+        return withTimeoutOrNull(timeoutMs) {
+            container.hosts.hosts.first { it[hostUuid]?.status == HostStatus.ONLINE }
+        } != null
+    }
+
+    private suspend fun shouldCheckNetwork(host: HostState): Boolean = when (container.settings.current().networkCheck) {
+        NetworkCheckMode.OFF -> false
+        NetworkCheckMode.ALWAYS -> true
+        // Using the host's remote address means we are not in the same network.
+        NetworkCheckMode.OUTSIDE_HOME -> host.details.activeAddress != null &&
+            host.details.activeAddress == host.details.remoteAddress &&
+            host.details.remoteAddress != host.details.localAddress
     }
 
     private fun applyOneOffProfile(profile: UUID?) {

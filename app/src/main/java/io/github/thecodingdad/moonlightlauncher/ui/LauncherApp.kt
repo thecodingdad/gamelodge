@@ -72,6 +72,8 @@ import io.github.thecodingdad.moonlightlauncher.ui.screens.home.GridHome
 import io.github.thecodingdad.moonlightlauncher.ui.screens.home.HeroHome
 import io.github.thecodingdad.moonlightlauncher.ui.screens.profiles.ProfileEditor
 import io.github.thecodingdad.moonlightlauncher.ui.screens.profiles.ProfilesList
+import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.ControllersScreen
+import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.HostConfigScreen
 import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.LauncherModeSettings
 import io.github.thecodingdad.moonlightlauncher.ui.screens.stats.StatsScreen
 import io.github.thecodingdad.moonlightlauncher.ui.shell.CollectionsDialog
@@ -103,6 +105,9 @@ private object Routes {
     const val SETTINGS = "settings/{page}"
     const val REVIEW = "review"
     const val STATS = "stats"
+    const val HOST = "host/{uuid}"
+    const val CONTROLLERS = "controllers"
+    fun host(uuid: String) = "host/$uuid"
     const val PROFILE = "profile/{uuid}"
     fun profile(uuid: java.util.UUID?) = "profile/${uuid ?: "base"}"
     fun detail(id: String) = "detail/$id"
@@ -184,9 +189,17 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                                 page, vm,
                                 openReview = { nav.navigate(Routes.REVIEW) },
                                 openProfile = { nav.navigate(Routes.profile(it)) },
+                                openHost = { nav.navigate(Routes.host(it)) },
+                                openControllers = { nav.navigate(Routes.CONTROLLERS) },
                             )
                         }
                     }
+                    composable(Routes.HOST) { backStack ->
+                        val uuid = backStack.arguments?.getString("uuid").orEmpty()
+                        val hosts by vm.hosts.collectAsState()
+                        ShellFrame(hints) { hosts[uuid]?.let { HostConfigScreen(it) } }
+                    }
+                    composable(Routes.CONTROLLERS) { ShellFrame(hints) { ControllersScreen() } }
                     composable(Routes.STATS) {
                         val all by vm.allEntries.collectAsState()
                         val sessions by vm.finishedSessions.collectAsState()
@@ -244,6 +257,8 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                     onDismiss = vm::dismissLaunch,
                     onRetry = { entry -> vm.dismissLaunch(); entryActions.play(entry) },
                     onConfirmQuit = { c -> vm.launch(activity, c.entry, c.target, c.override, quitRunning = true) },
+                    profiles = profiles,
+                    onContinueDespiteNetwork = { w, profile -> vm.launch(activity, w.entry, w.target, profile, skipNetworkCheck = true) },
                 )
                 // Y opens the smart home panel everywhere (screens can't override it).
                 PadAction(PadButton.Y) { haPanel = !haPanel }
@@ -398,7 +413,14 @@ private fun EmptyHome(openSettings: () -> Unit) {
 }
 
 @Composable
-private fun SettingsPageContent(page: SettingsPageId, vm: LauncherViewModel, openReview: () -> Unit, openProfile: (java.util.UUID?) -> Unit) {
+private fun SettingsPageContent(
+    page: SettingsPageId,
+    vm: LauncherViewModel,
+    openReview: () -> Unit,
+    openProfile: (java.util.UUID?) -> Unit,
+    openHost: (String) -> Unit,
+    openControllers: () -> Unit,
+) {
     val settings by vm.settings.collectAsState()
     val hosts by vm.hosts.collectAsState()
     val all by vm.allEntries.collectAsState()
@@ -409,9 +431,9 @@ private fun SettingsPageContent(page: SettingsPageId, vm: LauncherViewModel, ope
             reviewCount = all.count { it.item.metadataState == MetadataState.REVIEW },
             openReview = openReview,
         )
-        SettingsPageId.HOSTS -> HostsSettings(hosts.values.toList(), openHostConfig = {})
+        SettingsPageId.HOSTS -> HostsSettings(hosts.values.toList(), openHostConfig = { openHost(it.uuid) })
         SettingsPageId.APPEARANCE -> AppearanceSettings(settings, vm::updateSettings)
-        SettingsPageId.CONTROLS -> ControlsSettings(settings, vm::updateSettings, openControllers = {})
+        SettingsPageId.CONTROLS -> ControlsSettings(settings, vm::updateSettings, openControllers = openControllers)
         SettingsPageId.LANGUAGE -> LanguageSettings(settings, vm::updateSettings)
         SettingsPageId.ABOUT -> AboutSettings()
         SettingsPageId.PROFILES -> {

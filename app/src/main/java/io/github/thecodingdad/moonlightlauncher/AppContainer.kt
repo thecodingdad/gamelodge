@@ -11,6 +11,8 @@ import io.github.thecodingdad.moonlightlauncher.data.remote.HostActions
 import io.github.thecodingdad.moonlightlauncher.data.remote.HostRepository
 import io.github.thecodingdad.moonlightlauncher.data.settings.SecretStore
 import io.github.thecodingdad.moonlightlauncher.data.settings.SettingsRepository
+import io.github.thecodingdad.moonlightlauncher.stream.AutoSleep
+import io.github.thecodingdad.moonlightlauncher.stream.HostPower
 import io.github.thecodingdad.moonlightlauncher.stream.LaunchCoordinator
 import io.github.thecodingdad.moonlightlauncher.ha.HaAuth
 import io.github.thecodingdad.moonlightlauncher.ha.HaClient
@@ -55,4 +57,6 @@ class AppContainer(context: Context) {
         val wsHttp = http.newBuilder().pingInterval(30, TimeUnit.SECONDS).build()
         HaRepository(HaClient(wsHttp, haAuth, { haAuth.baseUrl }, scope), haAuth, database)
     }
+    val hostPower: HostPower by lazy { HostPower(database.hostConfigDao(), hosts, hostActions, ha) }
+    val autoSleep: AutoSleep by lazy { AutoSleep(appContext, database.hostConfigDao()) }
 }
