@@ -2,6 +2,7 @@ package io.github.thecodingdad.moonlightlauncher.ui
 
 import android.app.Activity
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -113,7 +114,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
     val nav = rememberNavController()
     val keyboard = remember { KeyboardController() }
     val hints = remember { HintHolder() }
-    val activity = LocalContext.current as Activity
+    val activity = LocalActivity.current!!
 
     feedback.soundsEnabled = settings.uiSounds
     feedback.volume = settings.uiSoundVolume / 100f
@@ -266,7 +267,7 @@ private fun MainShell(vm: LauncherViewModel, nav: NavHostController, openStats: 
     val profiles by vm.profiles.collectAsState()
     val hints = LocalHintHolder.current
     val entryActions = LocalEntryActions.current
-    val activity = LocalContext.current as Activity
+    val activity = LocalActivity.current!!
     var tab by vm.tabState
     val tabs = MainTab.entries
     val collections by vm.collections.collectAsState()

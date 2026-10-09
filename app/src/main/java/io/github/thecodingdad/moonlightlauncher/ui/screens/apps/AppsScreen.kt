@@ -19,7 +19,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRestorer
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.thecodingdad.moonlightlauncher.R
@@ -60,8 +59,8 @@ fun AppsScreen(apps: List<LibraryEntry>, lastFocusedKey: String?, onFocusKey: (S
     }
 
     val first = local.firstOrNull() ?: byHost.values.firstOrNull()?.firstOrNull()
-    val context = LocalContext.current
     val deviceTitle = stringResource(R.string.apps_on_device)
+    val hostTitles = byHost.keys.associateWith { stringResource(R.string.apps_on_host, it) }
     LazyVerticalGrid(
         columns = GridCells.Adaptive(LauncherTheme.dimens.iconTile + 36.dp),
         contentPadding = PaddingValues(horizontal = 36.dp, vertical = 12.dp),
@@ -88,6 +87,6 @@ fun AppsScreen(apps: List<LibraryEntry>, lastFocusedKey: String?, onFocusKey: (S
             }
         }
         section(deviceTitle, local)
-        byHost.forEach { (host, list) -> section(context.getString(R.string.apps_on_host, host), list) }
+        byHost.forEach { (host, list) -> section(hostTitles.getValue(host), list) }
     }
 }

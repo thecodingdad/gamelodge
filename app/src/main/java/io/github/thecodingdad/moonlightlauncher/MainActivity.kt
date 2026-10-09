@@ -1,5 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
@@ -12,6 +13,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import io.github.thecodingdad.moonlightlauncher.data.settings.ButtonLayout
+import io.github.thecodingdad.moonlightlauncher.system.LauncherMode
 import io.github.thecodingdad.moonlightlauncher.ui.LauncherApp
 import io.github.thecodingdad.moonlightlauncher.ui.LauncherViewModel
 import io.github.thecodingdad.moonlightlauncher.ui.feedback.UiFeedback
@@ -54,9 +56,18 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         // Back from a game or stream: close the play session, undo a one-off profile.
         container.launcher.restoreProfile()
-        lifecycleScope.launch { container.playtime.finishOpenSession() }
+        lifecycleScope.launch {
+            container.playtime.finishOpenSession()
+            // If the user made us the home app (also via Android settings), launcher mode is on.
+            val mode = LauncherMode(this@MainActivity)
+            if (mode.isDefaultHome && !vm.settings.value.launcherMode) {
+                container.settings.update { it.copy(launcherMode = true) }
+            }
+        }
     }
 
+    // Lint wrongly flags ComponentActivity.dispatchKeyEvent as restricted (androidx.core override).
+    @SuppressLint("RestrictedApi")
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         val e = if (vm.settings.value.buttonLayout == ButtonLayout.NINTENDO) {
             val swapped = InputDispatcher.swapForNintendo(event.keyCode)

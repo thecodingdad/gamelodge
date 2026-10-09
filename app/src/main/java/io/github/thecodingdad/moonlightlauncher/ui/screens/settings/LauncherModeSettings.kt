@@ -32,9 +32,13 @@ fun LauncherModeSettings(settings: LauncherSettings, update: ((LauncherSettings)
 
     val roleRequest = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { tick++ }
 
-    // Keep the alias in sync with the stored setting (e.g. after restoring a backup).
-    LaunchedEffect(settings.launcherMode) {
-        if (mode.isAvailable != settings.launcherMode) mode.setAvailable(settings.launcherMode)
+    // Keep the alias in sync with the stored setting (e.g. after restoring a backup), but never
+    // disable it while we are the default home app.
+    LaunchedEffect(settings.launcherMode, isDefault) {
+        when {
+            isDefault && !settings.launcherMode -> update { it.copy(launcherMode = true) }
+            mode.isAvailable != settings.launcherMode -> mode.setAvailable(settings.launcherMode)
+        }
     }
 
     SettingsPage(stringResource(R.string.settings_launcher)) {

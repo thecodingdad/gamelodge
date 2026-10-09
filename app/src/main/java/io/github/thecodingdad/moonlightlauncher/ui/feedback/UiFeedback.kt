@@ -3,6 +3,7 @@ package io.github.thecodingdad.moonlightlauncher.ui.feedback
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.SoundPool
+import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
@@ -36,7 +37,12 @@ class UiFeedback(private val context: Context) {
     private var lastFocusAt = 0L
 
     private val vibrator: Vibrator? =
-        (context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager)?.defaultVibrator
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            context.getSystemService(VibratorManager::class.java)?.defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            context.getSystemService(Vibrator::class.java)
+        }
 
     fun load() {
         val dir = File(context.cacheDir, "ui_sounds").apply { mkdirs() }
