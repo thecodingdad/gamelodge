@@ -12,10 +12,15 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          # The artemis submodule is a private repo; GITHUB_TOKEN cannot read it.
-          token: ${{ secrets.SUBMODULE_TOKEN }}
+
+      # The artemis submodule is a separate private repo that GITHUB_TOKEN cannot read;
+      # SUBMODULE_TOKEN is a fine-grained read-only token for that repo only.
+      - name: Checkout submodules
+        env:
+          SUBMODULE_TOKEN: ${{ secrets.SUBMODULE_TOKEN }}
+        run: |
+          git config --global url."https://x-access-token:${SUBMODULE_TOKEN}@github.com/thecodingdad/moonlight-android".insteadOf "https://github.com/thecodingdad/moonlight-android"
+          git submodule update --init --recursive --depth 1
 
       - uses: actions/setup-java@v4
         with:
