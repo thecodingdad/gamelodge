@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.VpnLock
 import androidx.compose.material.icons.filled.Wifi
+import androidx.compose.material.icons.filled.SettingsEthernet
 import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -57,13 +58,21 @@ import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 import kotlinx.coroutines.delay
 import java.util.Date
 
-data class SystemStatus(val batteryPercent: Int, val charging: Boolean, val wifi: Boolean, val vpn: Boolean)
+data class SystemStatus(
+    val batteryPercent: Int,
+    val charging: Boolean,
+    val wifi: Boolean,
+    val vpn: Boolean,
+    /** Wired network (e.g. a dock with a LAN port); preferred over Wi-Fi when both are up. */
+    val ethernet: Boolean = false,
+)
 
 @Composable
 fun rememberSystemStatus(): SystemStatus {
     val context = LocalContext.current
     var battery by remember { mutableStateOf(100 to false) }
     var network by remember { mutableStateOf(true to false) }
+    var ethernet by remember { mutableStateOf(false) }
 
     DisposableEffect(Unit) {
         val receiver = object : BroadcastReceiver() {
@@ -79,8 +88,13 @@ fun rememberSystemStatus(): SystemStatus {
         val cm = context.getSystemService(ConnectivityManager::class.java)
         fun refresh() {
             val caps = cm.getNetworkCapabilities(cm.activeNetwork)
-            network = (caps?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true) to
+            // With a VPN up the active network is the VPN: look at all networks for the transports.
+            @Suppress("DEPRECATION")
+            val all = cm.allNetworks.mapNotNull { cm.getNetworkCapabilities(it) }
+                .filter { it.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) }
+            network = all.any { it.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) } to
                 (caps?.hasTransport(NetworkCapabilities.TRANSPORT_VPN) == true)
+            ethernet = all.any { it.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) }
         }
         val callback = object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(n: Network) = refresh()
@@ -94,7 +108,7 @@ fun rememberSystemStatus(): SystemStatus {
             cm.unregisterNetworkCallback(callback)
         }
     }
-    return SystemStatus(battery.first, battery.second, network.first, network.second)
+    return SystemStatus(battery.first, battery.second, network.first, network.second, ethernet)
 }
 
 @Composable
@@ -185,9 +199,15 @@ fun StatusCluster(
         } else if (status.vpn) {
             StatusIcon(Icons.Filled.VpnLock)
         }
+        // The connection in use: LAN (dock) wins over Wi-Fi.
         Icon(
-            if (status.wifi) Icons.Filled.Wifi else Icons.Filled.WifiOff, null,
-            tint = if (status.wifi) colors.success else colors.onSurfaceMuted, modifier = Modifier.size(20.dp),
+            when {
+                status.ethernet -> Icons.Filled.SettingsEthernet
+                status.wifi -> Icons.Filled.Wifi
+                else -> Icons.Filled.WifiOff
+            },
+            null,
+            tint = if (status.ethernet || status.wifi) colors.success else colors.onSurfaceMuted, modifier = Modifier.size(20.dp),
         )
         Row(verticalAlignment = Alignment.CenterVertically) {
             StatusIcon(

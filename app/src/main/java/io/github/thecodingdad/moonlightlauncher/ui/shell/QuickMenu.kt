@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.StopCircle
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.filled.VpnLock
 import androidx.compose.material.icons.filled.Wifi
+import androidx.compose.material.icons.filled.SettingsEthernet
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -199,7 +200,11 @@ private fun StatusTiles(onHost: (String) -> Unit, onControllers: () -> Unit, vpn
         }
         val wifi = rememberWifiState(permissionRevision)
         val bluetooth = rememberBluetoothState(permissionRevision)
-        StatusTile(
+        val system = rememberSystemStatus()
+        if (system.ethernet) StatusTile(
+            Icons.Filled.SettingsEthernet, stringResource(R.string.qm_lan), colors.success,
+            { context.startActivity(Intent(Settings.ACTION_WIRELESS_SETTINGS)) },
+        ) else StatusTile(
             Icons.Filled.Wifi,
             when {
                 !wifi.connected -> stringResource(R.string.qm_wifi)

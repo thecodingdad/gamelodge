@@ -561,4 +561,5 @@
         <item quantity="one">%d Gerät</item>
         <item quantity="other">%d Geräte</item>
     </plurals>
+    <string name="qm_lan">LAN</string>
 </resources>
