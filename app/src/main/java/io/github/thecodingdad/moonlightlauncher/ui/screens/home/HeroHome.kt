@@ -156,14 +156,18 @@ fun HeroHome(
                 }
             }
             androidx.compose.runtime.CompositionLocalProvider(androidx.compose.foundation.gestures.LocalBringIntoViewSpec provides io.github.thecodingdad.moonlightlauncher.ui.components.NoScrollBringIntoView) {
-            val topFadePx = with(density) { 28.dp.toPx() }
+            // Snapped row starts at 48dp; the row above ends ~22dp earlier (spacing + row padding).
+            // That part stays fully transparent, the fade lies in the gap, so nothing of the
+            // previous row shows and the snapped row's title is not dimmed.
+            val topClearPx = with(density) { 26.dp.toPx() }
+            val topFadePx = with(density) { 48.dp.toPx() }
             val fadePx = with(density) { (insets.calculateBottomPadding() + 56.dp).toPx() }
             LazyColumn(
                 state = listState,
                 modifier = Modifier.fillMaxWidth().weight(1f)
-                    // Extend 28dp upwards under the info block (room for the top fade).
+                    // Extend 48dp upwards under the info block (room for the top fade).
                     .layout { measurable, constraints ->
-                        val extra = 28.dp.roundToPx()
+                        val extra = 48.dp.roundToPx()
                         val c = if (constraints.hasBoundedHeight) constraints.copy(maxHeight = constraints.maxHeight + extra, minHeight = constraints.minHeight + extra) else constraints
                         val placeable = measurable.measure(c)
                         layout(placeable.width, (placeable.height - extra).coerceAtLeast(0)) { placeable.place(0, -extra) }
@@ -176,14 +180,18 @@ fun HeroHome(
                         val stop = ((size.height - fadePx) / size.height).coerceIn(0f, 1f)
                         // Top edge fades too, so rows scrolled up don't end in a hard cut.
                         val topStop = (topFadePx / size.height).coerceIn(0f, stop)
+                        val clearStop = (topClearPx / size.height).coerceIn(0f, topStop)
                         drawRect(
-                            Brush.verticalGradient(0f to Color.Transparent, topStop to Color.Black, stop to Color.Black, 1f to Color.Transparent),
+                            Brush.verticalGradient(
+                                0f to Color.Transparent, clearStop to Color.Transparent, topStop to Color.Black,
+                                stop to Color.Black, 1f to Color.Transparent,
+                            ),
                             blendMode = androidx.compose.ui.graphics.BlendMode.DstIn,
                         )
                     },
                 // Top padding = fade height: a snapped row starts below the fade, so its title isn't dimmed
                 // (the list is pulled up by the same amount below, so the row keeps its position).
-                contentPadding = PaddingValues(top = 28.dp, bottom = 24.dp + insets.calculateBottomPadding()),
+                contentPadding = PaddingValues(top = 48.dp, bottom = 24.dp + insets.calculateBottomPadding()),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 if (rows.running.isNotEmpty()) {

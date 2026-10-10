@@ -68,6 +68,9 @@ object TouchFocus {
     fun justRestored() = android.os.SystemClock.uptimeMillis() - restoredAt < 500
 }
 
+/** False when the hint bar is turned off or no controller is connected. */
+val LocalShowHintBar = androidx.compose.runtime.compositionLocalOf { true }
+
 /** True on narrow screens (portrait handheld, phone): layouts stack instead of sitting side by side. */
 val LocalCompactWidth = androidx.compose.runtime.compositionLocalOf { false }
 

@@ -214,7 +214,12 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
             LocalBringIntoViewSpec provides scrollSpec,
         ) {
             androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
-            CompositionLocalProvider(io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth provides (maxWidth < 720.dp)) {
+            // Button hints only make sense with a controller (and can be turned off entirely).
+            val hintControllers = io.github.thecodingdad.moonlightlauncher.ui.screens.settings.rememberControllers()
+            CompositionLocalProvider(
+                io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth provides (maxWidth < 720.dp),
+                io.github.thecodingdad.moonlightlauncher.ui.components.LocalShowHintBar provides (settings.showHintBar && hintControllers.isNotEmpty()),
+            ) {
             Box(Modifier.fillMaxSize().background(LauncherTheme.colors.background)) {
                 // The launcher behind any popup or panel is blurred (Android 12+; older versions just dim).
                 val backdropBlur by androidx.compose.animation.core.animateDpAsState(if (io.github.thecodingdad.moonlightlauncher.ui.components.OverlayHost.anyVisible) 14.dp else 0.dp, label = "backdropBlur")
@@ -494,6 +499,9 @@ private fun MainShell(
     var topBarHeight by remember { mutableStateOf(0.dp) }
     var hintBarHeight by remember { mutableStateOf(0.dp) }
     val compactShell = io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current
+    val showHints = io.github.thecodingdad.moonlightlauncher.ui.components.LocalShowHintBar.current
+    // A hidden hint bar takes no space; its last measured height must not linger.
+    LaunchedEffect(showHints, compactShell) { if (!showHints && !compactShell) hintBarHeight = 0.dp }
     val fullBleed = tabs[tab] == MainTab.HOME && settings.homeLayout != HomeLayout.GRID
     val bg = LauncherTheme.colors.background
     Box(Modifier.fillMaxSize().statusBarsPadding()) {

@@ -565,4 +565,8 @@
     </plurals>
     <string name="qm_lan">LAN</string>
     <string name="step_connecting_stream">Connecting to the stream…</string>
+
+    <!-- Hint bar -->
+    <string name="setting_hint_bar">Show button hints</string>
+    <string name="setting_hint_bar_sub">Bar at the bottom with the controller buttons; only shown while a controller is connected</string>
 </resources>

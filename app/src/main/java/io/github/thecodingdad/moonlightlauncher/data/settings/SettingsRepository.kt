@@ -70,6 +70,8 @@ data class LauncherSettings(
     val filtersSeeded: Boolean = false,
     /** Hide Android's navigation bar / gesture handle while the launcher is shown. */
     val hideNavigationBar: Boolean = false,
+    /** Show the button hint bar (only while a controller is connected). */
+    val showHintBar: Boolean = true,
     /** Shrink the UI while a TV/monitor is attached (the layout is sized for the handheld). */
     val tvScaleAuto: Boolean = true,
     /** UI size on an external display, percent of the handheld size. */
@@ -120,6 +122,7 @@ class SettingsRepository(context: Context) {
         val onboardingDone = booleanPreferencesKey("onboarding_done")
         val filtersSeeded = booleanPreferencesKey("filters_seeded")
         val hideNavigationBar = booleanPreferencesKey("hide_navigation_bar")
+        val showHintBar = booleanPreferencesKey("show_hint_bar")
         val tvScaleAuto = booleanPreferencesKey("tv_scale_auto")
         val tvScale = intPreferencesKey("tv_scale")
         val uiScale = intPreferencesKey("ui_scale")
@@ -173,6 +176,7 @@ class SettingsRepository(context: Context) {
             onboardingDone = this[K.onboardingDone] ?: d.onboardingDone,
             filtersSeeded = this[K.filtersSeeded] ?: d.filtersSeeded,
             hideNavigationBar = this[K.hideNavigationBar] ?: d.hideNavigationBar,
+            showHintBar = this[K.showHintBar] ?: d.showHintBar,
             tvScaleAuto = this[K.tvScaleAuto] ?: d.tvScaleAuto,
             tvScale = this[K.tvScale] ?: d.tvScale,
             uiScale = this[K.uiScale] ?: d.uiScale,
@@ -215,6 +219,7 @@ class SettingsRepository(context: Context) {
         this[K.onboardingDone] = s.onboardingDone
         this[K.filtersSeeded] = s.filtersSeeded
         this[K.hideNavigationBar] = s.hideNavigationBar
+        this[K.showHintBar] = s.showHintBar
         this[K.tvScaleAuto] = s.tvScaleAuto
         this[K.tvScale] = s.tvScale
         this[K.uiScale] = s.uiScale

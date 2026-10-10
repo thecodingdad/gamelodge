@@ -563,4 +563,8 @@
     </plurals>
     <string name="qm_lan">LAN</string>
     <string name="step_connecting_stream">Verbindung zum Stream wird hergestellt …</string>
+
+    <!-- Hint bar -->
+    <string name="setting_hint_bar">Tastenhinweise anzeigen</string>
+    <string name="setting_hint_bar_sub">Leiste unten mit den Controller-Tasten; erscheint nur, wenn ein Controller verbunden ist</string>
 </resources>

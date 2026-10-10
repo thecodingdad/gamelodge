@@ -151,6 +151,10 @@ fun ControlsSettings(settings: LauncherSettings, update: ((LauncherSettings) -> 
             subtitle = stringResource(R.string.setting_button_layout_sub),
             initialFocus = true,
         )
+        SwitchRow(
+            stringResource(R.string.setting_hint_bar), settings.showHintBar, { v -> update { it.copy(showHintBar = v) } },
+            subtitle = stringResource(R.string.setting_hint_bar_sub),
+        )
         NavRow(stringResource(R.string.settings_controllers), openControllers, stringResource(R.string.settings_controllers_sub))
     }
 }
