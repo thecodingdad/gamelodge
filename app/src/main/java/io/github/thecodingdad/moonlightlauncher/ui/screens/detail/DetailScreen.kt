@@ -86,17 +86,32 @@ fun DetailScreen(
         Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(0f to bg, 0.5f to bg.copy(alpha = 0.85f), 1f to bg.copy(alpha = 0.25f))))
         Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.5f to Color.Transparent, 1f to bg)))
 
-        Row(Modifier.fillMaxSize().padding(horizontal = 40.dp, vertical = 20.dp), horizontalArrangement = Arrangement.spacedBy(36.dp)) {
+        // Layout grows with the available space (e.g. on a TV): bigger cover, wider text column,
+        // more generous spacing, content vertically centred instead of glued to the top left.
+        androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
+        val roomy = maxWidth > 1100.dp
+        val coverWidth = minOf(maxWidth * 0.26f, (maxHeight - 40.dp) * 0.82f * (2f / 3f)).coerceAtLeast(210.dp)
+        val sidePadding = (maxWidth * 0.045f).coerceAtLeast(40.dp)
+        val gap = (maxWidth * 0.035f).coerceAtLeast(36.dp)
+        val textWidth = (maxWidth - sidePadding * 2 - gap - coverWidth).coerceAtMost(if (roomy) 860.dp else 640.dp)
+        Row(
+            Modifier.fillMaxSize().padding(horizontal = sidePadding, vertical = if (roomy) 32.dp else 20.dp),
+            horizontalArrangement = Arrangement.spacedBy(gap),
+            verticalAlignment = if (roomy) Alignment.CenterVertically else Alignment.Top,
+        ) {
             ArtworkImage(
                 entry.coverModel(animatedArtwork), entry.item.title,
-                Modifier.width(210.dp).aspectRatio(2f / 3f).clip(RoundedCornerShape(16.dp)),
+                Modifier.width(coverWidth).aspectRatio(2f / 3f).clip(RoundedCornerShape(if (roomy) 22.dp else 16.dp)),
             )
             Column(
-                Modifier.widthIn(max = 640.dp).verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                Modifier.width(textWidth).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(if (roomy) 18.dp else 12.dp),
             ) {
                 if (entry.item.logoUrl != null) {
-                    io.github.thecodingdad.moonlightlauncher.ui.components.LogoImage(entry.item.logoUrl, entry.item.title, Modifier.height(90.dp).widthIn(max = 460.dp))
+                    io.github.thecodingdad.moonlightlauncher.ui.components.LogoImage(
+                        entry.item.logoUrl, entry.item.title,
+                        Modifier.height(if (roomy) 130.dp else 90.dp).widthIn(max = if (roomy) 620.dp else 460.dp),
+                    )
                 } else {
                     Text(entry.item.title, style = MaterialTheme.typography.displaySmall, color = colors.onSurface, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }
@@ -136,6 +151,7 @@ fun DetailScreen(
                 InfoBlock(entry, sessions)
                 Spacer(Modifier.height(24.dp))
             }
+        }
         }
     }
 }
