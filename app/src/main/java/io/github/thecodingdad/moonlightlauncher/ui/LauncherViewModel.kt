@@ -8,6 +8,7 @@ import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.container
 import io.github.thecodingdad.moonlightlauncher.data.db.CollectionEntity
 import io.github.thecodingdad.moonlightlauncher.data.db.FilterEntity
+import io.github.thecodingdad.moonlightlauncher.data.db.FilterScope
 import io.github.thecodingdad.moonlightlauncher.data.db.ItemKind
 import io.github.thecodingdad.moonlightlauncher.data.library.FilterEngine
 import io.github.thecodingdad.moonlightlauncher.data.library.FilterPlace
@@ -109,9 +110,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     val homeFilters = resolved(FilterPlace.HOME)
     val appsFilters = resolved(FilterPlace.APPS)
 
-    fun createGroup(name: String, addItem: String? = null) {
+    fun createGroup(name: String, scope: FilterScope, addItem: String? = null) {
         viewModelScope.launch {
-            val group = c.filters.createGroup(name)
+            val group = c.filters.createGroup(name, scope)
             if (addItem != null) c.library.setInCollection(addItem, group.id, true)
         }
     }
@@ -136,12 +137,12 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch { c.filters.move(id, delta) }
     }
 
-    fun createSmartFilter(name: String, onCreated: (FilterEntity) -> Unit = {}) {
-        viewModelScope.launch { onCreated(c.filters.createSmart(name, FilterRules())) }
+    fun createSmartFilter(name: String, scope: FilterScope, onCreated: (FilterEntity) -> Unit = {}) {
+        viewModelScope.launch { onCreated(c.filters.createSmart(name, FilterRules(), scope)) }
     }
 
-    fun restoreDefaultFilters() {
-        viewModelScope.launch { c.filters.restoreDefaults() }
+    fun restoreDefaultFilters(scope: FilterScope) {
+        viewModelScope.launch { c.filters.restoreDefaults(scope) }
     }
 
     fun setPlatform(entry: LibraryEntry, platform: String?) {

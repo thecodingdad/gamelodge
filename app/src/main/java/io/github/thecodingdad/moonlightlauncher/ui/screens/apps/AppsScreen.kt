@@ -2,6 +2,8 @@ package io.github.thecodingdad.moonlightlauncher.ui.screens.apps
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items as rowItems
@@ -43,7 +45,13 @@ import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 
 /** Regular apps, separate from the game library: device apps first, then each host's apps. */
 @Composable
-fun AppsScreen(apps: List<LibraryEntry>, filters: List<ResolvedFilter>, lastFocusedKey: String?, onFocusKey: (String) -> Unit) {
+fun AppsScreen(
+    apps: List<LibraryEntry>,
+    filters: List<ResolvedFilter>,
+    lastFocusedKey: String?,
+    openFilterSettings: () -> Unit,
+    onFocusKey: (String) -> Unit,
+) {
     val actions = LocalEntryActions.current
     var focused by remember { mutableStateOf<LibraryEntry?>(null) }
     var selectedKey by rememberSaveable { mutableStateOf<String?>(null) }
@@ -65,7 +73,7 @@ fun AppsScreen(apps: List<LibraryEntry>, filters: List<ResolvedFilter>, lastFocu
         .groupBy { it.remoteTargets.firstOrNull()?.hostName.orEmpty() }
 
     Column(Modifier.fillMaxSize()) {
-    if (filters.size > 1) {
+    run {
         LazyRow(
             contentPadding = PaddingValues(horizontal = 36.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -74,6 +82,13 @@ fun AppsScreen(apps: List<LibraryEntry>, filters: List<ResolvedFilter>, lastFocu
             rowItems(filters, key = { "filter:${it.key}" }) { f ->
                 val isSelected = f.key == selected?.key || (selected == null && f.builtin == BuiltinFilter.ALL)
                 Chip(filterLabel(f), selected = isSelected, onClick = { selectedKey = f.key })
+            }
+            // App filters are configured on their own page, separate from the game filters.
+            item(key = "edit") {
+                Chip(
+                    "", selected = false, onClick = openFilterSettings,
+                    icon = { androidx.compose.material3.Icon(Icons.Filled.Edit, stringResource(R.string.filters_edit)) },
+                )
             }
         }
     }

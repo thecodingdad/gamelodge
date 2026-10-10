@@ -287,11 +287,20 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                     onDismiss = { platformFor = null },
                 )
                 val collections by vm.collections.collectAsState()
+                val allFilters by vm.filters.collectAsState()
+                // Apps only see app groups, games only game groups.
+                val groupScope = if (collectionsFor?.item?.kind == io.github.thecodingdad.moonlightlauncher.data.db.ItemKind.APP) {
+                    io.github.thecodingdad.moonlightlauncher.data.db.FilterScope.APPS
+                } else io.github.thecodingdad.moonlightlauncher.data.db.FilterScope.GAMES
+                val scopedGroupIds = allFilters.filter {
+                    (it.scope == io.github.thecodingdad.moonlightlauncher.data.db.FilterScope.APPS) ==
+                        (groupScope == io.github.thecodingdad.moonlightlauncher.data.db.FilterScope.APPS)
+                }.map { it.id }.toSet()
                 CollectionsDialog(
                     entry = collectionsFor,
-                    collections = collections,
+                    collections = collections.filter { it.first.id in scopedGroupIds },
                     onToggle = { id, member -> collectionsFor?.let { vm.setInCollection(it.item.id, id, member) } },
-                    onCreate = { name -> vm.createGroup(name, collectionsFor?.item?.id) },
+                    onCreate = { name -> vm.createGroup(name, groupScope, collectionsFor?.item?.id) },
                     onDismiss = { collectionsFor = null },
                 )
                 val launchState by vm.launchState.collectAsState()
@@ -456,7 +465,10 @@ private fun MainShell(vm: LauncherViewModel, nav: NavHostController, openStats: 
                         allEntries, libraryFilters, settings.animatedArtwork, vm.lastFocusedKey, openStats,
                         openFilterSettings = { nav.navigate(Routes.settings(SettingsPageId.FILTERS)) },
                     ) { vm.lastFocusedKey = it }
-                    MainTab.APPS -> AppsScreen(apps, appsFilters, vm.lastFocusedKey) { vm.lastFocusedKey = it }
+                    MainTab.APPS -> AppsScreen(
+                        apps, appsFilters, vm.lastFocusedKey,
+                        openFilterSettings = { nav.navigate(Routes.settings(SettingsPageId.APP_FILTERS)) },
+                    ) { vm.lastFocusedKey = it }
                     MainTab.SETTINGS -> {
                         io.github.thecodingdad.moonlightlauncher.ui.shell.ScreenHints(
                             listOf(ButtonHint(PadButton.A, stringResource(R.string.hint_select)), ButtonHint(PadButton.L1, stringResource(R.string.hint_tabs))),
@@ -534,7 +546,8 @@ private fun SettingsPageContent(
         SettingsPageId.APPEARANCE -> AppearanceSettings(settings, vm::updateSettings)
         SettingsPageId.CONTROLS -> ControlsSettings(settings, vm::updateSettings, openControllers = openControllers)
         SettingsPageId.LANGUAGE -> LanguageSettings(settings, vm::updateSettings)
-        SettingsPageId.FILTERS -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.FilterSettings(vm)
+        SettingsPageId.FILTERS -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.FilterSettings(vm, io.github.thecodingdad.moonlightlauncher.data.db.FilterScope.GAMES)
+        SettingsPageId.APP_FILTERS -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.FilterSettings(vm, io.github.thecodingdad.moonlightlauncher.data.db.FilterScope.APPS)
         SettingsPageId.SOUNDS -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.SoundSettings(settings, vm::updateSettings)
         SettingsPageId.ABOUT -> AboutSettings()
         SettingsPageId.PROFILES -> {

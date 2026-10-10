@@ -45,21 +45,34 @@ object BuiltinFilter {
     const val REVIEW = "review"
     const val HIDDEN = "hidden"
 
-    /** Defaults in display order: key, scope, library, home, apps. */
-    val defaults = listOf(
-        Default(CONTINUE, FilterScope.GAMES, library = false, home = true),
-        Default(ALL, FilterScope.BOTH, library = true, home = false, apps = true),
-        Default(LOCAL, FilterScope.GAMES, library = true, home = false),
-        Default(HOSTS, FilterScope.GAMES, library = true, home = false),
-        Default(PLATFORMS, FilterScope.GAMES, library = true, home = false),
-        Default(FAVORITES, FilterScope.GAMES, library = true, home = true),
-        Default(RECENT, FilterScope.GAMES, library = false, home = true),
-        Default(NEVER_PLAYED, FilterScope.GAMES, library = true, home = false),
-        Default(REVIEW, FilterScope.GAMES, library = true, home = false),
-        Default(HIDDEN, FilterScope.BOTH, library = true, home = false, apps = true),
+    /** Default game filters in display order. */
+    val gameDefaults = listOf(
+        Default(CONTINUE, library = false, home = true),
+        Default(ALL, library = true, home = false),
+        Default(LOCAL, library = true, home = false),
+        Default(HOSTS, library = true, home = false),
+        Default(PLATFORMS, library = true, home = false),
+        Default(FAVORITES, library = true, home = true),
+        Default(RECENT, library = false, home = true),
+        Default(NEVER_PLAYED, library = true, home = false),
+        Default(REVIEW, library = true, home = false),
+        Default(HIDDEN, library = true, home = false),
     )
 
-    data class Default(val key: String, val scope: FilterScope, val library: Boolean, val home: Boolean, val apps: Boolean = false)
+    /** Default app filters (chips in the Apps tab). */
+    val appDefaults = listOf(
+        Default(ALL, library = true, home = false),
+        Default(LOCAL, library = true, home = false),
+        Default(HOSTS, library = true, home = false),
+        Default(FAVORITES, library = true, home = false),
+        Default(HIDDEN, library = true, home = false),
+    )
+
+    /** Row id of a default filter; app defaults get their own ids. */
+    fun id(key: String, scope: FilterScope) = if (scope == FilterScope.APPS) "apps_$key" else key
+
+    /** [library] = shown as chip in its tab (library for games, Apps tab for apps). */
+    data class Default(val key: String, val library: Boolean, val home: Boolean)
 }
 
 enum class LibrarySort { TITLE, LAST_PLAYED, ADDED, PLAYTIME }
@@ -91,11 +104,12 @@ object FilterEngine {
         hostNames: Map<String, String>,
         groupMembers: Map<String, Set<String>>,
     ): List<ResolvedFilter> {
+        // Game and app filters are separate sets; legacy BOTH rows count as game filters.
         val visible = filters.filter {
             when (place) {
-                FilterPlace.LIBRARY -> it.showInLibrary
+                FilterPlace.LIBRARY -> it.scope != FilterScope.APPS && it.showInLibrary
                 FilterPlace.HOME -> it.showOnHome
-                FilterPlace.APPS -> it.showInApps
+                FilterPlace.APPS -> it.scope == FilterScope.APPS && it.showInApps
             }
         }.sortedBy { it.sortOrder }
         return visible.flatMap { filter ->

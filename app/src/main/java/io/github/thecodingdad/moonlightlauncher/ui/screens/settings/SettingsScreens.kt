@@ -27,7 +27,7 @@ import io.github.thecodingdad.moonlightlauncher.data.settings.HomeLayout
 import io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings
 import io.github.thecodingdad.moonlightlauncher.data.settings.ThemeMode
 
-enum class SettingsPageId { HOSTS, PROFILES, APPEARANCE, FILTERS, CONTROLS, SOUNDS, METADATA, HOME_ASSISTANT, VPN, LAUNCHER, BACKUP, LANGUAGE, ABOUT }
+enum class SettingsPageId { HOSTS, PROFILES, APPEARANCE, FILTERS, APP_FILTERS, CONTROLS, SOUNDS, METADATA, HOME_ASSISTANT, VPN, LAUNCHER, BACKUP, LANGUAGE, ABOUT }
 
 @Composable
 fun SettingsHome(open: (SettingsPageId) -> Unit, isFirstVisit: Boolean) {
@@ -36,6 +36,7 @@ fun SettingsHome(open: (SettingsPageId) -> Unit, isFirstVisit: Boolean) {
         NavRow(stringResource(R.string.settings_profiles), { open(SettingsPageId.PROFILES) }, stringResource(R.string.settings_profiles_sub), Icons.Filled.Tune)
         NavRow(stringResource(R.string.settings_appearance), { open(SettingsPageId.APPEARANCE) }, stringResource(R.string.settings_appearance_sub), Icons.Filled.Palette)
         NavRow(stringResource(R.string.settings_filters), { open(SettingsPageId.FILTERS) }, stringResource(R.string.settings_filters_sub), Icons.Filled.FilterAlt)
+        NavRow(stringResource(R.string.settings_app_filters), { open(SettingsPageId.APP_FILTERS) }, stringResource(R.string.settings_app_filters_sub), Icons.Filled.FilterAlt)
         NavRow(stringResource(R.string.settings_sounds), { open(SettingsPageId.SOUNDS) }, stringResource(R.string.settings_sounds_sub), Icons.Filled.VolumeUp)
         NavRow(stringResource(R.string.settings_controls), { open(SettingsPageId.CONTROLS) }, stringResource(R.string.settings_controls_sub), Icons.Filled.SportsEsports)
         NavRow(stringResource(R.string.settings_metadata), { open(SettingsPageId.METADATA) }, stringResource(R.string.settings_metadata_sub), Icons.Filled.Image)

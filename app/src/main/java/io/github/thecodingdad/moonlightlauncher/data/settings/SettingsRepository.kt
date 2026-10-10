@@ -68,6 +68,8 @@ data class LauncherSettings(
     val onboardingDone: Boolean = false,
     /** Default library filters were created (they may be deleted afterwards). */
     val filtersSeeded: Boolean = false,
+    /** Separate app filters were created (and shared filters turned into game filters). */
+    val appFiltersSeeded: Boolean = false,
 )
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore("launcher_settings")
@@ -109,6 +111,7 @@ class SettingsRepository(context: Context) {
         val backupKeepCount = intPreferencesKey("backup_keep_count")
         val onboardingDone = booleanPreferencesKey("onboarding_done")
         val filtersSeeded = booleanPreferencesKey("filters_seeded")
+        val appFiltersSeeded = booleanPreferencesKey("app_filters_seeded")
     }
 
     val settings: Flow<LauncherSettings> = store.data.map { it.toSettings() }
@@ -157,6 +160,7 @@ class SettingsRepository(context: Context) {
             backupKeepCount = this[K.backupKeepCount] ?: d.backupKeepCount,
             onboardingDone = this[K.onboardingDone] ?: d.onboardingDone,
             filtersSeeded = this[K.filtersSeeded] ?: d.filtersSeeded,
+            appFiltersSeeded = this[K.appFiltersSeeded] ?: d.appFiltersSeeded,
         )
     }
 
@@ -194,6 +198,7 @@ class SettingsRepository(context: Context) {
         this[K.backupKeepCount] = s.backupKeepCount
         this[K.onboardingDone] = s.onboardingDone
         this[K.filtersSeeded] = s.filtersSeeded
+        this[K.appFiltersSeeded] = s.appFiltersSeeded
     }
 
     private inline fun <reified T : Enum<T>> enumOr(value: String?, default: T): T =

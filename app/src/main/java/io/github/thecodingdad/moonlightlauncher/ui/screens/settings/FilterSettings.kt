@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.data.db.FilterEntity
 import io.github.thecodingdad.moonlightlauncher.data.db.FilterKind
+import io.github.thecodingdad.moonlightlauncher.data.db.FilterScope
 import io.github.thecodingdad.moonlightlauncher.data.db.ItemKind
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry
 import io.github.thecodingdad.moonlightlauncher.data.library.FilterEngine
@@ -48,8 +49,11 @@ import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 
 /** Manage library filters: default filters, smart filters and manual groups, and where each appears. */
 @Composable
-fun FilterSettings(vm: LauncherViewModel) {
-    val filters by vm.filters.collectAsState()
+fun FilterSettings(vm: LauncherViewModel, scope: FilterScope) {
+    val apps = scope == FilterScope.APPS
+    val allFilters by vm.filters.collectAsState()
+    // Game and app filters are configured separately (legacy BOTH rows are game filters).
+    val filters = allFilters.filter { (it.scope == FilterScope.APPS) == apps }
     val all by vm.allEntries.collectAsState()
     val collections by vm.collections.collectAsState()
     val hosts by vm.hosts.collectAsState()
@@ -58,25 +62,25 @@ fun FilterSettings(vm: LauncherViewModel) {
     val smartTitle = stringResource(R.string.filter_new_smart)
     val groupTitle = stringResource(R.string.filter_new_group)
 
-    SettingsPage(stringResource(R.string.settings_filters)) {
-        Text(stringResource(R.string.filters_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+    SettingsPage(stringResource(if (apps) R.string.settings_app_filters else R.string.settings_filters)) {
+        Text(stringResource(if (apps) R.string.app_filters_help else R.string.filters_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(vertical = 6.dp)) {
             LauncherButton(
                 smartTitle, icon = Icons.Filled.FilterAlt,
-                onClick = { keyboard.open(smartTitle, "") { name -> if (name.isNotBlank()) vm.createSmartFilter(name.trim()) { editing = it.id } } },
+                onClick = { keyboard.open(smartTitle, "") { name -> if (name.isNotBlank()) vm.createSmartFilter(name.trim(), scope) { editing = it.id } } },
             )
             LauncherButton(
                 groupTitle, icon = Icons.AutoMirrored.Filled.PlaylistAdd,
-                onClick = { keyboard.open(groupTitle, "") { name -> if (name.isNotBlank()) vm.createGroup(name.trim()) } },
+                onClick = { keyboard.open(groupTitle, "") { name -> if (name.isNotBlank()) vm.createGroup(name.trim(), scope) } },
             )
-            LauncherButton(stringResource(R.string.filters_restore), icon = Icons.Filled.Restore, onClick = vm::restoreDefaultFilters)
+            LauncherButton(stringResource(R.string.filters_restore), icon = Icons.Filled.Restore, onClick = { vm.restoreDefaultFilters(scope) })
         }
         val members = collections.associate { (c, ids) -> c.id to ids.size }
         filters.sortedBy { it.sortOrder }.forEachIndexed { index, f ->
             val places = buildList {
-                if (f.showInLibrary) add(stringResource(R.string.filter_place_library))
+                if (!apps && f.showInLibrary) add(stringResource(R.string.filter_place_library))
+                if (apps && f.showInApps) add(stringResource(R.string.filter_place_apps))
                 if (f.showOnHome) add(stringResource(R.string.filter_place_home))
-                if (f.showInApps) add(stringResource(R.string.filter_place_apps))
             }.ifEmpty { listOf(stringResource(R.string.filter_place_none)) }
             val kind = when (f.kind) {
                 FilterKind.BUILTIN -> stringResource(R.string.filter_kind_builtin)
@@ -118,7 +122,8 @@ private fun FilterEditorDialog(
         val f = filter ?: return@Modal
         val rules = FilterRules.decode(f.rules)
         fun saveRules(transform: (FilterRules) -> FilterRules) = vm.saveFilter(f.copy(rules = FilterRules.encode(transform(rules))))
-        val games = entries.filter { it.item.kind == ItemKind.GAME }
+        val kind = if (f.scope == FilterScope.APPS) ItemKind.APP else ItemKind.GAME
+        val games = entries.filter { it.item.kind == kind }
         Column(
             Modifier.heightIn(max = 560.dp).verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -127,9 +132,12 @@ private fun FilterEditorDialog(
                 stringResource(R.string.filter_name), f.name, { vm.renameFilter(f, it) },
                 placeholder = f.builtin?.let { builtinLabel(it) },
             )
-            SwitchRow(stringResource(R.string.filter_show_library), f.showInLibrary, { vm.saveFilter(f.copy(showInLibrary = it)) })
+            if (f.scope == FilterScope.APPS) {
+                SwitchRow(stringResource(R.string.filter_show_apps), f.showInApps, { vm.saveFilter(f.copy(showInApps = it)) })
+            } else {
+                SwitchRow(stringResource(R.string.filter_show_library), f.showInLibrary, { vm.saveFilter(f.copy(showInLibrary = it)) })
+            }
             SwitchRow(stringResource(R.string.filter_show_home), f.showOnHome, { vm.saveFilter(f.copy(showOnHome = it)) })
-            SwitchRow(stringResource(R.string.filter_show_apps), f.showInApps, { vm.saveFilter(f.copy(showInApps = it)) })
 
             when (f.kind) {
                 FilterKind.SMART -> {
@@ -159,11 +167,11 @@ private fun FilterEditorDialog(
                     }
                     val localLabel = stringResource(R.string.filter_local)
                     ValuePicker(
-                        stringResource(R.string.filter_sources), FilterEngine.allValues(entries, GroupBy.SOURCE), rules.sources,
+                        stringResource(R.string.filter_sources), FilterEngine.allValues(games, GroupBy.SOURCE), rules.sources,
                         { if (it == FilterRules.SOURCE_LOCAL) localLabel else hostNames[it] ?: entries.firstNotNullOfOrNull { e -> e.remoteTargets.firstOrNull { t -> t.hostUuid == it }?.hostName } ?: it },
                     ) { v -> saveRules { it.copy(sources = it.sources.toggle(v)) } }
-                    val count = entries.count { !it.item.hidden && it.item.kind == ItemKind.GAME && FilterEngine.matches(it, rules) }
-                    Text(stringResource(R.string.filter_match_count, count), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+                    val count = games.count { !it.item.hidden && FilterEngine.matches(it, rules) }
+                    Text(stringResource(if (f.scope == FilterScope.APPS) R.string.filter_match_count_apps else R.string.filter_match_count, count), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
                 }
                 FilterKind.GROUP -> Text(
                     stringResource(R.string.filter_group_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted,

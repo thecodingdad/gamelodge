@@ -189,7 +189,7 @@ class BackupManager(
             val existing = filterDao.getAll().map { it.id }.toSet()
             filterDao.upsert(
                 collectionsByName.values.filter { it.id !in existing }.map {
-                    FilterEntity(it.id, it.name, FilterKind.GROUP, scope = FilterScope.BOTH, showOnHome = true, sortOrder = 100 + it.sortOrder)
+                    FilterEntity(it.id, it.name, FilterKind.GROUP, scope = FilterScope.GAMES, showOnHome = true, sortOrder = 100 + it.sortOrder)
                 },
             )
             return

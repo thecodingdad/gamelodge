@@ -61,6 +61,22 @@ class FiltersTest {
     }
 
     @Test
+    fun `game and app filters are separate sets`() {
+        val app = LibraryEntry(entries[2].item.copy(id = "app", kind = ItemKind.APP), entries[2].targets)
+        val all = entries + app
+        val gameAll = builtin(BuiltinFilter.ALL, 0)
+        val appAll = FilterEntity(
+            "apps_all", "", FilterKind.BUILTIN, builtin = BuiltinFilter.ALL, scope = FilterScope.APPS,
+            showInLibrary = false, showInApps = true, sortOrder = 1,
+        )
+        val library = FilterEngine.resolve(listOf(gameAll, appAll), FilterPlace.LIBRARY, all, emptyMap(), emptyMap())
+        val apps = FilterEngine.resolve(listOf(gameAll, appAll), FilterPlace.APPS, all, emptyMap(), emptyMap())
+        assertEquals(listOf("all"), library.map { it.filterId })
+        assertEquals(listOf("apps_all"), apps.map { it.filterId })
+        assertEquals(listOf("app"), apps.single().entries.map { it.item.id })
+    }
+
+    @Test
     fun `platform sources rank manual over playnite over igdb`() {
         val item = entries[0].item.copy(platformSource = PlatformSource.IGDB)
         assertTrue(PlatformResolver.mayReplace(item, PlatformSource.PLAYNITE, "Nintendo Switch"))

@@ -428,7 +428,7 @@
     <string name="filter_sources">Quellen</string>
     <string name="filter_any">Egal</string>
     <string name="filter_match_count">%d Spiele passen</string>
-    <string name="filter_group_help">Spiele fügst du über X → Gruppen bei einem Spiel hinzu.</string>
+    <string name="filter_group_help">Einträge fügst du über X → Gruppen hinzu.</string>
     <string name="filter_delete">Halten zum Löschen</string>
     <string name="move_up">Nach oben</string>
     <string name="move_down">Nach unten</string>
@@ -464,4 +464,10 @@
     <string name="haptic_medium">Mittel</string>
     <string name="haptic_strong">Stark</string>
     <string name="setting_haptic_focus">Beim Navigieren vibrieren</string>
+
+    <!-- App filters -->
+    <string name="settings_app_filters">App-Filter</string>
+    <string name="settings_app_filters_sub">Chips im Apps-Tab, Smart-Filter, App-Gruppen</string>
+    <string name="app_filters_help">App-Filter erscheinen als Chips im Apps-Tab und optional als Reihe auf der Startseite. Sie sind getrennt von den Spiele-Filtern der Bibliothek.</string>
+    <string name="filter_match_count_apps">%d Apps passen</string>
 </resources>
