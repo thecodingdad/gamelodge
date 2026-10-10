@@ -25,6 +25,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.graphics.Brush
@@ -60,6 +63,7 @@ fun DetailScreen(
     sessions: List<PlaySessionEntity>,
     animatedArtwork: Boolean,
     onFavorite: (Boolean) -> Unit,
+    onPlatform: () -> Unit = {},
     extraActions: @Composable () -> Unit = {},
 ) {
     val actions = LocalEntryActions.current
@@ -96,7 +100,18 @@ fun DetailScreen(
                 } else {
                     Text(entry.item.title, style = MaterialTheme.typography.displaySmall, color = colors.onSurface, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    // Platform as a chip: shows the current value, opens the platform picker.
+                    io.github.thecodingdad.moonlightlauncher.ui.screens.library.Chip(
+                        label = entry.item.platform ?: stringResource(R.string.platform_title),
+                        selected = false,
+                        onClick = onPlatform,
+                        icon = {
+                            androidx.compose.material3.Icon(
+                                Icons.Filled.SportsEsports, null, Modifier.padding(end = 6.dp).size(18.dp),
+                            )
+                        },
+                    )
                     SourceBadges(entry)
                     MetaLine(entry)
                 }

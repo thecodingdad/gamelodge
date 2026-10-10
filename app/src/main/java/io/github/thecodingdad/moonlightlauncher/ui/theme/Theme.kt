@@ -138,6 +138,10 @@ fun LauncherTheme(settings: LauncherSettings, content: @Composable () -> Unit) {
         LocalReduceMotion provides settings.reduceMotion,
         LocalAccentHolder provides accentHolder,
     ) {
-        MaterialTheme(colorScheme = scheme, typography = LauncherTypography, content = content)
+        MaterialTheme(colorScheme = scheme, typography = LauncherTypography) {
+            // Material 3 leaves the default content colour black; icons without an explicit
+            // tint would be nearly invisible on the dark surfaces.
+            CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides colors.onSurface, content = content)
+        }
     }
 }

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -15,7 +16,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -146,8 +147,8 @@ fun LibraryScreen(
             item { Chip(stringResource(R.string.stats_title), selected = false, onClick = openStats) }
             item {
                 Chip(
-                    stringResource(R.string.filters_edit), selected = false, onClick = openFilterSettings,
-                    icon = { Icon(Icons.Filled.Tune, null, Modifier.padding(end = 6.dp)) },
+                    "", selected = false, onClick = openFilterSettings,
+                    icon = { Icon(Icons.Filled.Edit, stringResource(R.string.filters_edit)) },
                 )
             }
         }
@@ -191,9 +192,17 @@ fun Chip(label: String, selected: Boolean, onClick: () -> Unit, icon: (@Composab
         color = if (selected) colors.accent else colors.surfaceRaised,
         focusScale = 1.08f,
     ) {
-        Row(Modifier.padding(horizontal = 16.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
-            icon?.invoke()
-            Text(label, style = MaterialTheme.typography.labelLarge, color = if (selected) colors.onAccent else colors.onSurface)
+        val content = if (selected) colors.onAccent else colors.onSurface
+        // Icons take their tint from LocalContentColor, which FocusSurface doesn't set.
+        androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides content) {
+            Row(
+                // Fixed content height: chips with and without icon line up.
+                Modifier.padding(horizontal = if (label.isEmpty()) 12.dp else 16.dp, vertical = 9.dp).height(24.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                icon?.invoke()
+                if (label.isNotEmpty()) Text(label, style = MaterialTheme.typography.labelLarge, color = content)
+            }
         }
     }
 }

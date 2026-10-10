@@ -194,7 +194,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                                 var fixing by remember { mutableStateOf(false) }
                                 var artwork by remember { mutableStateOf(false) }
                                 val scope = rememberCoroutineScope()
-                                DetailScreen(e, sessions, settings.animatedArtwork, onFavorite = { vm.setFavorite(e, it) }) {
+                                DetailScreen(e, sessions, settings.animatedArtwork, onFavorite = { vm.setFavorite(e, it) }, onPlatform = { platformFor = e }) {
                                     MetadataActions(
                                         entry = e,
                                         onFix = { fixing = true },
