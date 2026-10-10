@@ -103,7 +103,6 @@ fun HostInfoPopup(
             if (h.missingPermissions.isNotEmpty()) {
                 InfoRow(stringResource(R.string.host_info_permissions), stringResource(R.string.host_info_permissions_missing))
             }
-            config?.autoSleepMinutes?.let { InfoRow(stringResource(R.string.host_info_auto_sleep), stringResource(R.string.minutes_short, it)) }
         }
         // Stream profile used for the next streams (global, "start with…" overrides it per game).
         if (profiles.isNotEmpty() && activeProfile != null) {
@@ -116,6 +115,19 @@ fun HostInfoPopup(
                 label = { it.name }, onSelect = onProfile,
                 subtitle = profileSummary(context, activeProfile.uuid),
                 icon = Icons.Filled.Tune,
+            )
+        }
+        // Auto sleep after a stream, editable right here (same options as in the host settings).
+        config?.let { cfg ->
+            io.github.thecodingdad.moonlightlauncher.ui.screens.settings.ChoiceRow(
+                stringResource(R.string.host_auto_sleep), listOf<Int?>(null, 5, 10, 15, 30, 60), cfg.autoSleepMinutes,
+                label = { it?.let { m -> stringResource(R.string.minutes_short, m) } ?: stringResource(R.string.off) },
+                onSelect = { minutes ->
+                    val updated = cfg.copy(autoSleepMinutes = minutes)
+                    config = updated
+                    scope.launch { c.hostPower.save(updated) }
+                },
+                icon = Icons.Filled.Bedtime,
             )
         }
         Spacer(Modifier.height(18.dp))
