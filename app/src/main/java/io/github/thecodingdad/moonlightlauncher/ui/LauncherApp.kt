@@ -178,7 +178,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
             nav.popBackStack(Routes.MAIN, inclusive = false)
             vm.tab = 0
             // Home starts at the top again: forget the remembered position of the start tab.
-            vm.lastFocusedKey = null
+            vm.focusKeys.remove(MainTab.HOME.name)
             vm.homeResets.intValue++
             hostInfoFor = null
             controllerPopup = false
@@ -528,8 +528,8 @@ private fun MainShell(
                                 if (entry != null && target != null) vm.launch(activity, entry, target)
                             },
                             onRunningMenu = entryActions::contextForSession,
-                            lastFocusedKey = vm.lastFocusedKey,
-                            onFocusKey = { vm.lastFocusedKey = it },
+                            lastFocusedKey = vm.focusKeys[MainTab.HOME.name],
+                            onFocusKey = { vm.focusKeys[MainTab.HOME.name] = it },
                             animatedArtwork = settings.animatedArtwork,
                         )
                         io.github.thecodingdad.moonlightlauncher.ui.shell.ScreenHints(
@@ -552,13 +552,13 @@ private fun MainShell(
                         }
                     }
                     MainTab.LIBRARY -> LibraryScreen(
-                        allEntries, libraryFilters, settings.animatedArtwork, vm.lastFocusedKey, openStats,
+                        allEntries, libraryFilters, settings.animatedArtwork, vm.focusKeys[MainTab.LIBRARY.name], openStats,
                         openFilterSettings = { nav.navigate(Routes.settings(SettingsPageId.FILTERS)) },
-                    ) { vm.lastFocusedKey = it }
+                    ) { vm.focusKeys[MainTab.LIBRARY.name] = it }
                     MainTab.APPS -> AppsScreen(
-                        apps, appsFilters, vm.lastFocusedKey,
+                        apps, appsFilters, vm.focusKeys[MainTab.APPS.name],
                         openFilterSettings = { nav.navigate(Routes.settings(SettingsPageId.APP_FILTERS)) },
-                    ) { vm.lastFocusedKey = it }
+                    ) { vm.focusKeys[MainTab.APPS.name] = it }
                     MainTab.SETTINGS -> {
                         io.github.thecodingdad.moonlightlauncher.ui.shell.ScreenHints(
                             listOf(ButtonHint(PadButton.A, stringResource(R.string.hint_select)), ButtonHint(PadButton.L1, stringResource(R.string.hint_tabs), secondButton = PadButton.R1)),

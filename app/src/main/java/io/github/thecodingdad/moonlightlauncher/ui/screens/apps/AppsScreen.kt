@@ -65,7 +65,12 @@ fun AppsScreen(
     var sort by rememberSaveable { mutableStateOf(LibrarySort.TITLE) }
     // Scroll position and focused app are kept per filter.
     val gridStates = androidx.compose.runtime.saveable.rememberSaveableStateHolder()
-    val focusByFilter = remember { androidx.compose.runtime.mutableStateMapOf<String, String>() }
+    // Saveable: survives switching tabs (the tab's saved state is kept while another tab is shown).
+    val focusByFilter = androidx.compose.runtime.saveable.rememberSaveable(
+        saver = androidx.compose.runtime.saveable.Saver<androidx.compose.runtime.snapshots.SnapshotStateMap<String, String>, HashMap<String, String>>(
+            save = { HashMap(it) }, restore = { androidx.compose.runtime.mutableStateMapOf<String, String>().apply { putAll(it) } },
+        ),
+    ) { androidx.compose.runtime.mutableStateMapOf<String, String>() }
     var search by rememberSaveable { mutableStateOf("") }
     val selected = filters.firstOrNull { it.key == selectedKey }
     val keyboard = io.github.thecodingdad.moonlightlauncher.ui.components.LocalKeyboardController.current

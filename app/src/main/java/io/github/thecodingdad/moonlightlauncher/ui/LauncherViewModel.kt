@@ -83,7 +83,8 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     val homeResets = androidx.compose.runtime.mutableIntStateOf(0)
 
     /** Focus key ("row:itemId") to restore when returning to a list, e.g. back from details. */
-    var lastFocusedKey: String? = null
+    /** Last focused element per main tab, so switching tabs never overwrites another tab's position. */
+    val focusKeys = HashMap<String, String>()
 
     val allEntries: StateFlow<List<LibraryEntry>> =
         c.library.allEntries.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())

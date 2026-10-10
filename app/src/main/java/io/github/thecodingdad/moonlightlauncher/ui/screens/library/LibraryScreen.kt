@@ -129,7 +129,12 @@ fun LibraryScreen(
     )
     // Scroll position and focused game are kept per filter.
     val gridStates = androidx.compose.runtime.saveable.rememberSaveableStateHolder()
-    val focusByFilter = remember { androidx.compose.runtime.mutableStateMapOf<String, String>() }
+    // Saveable: survives switching tabs (the tab's saved state is kept while another tab is shown).
+    val focusByFilter = androidx.compose.runtime.saveable.rememberSaveable(
+        saver = androidx.compose.runtime.saveable.Saver<androidx.compose.runtime.snapshots.SnapshotStateMap<String, String>, HashMap<String, String>>(
+            save = { HashMap(it) }, restore = { androidx.compose.runtime.mutableStateMapOf<String, String>().apply { putAll(it) } },
+        ),
+    ) { androidx.compose.runtime.mutableStateMapOf<String, String>() }
     val filterKey = selected?.key ?: BuiltinFilter.ALL
 
     Column(Modifier.fillMaxSize()) {
