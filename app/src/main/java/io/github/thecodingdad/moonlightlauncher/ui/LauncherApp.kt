@@ -505,10 +505,7 @@ private fun MainShell(
     val fullBleed = tabs[tab] == MainTab.HOME && settings.homeLayout != HomeLayout.GRID
     val bg = LauncherTheme.colors.background
     Box(Modifier.fillMaxSize().statusBarsPadding()) {
-        Box(
-            Modifier.fillMaxSize()
-                .then(if (fullBleed) Modifier else Modifier.padding(top = topBarHeight, bottom = hintBarHeight)),
-        ) {
+        Box(Modifier.fillMaxSize()) {
           CompositionLocalProvider(
               io.github.thecodingdad.moonlightlauncher.ui.screens.home.LocalShellInsets provides
                   androidx.compose.foundation.layout.PaddingValues(top = topBarHeight, bottom = hintBarHeight),
@@ -517,6 +514,10 @@ private fun MainShell(
                 // The start tab's saved state is keyed by the reset counter, so Home starts fresh.
                 val stateKey = if (current == MainTab.HOME) "HOME-${vm.homeResets.intValue}" else current.name
                 tabStates.SaveableStateProvider(stateKey) {
+                // Each tab applies the bar insets itself (full-bleed home draws behind them), so the
+                // outgoing and incoming tab keep their own layout during the cross-fade.
+                val tabFullBleed = current == MainTab.HOME && settings.homeLayout != HomeLayout.GRID
+                Box(Modifier.fillMaxSize().then(if (tabFullBleed) Modifier else Modifier.padding(top = topBarHeight, bottom = hintBarHeight))) {
                 when (current) {
                     MainTab.HOME -> {
                         val rows = remember(games, running) { HomeRows.from(games, running) }
@@ -566,6 +567,7 @@ private fun MainShell(
                     }
                 }
                 }
+                }
             }
           }
         }
@@ -576,7 +578,8 @@ private fun MainShell(
                     else androidx.compose.ui.graphics.SolidColor(bg),
                 )
                 .onSizeChanged { topBarHeight = with(density) { it.height.toDp() } }
-                .padding(start = 28.dp, end = 28.dp, top = 10.dp, bottom = if (fullBleed) 14.dp else 4.dp),
+                // Constant height for every tab: a changing bar height would shift all content.
+                .padding(start = 28.dp, end = 28.dp, top = 10.dp, bottom = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             val compact = io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current
