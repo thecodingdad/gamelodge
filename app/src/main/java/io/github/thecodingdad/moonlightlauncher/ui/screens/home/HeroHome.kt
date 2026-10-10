@@ -155,6 +155,7 @@ fun HeroHome(
                 }
             }
             androidx.compose.runtime.CompositionLocalProvider(androidx.compose.foundation.gestures.LocalBringIntoViewSpec provides io.github.thecodingdad.moonlightlauncher.ui.components.NoScrollBringIntoView) {
+            val topFadePx = with(density) { 28.dp.toPx() }
             val fadePx = with(density) { (insets.calculateBottomPadding() + 56.dp).toPx() }
             LazyColumn(
                 state = listState,
@@ -165,8 +166,10 @@ fun HeroHome(
                     .drawWithContent {
                         drawContent()
                         val stop = ((size.height - fadePx) / size.height).coerceIn(0f, 1f)
+                        // Top edge fades too, so rows scrolled up don't end in a hard cut.
+                        val topStop = (topFadePx / size.height).coerceIn(0f, stop)
                         drawRect(
-                            Brush.verticalGradient(0f to Color.Black, stop to Color.Black, 1f to Color.Transparent),
+                            Brush.verticalGradient(0f to Color.Transparent, topStop to Color.Black, stop to Color.Black, 1f to Color.Transparent),
                             blendMode = androidx.compose.ui.graphics.BlendMode.DstIn,
                         )
                     },

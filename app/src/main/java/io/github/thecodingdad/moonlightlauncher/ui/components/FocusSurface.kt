@@ -68,6 +68,9 @@ object TouchFocus {
     fun justRestored() = android.os.SystemClock.uptimeMillis() - restoredAt < 500
 }
 
+/** True on narrow screens (portrait handheld, phone): layouts stack instead of sitting side by side. */
+val LocalCompactWidth = androidx.compose.runtime.compositionLocalOf { false }
+
 /** True when the user navigates with gamepad/keyboard (focus ring visible). */
 @Composable
 fun isControllerMode(): Boolean = LocalInputModeManager.current.inputMode == InputMode.Keyboard

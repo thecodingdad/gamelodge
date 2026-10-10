@@ -30,6 +30,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
@@ -200,6 +201,8 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
             LocalButtonLayout provides settings.buttonLayout,
             LocalBringIntoViewSpec provides scrollSpec,
         ) {
+            androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
+            CompositionLocalProvider(io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth provides (maxWidth < 720.dp)) {
             Box(Modifier.fillMaxSize().background(LauncherTheme.colors.background)) {
                 // The launcher behind any popup or panel is blurred (Android 12+; older versions just dim).
                 val backdropBlur by androidx.compose.animation.core.animateDpAsState(if (io.github.thecodingdad.moonlightlauncher.ui.components.OverlayHost.anyVisible) 14.dp else 0.dp, label = "backdropBlur")
@@ -413,6 +416,8 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                     io.github.thecodingdad.moonlightlauncher.ui.shell.Screensaver(games) { idle = false; vm.touch() }
                 }
             }
+            }
+            }
         }
     }
 }
@@ -422,7 +427,10 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
 private fun ShellFrame(hints: HintHolder, content: @Composable () -> Unit) {
     Column(Modifier.fillMaxSize().statusBarsPadding()) {
         Box(Modifier.fillMaxWidth().weight(1f)) { content() }
-        ButtonHintBar(hints.hints.ifEmpty { listOf(ButtonHint(PadButton.A, stringResource(R.string.hint_select)), ButtonHint(PadButton.B, stringResource(R.string.hint_back))) })
+        ButtonHintBar(
+            hints.hints.ifEmpty { listOf(ButtonHint(PadButton.A, stringResource(R.string.hint_select)), ButtonHint(PadButton.B, stringResource(R.string.hint_back))) },
+            hideWhenCompact = true,
+        )
     }
 }
 
@@ -473,6 +481,9 @@ private fun MainShell(
     val density = androidx.compose.ui.platform.LocalDensity.current
     var topBarHeight by remember { mutableStateOf(0.dp) }
     var hintBarHeight by remember { mutableStateOf(0.dp) }
+    // Hidden hint bar (portrait) takes no space; its last measured height must not linger.
+    val compactShell = io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current
+    LaunchedEffect(compactShell) { if (compactShell) hintBarHeight = 0.dp }
     val fullBleed = tabs[tab] == MainTab.HOME && settings.homeLayout != HomeLayout.GRID
     val bg = LauncherTheme.colors.background
     Box(Modifier.fillMaxSize().statusBarsPadding()) {
@@ -550,21 +561,40 @@ private fun MainShell(
                 .padding(start = 28.dp, end = 28.dp, top = 10.dp, bottom = if (fullBleed) 14.dp else 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.weight(1f)) {
-                tabs.forEachIndexed { index, t ->
-                    TabChip(stringResource(t.title), selected = index == tab, onClick = { tab = index })
+            val compact = io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current
+            val status: @Composable () -> Unit = {
+                StatusCluster(
+                    hosts,
+                    onHostClick = { onHostInfo(it.uuid) },
+                    controllerCount = controllers.size,
+                    onControllerClick = onControllers,
+                )
+            }
+            val tabRow: @Composable (Modifier) -> Unit = { m ->
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = m.horizontalScroll(androidx.compose.foundation.rememberScrollState()),
+                ) {
+                    tabs.forEachIndexed { index, t ->
+                        TabChip(stringResource(t.title), selected = index == tab, onClick = { tab = index })
+                    }
                 }
             }
-            StatusCluster(
-                hosts,
-                onHostClick = { onHostInfo(it.uuid) },
-                controllerCount = controllers.size,
-                onControllerClick = onControllers,
-            )
+            if (compact) {
+                // Narrow screen: status on its own line above the (scrollable) tabs.
+                Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) { status() }
+                    tabRow(Modifier)
+                }
+            } else {
+                tabRow(Modifier.weight(1f))
+                status()
+            }
         }
         ButtonHintBar(
             hints.hints,
-            Modifier.align(Alignment.BottomCenter)
+            hideWhenCompact = true,
+            modifier = Modifier.align(Alignment.BottomCenter)
                 .background(
                     if (fullBleed) androidx.compose.ui.graphics.Brush.verticalGradient(listOf(androidx.compose.ui.graphics.Color.Transparent, bg.copy(alpha = 0.7f)))
                     else androidx.compose.ui.graphics.SolidColor(bg),

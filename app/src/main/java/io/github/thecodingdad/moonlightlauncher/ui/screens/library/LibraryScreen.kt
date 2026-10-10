@@ -164,9 +164,13 @@ fun LibraryScreen(
         ) {
         LazyVerticalGrid(
             state = gridState,
-            columns = GridCells.Adaptive(LauncherTheme.dimens.coverWidth + 8.dp),
-            contentPadding = PaddingValues(horizontal = 36.dp, vertical = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(18.dp),
+            // Narrow screens get smaller covers (three columns instead of two huge ones).
+            columns = GridCells.Adaptive(
+                if (io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current) LauncherTheme.dimens.coverWidth * 0.62f
+                else LauncherTheme.dimens.coverWidth + 8.dp,
+            ),
+            contentPadding = PaddingValues(horizontal = if (io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current) 16.dp else 36.dp, vertical = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(if (io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current) 12.dp else 18.dp),
             verticalArrangement = Arrangement.spacedBy(22.dp),
             modifier = Modifier.focusRestorer(),
         ) {

@@ -141,8 +141,11 @@ fun AppsScreen(
     ) {
     LazyVerticalGrid(
         state = gridState,
-        columns = GridCells.Adaptive(LauncherTheme.dimens.iconTile + 36.dp),
-        contentPadding = PaddingValues(horizontal = 36.dp, vertical = 12.dp),
+        columns = GridCells.Adaptive(
+            if (io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current) LauncherTheme.dimens.iconTile * 0.6f + 30.dp
+            else LauncherTheme.dimens.iconTile + 36.dp,
+        ),
+        contentPadding = PaddingValues(horizontal = if (io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current) 16.dp else 36.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp),
         modifier = Modifier.fillMaxSize().focusRestorer(),

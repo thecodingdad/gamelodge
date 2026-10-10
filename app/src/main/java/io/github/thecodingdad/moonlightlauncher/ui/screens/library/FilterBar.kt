@@ -13,10 +13,13 @@ import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Icon
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRequester
@@ -94,6 +97,29 @@ fun FilterBar(
                 )
             }
         }
+        if (io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current) {
+            // Narrow screens: the tools sit behind one menu button, the chips get the width.
+            var menu by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+            Chip("", selected = search.isNotEmpty() || sort != LibrarySort.TITLE, onClick = { menu = true }, icon = {
+                Icon(Icons.Filled.MoreVert, stringResource(R.string.hint_options))
+            })
+            io.github.thecodingdad.moonlightlauncher.ui.components.Modal(
+                visible = menu, onDismiss = { menu = false }, maxWidth = 420.dp,
+            ) {
+                androidx.compose.foundation.layout.Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    val item: @Composable (androidx.compose.ui.graphics.vector.ImageVector, String, () -> Unit) -> Unit = { icon, label, action ->
+                        io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton(
+                            label, onClick = { menu = false; action() }, icon = icon,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
+                    item(Icons.Filled.Search, stringResource(R.string.hint_search), onSearch)
+                    item(Icons.AutoMirrored.Filled.Sort, sortLabel(sort) + "  →  " + sortLabel(sort.next()).substringAfter(": "), onSort)
+                    if (onStats != null) item(Icons.Filled.BarChart, stringResource(R.string.stats_title), onStats)
+                    item(Icons.Filled.Edit, stringResource(R.string.filters_edit), onEdit)
+                }
+            }
+        } else {
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.focusRestorer()) {
             Chip(
                 "", selected = search.isNotEmpty(), onClick = onSearch,
@@ -108,6 +134,7 @@ fun FilterBar(
             }
             Chip("", selected = false, onClick = onEdit, icon = { Icon(Icons.Filled.Edit, stringResource(R.string.filters_edit)) })
         }
+            }
     }
 }
 

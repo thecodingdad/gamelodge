@@ -126,7 +126,8 @@ fun AppTile(
     onLongClick: (() -> Unit)? = null,
     onFocused: (() -> Unit)? = null,
 ) {
-    val size = LauncherTheme.dimens.iconTile
+    // Narrow screens: smaller tiles so four fit next to each other.
+    val size = if (LocalCompactWidth.current) LauncherTheme.dimens.iconTile * 0.6f else LauncherTheme.dimens.iconTile
     val colors = LauncherTheme.colors
     Column(modifier.width(size + 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         FocusSurface(

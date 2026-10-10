@@ -25,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
@@ -61,6 +62,7 @@ import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 import java.text.DateFormat
 import java.util.Date
 
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun DetailScreen(
     entry: LibraryEntry,
@@ -111,6 +113,86 @@ fun DetailScreen(
 
         // Layout grows with the available space (e.g. on a TV): bigger cover, wider text column,
         // more generous spacing, content vertically centred instead of glued to the top left.
+        val compact = io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current
+        val chips: @Composable () -> Unit = {
+                    // Platform as a chip: shows the current value, opens the platform picker.
+                    io.github.thecodingdad.moonlightlauncher.ui.screens.library.Chip(
+                        label = entry.item.platform ?: stringResource(R.string.platform_title),
+                        selected = false,
+                        onClick = onPlatform,
+                        icon = {
+                            androidx.compose.material3.Icon(
+                                Icons.Filled.SportsEsports, null, Modifier.padding(end = 6.dp).size(18.dp),
+                            )
+                        },
+                    )
+                    if (hasRemote && activeProfile != null) {
+                        io.github.thecodingdad.moonlightlauncher.ui.screens.library.Chip(
+                            label = activeProfile.name,
+                            selected = false,
+                            onClick = { profilePicker = true },
+                            icon = {
+                                androidx.compose.material3.Icon(
+                                    Icons.Filled.Tune, null, Modifier.padding(end = 6.dp).size(18.dp),
+                                )
+                            },
+                        )
+                    }
+                    SourceBadges(entry)
+                    MetaLine(entry)
+                }
+        val buttons: @Composable () -> Unit = {
+                    LauncherButton(
+                        stringResource(R.string.action_play), onClick = { actions.play(entry) },
+                        icon = Icons.Filled.PlayArrow, primary = true,
+                        modifier = Modifier.restoreFocusIf(true),
+                    )
+                    if (hasRemote) LauncherButton(stringResource(R.string.action_play_with), onClick = { actions.playWith(entry) }, icon = Icons.Filled.Tune)
+                    LauncherButton(
+                        "", onClick = { onFavorite(!entry.item.favorite) },
+                        icon = if (entry.item.favorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                    )
+                    LauncherButton("", onClick = { actions.context(entry) }, icon = Icons.Filled.MoreHoriz)
+                }
+        val details: @Composable () -> Unit = {
+            extraActions()
+            entry.item.description?.let {
+                Text(it, style = MaterialTheme.typography.bodyLarge, color = colors.onSurface)
+            }
+            InfoBlock(entry, sessions)
+            Spacer(Modifier.height(24.dp))
+        }
+        if (compact) {
+            // Narrow (portrait): cover next to logo and chips on top, everything else full width below.
+            Column(
+                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.Bottom) {
+                    ArtworkImage(
+                        entry.coverModel(animatedArtwork), entry.item.title,
+                        Modifier.width(150.dp).aspectRatio(2f / 3f).clip(RoundedCornerShape(14.dp)),
+                    )
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        if (entry.item.logoUrl != null) {
+                            io.github.thecodingdad.moonlightlauncher.ui.components.LogoImage(entry.item.logoUrl, entry.item.title, Modifier.height(70.dp).fillMaxWidth())
+                        } else {
+                            Text(entry.item.title, style = MaterialTheme.typography.headlineMedium, color = colors.onSurface, maxLines = 3, overflow = TextOverflow.Ellipsis)
+                        }
+                        androidx.compose.foundation.layout.FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                        ) { chips() }
+                    }
+                }
+                androidx.compose.foundation.layout.FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier.focusRestorer(),
+                ) { buttons() }
+                details()
+            }
+        } else {
         androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
         val roomy = maxWidth > 1100.dp
         val coverWidth = minOf(maxWidth * 0.26f, (maxHeight - 40.dp) * 0.82f * (2f / 3f)).coerceAtLeast(210.dp)
@@ -139,53 +221,15 @@ fun DetailScreen(
                     Text(entry.item.title, style = MaterialTheme.typography.displaySmall, color = colors.onSurface, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    // Platform as a chip: shows the current value, opens the platform picker.
-                    io.github.thecodingdad.moonlightlauncher.ui.screens.library.Chip(
-                        label = entry.item.platform ?: stringResource(R.string.platform_title),
-                        selected = false,
-                        onClick = onPlatform,
-                        icon = {
-                            androidx.compose.material3.Icon(
-                                Icons.Filled.SportsEsports, null, Modifier.padding(end = 6.dp).size(18.dp),
-                            )
-                        },
-                    )
-                    if (hasRemote && activeProfile != null) {
-                        io.github.thecodingdad.moonlightlauncher.ui.screens.library.Chip(
-                            label = activeProfile.name,
-                            selected = false,
-                            onClick = { profilePicker = true },
-                            icon = {
-                                androidx.compose.material3.Icon(
-                                    Icons.Filled.Tune, null, Modifier.padding(end = 6.dp).size(18.dp),
-                                )
-                            },
-                        )
-                    }
-                    SourceBadges(entry)
-                    MetaLine(entry)
+                    chips()
                 }
                 Spacer(Modifier.height(4.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.focusRestorer()) {
-                    LauncherButton(
-                        stringResource(R.string.action_play), onClick = { actions.play(entry) },
-                        icon = Icons.Filled.PlayArrow, primary = true,
-                        modifier = Modifier.restoreFocusIf(true),
-                    )
-                    if (hasRemote) LauncherButton(stringResource(R.string.action_play_with), onClick = { actions.playWith(entry) }, icon = Icons.Filled.Tune)
-                    LauncherButton(
-                        "", onClick = { onFavorite(!entry.item.favorite) },
-                        icon = if (entry.item.favorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                    )
-                    LauncherButton("", onClick = { actions.context(entry) }, icon = Icons.Filled.MoreHoriz)
+                    buttons()
                 }
-                extraActions()
-                entry.item.description?.let {
-                    Text(it, style = MaterialTheme.typography.bodyLarge, color = colors.onSurface)
-                }
-                InfoBlock(entry, sessions)
-                Spacer(Modifier.height(24.dp))
+                details()
             }
+        }
         }
         }
         if (activeProfile != null) {
@@ -214,8 +258,8 @@ private fun InfoBlock(entry: LibraryEntry, sessions: List<PlaySessionEntity>) {
     ) {
         rows.forEach { (label, value) ->
             Row {
-                Text(label, style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceMuted, modifier = Modifier.width(170.dp))
-                Text(value, style = MaterialTheme.typography.bodyMedium, color = colors.onSurface)
+                Text(label, style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceMuted, modifier = Modifier.widthIn(min = 120.dp, max = 170.dp).padding(end = 12.dp))
+                Text(value, style = MaterialTheme.typography.bodyMedium, color = colors.onSurface, modifier = Modifier.weight(1f))
             }
         }
     }

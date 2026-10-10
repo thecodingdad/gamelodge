@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -41,12 +42,17 @@ data class ButtonHint(
 
 /** Bottom bar listing what each button does right now. Always visible, in every screen. */
 @Composable
-fun ButtonHintBar(hints: List<ButtonHint>, modifier: Modifier = Modifier) {
+fun ButtonHintBar(hints: List<ButtonHint>, modifier: Modifier = Modifier, hideWhenCompact: Boolean = false) {
+    // Portrait/phone is mostly touch: the main hint bars are hidden there (more room for content).
+    if (hideWhenCompact && LocalCompactWidth.current) return
+    val compact = LocalCompactWidth.current
+    // One line that never wraps; on narrow screens it scrolls instead.
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 28.dp, vertical = 10.dp),
-        horizontalArrangement = Arrangement.spacedBy(22.dp, Alignment.End),
+            .horizontalScroll(androidx.compose.foundation.rememberScrollState())
+            .padding(horizontal = if (compact) 16.dp else 28.dp, vertical = 10.dp),
+        horizontalArrangement = Arrangement.spacedBy(if (compact) 12.dp else 22.dp, Alignment.End),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         hints.forEach { hint ->
@@ -62,7 +68,7 @@ fun ButtonHintBar(hints: List<ButtonHint>, modifier: Modifier = Modifier) {
                 // A pair (previous/next) is one glyph "LB/RB" to save space.
                 PadGlyph(hint.button, second = hint.secondButton)
                 Spacer(Modifier.size(8.dp))
-                Text(hint.label, style = MaterialTheme.typography.labelMedium, color = LauncherTheme.colors.onSurfaceMuted)
+                Text(hint.label, style = MaterialTheme.typography.labelMedium, color = LauncherTheme.colors.onSurfaceMuted, maxLines = 1, softWrap = false)
             }
         }
     }
