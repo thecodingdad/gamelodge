@@ -95,8 +95,8 @@ fun QuickMenu(
         io.github.thecodingdad.moonlightlauncher.ui.input.PadAction(io.github.thecodingdad.moonlightlauncher.ui.input.PadButton.R1) { tab = 1 }
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
             io.github.thecodingdad.moonlightlauncher.ui.components.PadGlyph(io.github.thecodingdad.moonlightlauncher.ui.input.PadButton.L1)
-            io.github.thecodingdad.moonlightlauncher.ui.screens.library.Chip(stringResource(R.string.qm_tab_quick), selected = tab == 0, onClick = { tab = 0 })
-            io.github.thecodingdad.moonlightlauncher.ui.screens.library.Chip(stringResource(R.string.settings_home_assistant), selected = tab == 1, onClick = { tab = 1 })
+            PanelTab(stringResource(R.string.qm_tab_quick), selected = tab == 0, onClick = { tab = 0 })
+            PanelTab(stringResource(R.string.settings_home_assistant), selected = tab == 1, onClick = { tab = 1 })
             io.github.thecodingdad.moonlightlauncher.ui.components.PadGlyph(io.github.thecodingdad.moonlightlauncher.ui.input.PadButton.R1)
         }
         androidx.compose.foundation.layout.Spacer(Modifier.heightIn(min = 12.dp))
@@ -248,3 +248,23 @@ private fun HomeAssistantSection(openSettings: () -> Unit) {
     }
 }
 
+
+/** Tab header like the launcher's main tabs: touch only (LB/RB switch with the controller). */
+@Composable
+private fun PanelTab(label: String, selected: Boolean, onClick: () -> Unit) {
+    val colors = LauncherTheme.colors
+    io.github.thecodingdad.moonlightlauncher.ui.components.FocusSurface(
+        onClick = onClick,
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
+        color = if (selected) colors.onSurface else androidx.compose.ui.graphics.Color.Transparent,
+        focusScale = 1f,
+        dpadFocusable = false,
+    ) {
+        Text(
+            label,
+            style = MaterialTheme.typography.titleMedium,
+            color = if (selected) colors.background else colors.onSurfaceMuted,
+            modifier = Modifier.padding(horizontal = 18.dp, vertical = 8.dp),
+        )
+    }
+}

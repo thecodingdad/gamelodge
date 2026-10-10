@@ -27,6 +27,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import io.github.thecodingdad.moonlightlauncher.ui.input.PadButton
+import io.github.thecodingdad.moonlightlauncher.ui.input.PadAction
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
@@ -60,8 +69,9 @@ fun HaTileType.icon(): ImageVector = when (this) {
 }
 
 /**
- * One smart-home tile. A = primary action; D-pad left/right adjusts the value
- * (brightness, cover position, target temperature) in steps.
+ * One smart-home tile. A = primary action. The value (brightness, cover position, target
+ * temperature) is set with the right stick while focused, or by sliding a finger across the
+ * tile. D-pad and left stick only move the focus.
  */
 @Composable
 fun HaTile(tile: HaTileEntity, entity: HaEntity?, modifier: Modifier = Modifier, width: Dp = 200.dp) {
@@ -71,32 +81,68 @@ fun HaTile(tile: HaTileEntity, entity: HaEntity?, modifier: Modifier = Modifier,
     val colors = LauncherTheme.colors
     val active = entity?.isOn == true
 
-    fun adjust(direction: Int) {
-        entity ?: return
-        feedback?.play(UiSound.TOGGLE)
-        scope.launch {
+    val adjustable = tile.type in setOf(HaTileType.LIGHT, HaTileType.COVER, HaTileType.CLIMATE)
+    // Optimistic value while sliding / stepping, until Home Assistant reports the new state.
+    var pending by remember(tile.entityId) { mutableStateOf<Int?>(null) }
+    var dragging by remember { mutableStateOf(false) }
+    // Gesture/stick handlers outlive recompositions: always use the latest entity.
+    val latestEntity by androidx.compose.runtime.rememberUpdatedState(entity)
+    val current = pending ?: when (tile.type) {
+        HaTileType.LIGHT -> entity?.brightnessPercent?.takeIf { active } ?: 0
+        HaTileType.COVER -> entity?.coverPosition ?: 0
+        else -> 0
+    }
+    var sendJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
+    fun send(percent: Int, immediate: Boolean) {
+        val e = latestEntity ?: return
+        pending = percent
+        sendJob?.cancel()
+        sendJob = scope.launch {
+            // Coalesce rapid changes (stick repeat, finger slide) into few service calls.
+            if (!immediate) kotlinx.coroutines.delay(250)
             when (tile.type) {
-                HaTileType.LIGHT -> ha.setBrightness(entity, ((entity.brightnessPercent ?: 0) + direction * 10).coerceIn(0, 100))
-                HaTileType.COVER -> ha.setCoverPosition(entity, ((entity.coverPosition ?: 0) + direction * 10).coerceIn(0, 100))
-                HaTileType.CLIMATE -> entity.targetTemperature?.let { ha.setTemperature(entity, it + direction * 0.5) }
+                HaTileType.LIGHT -> ha.setBrightness(e, percent)
+                HaTileType.COVER -> ha.setCoverPosition(e, percent)
                 else -> Unit
             }
         }
     }
-    val adjustable = tile.type in setOf(HaTileType.LIGHT, HaTileType.COVER, HaTileType.CLIMATE)
+    // Drop the optimistic value once Home Assistant reports a state and nothing is pending.
+    androidx.compose.runtime.LaunchedEffect(entity) {
+        if (!dragging && sendJob?.isActive != true) pending = null
+    }
+    fun step(direction: Int) {
+        val e = entity ?: return
+        feedback?.play(UiSound.FOCUS)
+        if (tile.type == HaTileType.CLIMATE) {
+            e.targetTemperature?.let { t -> scope.launch { ha.setTemperature(e, t + direction * 0.5) } }
+        } else {
+            send((current + direction * 5).coerceIn(0, 100), immediate = false)
+        }
+    }
+    var focused by remember { mutableStateOf(false) }
+    PadAction(PadButton.RS_RIGHT, enabled = focused && adjustable) { step(1) }
+    PadAction(PadButton.RS_UP, enabled = focused && adjustable) { step(1) }
+    PadAction(PadButton.RS_LEFT, enabled = focused && adjustable) { step(-1) }
+    PadAction(PadButton.RS_DOWN, enabled = focused && adjustable) { step(-1) }
 
     FocusSurface(
         onClick = { if (entity != null && tile.type != HaTileType.SENSOR) scope.launch { ha.primaryAction(entity) } },
         modifier = modifier
             .width(width)
             .height(112.dp)
+            .onFocusChanged { focused = it.isFocused || it.hasFocus }
             .then(
-                if (adjustable) Modifier.onPreviewKeyEvent { e ->
-                    if (e.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
-                    when (e.key) {
-                        Key.DirectionLeft -> { adjust(-1); true }
-                        Key.DirectionRight -> { adjust(1); true }
-                        else -> false
+                // Touch: slide horizontally across the tile to set the value.
+                if (adjustable && tile.type != HaTileType.CLIMATE) Modifier.pointerInput(tile.entityId) {
+                    detectHorizontalDragGestures(
+                        onDragStart = { dragging = true },
+                        onDragEnd = { dragging = false; pending?.let { send(it, immediate = true) } },
+                        onDragCancel = { dragging = false },
+                    ) { change, _ ->
+                        change.consume()
+                        val percent = (change.position.x / size.width * 100).toInt().coerceIn(0, 100)
+                        send(percent, immediate = false)
                     }
                 } else Modifier,
             ),
@@ -113,10 +159,9 @@ fun HaTile(tile: HaTileEntity, entity: HaEntity?, modifier: Modifier = Modifier,
                     maxLines = 2, overflow = TextOverflow.Ellipsis,
                 )
             }
-            Text(stateText(tile, entity), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceMuted, maxLines = 1)
+            Text(pending?.let { "$it %" } ?: stateText(tile, entity), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceMuted, maxLines = 1)
             val level = when (tile.type) {
-                HaTileType.LIGHT -> entity?.brightnessPercent?.takeIf { active }
-                HaTileType.COVER -> entity?.coverPosition
+                HaTileType.LIGHT, HaTileType.COVER -> current
                 else -> null
             }
             if (level != null) {

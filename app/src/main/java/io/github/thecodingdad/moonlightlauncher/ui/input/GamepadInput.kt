@@ -8,7 +8,11 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.staticCompositionLocalOf
 
-enum class PadButton { A, B, X, Y, L1, R1, L2, R2, START, SELECT, SELECT_HOLD }
+enum class PadButton {
+    A, B, X, Y, L1, R1, L2, R2, START, SELECT, SELECT_HOLD,
+    /** Right stick pushed in a direction (repeats while held); used for values like brightness. */
+    RS_LEFT, RS_RIGHT, RS_UP, RS_DOWN,
+}
 
 /**
  * Central gamepad dispatcher. Screens register actions with [PadAction]; the most recently
@@ -24,6 +28,16 @@ class InputDispatcher {
     // Triggers: some controllers report them as keys, others only as analog axes, some both.
     private val triggerPressed = HashMap<PadButton, Boolean>()
     private val triggerFiredAt = HashMap<PadButton, Long>()
+    // Right stick as repeating direction buttons.
+    private val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private var stickDirection: PadButton? = null
+    private val stickRepeat = object : Runnable {
+        override fun run() {
+            val dir = stickDirection ?: return
+            fire(dir)
+            mainHandler.postDelayed(this, STICK_REPEAT_MS)
+        }
+    }
     private var selectDownAt = 0L
     private var selectHoldFired = false
 
@@ -70,6 +84,29 @@ class InputDispatcher {
         val right = maxOf(event.getAxisValue(MotionEvent.AXIS_RTRIGGER), event.getAxisValue(MotionEvent.AXIS_GAS))
         trigger(PadButton.L2, left, event.eventTime)
         trigger(PadButton.R2, right, event.eventTime)
+        rightStick(event)
+    }
+
+    private fun rightStick(event: MotionEvent) {
+        // Most pads report the right stick as Z/RZ, some as RX/RY.
+        val device = event.device
+        val useZ = device == null || device.getMotionRange(MotionEvent.AXIS_Z, event.source) != null
+        val x = event.getAxisValue(if (useZ) MotionEvent.AXIS_Z else MotionEvent.AXIS_RX)
+        val y = event.getAxisValue(if (useZ) MotionEvent.AXIS_RZ else MotionEvent.AXIS_RY)
+        val direction = when {
+            maxOf(kotlin.math.abs(x), kotlin.math.abs(y)) < STICK_RELEASE -> null
+            stickDirection != null && maxOf(kotlin.math.abs(x), kotlin.math.abs(y)) < STICK_PRESS -> stickDirection
+            maxOf(kotlin.math.abs(x), kotlin.math.abs(y)) < STICK_PRESS -> null
+            kotlin.math.abs(x) >= kotlin.math.abs(y) -> if (x > 0) PadButton.RS_RIGHT else PadButton.RS_LEFT
+            else -> if (y > 0) PadButton.RS_DOWN else PadButton.RS_UP
+        }
+        if (direction == stickDirection) return
+        mainHandler.removeCallbacks(stickRepeat)
+        stickDirection = direction
+        if (direction != null) {
+            fire(direction)
+            mainHandler.postDelayed(stickRepeat, STICK_FIRST_REPEAT_MS)
+        }
     }
 
     private fun trigger(button: PadButton, value: Float, time: Long) {
@@ -115,6 +152,10 @@ class InputDispatcher {
     companion object {
         const val HOLD_MS = 450L
         const val TRIGGER_DEDUP_MS = 250L
+        const val STICK_PRESS = 0.6f
+        const val STICK_RELEASE = 0.3f
+        const val STICK_FIRST_REPEAT_MS = 350L
+        const val STICK_REPEAT_MS = 120L
 
         fun buttonFor(keyCode: Int): PadButton? = when (keyCode) {
             KeyEvent.KEYCODE_BUTTON_X -> PadButton.X
