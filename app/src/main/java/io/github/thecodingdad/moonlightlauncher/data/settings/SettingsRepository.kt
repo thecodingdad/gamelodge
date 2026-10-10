@@ -74,6 +74,8 @@ data class LauncherSettings(
     val tvScaleAuto: Boolean = true,
     /** UI size on an external display, percent of the handheld size. */
     val tvScale: Int = 70,
+    /** UI size on the device's own display, percent. */
+    val uiScale: Int = 100,
     /** Separate app filters were created (and shared filters turned into game filters). */
     val appFiltersSeeded: Boolean = false,
 )
@@ -120,6 +122,7 @@ class SettingsRepository(context: Context) {
         val hideNavigationBar = booleanPreferencesKey("hide_navigation_bar")
         val tvScaleAuto = booleanPreferencesKey("tv_scale_auto")
         val tvScale = intPreferencesKey("tv_scale")
+        val uiScale = intPreferencesKey("ui_scale")
         val appFiltersSeeded = booleanPreferencesKey("app_filters_seeded")
     }
 
@@ -172,6 +175,7 @@ class SettingsRepository(context: Context) {
             hideNavigationBar = this[K.hideNavigationBar] ?: d.hideNavigationBar,
             tvScaleAuto = this[K.tvScaleAuto] ?: d.tvScaleAuto,
             tvScale = this[K.tvScale] ?: d.tvScale,
+            uiScale = this[K.uiScale] ?: d.uiScale,
             appFiltersSeeded = this[K.appFiltersSeeded] ?: d.appFiltersSeeded,
         )
     }
@@ -213,6 +217,7 @@ class SettingsRepository(context: Context) {
         this[K.hideNavigationBar] = s.hideNavigationBar
         this[K.tvScaleAuto] = s.tvScaleAuto
         this[K.tvScale] = s.tvScale
+        this[K.uiScale] = s.uiScale
         this[K.appFiltersSeeded] = s.appFiltersSeeded
     }
 

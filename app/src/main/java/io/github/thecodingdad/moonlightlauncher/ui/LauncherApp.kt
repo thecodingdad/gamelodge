@@ -179,7 +179,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
     // On a TV the handheld-sized layout looks huge: scale the whole UI down by lowering the density.
     val external by vm.externalDisplay.collectAsState()
     val baseDensity = androidx.compose.ui.platform.LocalDensity.current
-    val uiScale = if (settings.tvScaleAuto && external != null) settings.tvScale / 100f else 1f
+    val uiScale = (if (settings.tvScaleAuto && external != null) settings.tvScale else settings.uiScale) / 100f
     val scaledDensity = remember(baseDensity, uiScale) {
         androidx.compose.ui.unit.Density(baseDensity.density * uiScale, baseDensity.fontScale)
     }

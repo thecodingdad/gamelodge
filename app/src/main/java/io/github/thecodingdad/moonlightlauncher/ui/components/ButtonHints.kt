@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -53,6 +54,8 @@ fun ButtonHintBar(hints: List<ButtonHint>, modifier: Modifier = Modifier) {
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .clip(RoundedCornerShape(20.dp))
+                    // Touch only: the hints describe buttons, they must not catch D-pad focus.
+                    .focusProperties { canFocus = false }
                     .then(if (hint.onClick != null) Modifier.clickable(onClick = hint.onClick) else Modifier)
                     .padding(horizontal = 6.dp, vertical = 4.dp),
             ) {

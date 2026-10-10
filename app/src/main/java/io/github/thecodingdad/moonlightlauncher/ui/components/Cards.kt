@@ -24,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -43,13 +44,15 @@ import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
  */
 @Composable
 fun Modifier.restoreFocusIf(shouldFocus: Boolean): Modifier {
-    if (!shouldFocus) return this
     val requester = remember { FocusRequester() }
-    // In touch mode focus requests are ignored; retry as soon as the user picks up the controller.
+    val target by androidx.compose.runtime.rememberUpdatedState(shouldFocus)
+    // Only when the element appears (screen opened, filter switched, back from details) or the
+    // user picks up the controller. Not whenever it becomes the remembered element: during fast
+    // navigation late requests of two elements would keep stealing focus from each other.
     val controllerMode = isControllerMode()
     LaunchedEffect(controllerMode) {
         // The element the user just touched wins over the remembered one.
-        if (controllerMode && !TouchFocus.justRestored()) runCatching { requester.requestFocus() }
+        if (controllerMode && target && !TouchFocus.justRestored()) runCatching { requester.requestFocus() }
     }
     return this.focusRequester(requester)
 }

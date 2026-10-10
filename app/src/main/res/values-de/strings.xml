@@ -492,4 +492,7 @@
 
     <!-- Launch screen -->
     <string name="launch_on_host">auf %s</string>
+
+    <!-- UI scale -->
+    <string name="setting_ui_scale">Oberflächengröße (Gerätedisplay)</string>
 </resources>

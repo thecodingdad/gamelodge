@@ -108,6 +108,10 @@ fun AppearanceSettings(
         )
         SwitchRow(stringResource(R.string.setting_animated_artwork), settings.animatedArtwork, { v -> update { it.copy(animatedArtwork = v) } })
         SwitchRow(stringResource(R.string.setting_reduce_motion), settings.reduceMotion, { v -> update { it.copy(reduceMotion = v) } })
+        SliderRow(
+            stringResource(R.string.setting_ui_scale), settings.uiScale, 60..130, 5,
+            { v -> update { it.copy(uiScale = v) } }, { "$it %" },
+        )
         SectionHeader(stringResource(R.string.tv_section))
         InfoRow(
             stringResource(R.string.tv_detected),
