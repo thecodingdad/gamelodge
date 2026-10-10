@@ -134,6 +134,13 @@ fun HeroHome(
                 if (filterRows.size < 2 && haRow != null) add("ha")
             }
             var snapped by remember { mutableStateOf(false) }
+            // Rows arrive in stages at start (e.g. the smart home row before the game rows). The
+            // list keeps its first visible item when rows are inserted above it, so without a
+            // remembered position jump back to the top whenever the first row changes.
+            val firstRowKey = rowKeys.firstOrNull()
+            LaunchedEffect(firstRowKey) {
+                if (firstRowKey != null && callbacks.lastFocusedKey == null && !snapped) listState.scrollToItem(0)
+            }
             LaunchedEffect(focusedRow) {
                 val index = rowKeys.indexOf(focusedRow).takeIf { it >= 0 } ?: return@LaunchedEffect
                 // First focus (e.g. restored after returning) jumps, later changes glide.
