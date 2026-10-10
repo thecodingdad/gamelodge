@@ -414,6 +414,7 @@ private fun MainShell(vm: LauncherViewModel, nav: NavHostController, openStats: 
     // Keeps each tab's saved state (filter, sort, scroll position) while another tab is shown
     // or a detail page is open.
     val tabStates = androidx.compose.runtime.saveable.rememberSaveableStateHolder()
+    var hostInfoFor by remember { mutableStateOf<String?>(null) }
 
     PadAction(PadButton.L1) { tab = (tab - 1).mod(tabs.size) }
     PadAction(PadButton.R1) { tab = (tab + 1).mod(tabs.size) }
@@ -513,7 +514,7 @@ private fun MainShell(vm: LauncherViewModel, nav: NavHostController, openStats: 
                     TabChip(stringResource(t.title), selected = index == tab, onClick = { tab = index })
                 }
             }
-            StatusCluster(hosts, activeProfile.name, onProfileClick = ::cycleProfile)
+            StatusCluster(hosts, activeProfile.name, onProfileClick = ::cycleProfile, onHostClick = { hostInfoFor = it.uuid })
         }
         ButtonHintBar(
             hints.hints,
@@ -523,6 +524,12 @@ private fun MainShell(vm: LauncherViewModel, nav: NavHostController, openStats: 
                     else androidx.compose.ui.graphics.SolidColor(bg),
                 )
                 .onSizeChanged { hintBarHeight = with(density) { it.height.toDp() } },
+        )
+        io.github.thecodingdad.moonlightlauncher.ui.shell.HostInfoPopup(
+            host = hostInfoFor?.let { hostsMap[it] },
+            runningGame = running.firstOrNull { it.host.uuid == hostInfoFor }?.appName,
+            onDismiss = { hostInfoFor = null },
+            openSettings = { nav.navigate(Routes.host(it.uuid)) },
         )
     }
 }

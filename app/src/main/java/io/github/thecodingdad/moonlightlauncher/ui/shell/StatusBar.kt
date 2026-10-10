@@ -121,6 +121,7 @@ fun StatusCluster(
     profileName: String,
     onProfileClick: () -> Unit,
     modifier: Modifier = Modifier,
+    onHostClick: (HostState) -> Unit = {},
 ) {
     val status = rememberSystemStatus()
     val colors = LauncherTheme.colors
@@ -138,7 +139,16 @@ fun StatusCluster(
             Text(" $profileName", style = MaterialTheme.typography.labelMedium, color = colors.onSurface)
         }
         hosts.forEach { host ->
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            // Touch target for the host popup; like the other status icons not in D-pad navigation.
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                modifier = Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .focusProperties { canFocus = false }
+                    .clickable { onHostClick(host) }
+                    .padding(horizontal = 6.dp, vertical = 4.dp),
+            ) {
                 Icon(Icons.Filled.Computer, null, tint = colors.onSurfaceMuted, modifier = Modifier.size(18.dp))
                 StatusDot(
                     when {

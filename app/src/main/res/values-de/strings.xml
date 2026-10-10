@@ -495,4 +495,16 @@
 
     <!-- UI scale -->
     <string name="setting_ui_scale">Oberflächengröße (Gerätedisplay)</string>
+
+    <!-- Host popup -->
+    <string name="host_wake_sent">Wecksignal gesendet – der Host sollte gleich online sein</string>
+    <string name="host_state_streaming">Streamt: %s</string>
+    <string name="host_state_online">Online</string>
+    <string name="host_state_offline">Offline</string>
+    <string name="host_state_unknown">Wird geprüft …</string>
+    <string name="host_info_address">Adresse</string>
+    <string name="host_info_paired">Gekoppelt</string>
+    <string name="host_info_permissions">Berechtigungen</string>
+    <string name="host_info_permissions_missing">Teilweise fehlend – siehe Host-Einstellungen</string>
+    <string name="host_info_auto_sleep">Schlafen nach Stream</string>
 </resources>

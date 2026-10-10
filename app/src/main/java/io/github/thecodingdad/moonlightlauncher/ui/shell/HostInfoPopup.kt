@@ -1,0 +1,123 @@
+package io.github.thecodingdad.moonlightlauncher.ui.shell
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bedtime
+import androidx.compose.material.icons.filled.PowerSettingsNew
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.WbSunny
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import io.github.thecodingdad.moonlightlauncher.R
+import io.github.thecodingdad.moonlightlauncher.container
+import io.github.thecodingdad.moonlightlauncher.data.db.HostConfigEntity
+import io.github.thecodingdad.moonlightlauncher.data.remote.HostState
+import io.github.thecodingdad.moonlightlauncher.data.remote.HostStatus
+import io.github.thecodingdad.moonlightlauncher.stream.PowerAction
+import io.github.thecodingdad.moonlightlauncher.ui.components.HoldToConfirmButton
+import io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton
+import io.github.thecodingdad.moonlightlauncher.ui.components.Modal
+import io.github.thecodingdad.moonlightlauncher.ui.components.StatusDot
+import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.InfoRow
+import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
+import kotlinx.coroutines.launch
+
+/** Small popup from the status bar's host icon: state, address, running game, quick actions. */
+@Composable
+fun HostInfoPopup(
+    host: HostState?,
+    runningGame: String?,
+    onDismiss: () -> Unit,
+    openSettings: (HostState) -> Unit,
+) {
+    val c = LocalContext.current.container
+    val scope = rememberCoroutineScope()
+    var config by remember { mutableStateOf<HostConfigEntity?>(null) }
+    var message by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(host?.uuid) {
+        message = null
+        config = host?.let { c.hostPower.config(it.uuid) }
+    }
+    val wakeSent = stringResource(R.string.host_wake_sent)
+    Modal(visible = host != null, onDismiss = onDismiss, title = host?.name, maxWidth = 560.dp) {
+        val h = host ?: return@Modal
+        val colors = LauncherTheme.colors
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            StatusDot(
+                when {
+                    h.isStreaming -> colors.accent
+                    h.status == HostStatus.ONLINE -> colors.success
+                    h.status == HostStatus.OFFLINE -> colors.danger
+                    else -> colors.onSurfaceMuted
+                },
+            )
+            Text(
+                when {
+                    h.isStreaming -> stringResource(R.string.host_state_streaming, runningGame ?: "?")
+                    h.status == HostStatus.ONLINE -> stringResource(R.string.host_state_online)
+                    h.status == HostStatus.OFFLINE -> stringResource(R.string.host_state_offline)
+                    else -> stringResource(R.string.host_state_unknown)
+                },
+                style = MaterialTheme.typography.titleMedium, color = colors.onSurface,
+            )
+        }
+        Spacer(Modifier.height(14.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            h.address?.let { InfoRow(stringResource(R.string.host_info_address), it) }
+            // Pairing is only known once the host answered.
+            if (h.status == HostStatus.ONLINE) {
+                InfoRow(stringResource(R.string.host_info_paired), stringResource(if (h.paired) R.string.yes else R.string.no))
+            }
+            if (h.missingPermissions.isNotEmpty()) {
+                InfoRow(stringResource(R.string.host_info_permissions), stringResource(R.string.host_info_permissions_missing))
+            }
+            config?.autoSleepMinutes?.let { InfoRow(stringResource(R.string.host_info_auto_sleep), stringResource(R.string.minutes_short, it)) }
+        }
+        Spacer(Modifier.height(18.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            if (h.status != HostStatus.ONLINE) {
+                LauncherButton(
+                    stringResource(R.string.host_wake), icon = Icons.Filled.WbSunny, primary = true, modifier = Modifier.fillMaxWidth(),
+                    onClick = { scope.launch { c.hostPower.wake(h.uuid); message = wakeSent } },
+                )
+            } else {
+                config?.let { cfg ->
+                    if (cfg.haSleepEntity != null) {
+                        HoldToConfirmButton(
+                            stringResource(R.string.power_sleep), { scope.launch { c.hostPower.power(h.uuid, PowerAction.SLEEP); onDismiss() } },
+                            Modifier.fillMaxWidth(), Icons.Filled.Bedtime,
+                        )
+                    }
+                    if (cfg.haShutdownEntity != null) {
+                        HoldToConfirmButton(
+                            stringResource(R.string.power_shutdown), { scope.launch { c.hostPower.power(h.uuid, PowerAction.SHUTDOWN); onDismiss() } },
+                            Modifier.fillMaxWidth(), Icons.Filled.PowerSettingsNew,
+                        )
+                    }
+                }
+            }
+            LauncherButton(
+                stringResource(R.string.host_settings), icon = Icons.Filled.Settings, modifier = Modifier.fillMaxWidth(),
+                onClick = { onDismiss(); openSettings(h) },
+            )
+            message?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceMuted) }
+        }
+    }
+}
