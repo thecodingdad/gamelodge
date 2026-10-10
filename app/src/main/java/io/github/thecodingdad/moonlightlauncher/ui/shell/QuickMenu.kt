@@ -91,13 +91,46 @@ fun QuickMenu(
             mutableIntStateOf(runCatching { Settings.System.getInt(context.contentResolver, Settings.System.SCREEN_BRIGHTNESS) }.getOrDefault(128))
         }
 
-        Text(stringResource(R.string.quick_menu), style = MaterialTheme.typography.headlineSmall, color = LauncherTheme.colors.onSurface)
+        // Two tabs: quick settings and Home Assistant; LB/RB switch while the menu is open.
+        var tab by androidx.compose.runtime.saveable.rememberSaveable { mutableIntStateOf(0) }
+        io.github.thecodingdad.moonlightlauncher.ui.input.PadAction(io.github.thecodingdad.moonlightlauncher.ui.input.PadButton.L1) { tab = 0 }
+        io.github.thecodingdad.moonlightlauncher.ui.input.PadAction(io.github.thecodingdad.moonlightlauncher.ui.input.PadButton.R1) { tab = 1 }
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+            io.github.thecodingdad.moonlightlauncher.ui.components.PadGlyph(io.github.thecodingdad.moonlightlauncher.ui.input.PadButton.L1)
+            io.github.thecodingdad.moonlightlauncher.ui.screens.library.Chip(stringResource(R.string.qm_tab_quick), selected = tab == 0, onClick = { tab = 0 })
+            io.github.thecodingdad.moonlightlauncher.ui.screens.library.Chip(stringResource(R.string.settings_home_assistant), selected = tab == 1, onClick = { tab = 1 })
+            io.github.thecodingdad.moonlightlauncher.ui.components.PadGlyph(io.github.thecodingdad.moonlightlauncher.ui.input.PadButton.R1)
+        }
+        androidx.compose.foundation.layout.Spacer(Modifier.heightIn(min = 12.dp))
+        if (tab == 1) {
+            Column(Modifier.verticalScroll(rememberScrollState()).heightIn(max = 2000.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                HomeAssistantSection(openHaSettings)
+            }
+            return@SidePanel
+        }
         Column(
             Modifier.verticalScroll(rememberScrollState()).heightIn(max = 2000.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            // What the status bar shows, reachable with the controller too.
-            StatusEntries(onHost = onHost, onControllers = onControllers)
+            // 1. Status: what the status bar shows, as compact tiles (reachable with the controller).
+            StatusTiles(onHost = onHost, onControllers = onControllers, vpnAvailable = tunnels.isNotEmpty() && c.vpn.consentIntent() == null)
+
+            // 2. Running game: resume or quit (power and profile live in the host popup).
+            running.forEach { session ->
+                SectionHeader(stringResource(R.string.qm_running_on, session.appName, session.host.name))
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    LauncherButton(
+                        stringResource(R.string.qm_resume), icon = Icons.Filled.PlayArrow, primary = true,
+                        onClick = { onDismiss(); onResume(session) }, modifier = Modifier.weight(1f),
+                    )
+                    HoldToConfirmButton(stringResource(R.string.qm_quit_game), {
+                        scope.launch { withContext(Dispatchers.IO) { runCatching { c.hosts.http(session.host).quitApp() } } }
+                    }, icon = Icons.Filled.StopCircle, modifier = Modifier.weight(1f))
+                }
+            }
+
+            // 3. System.
+            SectionHeader(stringResource(R.string.qm_system))
             SliderRow(
                 stringResource(R.string.qm_volume), volume, 0..maxVolume, 1,
                 onChange = { v -> volume = v; audio.setStreamVolume(AudioManager.STREAM_MUSIC, v, 0) },
@@ -113,113 +146,106 @@ fun QuickMenu(
                     },
                     valueLabel = { "${it * 100 / 255} %" }, icon = Icons.Filled.BrightnessMedium,
                 )
-            } else {
-                LauncherButton(stringResource(R.string.qm_brightness_permission), icon = Icons.Filled.BrightnessMedium, onClick = {
-                    context.startActivity(Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:${context.packageName}")))
-                })
             }
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                LauncherButton(stringResource(R.string.qm_wifi), icon = Icons.Filled.Wifi, onClick = {
-                    context.startActivity(Intent(Settings.Panel.ACTION_WIFI))
-                })
-                LauncherButton(stringResource(R.string.qm_bluetooth), icon = Icons.Filled.Bluetooth, onClick = {
-                    context.startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS))
-                })
-                LauncherButton(stringResource(R.string.qm_android_settings), icon = Icons.Filled.Settings, onClick = {
-                    context.startActivity(Intent(Settings.ACTION_SETTINGS))
-                })
-            }
-            if (tunnels.isNotEmpty() && c.vpn.consentIntent() == null) {
-                SwitchRow(
-                    stringResource(R.string.settings_vpn), vpnState.status == VpnStatus.UP,
-                    { scope.launch { c.vpn.toggle() } }, icon = Icons.Filled.VpnLock,
-                    subtitle = vpnState.tunnel,
-                )
-            }
-            if (profiles.isNotEmpty()) {
-                ChoiceRow(
-                    stringResource(R.string.launch_profile), profiles, profiles.firstOrNull { it.uuid == activeProfile.uuid } ?: profiles.first(),
-                    label = { it.name }, onSelect = onProfile,
-                )
-            }
-            running.forEach { session ->
-                SectionHeader(stringResource(R.string.qm_running_on, session.appName, session.host.name))
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    LauncherButton(stringResource(R.string.qm_resume), icon = Icons.Filled.PlayArrow, primary = true, onClick = { onDismiss(); onResume(session) })
-                    HoldToConfirmButton(stringResource(R.string.qm_quit_game), {
-                        scope.launch { withContext(Dispatchers.IO) { runCatching { c.hosts.http(session.host).quitApp() } } }
-                    }, icon = Icons.Filled.StopCircle)
+                IconAction(Icons.Filled.Wifi, stringResource(R.string.qm_wifi)) { context.startActivity(Intent(Settings.Panel.ACTION_WIFI)) }
+                IconAction(Icons.Filled.Bluetooth, stringResource(R.string.qm_bluetooth)) { context.startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS)) }
+                if (!canWriteSettings) {
+                    IconAction(Icons.Filled.BrightnessMedium, stringResource(R.string.qm_brightness_permission)) {
+                        context.startActivity(Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:${context.packageName}")))
+                    }
                 }
+                IconAction(Icons.Filled.Settings, stringResource(R.string.qm_android_settings)) { context.startActivity(Intent(Settings.ACTION_SETTINGS)) }
             }
-            HostPowerButtons()
-            HomeAssistantSection(openHaSettings)
+
         }
     }
 }
 
-/** Controllers and hosts as colored entries (same colors as the status bar icons). */
+/** Icon-only action button (label as content description, shown by accessibility services). */
 @Composable
-private fun StatusEntries(onHost: (String) -> Unit, onControllers: () -> Unit) {
+private fun IconAction(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit) {
+    io.github.thecodingdad.moonlightlauncher.ui.components.FocusSurface(
+        onClick = onClick,
+        modifier = Modifier.size(64.dp),
+        shape = androidx.compose.foundation.shape.CircleShape,
+        color = LauncherTheme.colors.surfaceRaised,
+        focusScale = 1.1f,
+    ) {
+        androidx.compose.material3.Icon(icon, label, tint = LauncherTheme.colors.onSurface, modifier = Modifier.align(Alignment.Center).size(26.dp))
+    }
+}
+
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+/** Controllers, hosts and VPN as small tiles in one row; colors as in the status bar. */
+@Composable
+private fun StatusTiles(onHost: (String) -> Unit, onControllers: () -> Unit, vpnAvailable: Boolean) {
     val c = LocalContext.current.container
     val colors = LauncherTheme.colors
+    val scope = rememberCoroutineScope()
     val hosts by c.hosts.hosts.collectAsState()
+    val vpnState by c.vpn.state.collectAsState()
     val controllers = io.github.thecodingdad.moonlightlauncher.ui.screens.settings.rememberControllers()
-    QuickEntry(
-        title = stringResource(R.string.settings_controllers),
-        subtitle = if (controllers.isEmpty()) stringResource(R.string.controllers_none)
-        else controllers.joinToString(", ") { it.name },
-        icon = Icons.Filled.SportsEsports,
-        tint = if (controllers.isEmpty()) colors.danger else colors.success,
-        onClick = onControllers,
-        initialFocus = true,
-    )
-    hosts.values.sortedBy { it.name }.forEach { host ->
-        QuickEntry(
-            title = host.name,
-            subtitle = stringResource(
-                when {
-                    host.isStreaming -> R.string.host_status_streaming
-                    host.status == io.github.thecodingdad.moonlightlauncher.data.remote.HostStatus.ONLINE -> R.string.host_status_online
-                    host.status == io.github.thecodingdad.moonlightlauncher.data.remote.HostStatus.OFFLINE -> R.string.host_status_offline
-                    else -> R.string.host_status_unknown
-                },
-            ),
-            icon = Icons.Filled.Computer,
-            tint = when {
-                host.isStreaming -> colors.accent
-                host.status == io.github.thecodingdad.moonlightlauncher.data.remote.HostStatus.ONLINE -> colors.success
-                host.status == io.github.thecodingdad.moonlightlauncher.data.remote.HostStatus.OFFLINE -> colors.danger
-                else -> colors.onSurfaceMuted
-            },
-            onClick = { onHost(host.uuid) },
+    androidx.compose.foundation.layout.FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        StatusTile(
+            icon = Icons.Filled.SportsEsports,
+            label = if (controllers.isEmpty()) stringResource(R.string.qm_no_controller) else stringResource(R.string.qm_controllers, controllers.size),
+            tint = if (controllers.isEmpty()) colors.danger else colors.success,
+            onClick = onControllers,
+            initialFocus = true,
         )
+        hosts.values.sortedBy { it.name }.forEach { host ->
+            StatusTile(
+                icon = Icons.Filled.Computer,
+                label = host.name,
+                tint = when {
+                    host.isStreaming -> colors.accent
+                    host.status == io.github.thecodingdad.moonlightlauncher.data.remote.HostStatus.ONLINE -> colors.success
+                    host.status == io.github.thecodingdad.moonlightlauncher.data.remote.HostStatus.OFFLINE -> colors.danger
+                    else -> colors.onSurfaceMuted
+                },
+                onClick = { onHost(host.uuid) },
+            )
+        }
+        if (vpnAvailable) {
+            val up = vpnState.status == io.github.thecodingdad.moonlightlauncher.vpn.VpnStatus.UP
+            StatusTile(
+                icon = Icons.Filled.VpnLock,
+                label = stringResource(if (up) R.string.qm_vpn_on else R.string.qm_vpn_off),
+                tint = if (up) colors.success else colors.onSurfaceMuted,
+                onClick = { scope.launch { c.vpn.toggle() } },
+            )
+        }
     }
 }
 
 @Composable
-private fun QuickEntry(
-    title: String,
-    subtitle: String,
+private fun StatusTile(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
     tint: androidx.compose.ui.graphics.Color,
     onClick: () -> Unit,
     initialFocus: Boolean = false,
 ) {
     io.github.thecodingdad.moonlightlauncher.ui.components.FocusSurface(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth().then(
-            if (initialFocus) Modifier.restoreFocusIf(true) else Modifier,
-        ),
+        modifier = Modifier.width(140.dp).then(if (initialFocus) Modifier.restoreFocusIf(true) else Modifier),
         color = LauncherTheme.colors.surfaceRaised,
-        focusScale = 1.02f,
+        focusScale = 1.05f,
     ) {
-        Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            androidx.compose.material3.Icon(icon, null, tint = tint, modifier = Modifier.size(26.dp))
-            androidx.compose.foundation.layout.Spacer(Modifier.width(14.dp))
-            Column(Modifier.weight(1f)) {
-                Text(title, style = MaterialTheme.typography.titleMedium, color = LauncherTheme.colors.onSurface)
-                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted, maxLines = 1)
-            }
+        Column(
+            Modifier.fillMaxWidth().padding(vertical = 14.dp, horizontal = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            androidx.compose.material3.Icon(icon, null, tint = tint, modifier = Modifier.size(30.dp))
+            Text(
+                label, style = MaterialTheme.typography.labelMedium, color = LauncherTheme.colors.onSurface,
+                maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = 6.dp),
+            )
         }
     }
 }
@@ -233,32 +259,20 @@ private fun HomeAssistantSection(openSettings: () -> Unit) {
     val entities by ha.client.entities.collectAsState()
     val connection by ha.client.connection.collectAsState()
     LaunchedEffect(Unit) { ha.client.start() }
-    SectionHeader(stringResource(R.string.settings_home_assistant))
     if (connection == io.github.thecodingdad.moonlightlauncher.ha.HaConnection.NOT_CONFIGURED || tiles.isEmpty()) {
-        LauncherButton(stringResource(R.string.ha_setup), icon = Icons.Filled.Settings, onClick = openSettings)
+        Text(stringResource(R.string.ha_panel_empty), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+        LauncherButton(stringResource(R.string.ha_setup), icon = Icons.Filled.Settings, onClick = openSettings, modifier = Modifier.restoreFocusIf(true))
     } else {
         androidx.compose.foundation.layout.FlowRow(
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            tiles.forEach { tile -> io.github.thecodingdad.moonlightlauncher.ui.screens.ha.HaTile(tile, entities[tile.entityId], width = 220.dp) }
+            tiles.forEachIndexed { i, tile ->
+                io.github.thecodingdad.moonlightlauncher.ui.screens.ha.HaTile(
+                    tile, entities[tile.entityId], Modifier.restoreFocusIf(i == 0), width = 220.dp,
+                )
+            }
         }
     }
 }
 
-/** Sleep / shut down buttons for every host that has HA power actions configured. */
-@Composable
-private fun HostPowerButtons() {
-    val c = LocalContext.current.container
-    val scope = rememberCoroutineScope()
-    val hosts by c.hosts.hosts.collectAsState()
-    var configs by remember { mutableStateOf<List<Pair<String, io.github.thecodingdad.moonlightlauncher.data.db.HostConfigEntity>>>(emptyList()) }
-    LaunchedEffect(hosts.keys) { configs = hosts.values.map { it.name to c.hostPower.config(it.uuid) } }
-    configs.filter { (_, cfg) -> cfg.haSleepEntity != null || cfg.haShutdownEntity != null }.forEach { (name, cfg) ->
-        SectionHeader(name)
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            if (cfg.haSleepEntity != null) HoldToConfirmButton(stringResource(R.string.power_sleep), { scope.launch { c.hostPower.power(cfg.hostUuid, PowerAction.SLEEP) } }, icon = Icons.Filled.Bedtime)
-            if (cfg.haShutdownEntity != null) HoldToConfirmButton(stringResource(R.string.power_shutdown), { scope.launch { c.hostPower.power(cfg.hostUuid, PowerAction.SHUTDOWN) } }, icon = Icons.Filled.PowerSettingsNew)
-        }
-    }
-}

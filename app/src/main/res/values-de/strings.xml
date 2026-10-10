@@ -531,4 +531,12 @@
     <string name="controller_info_ids">Hersteller:Produkt</string>
     <string name="controller_info_vibration">Vibration</string>
     <string name="controller_info_player_order">Die Spielernummern am Host richten sich nach der Reihenfolge des ersten Tastendrucks im Stream.</string>
+
+    <!-- Quick menu -->
+    <string name="qm_system">System</string>
+    <string name="qm_tab_quick">Schnelleinstellungen</string>
+    <string name="qm_no_controller">Kein Controller</string>
+    <string name="qm_controllers">%d Controller</string>
+    <string name="qm_vpn_on">VPN an</string>
+    <string name="qm_vpn_off">VPN aus</string>
 </resources>
