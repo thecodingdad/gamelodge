@@ -15,6 +15,9 @@ import io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry
 import io.github.thecodingdad.moonlightlauncher.ui.RunningSession
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 
+/** Space taken by the shell's top and hint bars; full-bleed home layouts pad their content by it. */
+val LocalShellInsets = androidx.compose.runtime.compositionLocalOf { androidx.compose.foundation.layout.PaddingValues() }
+
 /** Rows shown on the home screen, shared by all three home layouts. */
 data class HomeRows(
     val continuePlaying: List<LibraryEntry>,

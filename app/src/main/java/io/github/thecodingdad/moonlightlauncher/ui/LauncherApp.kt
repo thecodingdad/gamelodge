@@ -30,6 +30,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -411,20 +412,22 @@ private fun MainShell(vm: LauncherViewModel, nav: NavHostController, openStats: 
         vm.setActiveProfile(profiles[(i + 1).mod(profiles.size)])
     }
 
-    Column(Modifier.fillMaxSize().statusBarsPadding()) {
-        Row(
-            Modifier.fillMaxWidth().padding(start = 28.dp, end = 28.dp, top = 10.dp, bottom = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
+    // Home layouts with a backdrop image draw behind the top and hint bars, which fade out
+    // with a gradient instead of hard edges; all other screens sit between solid bars.
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    var topBarHeight by remember { mutableStateOf(0.dp) }
+    var hintBarHeight by remember { mutableStateOf(0.dp) }
+    val fullBleed = tabs[tab] == MainTab.HOME && settings.homeLayout != HomeLayout.GRID
+    val bg = LauncherTheme.colors.background
+    Box(Modifier.fillMaxSize().statusBarsPadding()) {
+        Box(
+            Modifier.fillMaxSize()
+                .then(if (fullBleed) Modifier else Modifier.padding(top = topBarHeight, bottom = hintBarHeight)),
         ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.weight(1f)) {
-                tabs.forEachIndexed { index, t ->
-                    TabChip(stringResource(t.title), selected = index == tab, onClick = { tab = index })
-                }
-            }
-            StatusCluster(hosts, activeProfile.name, onProfileClick = ::cycleProfile)
-        }
-
-        Box(Modifier.fillMaxWidth().weight(1f)) {
+          CompositionLocalProvider(
+              io.github.thecodingdad.moonlightlauncher.ui.screens.home.LocalShellInsets provides
+                  androidx.compose.foundation.layout.PaddingValues(top = topBarHeight, bottom = hintBarHeight),
+          ) {
             AnimatedContent(tabs[tab], transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "tab") { current ->
                 tabStates.SaveableStateProvider(current.name) {
                 when (current) {
@@ -478,8 +481,34 @@ private fun MainShell(vm: LauncherViewModel, nav: NavHostController, openStats: 
                 }
                 }
             }
+          }
         }
-        ButtonHintBar(hints.hints)
+        Row(
+            Modifier.align(Alignment.TopCenter).fillMaxWidth()
+                .background(
+                    if (fullBleed) androidx.compose.ui.graphics.Brush.verticalGradient(listOf(bg.copy(alpha = 0.85f), androidx.compose.ui.graphics.Color.Transparent))
+                    else androidx.compose.ui.graphics.SolidColor(bg),
+                )
+                .onSizeChanged { topBarHeight = with(density) { it.height.toDp() } }
+                .padding(start = 28.dp, end = 28.dp, top = 10.dp, bottom = if (fullBleed) 14.dp else 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.weight(1f)) {
+                tabs.forEachIndexed { index, t ->
+                    TabChip(stringResource(t.title), selected = index == tab, onClick = { tab = index })
+                }
+            }
+            StatusCluster(hosts, activeProfile.name, onProfileClick = ::cycleProfile)
+        }
+        ButtonHintBar(
+            hints.hints,
+            Modifier.align(Alignment.BottomCenter)
+                .background(
+                    if (fullBleed) androidx.compose.ui.graphics.Brush.verticalGradient(listOf(androidx.compose.ui.graphics.Color.Transparent, bg.copy(alpha = 0.9f)))
+                    else androidx.compose.ui.graphics.SolidColor(bg),
+                )
+                .onSizeChanged { hintBarHeight = with(density) { it.height.toDp() } },
+        )
     }
 }
 

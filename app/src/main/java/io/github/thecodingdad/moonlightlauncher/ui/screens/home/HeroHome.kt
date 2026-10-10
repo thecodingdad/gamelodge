@@ -98,12 +98,13 @@ fun HeroHome(
         Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(0f to bg.copy(alpha = 0.95f), 0.55f to bg.copy(alpha = 0.55f), 1f to Color.Transparent)))
         Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.35f to Color.Transparent, 0.75f to bg.copy(alpha = 0.92f), 1f to bg)))
 
+        val insets = LocalShellInsets.current
         if (rows.isEmpty && rows.running.isEmpty()) {
-            emptyContent()
+            Box(Modifier.padding(insets)) { emptyContent() }
             return@Box
         }
 
-        Column(Modifier.fillMaxSize()) {
+        Column(Modifier.fillMaxSize().padding(insets)) {
             HeroInfo(shown, Modifier.padding(horizontal = 40.dp).padding(top = 8.dp).heightIn(min = 150.dp))
             LazyColumn(
                 modifier = Modifier.fillMaxWidth().weight(1f),

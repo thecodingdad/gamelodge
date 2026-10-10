@@ -64,7 +64,7 @@ fun CarouselHome(
         (rows.continuePlaying + rows.favorites + rows.recentlyAdded).distinctBy { it.item.id }.take(24)
     }
     if (items.isEmpty() && rows.running.isEmpty()) {
-        emptyContent()
+        Box(Modifier.padding(LocalShellInsets.current)) { emptyContent() }
         return
     }
     var focused by remember { mutableStateOf<LibraryEntry?>(null) }
@@ -101,7 +101,7 @@ fun CarouselHome(
             ),
         ),
     )
-    Column(Modifier.fillMaxSize().padding(top = 4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(Modifier.fillMaxSize().padding(LocalShellInsets.current).padding(top = 4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         LazyRow(
             state = listState,
             contentPadding = PaddingValues(horizontal = 48.dp, vertical = 12.dp),
