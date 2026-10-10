@@ -415,6 +415,9 @@ private fun MainShell(vm: LauncherViewModel, nav: NavHostController, openStats: 
     // or a detail page is open.
     val tabStates = androidx.compose.runtime.saveable.rememberSaveableStateHolder()
     var hostInfoFor by remember { mutableStateOf<String?>(null) }
+    var profilePicker by remember { mutableStateOf(false) }
+    var controllerPopup by remember { mutableStateOf(false) }
+    val controllers = io.github.thecodingdad.moonlightlauncher.ui.screens.settings.rememberControllers()
 
     PadAction(PadButton.L1) { tab = (tab - 1).mod(tabs.size) }
     PadAction(PadButton.R1) { tab = (tab + 1).mod(tabs.size) }
@@ -514,7 +517,14 @@ private fun MainShell(vm: LauncherViewModel, nav: NavHostController, openStats: 
                     TabChip(stringResource(t.title), selected = index == tab, onClick = { tab = index })
                 }
             }
-            StatusCluster(hosts, activeProfile.name, onProfileClick = ::cycleProfile, onHostClick = { hostInfoFor = it.uuid })
+            StatusCluster(
+                hosts, activeProfile.name,
+                onProfileClick = { profilePicker = true },
+                onHostClick = { hostInfoFor = it.uuid },
+                controllerCount = controllers.size,
+                controllerLowBattery = controllers.any { (it.batteryPercent ?: 100) <= 15 },
+                onControllerClick = { controllerPopup = true },
+            )
         }
         ButtonHintBar(
             hints.hints,
@@ -524,6 +534,17 @@ private fun MainShell(vm: LauncherViewModel, nav: NavHostController, openStats: 
                     else androidx.compose.ui.graphics.SolidColor(bg),
                 )
                 .onSizeChanged { hintBarHeight = with(density) { it.height.toDp() } },
+        )
+        io.github.thecodingdad.moonlightlauncher.ui.shell.ProfilePickerPopup(
+            visible = profilePicker, profiles = profiles, active = activeProfile,
+            onSelect = vm::setActiveProfile,
+            onEdit = { nav.navigate(Routes.settings(SettingsPageId.PROFILES)) },
+            onDismiss = { profilePicker = false },
+        )
+        io.github.thecodingdad.moonlightlauncher.ui.shell.ControllerPopup(
+            visible = controllerPopup, controllers = controllers,
+            onOpenSettings = { nav.navigate(Routes.CONTROLLERS) },
+            onDismiss = { controllerPopup = false },
         )
         io.github.thecodingdad.moonlightlauncher.ui.shell.HostInfoPopup(
             host = hostInfoFor?.let { hostsMap[it] },

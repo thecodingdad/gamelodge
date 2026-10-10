@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Battery3Bar
 import androidx.compose.material.icons.filled.Battery1Bar
 import androidx.compose.material.icons.filled.Computer
 import androidx.compose.material.icons.filled.SportsEsports
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.VpnLock
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material.icons.filled.WifiOff
@@ -122,6 +123,9 @@ fun StatusCluster(
     onProfileClick: () -> Unit,
     modifier: Modifier = Modifier,
     onHostClick: (HostState) -> Unit = {},
+    controllerCount: Int = 0,
+    controllerLowBattery: Boolean = false,
+    onControllerClick: () -> Unit = {},
 ) {
     val status = rememberSystemStatus()
     val colors = LauncherTheme.colors
@@ -135,8 +139,27 @@ fun StatusCluster(
                 .padding(horizontal = 12.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(Icons.Filled.SportsEsports, null, tint = colors.accent, modifier = Modifier.size(18.dp))
+            // Active stream profile; tapping opens the profile picker.
+            Icon(Icons.Filled.Tune, null, tint = colors.accent, modifier = Modifier.size(18.dp))
             Text(" $profileName", style = MaterialTheme.typography.labelMedium, color = colors.onSurface)
+        }
+        // Connected controllers (count, red when a battery runs low); tapping opens the overview.
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .clip(RoundedCornerShape(12.dp))
+                .focusProperties { canFocus = false }
+                .clickable(onClick = onControllerClick)
+                .padding(horizontal = 6.dp, vertical = 4.dp),
+        ) {
+            Icon(
+                Icons.Filled.SportsEsports, null,
+                tint = if (controllerLowBattery) colors.danger else colors.onSurfaceMuted,
+                modifier = Modifier.size(20.dp),
+            )
+            if (controllerCount > 1) {
+                Text(" $controllerCount", style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceMuted)
+            }
         }
         hosts.forEach { host ->
             // Touch target for the host popup; like the other status icons not in D-pad navigation.

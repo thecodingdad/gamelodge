@@ -516,4 +516,11 @@
     <string name="host_wake_failed">Could not send the wake signal – check the wake method in the host settings</string>
     <string name="host_wake_online">The host is online</string>
     <string name="host_wake_timeout">No answer from the host after 3 minutes</string>
+
+    <!-- Status popups -->
+    <string name="profile_picker_title">Stream profile</string>
+    <string name="profile_picker_sub">Used for the next streams (resolution, frame rate, bitrate). „Start with …“ (X) picks one for a single game.</string>
+    <string name="profile_picker_edit">Edit profiles</string>
+    <string name="controller_popup_sub">Every controller is passed to the host as its own gamepad. Select one to test its vibration.</string>
+    <string name="controller_popup_settings">Controller settings</string>
 </resources>

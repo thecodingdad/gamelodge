@@ -38,7 +38,7 @@ fun connectedControllers(): List<ControllerInfo> = InputDevice.getDeviceIds().to
         ControllerInfo(d.id, d.name, d.isExternal, battery, vibrate)
     }
 
-private fun vibrate(id: Int) {
+fun vibrateController(id: Int) {
     val device = InputDevice.getDevice(id) ?: return
     val effect = VibrationEffect.createOneShot(250, VibrationEffect.DEFAULT_AMPLITUDE)
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -52,8 +52,9 @@ private fun vibrate(id: Int) {
  * Connected controllers with battery and a rumble test. In a stream every controller becomes
  * its own gamepad on the host; player numbers follow the order of the first button press.
  */
+/** Connected controllers, updated when one connects, disconnects or changes (battery). */
 @Composable
-fun ControllersScreen() {
+fun rememberControllers(): List<ControllerInfo> {
     val context = LocalContext.current
     var revision by remember { mutableIntStateOf(0) }
     DisposableEffect(Unit) {
@@ -66,7 +67,19 @@ fun ControllersScreen() {
         im.registerInputDeviceListener(listener, null)
         onDispose { im.unregisterInputDeviceListener(listener) }
     }
-    val controllers = remember(revision) { connectedControllers() }
+    // Battery changes don't always fire a device change: refresh once a minute as well.
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        while (true) {
+            kotlinx.coroutines.delay(60_000)
+            revision++
+        }
+    }
+    return remember(revision) { connectedControllers() }
+}
+
+@Composable
+fun ControllersScreen() {
+    val controllers = rememberControllers()
 
     SettingsPage(stringResource(R.string.settings_controllers)) {
         Text(stringResource(R.string.controllers_intro), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
@@ -74,7 +87,7 @@ fun ControllersScreen() {
         controllers.forEachIndexed { index, c ->
             NavRow(
                 title = c.name,
-                onClick = { if (c.canVibrate) vibrate(c.id) },
+                onClick = { if (c.canVibrate) vibrateController(c.id) },
                 subtitle = listOfNotNull(
                     stringResource(if (c.external) R.string.controller_external else R.string.controller_builtin),
                     c.batteryPercent?.let { stringResource(R.string.controller_battery, it) },
