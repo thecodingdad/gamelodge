@@ -57,8 +57,10 @@ object PlatformResolver {
 
     /** True when [candidate] from [source] may replace the item's current platform. */
     fun mayReplace(item: LibraryItemEntity, source: PlatformSource, candidate: String?): Boolean {
-        if (candidate.isNullOrBlank() || candidate == item.platform) return false
+        if (candidate.isNullOrBlank()) return false
         val current = item.platformSource ?: return true
-        return current != PlatformSource.MANUAL && source.ordinal >= current.ordinal
+        if (current == PlatformSource.MANUAL) return false
+        // Same value from a more trusted source: only the source is upgraded.
+        return if (candidate == item.platform) source.ordinal > current.ordinal else source.ordinal >= current.ordinal
     }
 }

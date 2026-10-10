@@ -81,6 +81,11 @@ class LibraryRepository(
         suggestPlatforms()
     }
 
+    /** Re-applies a host's app list, e.g. after its Vibepollo access changed. */
+    suspend fun resyncHost(hostUuid: String) {
+        hosts.appLists.value[hostUuid]?.let { syncHost(hostUuid, it) }
+    }
+
     private suspend fun syncHost(hostUuid: String, apps: List<RemoteApp>) {
         // Optional: Vibepollo knows which apps came from Playnite (= certainly games).
         val vibe = vibepollo?.cached(hostUuid)

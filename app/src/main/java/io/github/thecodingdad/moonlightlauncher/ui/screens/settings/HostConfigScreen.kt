@@ -187,7 +187,7 @@ private fun VibepolloSection(host: HostState, cfg: HostConfigEntity, save: (Host
                     okText.format(r.apps, r.playniteUuids.size) + "\n" +
                         if (r.gamesError != null) playniteDeniedText.format(r.gamesError) else playniteOkText.format(r.games.size)
                 } else failText
-                if (r != null) c.hosts.refreshAppLists()
+                if (r != null) c.library.resyncHost(host.uuid)
             }
         },
     )
