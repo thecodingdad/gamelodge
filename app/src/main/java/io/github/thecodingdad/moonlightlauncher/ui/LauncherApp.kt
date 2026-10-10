@@ -30,6 +30,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -195,7 +196,9 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
             LocalBringIntoViewSpec provides scrollSpec,
         ) {
             Box(Modifier.fillMaxSize().background(LauncherTheme.colors.background)) {
-                NavHost(nav, startDestination = Routes.MAIN) {
+                // The launcher behind the quick menu is blurred (Android 12+; older versions just dim).
+                val backdropBlur by androidx.compose.animation.core.animateDpAsState(if (quickMenu) 14.dp else 0.dp, label = "backdropBlur")
+                NavHost(nav, startDestination = Routes.MAIN, modifier = Modifier.blur(backdropBlur)) {
                     composable(Routes.MAIN) {
                         MainShell(
                             vm, nav, openStats = { nav.navigate(Routes.STATS) },

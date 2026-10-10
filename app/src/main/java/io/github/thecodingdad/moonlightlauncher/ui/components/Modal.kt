@@ -88,7 +88,7 @@ fun SidePanel(
         ModalScaffold(
             onDismiss, alignment = Alignment.CenterEnd,
             scrim = androidx.compose.ui.graphics.Brush.horizontalGradient(
-                listOf(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.15f), androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.45f)),
+                listOf(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.35f), androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.6f)),
             ),
         ) {
             androidx.compose.animation.AnimatedVisibility(
