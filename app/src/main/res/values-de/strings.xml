@@ -507,4 +507,11 @@
     <string name="host_info_permissions">Berechtigungen</string>
     <string name="host_info_permissions_missing">Teilweise fehlend – siehe Host-Einstellungen</string>
     <string name="host_info_auto_sleep">Schlafen nach Stream</string>
+
+    <!-- Host wake feedback -->
+    <string name="host_waking">Wird aufgeweckt …</string>
+    <string name="host_wake_sending">Wecksignal gesendet – warte auf Antwort des Hosts …</string>
+    <string name="host_wake_failed">Wecksignal konnte nicht gesendet werden – Aufweck-Methode in den Host-Einstellungen prüfen</string>
+    <string name="host_wake_online">Der Host ist online</string>
+    <string name="host_wake_timeout">Keine Antwort vom Host nach 3 Minuten</string>
 </resources>

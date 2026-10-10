@@ -509,4 +509,11 @@
     <string name="host_info_permissions">Permissions</string>
     <string name="host_info_permissions_missing">Some are missing – see host settings</string>
     <string name="host_info_auto_sleep">Sleep after stream</string>
+
+    <!-- Host wake feedback -->
+    <string name="host_waking">Waking up…</string>
+    <string name="host_wake_sending">Wake signal sent – waiting for the host to answer…</string>
+    <string name="host_wake_failed">Could not send the wake signal – check the wake method in the host settings</string>
+    <string name="host_wake_online">The host is online</string>
+    <string name="host_wake_timeout">No answer from the host after 3 minutes</string>
 </resources>

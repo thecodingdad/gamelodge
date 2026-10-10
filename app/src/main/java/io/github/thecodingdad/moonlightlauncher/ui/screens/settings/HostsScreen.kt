@@ -49,6 +49,7 @@ import io.github.thecodingdad.moonlightlauncher.ui.components.StatusDot
 import io.github.thecodingdad.moonlightlauncher.ui.components.TextKind
 import io.github.thecodingdad.moonlightlauncher.ui.components.restoreFocusIf
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 private sealed interface PairUi {
@@ -75,6 +76,13 @@ fun HostsSettings(hosts: List<HostState>, openHostConfig: (HostState) -> Unit) {
         }
     }
 
+    val c = androidx.compose.ui.platform.LocalContext.current.container
+    val waking = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateListOf<String>() }
+    val notes = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateMapOf<String, String>() }
+    val wakeSentMsg = stringResource(R.string.host_wake_sending)
+    val wakeFailedMsg = stringResource(R.string.host_wake_failed)
+    val wakeOnlineMsg = stringResource(R.string.host_wake_online)
+    val wakeTimeoutMsg = stringResource(R.string.host_wake_timeout)
     val addTitle = stringResource(R.string.host_add_title)
     val addedMsg = stringResource(R.string.host_added)
     val invalidMsg = stringResource(R.string.host_invalid_address)
@@ -89,7 +97,28 @@ fun HostsSettings(hosts: List<HostState>, openHostConfig: (HostState) -> Unit) {
                 host = host,
                 initialFocus = index == 0,
                 onPair = { startPairing(host) },
-                onWake = { scope.launch { actions.wakeOnLan(host) } },
+                waking = host.uuid in waking && host.status != HostStatus.ONLINE,
+                note = notes[host.uuid],
+                onWake = {
+                    // Uses the configured wake method (WoL and/or Home Assistant), with feedback
+                    // until the host answers.
+                    waking.add(host.uuid)
+                    notes[host.uuid] = wakeSentMsg
+                    scope.launch {
+                        val sent = c.hostPower.wake(host.uuid)
+                        if (!sent) {
+                            waking.remove(host.uuid)
+                            notes[host.uuid] = wakeFailedMsg
+                            return@launch
+                        }
+                        c.hosts.refreshAppLists()
+                        val online = kotlinx.coroutines.withTimeoutOrNull(180_000) {
+                            c.hosts.hosts.first { it[host.uuid]?.status == HostStatus.ONLINE }
+                        } != null
+                        waking.remove(host.uuid)
+                        notes[host.uuid] = if (online) wakeOnlineMsg else wakeTimeoutMsg
+                    }
+                },
                 onUnpair = { scope.launch { actions.unpair(host) } },
                 onRemove = { scope.launch { actions.remove(host) } },
                 onConfig = { openHostConfig(host) },
@@ -166,6 +195,8 @@ fun HostsSettings(hosts: List<HostState>, openHostConfig: (HostState) -> Unit) {
 private fun HostCard(
     host: HostState,
     initialFocus: Boolean,
+    waking: Boolean,
+    note: String?,
     onPair: () -> Unit,
     onWake: () -> Unit,
     onUnpair: () -> Unit,
@@ -199,7 +230,8 @@ private fun HostCard(
                                 else -> R.string.host_status_unknown
                             },
                         ),
-                        stringResource(if (host.paired) R.string.host_paired else R.string.host_not_paired),
+                        // Pairing is only known while the host answers.
+                        if (host.status == HostStatus.ONLINE) stringResource(if (host.paired) R.string.host_paired else R.string.host_not_paired) else null,
                         host.address,
                     ).joinToString("  ·  "),
                     style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceMuted,
@@ -207,21 +239,27 @@ private fun HostCard(
             }
         }
         if (host.paired) MissingPermissionsNote(host)
+        val online = host.status == HostStatus.ONLINE
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            if (!host.paired) {
+            if (online && !host.paired) {
                 LauncherButton(
                     stringResource(R.string.host_pair), icon = Icons.Filled.Link, primary = true, onClick = onPair,
                     modifier = Modifier.restoreFocusIf(initialFocus),
                 )
-            } else {
+            }
+            LauncherButton(
+                stringResource(R.string.host_settings), icon = Icons.Filled.Settings, onClick = onConfig,
+                modifier = if (online && !host.paired) Modifier else Modifier.restoreFocusIf(initialFocus),
+            )
+            if (!online) {
                 LauncherButton(
-                    stringResource(R.string.host_settings), icon = Icons.Filled.Settings, onClick = onConfig,
-                    modifier = Modifier.restoreFocusIf(initialFocus),
+                    stringResource(if (waking) R.string.host_waking else R.string.host_wake), icon = Icons.Filled.Power,
+                    onClick = onWake, enabled = !waking, primary = waking,
                 )
             }
-            if (host.status != HostStatus.ONLINE) LauncherButton(stringResource(R.string.host_wake), icon = Icons.Filled.Power, onClick = onWake)
-            if (host.paired) LauncherButton(stringResource(R.string.host_unpair), icon = Icons.Filled.LinkOff, onClick = onUnpair)
+            if (online && host.paired) LauncherButton(stringResource(R.string.host_unpair), icon = Icons.Filled.LinkOff, onClick = onUnpair)
             HoldToConfirmButton(stringResource(R.string.host_remove), onConfirmed = onRemove, icon = Icons.Filled.Delete)
         }
+        note?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = if (waking) colors.accent else colors.onSurfaceMuted) }
     }
 }
