@@ -134,7 +134,7 @@ fun HaSettings(settings: LauncherSettings, update: ((LauncherSettings) -> Launch
             kind = TextKind.URL, placeholder = "http://homeassistant.local:8123",
             modifier = Modifier.restoreFocusIf(true),
         )
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 12.dp) {
             LauncherButton(
                 stringResource(if (ha.auth.isLoggedIn) R.string.ha_relogin else R.string.ha_login),
                 icon = Icons.Filled.Login, primary = !ha.auth.isLoggedIn, enabled = url.isNotBlank() && !busy,
@@ -192,7 +192,7 @@ private fun TileRow(tile: HaTileEntity, entity: HaEntity?, ha: HaRepository, isF
     val scope = rememberCoroutineScope()
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(entity?.name ?: tile.entityId, style = MaterialTheme.typography.titleMedium, color = LauncherTheme.colors.onSurface)
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 10.dp) {
             LauncherButton(
                 stringResource(if (tile.showOnHome) R.string.ha_on_home else R.string.ha_not_on_home),
                 icon = Icons.Filled.Home,

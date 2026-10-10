@@ -109,7 +109,7 @@ fun VpnSettings(settings: LauncherSettings, update: ((LauncherSettings) -> Launc
                 label = { it }, onSelect = { v -> update { it.copy(activeTunnel = v) } },
             )
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 12.dp) {
             LauncherButton(stringResource(R.string.vpn_import_file), icon = Icons.Filled.FileOpen, primary = tunnels.isEmpty(), onClick = { openFile.launch(arrayOf("*/*")) })
             LauncherButton(stringResource(R.string.vpn_import_clipboard), icon = Icons.Filled.ContentPaste, onClick = {
                 val text = context.getSystemService(ClipboardManager::class.java).primaryClip?.getItemAt(0)?.coerceToText(context)?.toString().orEmpty()

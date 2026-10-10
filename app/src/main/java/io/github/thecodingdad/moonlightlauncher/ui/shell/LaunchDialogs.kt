@@ -176,7 +176,7 @@ fun LaunchOverlay(
         if (failed == null) return@Modal
         Text(errorText(failed.reason), style = MaterialTheme.typography.bodyLarge, color = LauncherTheme.colors.onSurface)
         Spacer(Modifier.height(24.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 12.dp) {
             LauncherButton(stringResource(R.string.action_retry), onClick = { onRetry(failed.entry) }, primary = true)
             LauncherButton(stringResource(R.string.action_close), onClick = onDismiss)
         }
@@ -213,7 +213,7 @@ fun LaunchOverlay(
             color = LauncherTheme.colors.onSurface,
         )
         Spacer(Modifier.height(24.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 12.dp) {
             HoldToConfirmButton(stringResource(R.string.launch_quit_and_start), onConfirmed = { onConfirmQuit(confirm) }, icon = Icons.Filled.PowerSettingsNew)
             LauncherButton(stringResource(R.string.action_cancel), onClick = onDismiss)
         }

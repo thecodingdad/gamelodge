@@ -124,7 +124,7 @@ fun HostsSettings(hosts: List<HostState>, openHostConfig: (HostState) -> Unit) {
                 onConfig = { openHostConfig(host) },
             )
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 12.dp) {
             LauncherButton(
                 stringResource(R.string.host_add), icon = Icons.Filled.Add, primary = hosts.isEmpty(),
                 onClick = {
@@ -240,7 +240,7 @@ private fun HostCard(
         }
         if (host.paired) MissingPermissionsNote(host)
         val online = host.status == HostStatus.ONLINE
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 10.dp) {
             if (online && !host.paired) {
                 LauncherButton(
                     stringResource(R.string.host_pair), icon = Icons.Filled.Link, primary = true, onClick = onPair,

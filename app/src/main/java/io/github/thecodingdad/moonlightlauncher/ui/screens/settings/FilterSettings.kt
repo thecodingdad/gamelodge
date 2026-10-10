@@ -64,7 +64,7 @@ fun FilterSettings(vm: LauncherViewModel, scope: FilterScope) {
 
     SettingsPage(stringResource(if (apps) R.string.settings_app_filters else R.string.settings_filters)) {
         Text(stringResource(if (apps) R.string.app_filters_help else R.string.filters_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(vertical = 6.dp)) {
+        io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 12.dp, modifier = Modifier.padding(vertical = 6.dp)) {
             LauncherButton(
                 smartTitle, icon = Icons.Filled.FilterAlt,
                 onClick = { keyboard.open(smartTitle, "") { name -> if (name.isNotBlank()) vm.createSmartFilter(name.trim(), scope) { editing = it.id } } },
@@ -179,7 +179,7 @@ private fun FilterEditorDialog(
                 FilterKind.BUILTIN -> Unit
             }
 
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(top = 8.dp)) {
+            io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 12.dp, modifier = Modifier.padding(top = 8.dp)) {
                 LauncherButton(stringResource(R.string.move_up), icon = Icons.Filled.ArrowUpward, onClick = { vm.moveFilter(f.id, -1) })
                 LauncherButton(stringResource(R.string.move_down), icon = Icons.Filled.ArrowDownward, onClick = { vm.moveFilter(f.id, 1) })
                 HoldToConfirmButton(

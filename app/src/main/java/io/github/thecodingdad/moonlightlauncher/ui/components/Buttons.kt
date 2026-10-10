@@ -161,3 +161,22 @@ fun HoldToConfirmButton(
 fun StatusDot(color: Color, modifier: Modifier = Modifier) {
     Box(modifier.size(10.dp).clip(CircleShape).background(color))
 }
+
+/**
+ * Row of action buttons that wraps onto the next line when the screen is too narrow
+ * (portrait), instead of squeezing the last buttons.
+ */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+fun ButtonRow(
+    modifier: Modifier = Modifier,
+    spacing: androidx.compose.ui.unit.Dp = 12.dp,
+    content: @Composable androidx.compose.foundation.layout.FlowRowScope.() -> Unit,
+) {
+    androidx.compose.foundation.layout.FlowRow(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(spacing),
+        verticalArrangement = Arrangement.spacedBy(spacing),
+        content = content,
+    )
+}

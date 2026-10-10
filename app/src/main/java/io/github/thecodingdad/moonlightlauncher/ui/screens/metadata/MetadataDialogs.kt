@@ -126,7 +126,7 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
         PadAction(PadButton.L1) { kindIndex = (kindIndex - 1).mod(kinds.size) }
         PadAction(PadButton.R1) { kindIndex = (kindIndex + 1).mod(kinds.size) }
 
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 10.dp) {
             kinds.forEachIndexed { index, k ->
                 io.github.thecodingdad.moonlightlauncher.ui.screens.library.Chip(
                     stringResource(
@@ -183,7 +183,7 @@ fun MetadataActions(
     onArtwork: () -> Unit,
     onConfirm: () -> Unit,
 ) {
-    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+    io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 10.dp) {
         if (entry.item.metadataState == io.github.thecodingdad.moonlightlauncher.data.db.MetadataState.REVIEW) {
             io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton(
                 stringResource(R.string.metadata_confirm), onClick = onConfirm,

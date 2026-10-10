@@ -101,7 +101,7 @@ fun ProfileEditor(uuid: UUID?, name: String, onDeleted: () -> Unit) {
 
     SettingsPage(name) {
         if (uuid != null) {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 12.dp) {
                 LauncherButton(stringResource(R.string.profile_set_active), icon = Icons.Filled.CheckCircle, onClick = { StreamProfiles.setActive(uuid) })
                 LauncherButton(stringResource(R.string.profile_rename), icon = Icons.Filled.Edit, onClick = {
                     keyboard.open(renameTitle, name) { n -> if (n.isNotBlank()) ProfileStore.rename(uuid, n.trim()) }

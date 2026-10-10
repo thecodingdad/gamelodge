@@ -73,7 +73,7 @@ fun MetadataSettings(
             LinearProgressIndicator(progress = { it.done.toFloat() / it.total.coerceAtLeast(1) }, modifier = Modifier.fillMaxWidth(), color = LauncherTheme.colors.accent)
         }
         error?.let { Text(stringResource(R.string.metadata_auth_error, it), color = LauncherTheme.colors.danger) }
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 12.dp) {
             LauncherButton(stringResource(R.string.metadata_fetch_now), icon = Icons.Filled.CloudDownload, onClick = metadata::refreshPending)
             HoldToConfirmButton(stringResource(R.string.metadata_refetch_all), onConfirmed = { scope.launch { metadata.resetAutomatic() } }, icon = Icons.Filled.Refresh)
         }

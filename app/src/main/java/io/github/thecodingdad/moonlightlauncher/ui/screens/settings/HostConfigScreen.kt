@@ -117,7 +117,7 @@ fun HostConfigScreen(host: HostState) {
             onSelect = { save(cfg.copy(autoSleepMinutes = it)) },
             subtitle = stringResource(R.string.host_auto_sleep_sub),
         )
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 10.dp) {
             if (cfg.haSleepEntity != null) HoldToConfirmButton(stringResource(R.string.power_sleep), { scope.launch { c.hostPower.power(host.uuid, PowerAction.SLEEP) } }, icon = Icons.Filled.Bedtime)
             if (cfg.haRestartEntity != null) HoldToConfirmButton(stringResource(R.string.power_restart), { scope.launch { c.hostPower.power(host.uuid, PowerAction.RESTART) } }, icon = Icons.Filled.RestartAlt)
             if (cfg.haShutdownEntity != null) HoldToConfirmButton(stringResource(R.string.power_shutdown), { scope.launch { c.hostPower.power(host.uuid, PowerAction.SHUTDOWN) } }, icon = Icons.Filled.PowerSettingsNew)

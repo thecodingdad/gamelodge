@@ -51,7 +51,7 @@ fun SettingsPage(title: String, content: @Composable ColumnScope.() -> Unit) {
         Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 48.dp, vertical = 16.dp)
+            .padding(horizontal = if (io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current) 20.dp else 48.dp, vertical = 16.dp)
             .focusRestorer(),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
