@@ -164,6 +164,11 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
         vm.homePressed.collect {
             nav.popBackStack(Routes.MAIN, inclusive = false)
             vm.tab = 0
+            // Home starts at the top again: forget the remembered position of the start tab.
+            vm.lastFocusedKey = null
+            vm.homeResets.intValue++
+            hostInfoFor = null
+            controllerPopup = false
             entryActions.pick = null
             entryActions.closeContext()
             keyboard.close()
@@ -480,7 +485,9 @@ private fun MainShell(
                   androidx.compose.foundation.layout.PaddingValues(top = topBarHeight, bottom = hintBarHeight),
           ) {
             AnimatedContent(tabs[tab], transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "tab") { current ->
-                tabStates.SaveableStateProvider(current.name) {
+                // The start tab's saved state is keyed by the reset counter, so Home starts fresh.
+                val stateKey = if (current == MainTab.HOME) "HOME-${vm.homeResets.intValue}" else current.name
+                tabStates.SaveableStateProvider(stateKey) {
                 when (current) {
                     MainTab.HOME -> {
                         val rows = remember(games, running) { HomeRows.from(games, running) }
