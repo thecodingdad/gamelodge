@@ -53,7 +53,7 @@ fun GridHome(games: List<LibraryEntry>, callbacks: HomeCallbacks, emptyContent: 
     }
     // Recently played first, then alphabetical: the most likely next pick is top-left.
     val sorted = remember(games) {
-        games.sortedWith(compareByDescending<LibraryEntry> { it.item.lastPlayedAt ?: 0 }.thenBy { TitleNormalizer.sortKey(it.item.title) })
+        games.sortedWith(compareByDescending<LibraryEntry> { it.item.lastPlayedAt ?: 0L }.thenBy { TitleNormalizer.sortKey(it.item.title) })
     }
     var focused by remember { mutableStateOf<LibraryEntry?>(null) }
     val shown = focused ?: sorted.first()

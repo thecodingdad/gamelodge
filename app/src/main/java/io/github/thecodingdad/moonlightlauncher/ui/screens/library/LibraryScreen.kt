@@ -89,7 +89,7 @@ fun applyLibraryQuery(
         .let { seq ->
             when (sort) {
                 LibrarySort.TITLE -> seq.sortedBy { TitleNormalizer.sortKey(it.item.title) }
-                LibrarySort.LAST_PLAYED -> seq.sortedByDescending { it.item.lastPlayedAt ?: 0 }
+                LibrarySort.LAST_PLAYED -> seq.sortedByDescending { it.item.lastPlayedAt ?: 0L }
                 LibrarySort.ADDED -> seq.sortedByDescending { it.item.addedAt }
                 LibrarySort.PLAYTIME -> seq.sortedByDescending { it.item.playtimeSeconds }
             }
