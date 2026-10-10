@@ -122,6 +122,7 @@ fun HostConfigScreen(host: HostState) {
             if (cfg.haRestartEntity != null) HoldToConfirmButton(stringResource(R.string.power_restart), { scope.launch { c.hostPower.power(host.uuid, PowerAction.RESTART) } }, icon = Icons.Filled.RestartAlt)
             if (cfg.haShutdownEntity != null) HoldToConfirmButton(stringResource(R.string.power_shutdown), { scope.launch { c.hostPower.power(host.uuid, PowerAction.SHUTDOWN) } }, icon = Icons.Filled.PowerSettingsNew)
         }
+        VibepolloSection(host, cfg, ::save)
     }
 
     val onPick = picking
@@ -146,4 +147,44 @@ private fun EntityRow(entity: HaEntity?, onClick: () -> Unit) {
             if (entity != null) Text(entity.id, style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
         }
     }
+}
+
+@Composable
+private fun VibepolloSection(host: HostState, cfg: HostConfigEntity, save: (HostConfigEntity) -> Unit) {
+    val c = LocalContext.current.container
+    val scope = rememberCoroutineScope()
+    var revision by remember { mutableStateOf(0) }
+    val token = remember(revision) { c.secrets.get(io.github.thecodingdad.moonlightlauncher.data.settings.SecretStore.Keys.vibepolloToken(host.uuid)).orEmpty() }
+    var result by remember { mutableStateOf<String?>(null) }
+    val okText = stringResource(R.string.vibepollo_ok)
+    val failText = stringResource(R.string.vibepollo_failed)
+
+    SectionHeader(stringResource(R.string.vibepollo_section))
+    Text(stringResource(R.string.vibepollo_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+    io.github.thecodingdad.moonlightlauncher.ui.components.LauncherTextField(
+        stringResource(R.string.vibepollo_url), cfg.vibepolloUrl ?: "",
+        { save(cfg.copy(vibepolloUrl = it.trim().ifEmpty { null })); c.vibepollo.invalidate(host.uuid) },
+        kind = io.github.thecodingdad.moonlightlauncher.ui.components.TextKind.URL,
+        placeholder = host.address?.let { "https://$it:47990" },
+    )
+    io.github.thecodingdad.moonlightlauncher.ui.components.LauncherTextField(
+        stringResource(R.string.vibepollo_token), token,
+        {
+            c.secrets.put(io.github.thecodingdad.moonlightlauncher.data.settings.SecretStore.Keys.vibepolloToken(host.uuid), it.trim())
+            c.vibepollo.invalidate(host.uuid)
+            revision++
+        },
+        kind = io.github.thecodingdad.moonlightlauncher.ui.components.TextKind.PASSWORD,
+    )
+    io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton(
+        stringResource(R.string.vibepollo_test), enabled = !cfg.vibepolloUrl.isNullOrBlank() && token.isNotEmpty(),
+        onClick = {
+            scope.launch {
+                val r = c.vibepollo.fetch(host.uuid)
+                result = if (r != null) okText.format(r.apps, r.playniteUuids.size) else failText
+                if (r != null) c.hosts.refreshAppLists()
+            }
+        },
+    )
+    result?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurface) }
 }

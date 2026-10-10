@@ -10,6 +10,7 @@ import io.github.thecodingdad.moonlightlauncher.data.local.LocalAppScanner
 import io.github.thecodingdad.moonlightlauncher.data.remote.BoxArtCache
 import io.github.thecodingdad.moonlightlauncher.data.remote.HostActions
 import io.github.thecodingdad.moonlightlauncher.data.remote.HostRepository
+import io.github.thecodingdad.moonlightlauncher.data.remote.VibepolloClient
 import io.github.thecodingdad.moonlightlauncher.data.settings.SecretStore
 import io.github.thecodingdad.moonlightlauncher.data.settings.SettingsRepository
 import io.github.thecodingdad.moonlightlauncher.stream.AutoSleep
@@ -39,8 +40,9 @@ class AppContainer(context: Context) {
     val hosts: HostRepository by lazy { HostRepository(appContext, scope) }
     val boxArt: BoxArtCache by lazy { BoxArtCache(appContext) }
 
+    val vibepollo: VibepolloClient by lazy { VibepolloClient(http, database.hostConfigDao(), secrets) }
     val library: LibraryRepository by lazy {
-        LibraryRepository(database, LibrarySync(database), localApps, hosts, boxArt, scope)
+        LibraryRepository(database, LibrarySync(database), localApps, hosts, boxArt, scope, vibepollo)
     }
     val playtime: PlaytimeTracker by lazy { PlaytimeTracker(database) }
     val vpn: VpnManager by lazy { VpnManager(appContext, secrets, settings, scope) }

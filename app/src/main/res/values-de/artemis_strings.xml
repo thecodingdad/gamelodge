@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- German translations for Artemis texts shown during a stream that upstream does not
-     translate yet. They override the English Artemis strings for German only. -->
-<resources>
+     translate yet. They override the English Artemis strings for German only (the English
+     originals live in the Artemis library, which app lint doesn't see: hence ExtraTranslation). -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="ExtraTranslation">
     <string name="clipboard_sync_unsupported">Dieser Server unterstützt keine Zwischenablage-Synchronisierung. Bitte installiere oder aktualisiere Apollo auf die neueste Version.</string>
     <string name="error_msg_permission_denied">Zugriff verweigert</string>
     <string name="error_msg_timeout">Zeitüberschreitung der Verbindung</string>

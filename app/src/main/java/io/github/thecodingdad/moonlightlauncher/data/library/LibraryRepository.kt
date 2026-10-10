@@ -33,6 +33,7 @@ class LibraryRepository(
     private val hosts: HostRepository,
     private val boxArt: BoxArtCache,
     private val scope: CoroutineScope,
+    private val vibepollo: io.github.thecodingdad.moonlightlauncher.data.remote.VibepolloClient? = null,
 ) {
     private val dao = db.libraryDao()
 
@@ -80,6 +81,8 @@ class LibraryRepository(
     }
 
     private suspend fun syncHost(hostUuid: String, apps: List<RemoteApp>) {
+        // Optional: Vibepollo knows which apps came from Playnite (= certainly games).
+        val playnite = vibepollo?.playniteUuids(hostUuid).orEmpty()
         sync.syncHost(
             hostUuid,
             apps.map { remote ->
@@ -92,6 +95,7 @@ class LibraryRepository(
                     appId = remote.app.appId,
                     appUuid = remote.app.appUUID,
                     hdrSupported = remote.app.isHdrSupported,
+                    hasPlayniteId = remote.app.appUUID?.uppercase() in playnite,
                 )
             },
         )

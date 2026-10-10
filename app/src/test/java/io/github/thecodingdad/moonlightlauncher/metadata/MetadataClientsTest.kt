@@ -88,3 +88,32 @@ class MetadataClientsTest {
         assertEquals("id", query.getHeader("Client-ID"))
     }
 }
+
+@org.junit.runner.RunWith(org.robolectric.RobolectricTestRunner::class)
+@org.robolectric.annotation.Config(application = android.app.Application::class, sdk = [34])
+class VibepolloParseTest {
+    private val client = io.github.thecodingdad.moonlightlauncher.data.remote.VibepolloClient(
+        OkHttpClient(), FakeConfigs, FakeSecrets.instance,
+    )
+
+    @Test
+    fun `apps with a playnite id are reported by uuid`() {
+        val r = client.parse(
+            """{"apps":[{"name":"Desktop","uuid":"aaa"},{"name":"Hades","uuid":"bbb","playnite-id":"123"},{"name":"X","uuid":"ccc","playnite-id":""}],"current_app":0}""",
+        )
+        assertEquals(3, r.apps)
+        assertEquals(setOf("BBB"), r.playniteUuids)
+    }
+}
+
+private object FakeConfigs : io.github.thecodingdad.moonlightlauncher.data.db.HostConfigDao {
+    override fun observeAll() = kotlinx.coroutines.flow.flowOf(emptyList<io.github.thecodingdad.moonlightlauncher.data.db.HostConfigEntity>())
+    override suspend fun get(uuid: String) = null
+    override suspend fun upsert(config: io.github.thecodingdad.moonlightlauncher.data.db.HostConfigEntity) = Unit
+}
+
+private object FakeSecrets {
+    val instance: io.github.thecodingdad.moonlightlauncher.data.settings.SecretStore by lazy {
+        io.github.thecodingdad.moonlightlauncher.data.settings.SecretStore(androidx.test.core.app.ApplicationProvider.getApplicationContext())
+    }
+}

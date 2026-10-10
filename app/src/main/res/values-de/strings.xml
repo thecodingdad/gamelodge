@@ -383,4 +383,13 @@
     <string name="backup_done">Backup gespeichert.</string>
     <string name="backup_restored">Backup wiederhergestellt.</string>
     <string name="backup_wrong_password">Falsches Passwort – Zugangsdaten wurden nicht wiederhergestellt.</string>
+
+    <!-- Vibepollo -->
+    <string name="vibepollo_section">Vibepollo (optional)</string>
+    <string name="vibepollo_help">Mit einem Zugriffstoken für die Vibepollo-Weboberfläche (Einstellungen → Zugriffstoken, Lesezugriff auf Apps genügt) werden aus Playnite synchronisierte Spiele immer als Spiel erkannt.</string>
+    <string name="vibepollo_url">URL der Weboberfläche</string>
+    <string name="vibepollo_token">Zugriffstoken</string>
+    <string name="vibepollo_test">Verbindung testen</string>
+    <string name="vibepollo_ok">Verbunden: %1$d Apps, davon %2$d aus Playnite.</string>
+    <string name="vibepollo_failed">Nicht erreichbar oder Token abgelehnt.</string>
 </resources>
