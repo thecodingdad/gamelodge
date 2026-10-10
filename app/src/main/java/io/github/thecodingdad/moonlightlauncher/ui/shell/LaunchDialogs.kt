@@ -333,12 +333,34 @@ private fun RunningSessionActions(
 /** Full-screen progress while a stream starts: game artwork, logo, current step, B cancels. */
 @Composable
 private fun LaunchProgressScreen(working: LaunchState.Working, onCancel: () -> Unit) {
-    val colors = LauncherTheme.colors
-    val reduceMotion = io.github.thecodingdad.moonlightlauncher.ui.theme.LocalReduceMotion.current
     // Every pad button is swallowed while starting; B (back) cancels.
     PadBlocker()
     androidx.activity.compose.BackHandler(onBack = onCancel)
-    val entry = working.entry
+    StreamProgressContent(
+        entry = working.entry,
+        step = stepText(working.step),
+        detail = null,
+        timerKey = working.step,
+        showTimer = working.step == LaunchStep.WAKING_HOST,
+        onCancel = onCancel,
+    )
+}
+
+/**
+ * Full-screen start progress with the game's artwork. Shared by the launcher (waking, VPN …)
+ * and the stream activity while it connects ([StreamConnectingOverlay]).
+ */
+@Composable
+fun StreamProgressContent(
+    entry: LibraryEntry,
+    step: String,
+    detail: String?,
+    timerKey: Any?,
+    showTimer: Boolean,
+    onCancel: (() -> Unit)?,
+) {
+    val colors = LauncherTheme.colors
+    val reduceMotion = io.github.thecodingdad.moonlightlauncher.ui.theme.LocalReduceMotion.current
     val host = entry.remoteTargets.firstOrNull()?.hostName
 
     // Slow zoom on the artwork so the wait feels alive.
@@ -354,8 +376,8 @@ private fun LaunchProgressScreen(working: LaunchState.Working, onCancel: () -> U
         ).value
     }
     // Waking can take a while: show how long we've been waiting.
-    var seconds by androidx.compose.runtime.remember(working.step) { androidx.compose.runtime.mutableIntStateOf(0) }
-    androidx.compose.runtime.LaunchedEffect(working.step) {
+    var seconds by androidx.compose.runtime.remember(timerKey) { androidx.compose.runtime.mutableIntStateOf(0) }
+    androidx.compose.runtime.LaunchedEffect(timerKey) {
         while (true) {
             kotlinx.coroutines.delay(1_000)
             seconds++
@@ -395,19 +417,24 @@ private fun LaunchProgressScreen(working: LaunchState.Working, onCancel: () -> U
             }
             Spacer(Modifier.height(10.dp))
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                Text(stepText(working.step), style = MaterialTheme.typography.titleLarge, color = colors.onSurface)
-                if (working.step == LaunchStep.WAKING_HOST && seconds > 0) {
+                Text(step, style = MaterialTheme.typography.titleLarge, color = colors.onSurface)
+                if (showTimer && seconds > 0) {
                     Text("%d:%02d".format(seconds / 60, seconds % 60), style = MaterialTheme.typography.titleMedium, color = colors.onSurfaceMuted)
                 }
+            }
+            if (detail != null) {
+                Text(detail, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceMuted, maxLines = 1)
             }
             androidx.compose.material3.LinearProgressIndicator(
                 color = colors.accent, trackColor = colors.onSurface.copy(alpha = 0.15f),
                 modifier = Modifier.widthIn(max = 520.dp).fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)),
             )
         }
-        ButtonHintBar(
-            listOf(ButtonHint(PadButton.B, stringResource(R.string.action_cancel), onClick = onCancel)),
-            Modifier.align(Alignment.BottomCenter),
-        )
+        if (onCancel != null) {
+            ButtonHintBar(
+                listOf(ButtonHint(PadButton.B, stringResource(R.string.action_cancel), onClick = onCancel)),
+                Modifier.align(Alignment.BottomCenter),
+            )
+        }
     }
 }

@@ -56,6 +56,11 @@ class LaunchCoordinator(private val container: AppContainer) {
 
     var vpn: VpnAutoConnect = VpnAutoConnect { false }
 
+    /** Game whose stream is being started; shown by the stream activity while it connects. */
+    @Volatile
+    var streamingEntry: LibraryEntry? = null
+        private set
+
     fun dismiss() {
         _state.value = LaunchState.Idle
     }
@@ -180,6 +185,7 @@ class LaunchCoordinator(private val container: AppContainer) {
             val intent = ServerHelper.createStartIntent(activity, app, host.details, binder, vDisplay)
             val profileName = StreamProfiles.active("").name.ifEmpty { null }
             container.playtime.start(entry.item.id, target.id, profileName)
+            streamingEntry = entry
             activity.startActivity(intent)
             _state.value = LaunchState.Idle
             container.scope.launch {

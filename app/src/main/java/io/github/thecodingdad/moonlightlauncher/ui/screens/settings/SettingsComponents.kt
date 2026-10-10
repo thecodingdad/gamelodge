@@ -85,7 +85,8 @@ private fun RowShell(
         color = LauncherTheme.colors.surface,
         focusScale = 1.02f,
     ) {
-        Box(Modifier.padding(horizontal = 20.dp, vertical = 12.dp).fillMaxWidth()) { content() }
+        // Vertically centred: rows have a minimum height, short content must not stick to the top.
+        Box(Modifier.align(Alignment.CenterStart).padding(horizontal = 20.dp, vertical = 12.dp).fillMaxWidth()) { content() }
     }
 }
 

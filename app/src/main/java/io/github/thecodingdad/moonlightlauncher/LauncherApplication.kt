@@ -24,6 +24,7 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
         container.hosts.bind()
         container.library.start()
         container.controllerSettings.install()
+        io.github.thecodingdad.moonlightlauncher.ui.shell.StreamConnectingOverlay.install(container)
         container.scope.launch { container.filters.ensureDefaults() }
         container.metadata.start()
         container.vpn.startNetworkWatch()

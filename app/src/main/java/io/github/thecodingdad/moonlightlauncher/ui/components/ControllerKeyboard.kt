@@ -117,7 +117,7 @@ fun LauncherTextField(
         color = colors.surfaceRaised,
         focusScale = 1.02f,
     ) {
-        Column(Modifier.padding(horizontal = 18.dp, vertical = 10.dp)) {
+        Column(Modifier.align(Alignment.CenterStart).padding(horizontal = 18.dp, vertical = 10.dp)) {
             Text(label, style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceMuted)
             val shown = when {
                 value.isEmpty() -> placeholder ?: ""

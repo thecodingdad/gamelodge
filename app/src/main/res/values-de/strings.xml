@@ -562,4 +562,5 @@
         <item quantity="other">%d Geräte</item>
     </plurals>
     <string name="qm_lan">LAN</string>
+    <string name="step_connecting_stream">Verbindung zum Stream wird hergestellt …</string>
 </resources>
