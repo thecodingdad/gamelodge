@@ -27,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.compositeOver
 import io.github.thecodingdad.moonlightlauncher.ui.input.PadButton
 import io.github.thecodingdad.moonlightlauncher.ui.input.PadAction
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -130,7 +131,7 @@ fun HaTile(tile: HaTileEntity, entity: HaEntity?, modifier: Modifier = Modifier,
         onClick = { if (entity != null && tile.type != HaTileType.SENSOR) scope.launch { ha.primaryAction(entity) } },
         modifier = modifier
             .width(width)
-            .height(112.dp)
+            .height(76.dp)
             .onFocusChanged { focused = it.isFocused || it.hasFocus }
             .then(
                 // Touch: slide horizontally across the tile to set the value.
@@ -146,26 +147,33 @@ fun HaTile(tile: HaTileEntity, entity: HaEntity?, modifier: Modifier = Modifier,
                     }
                 } else Modifier,
             ),
-        color = if (active) colors.accent.copy(alpha = 0.28f) else colors.surfaceRaised,
+        // Opaque mix: a translucent tile would let the focus shadow show through as a box.
+        color = if (active) colors.accent.copy(alpha = 0.28f).compositeOver(colors.surfaceRaised) else colors.surfaceRaised,
         focusScale = 1.05f,
     ) {
-        Column(Modifier.padding(14.dp).fillMaxWidth(), verticalArrangement = Arrangement.SpaceBetween) {
+        Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp).fillMaxWidth().fillMaxHeight(), verticalArrangement = Arrangement.SpaceBetween) {
+            // Compact: icon next to a one-line name and the state below it.
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(tile.type.icon(), null, tint = if (active) colors.accent else colors.onSurfaceMuted, modifier = Modifier.size(24.dp))
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    tile.label ?: entity?.name ?: tile.entityId,
-                    style = MaterialTheme.typography.titleSmall, color = colors.onSurface,
-                    maxLines = 2, overflow = TextOverflow.Ellipsis,
-                )
+                Icon(tile.type.icon(), null, tint = if (active) colors.accent else colors.onSurfaceMuted, modifier = Modifier.size(22.dp))
+                Spacer(Modifier.width(10.dp))
+                Column {
+                    Text(
+                        tile.label ?: entity?.name ?: tile.entityId,
+                        style = MaterialTheme.typography.titleSmall, color = colors.onSurface,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        pending?.let { "$it %" } ?: stateText(tile, entity),
+                        style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceMuted, maxLines = 1,
+                    )
+                }
             }
-            Text(pending?.let { "$it %" } ?: stateText(tile, entity), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceMuted, maxLines = 1)
             val level = when (tile.type) {
                 HaTileType.LIGHT, HaTileType.COVER -> current
                 else -> null
             }
             if (level != null) {
-                Box(Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)).background(colors.surface)) {
+                Box(Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(2.dp)).background(colors.surface)) {
                     Box(Modifier.fillMaxHeight().fillMaxWidth(level / 100f).background(colors.accent))
                 }
             }

@@ -99,15 +99,15 @@ fun QuickMenu(
             PanelTab(stringResource(R.string.settings_home_assistant), selected = tab == 1, onClick = { tab = 1 })
             io.github.thecodingdad.moonlightlauncher.ui.components.PadGlyph(io.github.thecodingdad.moonlightlauncher.ui.input.PadButton.R1)
         }
-        androidx.compose.foundation.layout.Spacer(Modifier.heightIn(min = 12.dp))
+        androidx.compose.foundation.layout.Spacer(Modifier.heightIn(min = 4.dp))
         if (tab == 1) {
-            Column(Modifier.verticalScroll(rememberScrollState()).heightIn(max = 2000.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(vertical = 22.dp, horizontal = 14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 HomeAssistantSection(openHaSettings)
             }
             return@SidePanel
         }
         Column(
-            Modifier.verticalScroll(rememberScrollState()).heightIn(max = 2000.dp),
+            Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(vertical = 22.dp, horizontal = 14.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             // Status and shortcuts as tiles: controllers, hosts, VPN, Wi-Fi, Bluetooth, Android settings.
@@ -241,7 +241,7 @@ private fun HomeAssistantSection(openSettings: () -> Unit) {
         ) {
             tiles.forEachIndexed { i, tile ->
                 io.github.thecodingdad.moonlightlauncher.ui.screens.ha.HaTile(
-                    tile, entities[tile.entityId], Modifier.restoreFocusIf(i == 0), width = 220.dp,
+                    tile, entities[tile.entityId], Modifier.restoreFocusIf(i == 0), width = 210.dp,
                 )
             }
         }
