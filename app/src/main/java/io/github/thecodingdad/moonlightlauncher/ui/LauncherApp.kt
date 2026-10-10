@@ -30,6 +30,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material.icons.filled.VideoLibrary
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.layout.onSizeChanged
@@ -135,7 +142,12 @@ private object Routes {
     fun settings(page: SettingsPageId) = "settings/${page.name}"
 }
 
-enum class MainTab(val title: Int) { HOME(R.string.tab_home), LIBRARY(R.string.tab_library), APPS(R.string.tab_apps), SETTINGS(R.string.tab_settings) }
+enum class MainTab(val title: Int, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
+    HOME(R.string.tab_home, androidx.compose.material.icons.Icons.Filled.Home),
+    LIBRARY(R.string.tab_library, androidx.compose.material.icons.Icons.Filled.VideoLibrary),
+    APPS(R.string.tab_apps, androidx.compose.material.icons.Icons.Filled.Apps),
+    SETTINGS(R.string.tab_settings, androidx.compose.material.icons.Icons.Filled.Settings),
+}
 
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
@@ -481,9 +493,7 @@ private fun MainShell(
     val density = androidx.compose.ui.platform.LocalDensity.current
     var topBarHeight by remember { mutableStateOf(0.dp) }
     var hintBarHeight by remember { mutableStateOf(0.dp) }
-    // Hidden hint bar (portrait) takes no space; its last measured height must not linger.
     val compactShell = io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current
-    LaunchedEffect(compactShell) { if (compactShell) hintBarHeight = 0.dp }
     val fullBleed = tabs[tab] == MainTab.HOME && settings.homeLayout != HomeLayout.GRID
     val bg = LauncherTheme.colors.background
     Box(Modifier.fillMaxSize().statusBarsPadding()) {
@@ -581,11 +591,8 @@ private fun MainShell(
                 }
             }
             if (compact) {
-                // Narrow screen: status on its own line above the (scrollable) tabs.
-                Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) { status() }
-                    tabRow(Modifier)
-                }
+                // Narrow screen: only the status at the top; the tabs move to the bottom navigation bar.
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) { status() }
             } else {
                 tabRow(Modifier.weight(1f))
                 status()
@@ -601,6 +608,56 @@ private fun MainShell(
                 )
                 .onSizeChanged { hintBarHeight = with(density) { it.height.toDp() } },
         )
+        if (compactShell) {
+            // Portrait: main tabs as a bottom navigation bar (icon + label); takes the hint bar's place.
+            BottomNavBar(
+                tabs = tabs, selected = tab, onSelect = { tab = it },
+                modifier = Modifier.align(Alignment.BottomCenter)
+                    .onSizeChanged { hintBarHeight = with(density) { it.height.toDp() } },
+            )
+        }
+    }
+}
+
+@Composable
+private fun BottomNavBar(tabs: List<MainTab>, selected: Int, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
+    val colors = LauncherTheme.colors
+    Row(
+        modifier.fillMaxWidth().background(colors.surface).navigationBarsPadding().padding(horizontal = 8.dp, vertical = 6.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+    ) {
+        tabs.forEachIndexed { index, t ->
+            val active = index == selected
+            FocusSurface(
+                onClick = { onSelect(index) },
+                shape = RoundedCornerShape(16.dp),
+                color = androidx.compose.ui.graphics.Color.Transparent,
+                focusScale = 1f,
+                dpadFocusable = false,
+                modifier = Modifier.weight(1f),
+            ) {
+                Column(
+                    Modifier.fillMaxWidth().padding(vertical = 6.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Box(
+                        Modifier.clip(RoundedCornerShape(14.dp))
+                            .background(if (active) colors.onSurface else androidx.compose.ui.graphics.Color.Transparent)
+                            .padding(horizontal = 18.dp, vertical = 4.dp),
+                    ) {
+                        androidx.compose.material3.Icon(
+                            t.icon, null, tint = if (active) colors.background else colors.onSurfaceMuted,
+                            modifier = Modifier.size(24.dp),
+                        )
+                    }
+                    Text(
+                        stringResource(t.title), style = MaterialTheme.typography.labelMedium,
+                        color = if (active) colors.onSurface else colors.onSurfaceMuted,
+                        maxLines = 1, modifier = Modifier.padding(top = 4.dp),
+                    )
+                }
+            }
+        }
     }
 }
 
