@@ -30,7 +30,13 @@ import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 val LocalButtonLayout = staticCompositionLocalOf { ButtonLayout.XBOX }
 
 /** One entry of the hint bar. [onClick] makes the hint usable by touch as well. */
-data class ButtonHint(val button: PadButton, val label: String, val onClick: (() -> Unit)? = null)
+/** [secondButton] shows a pair such as LT/RT for "previous/next". */
+data class ButtonHint(
+    val button: PadButton,
+    val label: String,
+    val onClick: (() -> Unit)? = null,
+    val secondButton: PadButton? = null,
+)
 
 /** Bottom bar listing what each button does right now. Always visible, in every screen. */
 @Composable
@@ -51,6 +57,10 @@ fun ButtonHintBar(hints: List<ButtonHint>, modifier: Modifier = Modifier) {
                     .padding(horizontal = 6.dp, vertical = 4.dp),
             ) {
                 PadGlyph(hint.button)
+                hint.secondButton?.let {
+                    Spacer(Modifier.size(4.dp))
+                    PadGlyph(it)
+                }
                 Spacer(Modifier.size(8.dp))
                 Text(hint.label, style = MaterialTheme.typography.labelMedium, color = LauncherTheme.colors.onSurfaceMuted)
             }

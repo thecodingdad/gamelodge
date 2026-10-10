@@ -1,6 +1,8 @@
 package io.github.thecodingdad.moonlightlauncher.ui.input
 
+import android.view.InputDevice
 import android.view.KeyEvent
+import android.view.MotionEvent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.rememberUpdatedState
@@ -19,6 +21,9 @@ class InputDispatcher {
     private class Handler(val button: PadButton, val action: () -> Unit)
 
     private val handlers = ArrayList<Handler>()
+    // Triggers: some controllers report them as keys, others only as analog axes, some both.
+    private val triggerPressed = HashMap<PadButton, Boolean>()
+    private val triggerFiredAt = HashMap<PadButton, Long>()
     private var selectDownAt = 0L
     private var selectHoldFired = false
 
@@ -42,11 +47,45 @@ class InputDispatcher {
     fun dispatch(event: KeyEvent): Boolean {
         val button = buttonFor(event.keyCode) ?: return false
         if (button == PadButton.SELECT) return dispatchSelect(event)
+        if ((button == PadButton.L2 || button == PadButton.R2) && event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
+            return fireTrigger(button, event.eventTime) || handlers.any { it.button == button }
+        }
         return when (event.action) {
             KeyEvent.ACTION_DOWN -> if (event.repeatCount == 0) fire(button) else handlers.any { it.button == button }
             KeyEvent.ACTION_UP -> handlers.any { it.button == button }
             else -> false
         }
+    }
+
+    /**
+     * Analog triggers as buttons for controllers that don't send L2/R2 key events.
+     * Never consumes the event (the stream and other handlers still see it).
+     */
+    fun dispatchMotion(event: MotionEvent) {
+        if (event.source and InputDevice.SOURCE_JOYSTICK != InputDevice.SOURCE_JOYSTICK) return
+        val left = maxOf(event.getAxisValue(MotionEvent.AXIS_LTRIGGER), event.getAxisValue(MotionEvent.AXIS_BRAKE))
+        val right = maxOf(event.getAxisValue(MotionEvent.AXIS_RTRIGGER), event.getAxisValue(MotionEvent.AXIS_GAS))
+        trigger(PadButton.L2, left, event.eventTime)
+        trigger(PadButton.R2, right, event.eventTime)
+    }
+
+    private fun trigger(button: PadButton, value: Float, time: Long) {
+        val pressed = triggerPressed[button] == true
+        // Hysteresis so a half-pulled trigger doesn't flicker.
+        if (!pressed && value > 0.6f) {
+            triggerPressed[button] = true
+            fireTrigger(button, time)
+        } else if (pressed && value < 0.3f) {
+            triggerPressed[button] = false
+        }
+    }
+
+    /** Fires once per pull even when key and axis events both arrive. */
+    private fun fireTrigger(button: PadButton, time: Long): Boolean {
+        val last = triggerFiredAt[button] ?: Long.MIN_VALUE / 2
+        if (time - last < TRIGGER_DEDUP_MS) return true
+        triggerFiredAt[button] = time
+        return fire(button)
     }
 
     /** Select: short press and hold are separate actions (hold opens the quick menu). */
@@ -72,6 +111,7 @@ class InputDispatcher {
 
     companion object {
         const val HOLD_MS = 450L
+        const val TRIGGER_DEDUP_MS = 250L
 
         fun buttonFor(keyCode: Int): PadButton? = when (keyCode) {
             KeyEvent.KEYCODE_BUTTON_X -> PadButton.X

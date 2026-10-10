@@ -84,6 +84,11 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun dispatchGenericMotionEvent(event: android.view.MotionEvent): Boolean {
+        dispatcher.dispatchMotion(event)
+        return super.dispatchGenericMotionEvent(event)
+    }
+
     // Lint wrongly flags ComponentActivity.dispatchKeyEvent as restricted (androidx.core override).
     @SuppressLint("RestrictedApi")
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {

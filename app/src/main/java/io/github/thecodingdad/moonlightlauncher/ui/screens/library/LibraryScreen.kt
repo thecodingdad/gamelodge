@@ -99,6 +99,16 @@ fun LibraryScreen(
 
     val searchTitle = stringResource(R.string.hint_search)
     fun openSearch() = keyboard.open(title = searchTitle, initial = search) { search = it }
+    // LT/RT switch filters (LB/RB stay with the tabs).
+    val feedback = io.github.thecodingdad.moonlightlauncher.ui.feedback.LocalUiFeedback.current
+    fun stepFilter(delta: Int) {
+        filters.step(selected?.key, delta)?.let {
+            selectedKey = it
+            feedback?.play(io.github.thecodingdad.moonlightlauncher.ui.feedback.UiSound.TOGGLE)
+        }
+    }
+    PadAction(PadButton.L2) { stepFilter(-1) }
+    PadAction(PadButton.R2) { stepFilter(1) }
     PadAction(PadButton.SELECT) { sort = sort.next() }
     PadAction(PadButton.START) { openSearch() }
     PadAction(PadButton.X) { focused?.let(actions::context) }
@@ -107,10 +117,15 @@ fun LibraryScreen(
         listOf(
             ButtonHint(PadButton.A, stringResource(R.string.hint_open)),
             ButtonHint(PadButton.X, stringResource(R.string.hint_options), onClick = { focused?.let(actions::context) }),
+            ButtonHint(PadButton.L2, stringResource(R.string.hint_filters), onClick = { stepFilter(1) }, secondButton = PadButton.R2),
             ButtonHint(PadButton.SELECT, sortLabel(sort), onClick = { sort = sort.next() }),
             ButtonHint(PadButton.START, stringResource(R.string.hint_search), onClick = ::openSearch),
         ),
     )
+    // Scroll position and focused game are kept per filter.
+    val gridStates = androidx.compose.runtime.saveable.rememberSaveableStateHolder()
+    val focusByFilter = remember { androidx.compose.runtime.mutableStateMapOf<String, String>() }
+    val filterKey = selected?.key ?: BuiltinFilter.ALL
 
     Column(Modifier.fillMaxSize()) {
         FilterBar(
@@ -131,7 +146,12 @@ fun LibraryScreen(
             }
             return@Column
         }
+        val lastId = lastFocusedKey?.takeIf { it.startsWith("library:") }?.removePrefix("library:")
+        val targetId = listOfNotNull(focusByFilter[filterKey], lastId).firstOrNull { id -> shown.any { it.item.id == id } }
+            ?: shown.first().item.id
+        gridStates.SaveableStateProvider(filterKey) {
         LazyVerticalGrid(
+            state = androidx.compose.foundation.lazy.grid.rememberLazyGridState(),
             columns = GridCells.Adaptive(LauncherTheme.dimens.coverWidth + 8.dp),
             contentPadding = PaddingValues(horizontal = 36.dp, vertical = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(18.dp),
@@ -144,14 +164,13 @@ fun LibraryScreen(
                     entry = entry,
                     onClick = { actions.open(entry) },
                     onLongClick = { actions.context(entry) },
-                    onFocused = { focused = entry; onFocusKey(key) },
+                    onFocused = { focused = entry; focusByFilter[filterKey] = entry.item.id; onFocusKey(key) },
                     showTitle = true,
                     animated = animatedArtwork,
-                    modifier = Modifier.restoreFocusIf(
-                        lastFocusedKey == key || (lastFocusedKey?.startsWith("library:") != true && entry === shown.first()),
-                    ),
+                    modifier = Modifier.restoreFocusIf(entry.item.id == targetId),
                 )
             }
+        }
         }
     }
 }

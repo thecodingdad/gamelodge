@@ -473,4 +473,7 @@
 
     <!-- Filter bar -->
     <string name="search_clear">Suche löschen</string>
+
+    <!-- LT/RT -->
+    <string name="hint_filters">Filter</string>
 </resources>

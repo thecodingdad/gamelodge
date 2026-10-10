@@ -14,7 +14,9 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRestorer
@@ -43,11 +45,23 @@ fun FilterBar(
     onEdit: () -> Unit,
     onStats: (() -> Unit)? = null,
 ) {
+    val listState = rememberLazyListState()
+    val selectedIndex = filters.indexOfFirst { it.key == selectedKey || (selectedKey == null && it.builtin == BuiltinFilter.ALL) }
+        .takeIf { it >= 0 }?.let { if (search.isNotEmpty()) it + 1 else it }
+    // Keep the active chip visible, e.g. after switching with LT/RT.
+    LaunchedEffect(selectedIndex) {
+        val index = selectedIndex ?: return@LaunchedEffect
+        val info = listState.layoutInfo
+        val item = info.visibleItemsInfo.firstOrNull { it.index == index }
+        val fullyVisible = item != null && item.offset >= info.viewportStartOffset && item.offset + item.size <= info.viewportEndOffset
+        if (!fullyVisible) listState.animateScrollToItem((index - 1).coerceAtLeast(0))
+    }
     Row(
         Modifier.fillMaxWidth().padding(end = 36.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         LazyRow(
+            state = listState,
             contentPadding = PaddingValues(start = 36.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier.weight(1f).focusRestorer(),
@@ -80,6 +94,15 @@ fun FilterBar(
             Chip("", selected = false, onClick = onEdit, icon = { Icon(Icons.Filled.Edit, stringResource(R.string.filters_edit)) })
         }
     }
+}
+
+/** Next/previous filter for LT/RT; stops at both ends. Returns null when nothing changes. */
+fun List<ResolvedFilter>.step(selectedKey: String?, delta: Int): String? {
+    if (isEmpty()) return null
+    val current = indexOfFirst { it.key == selectedKey }.takeIf { it >= 0 }
+        ?: indexOfFirst { it.builtin == BuiltinFilter.ALL }.coerceAtLeast(0)
+    val next = (current + delta).coerceIn(0, lastIndex)
+    return if (next == current) null else this[next].key
 }
 
 fun LibrarySort.next(): LibrarySort = LibrarySort.entries[(ordinal + 1) % LibrarySort.entries.size]

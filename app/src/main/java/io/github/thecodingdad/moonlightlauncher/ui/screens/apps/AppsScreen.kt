@@ -14,6 +14,7 @@ import io.github.thecodingdad.moonlightlauncher.data.library.FilterEngine
 import io.github.thecodingdad.moonlightlauncher.data.library.LibrarySort
 import io.github.thecodingdad.moonlightlauncher.ui.screens.library.FilterBar
 import io.github.thecodingdad.moonlightlauncher.ui.screens.library.next
+import io.github.thecodingdad.moonlightlauncher.ui.screens.library.step
 import io.github.thecodingdad.moonlightlauncher.ui.screens.library.sortLabel
 import io.github.thecodingdad.moonlightlauncher.ui.screens.library.filterLabel
 import androidx.compose.foundation.layout.PaddingValues
@@ -60,11 +61,23 @@ fun AppsScreen(
     var focused by remember { mutableStateOf<LibraryEntry?>(null) }
     var selectedKey by rememberSaveable { mutableStateOf<String?>(null) }
     var sort by rememberSaveable { mutableStateOf(LibrarySort.TITLE) }
+    // Scroll position and focused app are kept per filter.
+    val gridStates = androidx.compose.runtime.saveable.rememberSaveableStateHolder()
+    val focusByFilter = remember { androidx.compose.runtime.mutableStateMapOf<String, String>() }
     var search by rememberSaveable { mutableStateOf("") }
     val selected = filters.firstOrNull { it.key == selectedKey }
     val keyboard = io.github.thecodingdad.moonlightlauncher.ui.components.LocalKeyboardController.current
     val searchTitle = stringResource(R.string.hint_search)
     fun openSearch() = keyboard.open(title = searchTitle, initial = search) { search = it }
+    val feedback = io.github.thecodingdad.moonlightlauncher.ui.feedback.LocalUiFeedback.current
+    fun stepFilter(delta: Int) {
+        filters.step(selected?.key, delta)?.let {
+            selectedKey = it
+            feedback?.play(io.github.thecodingdad.moonlightlauncher.ui.feedback.UiSound.TOGGLE)
+        }
+    }
+    PadAction(PadButton.L2) { stepFilter(-1) }
+    PadAction(PadButton.R2) { stepFilter(1) }
     PadAction(PadButton.SELECT) { sort = sort.next() }
     PadAction(PadButton.START) { openSearch() }
     PadAction(PadButton.X) { focused?.let(actions::context) }
@@ -72,6 +85,7 @@ fun AppsScreen(
         listOf(
             ButtonHint(PadButton.A, stringResource(R.string.hint_start)),
             ButtonHint(PadButton.X, stringResource(R.string.hint_options), onClick = { focused?.let(actions::context) }),
+            ButtonHint(PadButton.L2, stringResource(R.string.hint_filters), onClick = { stepFilter(1) }, secondButton = PadButton.R2),
             ButtonHint(PadButton.SELECT, sortLabel(sort), onClick = { sort = sort.next() }),
             ButtonHint(PadButton.START, stringResource(R.string.hint_search), onClick = ::openSearch),
         ),
@@ -105,10 +119,16 @@ fun AppsScreen(
     }
 
     val first = local.firstOrNull() ?: byHost.values.firstOrNull()?.firstOrNull()
+    val filterKey = selected?.key ?: BuiltinFilter.ALL
+    val lastId = lastFocusedKey?.takeIf { it.startsWith("apps:") }?.removePrefix("apps:")
+    val targetId = listOfNotNull(focusByFilter[filterKey], lastId).firstOrNull { id -> sorted.any { it.item.id == id } }
+        ?: first?.item?.id
     val deviceTitle = stringResource(R.string.apps_on_device)
     val selectedTitle = selected?.let { filterLabel(it) }.orEmpty()
     val hostTitles = byHost.keys.associateWith { stringResource(R.string.apps_on_host, it) }
+    gridStates.SaveableStateProvider(filterKey) {
     LazyVerticalGrid(
+        state = androidx.compose.foundation.lazy.grid.rememberLazyGridState(),
         columns = GridCells.Adaptive(LauncherTheme.dimens.iconTile + 36.dp),
         contentPadding = PaddingValues(horizontal = 36.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -126,10 +146,8 @@ fun AppsScreen(
                     entry = entry,
                     onClick = { actions.play(entry) },
                     onLongClick = { actions.context(entry) },
-                    onFocused = { focused = entry; onFocusKey(key) },
-                    modifier = Modifier.restoreFocusIf(
-                        lastFocusedKey == key || (lastFocusedKey?.startsWith("apps:") != true && entry === first),
-                    ),
+                    onFocused = { focused = entry; focusByFilter[filterKey] = entry.item.id; onFocusKey(key) },
+                    modifier = Modifier.restoreFocusIf(entry.item.id == targetId),
                 )
             }
         }
@@ -139,6 +157,7 @@ fun AppsScreen(
             section(deviceTitle, local)
             byHost.forEach { (host, list) -> section(hostTitles.getValue(host), list) }
         }
+    }
     }
     }
 }
