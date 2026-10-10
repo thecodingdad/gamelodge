@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -44,8 +45,11 @@ fun FilterBar(
     onSort: () -> Unit,
     onEdit: () -> Unit,
     onStats: (() -> Unit)? = null,
+    /** Incremented by the screen to move focus to the active filter chip (B button). */
+    focusRequests: Int = 0,
 ) {
     val listState = rememberLazyListState()
+    val selectedRequester = androidx.compose.runtime.remember { androidx.compose.ui.focus.FocusRequester() }
     val selectedIndex = filters.indexOfFirst { it.key == selectedKey || (selectedKey == null && it.builtin == BuiltinFilter.ALL) }
         .takeIf { it >= 0 }?.let { if (search.isNotEmpty()) it + 1 else it }
     // Keep the active chip visible, e.g. after switching with LT/RT.
@@ -55,6 +59,14 @@ fun FilterBar(
         val item = info.visibleItemsInfo.firstOrNull { it.index == index }
         val fullyVisible = item != null && item.offset >= info.viewportStartOffset && item.offset + item.size <= info.viewportEndOffset
         if (!fullyVisible) listState.animateScrollToItem((index - 1).coerceAtLeast(0))
+    }
+    LaunchedEffect(focusRequests) {
+        if (focusRequests == 0) return@LaunchedEffect
+        val index = selectedIndex ?: return@LaunchedEffect
+        // The chip must be composed before it can take focus.
+        if (listState.layoutInfo.visibleItemsInfo.none { it.index == index }) listState.scrollToItem((index - 1).coerceAtLeast(0))
+        kotlinx.coroutines.yield()
+        runCatching { selectedRequester.requestFocus() }
     }
     Row(
         Modifier.fillMaxWidth().padding(end = 36.dp),
@@ -76,7 +88,10 @@ fun FilterBar(
             }
             items(filters, key = { "filter:${it.key}" }) { f ->
                 val selected = f.key == selectedKey || (selectedKey == null && f.builtin == BuiltinFilter.ALL)
-                Chip(filterLabel(f), selected = selected, onClick = { onSelect(f.key) })
+                Chip(
+                    filterLabel(f), selected = selected, onClick = { onSelect(f.key) },
+                    modifier = if (selected) Modifier.focusRequester(selectedRequester) else Modifier,
+                )
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.focusRestorer()) {

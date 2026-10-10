@@ -417,7 +417,9 @@ private fun MainShell(vm: LauncherViewModel, nav: NavHostController, openStats: 
 
     PadAction(PadButton.L1) { tab = (tab - 1).mod(tabs.size) }
     PadAction(PadButton.R1) { tab = (tab + 1).mod(tabs.size) }
-    BackHandler(enabled = tab != 0 || settings.launcherMode) { tab = 0 }
+    // B: library/apps move focus to their filters (handled there); settings ignore it; home only
+    // swallows it in launcher mode (as a normal app, B on home leaves the app).
+    BackHandler(enabled = tabs[tab] == MainTab.SETTINGS || (tabs[tab] == MainTab.HOME && settings.launcherMode)) {}
 
     fun cycleProfile() {
         if (profiles.isEmpty()) return

@@ -76,6 +76,9 @@ fun AppsScreen(
             feedback?.play(io.github.thecodingdad.moonlightlauncher.ui.feedback.UiSound.TOGGLE)
         }
     }
+    // B moves focus up to the active filter instead of leaving the tab.
+    var filterFocusRequests by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+    androidx.activity.compose.BackHandler { filterFocusRequests++ }
     PadAction(PadButton.L2) { stepFilter(-1) }
     PadAction(PadButton.R2) { stepFilter(1) }
     PadAction(PadButton.SELECT) { sort = sort.next() }
@@ -110,6 +113,7 @@ fun AppsScreen(
         sort = sort,
         onSort = { sort = sort.next() },
         onEdit = openFilterSettings,
+        focusRequests = filterFocusRequests,
     )
     if (sorted.isEmpty()) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

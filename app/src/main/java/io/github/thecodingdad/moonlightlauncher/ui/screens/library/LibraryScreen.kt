@@ -107,6 +107,9 @@ fun LibraryScreen(
             feedback?.play(io.github.thecodingdad.moonlightlauncher.ui.feedback.UiSound.TOGGLE)
         }
     }
+    // B moves focus up to the active filter instead of leaving the tab.
+    var filterFocusRequests by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+    androidx.activity.compose.BackHandler { filterFocusRequests++ }
     PadAction(PadButton.L2) { stepFilter(-1) }
     PadAction(PadButton.R2) { stepFilter(1) }
     PadAction(PadButton.SELECT) { sort = sort.next() }
@@ -138,6 +141,7 @@ fun LibraryScreen(
             sort = sort,
             onSort = { sort = sort.next() },
             onEdit = openFilterSettings,
+        focusRequests = filterFocusRequests,
             onStats = openStats,
         )
         if (shown.isEmpty()) {
@@ -176,10 +180,17 @@ fun LibraryScreen(
 }
 
 @Composable
-fun Chip(label: String, selected: Boolean, onClick: () -> Unit, icon: (@Composable () -> Unit)? = null) {
+fun Chip(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    icon: (@Composable () -> Unit)? = null,
+    modifier: Modifier = Modifier,
+) {
     val colors = LauncherTheme.colors
     FocusSurface(
         onClick = onClick,
+        modifier = modifier,
         shape = RoundedCornerShape(20.dp),
         color = if (selected) colors.accent else colors.surfaceRaised,
         focusScale = 1.08f,
