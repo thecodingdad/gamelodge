@@ -521,7 +521,7 @@
     <string name="profile_picker_title">Stream profile</string>
     <string name="profile_picker_sub">Used for the next streams (resolution, frame rate, bitrate). „Start with …“ (X) picks one for a single game.</string>
     <string name="profile_picker_edit">Edit profiles</string>
-    <string name="controller_popup_sub">Every controller is passed to the host as its own gamepad. Select one to test its vibration.</string>
+    <string name="controller_popup_sub">Every controller is passed to the host as its own gamepad. Select one to open its settings.</string>
     <string name="controller_popup_settings">Controller settings</string>
 
     <!-- Controller settings -->

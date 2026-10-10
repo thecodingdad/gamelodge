@@ -26,6 +26,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -53,15 +57,10 @@ fun Modal(
     maxWidth: Dp = 620.dp,
     /** Element that gets focus when the modal opens; defaults to the first focusable child. */
     initialFocus: FocusRequester? = null,
-    /** Lighter scrim for popups over a blurred backdrop (see LauncherApp); null = dark default. */
-    lightScrim: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
-) {
+) = Overlay(visible) {
     AnimatedVisibility(visible, enter = fadeIn(), exit = fadeOut()) {
-        ModalScaffold(
-            onDismiss, alignment = Alignment.Center,
-            scrim = if (lightScrim) androidx.compose.ui.graphics.SolidColor(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.5f)) else null,
-        ) {
+        ModalScaffold(onDismiss, alignment = Alignment.Center, scrim = PopupScrim) {
             Column(
                 modifier = modifier
                     .widthIn(max = maxWidth)
@@ -87,15 +86,9 @@ fun SidePanel(
     onDismiss: () -> Unit,
     width: Dp = 460.dp,
     content: @Composable ColumnScope.() -> Unit,
-) {
+) = Overlay(visible) {
     AnimatedVisibility(visible, enter = fadeIn(), exit = fadeOut()) {
-        // Side panels keep the launcher visible: light scrim, a bit darker towards the panel.
-        ModalScaffold(
-            onDismiss, alignment = Alignment.CenterEnd,
-            scrim = androidx.compose.ui.graphics.Brush.horizontalGradient(
-                listOf(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.35f), androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.6f)),
-            ),
-        ) {
+        ModalScaffold(onDismiss, alignment = Alignment.CenterEnd, scrim = PopupScrim) {
             androidx.compose.animation.AnimatedVisibility(
                 visible = true,
                 enter = slideInHorizontally { it },
@@ -120,7 +113,7 @@ fun SidePanel(
 private fun ModalScaffold(
     onDismiss: () -> Unit,
     alignment: Alignment,
-    scrim: androidx.compose.ui.graphics.Brush? = null,
+    scrim: androidx.compose.ui.graphics.Brush,
     content: @Composable BoxScope.() -> Unit,
 ) {
     PadBlocker()
@@ -128,7 +121,7 @@ private fun ModalScaffold(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .then(if (scrim != null) Modifier.background(scrim) else Modifier.background(LauncherTheme.colors.scrim))
+            .background(scrim)
             .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onDismiss),
         contentAlignment = alignment,
     ) {
@@ -146,14 +139,74 @@ private fun ModalScaffold(
 @Composable
 fun Modifier.trapFocus(initialFocus: FocusRequester? = null): Modifier {
     val requester = remember { FocusRequester() }
-    LaunchedEffect(Unit) {
+    // Only the topmost overlay keeps the focus; a popup opened above takes it over, and when
+    // that popup closes, focus returns here (focusRestorer remembers the last child).
+    val entry = LocalOverlayEntry.current
+    val isTop = entry == null || OverlayHost.isTop(entry)
+    var first by remember { mutableStateOf(true) }
+    LaunchedEffect(isTop) {
+        if (!isTop) return@LaunchedEffect
         // Let children lay out before requesting focus into the group.
         delay(30)
-        runCatching { (initialFocus ?: requester).requestFocus() }
+        runCatching { if (first) (initialFocus ?: requester).requestFocus() else requester.requestFocus() }
+        first = false
     }
     return this
         .focusRequester(requester)
-        .focusProperties { onExit = { cancelFocusChange() } }
+        .focusProperties { onExit = { if (entry == null || OverlayHost.isTop(entry)) cancelFocusChange() } }
         .focusRestorer()
         .focusGroup()
+}
+
+/** Same dimming for every popup and panel; the launcher behind is blurred as well (LauncherApp). */
+private val PopupScrim: androidx.compose.ui.graphics.Brush =
+    androidx.compose.ui.graphics.SolidColor(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.5f))
+
+/**
+ * All popups and panels are drawn in one layer above the launcher ([OverlayOutlet]), wherever
+ * they are declared. That gives them one consistent backdrop (dimmed + blurred) and a clear
+ * stacking order: the most recently opened one is on top and owns the focus.
+ */
+object OverlayHost {
+    class Entry {
+        internal var content by mutableStateOf<@Composable () -> Unit>({})
+        internal var visible by mutableStateOf(false)
+    }
+
+    internal val entries = mutableStateListOf<Entry>()
+
+    /** True while any popup/panel is shown (drives the backdrop blur). */
+    val anyVisible: Boolean get() = entries.any { it.visible }
+
+    fun isTop(entry: Entry): Boolean = entries.lastOrNull { it.visible } === entry
+}
+
+val LocalOverlayEntry = androidx.compose.runtime.compositionLocalOf<OverlayHost.Entry?> { null }
+
+/** Place once, above the main content. */
+@Composable
+fun OverlayOutlet() {
+    OverlayHost.entries.forEach { entry ->
+        androidx.compose.runtime.key(entry) {
+            androidx.compose.runtime.CompositionLocalProvider(LocalOverlayEntry provides entry) { entry.content() }
+        }
+    }
+}
+
+@Composable
+private fun Overlay(visible: Boolean, content: @Composable () -> Unit) {
+    val entry = remember { OverlayHost.Entry() }
+    androidx.compose.runtime.SideEffect { entry.content = content }
+    androidx.compose.runtime.DisposableEffect(entry) {
+        OverlayHost.entries.add(entry)
+        onDispose { OverlayHost.entries.remove(entry) }
+    }
+    LaunchedEffect(visible) {
+        // A newly opened overlay moves to the top of the stack.
+        if (visible && OverlayHost.entries.lastOrNull() !== entry && entry in OverlayHost.entries) {
+            OverlayHost.entries.remove(entry)
+            OverlayHost.entries.add(entry)
+        }
+        entry.visible = visible
+    }
 }

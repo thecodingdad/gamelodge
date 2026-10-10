@@ -196,8 +196,8 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
             LocalBringIntoViewSpec provides scrollSpec,
         ) {
             Box(Modifier.fillMaxSize().background(LauncherTheme.colors.background)) {
-                // The launcher behind the quick menu is blurred (Android 12+; older versions just dim).
-                val backdropBlur by androidx.compose.animation.core.animateDpAsState(if (quickMenu || hostInfoFor != null || controllerPopup) 14.dp else 0.dp, label = "backdropBlur")
+                // The launcher behind any popup or panel is blurred (Android 12+; older versions just dim).
+                val backdropBlur by androidx.compose.animation.core.animateDpAsState(if (io.github.thecodingdad.moonlightlauncher.ui.components.OverlayHost.anyVisible) 14.dp else 0.dp, label = "backdropBlur")
                 NavHost(nav, startDestination = Routes.MAIN, modifier = Modifier.blur(backdropBlur)) {
                     composable(Routes.MAIN) {
                         MainShell(
@@ -381,6 +381,8 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
             openSettings = { nav.navigate(Routes.host(it.uuid)) },
         )
                 ControllerKeyboardHost(keyboard)
+                // Every popup and panel is drawn here, above the (blurred) launcher.
+                io.github.thecodingdad.moonlightlauncher.ui.components.OverlayOutlet()
 
                 // Screensaver after the configured idle time (also protects the OLED panel).
                 var idle by remember { mutableStateOf(false) }

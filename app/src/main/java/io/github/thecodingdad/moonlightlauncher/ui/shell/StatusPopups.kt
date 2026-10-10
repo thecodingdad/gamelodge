@@ -17,6 +17,8 @@ import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -85,7 +87,10 @@ fun ControllerPopup(
     onOpenSettings: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    Modal(visible = visible, onDismiss = onDismiss, title = stringResource(R.string.settings_controllers), maxWidth = 600.dp, lightScrim = true) {
+    // Selecting a controller opens its settings (on top of this popup).
+    var selected by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<ControllerInfo?>(null) }
+    io.github.thecodingdad.moonlightlauncher.ui.screens.settings.ControllerDetailDialog(selected, onDismiss = { selected = null })
+    Modal(visible = visible, onDismiss = onDismiss, title = stringResource(R.string.settings_controllers), maxWidth = 600.dp) {
         val colors = LauncherTheme.colors
         Text(stringResource(R.string.controller_popup_sub), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceMuted)
         androidx.compose.foundation.layout.Spacer(Modifier.heightIn(min = 14.dp))
@@ -98,8 +103,8 @@ fun ControllerPopup(
                 ).joinToString("  ·  ")
                 LauncherButton(
                     "${c.name}  ·  $details",
-                    onClick = { if (c.canVibrate) vibrateController(c.id) },
-                    icon = if (c.canVibrate) Icons.Filled.Vibration else Icons.Filled.SportsEsports,
+                    onClick = { selected = c },
+                    icon = Icons.Filled.SportsEsports,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }

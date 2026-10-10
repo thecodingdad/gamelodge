@@ -65,7 +65,7 @@ fun HostInfoPopup(
         config = host?.let { c.hostPower.config(it.uuid) }
     }
     val wakeSent = stringResource(R.string.host_wake_sent)
-    Modal(visible = host != null, onDismiss = onDismiss, title = host?.name, maxWidth = 560.dp, lightScrim = true) {
+    Modal(visible = host != null, onDismiss = onDismiss, title = host?.name, maxWidth = 560.dp) {
         val h = host ?: return@Modal
         val colors = LauncherTheme.colors
         Column(Modifier.heightIn(max = 600.dp).verticalScroll(rememberScrollState())) {

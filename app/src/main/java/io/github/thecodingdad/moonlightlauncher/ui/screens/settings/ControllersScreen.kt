@@ -145,7 +145,7 @@ fun ControllersScreen() {
 }
 
 @Composable
-private fun ControllerDetailDialog(controller: ControllerInfo?, onDismiss: () -> Unit) {
+fun ControllerDetailDialog(controller: ControllerInfo?, onDismiss: () -> Unit) {
     io.github.thecodingdad.moonlightlauncher.ui.components.Modal(
         visible = controller != null, onDismiss = onDismiss, title = controller?.name,
         maxWidth = 680.dp,

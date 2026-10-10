@@ -519,7 +519,7 @@
     <string name="profile_picker_title">Stream-Profil</string>
     <string name="profile_picker_sub">Wird für die nächsten Streams verwendet (Auflösung, Bildrate, Bitrate). „Starten mit …“ (X) wählt eins nur für ein Spiel.</string>
     <string name="profile_picker_edit">Profile bearbeiten</string>
-    <string name="controller_popup_sub">Jeder Controller wird als eigenes Gamepad an den Host weitergereicht. Auswählen testet die Vibration.</string>
+    <string name="controller_popup_sub">Jeder Controller wird als eigenes Gamepad an den Host weitergereicht. Auswählen öffnet seine Einstellungen.</string>
     <string name="controller_popup_settings">Controller-Einstellungen</string>
 
     <!-- Controller settings -->
