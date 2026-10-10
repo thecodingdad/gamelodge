@@ -115,7 +115,7 @@ fun HeroHome(
 
         // Only the top inset pads the column: the rows scroll on behind the translucent hint bar.
         Column(Modifier.fillMaxSize().padding(top = insets.calculateTopPadding())) {
-            HeroInfo(shown, Modifier.padding(horizontal = 40.dp).padding(top = 4.dp).height(140.dp))
+            HeroInfo(shown, Modifier.padding(horizontal = 40.dp).padding(top = 4.dp).height(160.dp))
             // The focused row always snaps to the top of the list, right below the info block
             // (like TV home screens): moving sideways never scrolls vertically, so rows don't jump.
             // The list itself ignores bring-into-view; the rows inside keep the normal spec.
