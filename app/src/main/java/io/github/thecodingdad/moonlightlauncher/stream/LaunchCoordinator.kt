@@ -60,6 +60,15 @@ class LaunchCoordinator(private val container: AppContainer) {
         _state.value = LaunchState.Idle
     }
 
+    private var running: kotlinx.coroutines.Job? = null
+
+    /** User cancelled while waking/connecting: stop waiting (an already sent wake stays sent). */
+    fun cancel() {
+        running?.cancel()
+        running = null
+        _state.value = LaunchState.Idle
+    }
+
     /**
      * [override]: profile for this launch only ("start with…"); null keeps the active profile.
      * [quitRunning]/[skipNetworkCheck]: answers to earlier confirmation dialogs.
@@ -72,6 +81,7 @@ class LaunchCoordinator(private val container: AppContainer) {
         quitRunning: Boolean = false,
         skipNetworkCheck: Boolean = false,
     ) {
+        running = kotlin.coroutines.coroutineContext[kotlinx.coroutines.Job]
         when (target.type) {
             TargetType.LOCAL -> launchLocal(activity, entry, target)
             TargetType.REMOTE -> launchRemote(activity, entry, target, override, quitRunning, skipNetworkCheck)

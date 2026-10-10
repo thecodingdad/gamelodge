@@ -47,6 +47,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -159,19 +164,11 @@ fun LaunchOverlay(
     onConfirmQuit: (LaunchState.ConfirmQuitRunning) -> Unit,
     profiles: List<StreamProfile>,
     onContinueDespiteNetwork: (LaunchState.NetworkWarning, StreamProfile?) -> Unit,
+    onCancel: () -> Unit = onDismiss,
 ) {
     AnimatedVisibility(state is LaunchState.Working, enter = fadeIn(), exit = fadeOut()) {
         val working = state as? LaunchState.Working ?: return@AnimatedVisibility
-        PadBlocker()
-        Box(Modifier.fillMaxSize().background(LauncherTheme.colors.background), contentAlignment = Alignment.Center) {
-            ArtworkImage(working.entry.heroModel(), working.entry.item.title, Modifier.fillMaxSize().blur(24.dp), showTitleOnPlaceholder = false)
-            Box(Modifier.fillMaxSize().background(LauncherTheme.colors.scrim))
-            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(20.dp)) {
-                Text(working.entry.item.title, style = MaterialTheme.typography.displaySmall, color = LauncherTheme.colors.onSurface)
-                CircularProgressIndicator(color = LauncherTheme.colors.accent)
-                Text(stepText(working.step), style = MaterialTheme.typography.titleMedium, color = LauncherTheme.colors.onSurfaceMuted)
-            }
-        }
+        LaunchProgressScreen(working, onCancel)
     }
 
     val failed = state as? LaunchState.Failed
@@ -331,4 +328,86 @@ private fun RunningSessionActions(
         if (cfg.haShutdownEntity != null) HoldToConfirmButton(stringResource(R.string.power_shutdown), { scope.launch { c.hostPower.power(cfg.hostUuid, io.github.thecodingdad.moonlightlauncher.stream.PowerAction.SHUTDOWN); onDone() } }, Modifier.fillMaxWidth(), Icons.Filled.PowerSettingsNew)
     }
     androidx.compose.foundation.layout.Spacer(Modifier.height(6.dp))
+}
+
+/** Full-screen progress while a stream starts: game artwork, logo, current step, B cancels. */
+@Composable
+private fun LaunchProgressScreen(working: LaunchState.Working, onCancel: () -> Unit) {
+    val colors = LauncherTheme.colors
+    val reduceMotion = io.github.thecodingdad.moonlightlauncher.ui.theme.LocalReduceMotion.current
+    // Every pad button is swallowed while starting; B (back) cancels.
+    PadBlocker()
+    androidx.activity.compose.BackHandler(onBack = onCancel)
+    val entry = working.entry
+    val host = entry.remoteTargets.firstOrNull()?.hostName
+
+    // Slow zoom on the artwork so the wait feels alive.
+    val zoom = if (reduceMotion) 1f else {
+        val transition = androidx.compose.animation.core.rememberInfiniteTransition(label = "launchZoom")
+        transition.animateFloat(
+            1f, 1.08f,
+            androidx.compose.animation.core.infiniteRepeatable(
+                androidx.compose.animation.core.tween(20_000, easing = androidx.compose.animation.core.LinearEasing),
+                androidx.compose.animation.core.RepeatMode.Reverse,
+            ),
+            label = "zoom",
+        ).value
+    }
+    // Waking can take a while: show how long we've been waiting.
+    var seconds by androidx.compose.runtime.remember(working.step) { androidx.compose.runtime.mutableIntStateOf(0) }
+    androidx.compose.runtime.LaunchedEffect(working.step) {
+        while (true) {
+            kotlinx.coroutines.delay(1_000)
+            seconds++
+        }
+    }
+
+    Box(Modifier.fillMaxSize().background(colors.background)) {
+        ArtworkImage(
+            entry.heroModel(), entry.item.title,
+            Modifier.fillMaxSize().graphicsLayer { scaleX = zoom; scaleY = zoom },
+            showTitleOnPlaceholder = false,
+        )
+        val bg = colors.background
+        Box(
+            Modifier.fillMaxSize().background(
+                androidx.compose.ui.graphics.Brush.horizontalGradient(0f to bg.copy(alpha = 0.9f), 0.55f to bg.copy(alpha = 0.4f), 1f to Color.Transparent),
+            ),
+        )
+        Box(
+            Modifier.fillMaxSize().background(
+                androidx.compose.ui.graphics.Brush.verticalGradient(0.4f to Color.Transparent, 1f to bg.copy(alpha = 0.95f)),
+            ),
+        )
+        Column(
+            Modifier.align(Alignment.BottomStart).padding(start = 56.dp, end = 56.dp, bottom = 72.dp).widthIn(max = 720.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            if (entry.item.logoUrl != null) {
+                io.github.thecodingdad.moonlightlauncher.ui.components.LogoImage(
+                    entry.item.logoUrl, entry.item.title, Modifier.height(120.dp).widthIn(max = 520.dp),
+                )
+            } else {
+                Text(entry.item.title, style = MaterialTheme.typography.displaySmall, color = colors.onSurface, maxLines = 2)
+            }
+            if (host != null) {
+                Text(stringResource(R.string.launch_on_host, host), style = MaterialTheme.typography.titleMedium, color = colors.onSurfaceMuted)
+            }
+            Spacer(Modifier.height(10.dp))
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                Text(stepText(working.step), style = MaterialTheme.typography.titleLarge, color = colors.onSurface)
+                if (working.step == LaunchStep.WAKING_HOST && seconds > 0) {
+                    Text("%d:%02d".format(seconds / 60, seconds % 60), style = MaterialTheme.typography.titleMedium, color = colors.onSurfaceMuted)
+                }
+            }
+            androidx.compose.material3.LinearProgressIndicator(
+                color = colors.accent, trackColor = colors.onSurface.copy(alpha = 0.15f),
+                modifier = Modifier.widthIn(max = 520.dp).fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)),
+            )
+        }
+        ButtonHintBar(
+            listOf(ButtonHint(PadButton.B, stringResource(R.string.action_cancel), onClick = onCancel)),
+            Modifier.align(Alignment.BottomCenter),
+        )
+    }
 }

@@ -183,6 +183,8 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     fun dismissLaunch() = c.launcher.dismiss()
 
+    fun cancelLaunch() = c.launcher.cancel()
+
     fun setActiveProfile(profile: StreamProfile) = StreamProfiles.setActive(profile.uuid)
 
     fun setFavorite(entry: LibraryEntry, favorite: Boolean) {

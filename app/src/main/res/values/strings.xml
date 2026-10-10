@@ -491,4 +491,7 @@
     <string name="setting_tv_scale_auto_sub">Detects a TV or monitor connected via USB-C/HDMI and scales the launcher down</string>
     <string name="setting_tv_scale">UI size on the TV</string>
     <string name="system_section">System</string>
+
+    <!-- Launch screen -->
+    <string name="launch_on_host">on %s</string>
 </resources>

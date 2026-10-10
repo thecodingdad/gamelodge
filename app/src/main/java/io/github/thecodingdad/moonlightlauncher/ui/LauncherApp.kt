@@ -332,6 +332,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                     onConfirmQuit = { c -> vm.launch(activity, c.entry, c.target, c.override, quitRunning = true) },
                     profiles = profiles,
                     onContinueDespiteNetwork = { w, profile -> vm.launch(activity, w.entry, w.target, profile, skipNetworkCheck = true) },
+                    onCancel = vm::cancelLaunch,
                 )
                 // Y opens the smart home panel everywhere (screens can't override it).
                 PadAction(PadButton.Y) { haPanel = !haPanel }
