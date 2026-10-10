@@ -555,4 +555,10 @@
     <string name="controller_rumble">Vibration</string>
     <string name="controller_motion">Bewegungssensoren (Gyro)</string>
     <string name="controller_touchpad_mouse">Touchpad als Maus</string>
+    <string name="qm_connected">Verbunden</string>
+    <string name="qm_bluetooth_off">Bluetooth aus</string>
+    <plurals name="qm_bluetooth_devices">
+        <item quantity="one">%d Gerät</item>
+        <item quantity="other">%d Geräte</item>
+    </plurals>
 </resources>

@@ -185,7 +185,10 @@ fun StatusCluster(
         } else if (status.vpn) {
             StatusIcon(Icons.Filled.VpnLock)
         }
-        StatusIcon(if (status.wifi) Icons.Filled.Wifi else Icons.Filled.WifiOff)
+        Icon(
+            if (status.wifi) Icons.Filled.Wifi else Icons.Filled.WifiOff, null,
+            tint = if (status.wifi) colors.success else colors.onSurfaceMuted, modifier = Modifier.size(20.dp),
+        )
         Row(verticalAlignment = Alignment.CenterVertically) {
             StatusIcon(
                 when {

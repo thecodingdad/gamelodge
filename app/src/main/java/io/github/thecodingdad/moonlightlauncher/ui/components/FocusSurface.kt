@@ -40,19 +40,28 @@ import io.github.thecodingdad.moonlightlauncher.ui.theme.LocalReduceMotion
  */
 object TouchFocus {
     private var pending: java.lang.ref.WeakReference<FocusRequester>? = null
+    private var pendingOverlay: OverlayHost.Entry? = null
 
-    fun touched(requester: FocusRequester) {
+    fun touched(requester: FocusRequester, overlay: OverlayHost.Entry?) {
         pending = java.lang.ref.WeakReference(requester)
+        pendingOverlay = overlay
     }
 
     /** Uptime of the last restore; screen-level focus restoring yields to it briefly. */
     var restoredAt = 0L
         private set
 
-    /** Call when the input mode switches to controller. */
+    /**
+     * Call when the input mode switches to controller. Only restores if the touched element is
+     * in the topmost popup (or no popup is open): a popup opened by touch keeps the focus.
+     */
     fun restore() {
         val requester = pending?.get() ?: return
+        val overlay = pendingOverlay
         pending = null
+        pendingOverlay = null
+        val top = OverlayHost.top()
+        if (top !== overlay) return
         if (runCatching { requester.requestFocus() }.getOrDefault(false)) restoredAt = android.os.SystemClock.uptimeMillis()
     }
 
@@ -90,11 +99,12 @@ fun FocusSurface(
     val reduceMotion = LocalReduceMotion.current
     val currentOnFocused by rememberUpdatedState(onFocused)
     val requester = remember { FocusRequester() }
+    val overlay = LocalOverlayEntry.current
     // Touching an element makes it the focus target for the next controller input, and tells
     // the screen (which remembers positions via onFocused) that the user is here now.
     fun touched() {
         if (controllerMode || !dpadFocusable) return
-        TouchFocus.touched(requester)
+        TouchFocus.touched(requester, overlay)
         currentOnFocused?.invoke()
     }
 

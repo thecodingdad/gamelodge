@@ -43,6 +43,7 @@ import androidx.compose.material.icons.filled.Computer
 import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.unit.dp
 import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.container
@@ -183,8 +184,42 @@ private fun StatusTiles(onHost: (String) -> Unit, onControllers: () -> Unit, vpn
                 onClick = { scope.launch { c.vpn.toggle() } },
             )
         }
-        StatusTile(Icons.Filled.Wifi, stringResource(R.string.qm_wifi), colors.onSurface, { context.startActivity(Intent(Settings.Panel.ACTION_WIFI)) })
-        StatusTile(Icons.Filled.Bluetooth, stringResource(R.string.qm_bluetooth), colors.onSurface, { context.startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS)) })
+        // Ask once for the permissions behind the Wi-Fi name and the Bluetooth device count.
+        var permissionRevision by remember { mutableIntStateOf(0) }
+        val permissionRequest = androidx.activity.compose.rememberLauncherForActivityResult(
+            androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions(),
+        ) { permissionRevision++ }
+        LaunchedEffect(Unit) {
+            val prefs = context.getSharedPreferences("launcher_ui", android.content.Context.MODE_PRIVATE)
+            val missing = missingConnectivityPermissions(context)
+            if (missing.isNotEmpty() && !prefs.getBoolean("connectivity_permissions_asked", false)) {
+                prefs.edit().putBoolean("connectivity_permissions_asked", true).apply()
+                permissionRequest.launch(missing.toTypedArray())
+            }
+        }
+        val wifi = rememberWifiState(permissionRevision)
+        val bluetooth = rememberBluetoothState(permissionRevision)
+        StatusTile(
+            Icons.Filled.Wifi,
+            when {
+                !wifi.connected -> stringResource(R.string.qm_wifi)
+                wifi.ssid != null -> wifi.ssid
+                else -> stringResource(R.string.qm_connected)
+            },
+            if (wifi.connected) colors.success else colors.onSurfaceMuted,
+            { context.startActivity(Intent(Settings.Panel.ACTION_WIFI)) },
+        )
+        val btCount = bluetooth.connectedDevices
+        StatusTile(
+            Icons.Filled.Bluetooth,
+            when {
+                !bluetooth.enabled -> stringResource(R.string.qm_bluetooth_off)
+                btCount != null && btCount > 0 -> pluralStringResource(R.plurals.qm_bluetooth_devices, btCount, btCount)
+                else -> stringResource(R.string.qm_bluetooth)
+            },
+            if (btCount != null && btCount > 0) colors.success else colors.onSurfaceMuted,
+            { context.startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS)) },
+        )
         if (!canWriteSettings) {
             StatusTile(Icons.Filled.BrightnessMedium, stringResource(R.string.qm_brightness), colors.onSurfaceMuted, {
                 context.startActivity(Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:${context.packageName}")))

@@ -144,10 +144,13 @@ fun Modifier.trapFocus(initialFocus: FocusRequester? = null): Modifier {
     val entry = LocalOverlayEntry.current
     val isTop = entry == null || OverlayHost.isTop(entry)
     var first by remember { mutableStateOf(true) }
-    LaunchedEffect(isTop) {
+    // Re-run when the user picks up the controller: a popup opened by touch must own the focus.
+    val controllerMode = isControllerMode()
+    LaunchedEffect(isTop, controllerMode) {
         if (!isTop) return@LaunchedEffect
-        // Let children lay out before requesting focus into the group.
+        // Let children lay out (and a touched element inside this popup restore) first.
         delay(30)
+        if (!first && TouchFocus.justRestored()) return@LaunchedEffect
         runCatching { if (first) (initialFocus ?: requester).requestFocus() else requester.requestFocus() }
         first = false
     }
@@ -179,6 +182,8 @@ object OverlayHost {
     val anyVisible: Boolean get() = entries.any { it.visible }
 
     fun isTop(entry: Entry): Boolean = entries.lastOrNull { it.visible } === entry
+
+    fun top(): Entry? = entries.lastOrNull { it.visible }
 }
 
 val LocalOverlayEntry = androidx.compose.runtime.compositionLocalOf<OverlayHost.Entry?> { null }

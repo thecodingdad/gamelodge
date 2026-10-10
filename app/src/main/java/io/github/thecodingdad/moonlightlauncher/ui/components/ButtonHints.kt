@@ -59,11 +59,8 @@ fun ButtonHintBar(hints: List<ButtonHint>, modifier: Modifier = Modifier) {
                     .then(if (hint.onClick != null) Modifier.clickable(onClick = hint.onClick) else Modifier)
                     .padding(horizontal = 6.dp, vertical = 4.dp),
             ) {
-                PadGlyph(hint.button)
-                hint.secondButton?.let {
-                    Spacer(Modifier.size(4.dp))
-                    PadGlyph(it)
-                }
+                // A pair (previous/next) is one glyph "LB/RB" to save space.
+                PadGlyph(hint.button, second = hint.secondButton)
                 Spacer(Modifier.size(8.dp))
                 Text(hint.label, style = MaterialTheme.typography.labelMedium, color = LauncherTheme.colors.onSurfaceMuted)
             }
@@ -73,10 +70,11 @@ fun ButtonHintBar(hints: List<ButtonHint>, modifier: Modifier = Modifier) {
 
 /** Controller button glyph in the style of the configured layout. */
 @Composable
-fun PadGlyph(button: PadButton, modifier: Modifier = Modifier) {
+fun PadGlyph(button: PadButton, modifier: Modifier = Modifier, second: PadButton? = null) {
     val layout = LocalButtonLayout.current
-    val (label, color) = glyphFor(button, layout)
-    val isRound = button in listOf(PadButton.A, PadButton.B, PadButton.X, PadButton.Y)
+    val (first, color) = glyphFor(button, layout)
+    val label = second?.let { "$first/${glyphFor(it, layout).first}" } ?: first
+    val isRound = second == null && button in listOf(PadButton.A, PadButton.B, PadButton.X, PadButton.Y)
     Box(
         modifier = modifier
             .then(if (isRound) Modifier.size(26.dp) else Modifier.widthIn(min = 34.dp))

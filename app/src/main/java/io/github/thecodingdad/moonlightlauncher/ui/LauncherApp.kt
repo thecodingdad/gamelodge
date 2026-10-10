@@ -500,7 +500,7 @@ private fun MainShell(
                                 ButtonHint(PadButton.A, stringResource(R.string.hint_open)),
                                 ButtonHint(PadButton.X, stringResource(R.string.hint_options)),
                                 ButtonHint(PadButton.Y, stringResource(R.string.quick_menu)),
-                                ButtonHint(PadButton.L1, stringResource(R.string.hint_tabs)),
+                                ButtonHint(PadButton.L1, stringResource(R.string.hint_tabs), secondButton = PadButton.R1),
                             ),
                         )
                         val empty: @Composable () -> Unit = { EmptyHome { tab = MainTab.SETTINGS.ordinal } }
@@ -524,7 +524,7 @@ private fun MainShell(
                     ) { vm.lastFocusedKey = it }
                     MainTab.SETTINGS -> {
                         io.github.thecodingdad.moonlightlauncher.ui.shell.ScreenHints(
-                            listOf(ButtonHint(PadButton.A, stringResource(R.string.hint_select)), ButtonHint(PadButton.L1, stringResource(R.string.hint_tabs))),
+                            listOf(ButtonHint(PadButton.A, stringResource(R.string.hint_select)), ButtonHint(PadButton.L1, stringResource(R.string.hint_tabs), secondButton = PadButton.R1)),
                         )
                         SettingsHome(open = { nav.navigate(Routes.settings(it)) }, isFirstVisit = true)
                     }

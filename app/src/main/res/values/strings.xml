@@ -557,4 +557,10 @@
     <string name="controller_rumble">Rumble</string>
     <string name="controller_motion">Motion sensors (gyro)</string>
     <string name="controller_touchpad_mouse">Touchpad as mouse</string>
+    <string name="qm_connected">Connected</string>
+    <string name="qm_bluetooth_off">Bluetooth off</string>
+    <plurals name="qm_bluetooth_devices">
+        <item quantity="one">%d device</item>
+        <item quantity="other">%d devices</item>
+    </plurals>
 </resources>
