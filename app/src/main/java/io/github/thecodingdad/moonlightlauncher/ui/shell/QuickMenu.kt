@@ -33,6 +33,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import io.github.thecodingdad.moonlightlauncher.ui.components.restoreFocusIf
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.icons.filled.Computer
+import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -64,6 +72,9 @@ fun QuickMenu(
     onProfile: (StreamProfile) -> Unit,
     running: List<RunningSession>,
     onResume: (RunningSession) -> Unit,
+    onHost: (String) -> Unit = {},
+    onControllers: () -> Unit = {},
+    openHaSettings: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val c = context.container
@@ -85,6 +96,8 @@ fun QuickMenu(
             Modifier.verticalScroll(rememberScrollState()).heightIn(max = 2000.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
+            // What the status bar shows, reachable with the controller too.
+            StatusEntries(onHost = onHost, onControllers = onControllers)
             SliderRow(
                 stringResource(R.string.qm_volume), volume, 0..maxVolume, 1,
                 onChange = { v -> volume = v; audio.setStreamVolume(AudioManager.STREAM_MUSIC, v, 0) },
@@ -139,6 +152,96 @@ fun QuickMenu(
                 }
             }
             HostPowerButtons()
+            HomeAssistantSection(openHaSettings)
+        }
+    }
+}
+
+/** Controllers and hosts as colored entries (same colors as the status bar icons). */
+@Composable
+private fun StatusEntries(onHost: (String) -> Unit, onControllers: () -> Unit) {
+    val c = LocalContext.current.container
+    val colors = LauncherTheme.colors
+    val hosts by c.hosts.hosts.collectAsState()
+    val controllers = io.github.thecodingdad.moonlightlauncher.ui.screens.settings.rememberControllers()
+    QuickEntry(
+        title = stringResource(R.string.settings_controllers),
+        subtitle = if (controllers.isEmpty()) stringResource(R.string.controllers_none)
+        else controllers.joinToString(", ") { it.name },
+        icon = Icons.Filled.SportsEsports,
+        tint = if (controllers.isEmpty()) colors.danger else colors.success,
+        onClick = onControllers,
+        initialFocus = true,
+    )
+    hosts.values.sortedBy { it.name }.forEach { host ->
+        QuickEntry(
+            title = host.name,
+            subtitle = stringResource(
+                when {
+                    host.isStreaming -> R.string.host_status_streaming
+                    host.status == io.github.thecodingdad.moonlightlauncher.data.remote.HostStatus.ONLINE -> R.string.host_status_online
+                    host.status == io.github.thecodingdad.moonlightlauncher.data.remote.HostStatus.OFFLINE -> R.string.host_status_offline
+                    else -> R.string.host_status_unknown
+                },
+            ),
+            icon = Icons.Filled.Computer,
+            tint = when {
+                host.isStreaming -> colors.accent
+                host.status == io.github.thecodingdad.moonlightlauncher.data.remote.HostStatus.ONLINE -> colors.success
+                host.status == io.github.thecodingdad.moonlightlauncher.data.remote.HostStatus.OFFLINE -> colors.danger
+                else -> colors.onSurfaceMuted
+            },
+            onClick = { onHost(host.uuid) },
+        )
+    }
+}
+
+@Composable
+private fun QuickEntry(
+    title: String,
+    subtitle: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    tint: androidx.compose.ui.graphics.Color,
+    onClick: () -> Unit,
+    initialFocus: Boolean = false,
+) {
+    io.github.thecodingdad.moonlightlauncher.ui.components.FocusSurface(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth().then(
+            if (initialFocus) Modifier.restoreFocusIf(true) else Modifier,
+        ),
+        color = LauncherTheme.colors.surfaceRaised,
+        focusScale = 1.02f,
+    ) {
+        Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            androidx.compose.material3.Icon(icon, null, tint = tint, modifier = Modifier.size(26.dp))
+            androidx.compose.foundation.layout.Spacer(Modifier.width(14.dp))
+            Column(Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.typography.titleMedium, color = LauncherTheme.colors.onSurface)
+                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted, maxLines = 1)
+            }
+        }
+    }
+}
+
+/** Home Assistant tiles (formerly a panel of its own). */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun HomeAssistantSection(openSettings: () -> Unit) {
+    val ha = LocalContext.current.container.ha
+    val tiles by ha.tiles.collectAsState(emptyList())
+    val entities by ha.client.entities.collectAsState()
+    val connection by ha.client.connection.collectAsState()
+    LaunchedEffect(Unit) { ha.client.start() }
+    SectionHeader(stringResource(R.string.settings_home_assistant))
+    if (connection == io.github.thecodingdad.moonlightlauncher.ha.HaConnection.NOT_CONFIGURED || tiles.isEmpty()) {
+        LauncherButton(stringResource(R.string.ha_setup), icon = Icons.Filled.Settings, onClick = openSettings)
+    } else {
+        androidx.compose.foundation.layout.FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            tiles.forEach { tile -> io.github.thecodingdad.moonlightlauncher.ui.screens.ha.HaTile(tile, entities[tile.entityId], width = 220.dp) }
         }
     }
 }

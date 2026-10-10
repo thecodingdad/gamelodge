@@ -50,10 +50,13 @@ class InputDispatcher {
         if ((button == PadButton.L2 || button == PadButton.R2) && event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
             return fireTrigger(button, event.eventTime) || handlers.any { it.button == button }
         }
+        // Start is always consumed: unhandled, Android would fall back to DPAD_CENTER and
+        // "click" the focused element (open/start a game by accident).
+        val alwaysConsume = button == PadButton.START
         return when (event.action) {
-            KeyEvent.ACTION_DOWN -> if (event.repeatCount == 0) fire(button) else handlers.any { it.button == button }
-            KeyEvent.ACTION_UP -> handlers.any { it.button == button }
-            else -> false
+            KeyEvent.ACTION_DOWN -> (if (event.repeatCount == 0) fire(button) else handlers.any { it.button == button }) || alwaysConsume
+            KeyEvent.ACTION_UP -> handlers.any { it.button == button } || alwaysConsume
+            else -> alwaysConsume
         }
     }
 

@@ -66,7 +66,6 @@ import io.github.thecodingdad.moonlightlauncher.ui.input.PadButton
 import io.github.thecodingdad.moonlightlauncher.ui.screens.apps.AppsScreen
 import io.github.thecodingdad.moonlightlauncher.ui.screens.detail.DetailScreen
 import io.github.thecodingdad.moonlightlauncher.ui.screens.ha.HaHomeRow
-import io.github.thecodingdad.moonlightlauncher.ui.screens.ha.HaPanel
 import io.github.thecodingdad.moonlightlauncher.ui.screens.ha.HaSettings
 import io.github.thecodingdad.moonlightlauncher.ui.screens.home.CarouselHome
 import io.github.thecodingdad.moonlightlauncher.ui.screens.home.GridHome
@@ -157,7 +156,8 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
         )
     }
 
-    var haPanel by remember { mutableStateOf(false) }
+    var hostInfoFor by remember { mutableStateOf<String?>(null) }
+    var controllerPopup by remember { mutableStateOf(false) }
     var quickMenu by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         vm.homePressed.collect {
@@ -166,7 +166,6 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
             entryActions.pick = null
             entryActions.closeContext()
             keyboard.close()
-            haPanel = false
             quickMenu = false
         }
     }
@@ -197,7 +196,12 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
         ) {
             Box(Modifier.fillMaxSize().background(LauncherTheme.colors.background)) {
                 NavHost(nav, startDestination = Routes.MAIN) {
-                    composable(Routes.MAIN) { MainShell(vm, nav, openStats = { nav.navigate(Routes.STATS) }) }
+                    composable(Routes.MAIN) {
+                        MainShell(
+                            vm, nav, openStats = { nav.navigate(Routes.STATS) },
+                            onHostInfo = { hostInfoFor = it }, onControllers = { controllerPopup = true },
+                        )
+                    }
                     composable(Routes.DETAIL) { backStack ->
                         val id = backStack.arguments?.getString("id").orEmpty()
                         val entry by remember(id) { vm.entry(id) }.collectAsState(null)
@@ -340,10 +344,9 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                     onContinueDespiteNetwork = { w, profile -> vm.launch(activity, w.entry, w.target, profile, skipNetworkCheck = true) },
                     onCancel = vm::cancelLaunch,
                 )
-                // Y opens the smart home panel everywhere (screens can't override it).
-                PadAction(PadButton.Y) { haPanel = !haPanel }
-                HaPanel(visible = haPanel, onDismiss = { haPanel = false }, openSettings = { nav.navigate(Routes.settings(SettingsPageId.HOME_ASSISTANT)) })
-                // Holding Select opens the quick menu everywhere.
+                // Y opens the quick menu everywhere (holding Select does too): system controls,
+                // controllers, hosts, VPN, stream profile and the Home Assistant tiles.
+                PadAction(PadButton.Y) { quickMenu = !quickMenu }
                 PadAction(PadButton.SELECT_HOLD) { quickMenu = !quickMenu }
                 val running by vm.runningSessions.collectAsState()
                 QuickMenu(
@@ -358,7 +361,28 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                         val target = entry?.remoteTargets?.firstOrNull { it.hostUuid == session.host.uuid && it.appId == session.host.runningAppId }
                         if (entry != null && target != null) vm.launch(activity, entry, target)
                     },
+                    onHost = { hostInfoFor = it },
+                    onControllers = { controllerPopup = true },
+                    openHaSettings = { quickMenu = false; nav.navigate(Routes.settings(SettingsPageId.HOME_ASSISTANT)) },
                 )
+                // Popups from the status bar and the quick menu, above everything else.
+                val controllers = io.github.thecodingdad.moonlightlauncher.ui.screens.settings.rememberControllers()
+                val hostsGlobal by vm.hosts.collectAsState()
+        io.github.thecodingdad.moonlightlauncher.ui.shell.ControllerPopup(
+            visible = controllerPopup, controllers = controllers,
+            onOpenSettings = { nav.navigate(Routes.CONTROLLERS) },
+            onDismiss = { controllerPopup = false },
+        )
+        io.github.thecodingdad.moonlightlauncher.ui.shell.HostInfoPopup(
+            host = hostInfoFor?.let { hostsGlobal[it] },
+            runningGame = running.firstOrNull { it.host.uuid == hostInfoFor }?.appName,
+            profiles = profiles,
+            activeProfile = activeProfile,
+            onProfile = vm::setActiveProfile,
+            onEditProfiles = { nav.navigate(Routes.settings(SettingsPageId.PROFILES)) },
+            onDismiss = { hostInfoFor = null },
+            openSettings = { nav.navigate(Routes.host(it.uuid)) },
+        )
                 ControllerKeyboardHost(keyboard)
 
                 // Screensaver after the configured idle time (also protects the OLED panel).
@@ -399,7 +423,13 @@ private fun ShellFrame(hints: HintHolder, content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun MainShell(vm: LauncherViewModel, nav: NavHostController, openStats: () -> Unit) {
+private fun MainShell(
+    vm: LauncherViewModel,
+    nav: NavHostController,
+    openStats: () -> Unit,
+    onHostInfo: (String) -> Unit,
+    onControllers: () -> Unit,
+) {
     val settings by vm.settings.collectAsState()
     val hostsMap by vm.hosts.collectAsState()
     val games by vm.games.collectAsState()
@@ -420,8 +450,6 @@ private fun MainShell(vm: LauncherViewModel, nav: NavHostController, openStats: 
     // Keeps each tab's saved state (filter, sort, scroll position) while another tab is shown
     // or a detail page is open.
     val tabStates = androidx.compose.runtime.saveable.rememberSaveableStateHolder()
-    var hostInfoFor by remember { mutableStateOf<String?>(null) }
-    var controllerPopup by remember { mutableStateOf(false) }
     val controllers = io.github.thecodingdad.moonlightlauncher.ui.screens.settings.rememberControllers()
 
     PadAction(PadButton.L1) { tab = (tab - 1).mod(tabs.size) }
@@ -472,8 +500,7 @@ private fun MainShell(vm: LauncherViewModel, nav: NavHostController, openStats: 
                             listOf(
                                 ButtonHint(PadButton.A, stringResource(R.string.hint_open)),
                                 ButtonHint(PadButton.X, stringResource(R.string.hint_options)),
-                                ButtonHint(PadButton.Y, stringResource(R.string.settings_home_assistant)),
-                                ButtonHint(PadButton.SELECT_HOLD, stringResource(R.string.quick_menu_hold)),
+                                ButtonHint(PadButton.Y, stringResource(R.string.quick_menu)),
                                 ButtonHint(PadButton.L1, stringResource(R.string.hint_tabs)),
                             ),
                         )
@@ -524,9 +551,9 @@ private fun MainShell(vm: LauncherViewModel, nav: NavHostController, openStats: 
             }
             StatusCluster(
                 hosts,
-                onHostClick = { hostInfoFor = it.uuid },
+                onHostClick = { onHostInfo(it.uuid) },
                 controllerCount = controllers.size,
-                onControllerClick = { controllerPopup = true },
+                onControllerClick = onControllers,
             )
         }
         ButtonHintBar(
@@ -537,21 +564,6 @@ private fun MainShell(vm: LauncherViewModel, nav: NavHostController, openStats: 
                     else androidx.compose.ui.graphics.SolidColor(bg),
                 )
                 .onSizeChanged { hintBarHeight = with(density) { it.height.toDp() } },
-        )
-        io.github.thecodingdad.moonlightlauncher.ui.shell.ControllerPopup(
-            visible = controllerPopup, controllers = controllers,
-            onOpenSettings = { nav.navigate(Routes.CONTROLLERS) },
-            onDismiss = { controllerPopup = false },
-        )
-        io.github.thecodingdad.moonlightlauncher.ui.shell.HostInfoPopup(
-            host = hostInfoFor?.let { hostsMap[it] },
-            runningGame = running.firstOrNull { it.host.uuid == hostInfoFor }?.appName,
-            profiles = profiles,
-            activeProfile = activeProfile,
-            onProfile = vm::setActiveProfile,
-            onEditProfiles = { nav.navigate(Routes.settings(SettingsPageId.PROFILES)) },
-            onDismiss = { hostInfoFor = null },
-            openSettings = { nav.navigate(Routes.host(it.uuid)) },
         )
     }
 }

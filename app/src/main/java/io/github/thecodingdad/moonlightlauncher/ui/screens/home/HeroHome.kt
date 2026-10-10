@@ -88,6 +88,8 @@ fun HeroHome(
         shown = focused ?: fallback
     }
     PublishAccentFrom(shown?.coverModel())
+    // Start: quick start of the focused game (no hint, a shortcut for those who know it).
+    PadAction(PadButton.START) { focused?.let(actions::play) }
     PadAction(PadButton.X) {
         val session = focusedSession
         if (session != null) callbacks.onRunningMenu(session) else focused?.let(actions::context)
