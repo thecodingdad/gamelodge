@@ -541,4 +541,7 @@
     <string name="qm_controllers">%d controller(s)</string>
     <string name="qm_vpn_on">VPN on</string>
     <string name="qm_vpn_off">VPN off</string>
+
+    <!-- qm -->
+    <string name="qm_android">Android</string>
 </resources>

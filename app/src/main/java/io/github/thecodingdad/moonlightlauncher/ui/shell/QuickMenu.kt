@@ -70,8 +70,6 @@ fun QuickMenu(
     profiles: List<StreamProfile>,
     activeProfile: StreamProfile,
     onProfile: (StreamProfile) -> Unit,
-    running: List<RunningSession>,
-    onResume: (RunningSession) -> Unit,
     onHost: (String) -> Unit = {},
     onControllers: () -> Unit = {},
     openHaSettings: () -> Unit = {},
@@ -112,24 +110,13 @@ fun QuickMenu(
             Modifier.verticalScroll(rememberScrollState()).heightIn(max = 2000.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            // 1. Status: what the status bar shows, as compact tiles (reachable with the controller).
-            StatusTiles(onHost = onHost, onControllers = onControllers, vpnAvailable = tunnels.isNotEmpty() && c.vpn.consentIntent() == null)
+            // Status and shortcuts as tiles: controllers, hosts, VPN, Wi-Fi, Bluetooth, Android settings.
+            StatusTiles(
+                onHost = onHost, onControllers = onControllers,
+                vpnAvailable = tunnels.isNotEmpty() && c.vpn.consentIntent() == null,
+                canWriteSettings = canWriteSettings,
+            )
 
-            // 2. Running game: resume or quit (power and profile live in the host popup).
-            running.forEach { session ->
-                SectionHeader(stringResource(R.string.qm_running_on, session.appName, session.host.name))
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                    LauncherButton(
-                        stringResource(R.string.qm_resume), icon = Icons.Filled.PlayArrow, primary = true,
-                        onClick = { onDismiss(); onResume(session) }, modifier = Modifier.weight(1f),
-                    )
-                    HoldToConfirmButton(stringResource(R.string.qm_quit_game), {
-                        scope.launch { withContext(Dispatchers.IO) { runCatching { c.hosts.http(session.host).quitApp() } } }
-                    }, icon = Icons.Filled.StopCircle, modifier = Modifier.weight(1f))
-                }
-            }
-
-            // 3. System.
             SectionHeader(stringResource(R.string.qm_system))
             SliderRow(
                 stringResource(R.string.qm_volume), volume, 0..maxVolume, 1,
@@ -147,40 +134,17 @@ fun QuickMenu(
                     valueLabel = { "${it * 100 / 255} %" }, icon = Icons.Filled.BrightnessMedium,
                 )
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                IconAction(Icons.Filled.Wifi, stringResource(R.string.qm_wifi)) { context.startActivity(Intent(Settings.Panel.ACTION_WIFI)) }
-                IconAction(Icons.Filled.Bluetooth, stringResource(R.string.qm_bluetooth)) { context.startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS)) }
-                if (!canWriteSettings) {
-                    IconAction(Icons.Filled.BrightnessMedium, stringResource(R.string.qm_brightness_permission)) {
-                        context.startActivity(Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:${context.packageName}")))
-                    }
-                }
-                IconAction(Icons.Filled.Settings, stringResource(R.string.qm_android_settings)) { context.startActivity(Intent(Settings.ACTION_SETTINGS)) }
-            }
 
         }
-    }
-}
-
-/** Icon-only action button (label as content description, shown by accessibility services). */
-@Composable
-private fun IconAction(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit) {
-    io.github.thecodingdad.moonlightlauncher.ui.components.FocusSurface(
-        onClick = onClick,
-        modifier = Modifier.size(64.dp),
-        shape = androidx.compose.foundation.shape.CircleShape,
-        color = LauncherTheme.colors.surfaceRaised,
-        focusScale = 1.1f,
-    ) {
-        androidx.compose.material3.Icon(icon, label, tint = LauncherTheme.colors.onSurface, modifier = Modifier.align(Alignment.Center).size(26.dp))
     }
 }
 
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 /** Controllers, hosts and VPN as small tiles in one row; colors as in the status bar. */
 @Composable
-private fun StatusTiles(onHost: (String) -> Unit, onControllers: () -> Unit, vpnAvailable: Boolean) {
-    val c = LocalContext.current.container
+private fun StatusTiles(onHost: (String) -> Unit, onControllers: () -> Unit, vpnAvailable: Boolean, canWriteSettings: Boolean) {
+    val context = LocalContext.current
+    val c = context.container
     val colors = LauncherTheme.colors
     val scope = rememberCoroutineScope()
     val hosts by c.hosts.hosts.collectAsState()
@@ -219,6 +183,14 @@ private fun StatusTiles(onHost: (String) -> Unit, onControllers: () -> Unit, vpn
                 onClick = { scope.launch { c.vpn.toggle() } },
             )
         }
+        StatusTile(Icons.Filled.Wifi, stringResource(R.string.qm_wifi), colors.onSurface, { context.startActivity(Intent(Settings.Panel.ACTION_WIFI)) })
+        StatusTile(Icons.Filled.Bluetooth, stringResource(R.string.qm_bluetooth), colors.onSurface, { context.startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS)) })
+        if (!canWriteSettings) {
+            StatusTile(Icons.Filled.BrightnessMedium, stringResource(R.string.qm_brightness), colors.onSurfaceMuted, {
+                context.startActivity(Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:${context.packageName}")))
+            })
+        }
+        StatusTile(Icons.Filled.Settings, stringResource(R.string.qm_android), colors.onSurface, { context.startActivity(Intent(Settings.ACTION_SETTINGS)) })
     }
 }
 
