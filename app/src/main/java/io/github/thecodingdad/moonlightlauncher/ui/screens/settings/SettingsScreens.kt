@@ -4,6 +4,8 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Backup
 import androidx.compose.material.icons.filled.Computer
+import androidx.compose.material.icons.filled.FilterAlt
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Info
@@ -25,7 +27,7 @@ import io.github.thecodingdad.moonlightlauncher.data.settings.HomeLayout
 import io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings
 import io.github.thecodingdad.moonlightlauncher.data.settings.ThemeMode
 
-enum class SettingsPageId { HOSTS, PROFILES, APPEARANCE, CONTROLS, METADATA, HOME_ASSISTANT, VPN, LAUNCHER, BACKUP, LANGUAGE, ABOUT }
+enum class SettingsPageId { HOSTS, PROFILES, APPEARANCE, FILTERS, CONTROLS, SOUNDS, METADATA, HOME_ASSISTANT, VPN, LAUNCHER, BACKUP, LANGUAGE, ABOUT }
 
 @Composable
 fun SettingsHome(open: (SettingsPageId) -> Unit, isFirstVisit: Boolean) {
@@ -33,6 +35,8 @@ fun SettingsHome(open: (SettingsPageId) -> Unit, isFirstVisit: Boolean) {
         NavRow(stringResource(R.string.settings_hosts), { open(SettingsPageId.HOSTS) }, stringResource(R.string.settings_hosts_sub), Icons.Filled.Computer, initialFocus = isFirstVisit)
         NavRow(stringResource(R.string.settings_profiles), { open(SettingsPageId.PROFILES) }, stringResource(R.string.settings_profiles_sub), Icons.Filled.Tune)
         NavRow(stringResource(R.string.settings_appearance), { open(SettingsPageId.APPEARANCE) }, stringResource(R.string.settings_appearance_sub), Icons.Filled.Palette)
+        NavRow(stringResource(R.string.settings_filters), { open(SettingsPageId.FILTERS) }, stringResource(R.string.settings_filters_sub), Icons.Filled.FilterAlt)
+        NavRow(stringResource(R.string.settings_sounds), { open(SettingsPageId.SOUNDS) }, stringResource(R.string.settings_sounds_sub), Icons.Filled.VolumeUp)
         NavRow(stringResource(R.string.settings_controls), { open(SettingsPageId.CONTROLS) }, stringResource(R.string.settings_controls_sub), Icons.Filled.SportsEsports)
         NavRow(stringResource(R.string.settings_metadata), { open(SettingsPageId.METADATA) }, stringResource(R.string.settings_metadata_sub), Icons.Filled.Image)
         NavRow(stringResource(R.string.settings_home_assistant), { open(SettingsPageId.HOME_ASSISTANT) }, stringResource(R.string.settings_home_assistant_sub), Icons.Filled.Widgets)
@@ -120,9 +124,6 @@ fun ControlsSettings(settings: LauncherSettings, update: ((LauncherSettings) -> 
             subtitle = stringResource(R.string.setting_button_layout_sub),
             initialFocus = true,
         )
-        SwitchRow(stringResource(R.string.setting_ui_sounds), settings.uiSounds, { v -> update { it.copy(uiSounds = v) } })
-        SliderRow(stringResource(R.string.setting_ui_volume), settings.uiSoundVolume, 0..100, 5, { v -> update { it.copy(uiSoundVolume = v) } }, { "$it %" })
-        SwitchRow(stringResource(R.string.setting_haptics), settings.haptics, { v -> update { it.copy(haptics = v) } })
         NavRow(stringResource(R.string.settings_controllers), openControllers, stringResource(R.string.settings_controllers_sub))
     }
 }

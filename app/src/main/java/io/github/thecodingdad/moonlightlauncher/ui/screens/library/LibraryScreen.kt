@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -33,9 +34,10 @@ import androidx.compose.ui.unit.dp
 import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.data.db.ItemKind
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry
-import io.github.thecodingdad.moonlightlauncher.data.db.MetadataState
-import io.github.thecodingdad.moonlightlauncher.data.library.TitleNormalizer
-import io.github.thecodingdad.moonlightlauncher.data.remote.HostState
+import io.github.thecodingdad.moonlightlauncher.data.library.BuiltinFilter
+import io.github.thecodingdad.moonlightlauncher.data.library.FilterEngine
+import io.github.thecodingdad.moonlightlauncher.data.library.LibrarySort
+import io.github.thecodingdad.moonlightlauncher.data.library.ResolvedFilter
 import io.github.thecodingdad.moonlightlauncher.ui.components.ButtonHint
 import io.github.thecodingdad.moonlightlauncher.ui.components.CoverCard
 import io.github.thecodingdad.moonlightlauncher.ui.components.FocusSurface
@@ -49,84 +51,50 @@ import io.github.thecodingdad.moonlightlauncher.ui.shell.LocalEntryActions
 import io.github.thecodingdad.moonlightlauncher.ui.shell.ScreenHints
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 
-sealed interface LibraryFilter {
-    data object All : LibraryFilter
-    data object Local : LibraryFilter
-    data class Host(val uuid: String, val name: String) : LibraryFilter
-    data object Favorites : LibraryFilter
-    data object NeverPlayed : LibraryFilter
-    data object Review : LibraryFilter
-    data object Hidden : LibraryFilter
-    data class Collection(val id: String, val name: String, val members: Set<String>) : LibraryFilter
-}
+/** Chip/row title of a resolved filter: custom name, localized default name or split value. */
+@Composable
+fun filterLabel(filter: ResolvedFilter): String =
+    filter.name ?: filter.builtin?.let { builtinLabel(it) } ?: filter.value.orEmpty()
 
-enum class LibrarySort { TITLE, LAST_PLAYED, ADDED, PLAYTIME }
-
-/** Pure filtering/sorting, unit-testable and shared with the playnite-style home grid. */
-fun applyLibraryQuery(
-    entries: List<LibraryEntry>,
-    filter: LibraryFilter,
-    sort: LibrarySort,
-    search: String,
-): List<LibraryEntry> {
-    val query = TitleNormalizer.normalize(search)
-    return entries
-        .asSequence()
-        .filter { filter == LibraryFilter.Hidden || !it.item.hidden }
-        .filter {
-            when (filter) {
-                LibraryFilter.All -> true
-                LibraryFilter.Local -> it.localTarget != null
-                is LibraryFilter.Host -> it.remoteTargets.any { t -> t.hostUuid == filter.uuid }
-                LibraryFilter.Favorites -> it.item.favorite
-                LibraryFilter.NeverPlayed -> it.item.lastPlayedAt == null
-                LibraryFilter.Review -> it.item.metadataState == MetadataState.REVIEW
-                LibraryFilter.Hidden -> it.item.hidden
-                is LibraryFilter.Collection -> it.item.id in filter.members
-            }
-        }
-        .filter { query.isEmpty() || it.item.normalizedTitle.contains(query) }
-        .let { seq ->
-            when (sort) {
-                LibrarySort.TITLE -> seq.sortedBy { TitleNormalizer.sortKey(it.item.title) }
-                LibrarySort.LAST_PLAYED -> seq.sortedByDescending { it.item.lastPlayedAt ?: 0L }
-                LibrarySort.ADDED -> seq.sortedByDescending { it.item.addedAt }
-                LibrarySort.PLAYTIME -> seq.sortedByDescending { it.item.playtimeSeconds }
-            }
-        }
-        .toList()
+@Composable
+fun builtinLabel(key: String): String = when (key) {
+    BuiltinFilter.ALL -> stringResource(R.string.filter_all)
+    BuiltinFilter.CONTINUE -> stringResource(R.string.home_continue)
+    BuiltinFilter.RECENT -> stringResource(R.string.home_recently_added)
+    BuiltinFilter.LOCAL -> stringResource(R.string.filter_local)
+    BuiltinFilter.HOSTS -> stringResource(R.string.filter_hosts)
+    BuiltinFilter.PLATFORMS -> stringResource(R.string.filter_platforms)
+    BuiltinFilter.FAVORITES -> stringResource(R.string.filter_favorites)
+    BuiltinFilter.NEVER_PLAYED -> stringResource(R.string.filter_never_played)
+    BuiltinFilter.REVIEW -> stringResource(R.string.filter_review)
+    BuiltinFilter.HIDDEN -> stringResource(R.string.filter_hidden)
+    else -> key
 }
 
 @Composable
 fun LibraryScreen(
     allEntries: List<LibraryEntry>,
-    hosts: List<HostState>,
-    collections: List<Pair<io.github.thecodingdad.moonlightlauncher.data.db.CollectionEntity, Set<String>>>,
+    filters: List<ResolvedFilter>,
     animatedArtwork: Boolean,
     lastFocusedKey: String?,
     openStats: () -> Unit,
+    openFilterSettings: () -> Unit,
     onFocusKey: (String) -> Unit,
 ) {
     val actions = LocalEntryActions.current
     val keyboard = LocalKeyboardController.current
-    var filter by remember { mutableStateOf<LibraryFilter>(LibraryFilter.All) }
+    // Saveable (the main shell keeps saved state per tab), so filter, sort and search survive
+    // opening details and switching tabs.
+    var selectedKey by rememberSaveable { mutableStateOf<String?>(null) }
     var sort by rememberSaveable { mutableStateOf(LibrarySort.TITLE) }
     var search by rememberSaveable { mutableStateOf("") }
     var focused by remember { mutableStateOf<LibraryEntry?>(null) }
     PublishAccentFrom(focused?.coverModel())
 
-    val games = remember(allEntries) { allEntries.filter { it.item.kind == ItemKind.GAME } }
-    val filters = buildList {
-        add(LibraryFilter.All to stringResource(R.string.filter_all))
-        if (games.any { it.localTarget != null }) add(LibraryFilter.Local to stringResource(R.string.filter_local))
-        hosts.forEach { add(LibraryFilter.Host(it.uuid, it.name) to it.name) }
-        add(LibraryFilter.Favorites to stringResource(R.string.filter_favorites))
-        add(LibraryFilter.NeverPlayed to stringResource(R.string.filter_never_played))
-        collections.forEach { (c, members) -> add(LibraryFilter.Collection(c.id, c.name, members) to c.name) }
-        if (games.any { it.item.metadataState == MetadataState.REVIEW }) add(LibraryFilter.Review to stringResource(R.string.filter_review))
-        if (games.any { it.item.hidden }) add(LibraryFilter.Hidden to stringResource(R.string.filter_hidden))
-    }
-    val shown = remember(games, filter, sort, search) { applyLibraryQuery(games, filter, sort, search) }
+    val selected = filters.firstOrNull { it.key == selectedKey }
+        ?: filters.firstOrNull { it.builtin == BuiltinFilter.ALL } ?: filters.firstOrNull()
+    val base = selected?.entries ?: remember(allEntries) { allEntries.filter { it.item.kind == ItemKind.GAME && !it.item.hidden } }
+    val shown = remember(base, sort, search) { FilterEngine.query(base, sort, search) }
 
     val searchTitle = stringResource(R.string.hint_search)
     fun openSearch() = keyboard.open(title = searchTitle, initial = search) { search = it }
@@ -172,10 +140,16 @@ fun LibraryScreen(
                     onClick = { sort = LibrarySort.entries[(sort.ordinal + 1) % LibrarySort.entries.size] },
                 )
             }
-            items(filters, key = { it.second }) { (f, label) ->
-                Chip(label, selected = f == filter, onClick = { filter = f })
+            items(filters, key = { "filter:${it.key}" }) { f ->
+                Chip(filterLabel(f), selected = f.key == selected?.key, onClick = { selectedKey = f.key })
             }
             item { Chip(stringResource(R.string.stats_title), selected = false, onClick = openStats) }
+            item {
+                Chip(
+                    stringResource(R.string.filters_edit), selected = false, onClick = openFilterSettings,
+                    icon = { Icon(Icons.Filled.Tune, null, Modifier.padding(end = 6.dp)) },
+                )
+            }
         }
         if (shown.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

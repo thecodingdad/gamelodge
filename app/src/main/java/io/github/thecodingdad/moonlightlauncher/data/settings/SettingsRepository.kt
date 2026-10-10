@@ -38,6 +38,12 @@ data class LauncherSettings(
     val uiSounds: Boolean = true,
     val uiSoundVolume: Int = 60,
     val haptics: Boolean = true,
+    val soundStyle: String = "SOFT",
+    val soundPitch: Int = 0,
+    /** UiSound names that stay silent. */
+    val mutedSounds: Set<String> = emptySet(),
+    val hapticStrength: String = "MEDIUM",
+    val hapticOnFocus: Boolean = true,
     // System
     val launcherMode: Boolean = false,
     val screensaverMinutes: Int = 5,
@@ -60,6 +66,8 @@ data class LauncherSettings(
     val backupKeepCount: Int = 7,
     // Onboarding
     val onboardingDone: Boolean = false,
+    /** Default library filters were created (they may be deleted afterwards). */
+    val filtersSeeded: Boolean = false,
 )
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore("launcher_settings")
@@ -80,6 +88,11 @@ class SettingsRepository(context: Context) {
         val uiSounds = booleanPreferencesKey("ui_sounds")
         val uiSoundVolume = intPreferencesKey("ui_sound_volume")
         val haptics = booleanPreferencesKey("haptics")
+        val soundStyle = stringPreferencesKey("sound_style")
+        val soundPitch = intPreferencesKey("sound_pitch")
+        val mutedSounds = stringPreferencesKey("muted_sounds")
+        val hapticStrength = stringPreferencesKey("haptic_strength")
+        val hapticOnFocus = booleanPreferencesKey("haptic_on_focus")
         val launcherMode = booleanPreferencesKey("launcher_mode")
         val screensaverMinutes = intPreferencesKey("screensaver_minutes")
         val language = stringPreferencesKey("language")
@@ -95,6 +108,7 @@ class SettingsRepository(context: Context) {
         val autoBackup = booleanPreferencesKey("auto_backup")
         val backupKeepCount = intPreferencesKey("backup_keep_count")
         val onboardingDone = booleanPreferencesKey("onboarding_done")
+        val filtersSeeded = booleanPreferencesKey("filters_seeded")
     }
 
     val settings: Flow<LauncherSettings> = store.data.map { it.toSettings() }
@@ -120,6 +134,11 @@ class SettingsRepository(context: Context) {
             uiSounds = this[K.uiSounds] ?: d.uiSounds,
             uiSoundVolume = this[K.uiSoundVolume] ?: d.uiSoundVolume,
             haptics = this[K.haptics] ?: d.haptics,
+            soundStyle = this[K.soundStyle] ?: d.soundStyle,
+            soundPitch = this[K.soundPitch] ?: d.soundPitch,
+            mutedSounds = this[K.mutedSounds]?.split(',')?.filter { it.isNotBlank() }?.toSet() ?: d.mutedSounds,
+            hapticStrength = this[K.hapticStrength] ?: d.hapticStrength,
+            hapticOnFocus = this[K.hapticOnFocus] ?: d.hapticOnFocus,
             launcherMode = this[K.launcherMode] ?: d.launcherMode,
             screensaverMinutes = this[K.screensaverMinutes] ?: d.screensaverMinutes,
             language = this[K.language] ?: d.language,
@@ -137,6 +156,7 @@ class SettingsRepository(context: Context) {
             autoBackup = this[K.autoBackup] ?: d.autoBackup,
             backupKeepCount = this[K.backupKeepCount] ?: d.backupKeepCount,
             onboardingDone = this[K.onboardingDone] ?: d.onboardingDone,
+            filtersSeeded = this[K.filtersSeeded] ?: d.filtersSeeded,
         )
     }
 
@@ -153,6 +173,11 @@ class SettingsRepository(context: Context) {
         this[K.uiSounds] = s.uiSounds
         this[K.uiSoundVolume] = s.uiSoundVolume
         this[K.haptics] = s.haptics
+        this[K.soundStyle] = s.soundStyle
+        this[K.soundPitch] = s.soundPitch
+        this[K.mutedSounds] = s.mutedSounds.joinToString(",")
+        this[K.hapticStrength] = s.hapticStrength
+        this[K.hapticOnFocus] = s.hapticOnFocus
         this[K.launcherMode] = s.launcherMode
         this[K.screensaverMinutes] = s.screensaverMinutes
         this[K.language] = s.language
@@ -168,6 +193,7 @@ class SettingsRepository(context: Context) {
         this[K.autoBackup] = s.autoBackup
         this[K.backupKeepCount] = s.backupKeepCount
         this[K.onboardingDone] = s.onboardingDone
+        this[K.filtersSeeded] = s.filtersSeeded
     }
 
     private inline fun <reified T : Enum<T>> enumOr(value: String?, default: T): T =

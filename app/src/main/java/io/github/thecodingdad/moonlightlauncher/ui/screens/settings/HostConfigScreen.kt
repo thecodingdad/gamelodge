@@ -158,6 +158,8 @@ private fun VibepolloSection(host: HostState, cfg: HostConfigEntity, save: (Host
     var result by remember { mutableStateOf<String?>(null) }
     val okText = stringResource(R.string.vibepollo_ok)
     val failText = stringResource(R.string.vibepollo_failed)
+    val playniteOkText = stringResource(R.string.vibepollo_playnite_ok)
+    val playniteDeniedText = stringResource(R.string.vibepollo_playnite_denied)
 
     SectionHeader(stringResource(R.string.vibepollo_section))
     Text(stringResource(R.string.vibepollo_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
@@ -181,7 +183,10 @@ private fun VibepolloSection(host: HostState, cfg: HostConfigEntity, save: (Host
         onClick = {
             scope.launch {
                 val r = c.vibepollo.fetch(host.uuid)
-                result = if (r != null) okText.format(r.apps, r.playniteUuids.size) else failText
+                result = if (r != null) {
+                    okText.format(r.apps, r.playniteUuids.size) + "\n" +
+                        if (r.gamesError != null) playniteDeniedText.format(r.gamesError) else playniteOkText.format(r.games.size)
+                } else failText
                 if (r != null) c.hosts.refreshAppLists()
             }
         },

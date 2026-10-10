@@ -101,6 +101,23 @@ import io.github.thecodingdad.moonlightlauncher.ui.shell.StatusCluster
 import io.github.thecodingdad.moonlightlauncher.ui.shell.TargetPickerDialog
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 
+/** Maps the stored settings to the feedback engine's configuration. */
+fun io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings.feedbackConfig() =
+    io.github.thecodingdad.moonlightlauncher.ui.feedback.FeedbackConfig(
+        soundsEnabled = uiSounds,
+        volume = uiSoundVolume / 100f,
+        style = runCatching { io.github.thecodingdad.moonlightlauncher.ui.feedback.SoundStyle.valueOf(soundStyle) }
+            .getOrDefault(io.github.thecodingdad.moonlightlauncher.ui.feedback.SoundStyle.SOFT),
+        pitch = soundPitch,
+        mutedSounds = mutedSounds.mapNotNull { name ->
+            io.github.thecodingdad.moonlightlauncher.ui.feedback.UiSound.entries.firstOrNull { it.name == name }
+        }.toSet(),
+        hapticsEnabled = haptics,
+        hapticStrength = runCatching { io.github.thecodingdad.moonlightlauncher.ui.feedback.HapticStrength.valueOf(hapticStrength) }
+            .getOrDefault(io.github.thecodingdad.moonlightlauncher.ui.feedback.HapticStrength.MEDIUM),
+        hapticOnFocus = hapticOnFocus,
+    )
+
 private object Routes {
     const val MAIN = "main"
     const val DETAIL = "detail/{id}"
@@ -127,9 +144,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
     val hints = remember { HintHolder() }
     val activity = LocalActivity.current!!
 
-    feedback.soundsEnabled = settings.uiSounds
-    feedback.volume = settings.uiSoundVolume / 100f
-    feedback.hapticsEnabled = settings.haptics
+    LaunchedEffect(settings) { feedback.configure(settings.feedbackConfig()) }
 
     val entryActions = remember(nav) {
         EntryActions(
@@ -151,6 +166,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
             quickMenu = false
         }
     }
+    var platformFor by remember { mutableStateOf<io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry?>(null) }
     var collectionsFor by remember { mutableStateOf<io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry?>(null) }
 
     val density = androidx.compose.ui.platform.LocalDensity.current
@@ -261,16 +277,32 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                     onKind = vm::setKind,
                     onHide = { vm.setHidden(it, true) },
                     onCollections = { collectionsFor = it },
+                    onPlatform = { platformFor = it },
+                )
+                val allForPlatforms by vm.allEntries.collectAsState()
+                io.github.thecodingdad.moonlightlauncher.ui.shell.PlatformDialog(
+                    entry = platformFor,
+                    knownPlatforms = remember(allForPlatforms) { allForPlatforms.mapNotNull { it.item.platform }.distinct().sorted() },
+                    onSelect = vm::setPlatform,
+                    onDismiss = { platformFor = null },
                 )
                 val collections by vm.collections.collectAsState()
                 CollectionsDialog(
                     entry = collectionsFor,
                     collections = collections,
                     onToggle = { id, member -> collectionsFor?.let { vm.setInCollection(it.item.id, id, member) } },
-                    onCreate = { name -> vm.createCollection(name, collectionsFor?.item?.id) },
+                    onCreate = { name -> vm.createGroup(name, collectionsFor?.item?.id) },
                     onDismiss = { collectionsFor = null },
                 )
                 val launchState by vm.launchState.collectAsState()
+                val launchKind = launchState::class
+                LaunchedEffect(launchKind) {
+                    when (launchState) {
+                        is io.github.thecodingdad.moonlightlauncher.stream.LaunchState.Working -> feedback.play(io.github.thecodingdad.moonlightlauncher.ui.feedback.UiSound.LAUNCH)
+                        is io.github.thecodingdad.moonlightlauncher.stream.LaunchState.Failed -> feedback.play(io.github.thecodingdad.moonlightlauncher.ui.feedback.UiSound.ERROR)
+                        else -> Unit
+                    }
+                }
                 LaunchOverlay(
                     state = launchState,
                     onDismiss = vm::dismissLaunch,
@@ -352,8 +384,13 @@ private fun MainShell(vm: LauncherViewModel, nav: NavHostController, openStats: 
     val activity = LocalActivity.current!!
     var tab by vm.tabState
     val tabs = MainTab.entries
-    val collections by vm.collections.collectAsState()
     val hosts = hostsMap.values.sortedBy { it.name }
+    val libraryFilters by vm.libraryFilters.collectAsState()
+    val homeFilters by vm.homeFilters.collectAsState()
+    val appsFilters by vm.appsFilters.collectAsState()
+    // Keeps each tab's saved state (filter, sort, scroll position) while another tab is shown
+    // or a detail page is open.
+    val tabStates = androidx.compose.runtime.saveable.rememberSaveableStateHolder()
 
     PadAction(PadButton.L1) { tab = (tab - 1).mod(tabs.size) }
     PadAction(PadButton.R1) { tab = (tab + 1).mod(tabs.size) }
@@ -380,6 +417,7 @@ private fun MainShell(vm: LauncherViewModel, nav: NavHostController, openStats: 
 
         Box(Modifier.fillMaxWidth().weight(1f)) {
             AnimatedContent(tabs[tab], transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "tab") { current ->
+                tabStates.SaveableStateProvider(current.name) {
                 when (current) {
                     MainTab.HOME -> {
                         val rows = remember(games, running) { HomeRows.from(games, running) }
@@ -406,25 +444,26 @@ private fun MainShell(vm: LauncherViewModel, nav: NavHostController, openStats: 
                         val empty: @Composable () -> Unit = { EmptyHome { tab = MainTab.SETTINGS.ordinal } }
                         when (settings.homeLayout) {
                             HomeLayout.HERO -> HeroHome(
-                                rows, callbacks,
-                                collections.mapNotNull { (c, ids) ->
-                                    games.filter { it.item.id in ids }.takeIf { it.isNotEmpty() }?.let { c.name to it }
-                                },
+                                rows, callbacks, homeFilters,
                                 haRow = if (settings.showHaRowOnHome) ({ HaHomeRow() }) else null,
                                 emptyContent = empty,
                             )
-                            HomeLayout.GRID -> GridHome(games, callbacks, empty)
+                            HomeLayout.GRID -> GridHome(games, running, callbacks, empty)
                             HomeLayout.CAROUSEL -> CarouselHome(rows, callbacks, openTab = { tab = it }, emptyContent = empty)
                         }
                     }
-                    MainTab.LIBRARY -> LibraryScreen(allEntries, hosts, collections, settings.animatedArtwork, vm.lastFocusedKey, openStats) { vm.lastFocusedKey = it }
-                    MainTab.APPS -> AppsScreen(apps, vm.lastFocusedKey) { vm.lastFocusedKey = it }
+                    MainTab.LIBRARY -> LibraryScreen(
+                        allEntries, libraryFilters, settings.animatedArtwork, vm.lastFocusedKey, openStats,
+                        openFilterSettings = { nav.navigate(Routes.settings(SettingsPageId.FILTERS)) },
+                    ) { vm.lastFocusedKey = it }
+                    MainTab.APPS -> AppsScreen(apps, appsFilters, vm.lastFocusedKey) { vm.lastFocusedKey = it }
                     MainTab.SETTINGS -> {
                         io.github.thecodingdad.moonlightlauncher.ui.shell.ScreenHints(
                             listOf(ButtonHint(PadButton.A, stringResource(R.string.hint_select)), ButtonHint(PadButton.L1, stringResource(R.string.hint_tabs))),
                         )
                         SettingsHome(open = { nav.navigate(Routes.settings(it)) }, isFirstVisit = true)
                     }
+                }
                 }
             }
         }
@@ -495,6 +534,8 @@ private fun SettingsPageContent(
         SettingsPageId.APPEARANCE -> AppearanceSettings(settings, vm::updateSettings)
         SettingsPageId.CONTROLS -> ControlsSettings(settings, vm::updateSettings, openControllers = openControllers)
         SettingsPageId.LANGUAGE -> LanguageSettings(settings, vm::updateSettings)
+        SettingsPageId.FILTERS -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.FilterSettings(vm)
+        SettingsPageId.SOUNDS -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.SoundSettings(settings, vm::updateSettings)
         SettingsPageId.ABOUT -> AboutSettings()
         SettingsPageId.PROFILES -> {
             val profiles by vm.profiles.collectAsState()

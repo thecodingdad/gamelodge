@@ -96,6 +96,11 @@ class MainActivity : ComponentActivity() {
                 )
             } else event
         } else event
+        if (e.action == KeyEvent.ACTION_DOWN && e.repeatCount == 0 &&
+            (e.keyCode == KeyEvent.KEYCODE_BUTTON_B || e.keyCode == KeyEvent.KEYCODE_BACK)
+        ) {
+            feedback.play(io.github.thecodingdad.moonlightlauncher.ui.feedback.UiSound.BACK)
+        }
         if (dispatcher.dispatch(e)) return true
         return super.dispatchKeyEvent(e)
     }

@@ -68,11 +68,39 @@ fun CarouselHome(
         return
     }
     var focused by remember { mutableStateOf<LibraryEntry?>(null) }
-    val shown = focused ?: items.firstOrNull()
+    var focusedSession by remember { mutableStateOf<io.github.thecodingdad.moonlightlauncher.ui.RunningSession?>(null) }
+    var libraryTileFocused by remember { mutableStateOf(false) }
+    val shown = focused ?: rows.running.firstOrNull()?.entry ?: items.firstOrNull()
     PublishAccentFrom(shown?.coverModel())
-    PadAction(PadButton.X) { focused?.let(actions::context) }
+    PadAction(PadButton.X) {
+        val session = focusedSession
+        if (session != null) callbacks.onRunningMenu(session) else focused?.let(actions::context)
+    }
     val listState = rememberLazyListState()
+    // Same artwork backdrop as the hero layout, without reloading on every fast scroll step.
+    var backdrop by remember { mutableStateOf<LibraryEntry?>(null) }
+    androidx.compose.runtime.LaunchedEffect(shown) {
+        if (backdrop != null) kotlinx.coroutines.delay(140)
+        backdrop = shown
+    }
 
+    Box(Modifier.fillMaxSize()) {
+    androidx.compose.animation.Crossfade(backdrop, animationSpec = androidx.compose.animation.core.tween(400), label = "carouselHero") { entry ->
+        if (entry != null) {
+            io.github.thecodingdad.moonlightlauncher.ui.components.ArtworkImage(
+                entry.heroModel(callbacks.animatedArtwork), entry.item.title, Modifier.fillMaxSize(),
+                androidx.compose.ui.layout.ContentScale.Crop, showTitleOnPlaceholder = false,
+            )
+        }
+    }
+    val bg = LauncherTheme.colors.background
+    Box(
+        Modifier.fillMaxSize().background(
+            androidx.compose.ui.graphics.Brush.verticalGradient(
+                0f to bg.copy(alpha = 0.55f), 0.45f to bg.copy(alpha = 0.35f), 0.8f to bg.copy(alpha = 0.9f), 1f to bg,
+            ),
+        ),
+    )
     Column(Modifier.fillMaxSize().padding(top = 4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         LazyRow(
             state = listState,
@@ -88,7 +116,7 @@ fun CarouselHome(
                     image = session.entry?.heroModel(),
                     onClick = { callbacks.onResume(session) },
                     onLongClick = { callbacks.onRunningMenu(session) },
-                    onFocused = { focused = session.entry },
+                    onFocused = { focused = session.entry; focusedSession = session; libraryTileFocused = false },
                     modifier = Modifier.width(340.dp).height(225.dp).restoreFocusIf(callbacks.lastFocusedKey == null),
                 )
             }
@@ -101,7 +129,7 @@ fun CarouselHome(
                     width = width,
                     onClick = { actions.open(entry) },
                     onLongClick = { actions.context(entry) },
-                    onFocused = { focused = entry; callbacks.onFocusKey(key) },
+                    onFocused = { focused = entry; focusedSession = null; libraryTileFocused = false; callbacks.onFocusKey(key) },
                     animated = callbacks.animatedArtwork,
                     modifier = Modifier.restoreFocusIf(
                         callbacks.lastFocusedKey == key ||
@@ -109,32 +137,40 @@ fun CarouselHome(
                     ),
                 )
             }
+            // Like the Switch home: the full library sits at the end of the row.
+            item(key = "library") {
+                LibraryTile(
+                    onClick = { openTab(1) },
+                    onFocused = { focused = null; focusedSession = null; libraryTileFocused = true; callbacks.onFocusKey("carousel:library") },
+                    modifier = Modifier.restoreFocusIf(callbacks.lastFocusedKey == "carousel:library"),
+                )
+            }
         }
-        shown?.let {
+        if (libraryTileFocused) {
+            Text(
+                stringResource(R.string.tab_library), style = MaterialTheme.typography.headlineSmall, color = LauncherTheme.colors.onSurface,
+                modifier = Modifier.padding(horizontal = 48.dp),
+            )
+        } else shown?.let {
             Column(Modifier.padding(horizontal = 48.dp)) {
                 Text(it.item.title, style = MaterialTheme.typography.headlineSmall, color = LauncherTheme.colors.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 MetaLine(it)
             }
         }
-        Spacer(Modifier.weight(1f))
-        Row(Modifier.fillMaxWidth().padding(bottom = 6.dp), horizontalArrangement = Arrangement.Center) {
-            Row(horizontalArrangement = Arrangement.spacedBy(28.dp)) {
-                QuickButton(Icons.Filled.VideoLibrary, stringResource(R.string.tab_library)) { openTab(1) }
-                QuickButton(Icons.Filled.Apps, stringResource(R.string.tab_apps)) { openTab(2) }
-                QuickButton(Icons.Filled.Settings, stringResource(R.string.tab_settings)) { openTab(3) }
-            }
-        }
+    }
     }
 }
 
 @Composable
-private fun QuickButton(icon: ImageVector, label: String, onClick: () -> Unit) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        FocusSurface(onClick = onClick, shape = CircleShape, color = LauncherTheme.colors.surfaceRaised, modifier = Modifier.size(64.dp), focusScale = 1.12f) {
-            Box(Modifier.fillMaxSize().background(LauncherTheme.colors.surfaceRaised), contentAlignment = Alignment.Center) {
-                Icon(icon, label, tint = LauncherTheme.colors.onSurface)
-            }
+private fun LibraryTile(onClick: () -> Unit, onFocused: () -> Unit, modifier: Modifier = Modifier) {
+    val label = stringResource(R.string.tab_library)
+    FocusSurface(
+        onClick = onClick, onFocused = onFocused, shape = CircleShape,
+        color = LauncherTheme.colors.surfaceRaised, modifier = modifier.size(112.dp), focusScale = 1.1f,
+    ) {
+        Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(Icons.Filled.Apps, label, tint = LauncherTheme.colors.onSurface, modifier = Modifier.size(40.dp))
+            Text(label, style = MaterialTheme.typography.labelMedium, color = LauncherTheme.colors.onSurface, modifier = Modifier.padding(top = 4.dp))
         }
-        Text(label, style = MaterialTheme.typography.labelMedium, color = LauncherTheme.colors.onSurfaceMuted, modifier = Modifier.padding(top = 6.dp))
     }
 }

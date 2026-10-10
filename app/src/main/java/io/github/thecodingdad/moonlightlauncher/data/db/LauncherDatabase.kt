@@ -14,8 +14,9 @@ import androidx.room.RoomDatabase
         ItemCollectionCrossRef::class,
         HostConfigEntity::class,
         HaTileEntity::class,
+        FilterEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
 abstract class LauncherDatabase : RoomDatabase() {
@@ -24,9 +25,31 @@ abstract class LauncherDatabase : RoomDatabase() {
     abstract fun collectionDao(): CollectionDao
     abstract fun hostConfigDao(): HostConfigDao
     abstract fun haTileDao(): HaTileDao
+    abstract fun filterDao(): FilterDao
 
     companion object {
         fun create(context: Context): LauncherDatabase =
-            Room.databaseBuilder(context, LauncherDatabase::class.java, "launcher.db").build()
+            Room.databaseBuilder(context, LauncherDatabase::class.java, "launcher.db")
+                .addMigrations(MIGRATION_1_2)
+                .build()
+
+        /** v2: platform + Playnite data per item, filters table (existing collections become groups). */
+        val MIGRATION_1_2 = object : androidx.room.migration.Migration(1, 2) {
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                listOf("platform", "platformSource", "playniteCategories", "playnitePlugin").forEach {
+                    db.execSQL("ALTER TABLE library_items ADD COLUMN $it TEXT")
+                }
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS filters (id TEXT NOT NULL, name TEXT NOT NULL, kind TEXT NOT NULL, " +
+                        "builtin TEXT, rules TEXT, scope TEXT NOT NULL, showInLibrary INTEGER NOT NULL, " +
+                        "showOnHome INTEGER NOT NULL, showInApps INTEGER NOT NULL, sortOrder INTEGER NOT NULL, PRIMARY KEY(id))",
+                )
+                // Collections from v1 are manual groups now; they used to appear as library chips and home rows.
+                db.execSQL(
+                    "INSERT OR IGNORE INTO filters (id, name, kind, builtin, rules, scope, showInLibrary, showOnHome, showInApps, sortOrder) " +
+                        "SELECT id, name, 'GROUP', NULL, NULL, 'BOTH', 1, 1, 0, 100 + sortOrder FROM collections",
+                )
+            }
+        }
     }
 }

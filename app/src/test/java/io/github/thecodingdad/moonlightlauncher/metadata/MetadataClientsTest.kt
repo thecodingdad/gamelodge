@@ -104,6 +104,18 @@ class VibepolloParseTest {
         assertEquals(3, r.apps)
         assertEquals(setOf("BBB"), r.playniteUuids)
     }
+
+    @Test
+    fun `playnite games give plugin and categories per app`() {
+        val apps = client.parse("""{"apps":[{"name":"Hades","uuid":"bbb","playnite-id":"ABC-1"}]}""")
+        val games = client.parseGames(
+            """[{"id":"abc-1","name":"Hades","pluginName":"Steam","categories":["Roguelike",{"name":"Couch"}]},{"id":"x","pluginName":""}]""",
+        )
+        val info = apps.copy(games = games).infoForApp("bbb")
+        assertEquals("Steam", info?.plugin)
+        assertEquals(listOf("Roguelike", "Couch"), info?.categories)
+        assertEquals(null, games["x"]?.plugin)
+    }
 }
 
 private object FakeConfigs : io.github.thecodingdad.moonlightlauncher.data.db.HostConfigDao {

@@ -92,7 +92,7 @@ fun DetailScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 if (entry.item.logoUrl != null) {
-                    ArtworkImage(entry.item.logoUrl, entry.item.title, Modifier.height(90.dp).widthIn(max = 460.dp), ContentScale.Fit, showTitleOnPlaceholder = false)
+                    io.github.thecodingdad.moonlightlauncher.ui.components.LogoImage(entry.item.logoUrl, entry.item.title, Modifier.height(90.dp).widthIn(max = 460.dp))
                 } else {
                     Text(entry.item.title, style = MaterialTheme.typography.displaySmall, color = colors.onSurface, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }

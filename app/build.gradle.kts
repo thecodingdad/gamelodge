@@ -44,6 +44,9 @@ android {
         unitTests.isIncludeAndroidResources = true
     }
 
+    // Exported Room schemas for the migration tests (Robolectric reads debug assets).
+    sourceSets.getByName("debug").assets.srcDir("$projectDir/schemas")
+
     packaging {
         resources {
             pickFirsts += "META-INF/versions/9/OSGI-INF/MANIFEST.MF"

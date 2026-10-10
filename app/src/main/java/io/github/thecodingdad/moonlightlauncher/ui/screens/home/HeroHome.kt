@@ -37,6 +37,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry
+import io.github.thecodingdad.moonlightlauncher.data.library.ResolvedFilter
+import io.github.thecodingdad.moonlightlauncher.ui.screens.library.filterLabel
 import io.github.thecodingdad.moonlightlauncher.ui.RunningSession
 import io.github.thecodingdad.moonlightlauncher.ui.components.ArtworkImage
 import io.github.thecodingdad.moonlightlauncher.ui.components.CoverCard
@@ -65,7 +67,7 @@ class HomeCallbacks(
 fun HeroHome(
     rows: HomeRows,
     callbacks: HomeCallbacks,
-    collectionRows: List<Pair<String, List<LibraryEntry>>>,
+    filterRows: List<ResolvedFilter>,
     haRow: (@Composable () -> Unit)?,
     emptyContent: @Composable () -> Unit,
 ) {
@@ -74,8 +76,8 @@ fun HeroHome(
     var focusedSession by remember { mutableStateOf<RunningSession?>(null) }
     var shown by remember { mutableStateOf<LibraryEntry?>(null) }
     // Avoid reloading artwork for every item while the user scrolls fast.
-    val fallback = rows.running.firstOrNull()?.entry ?: rows.continuePlaying.firstOrNull()
-        ?: rows.favorites.firstOrNull() ?: rows.recentlyAdded.firstOrNull()
+    val fallback = rows.running.firstOrNull()?.entry ?: filterRows.firstOrNull()?.entries?.firstOrNull()
+        ?: rows.continuePlaying.firstOrNull() ?: rows.recentlyAdded.firstOrNull()
     LaunchedEffect(focused, fallback) {
         if (focused != null) delay(140)
         shown = focused ?: fallback
@@ -132,17 +134,18 @@ fun HeroHome(
                         }
                     }
                 }
-                homeRow("continue", R.string.home_continue, rows.continuePlaying, callbacks, firstRow = rows.running.isEmpty(), onFocus = { focused = it; focusedSession = null }, actions = actions)
-                homeRow("favorites", R.string.home_favorites, rows.favorites, callbacks, firstRow = rows.running.isEmpty() && rows.continuePlaying.isEmpty(), onFocus = { focused = it; focusedSession = null }, actions = actions)
-                if (haRow != null) item(key = "ha") { haRow() }
-                collectionRows.forEach { (name, list) ->
-                    homeRow("collection:$name", 0, list, callbacks, firstRow = false, onFocus = { focused = it; focusedSession = null }, actions = actions, titleText = name)
+                val firstFilled = filterRows.indexOfFirst { it.entries.isNotEmpty() }
+                filterRows.forEachIndexed { index, row ->
+                    // The smart home row keeps its place after the first two rows.
+                    if (index == 2 && haRow != null) item(key = "ha") { haRow() }
+                    homeRow(
+                        "row:${row.key}", 0, row.entries, callbacks,
+                        firstRow = rows.running.isEmpty() && index == firstFilled,
+                        onFocus = { focused = it; focusedSession = null }, actions = actions,
+                        titleText = { filterLabel(row) },
+                    )
                 }
-                homeRow(
-                    "recent", R.string.home_recently_added, rows.recentlyAdded, callbacks,
-                    firstRow = rows.running.isEmpty() && rows.continuePlaying.isEmpty() && rows.favorites.isEmpty(),
-                    onFocus = { focused = it; focusedSession = null }, actions = actions,
-                )
+                if (filterRows.size < 2 && haRow != null) item(key = "ha") { haRow() }
             }
         }
     }
@@ -156,11 +159,11 @@ private fun androidx.compose.foundation.lazy.LazyListScope.homeRow(
     firstRow: Boolean,
     onFocus: (LibraryEntry) -> Unit,
     actions: io.github.thecodingdad.moonlightlauncher.ui.shell.EntryActions,
-    titleText: String? = null,
+    titleText: (@Composable () -> String)? = null,
 ) {
     if (entries.isEmpty()) return
     item(key = key) {
-        RowTitle(titleText ?: stringResource(title))
+        RowTitle(titleText?.invoke() ?: stringResource(title))
         LazyRow(
             contentPadding = PaddingValues(horizontal = 40.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -198,9 +201,8 @@ private fun HeroInfo(entry: LibraryEntry?, modifier: Modifier = Modifier) {
     Column(modifier.widthIn(max = 640.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (entry == null) return@Column
         if (entry.item.logoUrl != null) {
-            ArtworkImage(
-                entry.item.logoUrl, entry.item.title,
-                Modifier.height(84.dp).widthIn(max = 420.dp), ContentScale.Fit, showTitleOnPlaceholder = false,
+            io.github.thecodingdad.moonlightlauncher.ui.components.LogoImage(
+                entry.item.logoUrl, entry.item.title, Modifier.height(84.dp).widthIn(max = 420.dp),
             )
         } else {
             Text(

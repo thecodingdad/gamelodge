@@ -75,6 +75,31 @@ fun ArtworkImage(
     )
 }
 
+/**
+ * Transparent game logo: nothing is drawn while it loads (a coloured placeholder box would
+ * flash), it fades in when ready and falls back to the title text if it can't be loaded.
+ */
+@Composable
+fun LogoImage(url: String?, title: String, modifier: Modifier = Modifier) {
+    SubcomposeAsyncImage(
+        model = url,
+        contentDescription = title,
+        contentScale = ContentScale.Fit,
+        alignment = Alignment.CenterStart,
+        modifier = modifier,
+        loading = {},
+        error = {
+            Text(
+                title,
+                style = MaterialTheme.typography.displaySmall,
+                color = io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme.colors.onSurface,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            )
+        },
+    )
+}
+
 @Composable
 fun TitlePlaceholder(title: String, modifier: Modifier = Modifier, showTitle: Boolean = true) {
     val hue = (title.hashCode().absoluteValue % 360).toFloat()

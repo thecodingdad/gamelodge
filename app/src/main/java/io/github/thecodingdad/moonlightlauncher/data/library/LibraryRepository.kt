@@ -1,11 +1,11 @@
 package io.github.thecodingdad.moonlightlauncher.data.library
 
-import io.github.thecodingdad.moonlightlauncher.data.db.CollectionEntity
 import io.github.thecodingdad.moonlightlauncher.data.db.ItemCollectionCrossRef
 import io.github.thecodingdad.moonlightlauncher.data.db.ItemKind
 import io.github.thecodingdad.moonlightlauncher.data.db.KindSource
 import io.github.thecodingdad.moonlightlauncher.data.db.LauncherDatabase
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry
+import io.github.thecodingdad.moonlightlauncher.data.db.PlatformSource
 import io.github.thecodingdad.moonlightlauncher.data.db.TargetType
 import io.github.thecodingdad.moonlightlauncher.data.local.LocalAppScanner
 import io.github.thecodingdad.moonlightlauncher.data.remote.BoxArtCache
@@ -78,11 +78,13 @@ class LibraryRepository(
             },
         )
         Log.d("Local sync: ${apps.size} apps")
+        suggestPlatforms()
     }
 
     private suspend fun syncHost(hostUuid: String, apps: List<RemoteApp>) {
         // Optional: Vibepollo knows which apps came from Playnite (= certainly games).
-        val playnite = vibepollo?.playniteUuids(hostUuid).orEmpty()
+        val vibe = vibepollo?.cached(hostUuid)
+        val playnite = vibe?.playniteUuids.orEmpty()
         sync.syncHost(
             hostUuid,
             apps.map { remote ->
@@ -100,7 +102,43 @@ class LibraryRepository(
             },
         )
         Log.d("Host sync ${apps.firstOrNull()?.hostName}: ${apps.size} apps")
+        vibe?.let { applyPlayniteInfo(hostUuid, it) }
+        suggestPlatforms()
         fetchBoxArt(hostUuid, apps)
+    }
+
+    /** Stores Playnite plugin/categories per item and derives the platform from the plugin. */
+    private suspend fun applyPlayniteInfo(hostUuid: String, result: io.github.thecodingdad.moonlightlauncher.data.remote.VibepolloClient.Result) {
+        if (result.games.isEmpty()) return
+        for (target in dao.getAllTargets().filter { it.hostUuid == hostUuid }) {
+            val info = result.infoForApp(target.appUuid) ?: continue
+            val item = dao.getItem(target.itemId) ?: continue
+            val categories = info.categories.joinToString(", ").ifEmpty { null }
+            if (item.playniteCategories != categories || item.playnitePlugin != info.plugin) {
+                dao.setPlayniteInfo(item.id, categories, info.plugin)
+            }
+            val platform = PlatformResolver.fromPlaynitePlugin(info.plugin)
+            if (PlatformResolver.mayReplace(item, PlatformSource.PLAYNITE, platform)) {
+                dao.setPlatform(item.id, platform, PlatformSource.PLAYNITE)
+            }
+        }
+    }
+
+    /** Items nobody knows a platform for get a suggestion from how they are launched. */
+    private suspend fun suggestPlatforms() {
+        dao.observeAll().first().filter { it.item.platform == null }.forEach {
+            dao.setPlatform(it.item.id, PlatformResolver.suggest(it), PlatformSource.SUGGESTED)
+        }
+    }
+
+    /** Manual platform choice; null returns the item to automatic detection. */
+    suspend fun setPlatform(id: String, platform: String?) {
+        if (platform != null) {
+            dao.setPlatform(id, platform, PlatformSource.MANUAL)
+        } else {
+            dao.setPlatform(id, null, null)
+            suggestPlatforms()
+        }
     }
 
     private suspend fun fetchBoxArt(hostUuid: String, apps: List<RemoteApp>) {
@@ -127,15 +165,6 @@ class LibraryRepository(
 
     val collections = db.collectionDao().observeCollections()
     val memberships = db.collectionDao().observeMemberships()
-
-    suspend fun createCollection(name: String): String {
-        val id = java.util.UUID.randomUUID().toString()
-        val order = (db.collectionDao().observeCollections().first().maxOfOrNull { it.sortOrder } ?: -1) + 1
-        db.collectionDao().upsert(CollectionEntity(id, name, order))
-        return id
-    }
-
-    suspend fun deleteCollection(collection: CollectionEntity) = db.collectionDao().delete(collection)
 
     suspend fun setInCollection(itemId: String, collectionId: String, member: Boolean) {
         val ref = ItemCollectionCrossRef(itemId, collectionId)

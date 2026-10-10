@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -25,11 +26,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry
 import io.github.thecodingdad.moonlightlauncher.data.library.TitleNormalizer
 import io.github.thecodingdad.moonlightlauncher.ui.components.ArtworkImage
@@ -45,7 +48,12 @@ import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 
 /** Playnite fullscreen style: all games as a cover grid with a detail column on the right. */
 @Composable
-fun GridHome(games: List<LibraryEntry>, callbacks: HomeCallbacks, emptyContent: @Composable () -> Unit) {
+fun GridHome(
+    games: List<LibraryEntry>,
+    running: List<io.github.thecodingdad.moonlightlauncher.ui.RunningSession>,
+    callbacks: HomeCallbacks,
+    emptyContent: @Composable () -> Unit,
+) {
     val actions = LocalEntryActions.current
     if (games.isEmpty()) {
         emptyContent()
@@ -56,9 +64,14 @@ fun GridHome(games: List<LibraryEntry>, callbacks: HomeCallbacks, emptyContent: 
         games.sortedWith(compareByDescending<LibraryEntry> { it.item.lastPlayedAt ?: 0L }.thenBy { TitleNormalizer.sortKey(it.item.title) })
     }
     var focused by remember { mutableStateOf<LibraryEntry?>(null) }
-    val shown = focused ?: sorted.first()
+    var focusedSession by remember { mutableStateOf<io.github.thecodingdad.moonlightlauncher.ui.RunningSession?>(null) }
+    val shown = focused ?: running.firstOrNull()?.entry ?: sorted.first()
     PublishAccentFrom(shown.coverModel())
-    PadAction(PadButton.X) { focused?.let(actions::context) }
+    PadAction(PadButton.X) {
+        val session = focusedSession
+        if (session != null) callbacks.onRunningMenu(session) else focused?.let(actions::context)
+    }
+    val coverWidth = LauncherTheme.dimens.coverWidth * 0.7f
 
     Row(Modifier.fillMaxSize()) {
         LazyVerticalGrid(
@@ -68,6 +81,25 @@ fun GridHome(games: List<LibraryEntry>, callbacks: HomeCallbacks, emptyContent: 
             verticalArrangement = Arrangement.spacedBy(18.dp),
             modifier = Modifier.weight(1f).focusRestorer(),
         ) {
+            // A running game spans two cells, like the wide cards of the other layouts.
+            items(running, key = { "run:" + it.host.uuid }, span = { GridItemSpan(minOf(2, maxLineSpan)) }) { session ->
+                val key = "grid:run:${session.host.uuid}"
+                // Grid cells force their width onto the covers, so derive the height from the
+                // real cell width: two cells plus the gap, covers are 2:3.
+                androidx.compose.foundation.layout.BoxWithConstraints {
+                val cellWidth = if (maxWidth > coverWidth * 1.6f) (maxWidth - 16.dp) / 2 else maxWidth
+                io.github.thecodingdad.moonlightlauncher.ui.components.WideCard(
+                    title = session.appName,
+                    subtitle = stringResource(R.string.running_on, session.host.name),
+                    image = session.entry?.heroModel(),
+                    onClick = { callbacks.onResume(session) },
+                    onLongClick = { callbacks.onRunningMenu(session) },
+                    onFocused = { focused = session.entry; focusedSession = session; callbacks.onFocusKey(key) },
+                    modifier = Modifier.fillMaxWidth().height(cellWidth * 1.5f)
+                        .restoreFocusIf(callbacks.lastFocusedKey == key || callbacks.lastFocusedKey?.startsWith("grid:") != true),
+                )
+                }
+            }
             items(sorted, key = { it.item.id }) { entry ->
                 val key = "grid:${entry.item.id}"
                 CoverCard(
@@ -75,10 +107,11 @@ fun GridHome(games: List<LibraryEntry>, callbacks: HomeCallbacks, emptyContent: 
                     width = LauncherTheme.dimens.coverWidth * 0.7f,
                     onClick = { actions.open(entry) },
                     onLongClick = { actions.context(entry) },
-                    onFocused = { focused = entry; callbacks.onFocusKey(key) },
+                    onFocused = { focused = entry; focusedSession = null; callbacks.onFocusKey(key) },
                     animated = callbacks.animatedArtwork,
                     modifier = Modifier.restoreFocusIf(
-                        callbacks.lastFocusedKey == key || (callbacks.lastFocusedKey?.startsWith("grid:") != true && entry === sorted.first()),
+                        callbacks.lastFocusedKey == key ||
+                            (running.isEmpty() && callbacks.lastFocusedKey?.startsWith("grid:") != true && entry === sorted.first()),
                     ),
                 )
             }

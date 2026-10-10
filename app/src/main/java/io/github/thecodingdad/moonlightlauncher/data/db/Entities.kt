@@ -60,6 +60,40 @@ data class LibraryItemEntity(
     val animatedHeroUrl: String? = null,
     /** Title used for metadata lookup when it differs from [title] (manual search). */
     val metadataQuery: String? = null,
+    // --- added in schema v2 ---
+    /** Platform shown/filtered on, e.g. "PC", "Nintendo Switch", "Android". */
+    val platform: String? = null,
+    val platformSource: PlatformSource? = null,
+    /** Playnite categories (comma separated) and library plugin, via the Vibepollo API. */
+    val playniteCategories: String? = null,
+    val playnitePlugin: String? = null,
+)
+
+/** Where [LibraryItemEntity.platform] came from; higher sources are never overwritten by lower ones. */
+enum class PlatformSource { SUGGESTED, IGDB, PLAYNITE, MANUAL }
+
+enum class FilterKind { BUILTIN, SMART, GROUP }
+
+enum class FilterScope { GAMES, APPS, BOTH }
+
+/**
+ * A library filter. BUILTIN rows are the default filters (can be hidden), SMART filters match
+ * rules, GROUP filters are manual groups whose members live in item_collections (id = collection id).
+ */
+@Entity(tableName = "filters")
+data class FilterEntity(
+    @PrimaryKey val id: String,
+    val name: String,
+    val kind: FilterKind,
+    /** For BUILTIN: all, local, hosts, favorites, never_played, review, hidden. */
+    val builtin: String? = null,
+    /** JSON-encoded FilterRules for SMART filters. */
+    val rules: String? = null,
+    val scope: FilterScope = FilterScope.GAMES,
+    val showInLibrary: Boolean = true,
+    val showOnHome: Boolean = false,
+    val showInApps: Boolean = false,
+    val sortOrder: Int = 0,
 )
 
 /** One way to start an item: an installed Android app or an app on a streaming host. */

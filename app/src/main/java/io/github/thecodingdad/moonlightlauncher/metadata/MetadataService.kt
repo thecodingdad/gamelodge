@@ -3,7 +3,10 @@ package io.github.thecodingdad.moonlightlauncher.metadata
 import io.github.thecodingdad.moonlightlauncher.data.db.ItemKind
 import io.github.thecodingdad.moonlightlauncher.data.db.LauncherDatabase
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryItemEntity
+import io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry
 import io.github.thecodingdad.moonlightlauncher.data.db.MetadataState
+import io.github.thecodingdad.moonlightlauncher.data.db.PlatformSource
+import io.github.thecodingdad.moonlightlauncher.data.library.PlatformResolver
 import io.github.thecodingdad.moonlightlauncher.data.settings.SecretStore
 import io.github.thecodingdad.moonlightlauncher.data.settings.SettingsRepository
 import io.github.thecodingdad.moonlightlauncher.util.Log
@@ -15,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -82,6 +86,38 @@ class MetadataService(
                 .debounce(2_000)
                 .collect { pending -> if (pending > 0) refreshPending() }
         }
+        scope.launch(Dispatchers.IO) {
+            delay(10_000)
+            runCatching { backfillPlatforms() }.onFailure { Log.w("Platform backfill failed", it) }
+        }
+    }
+
+    /** Matches from before platforms were stored: fetch just the platforms, 100 games per request. */
+    private suspend fun backfillPlatforms() {
+        if (!igdb.isConfigured) return
+        val entries = dao.observeAll().first().filter {
+            it.item.igdbId != null && (it.item.platformSource == null || it.item.platformSource == PlatformSource.SUGGESTED)
+        }.associateBy { it.item.igdbId!! }
+        entries.keys.chunked(100).forEach { ids ->
+            igdb.platforms(ids).forEach { game ->
+                val entry = entries[game.id] ?: return@forEach
+                val platform = entry.igdbPlatform(game)
+                if (PlatformResolver.mayReplace(entry.item, PlatformSource.IGDB, platform)) {
+                    dao.setPlatform(entry.item.id, platform, PlatformSource.IGDB)
+                }
+            }
+            delay(300)
+        }
+    }
+
+    private fun LibraryEntry.igdbPlatform(game: IgdbGame) = PlatformResolver.fromIgdb(
+        game.platforms.map { it.name }, playsOnPc = remoteTargets.isNotEmpty(), playsOnAndroid = localTarget != null,
+    )
+
+    private suspend fun platformFor(item: LibraryItemEntity, game: IgdbGame): Pair<String, PlatformSource>? {
+        val entry = dao.observeEntry(item.id).first() ?: return null
+        val platform = entry.igdbPlatform(game)
+        return if (PlatformResolver.mayReplace(item, PlatformSource.IGDB, platform)) platform!! to PlatformSource.IGDB else null
     }
 
     /** Processes every game that was never looked up. */
@@ -136,7 +172,10 @@ class MetadataService(
             return
         }
         val state = if (confidence >= MatchScorer.AUTO_ACCEPT) MetadataState.OK else MetadataState.REVIEW
-        val withText = igdbBest?.first?.let { item.withIgdb(it) } ?: item
+        val withText = igdbBest?.first?.let { game ->
+            val platform = platformFor(item, game)
+            item.withIgdb(game).let { if (platform != null) it.copy(platform = platform.first, platformSource = platform.second) else it }
+        } ?: item
         val withArt = sgdbBest?.first?.takeIf { sgdbBest.second >= MatchScorer.REVIEW }
             ?.let { withText.withSgdbArtwork(it.id) } ?: withText
         dao.upsertItem(withArt.copy(metadataState = state, matchConfidence = confidence))
@@ -161,7 +200,10 @@ class MetadataService(
         var updated = item.clearedMetadata()
         when (candidate.source) {
             MetadataSource.IGDB -> {
-                igdb.byId(candidate.id)?.let { updated = updated.withIgdb(it) }
+                igdb.byId(candidate.id)?.let { game ->
+                    updated = updated.withIgdb(game)
+                    platformFor(item, game)?.let { updated = updated.copy(platform = it.first, platformSource = it.second) }
+                }
                 if (sgdb.isConfigured) {
                     sgdb.search(candidate.name).maxByOrNull { MatchScorer.score(candidate.name, it.name) }
                         ?.let { updated = updated.withSgdbArtwork(it.id) }

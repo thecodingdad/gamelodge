@@ -7,7 +7,12 @@ import androidx.lifecycle.viewModelScope
 import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.container
 import io.github.thecodingdad.moonlightlauncher.data.db.CollectionEntity
+import io.github.thecodingdad.moonlightlauncher.data.db.FilterEntity
 import io.github.thecodingdad.moonlightlauncher.data.db.ItemKind
+import io.github.thecodingdad.moonlightlauncher.data.library.FilterEngine
+import io.github.thecodingdad.moonlightlauncher.data.library.FilterPlace
+import io.github.thecodingdad.moonlightlauncher.data.library.FilterRules
+import io.github.thecodingdad.moonlightlauncher.data.library.ResolvedFilter
 import io.github.thecodingdad.moonlightlauncher.data.db.PlaySessionEntity
 import io.github.thecodingdad.moonlightlauncher.data.db.LaunchTargetEntity
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry
@@ -86,10 +91,28 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             cols.map { it to byCollection[it.id].orEmpty().toSet() }
         }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
-    fun createCollection(name: String, addItem: String? = null) {
+    val filters: StateFlow<List<FilterEntity>> =
+        c.filters.filters.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    /** Host UUID → name, from live hosts and (for offline/removed ones) the stored targets. */
+    private val hostNames = combine(hosts, allEntries) { live, list ->
+        val stored = list.flatMap { it.remoteTargets }.mapNotNull { t -> t.hostUuid?.let { it to (t.hostName ?: it) } }.toMap()
+        stored + live.mapValues { it.value.name } + (FilterRules.SOURCE_LOCAL to application.getString(R.string.filter_local))
+    }
+
+    private fun resolved(place: FilterPlace): StateFlow<List<ResolvedFilter>> =
+        combine(filters, allEntries, hostNames, collections) { f, list, names, cols ->
+            FilterEngine.resolve(f, place, list, names, cols.associate { (col, members) -> col.id to members })
+        }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    val libraryFilters = resolved(FilterPlace.LIBRARY)
+    val homeFilters = resolved(FilterPlace.HOME)
+    val appsFilters = resolved(FilterPlace.APPS)
+
+    fun createGroup(name: String, addItem: String? = null) {
         viewModelScope.launch {
-            val id = c.library.createCollection(name)
-            if (addItem != null) c.library.setInCollection(addItem, id, true)
+            val group = c.filters.createGroup(name)
+            if (addItem != null) c.library.setInCollection(addItem, group.id, true)
         }
     }
 
@@ -97,8 +120,32 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch { c.library.setInCollection(itemId, collectionId, member) }
     }
 
-    fun deleteCollection(collection: CollectionEntity) {
-        viewModelScope.launch { c.library.deleteCollection(collection) }
+    fun saveFilter(filter: FilterEntity) {
+        viewModelScope.launch { c.filters.save(filter) }
+    }
+
+    fun renameFilter(filter: FilterEntity, name: String) {
+        viewModelScope.launch { c.filters.rename(filter, name) }
+    }
+
+    fun deleteFilter(filter: FilterEntity) {
+        viewModelScope.launch { c.filters.delete(filter) }
+    }
+
+    fun moveFilter(id: String, delta: Int) {
+        viewModelScope.launch { c.filters.move(id, delta) }
+    }
+
+    fun createSmartFilter(name: String, onCreated: (FilterEntity) -> Unit = {}) {
+        viewModelScope.launch { onCreated(c.filters.createSmart(name, FilterRules())) }
+    }
+
+    fun restoreDefaultFilters() {
+        viewModelScope.launch { c.filters.restoreDefaults() }
+    }
+
+    fun setPlatform(entry: LibraryEntry, platform: String?) {
+        viewModelScope.launch { c.library.setPlatform(entry.item.id, platform) }
     }
 
     /** Time of the last user input; drives the screensaver. */

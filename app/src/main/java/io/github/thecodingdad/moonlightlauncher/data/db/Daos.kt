@@ -69,6 +69,12 @@ interface LibraryDao {
     @Query("UPDATE library_items SET hidden = :hidden WHERE id = :id")
     suspend fun setHidden(id: String, hidden: Boolean)
 
+    @Query("UPDATE library_items SET platform = :platform, platformSource = :source WHERE id = :id")
+    suspend fun setPlatform(id: String, platform: String?, source: PlatformSource?)
+
+    @Query("UPDATE library_items SET playniteCategories = :categories, playnitePlugin = :plugin WHERE id = :id")
+    suspend fun setPlayniteInfo(id: String, categories: String?, plugin: String?)
+
     @Query("UPDATE library_items SET kind = :kind, kindSource = :source WHERE id = :id")
     suspend fun setKind(id: String, kind: ItemKind, source: KindSource)
 
@@ -143,4 +149,19 @@ interface HaTileDao {
 
     @Query("DELETE FROM ha_tiles WHERE entityId = :entityId")
     suspend fun delete(entityId: String)
+}
+
+@Dao
+interface FilterDao {
+    @Query("SELECT * FROM filters ORDER BY sortOrder")
+    fun observeAll(): Flow<List<FilterEntity>>
+
+    @Query("SELECT * FROM filters ORDER BY sortOrder")
+    suspend fun getAll(): List<FilterEntity>
+
+    @Upsert
+    suspend fun upsert(filters: List<FilterEntity>)
+
+    @Query("DELETE FROM filters WHERE id = :id")
+    suspend fun delete(id: String)
 }

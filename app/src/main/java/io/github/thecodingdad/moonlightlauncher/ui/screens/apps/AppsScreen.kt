@@ -2,6 +2,14 @@ package io.github.thecodingdad.moonlightlauncher.ui.screens.apps
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items as rowItems
+import androidx.compose.runtime.saveable.rememberSaveable
+import io.github.thecodingdad.moonlightlauncher.data.library.BuiltinFilter
+import io.github.thecodingdad.moonlightlauncher.data.library.ResolvedFilter
+import io.github.thecodingdad.moonlightlauncher.ui.screens.library.Chip
+import io.github.thecodingdad.moonlightlauncher.ui.screens.library.filterLabel
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -35,9 +43,11 @@ import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 
 /** Regular apps, separate from the game library: device apps first, then each host's apps. */
 @Composable
-fun AppsScreen(apps: List<LibraryEntry>, lastFocusedKey: String?, onFocusKey: (String) -> Unit) {
+fun AppsScreen(apps: List<LibraryEntry>, filters: List<ResolvedFilter>, lastFocusedKey: String?, onFocusKey: (String) -> Unit) {
     val actions = LocalEntryActions.current
     var focused by remember { mutableStateOf<LibraryEntry?>(null) }
+    var selectedKey by rememberSaveable { mutableStateOf<String?>(null) }
+    val selected = filters.firstOrNull { it.key == selectedKey }
     PadAction(PadButton.X) { focused?.let(actions::context) }
     ScreenHints(
         listOf(
@@ -46,20 +56,37 @@ fun AppsScreen(apps: List<LibraryEntry>, lastFocusedKey: String?, onFocusKey: (S
         ),
     )
 
-    val sorted = remember(apps) { apps.sortedBy { TitleNormalizer.sortKey(it.item.title) } }
-    val local = sorted.filter { it.localTarget != null }
-    val byHost = sorted.filter { it.localTarget == null }
+    // "All" (or no filter) shows sections per source; any other filter a flat list.
+    val flat = selected != null && selected.builtin != BuiltinFilter.ALL
+    val source = if (flat) selected!!.entries else apps
+    val sorted = remember(source) { source.sortedBy { TitleNormalizer.sortKey(it.item.title) } }
+    val local = if (flat) sorted else sorted.filter { it.localTarget != null }
+    val byHost = if (flat) emptyMap() else sorted.filter { it.localTarget == null }
         .groupBy { it.remoteTargets.firstOrNull()?.hostName.orEmpty() }
 
+    Column(Modifier.fillMaxSize()) {
+    if (filters.size > 1) {
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = 36.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier.focusRestorer(),
+        ) {
+            rowItems(filters, key = { "filter:${it.key}" }) { f ->
+                val isSelected = f.key == selected?.key || (selected == null && f.builtin == BuiltinFilter.ALL)
+                Chip(filterLabel(f), selected = isSelected, onClick = { selectedKey = f.key })
+            }
+        }
+    }
     if (sorted.isEmpty()) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(stringResource(R.string.apps_empty), color = LauncherTheme.colors.onSurfaceMuted, style = MaterialTheme.typography.titleMedium)
         }
-        return
+        return@Column
     }
 
     val first = local.firstOrNull() ?: byHost.values.firstOrNull()?.firstOrNull()
     val deviceTitle = stringResource(R.string.apps_on_device)
+    val selectedTitle = selected?.let { filterLabel(it) }.orEmpty()
     val hostTitles = byHost.keys.associateWith { stringResource(R.string.apps_on_host, it) }
     LazyVerticalGrid(
         columns = GridCells.Adaptive(LauncherTheme.dimens.iconTile + 36.dp),
@@ -86,7 +113,12 @@ fun AppsScreen(apps: List<LibraryEntry>, lastFocusedKey: String?, onFocusKey: (S
                 )
             }
         }
-        section(deviceTitle, local)
-        byHost.forEach { (host, list) -> section(hostTitles.getValue(host), list) }
+        if (flat) {
+            section(selectedTitle, local)
+        } else {
+            section(deviceTitle, local)
+            byHost.forEach { (host, list) -> section(hostTitles.getValue(host), list) }
+        }
+    }
     }
 }

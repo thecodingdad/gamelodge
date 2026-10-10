@@ -33,6 +33,7 @@ data class IgdbGame(
     val cover: IgdbImage? = null,
     val artworks: List<IgdbImage> = emptyList(),
     val screenshots: List<IgdbImage> = emptyList(),
+    val platforms: List<IgdbNamed> = emptyList(),
 ) {
     val releaseYear: Int?
         get() = first_release_date?.let {
@@ -75,7 +76,7 @@ class IgdbClient(
         val body = """
             search "$term";
             fields name,summary,genres.name,involved_companies.company.name,involved_companies.developer,
-                   first_release_date,total_rating,cover.image_id,artworks.image_id,screenshots.image_id;
+                   first_release_date,total_rating,cover.image_id,artworks.image_id,screenshots.image_id,platforms.name;
             limit $limit;
         """.trimIndent()
         return post("games", body)
@@ -84,8 +85,13 @@ class IgdbClient(
     fun byId(id: Long): IgdbGame? = post(
         "games",
         "fields name,summary,genres.name,involved_companies.company.name,involved_companies.developer," +
-            "first_release_date,total_rating,cover.image_id,artworks.image_id,screenshots.image_id; where id = $id;",
+            "first_release_date,total_rating,cover.image_id,artworks.image_id,screenshots.image_id,platforms.name; where id = $id;",
     ).firstOrNull()
+
+    /** Only the platforms of several games (backfill for matches made before platforms were stored). */
+    fun platforms(ids: List<Long>): List<IgdbGame> =
+        if (ids.isEmpty()) emptyList()
+        else post("games", "fields name,platforms.name; where id = (${ids.joinToString(",")}); limit ${ids.size};")
 
     private fun post(endpoint: String, query: String, retried: Boolean = false): List<IgdbGame> {
         val token = token() ?: return emptyList()

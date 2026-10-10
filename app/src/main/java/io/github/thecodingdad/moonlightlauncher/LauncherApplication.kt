@@ -8,6 +8,7 @@ import coil3.gif.AnimatedImageDecoder
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.crossfade
 import com.limelight.ArtemisApplication
+import kotlinx.coroutines.launch
 
 /**
  * Extends Artemis' application so its global state (stream profiles) is initialised
@@ -22,6 +23,7 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
         container = AppContainer(this)
         container.hosts.bind()
         container.library.start()
+        container.scope.launch { container.filters.ensureDefaults() }
         container.metadata.start()
         container.vpn.startNetworkWatch()
         // Host polling is driven by MainActivity's lifecycle: Artemis' stream activity runs in
