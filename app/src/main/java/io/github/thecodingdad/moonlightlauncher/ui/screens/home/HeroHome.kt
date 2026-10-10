@@ -29,7 +29,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.focus.focusRestorer
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -98,7 +101,11 @@ fun HeroHome(
         }
         val bg = LauncherTheme.colors.background
         Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(0f to bg.copy(alpha = 0.95f), 0.55f to bg.copy(alpha = 0.55f), 1f to Color.Transparent)))
-        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.35f to Color.Transparent, 0.75f to bg.copy(alpha = 0.92f), 1f to bg)))
+        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(
+            // Dark behind the row titles for legibility, lighter again at the very bottom so the
+            // artwork shows through behind the hint bar instead of ending in solid black.
+            0.35f to Color.Transparent, 0.65f to bg.copy(alpha = 0.8f), 0.85f to bg.copy(alpha = 0.8f), 1f to bg.copy(alpha = 0.55f),
+        )))
 
         val insets = LocalShellInsets.current
         if (rows.isEmpty && rows.running.isEmpty()) {
@@ -106,22 +113,59 @@ fun HeroHome(
             return@Box
         }
 
-        Column(Modifier.fillMaxSize().padding(insets)) {
-            HeroInfo(shown, Modifier.padding(horizontal = 40.dp).padding(top = 8.dp).height(176.dp))
-            // Rows: room above a focused card for its row title, little below, so a row that
-            // fits doesn't scroll its title away.
+        // Only the top inset pads the column: the rows scroll on behind the translucent hint bar.
+        Column(Modifier.fillMaxSize().padding(top = insets.calculateTopPadding())) {
+            HeroInfo(shown, Modifier.padding(horizontal = 40.dp).padding(top = 4.dp).height(140.dp))
+            // The focused row always snaps to the top of the list, right below the info block
+            // (like TV home screens): moving sideways never scrolls vertically, so rows don't jump.
+            // The list itself ignores bring-into-view; the rows inside keep the normal spec.
             val density = androidx.compose.ui.platform.LocalDensity.current
-            val rowsSpec = remember(density) {
-                io.github.thecodingdad.moonlightlauncher.ui.components.MarginBringIntoViewSpec(density, margin = 64.dp, trailingMargin = 12.dp)
+            val outerSpec = androidx.compose.foundation.gestures.LocalBringIntoViewSpec.current
+            val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+            var focusedRow by remember { mutableStateOf<String?>(null) }
+            val rowKeys = buildList {
+                if (rows.running.isNotEmpty()) add("running")
+                filterRows.forEachIndexed { index, row ->
+                    if (index == 2 && haRow != null) add("ha")
+                    if (row.entries.isNotEmpty()) add("row:${row.key}")
+                }
+                if (filterRows.size < 2 && haRow != null) add("ha")
             }
-            androidx.compose.runtime.CompositionLocalProvider(androidx.compose.foundation.gestures.LocalBringIntoViewSpec provides rowsSpec) {
+            var snapped by remember { mutableStateOf(false) }
+            LaunchedEffect(focusedRow) {
+                val index = rowKeys.indexOf(focusedRow).takeIf { it >= 0 } ?: return@LaunchedEffect
+                // First focus (e.g. restored after returning) jumps, later changes glide.
+                if (snapped) listState.animateScrollToItem(index) else listState.scrollToItem(index)
+                snapped = true
+            }
+            val pinned: @Composable (String, @Composable () -> Unit) -> Unit = { key, content ->
+                Column(Modifier.onFocusChanged { if (it.hasFocus) focusedRow = key }) {
+                    androidx.compose.runtime.CompositionLocalProvider(
+                        androidx.compose.foundation.gestures.LocalBringIntoViewSpec provides outerSpec, content = content,
+                    )
+                }
+            }
+            androidx.compose.runtime.CompositionLocalProvider(androidx.compose.foundation.gestures.LocalBringIntoViewSpec provides NoScrollSpec) {
+            val fadePx = with(density) { (insets.calculateBottomPadding() + 56.dp).toPx() }
             LazyColumn(
-                modifier = Modifier.fillMaxWidth().weight(1f),
-                contentPadding = PaddingValues(bottom = 24.dp),
+                state = listState,
+                modifier = Modifier.fillMaxWidth().weight(1f)
+                    // Rows fade out towards the bottom edge (behind the hint bar) instead of
+                    // being cut off or showing through; the artwork stays visible underneath.
+                    .graphicsLayer { compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen }
+                    .drawWithContent {
+                        drawContent()
+                        val stop = ((size.height - fadePx) / size.height).coerceIn(0f, 1f)
+                        drawRect(
+                            Brush.verticalGradient(0f to Color.Black, stop to Color.Black, 1f to Color.Transparent),
+                            blendMode = androidx.compose.ui.graphics.BlendMode.DstIn,
+                        )
+                    },
+                contentPadding = PaddingValues(bottom = 24.dp + insets.calculateBottomPadding()),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 if (rows.running.isNotEmpty()) {
-                    item(key = "running") {
+                    item(key = "running") { pinned("running") {
                         RowTitle(stringResource(R.string.home_running))
                         LazyRow(
                             contentPadding = PaddingValues(horizontal = 40.dp, vertical = 12.dp),
@@ -142,20 +186,20 @@ fun HeroHome(
                                 )
                             }
                         }
-                    }
+                    } }
                 }
                 val firstFilled = filterRows.indexOfFirst { it.entries.isNotEmpty() }
                 filterRows.forEachIndexed { index, row ->
                     // The smart home row keeps its place after the first two rows.
-                    if (index == 2 && haRow != null) item(key = "ha") { haRow() }
+                    if (index == 2 && haRow != null) item(key = "ha") { pinned("ha") { haRow() } }
                     homeRow(
-                        "row:${row.key}", 0, row.entries, callbacks,
+                        "row:${row.key}", 0, row.entries, callbacks, pinned,
                         firstRow = rows.running.isEmpty() && index == firstFilled,
                         onFocus = { focused = it; focusedSession = null }, actions = actions,
                         titleText = { filterLabel(row) },
                     )
                 }
-                if (filterRows.size < 2 && haRow != null) item(key = "ha") { haRow() }
+                if (filterRows.size < 2 && haRow != null) item(key = "ha") { pinned("ha") { haRow() } }
             }
             }
         }
@@ -167,13 +211,14 @@ private fun androidx.compose.foundation.lazy.LazyListScope.homeRow(
     title: Int,
     entries: List<LibraryEntry>,
     callbacks: HomeCallbacks,
+    pinned: @Composable (String, @Composable () -> Unit) -> Unit,
     firstRow: Boolean,
     onFocus: (LibraryEntry) -> Unit,
     actions: io.github.thecodingdad.moonlightlauncher.ui.shell.EntryActions,
     titleText: (@Composable () -> String)? = null,
 ) {
     if (entries.isEmpty()) return
-    item(key = key) {
+    item(key = key) { pinned(key) {
         RowTitle(titleText?.invoke() ?: stringResource(title))
         LazyRow(
             contentPadding = PaddingValues(horizontal = 40.dp, vertical = 12.dp),
@@ -194,7 +239,13 @@ private fun androidx.compose.foundation.lazy.LazyListScope.homeRow(
                 )
             }
         }
-    }
+    } }
+}
+
+/** Bring-into-view that never scrolls (the hero rows list scrolls itself, see HeroHome). */
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+private object NoScrollSpec : androidx.compose.foundation.gestures.BringIntoViewSpec {
+    override fun calculateScrollDistance(offset: Float, size: Float, containerSize: Float) = 0f
 }
 
 @Composable
@@ -233,8 +284,8 @@ private fun HeroInfo(entry: LibraryEntry?, modifier: Modifier = Modifier) {
             entry.item.description.orEmpty(),
             style = MaterialTheme.typography.bodyMedium,
             color = LauncherTheme.colors.onSurfaceMuted,
-            maxLines = 2,
-            minLines = 2,
+            maxLines = 1,
+            minLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
     }

@@ -97,7 +97,7 @@ fun CarouselHome(
     Box(
         Modifier.fillMaxSize().background(
             androidx.compose.ui.graphics.Brush.verticalGradient(
-                0f to bg.copy(alpha = 0.55f), 0.45f to bg.copy(alpha = 0.35f), 0.8f to bg.copy(alpha = 0.9f), 1f to bg,
+                0f to bg.copy(alpha = 0.55f), 0.45f to bg.copy(alpha = 0.35f), 0.8f to bg.copy(alpha = 0.8f), 1f to bg.copy(alpha = 0.55f),
             ),
         ),
     )

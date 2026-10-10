@@ -516,7 +516,7 @@ private fun MainShell(vm: LauncherViewModel, nav: NavHostController, openStats: 
             hints.hints,
             Modifier.align(Alignment.BottomCenter)
                 .background(
-                    if (fullBleed) androidx.compose.ui.graphics.Brush.verticalGradient(listOf(androidx.compose.ui.graphics.Color.Transparent, bg.copy(alpha = 0.9f)))
+                    if (fullBleed) androidx.compose.ui.graphics.Brush.verticalGradient(listOf(androidx.compose.ui.graphics.Color.Transparent, bg.copy(alpha = 0.7f)))
                     else androidx.compose.ui.graphics.SolidColor(bg),
                 )
                 .onSizeChanged { hintBarHeight = with(density) { it.height.toDp() } },
