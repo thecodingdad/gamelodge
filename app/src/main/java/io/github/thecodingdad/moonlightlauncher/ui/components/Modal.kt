@@ -84,7 +84,13 @@ fun SidePanel(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     AnimatedVisibility(visible, enter = fadeIn(), exit = fadeOut()) {
-        ModalScaffold(onDismiss, alignment = Alignment.CenterEnd) {
+        // Side panels keep the launcher visible: light scrim, a bit darker towards the panel.
+        ModalScaffold(
+            onDismiss, alignment = Alignment.CenterEnd,
+            scrim = androidx.compose.ui.graphics.Brush.horizontalGradient(
+                listOf(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.15f), androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.45f)),
+            ),
+        ) {
             androidx.compose.animation.AnimatedVisibility(
                 visible = true,
                 enter = slideInHorizontally { it },
@@ -106,13 +112,18 @@ fun SidePanel(
 }
 
 @Composable
-private fun ModalScaffold(onDismiss: () -> Unit, alignment: Alignment, content: @Composable BoxScope.() -> Unit) {
+private fun ModalScaffold(
+    onDismiss: () -> Unit,
+    alignment: Alignment,
+    scrim: androidx.compose.ui.graphics.Brush? = null,
+    content: @Composable BoxScope.() -> Unit,
+) {
     PadBlocker()
     BackHandler(onBack = onDismiss)
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(LauncherTheme.colors.scrim)
+            .then(if (scrim != null) Modifier.background(scrim) else Modifier.background(LauncherTheme.colors.scrim))
             .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onDismiss),
         contentAlignment = alignment,
     ) {
