@@ -29,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.focus.focusRestorer
@@ -160,6 +161,13 @@ fun HeroHome(
             LazyColumn(
                 state = listState,
                 modifier = Modifier.fillMaxWidth().weight(1f)
+                    // Extend 28dp upwards under the info block (room for the top fade).
+                    .layout { measurable, constraints ->
+                        val extra = 28.dp.roundToPx()
+                        val c = if (constraints.hasBoundedHeight) constraints.copy(maxHeight = constraints.maxHeight + extra, minHeight = constraints.minHeight + extra) else constraints
+                        val placeable = measurable.measure(c)
+                        layout(placeable.width, (placeable.height - extra).coerceAtLeast(0)) { placeable.place(0, -extra) }
+                    }
                     // Rows fade out towards the bottom edge (behind the hint bar) instead of
                     // being cut off or showing through; the artwork stays visible underneath.
                     .graphicsLayer { compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen }
@@ -173,7 +181,9 @@ fun HeroHome(
                             blendMode = androidx.compose.ui.graphics.BlendMode.DstIn,
                         )
                     },
-                contentPadding = PaddingValues(bottom = 24.dp + insets.calculateBottomPadding()),
+                // Top padding = fade height: a snapped row starts below the fade, so its title isn't dimmed
+                // (the list is pulled up by the same amount below, so the row keeps its position).
+                contentPadding = PaddingValues(top = 28.dp, bottom = 24.dp + insets.calculateBottomPadding()),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 if (rows.running.isNotEmpty()) {
