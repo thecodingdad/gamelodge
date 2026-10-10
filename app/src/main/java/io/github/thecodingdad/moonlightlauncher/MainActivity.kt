@@ -37,7 +37,8 @@ class MainActivity : ComponentActivity() {
         applySystemBars()
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                vm.settings.map { it.hideNavigationBar }.distinctUntilChanged().collect { applySystemBars() }
+                kotlinx.coroutines.flow.combine(vm.settings.map { it.hideNavigationBar }, vm.externalDisplay) { a, b -> a to b }
+                    .distinctUntilChanged().collect { applySystemBars() }
             }
         }
         feedback = UiFeedback(this).also { it.load() }
@@ -48,7 +49,8 @@ class MainActivity : ComponentActivity() {
     private fun applySystemBars() {
         WindowCompat.getInsetsController(window, window.decorView).apply {
             hide(WindowInsetsCompat.Type.statusBars())
-            if (vm.settings.value.hideNavigationBar) hide(WindowInsetsCompat.Type.navigationBars())
+            // On a TV the gesture handle is always hidden (nobody swipes on a TV).
+            if (vm.settings.value.hideNavigationBar || vm.externalDisplay.value != null) hide(WindowInsetsCompat.Type.navigationBars())
             else show(WindowInsetsCompat.Type.navigationBars())
             systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }

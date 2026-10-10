@@ -11,14 +11,16 @@ import androidx.compose.ui.unit.dp
  * instead of sticking to them. This also keeps row titles above a focused card visible.
  */
 @OptIn(ExperimentalFoundationApi::class)
-class MarginBringIntoViewSpec(density: Density, margin: Dp = 72.dp) : BringIntoViewSpec {
-    private val marginPx = with(density) { margin.toPx() }
+class MarginBringIntoViewSpec(density: Density, margin: Dp = 72.dp, trailingMargin: Dp = margin) : BringIntoViewSpec {
+    private val leadingPx = with(density) { margin.toPx() }
+    private val trailingPx = with(density) { trailingMargin.toPx() }
 
     override fun calculateScrollDistance(offset: Float, size: Float, containerSize: Float): Float {
-        // Small containers can't fit both margins: fall back to a proportional margin.
-        val m = marginPx.coerceAtMost(((containerSize - size) / 2f).coerceAtLeast(0f))
-        val leading = offset - m
-        val trailing = offset + size + m - containerSize
+        // Small containers can't fit both margins: shrink them proportionally.
+        val free = (containerSize - size).coerceAtLeast(0f)
+        val factor = if (leadingPx + trailingPx > free && leadingPx + trailingPx > 0f) free / (leadingPx + trailingPx) else 1f
+        val leading = offset - leadingPx * factor
+        val trailing = offset + size + trailingPx * factor - containerSize
         return when {
             leading < 0f -> leading
             trailing > 0f -> trailing.coerceAtMost(leading)

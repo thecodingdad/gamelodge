@@ -479,7 +479,7 @@
 
     <!-- Nav bar -->
     <string name="setting_hide_nav_bar">Navigationsleiste ausblenden</string>
-    <string name="setting_hide_nav_bar_sub">Blendet den Gesten-Balken im Launcher aus; vom unteren Rand wischen zeigt ihn kurz an</string>
+    <string name="setting_hide_nav_bar_sub">Blendet den Gesten-Balken im Launcher aus (am TV immer ausgeblendet); vom unteren Rand wischen zeigt ihn kurz an</string>
 
     <!-- TV -->
     <string name="tv_section">TV / externer Bildschirm</string>

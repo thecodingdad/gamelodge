@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -63,6 +64,7 @@ class HomeCallbacks(
 )
 
 /** PS5/Netflix style: large artwork of the focused game on top, rows below. */
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun HeroHome(
     rows: HomeRows,
@@ -105,7 +107,14 @@ fun HeroHome(
         }
 
         Column(Modifier.fillMaxSize().padding(insets)) {
-            HeroInfo(shown, Modifier.padding(horizontal = 40.dp).padding(top = 8.dp).heightIn(min = 150.dp))
+            HeroInfo(shown, Modifier.padding(horizontal = 40.dp).padding(top = 8.dp).height(176.dp))
+            // Rows: room above a focused card for its row title, little below, so a row that
+            // fits doesn't scroll its title away.
+            val density = androidx.compose.ui.platform.LocalDensity.current
+            val rowsSpec = remember(density) {
+                io.github.thecodingdad.moonlightlauncher.ui.components.MarginBringIntoViewSpec(density, margin = 64.dp, trailingMargin = 12.dp)
+            }
+            androidx.compose.runtime.CompositionLocalProvider(androidx.compose.foundation.gestures.LocalBringIntoViewSpec provides rowsSpec) {
             LazyColumn(
                 modifier = Modifier.fillMaxWidth().weight(1f),
                 contentPadding = PaddingValues(bottom = 24.dp),
@@ -147,6 +156,7 @@ fun HeroHome(
                     )
                 }
                 if (filterRows.size < 2 && haRow != null) item(key = "ha") { haRow() }
+            }
             }
         }
     }
@@ -199,25 +209,33 @@ private fun RowTitle(text: String) {
 
 @Composable
 private fun HeroInfo(entry: LibraryEntry?, modifier: Modifier = Modifier) {
+    // Fixed heights throughout: games with/without logo or description must not change the
+    // block's height, otherwise the rows below jump while the user scrolls sideways.
     Column(modifier.widthIn(max = 640.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (entry == null) return@Column
-        if (entry.item.logoUrl != null) {
-            io.github.thecodingdad.moonlightlauncher.ui.components.LogoImage(
-                entry.item.logoUrl, entry.item.title, Modifier.height(84.dp).widthIn(max = 420.dp),
-            )
-        } else {
-            Text(
-                entry.item.title,
-                style = MaterialTheme.typography.displaySmall,
-                color = LauncherTheme.colors.onSurface,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
+        Box(Modifier.height(84.dp), contentAlignment = Alignment.BottomStart) {
+            if (entry.item.logoUrl != null) {
+                io.github.thecodingdad.moonlightlauncher.ui.components.LogoImage(
+                    entry.item.logoUrl, entry.item.title, Modifier.fillMaxHeight().widthIn(max = 420.dp),
+                )
+            } else {
+                Text(
+                    entry.item.title,
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = LauncherTheme.colors.onSurface,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
         MetaLine(entry)
-        entry.item.description?.let {
-            Text(it, style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted, maxLines = 2, overflow = TextOverflow.Ellipsis)
-        }
-        Spacer(Modifier.height(4.dp))
+        Text(
+            entry.item.description.orEmpty(),
+            style = MaterialTheme.typography.bodyMedium,
+            color = LauncherTheme.colors.onSurfaceMuted,
+            maxLines = 2,
+            minLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }

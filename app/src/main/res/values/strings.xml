@@ -481,7 +481,7 @@
 
     <!-- Nav bar -->
     <string name="setting_hide_nav_bar">Hide navigation bar</string>
-    <string name="setting_hide_nav_bar_sub">Hides the gesture handle in the launcher; swipe up from the bottom edge to show it briefly</string>
+    <string name="setting_hide_nav_bar_sub">Hides the gesture handle in the launcher (always hidden on a TV); swipe up from the bottom edge to show it briefly</string>
 
     <!-- TV -->
     <string name="tv_section">TV / external display</string>
