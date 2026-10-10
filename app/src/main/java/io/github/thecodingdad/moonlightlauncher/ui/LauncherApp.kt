@@ -197,7 +197,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
         ) {
             Box(Modifier.fillMaxSize().background(LauncherTheme.colors.background)) {
                 // The launcher behind the quick menu is blurred (Android 12+; older versions just dim).
-                val backdropBlur by androidx.compose.animation.core.animateDpAsState(if (quickMenu) 14.dp else 0.dp, label = "backdropBlur")
+                val backdropBlur by androidx.compose.animation.core.animateDpAsState(if (quickMenu || hostInfoFor != null || controllerPopup) 14.dp else 0.dp, label = "backdropBlur")
                 NavHost(nav, startDestination = Routes.MAIN, modifier = Modifier.blur(backdropBlur)) {
                     composable(Routes.MAIN) {
                         MainShell(

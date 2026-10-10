@@ -53,10 +53,15 @@ fun Modal(
     maxWidth: Dp = 620.dp,
     /** Element that gets focus when the modal opens; defaults to the first focusable child. */
     initialFocus: FocusRequester? = null,
+    /** Lighter scrim for popups over a blurred backdrop (see LauncherApp); null = dark default. */
+    lightScrim: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     AnimatedVisibility(visible, enter = fadeIn(), exit = fadeOut()) {
-        ModalScaffold(onDismiss, alignment = Alignment.Center) {
+        ModalScaffold(
+            onDismiss, alignment = Alignment.Center,
+            scrim = if (lightScrim) androidx.compose.ui.graphics.SolidColor(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.5f)) else null,
+        ) {
             Column(
                 modifier = modifier
                     .widthIn(max = maxWidth)

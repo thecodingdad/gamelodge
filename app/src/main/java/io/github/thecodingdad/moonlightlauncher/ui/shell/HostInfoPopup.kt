@@ -6,14 +6,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bedtime
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.RadioButtonChecked
-import androidx.compose.material.icons.filled.RadioButtonUnchecked
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.WbSunny
@@ -66,7 +65,7 @@ fun HostInfoPopup(
         config = host?.let { c.hostPower.config(it.uuid) }
     }
     val wakeSent = stringResource(R.string.host_wake_sent)
-    Modal(visible = host != null, onDismiss = onDismiss, title = host?.name, maxWidth = 560.dp) {
+    Modal(visible = host != null, onDismiss = onDismiss, title = host?.name, maxWidth = 560.dp, lightScrim = true) {
         val h = host ?: return@Modal
         val colors = LauncherTheme.colors
         Column(Modifier.heightIn(max = 600.dp).verticalScroll(rememberScrollState())) {
@@ -87,14 +86,19 @@ fun HostInfoPopup(
                     else -> stringResource(R.string.host_state_unknown)
                 },
                 style = MaterialTheme.typography.titleMedium, color = colors.onSurface,
+                maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false),
             )
+        }
+        h.address?.let {
+            Text(it, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceMuted, modifier = Modifier.padding(start = 22.dp, top = 2.dp))
         }
         Spacer(Modifier.height(14.dp))
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            h.address?.let { InfoRow(stringResource(R.string.host_info_address), it) }
             // Pairing is only known once the host answered.
-            if (h.status == HostStatus.ONLINE) {
-                InfoRow(stringResource(R.string.host_info_paired), stringResource(if (h.paired) R.string.yes else R.string.no))
+            // Only worth a line when something is wrong.
+            if (h.status == HostStatus.ONLINE && !h.paired) {
+                InfoRow(stringResource(R.string.host_info_paired), stringResource(R.string.no))
             }
             if (h.missingPermissions.isNotEmpty()) {
                 InfoRow(stringResource(R.string.host_info_permissions), stringResource(R.string.host_info_permissions_missing))
@@ -104,24 +108,15 @@ fun HostInfoPopup(
         // Stream profile used for the next streams (global, "start with…" overrides it per game).
         if (profiles.isNotEmpty() && activeProfile != null) {
             val context = LocalContext.current
-            Spacer(Modifier.height(16.dp))
-            Text(stringResource(R.string.profile_picker_title), style = MaterialTheme.typography.titleSmall, color = colors.accent)
-            Spacer(Modifier.height(8.dp))
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                profiles.forEach { p ->
-                    val isActive = p.uuid == activeProfile.uuid
-                    LauncherButton(
-                        "${p.name}  ·  ${profileSummary(context, p.uuid)}",
-                        onClick = { onProfile(p) },
-                        icon = if (isActive) Icons.Filled.RadioButtonChecked else Icons.Filled.RadioButtonUnchecked,
-                        primary = isActive, modifier = Modifier.fillMaxWidth(),
-                    )
-                }
-                LauncherButton(
-                    stringResource(R.string.profile_picker_edit), icon = Icons.Filled.Edit, modifier = Modifier.fillMaxWidth(),
-                    onClick = { onDismiss(); onEditProfiles() },
-                )
-            }
+            Spacer(Modifier.height(12.dp))
+            // One compact row: D-pad left/right or A cycles; editing lives in the settings.
+            io.github.thecodingdad.moonlightlauncher.ui.screens.settings.ChoiceRow(
+                stringResource(R.string.profile_picker_title), profiles,
+                profiles.firstOrNull { it.uuid == activeProfile.uuid } ?: profiles.first(),
+                label = { it.name }, onSelect = onProfile,
+                subtitle = profileSummary(context, activeProfile.uuid),
+                icon = Icons.Filled.Tune,
+            )
         }
         Spacer(Modifier.height(18.dp))
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {

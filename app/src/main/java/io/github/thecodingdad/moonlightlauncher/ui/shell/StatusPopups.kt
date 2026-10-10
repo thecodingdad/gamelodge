@@ -85,7 +85,7 @@ fun ControllerPopup(
     onOpenSettings: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    Modal(visible = visible, onDismiss = onDismiss, title = stringResource(R.string.settings_controllers), maxWidth = 600.dp) {
+    Modal(visible = visible, onDismiss = onDismiss, title = stringResource(R.string.settings_controllers), maxWidth = 600.dp, lightScrim = true) {
         val colors = LauncherTheme.colors
         Text(stringResource(R.string.controller_popup_sub), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceMuted)
         androidx.compose.foundation.layout.Spacer(Modifier.heightIn(min = 14.dp))
