@@ -79,6 +79,7 @@ import io.github.thecodingdad.moonlightlauncher.ui.screens.stats.StatsScreen
 import io.github.thecodingdad.moonlightlauncher.ui.shell.CollectionsDialog
 import io.github.thecodingdad.moonlightlauncher.ui.shell.QuickMenu
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import io.github.thecodingdad.moonlightlauncher.ui.screens.home.HomeCallbacks
 import io.github.thecodingdad.moonlightlauncher.ui.screens.home.HomeRows
 import io.github.thecodingdad.moonlightlauncher.ui.screens.library.LibraryScreen
@@ -117,6 +118,7 @@ private object Routes {
 
 enum class MainTab(val title: Int) { HOME(R.string.tab_home), LIBRARY(R.string.tab_library), APPS(R.string.tab_apps), SETTINGS(R.string.tab_settings) }
 
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: UiFeedback) {
     val settings by vm.settings.collectAsState()
@@ -151,6 +153,9 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
     }
     var collectionsFor by remember { mutableStateOf<io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry?>(null) }
 
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val scrollSpec = remember(density) { io.github.thecodingdad.moonlightlauncher.ui.components.MarginBringIntoViewSpec(density) }
+
     LauncherTheme(settings) {
         CompositionLocalProvider(
             LocalInputDispatcher provides dispatcher,
@@ -159,6 +164,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
             LocalHintHolder provides hints,
             LocalEntryActions provides entryActions,
             LocalButtonLayout provides settings.buttonLayout,
+            LocalBringIntoViewSpec provides scrollSpec,
         ) {
             Box(Modifier.fillMaxSize().background(LauncherTheme.colors.background)) {
                 NavHost(nav, startDestination = Routes.MAIN) {
@@ -302,6 +308,16 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                     if (settings.screensaverMinutes <= 0) return@LaunchedEffect
                     kotlinx.coroutines.delay(settings.screensaverMinutes * 60_000L)
                     idle = true
+                }
+                val view = androidx.compose.ui.platform.LocalView.current
+                // Android's own screen timeout would switch the display off before the screensaver:
+                // keep it on while the launcher is visible, and let it sleep 10 min into the screensaver.
+                LaunchedEffect(idle, settings.screensaverMinutes) {
+                    view.keepScreenOn = settings.screensaverMinutes > 0
+                    if (idle) {
+                        kotlinx.coroutines.delay(10 * 60_000L)
+                        view.keepScreenOn = false
+                    }
                 }
                 if (idle) {
                     val games by vm.games.collectAsState()
