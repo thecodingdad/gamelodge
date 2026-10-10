@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -72,6 +73,7 @@ fun builtinLabel(key: String): String = when (key) {
     else -> key
 }
 
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun LibraryScreen(
     allEntries: List<LibraryEntry>,
@@ -154,26 +156,33 @@ fun LibraryScreen(
         val targetId = listOfNotNull(focusByFilter[filterKey], lastId).firstOrNull { id -> shown.any { it.item.id == id } }
             ?: shown.first().item.id
         gridStates.SaveableStateProvider(filterKey) {
+        val gridState = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
+        // The focused line always sits at the top, so lines don't jump around while navigating.
+        val snapTo = io.github.thecodingdad.moonlightlauncher.ui.components.rememberFocusLineSnap(gridState)
+        androidx.compose.runtime.CompositionLocalProvider(
+            androidx.compose.foundation.gestures.LocalBringIntoViewSpec provides io.github.thecodingdad.moonlightlauncher.ui.components.NoScrollBringIntoView,
+        ) {
         LazyVerticalGrid(
-            state = androidx.compose.foundation.lazy.grid.rememberLazyGridState(),
+            state = gridState,
             columns = GridCells.Adaptive(LauncherTheme.dimens.coverWidth + 8.dp),
             contentPadding = PaddingValues(horizontal = 36.dp, vertical = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(18.dp),
             verticalArrangement = Arrangement.spacedBy(22.dp),
             modifier = Modifier.focusRestorer(),
         ) {
-            items(shown, key = { it.item.id }) { entry ->
+            itemsIndexed(shown, key = { _, it -> it.item.id }) { index, entry ->
                 val key = "library:${entry.item.id}"
                 CoverCard(
                     entry = entry,
                     onClick = { actions.open(entry) },
                     onLongClick = { actions.context(entry) },
-                    onFocused = { focused = entry; focusByFilter[filterKey] = entry.item.id; onFocusKey(key) },
+                    onFocused = { focused = entry; focusByFilter[filterKey] = entry.item.id; onFocusKey(key); snapTo(index) },
                     showTitle = true,
                     animated = animatedArtwork,
                     modifier = Modifier.restoreFocusIf(entry.item.id == targetId),
                 )
             }
+        }
         }
         }
     }

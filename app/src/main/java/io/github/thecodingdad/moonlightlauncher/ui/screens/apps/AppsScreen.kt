@@ -24,6 +24,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -49,6 +50,7 @@ import io.github.thecodingdad.moonlightlauncher.ui.shell.ScreenHints
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 
 /** Regular apps, separate from the game library: device apps first, then each host's apps. */
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun AppsScreen(
     apps: List<LibraryEntry>,
@@ -131,26 +133,39 @@ fun AppsScreen(
     val selectedTitle = selected?.let { filterLabel(it) }.orEmpty()
     val hostTitles = byHost.keys.associateWith { stringResource(R.string.apps_on_host, it) }
     gridStates.SaveableStateProvider(filterKey) {
+    val gridState = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
+    // Focused line snaps to the top; in a section's first line the section header stays visible.
+    val snapTo = io.github.thecodingdad.moonlightlauncher.ui.components.rememberFocusLineSnap(gridState)
+    androidx.compose.runtime.CompositionLocalProvider(
+        androidx.compose.foundation.gestures.LocalBringIntoViewSpec provides io.github.thecodingdad.moonlightlauncher.ui.components.NoScrollBringIntoView,
+    ) {
     LazyVerticalGrid(
-        state = androidx.compose.foundation.lazy.grid.rememberLazyGridState(),
+        state = gridState,
         columns = GridCells.Adaptive(LauncherTheme.dimens.iconTile + 36.dp),
         contentPadding = PaddingValues(horizontal = 36.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp),
         modifier = Modifier.fillMaxSize().focusRestorer(),
     ) {
+        var gridIndex = 0
         fun section(title: String, list: List<LibraryEntry>) {
             if (list.isEmpty()) return
+            val headerIndex = gridIndex
+            gridIndex += 1 + list.size
             item(span = { GridItemSpan(maxLineSpan) }, key = "header:$title") {
                 Text(title, style = MaterialTheme.typography.titleLarge, color = LauncherTheme.colors.onSurface, modifier = Modifier.padding(top = 10.dp))
             }
-            items(list, key = { it.item.id }) { entry ->
+            itemsIndexed(list, key = { _, it -> it.item.id }) { position, entry ->
                 val key = "apps:${entry.item.id}"
                 AppTile(
                     entry = entry,
                     onClick = { actions.play(entry) },
                     onLongClick = { actions.context(entry) },
-                    onFocused = { focused = entry; focusByFilter[filterKey] = entry.item.id; onFocusKey(key) },
+                    onFocused = {
+                        focused = entry; focusByFilter[filterKey] = entry.item.id; onFocusKey(key)
+                        val columns = gridState.layoutInfo.maxSpan.coerceAtLeast(1)
+                        snapTo(if (position < columns) headerIndex else headerIndex + 1 + position)
+                    },
                     modifier = Modifier.restoreFocusIf(entry.item.id == targetId),
                 )
             }
@@ -161,6 +176,7 @@ fun AppsScreen(
             section(deviceTitle, local)
             byHost.forEach { (host, list) -> section(hostTitles.getValue(host), list) }
         }
+    }
     }
     }
     }

@@ -145,7 +145,7 @@ fun HeroHome(
                     )
                 }
             }
-            androidx.compose.runtime.CompositionLocalProvider(androidx.compose.foundation.gestures.LocalBringIntoViewSpec provides NoScrollSpec) {
+            androidx.compose.runtime.CompositionLocalProvider(androidx.compose.foundation.gestures.LocalBringIntoViewSpec provides io.github.thecodingdad.moonlightlauncher.ui.components.NoScrollBringIntoView) {
             val fadePx = with(density) { (insets.calculateBottomPadding() + 56.dp).toPx() }
             LazyColumn(
                 state = listState,
@@ -242,11 +242,6 @@ private fun androidx.compose.foundation.lazy.LazyListScope.homeRow(
     } }
 }
 
-/** Bring-into-view that never scrolls (the hero rows list scrolls itself, see HeroHome). */
-@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
-private object NoScrollSpec : androidx.compose.foundation.gestures.BringIntoViewSpec {
-    override fun calculateScrollDistance(offset: Float, size: Float, containerSize: Float) = 0f
-}
 
 @Composable
 private fun RowTitle(text: String) {
