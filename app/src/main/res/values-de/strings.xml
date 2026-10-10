@@ -327,7 +327,7 @@
     <string name="power_sleep">Schlafen</string>
     <string name="power_restart">Neu starten</string>
     <string name="power_shutdown">Herunterfahren</string>
-    <string name="controllers_intro">Im Stream wird jeder Controller als eigenes Gamepad an den Host gereicht. Der Controller, der zuerst eine Taste drückt, wird Spieler 1.</string>
+    <string name="controllers_intro">Im Stream wird jeder Controller als eigenes Gamepad an den Host gereicht. Wähle einen Controller, um ihm eigene Einstellungen oder eine feste Spielernummer zu geben.</string>
     <string name="controllers_none">Keine Controller verbunden.</string>
     <string name="controller_external">Extern</string>
     <string name="controller_builtin">Eingebaut</string>
@@ -530,7 +530,7 @@
     <string name="controller_info_battery">Akku</string>
     <string name="controller_info_ids">Hersteller:Produkt</string>
     <string name="controller_info_vibration">Vibration</string>
-    <string name="controller_info_player_order">Die Spielernummern am Host richten sich nach der Reihenfolge des ersten Tastendrucks im Stream.</string>
+    <string name="controller_info_player_order">Ohne feste Zuordnung entscheidet die Reihenfolge des ersten Tastendrucks im Stream. Feste Spieler brauchen eine aktive „Automatische Controller Erkennung“.</string>
 
     <!-- Quick menu -->
     <string name="qm_system">System</string>
@@ -542,4 +542,17 @@
 
     <!-- qm -->
     <string name="qm_android">Android</string>
+
+    <!-- Controller overrides -->
+    <string name="controller_override_global">Global</string>
+    <string name="controller_overrides">Einstellungen für diesen Controller</string>
+    <string name="controller_overrides_sub">Gelten ab dem nächsten Stream. „Global“ übernimmt die Controller-Einstellungen im Stream.</string>
+    <string name="controller_player">Spieler am Host</string>
+    <string name="controller_player_auto">Automatisch</string>
+    <string name="controller_player_n">Spieler %d</string>
+    <string name="controller_flip">A/B und X/Y tauschen</string>
+    <string name="controller_deadzone">Stick-Deadzone</string>
+    <string name="controller_rumble">Vibration</string>
+    <string name="controller_motion">Bewegungssensoren (Gyro)</string>
+    <string name="controller_touchpad_mouse">Touchpad als Maus</string>
 </resources>

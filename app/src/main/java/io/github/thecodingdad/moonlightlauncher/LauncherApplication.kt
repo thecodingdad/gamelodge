@@ -23,6 +23,7 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
         container = AppContainer(this)
         container.hosts.bind()
         container.library.start()
+        container.controllerSettings.install()
         container.scope.launch { container.filters.ensureDefaults() }
         container.metadata.start()
         container.vpn.startNetworkWatch()

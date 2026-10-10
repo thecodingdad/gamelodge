@@ -1,4 +1,4 @@
 [submodule "artemis"]
 	path = artemis
 	url = https://github.com/thecodingdad/moonlight-android.git
-	branch = moonlight-noir
+	branch = launcher

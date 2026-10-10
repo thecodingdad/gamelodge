@@ -13,6 +13,10 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.heightIn
+import io.github.thecodingdad.moonlightlauncher.container
+import androidx.compose.runtime.collectAsState
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -32,6 +36,8 @@ data class ControllerInfo(
     val canVibrate: Boolean,
     val vendorId: Int = 0,
     val productId: Int = 0,
+    val descriptor: String = "",
+    val hasTouchpad: Boolean = false,
 )
 
 /** All connected gamepads (built-in, Bluetooth, USB). */
@@ -48,7 +54,11 @@ fun connectedControllers(): List<ControllerInfo> = InputDevice.getDeviceIds().to
             d.batteryState.takeIf { it.isPresent }?.capacity?.takeIf { !it.isNaN() }?.let { (it * 100).toInt() }
         } else null
         val vibrate = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) d.vibratorManager.vibratorIds.isNotEmpty() else d.vibrator.hasVibrator()
-        ControllerInfo(d.id, d.name, d.isExternal, battery, vibrate, d.vendorId, d.productId)
+        ControllerInfo(
+            d.id, d.name, d.isExternal, battery, vibrate, d.vendorId, d.productId, d.descriptor,
+            hasTouchpad = (d.sources and InputDevice.SOURCE_TOUCHPAD) == InputDevice.SOURCE_TOUCHPAD ||
+                d.vendorId == 0x054c, // Sony pads report their touchpad as a separate device
+        )
     }
 
 fun vibrateController(id: Int) {
@@ -138,10 +148,13 @@ fun ControllersScreen() {
 private fun ControllerDetailDialog(controller: ControllerInfo?, onDismiss: () -> Unit) {
     io.github.thecodingdad.moonlightlauncher.ui.components.Modal(
         visible = controller != null, onDismiss = onDismiss, title = controller?.name,
-        maxWidth = 580.dp,
+        maxWidth = 680.dp,
     ) {
         val c = controller ?: return@Modal
-        androidx.compose.foundation.layout.Column(verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
+        androidx.compose.foundation.layout.Column(
+            androidx.compose.ui.Modifier.heightIn(max = 560.dp).verticalScroll(androidx.compose.foundation.rememberScrollState()),
+            verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
+        ) {
             InfoRow(
                 stringResource(R.string.controller_info_type),
                 stringResource(if (c.external) R.string.controller_external else R.string.controller_builtin),
@@ -149,6 +162,7 @@ private fun ControllerDetailDialog(controller: ControllerInfo?, onDismiss: () ->
             c.batteryPercent?.let { InfoRow(stringResource(R.string.controller_info_battery), "$it %") }
             InfoRow(stringResource(R.string.controller_info_ids), "%04x:%04x".format(c.vendorId, c.productId))
             InfoRow(stringResource(R.string.controller_info_vibration), stringResource(if (c.canVibrate) R.string.yes else R.string.no))
+            ControllerOverrideRows(c)
             Text(
                 stringResource(R.string.controller_info_player_order),
                 style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted,
@@ -162,5 +176,46 @@ private fun ControllerDetailDialog(controller: ControllerInfo?, onDismiss: () ->
                 )
             }
         }
+    }
+}
+
+/** Settings of this controller that differ from the global ones; "global" keeps Artemis' value. */
+@Composable
+private fun ControllerOverrideRows(c: ControllerInfo) {
+    if (c.descriptor.isEmpty()) return
+    val store = LocalContext.current.container.controllerSettings
+    val all by store.all.collectAsState()
+    val s = all[c.descriptor] ?: io.github.thecodingdad.moonlightlauncher.stream.ControllerSettings()
+    fun save(t: (io.github.thecodingdad.moonlightlauncher.stream.ControllerSettings) -> io.github.thecodingdad.moonlightlauncher.stream.ControllerSettings) =
+        store.set(c.descriptor, t(s))
+    val global = stringResource(R.string.controller_override_global)
+    val on = stringResource(R.string.ha_on)
+    val off = stringResource(R.string.ha_off)
+    val tri = listOf<Boolean?>(null, true, false)
+    val triLabel: @Composable (Boolean?) -> String = { v -> when (v) { null -> global; true -> on; false -> off } }
+
+    SectionHeader(stringResource(R.string.controller_overrides))
+    Text(stringResource(R.string.controller_overrides_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+    ChoiceRow(
+        stringResource(R.string.controller_player), listOf<Int?>(null, 0, 1, 2, 3), s.playerSlot,
+        label = { v -> v?.let { stringResource(R.string.controller_player_n, it + 1) } ?: stringResource(R.string.controller_player_auto) },
+        onSelect = { v -> save { it.copy(playerSlot = v) } },
+    )
+    ChoiceRow(stringResource(R.string.controller_flip), tri, s.flipFaceButtons, label = triLabel, onSelect = { v -> save { it.copy(flipFaceButtons = v) } })
+    ChoiceRow(
+        stringResource(R.string.controller_deadzone), listOf<Int?>(null, 0, 3, 5, 8, 10, 15, 20), s.deadzonePercent,
+        label = { v -> v?.let { "$it %" } ?: global },
+        onSelect = { v -> save { it.copy(deadzonePercent = v) } },
+    )
+    if (c.canVibrate) {
+        ChoiceRow(
+            stringResource(R.string.controller_rumble), listOf<Int?>(null, 0, 25, 50, 75, 100), s.rumblePercent,
+            label = { v -> when (v) { null -> global; 0 -> off; else -> "$v %" } },
+            onSelect = { v -> save { it.copy(rumblePercent = v) } },
+        )
+    }
+    ChoiceRow(stringResource(R.string.controller_motion), tri, s.motionSensors, label = triLabel, onSelect = { v -> save { it.copy(motionSensors = v) } })
+    if (c.hasTouchpad) {
+        ChoiceRow(stringResource(R.string.controller_touchpad_mouse), tri, s.touchpadAsMouse, label = triLabel, onSelect = { v -> save { it.copy(touchpadAsMouse = v) } })
     }
 }

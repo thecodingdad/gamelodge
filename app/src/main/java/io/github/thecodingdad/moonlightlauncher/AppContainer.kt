@@ -48,6 +48,9 @@ class AppContainer(context: Context) {
     val filters: io.github.thecodingdad.moonlightlauncher.data.library.FilterRepository by lazy {
         io.github.thecodingdad.moonlightlauncher.data.library.FilterRepository(database, settings)
     }
+    val controllerSettings: io.github.thecodingdad.moonlightlauncher.stream.ControllerOverrideStore by lazy {
+        io.github.thecodingdad.moonlightlauncher.stream.ControllerOverrideStore(appContext)
+    }
     val vpn: VpnManager by lazy { VpnManager(appContext, secrets, settings, scope) }
     val launcher: LaunchCoordinator by lazy { LaunchCoordinator(this).also { it.vpn = vpn } }
     val hostActions: HostActions by lazy { HostActions(hosts, library) }
