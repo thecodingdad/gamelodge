@@ -18,6 +18,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.focusProperties
@@ -31,6 +33,31 @@ import io.github.thecodingdad.moonlightlauncher.ui.feedback.LocalUiFeedback
 import io.github.thecodingdad.moonlightlauncher.ui.feedback.UiSound
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LocalReduceMotion
+
+/**
+ * Element the user touched last. Touch doesn't move focus in Compose, so when the user picks
+ * up the controller again, focus continues from here instead of the element focused earlier.
+ */
+object TouchFocus {
+    private var pending: java.lang.ref.WeakReference<FocusRequester>? = null
+
+    fun touched(requester: FocusRequester) {
+        pending = java.lang.ref.WeakReference(requester)
+    }
+
+    /** Uptime of the last restore; screen-level focus restoring yields to it briefly. */
+    var restoredAt = 0L
+        private set
+
+    /** Call when the input mode switches to controller. */
+    fun restore() {
+        val requester = pending?.get() ?: return
+        pending = null
+        if (runCatching { requester.requestFocus() }.getOrDefault(false)) restoredAt = android.os.SystemClock.uptimeMillis()
+    }
+
+    fun justRestored() = android.os.SystemClock.uptimeMillis() - restoredAt < 500
+}
 
 /** True when the user navigates with gamepad/keyboard (focus ring visible). */
 @Composable
@@ -62,6 +89,14 @@ fun FocusSurface(
     val feedback = LocalUiFeedback.current
     val reduceMotion = LocalReduceMotion.current
     val currentOnFocused by rememberUpdatedState(onFocused)
+    val requester = remember { FocusRequester() }
+    // Touching an element makes it the focus target for the next controller input, and tells
+    // the screen (which remembers positions via onFocused) that the user is here now.
+    fun touched() {
+        if (controllerMode || !dpadFocusable) return
+        TouchFocus.touched(requester)
+        currentOnFocused?.invoke()
+    }
 
     val scale by animateFloatAsState(
         targetValue = if (focused && controllerMode && !reduceMotion) focusScale else 1f,
@@ -86,7 +121,7 @@ fun FocusSurface(
             .then(if (focused && controllerMode) Modifier.shadow(18.dp, shape, ambientColor = ring, spotColor = ring) else Modifier)
             .clip(shape)
             .background(color)
-            .then(if (dpadFocusable) Modifier else Modifier.focusProperties { canFocus = false })
+            .then(if (dpadFocusable) Modifier.focusRequester(requester) else Modifier.focusProperties { canFocus = false })
             .combinedClickable(
                 interactionSource = interactionSource,
                 indication = ripple(),
@@ -94,11 +129,13 @@ fun FocusSurface(
                 onLongClick = onLongClick?.let { action ->
                     {
                         feedback?.play(UiSound.TOGGLE)
+                        touched()
                         action()
                     }
                 },
                 onClick = {
                     feedback?.play(clickSound)
+                    touched()
                     onClick()
                 },
             )

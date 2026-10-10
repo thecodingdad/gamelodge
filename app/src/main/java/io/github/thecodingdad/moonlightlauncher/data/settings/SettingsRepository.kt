@@ -68,6 +68,12 @@ data class LauncherSettings(
     val onboardingDone: Boolean = false,
     /** Default library filters were created (they may be deleted afterwards). */
     val filtersSeeded: Boolean = false,
+    /** Hide Android's navigation bar / gesture handle while the launcher is shown. */
+    val hideNavigationBar: Boolean = false,
+    /** Shrink the UI while a TV/monitor is attached (the layout is sized for the handheld). */
+    val tvScaleAuto: Boolean = true,
+    /** UI size on an external display, percent of the handheld size. */
+    val tvScale: Int = 70,
     /** Separate app filters were created (and shared filters turned into game filters). */
     val appFiltersSeeded: Boolean = false,
 )
@@ -111,6 +117,9 @@ class SettingsRepository(context: Context) {
         val backupKeepCount = intPreferencesKey("backup_keep_count")
         val onboardingDone = booleanPreferencesKey("onboarding_done")
         val filtersSeeded = booleanPreferencesKey("filters_seeded")
+        val hideNavigationBar = booleanPreferencesKey("hide_navigation_bar")
+        val tvScaleAuto = booleanPreferencesKey("tv_scale_auto")
+        val tvScale = intPreferencesKey("tv_scale")
         val appFiltersSeeded = booleanPreferencesKey("app_filters_seeded")
     }
 
@@ -160,6 +169,9 @@ class SettingsRepository(context: Context) {
             backupKeepCount = this[K.backupKeepCount] ?: d.backupKeepCount,
             onboardingDone = this[K.onboardingDone] ?: d.onboardingDone,
             filtersSeeded = this[K.filtersSeeded] ?: d.filtersSeeded,
+            hideNavigationBar = this[K.hideNavigationBar] ?: d.hideNavigationBar,
+            tvScaleAuto = this[K.tvScaleAuto] ?: d.tvScaleAuto,
+            tvScale = this[K.tvScale] ?: d.tvScale,
             appFiltersSeeded = this[K.appFiltersSeeded] ?: d.appFiltersSeeded,
         )
     }
@@ -198,6 +210,9 @@ class SettingsRepository(context: Context) {
         this[K.backupKeepCount] = s.backupKeepCount
         this[K.onboardingDone] = s.onboardingDone
         this[K.filtersSeeded] = s.filtersSeeded
+        this[K.hideNavigationBar] = s.hideNavigationBar
+        this[K.tvScaleAuto] = s.tvScaleAuto
+        this[K.tvScale] = s.tvScale
         this[K.appFiltersSeeded] = s.appFiltersSeeded
     }
 

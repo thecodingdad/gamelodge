@@ -3,6 +3,12 @@ package io.github.thecodingdad.moonlightlauncher
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -28,12 +34,30 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        WindowCompat.getInsetsController(window, window.decorView).apply {
-            hide(WindowInsetsCompat.Type.statusBars())
-            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        applySystemBars()
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                vm.settings.map { it.hideNavigationBar }.distinctUntilChanged().collect { applySystemBars() }
+            }
         }
         feedback = UiFeedback(this).also { it.load() }
         setContent { LauncherApp(vm, dispatcher, feedback) }
+    }
+
+    /** Status bar always hidden; navigation bar (gesture handle) optionally. Swipe shows both briefly. */
+    private fun applySystemBars() {
+        WindowCompat.getInsetsController(window, window.decorView).apply {
+            hide(WindowInsetsCompat.Type.statusBars())
+            if (vm.settings.value.hideNavigationBar) hide(WindowInsetsCompat.Type.navigationBars())
+            else show(WindowInsetsCompat.Type.navigationBars())
+            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        }
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        // Returning from a stream or another app can bring the bars back.
+        if (hasFocus) applySystemBars()
     }
 
     override fun onNewIntent(intent: Intent) {

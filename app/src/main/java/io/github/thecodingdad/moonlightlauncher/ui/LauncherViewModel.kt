@@ -51,6 +51,11 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     val hosts: StateFlow<Map<String, HostState>> = c.hosts.hosts
 
+    /** TV/monitor attached via USB-C or HDMI, if any. */
+    val externalDisplay: StateFlow<io.github.thecodingdad.moonlightlauncher.system.ExternalDisplayInfo?> =
+        io.github.thecodingdad.moonlightlauncher.system.ExternalDisplay.observe(application)
+            .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
     val activeProfile: StateFlow<StreamProfile> = StreamProfiles.changes()
         .map { StreamProfiles.active(defaultProfileName) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, StreamProfile(null, defaultProfileName))

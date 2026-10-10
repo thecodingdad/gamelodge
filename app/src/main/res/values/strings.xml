@@ -478,4 +478,17 @@
 
     <!-- LT/RT -->
     <string name="hint_filters">Filters</string>
+
+    <!-- Nav bar -->
+    <string name="setting_hide_nav_bar">Hide navigation bar</string>
+    <string name="setting_hide_nav_bar_sub">Hides the gesture handle in the launcher; swipe up from the bottom edge to show it briefly</string>
+
+    <!-- TV -->
+    <string name="tv_section">TV / external display</string>
+    <string name="tv_detected">External display</string>
+    <string name="tv_none">not connected</string>
+    <string name="setting_tv_scale_auto">Smaller UI on a TV</string>
+    <string name="setting_tv_scale_auto_sub">Detects a TV or monitor connected via USB-C/HDMI and scales the launcher down</string>
+    <string name="setting_tv_scale">UI size on the TV</string>
+    <string name="system_section">System</string>
 </resources>

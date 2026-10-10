@@ -146,6 +146,9 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
     val activity = LocalActivity.current!!
 
     LaunchedEffect(settings) { feedback.configure(settings.feedbackConfig()) }
+    // First controller input after touching: continue from the touched element.
+    val controllerMode = io.github.thecodingdad.moonlightlauncher.ui.components.isControllerMode()
+    LaunchedEffect(controllerMode) { if (controllerMode) io.github.thecodingdad.moonlightlauncher.ui.components.TouchFocus.restore() }
 
     val entryActions = remember(nav) {
         EntryActions(
@@ -173,8 +176,17 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
     val density = androidx.compose.ui.platform.LocalDensity.current
     val scrollSpec = remember(density) { io.github.thecodingdad.moonlightlauncher.ui.components.MarginBringIntoViewSpec(density) }
 
+    // On a TV the handheld-sized layout looks huge: scale the whole UI down by lowering the density.
+    val external by vm.externalDisplay.collectAsState()
+    val baseDensity = androidx.compose.ui.platform.LocalDensity.current
+    val uiScale = if (settings.tvScaleAuto && external != null) settings.tvScale / 100f else 1f
+    val scaledDensity = remember(baseDensity, uiScale) {
+        androidx.compose.ui.unit.Density(baseDensity.density * uiScale, baseDensity.fontScale)
+    }
+
     LauncherTheme(settings) {
         CompositionLocalProvider(
+            androidx.compose.ui.platform.LocalDensity provides scaledDensity,
             LocalInputDispatcher provides dispatcher,
             LocalUiFeedback provides feedback,
             LocalKeyboardController provides keyboard,
@@ -572,7 +584,10 @@ private fun SettingsPageContent(
             openReview = openReview,
         )
         SettingsPageId.HOSTS -> HostsSettings(hosts.values.toList(), openHostConfig = { openHost(it.uuid) })
-        SettingsPageId.APPEARANCE -> AppearanceSettings(settings, vm::updateSettings)
+        SettingsPageId.APPEARANCE -> {
+            val external by vm.externalDisplay.collectAsState()
+            AppearanceSettings(settings, vm::updateSettings, external)
+        }
         SettingsPageId.CONTROLS -> ControlsSettings(settings, vm::updateSettings, openControllers = openControllers)
         SettingsPageId.LANGUAGE -> LanguageSettings(settings, vm::updateSettings)
         SettingsPageId.FILTERS -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.FilterSettings(vm, io.github.thecodingdad.moonlightlauncher.data.db.FilterScope.GAMES)

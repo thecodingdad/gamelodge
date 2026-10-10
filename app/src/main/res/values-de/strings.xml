@@ -476,4 +476,17 @@
 
     <!-- LT/RT -->
     <string name="hint_filters">Filter</string>
+
+    <!-- Nav bar -->
+    <string name="setting_hide_nav_bar">Navigationsleiste ausblenden</string>
+    <string name="setting_hide_nav_bar_sub">Blendet den Gesten-Balken im Launcher aus; vom unteren Rand wischen zeigt ihn kurz an</string>
+
+    <!-- TV -->
+    <string name="tv_section">TV / externer Bildschirm</string>
+    <string name="tv_detected">Externer Bildschirm</string>
+    <string name="tv_none">nicht verbunden</string>
+    <string name="setting_tv_scale_auto">Auf dem TV verkleinern</string>
+    <string name="setting_tv_scale_auto_sub">Erkennt einen per USB-C/HDMI angeschlossenen TV oder Monitor und verkleinert den Launcher</string>
+    <string name="setting_tv_scale">Oberflächengröße am TV</string>
+    <string name="system_section">System</string>
 </resources>

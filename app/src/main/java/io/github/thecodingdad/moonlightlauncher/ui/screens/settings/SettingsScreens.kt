@@ -50,7 +50,11 @@ fun SettingsHome(open: (SettingsPageId) -> Unit, isFirstVisit: Boolean) {
 }
 
 @Composable
-fun AppearanceSettings(settings: LauncherSettings, update: ((LauncherSettings) -> LauncherSettings) -> Unit) {
+fun AppearanceSettings(
+    settings: LauncherSettings,
+    update: ((LauncherSettings) -> LauncherSettings) -> Unit,
+    externalDisplay: io.github.thecodingdad.moonlightlauncher.system.ExternalDisplayInfo? = null,
+) {
     SettingsPage(stringResource(R.string.settings_appearance)) {
         ChoiceRow(
             stringResource(R.string.setting_home_layout), HomeLayout.entries, settings.homeLayout,
@@ -104,6 +108,24 @@ fun AppearanceSettings(settings: LauncherSettings, update: ((LauncherSettings) -
         )
         SwitchRow(stringResource(R.string.setting_animated_artwork), settings.animatedArtwork, { v -> update { it.copy(animatedArtwork = v) } })
         SwitchRow(stringResource(R.string.setting_reduce_motion), settings.reduceMotion, { v -> update { it.copy(reduceMotion = v) } })
+        SectionHeader(stringResource(R.string.tv_section))
+        InfoRow(
+            stringResource(R.string.tv_detected),
+            externalDisplay?.let { "${it.name} (${it.width}×${it.height})" } ?: stringResource(R.string.tv_none),
+        )
+        SwitchRow(
+            stringResource(R.string.setting_tv_scale_auto), settings.tvScaleAuto, { v -> update { it.copy(tvScaleAuto = v) } },
+            subtitle = stringResource(R.string.setting_tv_scale_auto_sub),
+        )
+        SliderRow(
+            stringResource(R.string.setting_tv_scale), settings.tvScale, 40..100, 5,
+            { v -> update { it.copy(tvScale = v) } }, { "$it %" },
+        )
+        SectionHeader(stringResource(R.string.system_section))
+        SwitchRow(
+            stringResource(R.string.setting_hide_nav_bar), settings.hideNavigationBar, { v -> update { it.copy(hideNavigationBar = v) } },
+            subtitle = stringResource(R.string.setting_hide_nav_bar_sub),
+        )
         ChoiceRow(
             stringResource(R.string.setting_screensaver), listOf(0, 2, 5, 10, 20), settings.screensaverMinutes,
             label = { if (it == 0) stringResource(R.string.off) else stringResource(R.string.minutes_short, it) },

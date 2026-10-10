@@ -47,7 +47,10 @@ fun Modifier.restoreFocusIf(shouldFocus: Boolean): Modifier {
     val requester = remember { FocusRequester() }
     // In touch mode focus requests are ignored; retry as soon as the user picks up the controller.
     val controllerMode = isControllerMode()
-    LaunchedEffect(controllerMode) { if (controllerMode) runCatching { requester.requestFocus() } }
+    LaunchedEffect(controllerMode) {
+        // The element the user just touched wins over the remembered one.
+        if (controllerMode && !TouchFocus.justRestored()) runCatching { requester.requestFocus() }
+    }
     return this.focusRequester(requester)
 }
 
