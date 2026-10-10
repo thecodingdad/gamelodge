@@ -93,12 +93,17 @@ class FilterRepository(
 
     /** Moves a filter one place up (-1) or down (+1) and renumbers all. */
     suspend fun move(id: String, delta: Int) {
-        val list = dao.getAll().sortedBy { it.sortOrder }.toMutableList()
-        val from = list.indexOfFirst { it.id == id }.takeIf { it >= 0 } ?: return
+        val all = dao.getAll().sortedBy { it.sortOrder }
+        val moving = all.firstOrNull { it.id == id } ?: return
+        // Game and app filters are ordered independently: move within the own set only.
+        val apps = moving.scope == FilterScope.APPS
+        val list = all.filter { (it.scope == FilterScope.APPS) == apps }.toMutableList()
+        val from = list.indexOf(moving)
         val to = (from + delta).coerceIn(0, list.lastIndex)
         if (from == to) return
+        val slots = list.map { it.sortOrder }.sorted()
         list.add(to, list.removeAt(from))
-        dao.upsert(list.mapIndexed { index, f -> f.copy(sortOrder = index) })
+        dao.upsert(list.mapIndexed { index, f -> f.copy(sortOrder = slots[index]) })
     }
 
     private suspend fun nextOrder() = (dao.getAll().maxOfOrNull { it.sortOrder } ?: -1) + 1

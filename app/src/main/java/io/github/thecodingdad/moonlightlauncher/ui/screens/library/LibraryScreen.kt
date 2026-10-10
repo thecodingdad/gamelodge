@@ -99,59 +99,32 @@ fun LibraryScreen(
 
     val searchTitle = stringResource(R.string.hint_search)
     fun openSearch() = keyboard.open(title = searchTitle, initial = search) { search = it }
-    PadAction(PadButton.SELECT) { sort = LibrarySort.entries[(sort.ordinal + 1) % LibrarySort.entries.size] }
+    PadAction(PadButton.SELECT) { sort = sort.next() }
     PadAction(PadButton.START) { openSearch() }
     PadAction(PadButton.X) { focused?.let(actions::context) }
 
-    val sortLabel = stringResource(
-        when (sort) {
-            LibrarySort.TITLE -> R.string.sort_title
-            LibrarySort.LAST_PLAYED -> R.string.sort_last_played
-            LibrarySort.ADDED -> R.string.sort_added
-            LibrarySort.PLAYTIME -> R.string.sort_playtime
-        },
-    )
     ScreenHints(
         listOf(
             ButtonHint(PadButton.A, stringResource(R.string.hint_open)),
             ButtonHint(PadButton.X, stringResource(R.string.hint_options), onClick = { focused?.let(actions::context) }),
-            ButtonHint(PadButton.SELECT, sortLabel, onClick = { sort = LibrarySort.entries[(sort.ordinal + 1) % LibrarySort.entries.size] }),
+            ButtonHint(PadButton.SELECT, sortLabel(sort), onClick = { sort = sort.next() }),
             ButtonHint(PadButton.START, stringResource(R.string.hint_search), onClick = ::openSearch),
         ),
     )
 
     Column(Modifier.fillMaxSize()) {
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 36.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            modifier = Modifier.focusRestorer(),
-        ) {
-            item {
-                Chip(
-                    label = if (search.isEmpty()) stringResource(R.string.hint_search) else "\"$search\"",
-                    selected = search.isNotEmpty(),
-                    icon = { Icon(Icons.Filled.Search, null, Modifier.padding(end = 6.dp)) },
-                    onClick = { if (search.isNotEmpty()) search = "" else openSearch() },
-                )
-            }
-            item {
-                Chip(
-                    label = sortLabel, selected = false,
-                    icon = { Icon(Icons.AutoMirrored.Filled.Sort, null, Modifier.padding(end = 6.dp)) },
-                    onClick = { sort = LibrarySort.entries[(sort.ordinal + 1) % LibrarySort.entries.size] },
-                )
-            }
-            items(filters, key = { "filter:${it.key}" }) { f ->
-                Chip(filterLabel(f), selected = f.key == selected?.key, onClick = { selectedKey = f.key })
-            }
-            item { Chip(stringResource(R.string.stats_title), selected = false, onClick = openStats) }
-            item {
-                Chip(
-                    "", selected = false, onClick = openFilterSettings,
-                    icon = { Icon(Icons.Filled.Edit, stringResource(R.string.filters_edit)) },
-                )
-            }
-        }
+        FilterBar(
+            filters = filters,
+            selectedKey = selected?.key,
+            onSelect = { selectedKey = it },
+            search = search,
+            onSearch = ::openSearch,
+            onClearSearch = { search = "" },
+            sort = sort,
+            onSort = { sort = sort.next() },
+            onEdit = openFilterSettings,
+            onStats = openStats,
+        )
         if (shown.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(stringResource(R.string.library_empty_filter), style = MaterialTheme.typography.titleMedium, color = LauncherTheme.colors.onSurfaceMuted)

@@ -472,4 +472,7 @@
     <string name="settings_app_filters_sub">Chips in the Apps tab, smart filters, app groups</string>
     <string name="app_filters_help">App filters appear as chips in the Apps tab and optionally as rows on the home screen. They are separate from the game filters of the library.</string>
     <string name="filter_match_count_apps">%d apps match</string>
+
+    <!-- Filter bar -->
+    <string name="search_clear">Clear search</string>
 </resources>

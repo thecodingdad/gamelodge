@@ -1,0 +1,95 @@
+package io.github.thecodingdad.moonlightlauncher.ui.screens.library
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Sort
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusRestorer
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import io.github.thecodingdad.moonlightlauncher.R
+import io.github.thecodingdad.moonlightlauncher.data.library.BuiltinFilter
+import io.github.thecodingdad.moonlightlauncher.data.library.LibrarySort
+import io.github.thecodingdad.moonlightlauncher.data.library.ResolvedFilter
+
+/**
+ * Filter bar shared by library and Apps tab: filter chips on the left (scrolling when they
+ * don't fit), fixed icon-only tools on the right: search, sort, statistics, edit filters.
+ * While a search is active it shows up as the first chip on the left; tapping it clears it.
+ */
+@Composable
+fun FilterBar(
+    filters: List<ResolvedFilter>,
+    selectedKey: String?,
+    onSelect: (String) -> Unit,
+    search: String,
+    onSearch: () -> Unit,
+    onClearSearch: () -> Unit,
+    sort: LibrarySort,
+    onSort: () -> Unit,
+    onEdit: () -> Unit,
+    onStats: (() -> Unit)? = null,
+) {
+    Row(
+        Modifier.fillMaxWidth().padding(end = 36.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        LazyRow(
+            contentPadding = PaddingValues(start = 36.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier.weight(1f).focusRestorer(),
+        ) {
+            if (search.isNotEmpty()) {
+                item(key = "search") {
+                    Chip(
+                        "„$search“", selected = true, onClick = onClearSearch,
+                        icon = { Icon(Icons.Filled.Close, stringResource(R.string.search_clear), Modifier.padding(end = 6.dp)) },
+                    )
+                }
+            }
+            items(filters, key = { "filter:${it.key}" }) { f ->
+                val selected = f.key == selectedKey || (selectedKey == null && f.builtin == BuiltinFilter.ALL)
+                Chip(filterLabel(f), selected = selected, onClick = { onSelect(f.key) })
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.focusRestorer()) {
+            Chip(
+                "", selected = search.isNotEmpty(), onClick = onSearch,
+                icon = { Icon(Icons.Filled.Search, stringResource(R.string.hint_search)) },
+            )
+            Chip(
+                "", selected = sort != LibrarySort.TITLE, onClick = onSort,
+                icon = { Icon(Icons.AutoMirrored.Filled.Sort, sortLabel(sort)) },
+            )
+            if (onStats != null) {
+                Chip("", selected = false, onClick = onStats, icon = { Icon(Icons.Filled.BarChart, stringResource(R.string.stats_title)) })
+            }
+            Chip("", selected = false, onClick = onEdit, icon = { Icon(Icons.Filled.Edit, stringResource(R.string.filters_edit)) })
+        }
+    }
+}
+
+fun LibrarySort.next(): LibrarySort = LibrarySort.entries[(ordinal + 1) % LibrarySort.entries.size]
+
+@Composable
+fun sortLabel(sort: LibrarySort): String = stringResource(
+    when (sort) {
+        LibrarySort.TITLE -> R.string.sort_title
+        LibrarySort.LAST_PLAYED -> R.string.sort_last_played
+        LibrarySort.ADDED -> R.string.sort_added
+        LibrarySort.PLAYTIME -> R.string.sort_playtime
+    },
+)

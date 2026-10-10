@@ -470,4 +470,7 @@
     <string name="settings_app_filters_sub">Chips im Apps-Tab, Smart-Filter, App-Gruppen</string>
     <string name="app_filters_help">App-Filter erscheinen als Chips im Apps-Tab und optional als Reihe auf der Startseite. Sie sind getrennt von den Spiele-Filtern der Bibliothek.</string>
     <string name="filter_match_count_apps">%d Apps passen</string>
+
+    <!-- Filter bar -->
+    <string name="search_clear">Suche löschen</string>
 </resources>

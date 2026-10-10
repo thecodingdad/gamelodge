@@ -10,7 +10,11 @@ import androidx.compose.foundation.lazy.items as rowItems
 import androidx.compose.runtime.saveable.rememberSaveable
 import io.github.thecodingdad.moonlightlauncher.data.library.BuiltinFilter
 import io.github.thecodingdad.moonlightlauncher.data.library.ResolvedFilter
-import io.github.thecodingdad.moonlightlauncher.ui.screens.library.Chip
+import io.github.thecodingdad.moonlightlauncher.data.library.FilterEngine
+import io.github.thecodingdad.moonlightlauncher.data.library.LibrarySort
+import io.github.thecodingdad.moonlightlauncher.ui.screens.library.FilterBar
+import io.github.thecodingdad.moonlightlauncher.ui.screens.library.next
+import io.github.thecodingdad.moonlightlauncher.ui.screens.library.sortLabel
 import io.github.thecodingdad.moonlightlauncher.ui.screens.library.filterLabel
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -55,46 +59,47 @@ fun AppsScreen(
     val actions = LocalEntryActions.current
     var focused by remember { mutableStateOf<LibraryEntry?>(null) }
     var selectedKey by rememberSaveable { mutableStateOf<String?>(null) }
+    var sort by rememberSaveable { mutableStateOf(LibrarySort.TITLE) }
+    var search by rememberSaveable { mutableStateOf("") }
     val selected = filters.firstOrNull { it.key == selectedKey }
+    val keyboard = io.github.thecodingdad.moonlightlauncher.ui.components.LocalKeyboardController.current
+    val searchTitle = stringResource(R.string.hint_search)
+    fun openSearch() = keyboard.open(title = searchTitle, initial = search) { search = it }
+    PadAction(PadButton.SELECT) { sort = sort.next() }
+    PadAction(PadButton.START) { openSearch() }
     PadAction(PadButton.X) { focused?.let(actions::context) }
     ScreenHints(
         listOf(
             ButtonHint(PadButton.A, stringResource(R.string.hint_start)),
             ButtonHint(PadButton.X, stringResource(R.string.hint_options), onClick = { focused?.let(actions::context) }),
+            ButtonHint(PadButton.SELECT, sortLabel(sort), onClick = { sort = sort.next() }),
+            ButtonHint(PadButton.START, stringResource(R.string.hint_search), onClick = ::openSearch),
         ),
     )
 
     // "All" (or no filter) shows sections per source; any other filter a flat list.
     val flat = selected != null && selected.builtin != BuiltinFilter.ALL
     val source = if (flat) selected!!.entries else apps
-    val sorted = remember(source) { source.sortedBy { TitleNormalizer.sortKey(it.item.title) } }
+    val sorted = remember(source, sort, search) { FilterEngine.query(source, sort, search) }
     val local = if (flat) sorted else sorted.filter { it.localTarget != null }
     val byHost = if (flat) emptyMap() else sorted.filter { it.localTarget == null }
         .groupBy { it.remoteTargets.firstOrNull()?.hostName.orEmpty() }
 
     Column(Modifier.fillMaxSize()) {
-    run {
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 36.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            modifier = Modifier.focusRestorer(),
-        ) {
-            rowItems(filters, key = { "filter:${it.key}" }) { f ->
-                val isSelected = f.key == selected?.key || (selected == null && f.builtin == BuiltinFilter.ALL)
-                Chip(filterLabel(f), selected = isSelected, onClick = { selectedKey = f.key })
-            }
-            // App filters are configured on their own page, separate from the game filters.
-            item(key = "edit") {
-                Chip(
-                    "", selected = false, onClick = openFilterSettings,
-                    icon = { androidx.compose.material3.Icon(Icons.Filled.Edit, stringResource(R.string.filters_edit)) },
-                )
-            }
-        }
-    }
+    FilterBar(
+        filters = filters,
+        selectedKey = selected?.key,
+        onSelect = { selectedKey = it },
+        search = search,
+        onSearch = ::openSearch,
+        onClearSearch = { search = "" },
+        sort = sort,
+        onSort = { sort = sort.next() },
+        onEdit = openFilterSettings,
+    )
     if (sorted.isEmpty()) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(stringResource(R.string.apps_empty), color = LauncherTheme.colors.onSurfaceMuted, style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(if (apps.isEmpty()) R.string.apps_empty else R.string.library_empty_filter), color = LauncherTheme.colors.onSurfaceMuted, style = MaterialTheme.typography.titleMedium)
         }
         return@Column
     }
