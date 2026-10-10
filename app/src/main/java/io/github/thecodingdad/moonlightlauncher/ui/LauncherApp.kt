@@ -207,7 +207,13 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                                 var fixing by remember { mutableStateOf(false) }
                                 var artwork by remember { mutableStateOf(false) }
                                 val scope = rememberCoroutineScope()
-                                DetailScreen(e, sessions, settings.animatedArtwork, onFavorite = { vm.setFavorite(e, it) }, onPlatform = { platformFor = e }) {
+                                val detailProfiles by vm.profiles.collectAsState()
+                                val detailActive by vm.activeProfile.collectAsState()
+                                DetailScreen(
+                                    e, sessions, settings.animatedArtwork, onFavorite = { vm.setFavorite(e, it) }, onPlatform = { platformFor = e },
+                                    profiles = detailProfiles, activeProfile = detailActive, onProfile = vm::setActiveProfile,
+                                    onEditProfiles = { nav.navigate(Routes.settings(SettingsPageId.PROFILES)) },
+                                ) {
                                     MetadataActions(
                                         entry = e,
                                         onFix = { fixing = true },
@@ -415,7 +421,6 @@ private fun MainShell(vm: LauncherViewModel, nav: NavHostController, openStats: 
     // or a detail page is open.
     val tabStates = androidx.compose.runtime.saveable.rememberSaveableStateHolder()
     var hostInfoFor by remember { mutableStateOf<String?>(null) }
-    var profilePicker by remember { mutableStateOf(false) }
     var controllerPopup by remember { mutableStateOf(false) }
     val controllers = io.github.thecodingdad.moonlightlauncher.ui.screens.settings.rememberControllers()
 
@@ -518,11 +523,9 @@ private fun MainShell(vm: LauncherViewModel, nav: NavHostController, openStats: 
                 }
             }
             StatusCluster(
-                hosts, activeProfile.name,
-                onProfileClick = { profilePicker = true },
+                hosts,
                 onHostClick = { hostInfoFor = it.uuid },
                 controllerCount = controllers.size,
-                controllerLowBattery = controllers.any { (it.batteryPercent ?: 100) <= 15 },
                 onControllerClick = { controllerPopup = true },
             )
         }
@@ -535,12 +538,6 @@ private fun MainShell(vm: LauncherViewModel, nav: NavHostController, openStats: 
                 )
                 .onSizeChanged { hintBarHeight = with(density) { it.height.toDp() } },
         )
-        io.github.thecodingdad.moonlightlauncher.ui.shell.ProfilePickerPopup(
-            visible = profilePicker, profiles = profiles, active = activeProfile,
-            onSelect = vm::setActiveProfile,
-            onEdit = { nav.navigate(Routes.settings(SettingsPageId.PROFILES)) },
-            onDismiss = { profilePicker = false },
-        )
         io.github.thecodingdad.moonlightlauncher.ui.shell.ControllerPopup(
             visible = controllerPopup, controllers = controllers,
             onOpenSettings = { nav.navigate(Routes.CONTROLLERS) },
@@ -549,6 +546,10 @@ private fun MainShell(vm: LauncherViewModel, nav: NavHostController, openStats: 
         io.github.thecodingdad.moonlightlauncher.ui.shell.HostInfoPopup(
             host = hostInfoFor?.let { hostsMap[it] },
             runningGame = running.firstOrNull { it.host.uuid == hostInfoFor }?.appName,
+            profiles = profiles,
+            activeProfile = activeProfile,
+            onProfile = vm::setActiveProfile,
+            onEditProfiles = { nav.navigate(Routes.settings(SettingsPageId.PROFILES)) },
             onDismiss = { hostInfoFor = null },
             openSettings = { nav.navigate(Routes.host(it.uuid)) },
         )

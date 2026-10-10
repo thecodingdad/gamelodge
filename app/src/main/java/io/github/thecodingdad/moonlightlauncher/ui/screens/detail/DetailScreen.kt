@@ -25,6 +25,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.filled.SportsEsports
@@ -64,6 +68,10 @@ fun DetailScreen(
     animatedArtwork: Boolean,
     onFavorite: (Boolean) -> Unit,
     onPlatform: () -> Unit = {},
+    profiles: List<io.github.thecodingdad.moonlightlauncher.stream.StreamProfile> = emptyList(),
+    activeProfile: io.github.thecodingdad.moonlightlauncher.stream.StreamProfile? = null,
+    onProfile: (io.github.thecodingdad.moonlightlauncher.stream.StreamProfile) -> Unit = {},
+    onEditProfiles: () -> Unit = {},
     extraActions: @Composable () -> Unit = {},
 ) {
     val actions = LocalEntryActions.current
@@ -72,10 +80,24 @@ fun DetailScreen(
     PublishAccentFrom(entry.coverModel())
 
     if (hasRemote) PadAction(PadButton.X) { actions.playWith(entry) }
+    // Remote games: LB/RB switch the stream profile used for the next start.
+    var profilePicker by remember { mutableStateOf(false) }
+    fun stepProfile(delta: Int) {
+        if (profiles.size < 2 || activeProfile == null) return
+        val i = profiles.indexOfFirst { it.uuid == activeProfile.uuid }.coerceAtLeast(0)
+        onProfile(profiles[(i + delta).mod(profiles.size)])
+    }
+    if (hasRemote) {
+        PadAction(PadButton.L1) { stepProfile(-1) }
+        PadAction(PadButton.R1) { stepProfile(1) }
+    }
     ScreenHints(
         buildList {
             add(ButtonHint(PadButton.A, stringResource(R.string.hint_select)))
             if (hasRemote) add(ButtonHint(PadButton.X, stringResource(R.string.action_play_with), onClick = { actions.playWith(entry) }))
+            if (hasRemote && profiles.size > 1) {
+                add(ButtonHint(PadButton.L1, stringResource(R.string.profile_picker_title), onClick = { stepProfile(1) }, secondButton = PadButton.R1))
+            }
             add(ButtonHint(PadButton.B, stringResource(R.string.hint_back)))
         },
     )
@@ -127,6 +149,18 @@ fun DetailScreen(
                             )
                         },
                     )
+                    if (hasRemote && activeProfile != null) {
+                        io.github.thecodingdad.moonlightlauncher.ui.screens.library.Chip(
+                            label = activeProfile.name,
+                            selected = false,
+                            onClick = { profilePicker = true },
+                            icon = {
+                                androidx.compose.material3.Icon(
+                                    Icons.Filled.Tune, null, Modifier.padding(end = 6.dp).size(18.dp),
+                                )
+                            },
+                        )
+                    }
                     SourceBadges(entry)
                     MetaLine(entry)
                 }
@@ -152,6 +186,12 @@ fun DetailScreen(
                 Spacer(Modifier.height(24.dp))
             }
         }
+        }
+        if (activeProfile != null) {
+            io.github.thecodingdad.moonlightlauncher.ui.shell.ProfilePickerPopup(
+                visible = profilePicker, profiles = profiles, active = activeProfile,
+                onSelect = onProfile, onEdit = onEditProfiles, onDismiss = { profilePicker = false },
+            )
         }
     }
 }

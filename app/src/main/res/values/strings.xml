@@ -334,7 +334,7 @@
     <string name="controller_external">External</string>
     <string name="controller_builtin">Built-in</string>
     <string name="controller_battery">Battery %d %%</string>
-    <string name="controller_vibrate_test">A = vibration test</string>
+    <string name="controller_vibrate_test">Test vibration</string>
 
     <!-- VPN -->
     <string name="vpn_down">Disconnected</string>
@@ -523,4 +523,14 @@
     <string name="profile_picker_edit">Edit profiles</string>
     <string name="controller_popup_sub">Every controller is passed to the host as its own gamepad. Select one to test its vibration.</string>
     <string name="controller_popup_settings">Controller settings</string>
+
+    <!-- Controller settings -->
+    <string name="controllers_connected">Connected controllers</string>
+    <string name="controllers_stream_settings">Controller settings in the stream</string>
+    <string name="controllers_stream_settings_sub">Apply to all controllers and to every stream profile that doesn\'t set them itself</string>
+    <string name="controller_info_type">Type</string>
+    <string name="controller_info_battery">Battery</string>
+    <string name="controller_info_ids">Vendor:Product</string>
+    <string name="controller_info_vibration">Vibration</string>
+    <string name="controller_info_player_order">Player numbers on the host follow the order of the first button press in the stream.</string>
 </resources>

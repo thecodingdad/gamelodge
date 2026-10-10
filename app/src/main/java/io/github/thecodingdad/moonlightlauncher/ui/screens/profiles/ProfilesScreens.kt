@@ -121,7 +121,7 @@ fun ProfileEditor(uuid: UUID?, name: String, onDeleted: () -> Unit) {
 }
 
 @Composable
-private fun OptionRow(option: StreamOption, store: ProfileStore, revision: Int, initialFocus: Boolean, changed: () -> Unit) {
+fun OptionRow(option: StreamOption, store: ProfileStore, revision: Int, initialFocus: Boolean, changed: () -> Unit) {
     // `revision` is read so the row recomposes after writes.
     if (revision < 0) return
     when (option) {

@@ -119,31 +119,15 @@ fun Clock(modifier: Modifier = Modifier) {
 @Composable
 fun StatusCluster(
     hosts: List<HostState>,
-    profileName: String,
-    onProfileClick: () -> Unit,
     modifier: Modifier = Modifier,
     onHostClick: (HostState) -> Unit = {},
     controllerCount: Int = 0,
-    controllerLowBattery: Boolean = false,
     onControllerClick: () -> Unit = {},
 ) {
     val status = rememberSystemStatus()
     val colors = LauncherTheme.colors
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
-        Row(
-            modifier = Modifier
-                .clip(RoundedCornerShape(16.dp))
-                .background(colors.surfaceRaised)
-                .focusProperties { canFocus = false }
-                .clickable(onClick = onProfileClick)
-                .padding(horizontal = 12.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            // Active stream profile; tapping opens the profile picker.
-            Icon(Icons.Filled.Tune, null, tint = colors.accent, modifier = Modifier.size(18.dp))
-            Text(" $profileName", style = MaterialTheme.typography.labelMedium, color = colors.onSurface)
-        }
-        // Connected controllers (count, red when a battery runs low); tapping opens the overview.
+        // Controllers: red when none is connected, green otherwise; tapping opens the overview.
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
@@ -154,7 +138,7 @@ fun StatusCluster(
         ) {
             Icon(
                 Icons.Filled.SportsEsports, null,
-                tint = if (controllerLowBattery) colors.danger else colors.onSurfaceMuted,
+                tint = if (controllerCount == 0) colors.danger else colors.success,
                 modifier = Modifier.size(20.dp),
             )
             if (controllerCount > 1) {
@@ -172,14 +156,16 @@ fun StatusCluster(
                     .clickable { onHostClick(host) }
                     .padding(horizontal = 6.dp, vertical = 4.dp),
             ) {
-                Icon(Icons.Filled.Computer, null, tint = colors.onSurfaceMuted, modifier = Modifier.size(18.dp))
-                StatusDot(
-                    when {
+                // The icon itself carries the state: accent = streaming, green = online, red = offline.
+                Icon(
+                    Icons.Filled.Computer, host.name,
+                    tint = when {
                         host.isStreaming -> colors.accent
                         host.status == HostStatus.ONLINE -> colors.success
                         host.status == HostStatus.OFFLINE -> colors.danger
                         else -> colors.onSurfaceMuted
                     },
+                    modifier = Modifier.size(22.dp),
                 )
             }
         }

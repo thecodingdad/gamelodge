@@ -332,7 +332,7 @@
     <string name="controller_external">Extern</string>
     <string name="controller_builtin">Eingebaut</string>
     <string name="controller_battery">Akku %d %%</string>
-    <string name="controller_vibrate_test">A = Vibrationstest</string>
+    <string name="controller_vibrate_test">Vibration testen</string>
 
     <!-- VPN -->
     <string name="vpn_down">Getrennt</string>
@@ -521,4 +521,14 @@
     <string name="profile_picker_edit">Profile bearbeiten</string>
     <string name="controller_popup_sub">Jeder Controller wird als eigenes Gamepad an den Host weitergereicht. Auswählen testet die Vibration.</string>
     <string name="controller_popup_settings">Controller-Einstellungen</string>
+
+    <!-- Controller settings -->
+    <string name="controllers_connected">Verbundene Controller</string>
+    <string name="controllers_stream_settings">Controller-Einstellungen im Stream</string>
+    <string name="controllers_stream_settings_sub">Gelten für alle Controller und für jedes Stream-Profil, das sie nicht selbst festlegt</string>
+    <string name="controller_info_type">Typ</string>
+    <string name="controller_info_battery">Akku</string>
+    <string name="controller_info_ids">Hersteller:Produkt</string>
+    <string name="controller_info_vibration">Vibration</string>
+    <string name="controller_info_player_order">Die Spielernummern am Host richten sich nach der Reihenfolge des ersten Tastendrucks im Stream.</string>
 </resources>

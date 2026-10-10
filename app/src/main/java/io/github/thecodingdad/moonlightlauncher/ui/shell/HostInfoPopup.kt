@@ -6,8 +6,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bedtime
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.RadioButtonChecked
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.WbSunny
@@ -46,6 +52,10 @@ fun HostInfoPopup(
     runningGame: String?,
     onDismiss: () -> Unit,
     openSettings: (HostState) -> Unit,
+    profiles: List<io.github.thecodingdad.moonlightlauncher.stream.StreamProfile> = emptyList(),
+    activeProfile: io.github.thecodingdad.moonlightlauncher.stream.StreamProfile? = null,
+    onProfile: (io.github.thecodingdad.moonlightlauncher.stream.StreamProfile) -> Unit = {},
+    onEditProfiles: () -> Unit = {},
 ) {
     val c = LocalContext.current.container
     val scope = rememberCoroutineScope()
@@ -59,6 +69,7 @@ fun HostInfoPopup(
     Modal(visible = host != null, onDismiss = onDismiss, title = host?.name, maxWidth = 560.dp) {
         val h = host ?: return@Modal
         val colors = LauncherTheme.colors
+        Column(Modifier.heightIn(max = 600.dp).verticalScroll(rememberScrollState())) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             StatusDot(
                 when {
@@ -90,6 +101,28 @@ fun HostInfoPopup(
             }
             config?.autoSleepMinutes?.let { InfoRow(stringResource(R.string.host_info_auto_sleep), stringResource(R.string.minutes_short, it)) }
         }
+        // Stream profile used for the next streams (global, "start with…" overrides it per game).
+        if (profiles.isNotEmpty() && activeProfile != null) {
+            val context = LocalContext.current
+            Spacer(Modifier.height(16.dp))
+            Text(stringResource(R.string.profile_picker_title), style = MaterialTheme.typography.titleSmall, color = colors.accent)
+            Spacer(Modifier.height(8.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                profiles.forEach { p ->
+                    val isActive = p.uuid == activeProfile.uuid
+                    LauncherButton(
+                        "${p.name}  ·  ${profileSummary(context, p.uuid)}",
+                        onClick = { onProfile(p) },
+                        icon = if (isActive) Icons.Filled.RadioButtonChecked else Icons.Filled.RadioButtonUnchecked,
+                        primary = isActive, modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+                LauncherButton(
+                    stringResource(R.string.profile_picker_edit), icon = Icons.Filled.Edit, modifier = Modifier.fillMaxWidth(),
+                    onClick = { onDismiss(); onEditProfiles() },
+                )
+            }
+        }
         Spacer(Modifier.height(18.dp))
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             if (h.status != HostStatus.ONLINE) {
@@ -118,6 +151,7 @@ fun HostInfoPopup(
                 onClick = { onDismiss(); openSettings(h) },
             )
             message?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceMuted) }
+        }
         }
     }
 }
