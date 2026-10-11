@@ -760,4 +760,7 @@
 
     <!-- Filters -->
     <string name="filter_drag">Move (drag, or A then up/down)</string>
+
+    <!-- Controllers -->
+    <string name="controller_device_info">Device information</string>
 </resources>

@@ -165,6 +165,14 @@ fun ControllerDetailDialog(controller: ControllerInfo?, onDismiss: () -> Unit) {
             androidx.compose.ui.Modifier.heightIn(max = 560.dp).controllerScroll(),
             verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
         ) {
+            ControllerOverrideRows(c)
+            Text(
+                stringResource(R.string.controller_info_player_order),
+                style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted,
+                modifier = androidx.compose.ui.Modifier.padding(top = 6.dp),
+            )
+            if (c.external) OdinMappingRow(c)
+            SectionHeader(stringResource(R.string.controller_device_info))
             InfoRow(
                 stringResource(R.string.controller_info_type),
                 listOfNotNull(
@@ -175,13 +183,6 @@ fun ControllerDetailDialog(controller: ControllerInfo?, onDismiss: () -> Unit) {
             c.batteryPercent?.let { InfoRow(stringResource(R.string.controller_info_battery), "$it %") }
             InfoRow(stringResource(R.string.controller_info_ids), "%04x:%04x".format(c.vendorId, c.productId))
             InfoRow(stringResource(R.string.controller_info_vibration), stringResource(if (c.canVibrate) R.string.yes else R.string.no))
-            ControllerOverrideRows(c)
-            if (c.external) OdinMappingRow(c)
-            Text(
-                stringResource(R.string.controller_info_player_order),
-                style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted,
-                modifier = androidx.compose.ui.Modifier.padding(top = 6.dp),
-            )
             if (c.canVibrate) {
                 io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton(
                     stringResource(R.string.controller_vibrate_test), onClick = { vibrateController(c.id) },

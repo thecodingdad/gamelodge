@@ -758,4 +758,7 @@
 
     <!-- Filters -->
     <string name="filter_drag">Verschieben (ziehen oder A, dann hoch/runter)</string>
+
+    <!-- Controllers -->
+    <string name="controller_device_info">Geräte-Informationen</string>
 </resources>
