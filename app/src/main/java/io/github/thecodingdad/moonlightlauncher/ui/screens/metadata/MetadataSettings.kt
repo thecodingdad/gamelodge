@@ -81,26 +81,35 @@ fun MetadataSettings(
         SectionHeader("SteamGridDB")
         Text(stringResource(R.string.metadata_sgdb_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
         LauncherTextField(stringResource(R.string.metadata_api_key), sgdbKey, { save(SecretStore.Keys.SGDB_API_KEY, it) }, kind = TextKind.PASSWORD)
+        if (sgdbKey.isNotBlank()) ConnectionStatus("SteamGridDB", revision) { metadata.testSgdb() }
 
         SectionHeader("IGDB (Twitch)")
         Text(stringResource(R.string.metadata_igdb_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
         LauncherTextField(stringResource(R.string.metadata_client_id), igdbId, { save(SecretStore.Keys.IGDB_CLIENT_ID, it) })
         LauncherTextField(stringResource(R.string.metadata_client_secret), igdbSecret, { save(SecretStore.Keys.IGDB_CLIENT_SECRET, it) }, kind = TextKind.PASSWORD)
-        // Whether the keys work, checked after every change.
-        var igdbStatus by remember { mutableStateOf<Boolean?>(null) }
-        androidx.compose.runtime.LaunchedEffect(revision) { igdbStatus = metadata.testIgdb() }
-        if (igdbId.isNotBlank() && igdbSecret.isNotBlank()) {
-            Text(
-                stringResource(
-                    when (igdbStatus) {
-                        true -> R.string.metadata_igdb_ok
-                        false -> R.string.metadata_igdb_rejected
-                        null -> R.string.metadata_igdb_unknown
-                    },
-                ),
-                style = MaterialTheme.typography.bodyMedium,
-                color = when (igdbStatus) { true -> LauncherTheme.colors.success; false -> LauncherTheme.colors.danger; null -> LauncherTheme.colors.onSurfaceMuted },
-            )
-        }
+        if (igdbId.isNotBlank() && igdbSecret.isNotBlank()) ConnectionStatus("IGDB", revision) { metadata.testIgdb() }
     }
+}
+
+/** Whether a provider accepts the key(s), checked again after every change ([revision]). */
+@Composable
+private fun ConnectionStatus(provider: String, revision: Int, test: suspend () -> Boolean?) {
+    var status by remember { mutableStateOf<Boolean?>(null) }
+    var checked by remember { mutableStateOf(false) }
+    androidx.compose.runtime.LaunchedEffect(revision) { checked = false; status = test(); checked = true }
+    Text(
+        when {
+            !checked -> stringResource(R.string.metadata_status_checking, provider)
+            status == true -> stringResource(R.string.metadata_status_ok, provider)
+            status == false -> stringResource(R.string.metadata_status_rejected, provider)
+            else -> stringResource(R.string.metadata_status_unknown, provider)
+        },
+        style = MaterialTheme.typography.bodyMedium,
+        color = when {
+            !checked -> LauncherTheme.colors.onSurfaceMuted
+            status == true -> LauncherTheme.colors.success
+            status == false -> LauncherTheme.colors.danger
+            else -> LauncherTheme.colors.onSurfaceMuted
+        },
+    )
 }

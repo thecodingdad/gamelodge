@@ -116,8 +116,8 @@
     <string name="settings_controls_sub">Tastenbelegung, Sounds, Vibration</string>
     <string name="settings_controllers">Controller</string>
     <string name="settings_controllers_sub">Verbundene Controller und Spielerreihenfolge</string>
-    <string name="settings_metadata">Bibliothek &amp; Artwork</string>
-    <string name="settings_metadata_sub">SteamGridDB, IGDB, Metadaten prüfen</string>
+    <string name="settings_metadata">Metadaten-Quellen</string>
+    <string name="settings_metadata_sub">SteamGridDB, IGDB, Abgleich, Prüfliste</string>
     <string name="settings_home_assistant">Home Assistant</string>
     <string name="settings_home_assistant_sub">Verbindung und Smart-Home-Kacheln</string>
     <string name="settings_vpn">VPN</string>
@@ -762,7 +762,10 @@
     <string name="controller_device_info">Geräte-Informationen</string>
 
     <!-- Metadata -->
-    <string name="metadata_igdb_ok">IGDB verbunden</string>
-    <string name="metadata_igdb_rejected">IGDB hat Client-ID oder Secret abgelehnt</string>
-    <string name="metadata_igdb_unknown">IGDB gerade nicht erreichbar</string>
+
+    <!-- Metadata -->
+    <string name="metadata_status_checking">%1$s wird geprüft…</string>
+    <string name="metadata_status_ok">%1$s verbunden</string>
+    <string name="metadata_status_rejected">%1$s hat den Schlüssel abgelehnt</string>
+    <string name="metadata_status_unknown">%1$s gerade nicht erreichbar</string>
 </resources>

@@ -219,6 +219,19 @@ class MetadataService(
         dao.upsertItem(updated.copy(metadataState = state, matchConfidence = maxOf(fresh.matchConfidence, best.second)))
     }
 
+    /** Same check for the SteamGridDB key. */
+    suspend fun testSgdb(): Boolean? = withContext(Dispatchers.IO) {
+        if (!sgdb.isConfigured) return@withContext null
+        try {
+            sgdb.search("Mario")
+            true
+        } catch (e: MetadataAuthException) {
+            false
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     /** Checks the IGDB keys with one tiny request: true = works, false = rejected, null = not set / offline. */
     suspend fun testIgdb(): Boolean? = withContext(Dispatchers.IO) {
         if (!igdb.isConfigured) return@withContext null

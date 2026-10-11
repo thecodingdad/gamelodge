@@ -118,8 +118,8 @@
     <string name="settings_controls_sub">Button layout, sounds, vibration</string>
     <string name="settings_controllers">Controllers</string>
     <string name="settings_controllers_sub">Connected controllers and player order</string>
-    <string name="settings_metadata">Library &amp; artwork</string>
-    <string name="settings_metadata_sub">SteamGridDB, IGDB, metadata review</string>
+    <string name="settings_metadata">Metadata sources</string>
+    <string name="settings_metadata_sub">SteamGridDB, IGDB, matching, review list</string>
     <string name="settings_home_assistant">Home Assistant</string>
     <string name="settings_home_assistant_sub">Connection and smart home tiles</string>
     <string name="settings_vpn">VPN</string>
@@ -764,7 +764,10 @@
     <string name="controller_device_info">Device information</string>
 
     <!-- Metadata -->
-    <string name="metadata_igdb_ok">IGDB connected</string>
-    <string name="metadata_igdb_rejected">IGDB rejected the client ID or secret</string>
-    <string name="metadata_igdb_unknown">IGDB not reachable right now</string>
+
+    <!-- Metadata -->
+    <string name="metadata_status_checking">Checking %1$s…</string>
+    <string name="metadata_status_ok">%1$s connected</string>
+    <string name="metadata_status_rejected">%1$s rejected the key</string>
+    <string name="metadata_status_unknown">%1$s not reachable right now</string>
 </resources>
