@@ -24,6 +24,10 @@ class FilterRepository(
         val current = settings.current()
         if (!current.filtersSeeded) {
             restoreDefaults(FilterScope.GAMES)
+        } else if (!current.notInstalledFilterSeeded && dao.getAll().none { it.builtin == BuiltinFilter.NOT_INSTALLED }) {
+            // Default added in a later version: append it once for existing installs.
+            val d = BuiltinFilter.gameDefaults.first { it.key == BuiltinFilter.NOT_INSTALLED }
+            dao.upsert(listOf(defaultEntity(d, FilterScope.GAMES, (dao.getAll().maxOfOrNull { it.sortOrder } ?: -1) + 1)))
         }
         if (!current.appFiltersSeeded) {
             // Until now filters were shared; existing ones become game filters.
@@ -33,7 +37,7 @@ class FilterRepository(
             )
             restoreDefaults(FilterScope.APPS)
         }
-        settings.update { it.copy(filtersSeeded = true, appFiltersSeeded = true) }
+        settings.update { it.copy(filtersSeeded = true, appFiltersSeeded = true, notInstalledFilterSeeded = true) }
         // Default filters used to be special rows; they are ordinary free filters now.
         val builtin = dao.getAll().filter { it.kind == FilterKind.BUILTIN }
         if (builtin.isNotEmpty()) {

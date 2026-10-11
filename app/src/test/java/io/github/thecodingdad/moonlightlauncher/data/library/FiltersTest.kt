@@ -38,6 +38,16 @@ class FiltersTest {
         FilterEntity(key, "", FilterKind.BUILTIN, builtin = key, scope = FilterScope.GAMES, sortOrder = order)
 
     @Test
+    fun `not installed builtin lists host games the companion marks as not installed`() {
+        val owned = entry("e", "PC").let { e -> e.copy(targets = e.targets.map { it.copy(installed = false) }) }
+        val r = FilterEngine.resolve(listOf(builtin(BuiltinFilter.NOT_INSTALLED, 0)), FilterPlace.LIBRARY, entries + owned, emptyMap(), emptyMap())
+        assertEquals(listOf("e"), r.single().entries.map { it.item.id })
+        // A local copy makes it playable.
+        val alsoLocal = owned.copy(targets = owned.targets + LaunchTargetEntity("l:e", "e", TargetType.LOCAL, "e", packageName = "e", lastSeenAt = 0))
+        assertFalse(alsoLocal.notInstalled)
+    }
+
+    @Test
     fun `platform builtin splits into one chip per platform`() {
         val r = FilterEngine.resolve(listOf(builtin(BuiltinFilter.PLATFORMS, 0)), FilterPlace.LIBRARY, entries, emptyMap(), emptyMap())
         assertEquals(listOf("Android", "Nintendo Switch", "PC"), r.map { it.value })

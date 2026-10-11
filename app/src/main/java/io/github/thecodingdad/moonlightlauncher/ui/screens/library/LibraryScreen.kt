@@ -78,6 +78,7 @@ fun builtinLabel(key: String): String = when (key) {
     BuiltinFilter.PLATFORMS -> stringResource(R.string.filter_platforms)
     BuiltinFilter.FAVORITES -> stringResource(R.string.filter_favorites)
     BuiltinFilter.NEVER_PLAYED -> stringResource(R.string.filter_never_played)
+    BuiltinFilter.NOT_INSTALLED -> stringResource(R.string.not_installed)
     BuiltinFilter.REVIEW -> stringResource(R.string.filter_review)
     BuiltinFilter.HIDDEN -> stringResource(R.string.filter_hidden)
     else -> key

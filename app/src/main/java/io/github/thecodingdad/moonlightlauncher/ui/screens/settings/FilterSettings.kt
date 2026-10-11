@@ -326,6 +326,7 @@ private fun fieldLabel(field: FilterField): String = stringResource(
         FilterField.CATEGORY -> R.string.filter_field_category
         FilterField.GROUP -> R.string.filter_field_group
         FilterField.INSTALLED -> R.string.filter_field_installed
+        FilterField.NOT_INSTALLED -> R.string.not_installed
         FilterField.GENRE -> R.string.filter_field_genre
         FilterField.DEVELOPER -> R.string.filter_field_developer
         FilterField.PUBLISHER -> R.string.filter_field_publisher

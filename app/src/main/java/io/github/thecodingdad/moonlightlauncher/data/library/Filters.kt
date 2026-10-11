@@ -39,6 +39,8 @@ enum class FilterField(val type: FieldType, val section: FieldSection, val multi
     CATEGORY(FieldType.LIST, FieldSection.GAME, multiValue = true),
     GROUP(FieldType.LIST, FieldSection.GAME, multiValue = true),
     INSTALLED(FieldType.BOOLEAN, FieldSection.GAME),
+    /** Owned on a host but not installed there (companion); playing it starts the installation. */
+    NOT_INSTALLED(FieldType.BOOLEAN, FieldSection.GAME),
     GENRE(FieldType.LIST, FieldSection.METADATA, multiValue = true),
     DEVELOPER(FieldType.LIST, FieldSection.METADATA),
     PUBLISHER(FieldType.LIST, FieldSection.METADATA),
@@ -140,6 +142,7 @@ object BuiltinFilter {
     const val PLATFORMS = "platforms"
     const val FAVORITES = "favorites"
     const val NEVER_PLAYED = "never_played"
+    const val NOT_INSTALLED = "not_installed"
     const val REVIEW = "review"
     const val HIDDEN = "hidden"
 
@@ -153,6 +156,7 @@ object BuiltinFilter {
         Default(FAVORITES, library = true, home = true),
         Default(RECENT, library = false, home = true),
         Default(NEVER_PLAYED, library = true, home = false),
+        Default(NOT_INSTALLED, library = true, home = false),
         Default(REVIEW, library = true, home = false),
         Default(HIDDEN, library = true, home = false),
     )
@@ -178,6 +182,7 @@ object BuiltinFilter {
         PLATFORMS -> FilterRules(groupBy = GroupBy.PLATFORM, chipShowName = false, rowShowName = false)
         FAVORITES -> FilterRules(listOf(FilterCondition(FilterField.FAVORITE, setOf("true"))))
         NEVER_PLAYED -> FilterRules(listOf(FilterCondition(FilterField.PLAYED, setOf("true"), negate = true)))
+        NOT_INSTALLED -> FilterRules(listOf(FilterCondition(FilterField.NOT_INSTALLED, setOf("true"))))
         REVIEW -> FilterRules(listOf(FilterCondition(FilterField.REVIEW, setOf("true"))))
         HIDDEN -> FilterRules(listOf(FilterCondition(FilterField.HIDDEN, setOf("true"))))
         else -> FilterRules()
@@ -393,6 +398,7 @@ object FilterEngine {
         val hit = when (field.type) {
             FieldType.BOOLEAN -> when (field) {
                 FilterField.INSTALLED -> entry.localTarget != null
+                FilterField.NOT_INSTALLED -> entry.notInstalled
                 FilterField.FAVORITE -> item.favorite
                 FilterField.PLAYED -> item.lastPlayedAt != null
                 FilterField.REVIEW -> item.metadataState == MetadataState.REVIEW

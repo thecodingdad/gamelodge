@@ -69,6 +69,8 @@ data class LauncherSettings(
     val onboardingDone: Boolean = false,
     /** Default library filters were created (they may be deleted afterwards). */
     val filtersSeeded: Boolean = false,
+    /** The "not installed" default filter (added later) was created for existing installs. */
+    val notInstalledFilterSeeded: Boolean = false,
     /** Hide Android's navigation bar / gesture handle while the launcher is shown. */
     val hideNavigationBar: Boolean = false,
     /** Show the button hint bar (only while a controller is connected). */
@@ -131,6 +133,7 @@ class SettingsRepository(context: Context) {
         val backupKeepCount = intPreferencesKey("backup_keep_count")
         val onboardingDone = booleanPreferencesKey("onboarding_done")
         val filtersSeeded = booleanPreferencesKey("filters_seeded")
+        val notInstalledFilterSeeded = booleanPreferencesKey("not_installed_filter_seeded")
         val hideNavigationBar = booleanPreferencesKey("hide_navigation_bar")
         val showHintBar = booleanPreferencesKey("show_hint_bar")
         val platformRule = intPreferencesKey("platform_rule")
@@ -190,6 +193,7 @@ class SettingsRepository(context: Context) {
             backupKeepCount = this[K.backupKeepCount] ?: d.backupKeepCount,
             onboardingDone = this[K.onboardingDone] ?: d.onboardingDone,
             filtersSeeded = this[K.filtersSeeded] ?: d.filtersSeeded,
+            notInstalledFilterSeeded = this[K.notInstalledFilterSeeded] ?: d.notInstalledFilterSeeded,
             hideNavigationBar = this[K.hideNavigationBar] ?: d.hideNavigationBar,
             showHintBar = this[K.showHintBar] ?: d.showHintBar,
             platformRule = this[K.platformRule] ?: d.platformRule,
@@ -238,6 +242,7 @@ class SettingsRepository(context: Context) {
         this[K.backupKeepCount] = s.backupKeepCount
         this[K.onboardingDone] = s.onboardingDone
         this[K.filtersSeeded] = s.filtersSeeded
+        this[K.notInstalledFilterSeeded] = s.notInstalledFilterSeeded
         this[K.hideNavigationBar] = s.hideNavigationBar
         this[K.showHintBar] = s.showHintBar
         this[K.platformRule] = s.platformRule
