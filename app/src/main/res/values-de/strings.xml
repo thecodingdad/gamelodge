@@ -567,4 +567,14 @@
     <!-- Hint bar -->
     <string name="setting_hint_bar">Tastenhinweise anzeigen</string>
     <string name="setting_hint_bar_sub">Leiste unten mit den Controller-Tasten; erscheint nur, wenn ein Controller verbunden ist</string>
+
+    <!-- Settings groups -->
+    <string name="settings_group_streaming">Streaming</string>
+    <string name="settings_group_library">Bibliothek</string>
+    <string name="settings_group_controls">Bedienung</string>
+    <string name="settings_group_display">Darstellung</string>
+    <string name="settings_group_smart_home">Smart Home</string>
+    <string name="settings_group_system">System</string>
+    <string name="settings_android">Android-Einstellungen</string>
+    <string name="settings_android_sub">Systemeinstellungen des Geräts</string>
 </resources>

@@ -7,6 +7,8 @@ import androidx.compose.material.icons.filled.Computer
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Android
+import androidx.compose.material.icons.filled.Gamepad
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
@@ -30,21 +32,40 @@ import io.github.thecodingdad.moonlightlauncher.data.settings.ThemeMode
 enum class SettingsPageId { HOSTS, PROFILES, APPEARANCE, FILTERS, APP_FILTERS, CONTROLS, SOUNDS, METADATA, HOME_ASSISTANT, VPN, LAUNCHER, BACKUP, LANGUAGE, ABOUT }
 
 @Composable
-fun SettingsHome(open: (SettingsPageId) -> Unit, isFirstVisit: Boolean) {
+fun SettingsHome(open: (SettingsPageId) -> Unit, isFirstVisit: Boolean, openControllers: () -> Unit = {}) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     SettingsPage(stringResource(R.string.tab_settings)) {
+        SectionHeader(stringResource(R.string.settings_group_streaming))
         NavRow(stringResource(R.string.settings_hosts), { open(SettingsPageId.HOSTS) }, stringResource(R.string.settings_hosts_sub), Icons.Filled.Computer, initialFocus = isFirstVisit)
         NavRow(stringResource(R.string.settings_profiles), { open(SettingsPageId.PROFILES) }, stringResource(R.string.settings_profiles_sub), Icons.Filled.Tune)
-        NavRow(stringResource(R.string.settings_appearance), { open(SettingsPageId.APPEARANCE) }, stringResource(R.string.settings_appearance_sub), Icons.Filled.Palette)
+        NavRow(stringResource(R.string.settings_vpn), { open(SettingsPageId.VPN) }, stringResource(R.string.settings_vpn_sub), Icons.Filled.VpnLock)
+
+        SectionHeader(stringResource(R.string.settings_group_library))
         NavRow(stringResource(R.string.settings_filters), { open(SettingsPageId.FILTERS) }, stringResource(R.string.settings_filters_sub), Icons.Filled.FilterAlt)
         NavRow(stringResource(R.string.settings_app_filters), { open(SettingsPageId.APP_FILTERS) }, stringResource(R.string.settings_app_filters_sub), Icons.Filled.FilterAlt)
-        NavRow(stringResource(R.string.settings_sounds), { open(SettingsPageId.SOUNDS) }, stringResource(R.string.settings_sounds_sub), Icons.Filled.VolumeUp)
-        NavRow(stringResource(R.string.settings_controls), { open(SettingsPageId.CONTROLS) }, stringResource(R.string.settings_controls_sub), Icons.Filled.SportsEsports)
         NavRow(stringResource(R.string.settings_metadata), { open(SettingsPageId.METADATA) }, stringResource(R.string.settings_metadata_sub), Icons.Filled.Image)
+
+        SectionHeader(stringResource(R.string.settings_group_controls))
+        NavRow(stringResource(R.string.settings_controls), { open(SettingsPageId.CONTROLS) }, stringResource(R.string.settings_controls_sub), Icons.Filled.SportsEsports)
+        NavRow(stringResource(R.string.settings_controllers), openControllers, stringResource(R.string.settings_controllers_sub), Icons.Filled.Gamepad)
+        NavRow(stringResource(R.string.settings_sounds), { open(SettingsPageId.SOUNDS) }, stringResource(R.string.settings_sounds_sub), Icons.Filled.VolumeUp)
+
+        SectionHeader(stringResource(R.string.settings_group_display))
+        NavRow(stringResource(R.string.settings_appearance), { open(SettingsPageId.APPEARANCE) }, stringResource(R.string.settings_appearance_sub), Icons.Filled.Palette)
+        NavRow(stringResource(R.string.settings_language), { open(SettingsPageId.LANGUAGE) }, null, Icons.Filled.Language)
+
+        SectionHeader(stringResource(R.string.settings_group_smart_home))
         NavRow(stringResource(R.string.settings_home_assistant), { open(SettingsPageId.HOME_ASSISTANT) }, stringResource(R.string.settings_home_assistant_sub), Icons.Filled.Widgets)
-        NavRow(stringResource(R.string.settings_vpn), { open(SettingsPageId.VPN) }, stringResource(R.string.settings_vpn_sub), Icons.Filled.VpnLock)
+
+        SectionHeader(stringResource(R.string.settings_group_system))
         NavRow(stringResource(R.string.settings_launcher), { open(SettingsPageId.LAUNCHER) }, stringResource(R.string.settings_launcher_sub), Icons.Filled.Home)
         NavRow(stringResource(R.string.settings_backup), { open(SettingsPageId.BACKUP) }, stringResource(R.string.settings_backup_sub), Icons.Filled.Backup)
-        NavRow(stringResource(R.string.settings_language), { open(SettingsPageId.LANGUAGE) }, null, Icons.Filled.Language)
+        NavRow(
+            stringResource(R.string.settings_android), {
+                runCatching { context.startActivity(android.content.Intent(android.provider.Settings.ACTION_SETTINGS)) }
+            },
+            stringResource(R.string.settings_android_sub), Icons.Filled.Android,
+        )
         NavRow(stringResource(R.string.settings_about), { open(SettingsPageId.ABOUT) }, null, Icons.Filled.Info)
     }
 }

@@ -569,4 +569,14 @@
     <!-- Hint bar -->
     <string name="setting_hint_bar">Show button hints</string>
     <string name="setting_hint_bar_sub">Bar at the bottom with the controller buttons; only shown while a controller is connected</string>
+
+    <!-- Settings groups -->
+    <string name="settings_group_streaming">Streaming</string>
+    <string name="settings_group_library">Library</string>
+    <string name="settings_group_controls">Controls</string>
+    <string name="settings_group_display">Display</string>
+    <string name="settings_group_smart_home">Smart home</string>
+    <string name="settings_group_system">System</string>
+    <string name="settings_android">Android settings</string>
+    <string name="settings_android_sub">System settings of the device</string>
 </resources>

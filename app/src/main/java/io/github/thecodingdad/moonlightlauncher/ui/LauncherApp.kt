@@ -568,7 +568,7 @@ private fun MainShell(
                         io.github.thecodingdad.moonlightlauncher.ui.shell.ScreenHints(
                             listOf(ButtonHint(PadButton.A, stringResource(R.string.hint_select)), ButtonHint(PadButton.L1, stringResource(R.string.hint_tabs), secondButton = PadButton.R1)),
                         )
-                        SettingsHome(open = { nav.navigate(Routes.settings(it)) }, isFirstVisit = true)
+                        SettingsHome(open = { nav.navigate(Routes.settings(it)) }, isFirstVisit = true, openControllers = { nav.navigate(Routes.CONTROLLERS) })
                     }
                 }
                 }
