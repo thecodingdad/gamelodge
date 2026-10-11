@@ -10,12 +10,14 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 /** Dimension a filter can be split by: one chip/row per distinct value. */
-enum class GroupBy { PLATFORM, GENRE, CATEGORY, SOURCE }
+enum class GroupBy { PLATFORM, GENRE, CATEGORY, SOURCE, HOST }
 
 /** Item property a filter condition looks at. */
 enum class FilterField(val boolean: Boolean = false) {
     PLATFORM, GENRE, CATEGORY, SOURCE, GROUP,
     FAVORITE(boolean = true), PLAYED(boolean = true), REVIEW(boolean = true),
+    /** Hidden items only show in filters with a condition on this field. */
+    HIDDEN(boolean = true),
 }
 
 /**
@@ -37,6 +39,13 @@ data class FilterCondition(
 data class FilterRules(
     val conditions: List<FilterCondition> = emptyList(),
     val groupBy: GroupBy? = null,
+    /** Order and maximum number of items (e.g. "last played, 20"); null = title order, all. */
+    val sort: LibrarySort? = null,
+    val limit: Int? = null,
+    /** With [groupBy]: prefix each part with the filter name ("Couch: Nintendo Switch") … */
+    val chipShowName: Boolean = true,
+    /** … separately for the row header on the home screen. */
+    val rowShowName: Boolean = true,
     // --- legacy (schema before free conditions); read only ---
     val platforms: Set<String> = emptySet(),
     val genres: Set<String> = emptySet(),
@@ -56,7 +65,10 @@ data class FilterRules(
         }
 
     /** Same rules in the current format (legacy fields folded into conditions). */
-    fun normalized() = FilterRules(conditions = effectiveConditions, groupBy = groupBy)
+    fun normalized() = copy(
+        conditions = effectiveConditions,
+        platforms = emptySet(), genres = emptySet(), categories = emptySet(), sources = emptySet(), favorite = null, played = null,
+    )
 
     companion object {
         const val SOURCE_LOCAL = "local"
@@ -102,6 +114,23 @@ object BuiltinFilter {
         Default(HIDDEN, library = true, home = false),
     )
 
+    /**
+     * Rules of a default filter: defaults are ordinary free filters that keep their key only for
+     * the localized name and for "restore defaults".
+     */
+    fun rulesFor(key: String?): FilterRules = when (key) {
+        CONTINUE -> FilterRules(listOf(FilterCondition(FilterField.PLAYED, setOf("true"))), sort = LibrarySort.LAST_PLAYED, limit = 20)
+        RECENT -> FilterRules(sort = LibrarySort.ADDED, limit = 20)
+        LOCAL -> FilterRules(listOf(FilterCondition(FilterField.SOURCE, setOf(FilterRules.SOURCE_LOCAL))))
+        HOSTS -> FilterRules(groupBy = GroupBy.HOST, chipShowName = false, rowShowName = false)
+        PLATFORMS -> FilterRules(groupBy = GroupBy.PLATFORM, chipShowName = false, rowShowName = false)
+        FAVORITES -> FilterRules(listOf(FilterCondition(FilterField.FAVORITE, setOf("true"))))
+        NEVER_PLAYED -> FilterRules(listOf(FilterCondition(FilterField.PLAYED, setOf("true"), negate = true)))
+        REVIEW -> FilterRules(listOf(FilterCondition(FilterField.REVIEW, setOf("true"))))
+        HIDDEN -> FilterRules(listOf(FilterCondition(FilterField.HIDDEN, setOf("true"))))
+        else -> FilterRules()
+    }
+
     /** Row id of a default filter; app defaults get their own ids. */
     fun id(key: String, scope: FilterScope) = if (scope == FilterScope.APPS) "apps_$key" else key
 
@@ -119,14 +148,17 @@ data class ResolvedFilter(
     /** Stable key for selection/focus, e.g. `all`, `<id>`, `<id>:Nintendo Switch`. */
     val key: String,
     val filterId: String,
-    /** Display name; null = use the builtin's localized name ([builtin]) or [value]. */
+    /** Custom filter name; null = the default's localized name ([builtin]). */
     val name: String?,
     val builtin: String?,
-    /** For split filters: the value of this part (platform, genre, host name …). */
+    /** For split filters: the value of this part (platform id, host uuid …) and its label. */
     val value: String?,
     val entries: List<LibraryEntry>,
-    /** Fixed order for home rows (continue/recent); null = title order. */
+    /** Fixed order (e.g. last played); null = title order. */
     val rowSort: LibrarySort?,
+    val valueLabel: String? = null,
+    val chipShowName: Boolean = true,
+    val rowShowName: Boolean = true,
 )
 
 object FilterEngine {
@@ -168,61 +200,44 @@ object FilterEngine {
         hostNames: Map<String, String>,
         groupMembers: Map<String, Set<String>>,
     ): List<ResolvedFilter> {
-        val shown = pool.filter { !it.item.hidden }
-        fun single(entries: List<LibraryEntry>, sort: LibrarySort? = null) =
-            listOf(ResolvedFilter(filter.id, filter.id, filter.name.ifBlank { null }, filter.builtin, null, entries, sort))
-        return when (filter.kind) {
-            FilterKind.BUILTIN -> when (filter.builtin) {
-                BuiltinFilter.ALL -> single(shown)
-                BuiltinFilter.CONTINUE -> single(
-                    shown.filter { it.item.lastPlayedAt != null }.sortedByDescending { it.item.lastPlayedAt }.take(20),
-                    LibrarySort.LAST_PLAYED,
-                )
-                BuiltinFilter.RECENT -> single(shown.sortedByDescending { it.item.addedAt }.take(20), LibrarySort.ADDED)
-                BuiltinFilter.LOCAL -> single(shown.filter { it.localTarget != null })
-                BuiltinFilter.HOSTS -> split(filter, shown, GroupBy.SOURCE, hostNames, onlyHosts = true)
-                BuiltinFilter.PLATFORMS -> split(filter, shown, GroupBy.PLATFORM, hostNames)
-                BuiltinFilter.FAVORITES -> single(shown.filter { it.item.favorite })
-                BuiltinFilter.NEVER_PLAYED -> single(shown.filter { it.item.lastPlayedAt == null })
-                BuiltinFilter.REVIEW -> single(shown.filter { it.item.metadataState == MetadataState.REVIEW })
-                BuiltinFilter.HIDDEN -> single(pool.filter { it.item.hidden })
-                else -> emptyList()
-            }
-            FilterKind.GROUP -> {
-                val members = groupMembers[filter.id].orEmpty()
-                single(shown.filter { it.item.id in members })
-            }
-            FilterKind.SMART -> {
-                val rules = FilterRules.decode(filter.rules)
-                val matching = shown.filter { matches(it, rules, groupMembers) }
-                rules.groupBy?.let { split(filter, matching, it, hostNames) } ?: single(matching)
-            }
+        val name = filter.name.ifBlank { null }
+        if (filter.kind == FilterKind.GROUP) {
+            val members = groupMembers[filter.id].orEmpty()
+            return listOf(ResolvedFilter(filter.id, filter.id, name, filter.builtin, null, pool.filter { !it.item.hidden && it.item.id in members }, null))
         }
-    }
-
-    private fun split(
-        filter: FilterEntity,
-        entries: List<LibraryEntry>,
-        by: GroupBy,
-        hostNames: Map<String, String>,
-        onlyHosts: Boolean = false,
-    ): List<ResolvedFilter> {
+        val rules = effectiveRules(filter)
+        val matching = apply(pool, rules, groupMembers)
+        val by = rules.groupBy
+            ?: return listOf(ResolvedFilter(filter.id, filter.id, name, filter.builtin, null, matching, rules.sort))
         val byValue = LinkedHashMap<String, MutableList<LibraryEntry>>()
-        entries.forEach { e ->
-            values(e, by).filter { !onlyHosts || it != FilterRules.SOURCE_LOCAL }.forEach { byValue.getOrPut(it) { mutableListOf() }.add(e) }
-        }
+        matching.forEach { e -> values(e, by).forEach { byValue.getOrPut(it) { mutableListOf() }.add(e) } }
         return byValue.entries
             .sortedBy { (value, _) -> label(value, by, hostNames).lowercase() }
             .map { (value, list) ->
-                val label = label(value, by, hostNames)
-                // A split filter with a custom name keeps it as prefix ("Couch: Nintendo Switch").
-                val name = if (filter.kind == FilterKind.SMART && filter.name.isNotBlank()) "${filter.name}: $label" else label
-                ResolvedFilter("${filter.id}:$value", filter.id, name, filter.builtin, value, list, null)
+                ResolvedFilter(
+                    "${filter.id}:$value", filter.id, name, filter.builtin, value, list, rules.sort,
+                    valueLabel = label(value, by, hostNames), chipShowName = rules.chipShowName, rowShowName = rules.rowShowName,
+                )
             }
     }
 
+    /** Rules of a filter; old default rows (BUILTIN, e.g. from a backup) use their default rules. */
+    fun effectiveRules(filter: FilterEntity): FilterRules =
+        if (filter.kind == FilterKind.BUILTIN) BuiltinFilter.rulesFor(filter.builtin) else FilterRules.decode(filter.rules).normalized()
+
+    /**
+     * Items of [pool] matching [rules], in the rules' order and limit. Hidden items only count
+     * when a condition looks at "hidden".
+     */
+    fun apply(pool: List<LibraryEntry>, rules: FilterRules, groupMembers: Map<String, Set<String>> = emptyMap()): List<LibraryEntry> {
+        val withHidden = rules.effectiveConditions.any { it.field == FilterField.HIDDEN }
+        val matching = pool.filter { (withHidden || !it.item.hidden) && matches(it, rules, groupMembers) }
+        val sorted = rules.sort?.let { query(matching, it, "") } ?: matching
+        return rules.limit?.let { sorted.take(it) } ?: sorted
+    }
+
     private fun label(value: String, by: GroupBy, hostNames: Map<String, String>) =
-        if (by == GroupBy.SOURCE) hostNames[value] ?: value else value
+        if (by == GroupBy.SOURCE || by == GroupBy.HOST) hostNames[value] ?: value else value
 
     fun values(entry: LibraryEntry, by: GroupBy): List<String> = when (by) {
         GroupBy.PLATFORM -> listOfNotNull(entry.item.platform)
@@ -232,6 +247,7 @@ object FilterEngine {
             if (entry.localTarget != null) add(FilterRules.SOURCE_LOCAL)
             entry.remoteTargets.mapNotNull { it.hostUuid }.distinct().forEach(::add)
         }
+        GroupBy.HOST -> entry.remoteTargets.mapNotNull { it.hostUuid }.distinct()
     }
 
     fun matches(entry: LibraryEntry, rules: FilterRules, groupMembers: Map<String, Set<String>> = emptyMap()): Boolean =
@@ -247,6 +263,7 @@ object FilterEngine {
             FilterField.FAVORITE -> entry.item.favorite
             FilterField.PLAYED -> entry.item.lastPlayedAt != null
             FilterField.REVIEW -> entry.item.metadataState == MetadataState.REVIEW
+            FilterField.HIDDEN -> entry.item.hidden
         }
         // A list condition without values doesn't restrict anything (yet).
         if (!condition.field.boolean && condition.values.isEmpty()) return true

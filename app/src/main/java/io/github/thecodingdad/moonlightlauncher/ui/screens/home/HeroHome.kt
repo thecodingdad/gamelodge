@@ -236,7 +236,7 @@ fun HeroHome(
                         "row:${row.key}", 0, row.entries, callbacks, pinned,
                         firstRow = rows.running.isEmpty() && index == firstFilled,
                         onFocus = { focused = it; focusedSession = null }, actions = actions,
-                        titleText = { filterLabel(row) },
+                        titleText = { filterLabel(row, row = true) },
                     )
                 }
                 if (filterRows.size < 2 && haRow != null) item(key = "ha") { pinned("ha") { haRow() } }

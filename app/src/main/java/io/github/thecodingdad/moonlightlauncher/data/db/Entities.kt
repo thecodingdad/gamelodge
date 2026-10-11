@@ -77,15 +77,16 @@ enum class FilterKind { BUILTIN, SMART, GROUP }
 enum class FilterScope { GAMES, APPS, BOTH }
 
 /**
- * A library filter. BUILTIN rows are the default filters (can be hidden), SMART filters match
- * rules, GROUP filters are manual groups whose members live in item_collections (id = collection id).
+ * A library filter. SMART filters match rules (the default filters too: they keep their key in
+ * [builtin] for the localized name), GROUP filters are manual groups whose members live in
+ * item_collections (id = collection id). BUILTIN is the old form of default filters (migrated).
  */
 @Entity(tableName = "filters")
 data class FilterEntity(
     @PrimaryKey val id: String,
     val name: String,
     val kind: FilterKind,
-    /** For BUILTIN: all, local, hosts, favorites, never_played, review, hidden. */
+    /** Default filter key (all, local, hosts, favorites …), null for own filters. */
     val builtin: String? = null,
     /** JSON-encoded FilterRules for SMART filters. */
     val rules: String? = null,

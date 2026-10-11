@@ -403,7 +403,7 @@
     <string name="filters_edit">Filter bearbeiten</string>
     <string name="settings_filters">Filter &amp; Gruppen</string>
     <string name="settings_filters_sub">Bibliothek-Chips, Startseiten-Reihen, eigene Filter und Gruppen</string>
-    <string name="filters_help">Jeder Filter kann als Chip in der Bibliothek, als Reihe auf der Startseite und als Chip im Apps-Tab erscheinen. Standardfilter lassen sich umbenennen, ausblenden oder löschen.</string>
+    <string name="filters_help">Jeder Filter kann als Chip in der Bibliothek, als Reihe auf der Startseite und als Chip im Apps-Tab erscheinen. Standardfilter sind normale Filter: bearbeiten, ausblenden oder löschen wie eigene.</string>
     <string name="filter_new_smart">Neuer Filter</string>
     <string name="filter_new_group">Neue Gruppe</string>
     <string name="filters_restore">Standards wiederherstellen</string>
@@ -670,4 +670,22 @@
 
     <!-- Odin -->
     <string name="controller_odin_copy">von Odin Mapping übernommen</string>
+
+    <!-- Filters -->
+    <string name="filter_chip_show_name">Filtername im Chip</string>
+    <string name="filter_row_show_name">Filtername in der Reihenüberschrift (Start)</string>
+    <string name="filter_show_name_sub">An: „Name: Gruppe“, aus: nur die Gruppe</string>
+    <string name="filter_sort">Sortierung</string>
+    <string name="filter_limit">Maximale Anzahl</string>
+    <string name="filter_limit_none">Alle</string>
+    <string name="filter_sort_title">Name</string>
+    <string name="filter_sort_last_played">Zuletzt gespielt</string>
+    <string name="filter_sort_added">Zuletzt hinzugefügt</string>
+    <string name="filter_sort_playtime">Spielzeit</string>
+    <string name="filter_field_hidden">Ausgeblendet</string>
+
+    <!-- Filters -->
+    <string name="filters_reset_help">Standardfilter auf ihre ursprünglichen Einstellungen zurücksetzen oder komplett neu anfangen: Das löscht auch deine eigenen Filter und Gruppen (samt Zuordnungen) und stellt die ursprüngliche Reihenfolge wieder her.</string>
+    <string name="filters_reset_defaults">Standardfilter zurücksetzen</string>
+    <string name="filters_reset_all">Alle Filter und die Reihenfolge zurücksetzen (halten)</string>
 </resources>

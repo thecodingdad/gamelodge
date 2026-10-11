@@ -405,7 +405,7 @@
     <string name="filters_edit">Edit filters</string>
     <string name="settings_filters">Filters &amp; groups</string>
     <string name="settings_filters_sub">Library chips, home rows, custom filters and groups</string>
-    <string name="filters_help">Each filter can appear as a chip in the library, as a row on the home screen and as a chip in the Apps tab. Default filters can be renamed, hidden or deleted.</string>
+    <string name="filters_help">Each filter can appear as a chip in the library, as a row on the home screen and as a chip in the Apps tab. Default filters are ordinary filters: edit, hide or delete them like your own.</string>
     <string name="filter_new_smart">New filter</string>
     <string name="filter_new_group">New group</string>
     <string name="filters_restore">Restore defaults</string>
@@ -672,4 +672,22 @@
 
     <!-- Odin -->
     <string name="controller_odin_copy">taken over by Odin Mapping</string>
+
+    <!-- Filters -->
+    <string name="filter_chip_show_name">Filter name in chip</string>
+    <string name="filter_row_show_name">Filter name in row header (home)</string>
+    <string name="filter_show_name_sub">On: \"Name: Group\", off: only the group</string>
+    <string name="filter_sort">Order</string>
+    <string name="filter_limit">Maximum number</string>
+    <string name="filter_limit_none">All</string>
+    <string name="filter_sort_title">Name</string>
+    <string name="filter_sort_last_played">Last played</string>
+    <string name="filter_sort_added">Recently added</string>
+    <string name="filter_sort_playtime">Playtime</string>
+    <string name="filter_field_hidden">Hidden</string>
+
+    <!-- Filters -->
+    <string name="filters_reset_help">Reset the default filters to their original settings, or start over completely: this also deletes your own filters and groups (including their assignments) and restores the original order.</string>
+    <string name="filters_reset_defaults">Reset default filters</string>
+    <string name="filters_reset_all">Reset all filters and the order (hold)</string>
 </resources>

@@ -153,8 +153,12 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch { onCreated(c.filters.createSmart(name, FilterRules(), scope)) }
     }
 
-    fun restoreDefaultFilters(scope: FilterScope) {
-        viewModelScope.launch { c.filters.restoreDefaults(scope) }
+    fun resetDefaultFilters(scope: FilterScope) {
+        viewModelScope.launch { c.filters.resetDefaults(scope) }
+    }
+
+    fun resetAllFilters(scope: FilterScope) {
+        viewModelScope.launch { c.filters.resetAll(scope) }
     }
 
     fun setPlatform(entry: LibraryEntry, platform: String?) {

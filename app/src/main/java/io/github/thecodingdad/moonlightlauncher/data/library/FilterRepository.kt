@@ -34,6 +34,11 @@ class FilterRepository(
             restoreDefaults(FilterScope.APPS)
         }
         settings.update { it.copy(filtersSeeded = true, appFiltersSeeded = true) }
+        // Default filters used to be special rows; they are ordinary free filters now.
+        val builtin = dao.getAll().filter { it.kind == FilterKind.BUILTIN }
+        if (builtin.isNotEmpty()) {
+            dao.upsert(builtin.map { it.copy(kind = FilterKind.SMART, rules = FilterRules.encode(BuiltinFilter.rulesFor(it.builtin))) })
+        }
     }
 
     /** Re-adds default filters of one scope the user deleted; existing ones stay untouched. */
@@ -44,16 +49,42 @@ class FilterRepository(
         val defaults = if (scope == FilterScope.APPS) BuiltinFilter.appDefaults else BuiltinFilter.gameDefaults
         val base = (existing.maxOfOrNull { it.sortOrder } ?: -1) + 1
         val missing = defaults.withIndex().filter { it.value.key !in present }.map { (index, d) ->
-            FilterEntity(
-                id = BuiltinFilter.id(d.key, scope), name = "", kind = FilterKind.BUILTIN, builtin = d.key, scope = scope,
-                showInLibrary = d.library && scope != FilterScope.APPS,
-                showInApps = d.library && scope == FilterScope.APPS,
-                showOnHome = d.home,
-                sortOrder = if (inScope.isEmpty()) index else base + index,
-            )
+            defaultEntity(d, scope, if (inScope.isEmpty()) index else base + index)
         }
         if (missing.isNotEmpty()) dao.upsert(missing)
     }
+
+    /** Default filters of one scope back to their original rules, name and visibility (deleted ones re-added). */
+    suspend fun resetDefaults(scope: FilterScope) {
+        val apps = scope == FilterScope.APPS
+        val defaults = if (apps) BuiltinFilter.appDefaults else BuiltinFilter.gameDefaults
+        val existing = dao.getAll().filter { (it.scope == FilterScope.APPS) == apps && it.builtin != null }
+        dao.upsert(
+            existing.mapNotNull { f ->
+                val d = defaults.firstOrNull { it.key == f.builtin } ?: return@mapNotNull null
+                defaultEntity(d, scope, f.sortOrder).copy(id = f.id)
+            },
+        )
+        restoreDefaults(scope)
+    }
+
+    /** Everything of one scope back to the start: own filters and groups deleted, defaults in their order. */
+    suspend fun resetAll(scope: FilterScope) = db.withTransaction {
+        val apps = scope == FilterScope.APPS
+        dao.getAll().filter { (it.scope == FilterScope.APPS) == apps }.forEach { delete(it) }
+        val defaults = if (apps) BuiltinFilter.appDefaults else BuiltinFilter.gameDefaults
+        val base = (dao.getAll().maxOfOrNull { it.sortOrder } ?: -1) + 1
+        dao.upsert(defaults.mapIndexed { index, d -> defaultEntity(d, scope, base + index) })
+    }
+
+    private fun defaultEntity(d: BuiltinFilter.Default, scope: FilterScope, order: Int) = FilterEntity(
+        id = BuiltinFilter.id(d.key, scope), name = "", kind = FilterKind.SMART, builtin = d.key, scope = scope,
+        rules = FilterRules.encode(BuiltinFilter.rulesFor(d.key)),
+        showInLibrary = d.library && scope != FilterScope.APPS,
+        showInApps = d.library && scope == FilterScope.APPS,
+        showOnHome = d.home,
+        sortOrder = order,
+    )
 
     suspend fun save(filter: FilterEntity) = dao.upsert(listOf(filter))
 

@@ -53,10 +53,17 @@ import io.github.thecodingdad.moonlightlauncher.ui.shell.LocalEntryActions
 import io.github.thecodingdad.moonlightlauncher.ui.shell.ScreenHints
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 
-/** Chip/row title of a resolved filter: custom name, localized default name or split value. */
+/**
+ * Chip ([row] = false) or home row title of a resolved filter: its name (custom or localized
+ * default); for a part of a grouped filter the group value, prefixed with the name if wanted.
+ */
 @Composable
-fun filterLabel(filter: ResolvedFilter): String =
-    filter.name ?: filter.builtin?.let { builtinLabel(it) } ?: filter.value.orEmpty()
+fun filterLabel(filter: ResolvedFilter, row: Boolean = false): String {
+    val name = filter.name ?: filter.builtin?.let { builtinLabel(it) }
+    val part = filter.valueLabel ?: return name ?: filter.value.orEmpty()
+    val withName = if (row) filter.rowShowName else filter.chipShowName
+    return if (withName && name != null) "$name: $part" else part
+}
 
 @Composable
 fun builtinLabel(key: String): String = when (key) {

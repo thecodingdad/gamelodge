@@ -41,6 +41,7 @@ import io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry
 import io.github.thecodingdad.moonlightlauncher.data.library.FilterEngine
 import io.github.thecodingdad.moonlightlauncher.data.library.FilterRules
 import io.github.thecodingdad.moonlightlauncher.data.library.GroupBy
+import io.github.thecodingdad.moonlightlauncher.data.library.LibrarySort
 import io.github.thecodingdad.moonlightlauncher.ui.LauncherViewModel
 import io.github.thecodingdad.moonlightlauncher.ui.components.HoldToConfirmButton
 import io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton
@@ -63,6 +64,7 @@ fun FilterSettings(vm: LauncherViewModel, scope: FilterScope) {
     val hosts by vm.hosts.collectAsState()
     val keyboard = LocalKeyboardController.current
     var editing by remember { mutableStateOf<String?>(null) }
+    var resetting by remember { mutableStateOf(false) }
     val smartTitle = stringResource(R.string.filter_new_smart)
     val groupTitle = stringResource(R.string.filter_new_group)
 
@@ -77,7 +79,7 @@ fun FilterSettings(vm: LauncherViewModel, scope: FilterScope) {
                 groupTitle, icon = Icons.AutoMirrored.Filled.PlaylistAdd,
                 onClick = { keyboard.open(groupTitle, "") { name -> if (name.isNotBlank()) vm.createGroup(name.trim(), scope) } },
             )
-            LauncherButton(stringResource(R.string.filters_restore), icon = Icons.Filled.Restore, onClick = { vm.restoreDefaultFilters(scope) })
+            LauncherButton(stringResource(R.string.filters_restore), icon = Icons.Filled.Restore, onClick = { resetting = true })
         }
         val members = collections.associate { (c, ids) -> c.id to ids.size }
         filters.sortedBy { it.sortOrder }.forEachIndexed { index, f ->
@@ -87,8 +89,8 @@ fun FilterSettings(vm: LauncherViewModel, scope: FilterScope) {
                 if (f.showOnHome) add(stringResource(R.string.filter_place_home))
             }.ifEmpty { listOf(stringResource(R.string.filter_place_none)) }
             val kind = when (f.kind) {
-                FilterKind.BUILTIN -> stringResource(R.string.filter_kind_builtin)
-                FilterKind.SMART -> stringResource(R.string.filter_kind_smart)
+                FilterKind.BUILTIN, FilterKind.SMART ->
+                    stringResource(if (f.builtin != null) R.string.filter_kind_builtin else R.string.filter_kind_smart)
                 FilterKind.GROUP -> stringResource(R.string.filter_kind_group, members[f.id] ?: 0)
             }
             NavRow(
@@ -97,6 +99,23 @@ fun FilterSettings(vm: LauncherViewModel, scope: FilterScope) {
                 onClick = { editing = f.id },
                 initialFocus = index == 0,
             )
+        }
+    }
+
+    Modal(visible = resetting, onDismiss = { resetting = false }, title = stringResource(R.string.filters_restore), maxWidth = 680.dp) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(stringResource(R.string.filters_reset_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+            LauncherButton(
+                stringResource(R.string.filters_reset_defaults), icon = Icons.Filled.Restore, primary = true,
+                modifier = Modifier.fillMaxWidth(),
+                onClick = { vm.resetDefaultFilters(scope); resetting = false },
+            )
+            HoldToConfirmButton(
+                stringResource(R.string.filters_reset_all), icon = Icons.Filled.Delete,
+                modifier = Modifier.fillMaxWidth(),
+                onConfirmed = { vm.resetAllFilters(scope); resetting = false },
+            )
+            LauncherButton(stringResource(R.string.action_cancel), modifier = Modifier.fillMaxWidth(), onClick = { resetting = false })
         }
     }
 
@@ -124,9 +143,7 @@ private fun FilterEditorDialog(
 ) {
     Modal(visible = filter != null, onDismiss = onDismiss, title = filter?.let { filterEntityLabel(it) }, maxWidth = 760.dp) {
         val f = filter ?: return@Modal
-        val rules = FilterRules.decode(f.rules)
         var editingCondition by remember(f.id) { mutableStateOf<Int?>(null) }
-        fun saveRules(transform: (FilterRules) -> FilterRules) = vm.saveFilter(f.copy(rules = FilterRules.encode(transform(rules))))
         val kind = if (f.scope == FilterScope.APPS) ItemKind.APP else ItemKind.GAME
         val games = entries.filter { it.item.kind == kind }
         Column(
@@ -145,10 +162,12 @@ private fun FilterEditorDialog(
             SwitchRow(stringResource(R.string.filter_show_home), f.showOnHome, { vm.saveFilter(f.copy(showOnHome = it)) })
 
             when (f.kind) {
-                FilterKind.SMART -> {
-                    val current = rules.normalized()
-                    fun saveConditions(list: List<FilterCondition>) =
-                        vm.saveFilter(f.copy(rules = FilterRules.encode(current.copy(conditions = list))))
+                // Default filters are free filters too (old BUILTIN rows become one on the first change).
+                FilterKind.SMART, FilterKind.BUILTIN -> {
+                    val current = FilterEngine.effectiveRules(f)
+                    fun saveRules(rules: FilterRules) =
+                        vm.saveFilter(f.copy(kind = FilterKind.SMART, rules = FilterRules.encode(rules)))
+                    fun saveConditions(list: List<FilterCondition>) = saveRules(current.copy(conditions = list))
                     SectionHeader(stringResource(R.string.filter_conditions))
                     Text(stringResource(R.string.filter_conditions_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
                     val labelFor = conditionValueLabel(entries, hostNames, vm)
@@ -171,12 +190,32 @@ private fun FilterEditorDialog(
                     ChoiceRow(
                         stringResource(R.string.filter_group_by), listOf<GroupBy?>(null) + GroupBy.entries, current.groupBy,
                         label = { groupByLabel(it) },
-                        onSelect = { v -> vm.saveFilter(f.copy(rules = FilterRules.encode(current.copy(groupBy = v)))) },
+                        onSelect = { v -> saveRules(current.copy(groupBy = v)) },
                         subtitle = stringResource(R.string.filter_group_by_sub),
+                    )
+                    if (current.groupBy != null) {
+                        SwitchRow(
+                            stringResource(R.string.filter_chip_show_name), current.chipShowName, { v -> saveRules(current.copy(chipShowName = v)) },
+                            subtitle = stringResource(R.string.filter_show_name_sub),
+                        )
+                        SwitchRow(
+                            stringResource(R.string.filter_row_show_name), current.rowShowName, { v -> saveRules(current.copy(rowShowName = v)) },
+                            subtitle = stringResource(R.string.filter_show_name_sub),
+                        )
+                    }
+                    ChoiceRow(
+                        stringResource(R.string.filter_sort), listOf<LibrarySort?>(null) + LibrarySort.entries, current.sort,
+                        label = { sortLabel(it) },
+                        onSelect = { v -> saveRules(current.copy(sort = v)) },
+                    )
+                    ChoiceRow(
+                        stringResource(R.string.filter_limit), listOf<Int?>(null, 10, 20, 30, 50, 100), current.limit,
+                        label = { it?.toString() ?: stringResource(R.string.filter_limit_none) },
+                        onSelect = { v -> saveRules(current.copy(limit = v)) },
                     )
                     val members by vm.collections.collectAsState()
                     val memberMap = members.associate { (c, ids) -> c.id to ids }
-                    val count = games.count { !it.item.hidden && FilterEngine.matches(it, current, memberMap) }
+                    val count = FilterEngine.apply(games, current, memberMap).size
                     Text(stringResource(if (f.scope == FilterScope.APPS) R.string.filter_match_count_apps else R.string.filter_match_count, count), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
 
                     ConditionDialog(
@@ -192,7 +231,6 @@ private fun FilterEditorDialog(
                 FilterKind.GROUP -> Text(
                     stringResource(R.string.filter_group_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted,
                 )
-                FilterKind.BUILTIN -> Unit
             }
 
             io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 12.dp, modifier = Modifier.padding(top = 8.dp)) {
@@ -233,6 +271,18 @@ private fun groupByLabel(g: GroupBy?): String = stringResource(
         GroupBy.GENRE -> R.string.filter_genres
         GroupBy.CATEGORY -> R.string.filter_categories
         GroupBy.SOURCE -> R.string.filter_sources
+        GroupBy.HOST -> R.string.filter_hosts
+    },
+)
+
+@Composable
+private fun sortLabel(sort: LibrarySort?): String = stringResource(
+    when (sort) {
+        null -> R.string.filter_sort_title
+        LibrarySort.TITLE -> R.string.filter_sort_title
+        LibrarySort.LAST_PLAYED -> R.string.filter_sort_last_played
+        LibrarySort.ADDED -> R.string.filter_sort_added
+        LibrarySort.PLAYTIME -> R.string.filter_sort_playtime
     },
 )
 
@@ -256,6 +306,7 @@ private fun fieldLabel(field: FilterField): String = stringResource(
         FilterField.FAVORITE -> R.string.filter_field_favorite
         FilterField.PLAYED -> R.string.filter_field_played
         FilterField.REVIEW -> R.string.filter_field_review
+        FilterField.HIDDEN -> R.string.filter_field_hidden
     },
 )
 

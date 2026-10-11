@@ -108,4 +108,37 @@ class FiltersTest {
         assertEquals("Nintendo Switch", PlatformResolver.fromIgdb(listOf("Wii U", "Nintendo Switch", "Nintendo 3DS"), playsOnPc = true, playsOnAndroid = false))
         assertEquals("PC", PlatformResolver.fromIgdb(listOf("Nintendo Switch", "PC (Microsoft Windows)"), playsOnPc = true, playsOnAndroid = false))
     }
+
+    private fun converted(key: String, order: Int) = FilterEntity(
+        key, "", FilterKind.SMART, builtin = key, rules = FilterRules.encode(BuiltinFilter.rulesFor(key)), scope = FilterScope.GAMES, sortOrder = order,
+    )
+
+    @Test
+    fun `default filters as free filters match their old built-in behaviour`() {
+        val keys = BuiltinFilter.gameDefaults.map { it.key }
+        keys.forEach { key ->
+            val old = FilterEngine.resolve(listOf(builtin(key, 0).copy(showInLibrary = true)), FilterPlace.LIBRARY, entries, mapOf("H1" to "PC"), emptyMap())
+            val new = FilterEngine.resolve(listOf(converted(key, 0)), FilterPlace.LIBRARY, entries, mapOf("H1" to "PC"), emptyMap())
+            assertEquals(key, old.map { it.key to it.entries.map { e -> e.item.id } }, new.map { it.key to it.entries.map { e -> e.item.id } })
+        }
+        val hosts = FilterEngine.resolve(listOf(converted(BuiltinFilter.HOSTS, 0)), FilterPlace.LIBRARY, entries, mapOf("H1" to "PC"), emptyMap())
+        assertEquals(listOf("H1"), hosts.map { it.value }) // only hosts, no "local" part
+        assertEquals("PC", hosts.single().valueLabel)
+    }
+
+    @Test
+    fun `grouped filter keeps separate name options for chip and row`() {
+        val rules = FilterRules(groupBy = GroupBy.PLATFORM, chipShowName = false, rowShowName = true)
+        val f = FilterEntity("s", "Couch", FilterKind.SMART, rules = FilterRules.encode(rules))
+        val parts = FilterEngine.resolve(listOf(f), FilterPlace.LIBRARY, entries, emptyMap(), emptyMap())
+        assertTrue(parts.all { it.name == "Couch" && !it.chipShowName && it.rowShowName })
+        assertEquals(listOf("Android", "Nintendo Switch", "PC"), parts.map { it.valueLabel })
+    }
+
+    @Test
+    fun `sort and limit apply before grouping`() {
+        val rules = FilterRules(sort = LibrarySort.TITLE, limit = 2)
+        val r = FilterEngine.apply(entries, rules)
+        assertEquals(listOf("a", "b"), r.map { it.item.id })
+    }
 }
