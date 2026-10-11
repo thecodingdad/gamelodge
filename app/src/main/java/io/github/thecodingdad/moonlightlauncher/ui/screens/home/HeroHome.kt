@@ -1,5 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher.ui.screens.home
 
+import kotlinx.coroutines.flow.first
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -55,6 +56,7 @@ import io.github.thecodingdad.moonlightlauncher.ui.components.restoreFocusIf
 import io.github.thecodingdad.moonlightlauncher.ui.input.PadAction
 import io.github.thecodingdad.moonlightlauncher.ui.input.PadButton
 import io.github.thecodingdad.moonlightlauncher.ui.shell.LocalEntryActions
+import io.github.thecodingdad.moonlightlauncher.ui.shell.focusAfterBrowse
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 import kotlinx.coroutines.delay
 
@@ -260,7 +262,16 @@ private fun androidx.compose.foundation.lazy.LazyListScope.homeRow(
     if (entries.isEmpty()) return
     item(key = key) { pinned(key) {
         RowTitle(titleText?.invoke() ?: stringResource(title))
+        val rowState = androidx.compose.foundation.lazy.rememberLazyListState()
+        // Back from paging through details: bring the last game viewed into the row's view.
+        androidx.compose.runtime.LaunchedEffect(Unit) {
+            val id = callbacks.lastFocusedKey?.takeIf { it.startsWith("$key:") }?.removePrefix("$key:") ?: return@LaunchedEffect
+            val index = entries.indexOfFirst { it.item.id == id }
+            androidx.compose.runtime.snapshotFlow { rowState.layoutInfo.visibleItemsInfo.isNotEmpty() }.first { it }
+            if (index >= 0 && rowState.layoutInfo.visibleItemsInfo.none { it.index == index }) rowState.scrollToItem(index)
+        }
         LazyRow(
+            state = rowState,
             contentPadding = PaddingValues(horizontal = 40.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.focusRestorer(),
@@ -271,11 +282,11 @@ private fun androidx.compose.foundation.lazy.LazyListScope.homeRow(
                 CoverCard(
                     entry = entry,
                     width = LauncherTheme.dimens.coverWidth * 0.82f,
-                    onClick = { actions.open(entry) },
+                    onClick = { actions.open(entry, entries) { id -> callbacks.onFocusKey("$key:$id") } },
                     onLongClick = { actions.context(entry) },
                     onFocused = { onFocus(entry); callbacks.onFocusKey(focusKey) },
                     animated = callbacks.animatedArtwork,
-                    modifier = Modifier.restoreFocusIf(isDefault || callbacks.lastFocusedKey == focusKey),
+                    modifier = Modifier.restoreFocusIf(isDefault || callbacks.lastFocusedKey == focusKey).focusAfterBrowse(entry.item.id),
                 )
             }
         }

@@ -770,4 +770,7 @@
     <string name="metadata_status_ok">%1$s connected</string>
     <string name="metadata_status_rejected">%1$s rejected the key</string>
     <string name="metadata_status_unknown">%1$s not reachable right now</string>
+
+    <!-- Detail -->
+    <string name="hint_prev_next">Previous/next</string>
 </resources>

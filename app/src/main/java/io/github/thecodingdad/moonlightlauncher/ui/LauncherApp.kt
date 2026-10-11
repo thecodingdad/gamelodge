@@ -47,7 +47,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.container
 import io.github.thecodingdad.moonlightlauncher.data.db.MetadataState
@@ -206,8 +205,9 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
     var artworkFor by remember { mutableStateOf<String?>(null) }
     val metaScope = rememberCoroutineScope()
     // Game whose detail page is on screen (its menu leaves out what the page offers itself).
-    val backStack by nav.currentBackStackEntryAsState()
-    val detailOpenFor = backStack?.takeIf { it.destination.route == Routes.DETAIL }?.arguments?.getString("id")
+    // Game whose detail page is on screen (paging through a list changes it without navigating).
+    var detailShownId by remember { mutableStateOf<String?>(null) }
+    val detailOpenFor = detailShownId
     var collectionsFor by remember { mutableStateOf<io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry?>(null) }
 
     val density = androidx.compose.ui.platform.LocalDensity.current
@@ -250,10 +250,22 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                         )
                     }
                     composable(Routes.DETAIL) { backStack ->
-                        val id = backStack.arguments?.getString("id").orEmpty()
-                        val entry by remember(id) { vm.entry(id) }.collectAsState(null)
-                        val sessions by remember(id) { vm.sessions(id) }.collectAsState(emptyList())
+                        val startId = backStack.arguments?.getString("id").orEmpty()
+                        val browse = remember(startId) { entryActions.browse?.takeIf { startId in it.ids } }
+                        var lastShown by remember { mutableStateOf(startId) }
+                        androidx.compose.runtime.DisposableEffect(Unit) {
+                            onDispose {
+                                detailShownId = null
+                                if (lastShown != startId) entryActions.returnFocusId = lastShown
+                            }
+                        }
                         ShellFrame(hints) {
+                        io.github.thecodingdad.moonlightlauncher.ui.screens.detail.DetailBrowser(
+                            startId, browse?.ids,
+                            onShown = { shown -> detailShownId = shown; lastShown = shown; browse?.onShown?.invoke(shown) },
+                        ) { id, onBrowse, pageActive ->
+                            val entry by remember(id) { vm.entry(id) }.collectAsState(null)
+                            val sessions by remember(id) { vm.sessions(id) }.collectAsState(emptyList())
                             entry?.let { e ->
                                 val detailProfiles by vm.profiles.collectAsState()
                                 val detailActive by vm.activeProfile.collectAsState()
@@ -261,12 +273,15 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                                     e, sessions, settings.animatedArtwork, onFavorite = { vm.setFavorite(e, it) }, onPlatform = { platformFor = e },
                                     profiles = detailProfiles, activeProfile = detailActive, onProfile = vm::setActiveProfile,
                                     onEditProfiles = { nav.navigate(Routes.settings(SettingsPageId.PROFILES)) },
+                                    onBrowse = onBrowse,
+                                    active = pageActive,
                                 ) {
                                     io.github.thecodingdad.moonlightlauncher.ui.screens.metadata.ReviewConfirmAction(e) {
                                         metaScope.launch { activity.container.metadata.confirm(e.item.id) }
                                     }
                                 }
                             }
+                        }
                         }
                     }
                     composable(Routes.SETTINGS) { backStack ->

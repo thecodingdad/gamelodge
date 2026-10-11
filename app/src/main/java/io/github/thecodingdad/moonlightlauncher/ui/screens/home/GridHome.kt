@@ -1,5 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher.ui.screens.home
 
+import kotlinx.coroutines.flow.first
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -44,6 +45,7 @@ import io.github.thecodingdad.moonlightlauncher.ui.components.restoreFocusIf
 import io.github.thecodingdad.moonlightlauncher.ui.input.PadAction
 import io.github.thecodingdad.moonlightlauncher.ui.input.PadButton
 import io.github.thecodingdad.moonlightlauncher.ui.shell.LocalEntryActions
+import io.github.thecodingdad.moonlightlauncher.ui.shell.focusAfterBrowse
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 
 /** Playnite fullscreen style: all games as a cover grid with a detail column on the right. */
@@ -79,7 +81,16 @@ fun GridHome(
     val coverWidth = LauncherTheme.dimens.coverWidth * 0.7f
 
     Row(Modifier.fillMaxSize()) {
+        val gridState = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
+        // Back from paging through details: the last game viewed may be off screen.
+        androidx.compose.runtime.LaunchedEffect(Unit) {
+            val id = callbacks.lastFocusedKey?.takeIf { it.startsWith("grid:") }?.removePrefix("grid:") ?: return@LaunchedEffect
+            val index = sorted.indexOfFirst { it.item.id == id }.takeIf { it >= 0 }?.plus(running.size) ?: return@LaunchedEffect
+            androidx.compose.runtime.snapshotFlow { gridState.layoutInfo.visibleItemsInfo.isNotEmpty() }.first { it }
+            if (gridState.layoutInfo.visibleItemsInfo.none { it.index == index }) gridState.scrollToItem(index)
+        }
         LazyVerticalGrid(
+            state = gridState,
             columns = GridCells.Adaptive(LauncherTheme.dimens.coverWidth * 0.7f + 8.dp),
             contentPadding = PaddingValues(start = 36.dp, end = 16.dp, top = 12.dp, bottom = 24.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -110,14 +121,14 @@ fun GridHome(
                 CoverCard(
                     entry = entry,
                     width = LauncherTheme.dimens.coverWidth * 0.7f,
-                    onClick = { actions.open(entry) },
+                    onClick = { actions.open(entry, sorted) { id -> callbacks.onFocusKey("grid:$id") } },
                     onLongClick = { actions.context(entry) },
                     onFocused = { focused = entry; focusedSession = null; callbacks.onFocusKey(key) },
                     animated = callbacks.animatedArtwork,
                     modifier = Modifier.restoreFocusIf(
                         callbacks.lastFocusedKey == key ||
                             (running.isEmpty() && callbacks.lastFocusedKey?.startsWith("grid:") != true && entry === sorted.first()),
-                    ),
+                    ).focusAfterBrowse(entry.item.id),
                 )
             }
         }

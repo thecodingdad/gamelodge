@@ -1,5 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher.ui.screens.library
 
+import kotlinx.coroutines.flow.first
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,6 +24,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,6 +52,7 @@ import io.github.thecodingdad.moonlightlauncher.ui.components.restoreFocusIf
 import io.github.thecodingdad.moonlightlauncher.ui.input.PadAction
 import io.github.thecodingdad.moonlightlauncher.ui.input.PadButton
 import io.github.thecodingdad.moonlightlauncher.ui.shell.LocalEntryActions
+import io.github.thecodingdad.moonlightlauncher.ui.shell.focusAfterBrowse
 import io.github.thecodingdad.moonlightlauncher.ui.shell.ScreenHints
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 
@@ -165,10 +168,23 @@ fun LibraryScreen(
             return@Column
         }
         val lastId = lastFocusedKey?.takeIf { it.startsWith("library:") }?.removePrefix("library:")
+        // Back from paging through details: the last game viewed (reported via the focus key while
+        // this screen was away) takes over this filter's remembered position.
+        // Done before the cards appear: they request focus in their first frame.
+        remember {
+            if (lastId != null && lastId != focusByFilter[filterKey] && shown.any { it.item.id == lastId }) focusByFilter[filterKey] = lastId
+            true
+        }
         val targetId = listOfNotNull(focusByFilter[filterKey], lastId).firstOrNull { id -> shown.any { it.item.id == id } }
             ?: shown.first().item.id
         gridStates.SaveableStateProvider(filterKey) {
         val gridState = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
+        // Back from paging through details: the last game viewed may be off screen.
+        LaunchedEffect(Unit) {
+            val index = shown.indexOfFirst { it.item.id == targetId }
+            androidx.compose.runtime.snapshotFlow { gridState.layoutInfo.visibleItemsInfo.isNotEmpty() }.first { it }
+            if (index >= 0 && gridState.layoutInfo.visibleItemsInfo.none { it.index == index }) gridState.scrollToItem(index)
+        }
         // The focused line always sits at the top, so lines don't jump around while navigating.
         val snapTo = io.github.thecodingdad.moonlightlauncher.ui.components.rememberFocusLineSnap(gridState)
         androidx.compose.runtime.CompositionLocalProvider(
@@ -190,12 +206,14 @@ fun LibraryScreen(
                 val key = "library:${entry.item.id}"
                 CoverCard(
                     entry = entry,
-                    onClick = { actions.open(entry) },
+                    onClick = {
+                        actions.open(entry, shown) { id -> focusByFilter[filterKey] = id; onFocusKey("library:$id") }
+                    },
                     onLongClick = { actions.context(entry) },
                     onFocused = { focused = entry; focusByFilter[filterKey] = entry.item.id; onFocusKey(key); snapTo(index) },
                     showTitle = true,
                     animated = animatedArtwork,
-                    modifier = Modifier.restoreFocusIf(entry.item.id == targetId),
+                    modifier = Modifier.restoreFocusIf(entry.item.id == targetId).focusAfterBrowse(entry.item.id),
                 )
             }
         }

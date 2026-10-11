@@ -80,7 +80,10 @@ fun PadGlyph(button: PadButton, modifier: Modifier = Modifier, second: PadButton
     val layout = LocalButtonLayout.current
     val (first, color) = glyphFor(button, layout)
     val label = second?.let { "$first/${glyphFor(it, layout).first}" } ?: first
-    val isRound = second == null && button in listOf(PadButton.A, PadButton.B, PadButton.X, PadButton.Y)
+    val isRound = second == null && button in listOf(
+        PadButton.A, PadButton.B, PadButton.X, PadButton.Y,
+        PadButton.RS_LEFT, PadButton.RS_RIGHT, PadButton.RS_UP, PadButton.RS_DOWN,
+    )
     Box(
         modifier = modifier
             .then(if (isRound) Modifier.size(26.dp) else Modifier.widthIn(min = 34.dp))
@@ -108,6 +111,7 @@ private fun glyphFor(button: PadButton, layout: ButtonLayout): Pair<String, Colo
         PadButton.START -> "☰" to shoulder
         PadButton.SELECT -> "⧉" to shoulder
         PadButton.SELECT_HOLD -> "⧉" to shoulder
-        PadButton.RS_LEFT, PadButton.RS_RIGHT, PadButton.RS_UP, PadButton.RS_DOWN -> "RS" to shoulder
+        // Right stick: a round "R", like the face buttons.
+        PadButton.RS_LEFT, PadButton.RS_RIGHT, PadButton.RS_UP, PadButton.RS_DOWN -> "R" to shoulder
     }
 }

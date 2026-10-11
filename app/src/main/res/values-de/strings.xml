@@ -768,4 +768,7 @@
     <string name="metadata_status_ok">%1$s verbunden</string>
     <string name="metadata_status_rejected">%1$s hat den Schlüssel abgelehnt</string>
     <string name="metadata_status_unknown">%1$s gerade nicht erreichbar</string>
+
+    <!-- Detail -->
+    <string name="hint_prev_next">Voriges/Nächstes</string>
 </resources>

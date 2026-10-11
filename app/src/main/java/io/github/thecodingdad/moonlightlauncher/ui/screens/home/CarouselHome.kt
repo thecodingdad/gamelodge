@@ -1,5 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher.ui.screens.home
 
+import kotlinx.coroutines.flow.first
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -49,6 +50,7 @@ import io.github.thecodingdad.moonlightlauncher.ui.components.restoreFocusIf
 import io.github.thecodingdad.moonlightlauncher.ui.input.PadAction
 import io.github.thecodingdad.moonlightlauncher.ui.input.PadButton
 import io.github.thecodingdad.moonlightlauncher.ui.shell.LocalEntryActions
+import io.github.thecodingdad.moonlightlauncher.ui.shell.focusAfterBrowse
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 
 /** Switch / Steam Deck style: one big row of recent games plus round quick buttons. */
@@ -79,6 +81,13 @@ fun CarouselHome(
         if (session != null) callbacks.onRunningMenu(session) else focused?.let(actions::context)
     }
     val listState = rememberLazyListState()
+    // Back from paging through details: the last game viewed may be off screen.
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        val id = callbacks.lastFocusedKey?.takeIf { it.startsWith("carousel:") }?.removePrefix("carousel:") ?: return@LaunchedEffect
+        val index = items.indexOfFirst { it.item.id == id }.takeIf { it >= 0 }?.plus(rows.running.size) ?: return@LaunchedEffect
+        androidx.compose.runtime.snapshotFlow { listState.layoutInfo.visibleItemsInfo.isNotEmpty() }.first { it }
+        if (listState.layoutInfo.visibleItemsInfo.none { it.index == index }) listState.scrollToItem(index)
+    }
     val atStart = listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0 &&
         (focused == null && focusedSession == null && !libraryTileFocused ||
             if (rows.running.isNotEmpty()) focusedSession === rows.running.first() else focused?.item?.id == items.firstOrNull()?.item?.id)
@@ -133,14 +142,14 @@ fun CarouselHome(
                 CoverCard(
                     entry = entry,
                     width = width,
-                    onClick = { actions.open(entry) },
+                    onClick = { actions.open(entry, items) { id -> callbacks.onFocusKey("carousel:$id") } },
                     onLongClick = { actions.context(entry) },
                     onFocused = { focused = entry; focusedSession = null; libraryTileFocused = false; callbacks.onFocusKey(key) },
                     animated = callbacks.animatedArtwork,
                     modifier = Modifier.restoreFocusIf(
                         callbacks.lastFocusedKey == key ||
                             (rows.running.isEmpty() && callbacks.lastFocusedKey?.startsWith("carousel:") != true && entry === items.first()),
-                    ),
+                    ).focusAfterBrowse(entry.item.id),
                 )
             }
             // Like the Switch home: the full library sits at the end of the row.

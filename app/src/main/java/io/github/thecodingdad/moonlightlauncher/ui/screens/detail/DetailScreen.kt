@@ -1,5 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher.ui.screens.detail
 
+import androidx.compose.ui.focus.focusRequester
 import io.github.thecodingdad.moonlightlauncher.ui.components.controllerScroll
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -75,15 +76,19 @@ fun DetailScreen(
     activeProfile: io.github.thecodingdad.moonlightlauncher.stream.StreamProfile? = null,
     onProfile: (io.github.thecodingdad.moonlightlauncher.stream.StreamProfile) -> Unit = {},
     onEditProfiles: () -> Unit = {},
+    /** Previous (-1) / next (+1) game of the list the page was opened from; null = no list. */
+    onBrowse: ((Int) -> Unit)? = null,
+    /** False for the neighbour pages composed for swiping: no input, hints, accent or focus. */
+    active: Boolean = true,
     extraActions: @Composable () -> Unit = {},
 ) {
     val actions = LocalEntryActions.current
     val colors = LauncherTheme.colors
     val hasRemote = entry.remoteTargets.isNotEmpty()
-    PublishAccentFrom(entry.coverModel())
+    if (active) PublishAccentFrom(entry.coverModel())
 
-    if (hasRemote) PadAction(PadButton.X) { actions.playWith(entry) }
-    PadAction(PadButton.START) { actions.play(entry) }
+    if (hasRemote) PadAction(PadButton.X, enabled = active) { actions.playWith(entry) }
+    PadAction(PadButton.START, enabled = active) { actions.play(entry) }
     // Remote games: LB/RB switch the stream profile used for the next start.
     var profilePicker by remember { mutableStateOf(false) }
     fun stepProfile(delta: Int) {
@@ -92,13 +97,18 @@ fun DetailScreen(
         onProfile(profiles[(i + delta).mod(profiles.size)])
     }
     if (hasRemote) {
-        PadAction(PadButton.L1) { stepProfile(-1) }
-        PadAction(PadButton.R1) { stepProfile(1) }
+        PadAction(PadButton.L1, enabled = active) { stepProfile(-1) }
+        PadAction(PadButton.R1, enabled = active) { stepProfile(1) }
     }
-    ScreenHints(
+    if (onBrowse != null) {
+        PadAction(PadButton.RS_LEFT, enabled = active) { onBrowse(-1) }
+        PadAction(PadButton.RS_RIGHT, enabled = active) { onBrowse(1) }
+    }
+    if (active) ScreenHints(
         buildList {
             add(ButtonHint(PadButton.A, stringResource(R.string.hint_select)))
             if (hasRemote) add(ButtonHint(PadButton.X, stringResource(R.string.action_play_with), onClick = { actions.playWith(entry) }))
+            if (onBrowse != null) add(ButtonHint(PadButton.RS_RIGHT, stringResource(R.string.hint_prev_next), onClick = { onBrowse(1) }))
             if (hasRemote && profiles.size > 1) {
                 add(ButtonHint(PadButton.L1, stringResource(R.string.profile_picker_title), onClick = { stepProfile(1) }, secondButton = PadButton.R1))
             }
@@ -146,7 +156,7 @@ fun DetailScreen(
                     LauncherButton(
                         stringResource(R.string.action_play), onClick = { actions.play(entry) },
                         icon = Icons.Filled.PlayArrow, primary = true,
-                        modifier = Modifier.restoreFocusIf(true),
+                        modifier = Modifier.focusWhenActive(active),
                     )
                     if (hasRemote) LauncherButton(stringResource(R.string.action_play_with), onClick = { actions.playWith(entry) }, icon = Icons.Filled.Tune)
                     LauncherButton(
@@ -272,3 +282,14 @@ private fun InfoBlock(entry: LibraryEntry, sessions: List<PlaySessionEntity>) {
 
 @Composable
 private fun targetLabelText(t: io.github.thecodingdad.moonlightlauncher.data.db.LaunchTargetEntity) = targetLabel(t)
+
+/** The play button takes the focus whenever its page becomes the shown one (controller mode). */
+@Composable
+private fun Modifier.focusWhenActive(active: Boolean): Modifier {
+    val requester = remember { androidx.compose.ui.focus.FocusRequester() }
+    val controllerMode = io.github.thecodingdad.moonlightlauncher.ui.components.isControllerMode()
+    androidx.compose.runtime.LaunchedEffect(active, controllerMode) {
+        if (active && controllerMode) runCatching { requester.requestFocus() }
+    }
+    return this.then(Modifier.focusRequester(requester))
+}
