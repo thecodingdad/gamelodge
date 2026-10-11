@@ -757,4 +757,7 @@
     <string name="meta_chips_multi">Select values or add a new one</string>
     <string name="meta_chips_single">Select a value or add a new one; select again to clear</string>
     <string name="meta_new_value">New value</string>
+
+    <!-- Filters -->
+    <string name="filter_drag">Move (drag, or A then up/down)</string>
 </resources>

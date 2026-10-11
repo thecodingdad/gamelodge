@@ -47,12 +47,12 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.container
 import io.github.thecodingdad.moonlightlauncher.data.db.MetadataState
 import io.github.thecodingdad.moonlightlauncher.ui.screens.metadata.ArtworkPickerDialog
 import io.github.thecodingdad.moonlightlauncher.ui.screens.metadata.FixMetadataDialog
-import io.github.thecodingdad.moonlightlauncher.ui.screens.metadata.MetadataActions
 import io.github.thecodingdad.moonlightlauncher.ui.screens.metadata.MetadataSettings
 import io.github.thecodingdad.moonlightlauncher.ui.screens.metadata.ReviewScreen
 import androidx.compose.runtime.mutableStateOf
@@ -201,6 +201,13 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
         }
     }
     var platformFor by remember { mutableStateOf<io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry?>(null) }
+    var metaEditorFor by remember { mutableStateOf<String?>(null) }
+    var fixingFor by remember { mutableStateOf<String?>(null) }
+    var artworkFor by remember { mutableStateOf<String?>(null) }
+    val metaScope = rememberCoroutineScope()
+    // Game whose detail page is on screen (its menu leaves out what the page offers itself).
+    val backStack by nav.currentBackStackEntryAsState()
+    val detailOpenFor = backStack?.takeIf { it.destination.route == Routes.DETAIL }?.arguments?.getString("id")
     var collectionsFor by remember { mutableStateOf<io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry?>(null) }
 
     val density = androidx.compose.ui.platform.LocalDensity.current
@@ -248,10 +255,6 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                         val sessions by remember(id) { vm.sessions(id) }.collectAsState(emptyList())
                         ShellFrame(hints) {
                             entry?.let { e ->
-                                var fixing by remember { mutableStateOf(false) }
-                                var artwork by remember { mutableStateOf(false) }
-                                var editingMeta by remember { mutableStateOf(false) }
-                                val scope = rememberCoroutineScope()
                                 val detailProfiles by vm.profiles.collectAsState()
                                 val detailActive by vm.activeProfile.collectAsState()
                                 DetailScreen(
@@ -259,21 +262,10 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                                     profiles = detailProfiles, activeProfile = detailActive, onProfile = vm::setActiveProfile,
                                     onEditProfiles = { nav.navigate(Routes.settings(SettingsPageId.PROFILES)) },
                                 ) {
-                                    MetadataActions(
-                                        entry = e,
-                                        onFix = { fixing = true },
-                                        onArtwork = { artwork = true },
-                                        onConfirm = { scope.launch { activity.container.metadata.confirm(e.item.id) } },
-                                        onEdit = { editingMeta = true },
-                                    )
+                                    io.github.thecodingdad.moonlightlauncher.ui.screens.metadata.ReviewConfirmAction(e) {
+                                        metaScope.launch { activity.container.metadata.confirm(e.item.id) }
+                                    }
                                 }
-                                FixMetadataDialog(if (fixing) e.item else null) { fixing = false }
-                                ArtworkPickerDialog(if (artwork) e.item else null) { artwork = false }
-                                val library by vm.allEntries.collectAsState()
-                                io.github.thecodingdad.moonlightlauncher.ui.screens.metadata.MetadataEditorDialog(
-                                    entry = if (editingMeta) e else null, library = library,
-                                    onPlatform = { platformFor = it }, onDismiss = { editingMeta = false },
-                                )
                             }
                         }
                     }
@@ -348,7 +340,19 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                     onHide = { vm.setHidden(it, true) },
                     onCollections = { collectionsFor = it },
                     onPlatform = { platformFor = it },
+                    onEditMetadata = { metaEditorFor = it.item.id },
+                    inDetail = detailOpenFor == entryActions.contextMenuFor?.item?.id,
                 )
+                // Metadata editor with its match and artwork dialogs, reachable from every menu.
+                val metaLibrary by vm.allEntries.collectAsState()
+                val metaEntry = metaEditorFor?.let { id -> metaLibrary.firstOrNull { it.item.id == id } }
+                io.github.thecodingdad.moonlightlauncher.ui.screens.metadata.MetadataEditorDialog(
+                    entry = metaEntry, library = metaLibrary,
+                    onPlatform = { platformFor = it }, onDismiss = { metaEditorFor = null },
+                    onFix = { fixingFor = it.item.id }, onArtwork = { artworkFor = it.item.id },
+                )
+                FixMetadataDialog(fixingFor?.let { id -> metaLibrary.firstOrNull { it.item.id == id }?.item }) { fixingFor = null }
+                ArtworkPickerDialog(artworkFor?.let { id -> metaLibrary.firstOrNull { it.item.id == id }?.item }) { artworkFor = null }
                 val allForPlatforms by vm.allEntries.collectAsState()
                 io.github.thecodingdad.moonlightlauncher.ui.shell.PlatformDialog(
                     entry = platformFor,

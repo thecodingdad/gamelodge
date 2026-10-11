@@ -122,6 +122,14 @@ class FilterRepository(
         if (filter.kind == FilterKind.GROUP) db.collectionDao().delete(CollectionEntity(filter.id, filter.name, 0))
     }
 
+    /** New order of one set (game or app filters) after drag and drop: [ids] take over their slots. */
+    suspend fun reorder(ids: List<String>) {
+        val all = dao.getAll().associateBy { it.id }
+        val moving = ids.mapNotNull { all[it] }
+        val slots = moving.map { it.sortOrder }.sorted()
+        dao.upsert(moving.mapIndexed { index, f -> f.copy(sortOrder = slots[index]) })
+    }
+
     /** Moves a filter one place up (-1) or down (+1) and renumbers all. */
     suspend fun move(id: String, delta: Int) {
         val all = dao.getAll().sortedBy { it.sortOrder }

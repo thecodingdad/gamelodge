@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Devices
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.PowerSettingsNew
@@ -262,6 +263,9 @@ fun EntryContextMenu(
     onHide: (LibraryEntry) -> Unit,
     onCollections: (LibraryEntry) -> Unit,
     onPlatform: (LibraryEntry) -> Unit,
+    onEditMetadata: (LibraryEntry) -> Unit,
+    /** Opened from the game's own detail page: its buttons already cover play, favorite and platform. */
+    inDetail: Boolean = false,
 ) {
     Modal(
         visible = entry != null || session != null, onDismiss = onDismiss,
@@ -274,15 +278,21 @@ fun EntryContextMenu(
         ) {
             if (session != null) RunningSessionActions(session, onResume = act { onResume(session) }, onDone = onDismiss)
             val e = entry ?: return@Column
-            if (session == null) LauncherButton(stringResource(R.string.action_play), act { onPlay(e) }, Modifier.fillMaxWidth(), Icons.Filled.PlayArrow, primary = true)
-            if (e.remoteTargets.isNotEmpty()) {
-                LauncherButton(stringResource(R.string.action_play_with), act { onPlayWith(e) }, Modifier.fillMaxWidth(), Icons.Filled.Tune)
+            if (!inDetail) {
+                if (session == null) LauncherButton(stringResource(R.string.action_play), act { onPlay(e) }, Modifier.fillMaxWidth(), Icons.Filled.PlayArrow, primary = true)
+                if (e.remoteTargets.isNotEmpty()) {
+                    LauncherButton(stringResource(R.string.action_play_with), act { onPlayWith(e) }, Modifier.fillMaxWidth(), Icons.Filled.Tune)
+                }
+                LauncherButton(stringResource(R.string.action_details), act { onDetails(e) }, Modifier.fillMaxWidth(), Icons.Filled.Info)
+                LauncherButton(
+                    stringResource(if (e.item.favorite) R.string.action_unfavorite else R.string.action_favorite),
+                    act { onFavorite(e, !e.item.favorite) }, Modifier.fillMaxWidth(),
+                    if (e.item.favorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                )
             }
-            LauncherButton(stringResource(R.string.action_details), act { onDetails(e) }, Modifier.fillMaxWidth(), Icons.Filled.Info)
             LauncherButton(
-                stringResource(if (e.item.favorite) R.string.action_unfavorite else R.string.action_favorite),
-                act { onFavorite(e, !e.item.favorite) }, Modifier.fillMaxWidth(),
-                if (e.item.favorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                stringResource(R.string.meta_edit_title), act { onEditMetadata(e) }, Modifier.fillMaxWidth(), Icons.Filled.Edit,
+                primary = inDetail && session == null,
             )
             if (e.item.kind == ItemKind.GAME) {
                 LauncherButton(stringResource(R.string.action_mark_app), act { onKind(e, ItemKind.APP) }, Modifier.fillMaxWidth(), Icons.Filled.Apps)
@@ -290,9 +300,11 @@ fun EntryContextMenu(
                 LauncherButton(stringResource(R.string.action_mark_game), act { onKind(e, ItemKind.GAME) }, Modifier.fillMaxWidth(), Icons.Filled.SportsEsports)
             }
             LauncherButton(stringResource(R.string.action_collections), act { onCollections(e) }, Modifier.fillMaxWidth(), Icons.Filled.CollectionsBookmark)
-            LauncherButton(
-                stringResource(R.string.action_platform, e.item.platform ?: "–"), act { onPlatform(e) }, Modifier.fillMaxWidth(), Icons.Filled.Devices,
-            )
+            if (!inDetail) {
+                LauncherButton(
+                    stringResource(R.string.action_platform, e.item.platform ?: "–"), act { onPlatform(e) }, Modifier.fillMaxWidth(), Icons.Filled.Devices,
+                )
+            }
             LauncherButton(stringResource(R.string.action_hide), act { onHide(e) }, Modifier.fillMaxWidth(), Icons.Filled.VisibilityOff)
         }
     }

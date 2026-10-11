@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Restore
 import androidx.compose.material3.MaterialTheme
@@ -64,6 +66,8 @@ fun MetadataEditorDialog(
     library: List<LibraryEntry>,
     onPlatform: (LibraryEntry) -> Unit,
     onDismiss: () -> Unit,
+    onFix: (LibraryEntry) -> Unit = {},
+    onArtwork: (LibraryEntry) -> Unit = {},
 ) {
     val service = LocalContext.current.container.metadata
     val scope = rememberCoroutineScope()
@@ -77,6 +81,11 @@ fun MetadataEditorDialog(
         val none = stringResource(R.string.meta_none)
         Column(Modifier.heightIn(max = 600.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(stringResource(R.string.meta_edit_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+            // New IGDB match and other artwork (formerly buttons on the detail page).
+            ButtonRow(spacing = 10.dp) {
+                LauncherButton(stringResource(R.string.metadata_fix_title), onClick = { onFix(e) }, icon = Icons.Filled.Search)
+                LauncherButton(stringResource(R.string.artwork_title), onClick = { onArtwork(e) }, icon = Icons.Filled.Image)
+            }
             @Composable
             fun Row(row: EditRow, label: Int, value: String?, first: Boolean = false) = NavRow(
                 stringResource(label), { editing = row },
@@ -85,7 +94,7 @@ fun MetadataEditorDialog(
                 initialFocus = first,
             )
             SectionHeader(stringResource(R.string.filter_section_game))
-            Row(EditRow.TITLE, R.string.meta_name, item.title, first = true)
+            Row(EditRow.TITLE, R.string.meta_name, item.title)
             NavRow(stringResource(R.string.filter_field_platform), { onPlatform(e) }, subtitle = item.platform ?: none)
             Row(EditRow.DESCRIPTION, R.string.meta_description, item.description?.take(120))
             SectionHeader(stringResource(R.string.filter_section_metadata))

@@ -2,6 +2,24 @@ package io.github.thecodingdad.moonlightlauncher.ui.screens.settings
 
 import io.github.thecodingdad.moonlightlauncher.ui.components.controllerScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.filled.DragHandle
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.zIndex
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -84,7 +102,10 @@ fun FilterSettings(vm: LauncherViewModel, scope: FilterScope) {
             LauncherButton(stringResource(R.string.filters_restore), icon = Icons.Filled.Restore, onClick = { resetting = true })
         }
         val members = collections.associate { (c, ids) -> c.id to ids.size }
-        filters.sortedBy { it.sortOrder }.forEachIndexed { index, f ->
+        ReorderableFilterList(
+            filters = filters.sortedBy { it.sortOrder },
+            onReorder = vm::reorderFilters,
+        ) { index, f ->
             val places = buildList {
                 if (!apps && f.showInLibrary) add(stringResource(R.string.filter_place_library))
                 if (apps && f.showInApps) add(stringResource(R.string.filter_place_apps))
@@ -495,4 +516,110 @@ private fun bucketLabel(field: FilterField, key: String): String = when (field) 
             else -> R.string.filter_never
         },
     )
+}
+
+/**
+ * Filter rows with a drag handle on the right. Touch: drag the handle. Controller: A on the
+ * handle picks the filter up, D-pad up/down moves it, A or B drops it.
+ */
+@Composable
+private fun ReorderableFilterList(
+    filters: List<FilterEntity>,
+    onReorder: (List<String>) -> Unit,
+    row: @Composable (Int, FilterEntity) -> Unit,
+) {
+    val byId = filters.associateBy { it.id }
+    var order by remember(filters.map { it.id }) { mutableStateOf(filters.map { it.id }) }
+    var dragging by remember { mutableStateOf<String?>(null) }
+    var picked by remember { mutableStateOf<String?>(null) }
+    var dragOffset by remember { mutableFloatStateOf(0f) }
+    val tops = remember { HashMap<String, Float>() }
+    val heights = remember { HashMap<String, Float>() }
+
+    fun commit() {
+        if (order != filters.map { it.id }) onReorder(order)
+    }
+    fun move(id: String, delta: Int): Boolean {
+        val from = order.indexOf(id)
+        val to = from + delta
+        if (from < 0 || to !in order.indices) return false
+        order = order.toMutableList().also { it.add(to, it.removeAt(from)) }
+        return true
+    }
+    // B drops a picked-up filter instead of leaving the page.
+    io.github.thecodingdad.moonlightlauncher.ui.input.PadAction(
+        io.github.thecodingdad.moonlightlauncher.ui.input.PadButton.B, enabled = picked != null,
+    ) { picked = null; commit() }
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        order.forEachIndexed { index, id ->
+            val f = byId[id] ?: return@forEachIndexed
+            key(id) {
+                val active = dragging == id || picked == id
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .zIndex(if (active) 1f else 0f)
+                        // Measured before the drag translation: the row's resting place.
+                        .onGloballyPositioned { tops[id] = it.positionInParent().y; heights[id] = it.size.height.toFloat() }
+                        .graphicsLayer { translationY = if (dragging == id) dragOffset else 0f },
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(Modifier.weight(1f)) { row(index, f) }
+                    io.github.thecodingdad.moonlightlauncher.ui.components.FocusSurface(
+                        onClick = {
+                            if (picked == id) { picked = null; commit() } else picked = id
+                        },
+                        color = if (active) LauncherTheme.colors.accent else LauncherTheme.colors.surface,
+                        modifier = Modifier
+                            .padding(start = 8.dp)
+                            .size(56.dp)
+                            .onPreviewKeyEvent { event ->
+                                if (picked != id) return@onPreviewKeyEvent false
+                                val delta = when (event.key) {
+                                    Key.DirectionUp -> -1
+                                    Key.DirectionDown -> 1
+                                    Key.DirectionLeft, Key.DirectionRight -> 0
+                                    else -> return@onPreviewKeyEvent false
+                                }
+                                if (event.type == KeyEventType.KeyDown && delta != 0) move(id, delta)
+                                true
+                            }
+                            .pointerInput(id) {
+                                detectDragGestures(
+                                    onDragStart = { dragging = id; dragOffset = 0f },
+                                    onDragEnd = { dragging = null; dragOffset = 0f; commit() },
+                                    onDragCancel = { dragging = null; dragOffset = 0f; order = filters.map { it.id } },
+                                ) { change, amount ->
+                                    change.consume()
+                                    dragOffset += amount.y
+                                    val i = order.indexOf(id)
+                                    val top = tops[id] ?: return@detectDragGestures
+                                    val h = heights[id] ?: return@detectDragGestures
+                                    val center = top + dragOffset + h / 2
+                                    // Swap with a neighbour once the dragged row's centre passes its centre.
+                                    order.getOrNull(i + 1)?.let { next ->
+                                        val nTop = tops[next] ?: return@let
+                                        val nH = heights[next] ?: return@let
+                                        if (center > nTop + nH / 2 && move(id, 1)) dragOffset -= nTop + nH - (top + h)
+                                    }
+                                    order.getOrNull(i - 1)?.let { prev ->
+                                        val pTop = tops[prev] ?: return@let
+                                        val pH = heights[prev] ?: return@let
+                                        if (center < pTop + pH / 2 && move(id, -1)) dragOffset += top - pTop
+                                    }
+                                }
+                            },
+                    ) {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            androidx.compose.material3.Icon(
+                                Icons.Filled.DragHandle, stringResource(R.string.filter_drag),
+                                tint = if (active) LauncherTheme.colors.onAccent else LauncherTheme.colors.onSurfaceMuted,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

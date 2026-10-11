@@ -176,33 +176,12 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
     }
 }
 
-/** Second button row on the detail page: fix match, change artwork, confirm a review match. */
+/** Detail page: confirm a match that is waiting for review. */
 @Composable
-fun MetadataActions(
-    entry: io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry,
-    onFix: () -> Unit,
-    onArtwork: () -> Unit,
-    onConfirm: () -> Unit,
-    onEdit: () -> Unit,
-) {
-    io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 10.dp) {
-        if (entry.item.metadataState == io.github.thecodingdad.moonlightlauncher.data.db.MetadataState.REVIEW) {
-            io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton(
-                stringResource(R.string.metadata_confirm), onClick = onConfirm,
-                icon = androidx.compose.material.icons.Icons.Filled.Check,
-            )
-        }
-        io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton(
-            stringResource(R.string.meta_edit_title), onClick = onEdit,
-            icon = androidx.compose.material.icons.Icons.Filled.Edit,
-        )
-        io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton(
-            stringResource(R.string.metadata_fix_title), onClick = onFix,
-            icon = androidx.compose.material.icons.Icons.Filled.Search,
-        )
-        io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton(
-            stringResource(R.string.artwork_title), onClick = onArtwork,
-            icon = androidx.compose.material.icons.Icons.Filled.Image,
-        )
-    }
+fun ReviewConfirmAction(entry: io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry, onConfirm: () -> Unit) {
+    if (entry.item.metadataState != io.github.thecodingdad.moonlightlauncher.data.db.MetadataState.REVIEW) return
+    io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton(
+        stringResource(R.string.metadata_confirm), onClick = onConfirm,
+        icon = androidx.compose.material.icons.Icons.Filled.Check,
+    )
 }

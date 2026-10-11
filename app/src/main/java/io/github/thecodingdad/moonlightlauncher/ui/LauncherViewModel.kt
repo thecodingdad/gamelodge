@@ -145,6 +145,10 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch { c.filters.delete(filter) }
     }
 
+    fun reorderFilters(ids: List<String>) {
+        viewModelScope.launch { c.filters.reorder(ids) }
+    }
+
     fun moveFilter(id: String, delta: Int) {
         viewModelScope.launch { c.filters.move(id, delta) }
     }
