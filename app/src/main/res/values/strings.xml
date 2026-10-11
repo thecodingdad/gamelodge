@@ -629,4 +629,24 @@
     <string name="qt_reset">Reset to defaults</string>
     <string name="qt_info_toggle">Switches directly</string>
     <string name="qt_info_opens">Opens the Android setting</string>
+
+    <!-- Button combos -->
+    <string name="combo_section">Button combinations</string>
+    <string name="combo_home">Android Home</string>
+    <string name="combo_home_sub">Acts like the Home button</string>
+    <string name="combo_quick_menu">Open quick menu</string>
+    <string name="combo_quick_menu_sub">Opens the sidebar</string>
+    <string name="combo_service">System-wide (accessibility)</string>
+    <string name="combo_service_sub">Enable \"Moonlight Launcher combos\" in the accessibility settings so the combinations also work in other apps and in the stream</string>
+    <string name="combo_service_on">On</string>
+    <string name="combo_service_label">Moonlight Launcher combos</string>
+    <string name="combo_service_description">Detects your configured controller button combinations in every app and in the stream (Android Home, quick menu). Only controller buttons are read, nothing on the screen.</string>
+    <string name="combo_none">Not set</string>
+    <string name="combo_help">Record a single button (e.g. Guide) or a combination (e.g. Select + Start). In the stream only the last pressed button of a combination is held back from the host.</string>
+    <string name="combo_recording_hint">Press buttons…</string>
+    <string name="combo_recording_help">Hold the buttons together, then release them. Cancels after 10 seconds.</string>
+    <string name="combo_record">Record</string>
+    <string name="combo_clear">Remove</string>
+    <string name="combo_error_blocked">A, B or a D-pad direction alone are needed for navigation.</string>
+    <string name="combo_error_duplicate">This combination is already used for the other action.</string>
 </resources>

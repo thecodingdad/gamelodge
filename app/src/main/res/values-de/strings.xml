@@ -627,4 +627,24 @@
     <string name="qt_reset">Standard wiederherstellen</string>
     <string name="qt_info_toggle">Schaltet direkt</string>
     <string name="qt_info_opens">Öffnet die Android-Einstellung</string>
+
+    <!-- Button combos -->
+    <string name="combo_section">Tastenkombinationen</string>
+    <string name="combo_home">Android-Home</string>
+    <string name="combo_home_sub">Wirkt wie die Home-Taste</string>
+    <string name="combo_quick_menu">Schnellmenü öffnen</string>
+    <string name="combo_quick_menu_sub">Öffnet die Seitenleiste</string>
+    <string name="combo_service">Systemweit (Bedienungshilfe)</string>
+    <string name="combo_service_sub">„Moonlight Launcher Tastenkombinationen“ in den Bedienungshilfen aktivieren, damit die Kombinationen auch in anderen Apps und im Stream funktionieren</string>
+    <string name="combo_service_on">An</string>
+    <string name="combo_service_label">Moonlight Launcher Tastenkombinationen</string>
+    <string name="combo_service_description">Erkennt deine eingestellten Controller-Tastenkombinationen in jeder App und im Stream (Android-Home, Schnellmenü). Gelesen werden nur Controller-Tasten, nichts vom Bildschirminhalt.</string>
+    <string name="combo_none">Nicht belegt</string>
+    <string name="combo_help">Nimm eine einzelne Taste (z. B. Guide) oder eine Kombination (z. B. Select + Start) auf. Im Stream wird nur die zuletzt gedrückte Taste einer Kombination vom Host ferngehalten.</string>
+    <string name="combo_recording_hint">Tasten drücken…</string>
+    <string name="combo_recording_help">Tasten gemeinsam gedrückt halten, dann loslassen. Bricht nach 10 Sekunden ab.</string>
+    <string name="combo_record">Aufnehmen</string>
+    <string name="combo_clear">Entfernen</string>
+    <string name="combo_error_blocked">A, B oder eine Steuerkreuz-Richtung allein werden zur Bedienung gebraucht.</string>
+    <string name="combo_error_duplicate">Diese Kombination ist schon für die andere Aktion belegt.</string>
 </resources>

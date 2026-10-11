@@ -177,6 +177,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     /** Emits when the Home button is pressed while the launcher is the home app. */
     val homePressed = kotlinx.coroutines.flow.MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
+    /** Quick menu requested by a button combination: true = open, false = toggle. */
+    val quickMenuRequests = kotlinx.coroutines.flow.MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
+
     fun launch(
         activity: Activity,
         entry: LibraryEntry,

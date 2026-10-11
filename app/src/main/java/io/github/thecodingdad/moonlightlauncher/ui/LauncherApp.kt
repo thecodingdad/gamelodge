@@ -192,6 +192,9 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
             quickMenu = false
         }
     }
+    LaunchedEffect(Unit) {
+        vm.quickMenuRequests.collect { open -> quickMenu = open || !quickMenu }
+    }
     var platformFor by remember { mutableStateOf<io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry?>(null) }
     var collectionsFor by remember { mutableStateOf<io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry?>(null) }
 

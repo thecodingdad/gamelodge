@@ -26,6 +26,16 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
         container.controllerSettings.install()
         io.github.thecodingdad.moonlightlauncher.ui.shell.StreamConnectingOverlay.install(container)
         container.scope.launch { container.filters.ensureDefaults() }
+        // Button combinations: needed by the activity and by the accessibility service, which
+        // can run without any activity (e.g. after an update).
+        container.scope.launch {
+            container.settings.settings.collect {
+                io.github.thecodingdad.moonlightlauncher.input.ButtonCombos.combos = mapOf(
+                    io.github.thecodingdad.moonlightlauncher.input.ComboAction.HOME to it.comboHome,
+                    io.github.thecodingdad.moonlightlauncher.input.ComboAction.QUICK_MENU to it.comboQuickMenu,
+                )
+            }
+        }
         container.metadata.start()
         container.vpn.startNetworkWatch()
         // Host polling is driven by MainActivity's lifecycle: Artemis' stream activity runs in

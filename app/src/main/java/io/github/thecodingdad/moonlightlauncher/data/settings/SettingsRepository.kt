@@ -74,6 +74,9 @@ data class LauncherSettings(
     val showHintBar: Boolean = true,
     /** Tiles in the quick menu, in order (see QuickTile ids; apps as "app:<package>"). */
     val quickTiles: List<String> = listOf("controllers", "hosts", "vpn", "wifi", "bluetooth", "android"),
+    /** Controller button combinations (key codes) for Android Home and the quick menu; empty = off. */
+    val comboHome: Set<Int> = emptySet(),
+    val comboQuickMenu: Set<Int> = emptySet(),
     /** Shrink the UI while a TV/monitor is attached (the layout is sized for the handheld). */
     val tvScaleAuto: Boolean = true,
     /** UI size on an external display, percent of the handheld size. */
@@ -126,6 +129,8 @@ class SettingsRepository(context: Context) {
         val hideNavigationBar = booleanPreferencesKey("hide_navigation_bar")
         val showHintBar = booleanPreferencesKey("show_hint_bar")
         val quickTiles = stringPreferencesKey("quick_tiles")
+        val comboHome = stringPreferencesKey("combo_home")
+        val comboQuickMenu = stringPreferencesKey("combo_quick_menu")
         val tvScaleAuto = booleanPreferencesKey("tv_scale_auto")
         val tvScale = intPreferencesKey("tv_scale")
         val uiScale = intPreferencesKey("ui_scale")
@@ -181,6 +186,8 @@ class SettingsRepository(context: Context) {
             hideNavigationBar = this[K.hideNavigationBar] ?: d.hideNavigationBar,
             showHintBar = this[K.showHintBar] ?: d.showHintBar,
             quickTiles = this[K.quickTiles]?.split(',')?.filter { it.isNotBlank() } ?: d.quickTiles,
+            comboHome = this[K.comboHome]?.split(',')?.mapNotNull { it.toIntOrNull() }?.toSet() ?: d.comboHome,
+            comboQuickMenu = this[K.comboQuickMenu]?.split(',')?.mapNotNull { it.toIntOrNull() }?.toSet() ?: d.comboQuickMenu,
             tvScaleAuto = this[K.tvScaleAuto] ?: d.tvScaleAuto,
             tvScale = this[K.tvScale] ?: d.tvScale,
             uiScale = this[K.uiScale] ?: d.uiScale,
@@ -225,6 +232,8 @@ class SettingsRepository(context: Context) {
         this[K.hideNavigationBar] = s.hideNavigationBar
         this[K.showHintBar] = s.showHintBar
         this[K.quickTiles] = s.quickTiles.joinToString(",")
+        this[K.comboHome] = s.comboHome.joinToString(",")
+        this[K.comboQuickMenu] = s.comboQuickMenu.joinToString(",")
         this[K.tvScaleAuto] = s.tvScaleAuto
         this[K.tvScale] = s.tvScale
         this[K.uiScale] = s.uiScale

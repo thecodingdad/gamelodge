@@ -19,6 +19,9 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import io.github.thecodingdad.moonlightlauncher.data.settings.ButtonLayout
+import io.github.thecodingdad.moonlightlauncher.input.ButtonCombos
+import io.github.thecodingdad.moonlightlauncher.input.ComboAccessibilityService
+import io.github.thecodingdad.moonlightlauncher.input.ComboAction
 import io.github.thecodingdad.moonlightlauncher.system.LauncherMode
 import io.github.thecodingdad.moonlightlauncher.ui.LauncherApp
 import io.github.thecodingdad.moonlightlauncher.ui.LauncherViewModel
@@ -42,6 +45,7 @@ class MainActivity : ComponentActivity() {
             }
         }
         feedback = UiFeedback(this).also { it.load() }
+        handleQuickMenuExtra(intent)
         setContent { LauncherApp(vm, dispatcher, feedback) }
     }
 
@@ -59,13 +63,22 @@ class MainActivity : ComponentActivity() {
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         // Returning from a stream or another app can bring the bars back.
-        if (hasFocus) applySystemBars()
+        if (hasFocus) applySystemBars() else ButtonCombos.reset()
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         // Home pressed while we are the home app: back to the start screen.
         if (intent.hasCategory(Intent.CATEGORY_HOME)) vm.homePressed.tryEmit(Unit)
+        handleQuickMenuExtra(intent)
+    }
+
+    /** Quick menu combination pressed in another app (accessibility service). */
+    private fun handleQuickMenuExtra(intent: Intent?) {
+        if (intent?.getBooleanExtra(EXTRA_QUICK_MENU, false) == true) {
+            intent.removeExtra(EXTRA_QUICK_MENU)
+            vm.quickMenuRequests.tryEmit(true)
+        }
     }
 
     override fun onStart() {
@@ -118,6 +131,16 @@ class MainActivity : ComponentActivity() {
     // Lint wrongly flags ComponentActivity.dispatchKeyEvent as restricted (androidx.core override).
     @SuppressLint("RestrictedApi")
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        // Button combinations; the accessibility service handles them already when enabled.
+        if (ComboAccessibilityService.instance == null || ButtonCombos.isRecording) {
+            val consumed = ButtonCombos.handle(event) { action ->
+                when (action) {
+                    ComboAction.HOME -> vm.homePressed.tryEmit(Unit)
+                    ComboAction.QUICK_MENU -> vm.quickMenuRequests.tryEmit(false)
+                }
+            }
+            if (consumed) return true
+        }
         val e = if (vm.settings.value.buttonLayout == ButtonLayout.NINTENDO) {
             val swapped = InputDispatcher.swapForNintendo(event.keyCode)
             if (swapped != event.keyCode) {
@@ -134,5 +157,9 @@ class MainActivity : ComponentActivity() {
         }
         if (dispatcher.dispatch(e)) return true
         return super.dispatchKeyEvent(e)
+    }
+
+    companion object {
+        const val EXTRA_QUICK_MENU = "io.github.thecodingdad.moonlightlauncher.QUICK_MENU"
     }
 }
