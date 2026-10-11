@@ -59,26 +59,37 @@ fun FilterBar(
         .takeIf { it >= 0 }?.let { if (search.isNotEmpty()) it + 1 else it }
     // Keep the active chip visible, e.g. after switching with LT/RT.
     val density = androidx.compose.ui.platform.LocalDensity.current
-    LaunchedEffect(selectedIndex, filters.size, search.isNotEmpty()) {
+    LaunchedEffect(selectedIndex, filters, search.isNotEmpty()) {
         val index = selectedIndex ?: return@LaunchedEffect
-        // Wait for a layout that contains the chips (e.g. right after the list changed).
-        androidx.compose.runtime.snapshotFlow { listState.layoutInfo.totalItemsCount > index }.first { it }
-        // The first chip: back to the very start (not just "visible with margin").
-        if (index == 0) { listState.animateScrollToItem(0); return@LaunchedEffect }
-        if (listState.layoutInfo.visibleItemsInfo.none { it.index == index }) listState.scrollToItem(index)
-        // Exactly as far as needed for the whole chip plus a little margin to show it isn't the edge.
         val margin = with(density) { 24.dp.toPx() }
-        val info = listState.layoutInfo
-        val item = info.visibleItemsInfo.firstOrNull { it.index == index } ?: return@LaunchedEffect
-        val start = info.viewportStartOffset + margin
-        val end = info.viewportEndOffset - margin
-        val delta = when {
-            item.size > end - start -> item.offset - start
-            item.offset < start -> item.offset - start
-            item.offset + item.size > end -> item.offset + item.size - end
-            else -> 0f
+        /** Pixels to scroll so the whole chip (plus margin) is visible; null = not laid out yet. */
+        fun overflow(): Float? {
+            val info = listState.layoutInfo
+            val item = info.visibleItemsInfo.firstOrNull { it.index == index } ?: return null
+            val start = info.viewportStartOffset + margin
+            val end = info.viewportEndOffset - margin
+            return when {
+                item.size > end - start || item.offset < start -> item.offset - start
+                item.offset + item.size > end -> item.offset + item.size - end
+                else -> 0f
+            }
         }
-        if (delta != 0f) listState.animateScrollBy(delta.toFloat())
+        // Keeps correcting for a moment: chip widths can still change after the switch (labels
+        // such as host names arrive later, the list is rebuilt), which left a chip cut off.
+        kotlinx.coroutines.withTimeoutOrNull(1_500) {
+            androidx.compose.runtime.snapshotFlow { listState.layoutInfo }.collect { info ->
+                if (info.totalItemsCount <= index) return@collect
+                if (index == 0) {
+                    if (listState.firstVisibleItemIndex != 0 || listState.firstVisibleItemScrollOffset != 0) listState.animateScrollToItem(0)
+                    return@collect
+                }
+                val delta = overflow()
+                when {
+                    delta == null -> listState.scrollToItem(index)
+                    kotlin.math.abs(delta) > 1f -> listState.animateScrollBy(delta)
+                }
+            }
+        }
     }
     LaunchedEffect(focusRequests) {
         if (focusRequests == 0) return@LaunchedEffect
