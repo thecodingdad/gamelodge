@@ -150,7 +150,7 @@ class MetadataService(
                 // Games matched before IGDB keys existed (e.g. SteamGridDB only) get their IGDB text once.
                 val withoutIgdb = if (igdb.isConfigured) {
                     dao.getItemsWithMetadataState(listOf(MetadataState.OK, MetadataState.REVIEW, MetadataState.NOT_FOUND, MetadataState.LOCKED))
-                        .filter { it.kind == ItemKind.GAME && it.igdbId == null && it.metadataVersion < 1 }
+                        .filter { it.kind == ItemKind.GAME && it.igdbId == null && it.metadataVersion < IGDB_LOOKUP_VERSION }
                 } else emptyList()
                 val total = pending.size + withoutIgdb.size
                 pending.forEachIndexed { index, item ->
@@ -200,13 +200,13 @@ class MetadataService(
      */
     private suspend fun addIgdb(item: LibraryItemEntity) {
         val query = item.metadataQuery ?: item.title
-        val best = igdb.search(query).map { it to MatchScorer.score(query, it.name) }.maxByOrNull { it.second }
+        val best = igdbBest(query)
         val fresh = dao.getItem(item.id) ?: return
         val confident = best != null && best.second >= MatchScorer.AUTO_ACCEPT
         val usable = best != null && best.second >= MatchScorer.REVIEW && fresh.metadataState == MetadataState.NOT_FOUND
         if (best == null || !(confident || usable)) {
             // Tried once: don't search again on every start ("fetch all again" retries).
-            dao.upsertItem(fresh.copy(metadataVersion = 1))
+            dao.upsertItem(fresh.copy(metadataVersion = IGDB_LOOKUP_VERSION))
             return
         }
         val game = best.first
@@ -232,6 +232,21 @@ class MetadataService(
         }
     }
 
+    /** A game's best score over its main, alternative and localized titles. */
+    private fun scoreAll(query: String, game: IgdbGame): Float = game.allNames.maxOf { MatchScorer.score(query, it) }
+
+    /**
+     * Best IGDB hit for a title: the regular search first, then alternative / localized titles
+     * when that finds nothing confident (e.g. German titles from Playnite).
+     */
+    private suspend fun igdbBest(query: String): Pair<IgdbGame, Float>? {
+        val regular = igdb.search(query).map { it to scoreAll(query, it) }.maxByOrNull { it.second }
+        if (regular != null && regular.second >= MatchScorer.AUTO_ACCEPT) return regular
+        delay(250)
+        val other = igdb.searchOtherTitles(query).map { it to scoreAll(query, it) }.maxByOrNull { it.second }
+        return listOfNotNull(regular, other).maxByOrNull { it.second }
+    }
+
     /** Checks the IGDB keys with one tiny request: true = works, false = rejected, null = not set / offline. */
     suspend fun testIgdb(): Boolean? = withContext(Dispatchers.IO) {
         if (!igdb.isConfigured) return@withContext null
@@ -248,7 +263,7 @@ class MetadataService(
     private suspend fun lookupAndApply(item: LibraryItemEntity) {
         val query = item.metadataQuery ?: item.title
         val igdbBest = if (igdb.isConfigured) {
-            igdb.search(query).map { it to MatchScorer.score(query, it.name) }.maxByOrNull { it.second }
+            igdbBest(query)
         } else null
         val sgdbBest = if (sgdb.isConfigured) {
             sgdb.search(igdbBest?.first?.name ?: query).map { it to MatchScorer.score(query, it.name) }.maxByOrNull { it.second }
@@ -272,8 +287,8 @@ class MetadataService(
     /** Manual search for the correction dialog (IGDB preferred, SteamGridDB otherwise). */
     suspend fun search(query: String): List<MetadataCandidate> = withContext(Dispatchers.IO) {
         if (igdb.isConfigured) {
-            igdb.search(query, limit = 12).map {
-                MetadataCandidate(MetadataSource.IGDB, it.id, it.name, it.releaseYear, it.coverUrl, MatchScorer.score(query, it.name))
+            (igdb.search(query, limit = 12) + igdb.searchOtherTitles(query, limit = 6)).distinctBy { it.id }.map {
+                MetadataCandidate(MetadataSource.IGDB, it.id, it.name, it.releaseYear, it.coverUrl, scoreAll(query, it))
             }
         } else if (sgdb.isConfigured) {
             sgdb.search(query).take(12).map {
@@ -435,3 +450,9 @@ class MetadataService(
         )
     }
 }
+
+/**
+ * Games without an IGDB match are looked up again when this grows (2: alternative and
+ * localized titles are searched too).
+ */
+private const val IGDB_LOOKUP_VERSION = 2

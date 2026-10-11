@@ -22,6 +22,9 @@ data class IgdbImage(val image_id: String = "")
 data class IgdbCompanyRef(val company: IgdbNamed? = null, val developer: Boolean = false, val publisher: Boolean = false)
 
 @Serializable
+data class IgdbGameRef(val game: Long? = null)
+
+@Serializable
 data class IgdbRatingCategory(val rating: String? = null)
 
 /** Both the current (organization + rating_category) and the old (category + rating enums) form. */
@@ -67,7 +70,12 @@ data class IgdbGame(
     val collections: List<IgdbNamed> = emptyList(),
     val game_modes: List<IgdbNamed> = emptyList(),
     val age_ratings: List<IgdbAgeRating> = emptyList(),
+    val alternative_names: List<IgdbNamed> = emptyList(),
+    val game_localizations: List<IgdbNamed> = emptyList(),
 ) {
+    /** Main title plus alternative and localized ones (e.g. the German title). */
+    val allNames: List<String> get() = (listOf(name) + alternative_names.map { it.name } + game_localizations.map { it.name }).filter { it.isNotBlank() }.distinct()
+
     val releaseYear: Int?
         get() = first_release_date?.let {
             Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply { timeInMillis = it * 1000 }.get(Calendar.YEAR)
@@ -108,11 +116,22 @@ class IgdbClient(
     val isConfigured: Boolean
         get() = !credentials.clientId.isNullOrBlank() && !credentials.clientSecret.isNullOrBlank()
 
-    fun search(title: String, limit: Int = 8): List<IgdbGame> {
-        // Apicalypse: quotes in the search term must be escaped.
-        val term = title.replace("\\", "").replace("\"", "\\\"")
-        return post("games", "search \"$term\"; fields $GAME_FIELDS; limit $limit;")
+    fun search(title: String, limit: Int = 8): List<IgdbGame> =
+        post("games", "search \"${escape(title)}\"; fields $GAME_FIELDS; limit $limit;")
+
+    /**
+     * Games with an alternative or localized title containing [title] ("LEGO Batman: Das
+     * Vermächtnis …"); the regular search only knows the main title well.
+     */
+    fun searchOtherTitles(title: String, limit: Int = 8): List<IgdbGame> {
+        val where = "where name ~ *\"${escape(title)}\"*; fields game; limit 20;"
+        val ids = (postRaw<IgdbGameRef>("alternative_names", where) + postRaw<IgdbGameRef>("game_localizations", where))
+            .mapNotNull { it.game }.distinct().take(limit)
+        return details(ids)
     }
+
+    // Apicalypse: quotes in the search term must be escaped.
+    private fun escape(text: String) = text.replace("\\", "").replace("\"", "\\\"")
 
     fun byId(id: Long): IgdbGame? = post("games", "fields $GAME_FIELDS; where id = $id;").firstOrNull()
 
@@ -130,11 +149,18 @@ class IgdbClient(
         const val GAME_FIELDS = "name,summary,genres.name,involved_companies.company.name,involved_companies.developer," +
             "involved_companies.publisher,first_release_date,total_rating,cover.image_id,artworks.image_id," +
             "screenshots.image_id,platforms.name,franchises.name,collections.name,game_modes.name," +
-            "age_ratings.organization.name,age_ratings.rating_category.rating,age_ratings.category,age_ratings.rating"
+            "age_ratings.organization.name,age_ratings.rating_category.rating,age_ratings.category,age_ratings.rating," +
+            "alternative_names.name,game_localizations.name"
     }
 
-    private fun post(endpoint: String, query: String, retried: Boolean = false): List<IgdbGame> {
-        val token = token() ?: return emptyList()
+    private fun post(endpoint: String, query: String): List<IgdbGame> = postRaw(endpoint, query)
+
+    private inline fun <reified T> postRaw(endpoint: String, query: String): List<T> =
+        execute(endpoint, query)?.let { json.decodeFromString<List<T>>(it) }.orEmpty()
+
+    /** Response body, or null on failure; 401 retries once with a new token. */
+    private fun execute(endpoint: String, query: String, retried: Boolean = false): String? {
+        val token = token() ?: return null
         val request = Request.Builder()
             .url(apiUrl.newBuilder().addPathSegment(endpoint).build())
             .header("Client-ID", credentials.clientId!!)
@@ -144,11 +170,11 @@ class IgdbClient(
         http.newCall(request).execute().use { response ->
             if (response.code == 401 && !retried) {
                 credentials.token = null
-                return post(endpoint, query, retried = true)
+                return execute(endpoint, query, retried = true)
             }
             if (response.code == 401) throw MetadataAuthException("IGDB")
-            if (!response.isSuccessful) return emptyList()
-            return json.decodeFromString(response.body?.string() ?: "[]")
+            if (!response.isSuccessful) return null
+            return response.body?.string()
         }
     }
 

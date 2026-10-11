@@ -87,6 +87,39 @@ class MetadataClientsTest {
         assertEquals("Bearer tok", query.getHeader("Authorization"))
         assertEquals("id", query.getHeader("Client-ID"))
     }
+
+    @Test
+    fun `other titles are searched via alternative names and localizations`() {
+        server.enqueue(MockResponse().setBody("""{"access_token":"tok","expires_in":3600,"token_type":"bearer"}"""))
+        server.enqueue(MockResponse().setBody("""[{"id":1,"game":42}]""")) // alternative_names
+        server.enqueue(MockResponse().setBody("""[{"id":2,"game":42},{"id":3,"game":43}]""")) // game_localizations
+        server.enqueue(
+            MockResponse().setBody(
+                """[{"id":42,"name":"LEGO Batman: Legacy of the Dark Knight",
+                   "game_localizations":[{"id":2,"name":"LEGO Batman: Das Vermächtnis des Dunklen Ritters"}]}]""",
+            ),
+        )
+        val creds = object : IgdbCredentials {
+            override val clientId = "id"
+            override val clientSecret = "secret"
+            override var token: String? = null
+            override var tokenExpiresAt = 0L
+        }
+        val client = IgdbClient(http, creds, server.url("/v4/"), server.url("/oauth2/token"))
+
+        val game = client.searchOtherTitles("LEGO Batman: Das Vermächtnis des Dunklen Ritters").single()
+        assertEquals(42L, game.id)
+        assertEquals(
+            listOf("LEGO Batman: Legacy of the Dark Knight", "LEGO Batman: Das Vermächtnis des Dunklen Ritters"),
+            game.allNames,
+        )
+        server.takeRequest() // token
+        assertEquals("/v4/alternative_names", server.takeRequest().path)
+        assertEquals("/v4/game_localizations", server.takeRequest().path)
+        val details = server.takeRequest()
+        assertEquals("/v4/games", details.path)
+        assert(details.body.readUtf8().contains("where id = (42,43)"))
+    }
 }
 
 @org.junit.runner.RunWith(org.robolectric.RobolectricTestRunner::class)
