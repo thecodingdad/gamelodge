@@ -61,6 +61,25 @@ class FiltersTest {
     }
 
     @Test
+    fun `free conditions combine with AND, negation and legacy rules`() {
+        val switchFavorites = FilterRules(
+            conditions = listOf(
+                FilterCondition(FilterField.PLATFORM, setOf("Nintendo Switch")),
+                FilterCondition(FilterField.FAVORITE, setOf("true")),
+            ),
+        )
+        assertEquals(listOf("b"), entries.filter { FilterEngine.matches(it, switchFavorites) }.map { it.item.id })
+        val notPc = FilterRules(conditions = listOf(FilterCondition(FilterField.PLATFORM, setOf("PC"), negate = true)))
+        assertEquals(listOf("b", "c"), entries.filter { FilterEngine.matches(it, notPc) }.map { it.item.id })
+        val inGroup = FilterRules(conditions = listOf(FilterCondition(FilterField.GROUP, setOf("g"))))
+        assertEquals(listOf("c"), entries.filter { FilterEngine.matches(it, inGroup, mapOf("g" to setOf("c"))) }.map { it.item.id })
+        // Old stored format still works and normalizes into conditions.
+        val legacy = FilterRules.decode("""{"platforms":["PC"],"favorite":false}""")
+        assertEquals(2, legacy.normalized().conditions.size)
+        assertEquals(listOf("a", "d"), entries.filter { FilterEngine.matches(it, legacy) }.map { it.item.id })
+    }
+
+    @Test
     fun `game and app filters are separate sets`() {
         val app = LibraryEntry(entries[2].item.copy(id = "app", kind = ItemKind.APP), entries[2].targets)
         val all = entries + app

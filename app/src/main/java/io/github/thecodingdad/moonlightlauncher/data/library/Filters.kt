@@ -12,18 +12,52 @@ import kotlinx.serialization.json.Json
 /** Dimension a filter can be split by: one chip/row per distinct value. */
 enum class GroupBy { PLATFORM, GENRE, CATEGORY, SOURCE }
 
-/** Rules of a smart filter. Empty sets match everything; values within a set are OR-ed, sets AND-ed. */
+/** Item property a filter condition looks at. */
+enum class FilterField(val boolean: Boolean = false) {
+    PLATFORM, GENRE, CATEGORY, SOURCE, GROUP,
+    FAVORITE(boolean = true), PLAYED(boolean = true), REVIEW(boolean = true),
+}
+
+/**
+ * One condition: [field] is (or with [negate], is not) one of [values]. Boolean fields use the
+ * value "true" ("is a favorite"; negated: "is not a favorite").
+ */
+@Serializable
+data class FilterCondition(
+    val field: FilterField,
+    val values: Set<String> = emptySet(),
+    val negate: Boolean = false,
+)
+
+/**
+ * Rules of a free filter: every condition must match (AND). Older filters stored fixed fields
+ * (platforms, favorite …); [effectiveConditions] turns those into conditions.
+ */
 @Serializable
 data class FilterRules(
+    val conditions: List<FilterCondition> = emptyList(),
+    val groupBy: GroupBy? = null,
+    // --- legacy (schema before free conditions); read only ---
     val platforms: Set<String> = emptySet(),
     val genres: Set<String> = emptySet(),
     val categories: Set<String> = emptySet(),
-    /** [SOURCE_LOCAL] or host UUIDs. */
     val sources: Set<String> = emptySet(),
     val favorite: Boolean? = null,
     val played: Boolean? = null,
-    val groupBy: GroupBy? = null,
 ) {
+    val effectiveConditions: List<FilterCondition>
+        get() = conditions + buildList {
+            if (platforms.isNotEmpty()) add(FilterCondition(FilterField.PLATFORM, platforms))
+            if (genres.isNotEmpty()) add(FilterCondition(FilterField.GENRE, genres))
+            if (categories.isNotEmpty()) add(FilterCondition(FilterField.CATEGORY, categories))
+            if (sources.isNotEmpty()) add(FilterCondition(FilterField.SOURCE, sources))
+            favorite?.let { add(FilterCondition(FilterField.FAVORITE, setOf("true"), negate = !it)) }
+            played?.let { add(FilterCondition(FilterField.PLAYED, setOf("true"), negate = !it)) }
+        }
+
+    /** Same rules in the current format (legacy fields folded into conditions). */
+    fun normalized() = FilterRules(conditions = effectiveConditions, groupBy = groupBy)
+
     companion object {
         const val SOURCE_LOCAL = "local"
         private val json = Json { ignoreUnknownKeys = true; encodeDefaults = false }
@@ -160,7 +194,7 @@ object FilterEngine {
             }
             FilterKind.SMART -> {
                 val rules = FilterRules.decode(filter.rules)
-                val matching = shown.filter { matches(it, rules) }
+                val matching = shown.filter { matches(it, rules, groupMembers) }
                 rules.groupBy?.let { split(filter, matching, it, hostNames) } ?: single(matching)
             }
         }
@@ -200,14 +234,23 @@ object FilterEngine {
         }
     }
 
-    fun matches(entry: LibraryEntry, rules: FilterRules): Boolean {
-        fun anyOf(set: Set<String>, by: GroupBy) = set.isEmpty() || values(entry, by).any { it in set }
-        return anyOf(rules.platforms, GroupBy.PLATFORM) &&
-            anyOf(rules.genres, GroupBy.GENRE) &&
-            anyOf(rules.categories, GroupBy.CATEGORY) &&
-            anyOf(rules.sources, GroupBy.SOURCE) &&
-            (rules.favorite == null || entry.item.favorite == rules.favorite) &&
-            (rules.played == null || (entry.item.lastPlayedAt != null) == rules.played)
+    fun matches(entry: LibraryEntry, rules: FilterRules, groupMembers: Map<String, Set<String>> = emptyMap()): Boolean =
+        rules.effectiveConditions.all { matches(entry, it, groupMembers) }
+
+    fun matches(entry: LibraryEntry, condition: FilterCondition, groupMembers: Map<String, Set<String>> = emptyMap()): Boolean {
+        val hit = when (condition.field) {
+            FilterField.PLATFORM -> values(entry, GroupBy.PLATFORM).any { it in condition.values }
+            FilterField.GENRE -> values(entry, GroupBy.GENRE).any { it in condition.values }
+            FilterField.CATEGORY -> values(entry, GroupBy.CATEGORY).any { it in condition.values }
+            FilterField.SOURCE -> values(entry, GroupBy.SOURCE).any { it in condition.values }
+            FilterField.GROUP -> condition.values.any { entry.item.id in groupMembers[it].orEmpty() }
+            FilterField.FAVORITE -> entry.item.favorite
+            FilterField.PLAYED -> entry.item.lastPlayedAt != null
+            FilterField.REVIEW -> entry.item.metadataState == MetadataState.REVIEW
+        }
+        // A list condition without values doesn't restrict anything (yet).
+        if (!condition.field.boolean && condition.values.isEmpty()) return true
+        return hit != condition.negate
     }
 
     private fun splitList(raw: String?): List<String> =

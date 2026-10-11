@@ -148,6 +148,9 @@ fun Modifier.trapFocus(initialFocus: FocusRequester? = null): Modifier {
     val controllerMode = isControllerMode()
     LaunchedEffect(isTop, controllerMode) {
         if (!isTop) return@LaunchedEffect
+        // Touch: no automatic focus (it would open the system keyboard on text fields); the
+        // effect runs again as soon as the controller is used.
+        if (!controllerMode) return@LaunchedEffect
         // Let children lay out (and a touched element inside this popup restore) first.
         delay(30)
         if (!first && TouchFocus.justRestored()) return@LaunchedEffect

@@ -404,9 +404,9 @@
     <string name="filter_platforms">Platforms</string>
     <string name="filters_edit">Edit filters</string>
     <string name="settings_filters">Filters &amp; groups</string>
-    <string name="settings_filters_sub">Library chips, home rows, smart filters, manual groups</string>
+    <string name="settings_filters_sub">Library chips, home rows, custom filters and groups</string>
     <string name="filters_help">Each filter can appear as a chip in the library, as a row on the home screen and as a chip in the Apps tab. Default filters can be renamed, hidden or deleted.</string>
-    <string name="filter_new_smart">New smart filter</string>
+    <string name="filter_new_smart">New filter</string>
     <string name="filter_new_group">New group</string>
     <string name="filters_restore">Restore defaults</string>
     <string name="filter_place_library">Library</string>
@@ -414,7 +414,7 @@
     <string name="filter_place_apps">Apps</string>
     <string name="filter_place_none">Not shown</string>
     <string name="filter_kind_builtin">Default filter</string>
-    <string name="filter_kind_smart">Smart filter</string>
+    <string name="filter_kind_smart">Custom filter</string>
     <string name="filter_kind_group">Group (%d)</string>
     <string name="filter_name">Name</string>
     <string name="filter_show_library">Show in library</string>
@@ -469,7 +469,7 @@
 
     <!-- App filters -->
     <string name="settings_app_filters">App filters</string>
-    <string name="settings_app_filters_sub">Chips in the Apps tab, smart filters, app groups</string>
+    <string name="settings_app_filters_sub">Chips in the Apps tab, custom filters and app groups</string>
     <string name="app_filters_help">App filters appear as chips in the Apps tab and optionally as rows on the home screen. They are separate from the game filters of the library.</string>
     <string name="filter_match_count_apps">%d apps match</string>
 
@@ -579,4 +579,27 @@
     <string name="settings_group_system">System</string>
     <string name="settings_android">Android settings</string>
     <string name="settings_android_sub">System settings of the device</string>
+
+    <!-- Free filters -->
+    <string name="filter_conditions">Conditions</string>
+    <string name="filter_conditions_help">A game is shown when all conditions apply.</string>
+    <string name="filter_condition">Condition</string>
+    <string name="filter_condition_add">Add condition</string>
+    <string name="filter_condition_delete">Remove condition</string>
+    <string name="filter_condition_no_values">no value chosen yet</string>
+    <string name="filter_field">Property</string>
+    <string name="filter_operator">Comparison</string>
+    <string name="filter_is">is</string>
+    <string name="filter_is_not">is not</string>
+    <string name="filter_values_help">One of the selected values must apply.</string>
+    <string name="filter_values_none">No values in the library yet.</string>
+    <string name="filter_field_platform">Platform</string>
+    <string name="filter_field_genre">Genre</string>
+    <string name="filter_field_category">Playnite category</string>
+    <string name="filter_field_source">Source</string>
+    <string name="filter_field_group">Group</string>
+    <string name="filter_field_favorite">Favorite</string>
+    <string name="filter_field_played">Played</string>
+    <string name="filter_field_review">Needs review</string>
+    <string name="action_done">Done</string>
 </resources>
