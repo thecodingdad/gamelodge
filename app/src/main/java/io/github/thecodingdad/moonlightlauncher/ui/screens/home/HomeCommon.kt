@@ -52,6 +52,7 @@ fun MetaLine(entry: LibraryEntry, modifier: Modifier = Modifier) {
             entry.item.lastPlayedAt == null -> add(stringResource(R.string.never_played))
         }
         entry.remoteTargets.firstOrNull()?.hostName?.let { add(it) }
+        if (entry.notInstalled) add(stringResource(R.string.not_installed))
     }
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(

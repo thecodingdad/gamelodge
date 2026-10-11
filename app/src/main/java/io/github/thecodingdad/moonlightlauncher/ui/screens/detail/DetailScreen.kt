@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.MaterialTheme
@@ -154,8 +155,9 @@ fun DetailScreen(
                 }
         val buttons: @Composable () -> Unit = {
                     LauncherButton(
-                        stringResource(R.string.action_play), onClick = { actions.play(entry) },
-                        icon = Icons.Filled.PlayArrow, primary = true,
+                        stringResource(if (entry.notInstalled) R.string.action_install else R.string.action_play),
+                        onClick = { actions.play(entry) },
+                        icon = if (entry.notInstalled) Icons.Filled.Download else Icons.Filled.PlayArrow, primary = true,
                         modifier = Modifier.focusWhenActive(active),
                     )
                     if (hasRemote) LauncherButton(stringResource(R.string.action_play_with), onClick = { actions.playWith(entry) }, icon = Icons.Filled.Tune)

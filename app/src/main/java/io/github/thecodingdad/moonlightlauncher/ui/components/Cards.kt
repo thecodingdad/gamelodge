@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cloud
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.PlayArrow
@@ -77,6 +78,8 @@ fun CoverCard(
             modifier = Modifier.fillMaxWidth().aspectRatio(2f / 3f),
         ) { focused ->
             ArtworkImage(entry.coverModel(animated && focused), entry.item.title, Modifier.fillMaxSize())
+            // Owned but not installed on the host: dimmed, playing it starts the installation.
+            if (entry.notInstalled) Box(Modifier.fillMaxSize().background(Color(0x99000000)))
             SourceBadges(entry, Modifier.align(Alignment.TopEnd).padding(6.dp))
             if (entry.item.favorite) {
                 Icon(
@@ -104,6 +107,7 @@ fun SourceBadges(entry: LibraryEntry, modifier: Modifier = Modifier) {
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         if (entry.localTarget != null) Badge(Icons.Filled.PhoneAndroid)
         if (entry.remoteTargets.isNotEmpty()) Badge(Icons.Filled.Cloud)
+        if (entry.notInstalled) Badge(Icons.Filled.Download)
     }
 }
 

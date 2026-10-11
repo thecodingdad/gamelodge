@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PhoneAndroid
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.SportsEsports
@@ -277,7 +278,12 @@ fun EntryContextMenu(
             if (session != null) RunningSessionActions(session, onResume = act { onResume(session) }, onDone = onDismiss)
             val e = entry ?: return@Column
             if (!inDetail) {
-                if (session == null) LauncherButton(stringResource(R.string.action_play), act { onPlay(e) }, Modifier.fillMaxWidth(), Icons.Filled.PlayArrow, primary = true)
+                if (session == null) {
+                    LauncherButton(
+                        stringResource(if (e.notInstalled) R.string.action_install else R.string.action_play), act { onPlay(e) },
+                        Modifier.fillMaxWidth(), if (e.notInstalled) Icons.Filled.Download else Icons.Filled.PlayArrow, primary = true,
+                    )
+                }
                 if (e.remoteTargets.isNotEmpty()) {
                     LauncherButton(stringResource(R.string.action_play_with), act { onPlayWith(e) }, Modifier.fillMaxWidth(), Icons.Filled.Tune)
                 }
