@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FiberManualRecord
+import androidx.compose.material.icons.filled.Public
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -78,9 +79,10 @@ fun ButtonComboRows(settings: LauncherSettings, update: ((LauncherSettings) -> L
             null -> emptySet()
         },
         onSave = { keys ->
+            val k = keys.orEmpty()
             when (action) {
-                ComboAction.HOME -> update { it.copy(comboHome = keys) }
-                ComboAction.QUICK_MENU -> update { it.copy(comboQuickMenu = keys) }
+                ComboAction.HOME -> update { it.copy(comboHome = k) }
+                ComboAction.QUICK_MENU -> update { it.copy(comboQuickMenu = k) }
                 null -> Unit
             }
         },
@@ -88,13 +90,20 @@ fun ButtonComboRows(settings: LauncherSettings, update: ((LauncherSettings) -> L
     )
 }
 
+/**
+ * Records a combination for [action]. [current] null = the controller follows the global one
+ * ([global] shown), only possible with a [descriptor] (per-controller dialog, which also
+ * records from that controller only).
+ */
 @Composable
-private fun ComboDialog(
+fun ComboDialog(
     action: ComboAction?,
-    current: Set<Int>,
+    current: Set<Int>?,
     other: Set<Int>,
-    onSave: (Set<Int>) -> Unit,
+    onSave: (Set<Int>?) -> Unit,
     onDismiss: () -> Unit,
+    descriptor: String? = null,
+    global: Set<Int> = emptySet(),
 ) {
     var recording by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<Int?>(null) }
@@ -112,17 +121,26 @@ private fun ComboDialog(
         ComboAction.QUICK_MENU -> stringResource(R.string.combo_quick_menu)
         else -> stringResource(R.string.combo_home)
     }
+    val perController = descriptor != null
     Modal(visible = action != null, onDismiss = { if (!recording) onDismiss() }, title = title, maxWidth = 640.dp) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            val shown = if (recording) preview else current
             Text(
-                if (shown.isEmpty()) stringResource(if (recording) R.string.combo_recording_hint else R.string.combo_none)
-                else ButtonCombos.describe(shown),
+                when {
+                    recording -> if (preview.isEmpty()) stringResource(R.string.combo_recording_hint) else ButtonCombos.describe(preview)
+                    current == null -> comboLabel(global, global = true)
+                    else -> comboLabel(current)
+                },
                 style = MaterialTheme.typography.headlineSmall,
                 color = if (recording) LauncherTheme.colors.accent else LauncherTheme.colors.onSurface,
             )
             Text(
-                stringResource(if (recording) R.string.combo_recording_help else R.string.combo_help),
+                stringResource(
+                    when {
+                        recording && perController -> R.string.combo_recording_help_controller
+                        recording -> R.string.combo_recording_help
+                        else -> R.string.combo_help
+                    },
+                ),
                 style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted,
             )
             error?.let { Text(stringResource(it), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error) }
@@ -131,7 +149,7 @@ private fun ComboDialog(
                     LauncherButton(stringResource(R.string.combo_record), onClick = {
                         error = null
                         recording = true
-                        ButtonCombos.startRecording { keys ->
+                        ButtonCombos.startRecording(descriptor) { keys ->
                             recording = false
                             error = when {
                                 ButtonCombos.isBlocked(keys) -> R.string.combo_error_blocked
@@ -141,12 +159,25 @@ private fun ComboDialog(
                             if (error == null) onSave(keys)
                         }
                     }, primary = true, icon = Icons.Filled.FiberManualRecord)
-                    if (current.isNotEmpty()) {
-                        LauncherButton(stringResource(R.string.combo_clear), onClick = { onSave(emptySet()) }, icon = Icons.Filled.Delete)
+                    if (perController && current != null) {
+                        LauncherButton(stringResource(R.string.combo_use_global), onClick = { onSave(null) }, icon = Icons.Filled.Public)
+                    }
+                    if (current == null || current.isNotEmpty()) {
+                        LauncherButton(
+                            stringResource(if (perController) R.string.combo_off else R.string.combo_clear),
+                            onClick = { onSave(emptySet()) }, icon = Icons.Filled.Delete,
+                        )
                     }
                     LauncherButton(stringResource(R.string.action_done), onClick = onDismiss)
                 }
             }
         }
     }
+}
+
+/** "LB + RB", "Off", or for a controller following the global one "Global (LB + RB)". */
+@Composable
+fun comboLabel(keys: Set<Int>?, global: Boolean = false): String {
+    val text = if (keys.isNullOrEmpty()) stringResource(R.string.off) else ButtonCombos.describe(keys)
+    return if (global) stringResource(R.string.combo_global_value, text) else text
 }

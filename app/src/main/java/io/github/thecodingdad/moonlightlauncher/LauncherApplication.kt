@@ -29,6 +29,16 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
         // Button combinations: needed by the activity and by the accessibility service, which
         // can run without any activity (e.g. after an update).
         container.scope.launch {
+            container.controllerSettings.all.collect { all ->
+                io.github.thecodingdad.moonlightlauncher.input.ButtonCombos.overrides = all.mapValues { (_, s) ->
+                    buildMap {
+                        s.comboHome?.let { put(io.github.thecodingdad.moonlightlauncher.input.ComboAction.HOME, it.toSet()) }
+                        s.comboQuickMenu?.let { put(io.github.thecodingdad.moonlightlauncher.input.ComboAction.QUICK_MENU, it.toSet()) }
+                    }
+                }.filterValues { it.isNotEmpty() }
+            }
+        }
+        container.scope.launch {
             container.settings.settings.collect {
                 io.github.thecodingdad.moonlightlauncher.input.ButtonCombos.combos = mapOf(
                     io.github.thecodingdad.moonlightlauncher.input.ComboAction.HOME to it.comboHome,

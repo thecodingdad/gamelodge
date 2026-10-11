@@ -18,6 +18,9 @@ data class ControllerSettings(
     val motionSensors: Boolean? = null,
     /** 0-based player slot on the host. */
     val playerSlot: Int? = null,
+    /** Button combinations (key codes) of this controller: null = global, empty = off. */
+    val comboHome: List<Int>? = null,
+    val comboQuickMenu: List<Int>? = null,
 ) {
     val isEmpty: Boolean get() = this == ControllerSettings()
 }

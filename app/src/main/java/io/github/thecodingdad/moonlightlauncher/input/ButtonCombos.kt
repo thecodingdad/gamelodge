@@ -14,25 +14,37 @@ enum class ComboAction { HOME, QUICK_MENU }
  * process-wide state so recording in the settings works with either path.
  */
 object ButtonCombos {
+    /** Global combinations. */
     @Volatile var combos: Map<ComboAction, Set<Int>> = emptyMap()
 
-    private val down = LinkedHashSet<Int>()
-    private val consuming = HashSet<Int>()
+    /** Per-controller replacements by device descriptor (an empty set switches the action off). */
+    @Volatile var overrides: Map<String, Map<ComboAction, Set<Int>>> = emptyMap()
+
+    fun combosFor(descriptor: String?): Map<ComboAction, Set<Int>> =
+        descriptor?.let { overrides[it] }?.let { combos + it } ?: combos
+
+    // Held and swallowed buttons per controller: combinations never mix two controllers.
+    private val down = HashMap<Int, LinkedHashSet<Int>>()
+    private val consuming = HashMap<Int, HashSet<Int>>()
 
     // Recording: collects the largest set of buttons held at once, finishes when all are released.
     private var recorder: ((Set<Int>) -> Unit)? = null
+    private var recordDescriptor: String? = null
     private val recorded = LinkedHashSet<Int>()
     private val _recordingPreview = MutableStateFlow<Set<Int>>(emptySet())
     val recordingPreview: StateFlow<Set<Int>> = _recordingPreview.asStateFlow()
 
-    fun startRecording(onDone: (Set<Int>) -> Unit) {
+    /** Records the next combination; with [descriptor] only from that controller. */
+    fun startRecording(descriptor: String? = null, onDone: (Set<Int>) -> Unit) {
         recorded.clear()
         _recordingPreview.value = emptySet()
+        recordDescriptor = descriptor
         recorder = onDone
     }
 
     fun cancelRecording() {
         recorder = null
+        recordDescriptor = null
         recorded.clear()
         _recordingPreview.value = emptySet()
     }
@@ -49,21 +61,28 @@ object ButtonCombos {
     fun handle(event: KeyEvent, onAction: (ComboAction) -> Unit): Boolean {
         if (!isGamepadKey(event)) return false
         val code = event.keyCode
+        val held = down.getOrPut(event.deviceId) { LinkedHashSet() }
+        val swallowed = consuming.getOrPut(event.deviceId) { HashSet() }
+        val descriptor = event.device?.descriptor
+        val recordsThis = recorder != null && (recordDescriptor == null || recordDescriptor == descriptor)
         when (event.action) {
             KeyEvent.ACTION_DOWN -> {
-                if (event.repeatCount == 0) down += code
-                recorder?.let {
-                    recorded += code
-                    _recordingPreview.value = LinkedHashSet(recorded)
+                if (event.repeatCount == 0) held += code
+                if (recorder != null) {
+                    // Other controllers are ignored while recording for a specific one.
+                    if (recordsThis) {
+                        recorded += code
+                        _recordingPreview.value = LinkedHashSet(recorded)
+                    }
                     return true
                 }
-                if (code in consuming) return true
+                if (code in swallowed) return true
                 if (event.repeatCount == 0) {
-                    val hit = combos.entries.firstOrNull { (_, keys) -> keys.isNotEmpty() && keys == down }
+                    val hit = combosFor(descriptor).entries.firstOrNull { (_, keys) -> keys.isNotEmpty() && keys == held }
                     if (hit != null) {
                         // Only the completing button is swallowed: the others already reached
                         // the app, so their release has to reach it too (no stuck buttons).
-                        consuming += code
+                        swallowed += code
                         onAction(hit.key)
                         return true
                     }
@@ -71,16 +90,16 @@ object ButtonCombos {
                 return false
             }
             KeyEvent.ACTION_UP -> {
-                down -= code
+                held -= code
                 recorder?.let { done ->
-                    if (down.isEmpty() && recorded.isNotEmpty()) {
+                    if (recordsThis && held.isEmpty() && recorded.isNotEmpty()) {
                         val result = LinkedHashSet(recorded)
                         cancelRecording()
                         done(result)
                     }
                     return true
                 }
-                return consuming.remove(code)
+                return swallowed.remove(code)
             }
         }
         return false

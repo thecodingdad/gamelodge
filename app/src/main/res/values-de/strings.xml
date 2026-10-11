@@ -650,4 +650,10 @@
 
     <!-- Quick tiles -->
     <string name="qt_unavailable">Auf diesem Gerät nicht verfügbar (ausgeblendet)</string>
+
+    <!-- Button combos -->
+    <string name="combo_use_global">Global verwenden</string>
+    <string name="combo_off">Aus</string>
+    <string name="combo_global_value">Global (%1$s)</string>
+    <string name="combo_recording_help_controller">Tasten an diesem Controller gemeinsam gedrückt halten, dann loslassen. Bricht nach 10 Sekunden ab.</string>
 </resources>

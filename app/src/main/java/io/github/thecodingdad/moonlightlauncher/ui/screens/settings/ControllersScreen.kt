@@ -219,4 +219,34 @@ private fun ControllerOverrideRows(c: ControllerInfo) {
     if (c.hasTouchpad) {
         ChoiceRow(stringResource(R.string.controller_touchpad_mouse), tri, s.touchpadAsMouse, label = triLabel, onSelect = { v -> save { it.copy(touchpadAsMouse = v) } })
     }
+
+    // Button combinations of this controller (e.g. Guide on an Xbox pad, Select + Start elsewhere).
+    val launcher by LocalContext.current.container.settings.settings.collectAsState(null)
+    val globalHome = launcher?.comboHome.orEmpty()
+    val globalMenu = launcher?.comboQuickMenu.orEmpty()
+    var editing by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<io.github.thecodingdad.moonlightlauncher.input.ComboAction?>(null) }
+    val home = s.comboHome?.toSet()
+    val menu = s.comboQuickMenu?.toSet()
+    NavRow(
+        stringResource(R.string.combo_home), { editing = io.github.thecodingdad.moonlightlauncher.input.ComboAction.HOME },
+        trailing = if (home == null) comboLabel(globalHome, global = true) else comboLabel(home),
+    )
+    NavRow(
+        stringResource(R.string.combo_quick_menu), { editing = io.github.thecodingdad.moonlightlauncher.input.ComboAction.QUICK_MENU },
+        trailing = if (menu == null) comboLabel(globalMenu, global = true) else comboLabel(menu),
+    )
+    val action = editing
+    val isHome = action == io.github.thecodingdad.moonlightlauncher.input.ComboAction.HOME
+    ComboDialog(
+        action = action,
+        current = if (isHome) home else menu,
+        other = (if (isHome) menu ?: globalMenu else home ?: globalHome),
+        global = if (isHome) globalHome else globalMenu,
+        descriptor = c.descriptor,
+        onSave = { keys ->
+            val list = keys?.toList()
+            save { if (isHome) it.copy(comboHome = list) else it.copy(comboQuickMenu = list) }
+        },
+        onDismiss = { editing = null },
+    )
 }

@@ -652,4 +652,10 @@
 
     <!-- Quick tiles -->
     <string name="qt_unavailable">Not available on this device (hidden)</string>
+
+    <!-- Button combos -->
+    <string name="combo_use_global">Use global</string>
+    <string name="combo_off">Off</string>
+    <string name="combo_global_value">Global (%1$s)</string>
+    <string name="combo_recording_help_controller">Hold the buttons together on this controller, then release them. Cancels after 10 seconds.</string>
 </resources>
