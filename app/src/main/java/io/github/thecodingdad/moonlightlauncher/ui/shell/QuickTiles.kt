@@ -47,6 +47,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -96,6 +100,28 @@ object QuickTile {
     )
 
     fun appId(packageName: String) = APP_PREFIX + packageName
+
+    /** Whether the device has the hardware behind a tile (e.g. no flashlight without a flash). */
+    fun isAvailable(context: Context, id: String): Boolean {
+        val pm = context.packageManager
+        fun has(feature: String) = pm.hasSystemFeature(feature)
+        return when (id) {
+            BLUETOOTH -> has(android.content.pm.PackageManager.FEATURE_BLUETOOTH)
+            MOBILE_DATA -> has(android.content.pm.PackageManager.FEATURE_TELEPHONY)
+            WIFI, HOTSPOT -> has(android.content.pm.PackageManager.FEATURE_WIFI)
+            // Some devices declare camera.flash without any camera having one: ask the cameras.
+            FLASHLIGHT -> torchCameraId(context) != null
+            ROTATION -> has(android.content.pm.PackageManager.FEATURE_SENSOR_ACCELEROMETER)
+            BATTERY_SAVER -> context.registerReceiver(null, android.content.IntentFilter(android.content.Intent.ACTION_BATTERY_CHANGED))
+                ?.getBooleanExtra(android.os.BatteryManager.EXTRA_PRESENT, false) == true
+            else -> true
+        }
+    }
+
+    fun torchCameraId(context: Context): String? = runCatching {
+        val cm = context.getSystemService(CameraManager::class.java)
+        cm.cameraIdList.firstOrNull { cm.getCameraCharacteristics(it).get(CameraCharacteristics.FLASH_INFO_AVAILABLE) == true }
+    }.getOrNull()
 }
 
 /** One rendered tile. [packageName] set = app icon instead of [icon]. */
@@ -217,8 +243,10 @@ fun rememberQuickTiles(ids: List<String>, onHost: (String) -> Unit, onController
     val names = ids.associateWith { quickTileName(it) }
     val controllersLabel = if (controllers.isEmpty()) labelControllersNone else stringResource(R.string.qm_controllers, controllers.size)
 
-    return remember(ids, tick, hosts, vpnState, tunnels, controllers, wifi, bluetooth, system, torch.on, names) {
-        ids.flatMap { id ->
+    // Tiles without hardware on this device (e.g. from a backup of another device) stay hidden.
+    val usable = remember(ids) { ids.filter { QuickTile.isAvailable(context, it) } }
+    return remember(usable, tick, hosts, vpnState, tunnels, controllers, wifi, bluetooth, system, torch.on, names) {
+        usable.flatMap { id ->
             when (id) {
                 QuickTile.CONTROLLERS -> listOf(
                     TileModel(id, Icons.Filled.SportsEsports, controllersLabel, if (controllers.isEmpty()) colors.danger else on, onControllers),
@@ -343,11 +371,7 @@ class TorchState(val available: Boolean, val on: Boolean, val toggle: () -> Unit
 private fun rememberTorch(): TorchState {
     val context = LocalContext.current
     val cm = remember { context.getSystemService(CameraManager::class.java) }
-    val cameraId = remember {
-        runCatching {
-            cm.cameraIdList.firstOrNull { cm.getCameraCharacteristics(it).get(CameraCharacteristics.FLASH_INFO_AVAILABLE) == true }
-        }.getOrNull()
-    }
+    val cameraId = remember { QuickTile.torchCameraId(context) }
     var on by remember { androidx.compose.runtime.mutableStateOf(false) }
     androidx.compose.runtime.DisposableEffect(cameraId) {
         val callback = object : CameraManager.TorchCallback() {
@@ -360,19 +384,24 @@ private fun rememberTorch(): TorchState {
 }
 
 /**
- * Tiles in at most two rows; with more tiles than fit, the rows scroll sideways together.
- * Order is row by row (first half on top).
+ * Quick tiles in pages of up to two rows of three. More than six tiles: page dots below, and
+ * both swiping and the D-pad move a whole page at a time.
  */
 @Composable
 fun QuickTileGrid(tiles: List<TileModel>) {
-    val perRow = if (tiles.size <= 3) tiles.size else (tiles.size + 1) / 2
-    val rows = tiles.chunked(perRow.coerceAtLeast(1))
-    // The scroll container clips: extend it by a margin on every side (laid out beyond the
-    // panel's padding) so the focus ring and the focus scale of edge tiles stay visible.
+    val columns = 3
+    val pages = tiles.chunked(columns * 2).ifEmpty { listOf(emptyList()) }
+    val pager = androidx.compose.foundation.pager.rememberPagerState { pages.size }
+    val scope = rememberCoroutineScope()
+    // The pager clips: extend it by a margin on every side (laid out beyond the panel's
+    // padding) so the focus ring and the focus scale of edge tiles stay visible.
     val margin = 8.dp
-    Column(
-        Modifier
-            .layout { measurable, constraints ->
+    Column {
+        androidx.compose.foundation.pager.HorizontalPager(
+            state = pager,
+            beyondViewportPageCount = 1,
+            verticalAlignment = Alignment.Top,
+            modifier = Modifier.layout { measurable, constraints ->
                 val m = margin.roundToPx()
                 val placeable = measurable.measure(
                     constraints.copy(
@@ -381,25 +410,58 @@ fun QuickTileGrid(tiles: List<TileModel>) {
                     ),
                 )
                 layout(placeable.width - 2 * m, placeable.height - 2 * m) { placeable.place(-m, -m) }
+            },
+        ) { page ->
+            Column(Modifier.fillMaxWidth().padding(margin), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                pages[page].chunked(columns).forEachIndexed { r, row ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        row.forEachIndexed { i, tile ->
+                            QuickTileView(
+                                tile,
+                                initialFocus = page == 0 && r == 0 && i == 0,
+                                // D-pad onto a tile of another page: show that whole page.
+                                onFocused = { if (pager.currentPage != page) scope.launch { pager.animateScrollToPage(page) } },
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                        // Keep the tile width on a half-filled last row.
+                        repeat(columns - row.size) { Box(Modifier.weight(1f)) }
+                    }
+                }
             }
-            .fillMaxWidth()
-            .horizontalScroll(rememberScrollState())
-            .padding(margin),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        }
+        if (pages.size > 1) PageDots(pages.size, pager.currentPage) { scope.launch { pager.animateScrollToPage(it) } }
+    }
+}
+
+/** Subtle page dots under the tiles (tap a dot to jump to its page). */
+@Composable
+private fun PageDots(count: Int, current: Int, onSelect: (Int) -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().padding(top = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        rows.forEachIndexed { r, row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                row.forEachIndexed { i, tile -> QuickTileView(tile, initialFocus = r == 0 && i == 0) }
-            }
+        repeat(count) { page ->
+            val active = page == current
+            val width by androidx.compose.animation.core.animateDpAsState(if (active) 14.dp else 6.dp, label = "pageDot")
+            Box(
+                Modifier
+                    .size(width = width, height = 6.dp)
+                    .clip(androidx.compose.foundation.shape.CircleShape)
+                    .background(if (active) LauncherTheme.colors.accent else LauncherTheme.colors.onSurfaceMuted.copy(alpha = 0.4f))
+                    .clickable { onSelect(page) },
+            )
         }
     }
 }
 
 @Composable
-private fun QuickTileView(tile: TileModel, initialFocus: Boolean) {
+private fun QuickTileView(tile: TileModel, initialFocus: Boolean, onFocused: () -> Unit, modifier: Modifier) {
     FocusSurface(
         onClick = tile.onClick,
-        modifier = Modifier.width(140.dp).then(if (initialFocus) Modifier.restoreFocusIf(true) else Modifier),
+        onFocused = onFocused,
+        modifier = modifier.then(if (initialFocus) Modifier.restoreFocusIf(true) else Modifier),
         color = LauncherTheme.colors.surfaceRaised,
         focusScale = 1.05f,
     ) {

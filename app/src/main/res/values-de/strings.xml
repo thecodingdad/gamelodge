@@ -647,4 +647,7 @@
     <string name="combo_clear">Entfernen</string>
     <string name="combo_error_blocked">A, B oder eine Steuerkreuz-Richtung allein werden zur Bedienung gebraucht.</string>
     <string name="combo_error_duplicate">Diese Kombination ist schon für die andere Aktion belegt.</string>
+
+    <!-- Quick tiles -->
+    <string name="qt_unavailable">Auf diesem Gerät nicht verfügbar (ausgeblendet)</string>
 </resources>

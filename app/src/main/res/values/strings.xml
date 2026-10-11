@@ -649,4 +649,7 @@
     <string name="combo_clear">Remove</string>
     <string name="combo_error_blocked">A, B or a D-pad direction alone are needed for navigation.</string>
     <string name="combo_error_duplicate">This combination is already used for the other action.</string>
+
+    <!-- Quick tiles -->
+    <string name="qt_unavailable">Not available on this device (hidden)</string>
 </resources>

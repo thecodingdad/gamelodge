@@ -44,8 +44,14 @@ fun QuickMenuSettings(vm: LauncherViewModel, settings: LauncherSettings, update:
 
     SettingsPage(stringResource(R.string.settings_quick_menu)) {
         Text(stringResource(R.string.qt_settings_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+        val tileContext = androidx.compose.ui.platform.LocalContext.current
+        val unavailable = remember(tiles) { tiles.filterNot { QuickTile.isAvailable(tileContext, it) }.toSet() }
         tiles.forEachIndexed { index, id ->
-            NavRow(quickTileName(id), { selected = id }, icon = quickTileIcon(id) ?: Icons.Filled.Apps, initialFocus = index == 0)
+            NavRow(
+                quickTileName(id), { selected = id },
+                subtitle = if (id in unavailable) stringResource(R.string.qt_unavailable) else null,
+                icon = quickTileIcon(id) ?: Icons.Filled.Apps, initialFocus = index == 0,
+            )
         }
         ButtonRow {
             LauncherButton(stringResource(R.string.qt_add), icon = Icons.Filled.Add, onClick = { adding = true })
@@ -74,10 +80,13 @@ fun QuickMenuSettings(vm: LauncherViewModel, settings: LauncherSettings, update:
     val apps = remember(entries) {
         entries.mapNotNull { e -> e.localTarget?.packageName?.let { it to e.item.title } }.distinctBy { it.first }.sortedBy { it.second.lowercase() }
     }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    // Only tiles the device has the hardware for.
+    val available = remember { QuickTile.groups.flatMap { it.second }.filter { QuickTile.isAvailable(context, it) }.toSet() }
     Modal(visible = adding, onDismiss = { adding = false }, title = stringResource(R.string.qt_add), maxWidth = 640.dp) {
         Column(Modifier.heightIn(max = 600.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             QuickTile.groups.forEach { (title, ids) ->
-                val free = ids.filter { it !in tiles }
+                val free = ids.filter { it !in tiles && it in available }
                 if (free.isEmpty()) return@forEach
                 SectionHeader(stringResource(title))
                 free.forEach { id ->
