@@ -1,5 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher.ui.shell
 
+import io.github.thecodingdad.moonlightlauncher.ui.components.controllerScroll
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -268,7 +269,7 @@ fun EntryContextMenu(
     ) {
         fun act(block: () -> Unit) = { onDismiss(); block() }
         Column(
-            Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState()),
+            Modifier.heightIn(max = 420.dp).controllerScroll(),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             if (session != null) RunningSessionActions(session, onResume = act { onResume(session) }, onDone = onDismiss)

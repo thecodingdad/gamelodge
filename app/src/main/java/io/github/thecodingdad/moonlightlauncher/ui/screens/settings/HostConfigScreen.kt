@@ -36,9 +36,7 @@ import io.github.thecodingdad.moonlightlauncher.data.db.WakeMethod
 import io.github.thecodingdad.moonlightlauncher.data.remote.HostPermission
 import io.github.thecodingdad.moonlightlauncher.data.remote.HostState
 import io.github.thecodingdad.moonlightlauncher.ha.HaEntity
-import io.github.thecodingdad.moonlightlauncher.stream.PowerAction
 import io.github.thecodingdad.moonlightlauncher.ui.components.FocusSurface
-import io.github.thecodingdad.moonlightlauncher.ui.components.HoldToConfirmButton
 import io.github.thecodingdad.moonlightlauncher.ui.components.Modal
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 import kotlinx.coroutines.launch
@@ -117,11 +115,6 @@ fun HostConfigScreen(host: HostState) {
             onSelect = { save(cfg.copy(autoSleepMinutes = it)) },
             subtitle = stringResource(R.string.host_auto_sleep_sub),
         )
-        io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 10.dp) {
-            if (cfg.haSleepEntity != null) HoldToConfirmButton(stringResource(R.string.power_sleep), { scope.launch { c.hostPower.power(host.uuid, PowerAction.SLEEP) } }, icon = Icons.Filled.Bedtime)
-            if (cfg.haRestartEntity != null) HoldToConfirmButton(stringResource(R.string.power_restart), { scope.launch { c.hostPower.power(host.uuid, PowerAction.RESTART) } }, icon = Icons.Filled.RestartAlt)
-            if (cfg.haShutdownEntity != null) HoldToConfirmButton(stringResource(R.string.power_shutdown), { scope.launch { c.hostPower.power(host.uuid, PowerAction.SHUTDOWN) } }, icon = Icons.Filled.PowerSettingsNew)
-        }
         VibepolloSection(host, cfg, ::save)
     }
 

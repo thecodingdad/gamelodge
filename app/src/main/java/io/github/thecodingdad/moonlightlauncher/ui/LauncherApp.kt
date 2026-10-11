@@ -175,11 +175,15 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
     var quickMenu by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         vm.homePressed.collect {
+            // Already at the untouched start screen: nothing to do (don't reload artwork).
+            val alreadyHome = vm.tab == 0 && nav.currentDestination?.route == Routes.MAIN && vm.homeAtStart
             nav.popBackStack(Routes.MAIN, inclusive = false)
             vm.tab = 0
-            // Home starts at the top again: forget the remembered position of the start tab.
-            vm.focusKeys.remove(MainTab.HOME.name)
-            vm.homeResets.intValue++
+            if (!alreadyHome) {
+                // Home starts at the top again: forget the remembered position of the start tab.
+                vm.focusKeys.remove(MainTab.HOME.name)
+                vm.homeResets.intValue++
+            }
             hostInfoFor = null
             controllerPopup = false
             entryActions.pick = null
@@ -530,6 +534,7 @@ private fun MainShell(
                             onRunningMenu = entryActions::contextForSession,
                             lastFocusedKey = vm.focusKeys[MainTab.HOME.name],
                             onFocusKey = { vm.focusKeys[MainTab.HOME.name] = it },
+                            onAtStart = { vm.homeAtStart = it },
                             animatedArtwork = settings.animatedArtwork,
                         )
                         io.github.thecodingdad.moonlightlauncher.ui.shell.ScreenHints(

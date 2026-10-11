@@ -1,5 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher.ui.screens.detail
 
+import io.github.thecodingdad.moonlightlauncher.ui.components.controllerScroll
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -165,7 +166,7 @@ fun DetailScreen(
         if (compact) {
             // Narrow (portrait): cover next to logo and chips on top, everything else full width below.
             Column(
-                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 16.dp),
+                Modifier.fillMaxSize().controllerScroll().padding(horizontal = 20.dp, vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.Bottom) {
@@ -209,7 +210,7 @@ fun DetailScreen(
                 Modifier.width(coverWidth).aspectRatio(2f / 3f).clip(RoundedCornerShape(if (roomy) 22.dp else 16.dp)),
             )
             Column(
-                Modifier.width(textWidth).verticalScroll(rememberScrollState()),
+                Modifier.width(textWidth).controllerScroll(),
                 verticalArrangement = Arrangement.spacedBy(if (roomy) 18.dp else 12.dp),
             ) {
                 if (entry.item.logoUrl != null) {

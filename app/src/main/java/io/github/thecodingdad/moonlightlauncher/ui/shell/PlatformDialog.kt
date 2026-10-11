@@ -1,5 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher.ui.shell
 
+import io.github.thecodingdad.moonlightlauncher.ui.components.controllerScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -53,7 +54,7 @@ fun PlatformDialog(
             style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted,
         )
         Column(
-            Modifier.heightIn(max = 400.dp).verticalScroll(rememberScrollState()),
+            Modifier.heightIn(max = 400.dp).controllerScroll(),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             LauncherButton(

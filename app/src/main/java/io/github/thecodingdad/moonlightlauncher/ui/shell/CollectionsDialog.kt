@@ -1,5 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher.ui.shell
 
+import io.github.thecodingdad.moonlightlauncher.ui.components.controllerScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -35,7 +36,7 @@ fun CollectionsDialog(
     Modal(visible = entry != null, onDismiss = onDismiss, title = stringResource(R.string.collections_title), maxWidth = 520.dp) {
         val e = entry ?: return@Modal
         Column(
-            Modifier.heightIn(max = 380.dp).verticalScroll(rememberScrollState()),
+            Modifier.heightIn(max = 380.dp).controllerScroll(),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             collections.forEach { (collection, members) ->

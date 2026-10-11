@@ -1,5 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher.ui.screens.settings
 
+import io.github.thecodingdad.moonlightlauncher.ui.components.controllerScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -125,7 +126,7 @@ private fun FilterEditorDialog(
         val kind = if (f.scope == FilterScope.APPS) ItemKind.APP else ItemKind.GAME
         val games = entries.filter { it.item.kind == kind }
         Column(
-            Modifier.heightIn(max = 560.dp).verticalScroll(rememberScrollState()),
+            Modifier.heightIn(max = 560.dp).controllerScroll(),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             LauncherTextField(

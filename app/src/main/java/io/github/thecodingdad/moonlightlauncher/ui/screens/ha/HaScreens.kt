@@ -1,5 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher.ui.screens.ha
 
+import io.github.thecodingdad.moonlightlauncher.ui.components.controllerScroll
 import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -95,7 +96,7 @@ fun HaPanel(visible: Boolean, onDismiss: () -> Unit, openSettings: () -> Unit) {
             LauncherButton(stringResource(R.string.ha_setup), onClick = { onDismiss(); openSettings() }, primary = true)
         } else {
             FlowRow(
-                Modifier.verticalScroll(rememberScrollState()).weight(1f),
+                Modifier.controllerScroll().weight(1f),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {

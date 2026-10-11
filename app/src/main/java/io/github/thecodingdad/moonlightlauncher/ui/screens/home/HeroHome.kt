@@ -65,6 +65,8 @@ class HomeCallbacks(
     val lastFocusedKey: String?,
     val onFocusKey: (String) -> Unit,
     val animatedArtwork: Boolean,
+    /** Reports whether the layout is in its initial state (top, first item focused). */
+    val onAtStart: (Boolean) -> Unit = {},
 )
 
 /** PS5/Netflix style: large artwork of the focused game on top, rows below. */
@@ -135,6 +137,14 @@ fun HeroHome(
                 if (filterRows.size < 2 && haRow != null) add("ha")
             }
             var snapped by remember { mutableStateOf(false) }
+            // Initial state: list at the top and the first card of the first row focused (or nothing yet).
+            val firstFilled = filterRows.firstOrNull { it.entries.isNotEmpty() }
+            val atStart = listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0 && when {
+                focused == null && focusedSession == null -> true
+                rows.running.isNotEmpty() -> focusedSession === rows.running.first()
+                else -> focusedRow == firstFilled?.let { "row:${it.key}" } && focused?.item?.id == firstFilled?.entries?.first()?.item?.id
+            }
+            LaunchedEffect(atStart) { callbacks.onAtStart(atStart) }
             // Rows arrive in stages at start (e.g. the smart home row before the game rows). The
             // list keeps its first visible item when rows are inserted above it, so without a
             // remembered position jump back to the top whenever the first row changes.

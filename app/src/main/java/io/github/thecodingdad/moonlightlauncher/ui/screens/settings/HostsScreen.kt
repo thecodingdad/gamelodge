@@ -29,6 +29,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.collectAsState
+import kotlinx.coroutines.flow.map
+import androidx.compose.material.icons.filled.PowerSettingsNew
+import androidx.compose.material.icons.filled.RestartAlt
+import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
@@ -79,6 +84,9 @@ fun HostsSettings(hosts: List<HostState>, openHostConfig: (HostState) -> Unit) {
     val c = androidx.compose.ui.platform.LocalContext.current.container
     val waking = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateListOf<String>() }
     val notes = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateMapOf<String, String>() }
+    val hostConfigs by c.database.hostConfigDao().observeAll()
+        .map { list -> list.associateBy { it.hostUuid } }
+        .collectAsState(emptyMap())
     val wakeSentMsg = stringResource(R.string.host_wake_sending)
     val wakeFailedMsg = stringResource(R.string.host_wake_failed)
     val wakeOnlineMsg = stringResource(R.string.host_wake_online)
@@ -99,6 +107,8 @@ fun HostsSettings(hosts: List<HostState>, openHostConfig: (HostState) -> Unit) {
                 onPair = { startPairing(host) },
                 waking = host.uuid in waking && host.status != HostStatus.ONLINE,
                 note = notes[host.uuid],
+                power = hostConfigs[host.uuid],
+                onPower = { action -> scope.launch { c.hostPower.power(host.uuid, action) } },
                 onWake = {
                     // Uses the configured wake method (WoL and/or Home Assistant), with feedback
                     // until the host answers.
@@ -197,6 +207,8 @@ private fun HostCard(
     initialFocus: Boolean,
     waking: Boolean,
     note: String?,
+    power: io.github.thecodingdad.moonlightlauncher.data.db.HostConfigEntity?,
+    onPower: (io.github.thecodingdad.moonlightlauncher.stream.PowerAction) -> Unit,
     onPair: () -> Unit,
     onWake: () -> Unit,
     onUnpair: () -> Unit,
@@ -256,6 +268,12 @@ private fun HostCard(
                     stringResource(if (waking) R.string.host_waking else R.string.host_wake), icon = Icons.Filled.Power,
                     onClick = onWake, enabled = !waking, primary = waking,
                 )
+            }
+            // Power actions (Home Assistant), only while the host is on and when configured.
+            if (online && power != null) {
+                if (power.haSleepEntity != null) HoldToConfirmButton(stringResource(R.string.power_sleep), { onPower(io.github.thecodingdad.moonlightlauncher.stream.PowerAction.SLEEP) }, icon = Icons.Filled.Bedtime)
+                if (power.haRestartEntity != null) HoldToConfirmButton(stringResource(R.string.power_restart), { onPower(io.github.thecodingdad.moonlightlauncher.stream.PowerAction.RESTART) }, icon = Icons.Filled.RestartAlt)
+                if (power.haShutdownEntity != null) HoldToConfirmButton(stringResource(R.string.power_shutdown), { onPower(io.github.thecodingdad.moonlightlauncher.stream.PowerAction.SHUTDOWN) }, icon = Icons.Filled.PowerSettingsNew)
             }
             if (online && host.paired) LauncherButton(stringResource(R.string.host_unpair), icon = Icons.Filled.LinkOff, onClick = onUnpair)
             HoldToConfirmButton(stringResource(R.string.host_remove), onConfirmed = onRemove, icon = Icons.Filled.Delete)

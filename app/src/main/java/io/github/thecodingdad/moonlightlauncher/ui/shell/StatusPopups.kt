@@ -1,5 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher.ui.shell
 
+import io.github.thecodingdad.moonlightlauncher.ui.components.controllerScroll
 import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -63,7 +64,7 @@ fun ProfilePickerPopup(
     Modal(visible = visible, onDismiss = onDismiss, title = stringResource(R.string.profile_picker_title), maxWidth = 560.dp) {
         Text(stringResource(R.string.profile_picker_sub), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
         androidx.compose.foundation.layout.Spacer(Modifier.heightIn(min = 14.dp))
-        Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.heightIn(max = 420.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             profiles.forEach { p ->
                 val isActive = p.uuid == active.uuid
                 LauncherButton(
@@ -94,7 +95,7 @@ fun ControllerPopup(
         val colors = LauncherTheme.colors
         Text(stringResource(R.string.controller_popup_sub), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceMuted)
         androidx.compose.foundation.layout.Spacer(Modifier.heightIn(min = 14.dp))
-        Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.heightIn(max = 420.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             if (controllers.isEmpty()) Text(stringResource(R.string.controllers_none), color = colors.onSurface)
             controllers.forEach { c ->
                 val details = listOfNotNull(

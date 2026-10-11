@@ -1,5 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher.ui.shell
 
+import io.github.thecodingdad.moonlightlauncher.ui.components.controllerScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -68,7 +69,7 @@ fun HostInfoPopup(
     Modal(visible = host != null, onDismiss = onDismiss, title = host?.name, maxWidth = 560.dp) {
         val h = host ?: return@Modal
         val colors = LauncherTheme.colors
-        Column(Modifier.heightIn(max = 600.dp).verticalScroll(rememberScrollState())) {
+        Column(Modifier.heightIn(max = 600.dp).controllerScroll()) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             StatusDot(
                 when {

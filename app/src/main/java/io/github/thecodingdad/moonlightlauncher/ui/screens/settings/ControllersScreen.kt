@@ -1,5 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher.ui.screens.settings
 
+import io.github.thecodingdad.moonlightlauncher.ui.components.controllerScroll
 import android.hardware.input.InputManager
 import android.os.Build
 import android.os.VibrationEffect
@@ -152,7 +153,7 @@ fun ControllerDetailDialog(controller: ControllerInfo?, onDismiss: () -> Unit) {
     ) {
         val c = controller ?: return@Modal
         androidx.compose.foundation.layout.Column(
-            androidx.compose.ui.Modifier.heightIn(max = 560.dp).verticalScroll(androidx.compose.foundation.rememberScrollState()),
+            androidx.compose.ui.Modifier.heightIn(max = 560.dp).controllerScroll(),
             verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
         ) {
             InfoRow(

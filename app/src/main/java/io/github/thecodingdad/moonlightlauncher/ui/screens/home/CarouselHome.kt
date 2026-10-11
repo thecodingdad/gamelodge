@@ -79,6 +79,10 @@ fun CarouselHome(
         if (session != null) callbacks.onRunningMenu(session) else focused?.let(actions::context)
     }
     val listState = rememberLazyListState()
+    val atStart = listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0 &&
+        (focused == null && focusedSession == null && !libraryTileFocused ||
+            if (rows.running.isNotEmpty()) focusedSession === rows.running.first() else focused?.item?.id == items.firstOrNull()?.item?.id)
+    androidx.compose.runtime.LaunchedEffect(atStart) { callbacks.onAtStart(atStart) }
     // Same artwork backdrop as the hero layout, without reloading on every fast scroll step.
     var backdrop by remember { mutableStateOf<LibraryEntry?>(null) }
     androidx.compose.runtime.LaunchedEffect(shown) {

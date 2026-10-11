@@ -82,6 +82,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     /** Bumped when the Home button is pressed: the start tab then begins at the top. */
     val homeResets = androidx.compose.runtime.mutableIntStateOf(0)
 
+    /** Start tab is in its initial state (top, first item): Home then does nothing. */
+    var homeAtStart = true
+
     /** Focus key ("row:itemId") to restore when returning to a list, e.g. back from details. */
     /** Last focused element per main tab, so switching tabs never overwrites another tab's position. */
     val focusKeys = HashMap<String, String>()

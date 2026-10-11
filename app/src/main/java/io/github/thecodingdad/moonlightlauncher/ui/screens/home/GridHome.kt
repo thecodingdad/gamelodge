@@ -66,6 +66,9 @@ fun GridHome(
     var focused by remember { mutableStateOf<LibraryEntry?>(null) }
     var focusedSession by remember { mutableStateOf<io.github.thecodingdad.moonlightlauncher.ui.RunningSession?>(null) }
     val shown = focused ?: running.firstOrNull()?.entry ?: sorted.first()
+    val atStart = focused == null && focusedSession == null ||
+        if (running.isNotEmpty()) focusedSession === running.first() else focused?.item?.id == sorted.first().item.id
+    androidx.compose.runtime.LaunchedEffect(atStart) { callbacks.onAtStart(atStart) }
     PublishAccentFrom(shown.coverModel())
     // Start: quick start of the focused game (no hint, a shortcut for those who know it).
     PadAction(PadButton.START) { focused?.let(actions::play) }

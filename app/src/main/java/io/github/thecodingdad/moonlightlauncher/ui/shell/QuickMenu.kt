@@ -1,5 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher.ui.shell
 
+import io.github.thecodingdad.moonlightlauncher.ui.components.controllerScroll
 import android.content.Intent
 import android.media.AudioManager
 import android.net.Uri
@@ -103,13 +104,13 @@ fun QuickMenu(
         }
         androidx.compose.foundation.layout.Spacer(Modifier.heightIn(min = 4.dp))
         if (tab == 1) {
-            Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(vertical = 22.dp, horizontal = 14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(Modifier.weight(1f).fillMaxWidth().controllerScroll().padding(vertical = 22.dp, horizontal = 14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 HomeAssistantSection(openHaSettings)
             }
             return@SidePanel
         }
         Column(
-            Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(vertical = 22.dp, horizontal = 14.dp),
+            Modifier.weight(1f).fillMaxWidth().controllerScroll().padding(vertical = 22.dp, horizontal = 14.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             // Status and shortcuts as tiles: controllers, hosts, VPN, Wi-Fi, Bluetooth, Android settings.
