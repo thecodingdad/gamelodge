@@ -72,6 +72,8 @@ data class LauncherSettings(
     val hideNavigationBar: Boolean = false,
     /** Show the button hint bar (only while a controller is connected). */
     val showHintBar: Boolean = true,
+    /** Version of the automatic platform rules the library was last re-evaluated with. */
+    val platformRule: Int = 0,
     /** AYN Odin: put every external controller on Odin Mapping's blacklist (keeps battery/rumble). */
     val odinKeepControllers: Boolean = true,
     /** Tiles in the quick menu, in order (see QuickTile ids; apps as "app:<package>"). */
@@ -130,6 +132,7 @@ class SettingsRepository(context: Context) {
         val filtersSeeded = booleanPreferencesKey("filters_seeded")
         val hideNavigationBar = booleanPreferencesKey("hide_navigation_bar")
         val showHintBar = booleanPreferencesKey("show_hint_bar")
+        val platformRule = intPreferencesKey("platform_rule")
         val odinKeepControllers = booleanPreferencesKey("odin_keep_controllers")
         val quickTiles = stringPreferencesKey("quick_tiles")
         val comboHome = stringPreferencesKey("combo_home")
@@ -188,6 +191,7 @@ class SettingsRepository(context: Context) {
             filtersSeeded = this[K.filtersSeeded] ?: d.filtersSeeded,
             hideNavigationBar = this[K.hideNavigationBar] ?: d.hideNavigationBar,
             showHintBar = this[K.showHintBar] ?: d.showHintBar,
+            platformRule = this[K.platformRule] ?: d.platformRule,
             odinKeepControllers = this[K.odinKeepControllers] ?: d.odinKeepControllers,
             quickTiles = this[K.quickTiles]?.split(',')?.filter { it.isNotBlank() } ?: d.quickTiles,
             comboHome = this[K.comboHome]?.split(',')?.mapNotNull { it.toIntOrNull() }?.toSet() ?: d.comboHome,
@@ -235,6 +239,7 @@ class SettingsRepository(context: Context) {
         this[K.filtersSeeded] = s.filtersSeeded
         this[K.hideNavigationBar] = s.hideNavigationBar
         this[K.showHintBar] = s.showHintBar
+        this[K.platformRule] = s.platformRule
         this[K.odinKeepControllers] = s.odinKeepControllers
         this[K.quickTiles] = s.quickTiles.joinToString(",")
         this[K.comboHome] = s.comboHome.joinToString(",")

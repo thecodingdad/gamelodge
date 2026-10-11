@@ -131,8 +131,8 @@ class LibraryRepository(
 
     /** Items nobody knows a platform for get a suggestion from how they are launched. */
     private suspend fun suggestPlatforms() {
-        dao.observeAll().first().filter { it.item.platform == null }.forEach {
-            dao.setPlatform(it.item.id, PlatformResolver.suggest(it), PlatformSource.SUGGESTED)
+        dao.observeAll().first().filter { it.item.platform == null }.forEach { entry ->
+            PlatformResolver.suggest(entry)?.let { dao.setPlatform(entry.item.id, it, PlatformSource.SUGGESTED) }
         }
     }
 

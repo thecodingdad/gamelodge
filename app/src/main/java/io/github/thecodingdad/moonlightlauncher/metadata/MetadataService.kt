@@ -89,6 +89,8 @@ class MetadataService(
         }
         scope.launch(Dispatchers.IO) {
             delay(10_000)
+            runCatching { reevaluatePlatforms() }.onFailure { Log.w("Platform re-evaluation failed", it) }
+            runCatching { rematchUnofficial() }.onFailure { Log.w("Re-matching mods failed", it) }
             runCatching { backfillPlatforms() }.onFailure { Log.w("Platform backfill failed", it) }
             runCatching { backfillDetails() }.onFailure { Log.w("Metadata details backfill failed", it) }
             runCatching { fillArtworkGaps() }.onFailure { Log.w("Artwork gap fill failed", it) }
@@ -131,8 +133,34 @@ class MetadataService(
     }
 
     private fun LibraryEntry.igdbPlatform(game: IgdbGame) = PlatformResolver.fromIgdb(
-        game.platforms.map { it.name }, playsOnPc = remoteTargets.isNotEmpty(), playsOnAndroid = localTarget != null,
+        game.platforms.map { it.name }, playsOnAndroid = localTarget != null,
     )
+
+    /**
+     * One-time re-evaluation with the stricter rules (v1): guessed platforms ("streamed = PC")
+     * and IGDB picks among several platforms are removed; manual and Playnite ones stay.
+     */
+    private suspend fun reevaluatePlatforms() {
+        if (settings.current().platformRule >= PLATFORM_RULE) return
+        val entries = dao.observeAll().first()
+        entries.filter { it.item.platformSource == PlatformSource.SUGGESTED }.forEach { entry ->
+            val suggestion = PlatformResolver.suggest(entry)
+            if (suggestion != entry.item.platform) dao.setPlatform(entry.item.id, suggestion, suggestion?.let { PlatformSource.SUGGESTED })
+        }
+        val fromIgdb = entries.filter { it.item.platformSource == PlatformSource.IGDB && it.item.igdbId != null }.associateBy { it.item.igdbId!! }
+        if (fromIgdb.isNotEmpty()) {
+            if (!igdb.isConfigured) return // try again once the keys are there
+            fromIgdb.keys.chunked(100).forEach { ids ->
+                igdb.platforms(ids).forEach { game ->
+                    val entry = fromIgdb[game.id] ?: return@forEach
+                    val platform = entry.igdbPlatform(game)
+                    if (platform != entry.item.platform) dao.setPlatform(entry.item.id, platform, platform?.let { PlatformSource.IGDB })
+                }
+                delay(300)
+            }
+        }
+        settings.update { it.copy(platformRule = PLATFORM_RULE) }
+    }
 
     private suspend fun platformFor(item: LibraryItemEntity, game: IgdbGame): Pair<String, PlatformSource>? {
         val entry = dao.observeEntry(item.id).first() ?: return null
@@ -233,8 +261,17 @@ class MetadataService(
         }
     }
 
-    /** A game's best score over its main, alternative and localized titles. */
-    private fun scoreAll(query: String, game: IgdbGame): Float = game.allNames.maxOf { MatchScorer.score(query, it) }
+    /**
+     * A game's best score over its main, alternative and localized titles. Mods and ROM hacks
+     * rank lower (they often carry the exact title of the real game); among equal names the
+     * better-known game wins.
+     */
+    private fun scoreAll(query: String, game: IgdbGame): Float {
+        val name = game.allNames.maxOf { MatchScorer.score(query, it) }
+        val unofficial = if (game.isUnofficial) 0.25f else 0f
+        val known = minOf(game.total_rating_count ?: 0, 1000) / 100_000f // tie-breaker only (≤ 0.01)
+        return (name - unofficial + known).coerceIn(0f, 1f)
+    }
 
     /**
      * Best IGDB hit for a title: the regular search first, then alternative / localized titles
@@ -469,6 +506,31 @@ class MetadataService(
         return item
     }
 
+    /**
+     * Automatic IGDB matches that turn out to be mods / ROM hacks (from before they ranked
+     * lower) are looked up again once; hand-picked ones stay.
+     */
+    private suspend fun rematchUnofficial() {
+        if (!igdb.isConfigured || settings.current().platformRule >= REMATCH_RULE) return
+        val items = dao.observeAll().first().map { it.item }
+            .filter { it.igdbId != null && it.metadataState != MetadataState.LOCKED }.associateBy { it.igdbId!! }
+        items.keys.chunked(100).forEach { ids ->
+            igdb.details(ids).filter { it.isUnofficial }.forEach { game ->
+                val item = dao.getItem(items[game.id]?.id ?: return@forEach) ?: return@forEach
+                val best = igdbBest(item.metadataQuery ?: item.title)
+                if (best != null && best.first.id != game.id && best.second >= MatchScorer.REVIEW) {
+                    var updated = item.copy(platform = item.platform.takeIf { item.platformSource == PlatformSource.MANUAL || item.platformSource == PlatformSource.PLAYNITE },
+                        platformSource = item.platformSource.takeIf { it == PlatformSource.MANUAL || it == PlatformSource.PLAYNITE })
+                    updated = updated.withIgdb(best.first)
+                    platformFor(updated, best.first)?.let { updated = updated.copy(platform = it.first, platformSource = it.second) }
+                    dao.upsertItem(updated.copy(matchConfidence = best.second, metadataState = if (best.second >= MatchScorer.AUTO_ACCEPT) MetadataState.OK else MetadataState.REVIEW))
+                }
+                delay(300)
+            }
+        }
+        settings.update { it.copy(platformRule = REMATCH_RULE) }
+    }
+
     /** Games with an IGDB match but gaps in their artwork: try the IGDB titles on SteamGridDB once. */
     private suspend fun fillArtworkGaps() {
         if (!igdb.isConfigured || !sgdb.isConfigured) return
@@ -519,3 +581,9 @@ private const val IGDB_LOOKUP_VERSION = 2
 
 /** Games with an IGDB match got the SteamGridDB gap fill via their IGDB titles (3). */
 private const val ART_FILL_VERSION = 3
+
+/** Version of the automatic platform rules (1: only unambiguous platforms). */
+private const val PLATFORM_RULE = 1
+
+/** Library re-evaluated after mods / ROM hacks rank lower (shares the platform rule counter). */
+private const val REMATCH_RULE = 2

@@ -22,6 +22,9 @@ data class IgdbImage(val image_id: String = "")
 data class IgdbCompanyRef(val company: IgdbNamed? = null, val developer: Boolean = false, val publisher: Boolean = false)
 
 @Serializable
+data class IgdbGameType(val type: String? = null)
+
+@Serializable
 data class IgdbGameRef(val game: Long? = null)
 
 @Serializable
@@ -72,7 +75,16 @@ data class IgdbGame(
     val age_ratings: List<IgdbAgeRating> = emptyList(),
     val alternative_names: List<IgdbNamed> = emptyList(),
     val game_localizations: List<IgdbNamed> = emptyList(),
+    /** Old game kind enum (5 = mod, 13 = fork …) and its replacement game_type. */
+    val category: Int? = null,
+    val game_type: IgdbGameType? = null,
+    val total_rating_count: Int? = null,
 ) {
+    /** ROM hacks, mods and fan games: often share the exact title of the real game. */
+    val isUnofficial: Boolean
+        get() = category == 5 || category == 13 ||
+            game_type?.type?.lowercase()?.let { "mod" in it || "fan" in it || "fork" in it } == true
+
     /** Main title plus alternative and localized ones (e.g. the German title). */
     val allNames: List<String> get() = (listOf(name) + alternative_names.map { it.name } + game_localizations.map { it.name }).filter { it.isNotBlank() }.distinct()
 
@@ -150,7 +162,7 @@ class IgdbClient(
             "involved_companies.publisher,first_release_date,total_rating,cover.image_id,artworks.image_id," +
             "screenshots.image_id,platforms.name,franchises.name,collections.name,game_modes.name," +
             "age_ratings.organization.name,age_ratings.rating_category.rating,age_ratings.category,age_ratings.rating," +
-            "alternative_names.name,game_localizations.name"
+            "alternative_names.name,game_localizations.name,category,game_type.type,total_rating_count"
     }
 
     private fun post(endpoint: String, query: String): List<IgdbGame> = postRaw(endpoint, query)

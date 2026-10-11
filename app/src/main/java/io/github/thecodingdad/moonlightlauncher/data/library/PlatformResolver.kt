@@ -34,7 +34,8 @@ object PlatformResolver {
 
     /** Short display name for an IGDB platform name. */
     fun normalizeIgdb(name: String): String = when {
-        name.startsWith("PC (") || name == "PC" -> PC
+        // Windows, Linux and Mac versions are one platform here: the game runs on the PC host.
+        name.startsWith("PC (") || name == "PC" || name == "Linux" || name == "Mac" -> PC
         name.equals("Android", ignoreCase = true) -> ANDROID
         name.startsWith("Super Nintendo") -> "SNES"
         name == "Nintendo Entertainment System" -> "NES"
@@ -42,18 +43,19 @@ object PlatformResolver {
         else -> name
     }
 
-    /** Picks one of IGDB's platforms: the one matching how the game is played here, else the newest console. */
-    fun fromIgdb(platforms: List<String>, playsOnPc: Boolean, playsOnAndroid: Boolean): String? {
-        if (platforms.isEmpty()) return null
-        val normalized = platforms.map(::normalizeIgdb)
-        if (playsOnPc && PC in normalized) return PC
+    /**
+     * IGDB's platform only when it is unambiguous: the game exists on exactly one platform, or
+     * it is installed here and IGDB lists Android. A game on several platforms stays without one
+     * (a streamed game may as well run in an emulator) until the user or Playnite says otherwise.
+     */
+    fun fromIgdb(platforms: List<String>, playsOnAndroid: Boolean): String? {
+        val normalized = platforms.map(::normalizeIgdb).distinct()
         if (playsOnAndroid && ANDROID in normalized) return ANDROID
-        consoleRank.firstOrNull { it in platforms }?.let { return normalizeIgdb(it) }
-        return normalized.firstOrNull { it != PC && it != ANDROID } ?: normalized.first()
+        return normalized.singleOrNull()
     }
 
-    /** Fallback when nothing better is known: streamed = PC, installed = Android. */
-    fun suggest(entry: LibraryEntry): String = if (entry.remoteTargets.isNotEmpty()) PC else ANDROID
+    /** Fallback when nothing better is known: only an installed Android game is certain. */
+    fun suggest(entry: LibraryEntry): String? = if (entry.remoteTargets.isEmpty() && entry.localTarget != null) ANDROID else null
 
     /** True when [candidate] from [source] may replace the item's current platform. */
     fun mayReplace(item: LibraryItemEntity, source: PlatformSource, candidate: String?): Boolean {

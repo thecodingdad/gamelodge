@@ -105,8 +105,12 @@ class FiltersTest {
         assertFalse(PlatformResolver.mayReplace(item.copy(platform = "PC", platformSource = PlatformSource.PLAYNITE), PlatformSource.PLAYNITE, "PC"))
         assertEquals("PC", PlatformResolver.fromPlaynitePlugin("Steam"))
         assertEquals(null, PlatformResolver.fromPlaynitePlugin(""))
-        assertEquals("Nintendo Switch", PlatformResolver.fromIgdb(listOf("Wii U", "Nintendo Switch", "Nintendo 3DS"), playsOnPc = true, playsOnAndroid = false))
-        assertEquals("PC", PlatformResolver.fromIgdb(listOf("Nintendo Switch", "PC (Microsoft Windows)"), playsOnPc = true, playsOnAndroid = false))
+        // Several platforms: nothing is set automatically; one platform (PC variants count once) is.
+        assertEquals(null, PlatformResolver.fromIgdb(listOf("Wii U", "Nintendo Switch", "Nintendo 3DS"), playsOnAndroid = false))
+        assertEquals(null, PlatformResolver.fromIgdb(listOf("Nintendo Switch", "PC (Microsoft Windows)"), playsOnAndroid = false))
+        assertEquals("Nintendo Switch", PlatformResolver.fromIgdb(listOf("Nintendo Switch"), playsOnAndroid = false))
+        assertEquals("PC", PlatformResolver.fromIgdb(listOf("PC (Microsoft Windows)", "Linux", "Mac"), playsOnAndroid = false))
+        assertEquals("Android", PlatformResolver.fromIgdb(listOf("iOS", "Android", "Nintendo Switch"), playsOnAndroid = true))
     }
 
     private fun converted(key: String, order: Int) = FilterEntity(
