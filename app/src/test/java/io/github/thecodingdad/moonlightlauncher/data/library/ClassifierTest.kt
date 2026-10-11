@@ -5,8 +5,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class ClassifierTest {
-    private fun remote(title: String, uuid: String? = null, playnite: Boolean = false) =
-        Classifier.classify(ClassificationInput(title, isRemote = true, remoteAppUuid = uuid, hasPlayniteId = playnite))
+    private fun remote(title: String, uuid: String? = null, companion: Boolean? = null) =
+        Classifier.classify(ClassificationInput(title, isRemote = true, remoteAppUuid = uuid, companionGame = companion))
 
     private fun local(title: String, gameFlag: Boolean = false) =
         Classifier.classify(ClassificationInput(title, isRemote = false, androidGameFlag = gameFlag))
@@ -28,8 +28,9 @@ class ClassifierTest {
     }
 
     @Test
-    fun `playnite id always wins`() {
-        assertEquals(ItemKind.GAME, remote("Steam", playnite = true))
+    fun `companion kind always wins`() {
+        assertEquals(ItemKind.GAME, remote("Steam", companion = true))
+        assertEquals(ItemKind.APP, remote("Elden Ring", companion = false))
     }
 
     @Test

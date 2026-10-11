@@ -23,7 +23,10 @@ data class SourceEntry(
     val appUuid: String? = null,
     val hdrSupported: Boolean = false,
     val androidGameFlag: Boolean = false,
-    val hasPlayniteId: Boolean = false,
+    /** Companion data: game (true) / app (false), null = unmanaged entry. */
+    val companionGame: Boolean? = null,
+    /** Companion data: false = owned only, the entry installs the game. */
+    val installed: Boolean = true,
 ) {
     companion object {
         fun localId(packageName: String) = "local:$packageName"
@@ -151,7 +154,7 @@ class LibrarySync(
         isRemote = type == TargetType.REMOTE,
         remoteAppUuid = appUuid,
         androidGameFlag = androidGameFlag,
-        hasPlayniteId = hasPlayniteId,
+        companionGame = companionGame,
         packageName = packageName,
     )
 
@@ -168,5 +171,6 @@ class LibrarySync(
         hdrSupported = hdrSupported,
         boxArtPath = boxArtPath,
         lastSeenAt = now,
+        installed = installed,
     )
 }

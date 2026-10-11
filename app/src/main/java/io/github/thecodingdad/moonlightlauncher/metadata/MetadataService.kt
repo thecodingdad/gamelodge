@@ -519,8 +519,8 @@ class MetadataService(
                 val item = dao.getItem(items[game.id]?.id ?: return@forEach) ?: return@forEach
                 val best = igdbBest(item.metadataQuery ?: item.title)
                 if (best != null && best.first.id != game.id && best.second >= MatchScorer.REVIEW) {
-                    var updated = item.copy(platform = item.platform.takeIf { item.platformSource == PlatformSource.MANUAL || item.platformSource == PlatformSource.PLAYNITE },
-                        platformSource = item.platformSource.takeIf { it == PlatformSource.MANUAL || it == PlatformSource.PLAYNITE })
+                    var updated = item.copy(platform = item.platform.takeIf { item.platformSource in setOf(PlatformSource.MANUAL, PlatformSource.PLAYNITE, PlatformSource.COMPANION) },
+                        platformSource = item.platformSource.takeIf { it in setOf(PlatformSource.MANUAL, PlatformSource.PLAYNITE, PlatformSource.COMPANION) })
                     updated = updated.withIgdb(best.first)
                     platformFor(updated, best.first)?.let { updated = updated.copy(platform = it.first, platformSource = it.second) }
                     dao.upsertItem(updated.copy(matchConfidence = best.second, metadataState = if (best.second >= MatchScorer.AUTO_ACCEPT) MetadataState.OK else MetadataState.REVIEW))

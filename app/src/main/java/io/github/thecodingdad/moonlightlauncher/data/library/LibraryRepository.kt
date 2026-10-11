@@ -33,7 +33,7 @@ class LibraryRepository(
     private val hosts: HostRepository,
     private val boxArt: BoxArtCache,
     private val scope: CoroutineScope,
-    private val vibepollo: io.github.thecodingdad.moonlightlauncher.data.remote.VibepolloClient? = null,
+    private val hostApi: io.github.thecodingdad.moonlightlauncher.data.remote.HostApiClient? = null,
 ) {
     private val dao = db.libraryDao()
 
@@ -87,12 +87,13 @@ class LibraryRepository(
     }
 
     private suspend fun syncHost(hostUuid: String, apps: List<RemoteApp>) {
-        // Optional: Vibepollo knows which apps came from Playnite (= certainly games).
-        val vibe = vibepollo?.cached(hostUuid)
-        val playnite = vibe?.playniteUuids.orEmpty()
+        // Optional: the host API carries the companion's data (game/app, platform, store, groups,
+        // installed) for the entries it manages.
+        val api = hostApi?.cached(hostUuid)
         sync.syncHost(
             hostUuid,
             apps.map { remote ->
+                val info = api?.infoForApp(remote.app.appUUID)
                 SourceEntry(
                     targetId = SourceEntry.remoteId(hostUuid, remote.app.appId),
                     type = TargetType.REMOTE,
@@ -102,29 +103,30 @@ class LibraryRepository(
                     appId = remote.app.appId,
                     appUuid = remote.app.appUUID,
                     hdrSupported = remote.app.isHdrSupported,
-                    hasPlayniteId = remote.app.appUUID?.uppercase() in playnite,
+                    companionGame = info?.isGame,
+                    installed = info?.installed ?: true,
                 )
             },
         )
-        Log.d("Host sync ${apps.firstOrNull()?.hostName}: ${apps.size} apps")
-        vibe?.let { applyPlayniteInfo(hostUuid, it) }
+        Log.d("Host sync ${apps.firstOrNull()?.hostName}: ${apps.size} apps (${api?.companion?.size ?: 0} from the companion)")
+        api?.let { applyCompanionInfo(hostUuid, it) }
         suggestPlatforms()
         fetchBoxArt(hostUuid, apps)
     }
 
-    /** Stores Playnite plugin/categories per item and derives the platform from the plugin. */
-    private suspend fun applyPlayniteInfo(hostUuid: String, result: io.github.thecodingdad.moonlightlauncher.data.remote.VibepolloClient.Result) {
-        if (result.games.isEmpty()) return
+    /** Groups, store name and platform from the companion data of each managed entry. */
+    private suspend fun applyCompanionInfo(hostUuid: String, result: io.github.thecodingdad.moonlightlauncher.data.remote.HostApiClient.Result) {
+        if (result.companion.isEmpty()) return
         for (target in dao.getAllTargets().filter { it.hostUuid == hostUuid }) {
             val info = result.infoForApp(target.appUuid) ?: continue
             val item = dao.getItem(target.itemId) ?: continue
-            val categories = info.categories.joinToString(", ").ifEmpty { null }
-            if (item.playniteCategories != categories || item.playnitePlugin != info.plugin) {
-                dao.setPlayniteInfo(item.id, categories, info.plugin)
+            val groups = info.collections.joinToString(", ").ifEmpty { null }
+            if (item.playniteCategories != groups || item.playnitePlugin != info.sourceLabel) {
+                dao.setPlayniteInfo(item.id, groups, info.sourceLabel)
             }
-            val platform = PlatformResolver.fromPlaynitePlugin(info.plugin)
-            if (PlatformResolver.mayReplace(item, PlatformSource.PLAYNITE, platform)) {
-                dao.setPlatform(item.id, platform, PlatformSource.PLAYNITE)
+            val platform = info.platform?.let(PlatformResolver::normalizeIgdb)
+            if (PlatformResolver.mayReplace(item, PlatformSource.COMPANION, platform)) {
+                dao.setPlatform(item.id, platform, PlatformSource.COMPANION)
             }
         }
     }

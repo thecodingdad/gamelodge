@@ -64,7 +64,7 @@ data class LibraryItemEntity(
     /** Platform shown/filtered on, e.g. "PC", "Nintendo Switch", "Android". */
     val platform: String? = null,
     val platformSource: PlatformSource? = null,
-    /** Playnite categories (comma separated) and library plugin, via the Vibepollo API. */
+    /** Groups (comma separated) and store/library name, from the companion data of the host API. */
     val playniteCategories: String? = null,
     val playnitePlugin: String? = null,
     // --- added in schema v3 ---
@@ -89,7 +89,8 @@ data class LibraryItemEntity(
 enum class MetaField { TITLE, DESCRIPTION, GENRES, DEVELOPER, PUBLISHER, SERIES, FEATURES, RELEASE, RATING, AGE_RATING }
 
 /** Where [LibraryItemEntity.platform] came from; higher sources are never overwritten by lower ones. */
-enum class PlatformSource { SUGGESTED, IGDB, PLAYNITE, MANUAL }
+/** Trust order (later wins): PLAYNITE is the old Vibepollo/Playnite source, COMPANION the host API data. */
+enum class PlatformSource { SUGGESTED, IGDB, PLAYNITE, COMPANION, MANUAL }
 
 enum class FilterKind { BUILTIN, SMART, GROUP }
 
@@ -144,6 +145,8 @@ data class LaunchTargetEntity(
     /** Local file with the host-provided box art (fallback cover). */
     val boxArtPath: String? = null,
     val lastSeenAt: Long,
+    /** False for an owned game the host entry only installs (companion data). */
+    val installed: Boolean = true,
 )
 
 @Entity(
@@ -194,8 +197,12 @@ data class HostConfigEntity(
     val haSleepEntity: String? = null,
     /** Minutes after a stream ends before the host is put to sleep; null = never. */
     val autoSleepMinutes: Int? = null,
-    /** Optional Vibepollo web API base URL, e.g. `https://192.168.1.10:47990`. */
+    /** Optional host web API base URL, e.g. `https://192.168.1.10:47990` (companion data). */
     val vibepolloUrl: String? = null,
+    /** Host software of that API (HostApiType name); null = Vibepollo. */
+    val apiType: String? = null,
+    /** User name for Apollo / Sunshine logins. */
+    val apiUser: String? = null,
 )
 
 enum class HaTileType { SWITCH, LIGHT, BUTTON, SENSOR, COVER, CLIMATE }
@@ -218,4 +225,7 @@ data class LibraryEntry(
     val localTarget: LaunchTargetEntity? get() = targets.firstOrNull { it.type == TargetType.LOCAL }
     val remoteTargets: List<LaunchTargetEntity> get() = targets.filter { it.type == TargetType.REMOTE }
     val boxArtPath: String? get() = targets.firstNotNullOfOrNull { it.boxArtPath }
+
+    /** Only owned: no local app and every host entry would install the game first. */
+    val notInstalled: Boolean get() = targets.isNotEmpty() && localTarget == null && remoteTargets.none { it.installed }
 }

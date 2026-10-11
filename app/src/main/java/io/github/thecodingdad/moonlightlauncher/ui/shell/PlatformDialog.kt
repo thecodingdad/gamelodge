@@ -46,6 +46,7 @@ fun PlatformDialog(
         val source = when (e.item.platformSource) {
             PlatformSource.MANUAL -> R.string.platform_source_manual
             PlatformSource.PLAYNITE -> R.string.platform_source_playnite
+            PlatformSource.COMPANION -> R.string.platform_source_companion
             PlatformSource.IGDB -> R.string.platform_source_igdb
             PlatformSource.SUGGESTED, null -> R.string.platform_source_suggested
         }

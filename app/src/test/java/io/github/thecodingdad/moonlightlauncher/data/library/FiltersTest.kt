@@ -103,8 +103,8 @@ class FiltersTest {
         assertFalse(PlatformResolver.mayReplace(item.copy(platformSource = PlatformSource.PLAYNITE), PlatformSource.IGDB, "Wii"))
         assertTrue(PlatformResolver.mayReplace(item.copy(platform = "PC", platformSource = PlatformSource.SUGGESTED), PlatformSource.PLAYNITE, "PC"))
         assertFalse(PlatformResolver.mayReplace(item.copy(platform = "PC", platformSource = PlatformSource.PLAYNITE), PlatformSource.PLAYNITE, "PC"))
-        assertEquals("PC", PlatformResolver.fromPlaynitePlugin("Steam"))
-        assertEquals(null, PlatformResolver.fromPlaynitePlugin(""))
+        assertTrue(PlatformResolver.mayReplace(item.copy(platform = "PC", platformSource = PlatformSource.PLAYNITE), PlatformSource.COMPANION, "PC"))
+        assertFalse(PlatformResolver.mayReplace(item.copy(platformSource = PlatformSource.COMPANION), PlatformSource.IGDB, "Wii"))
         // Several platforms: nothing is set automatically; one platform (PC variants count once) is.
         assertEquals(null, PlatformResolver.fromIgdb(listOf("Wii U", "Nintendo Switch", "Nintendo 3DS"), playsOnAndroid = false))
         assertEquals(null, PlatformResolver.fromIgdb(listOf("Nintendo Switch", "PC (Microsoft Windows)"), playsOnAndroid = false))

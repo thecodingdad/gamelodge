@@ -10,8 +10,8 @@ data class ClassificationInput(
     /** Android: ApplicationInfo.category == CATEGORY_GAME or FLAG_IS_GAME. */
     val androidGameFlag: Boolean = false,
     val packageName: String? = null,
-    /** Vibepollo: entry was synced from Playnite. */
-    val hasPlayniteId: Boolean = false,
+    /** Companion data on the host says game (true) or app (false); null = not managed. */
+    val companionGame: Boolean? = null,
     /** Metadata lookup found a confident game match. */
     val confidentGameMatch: Boolean = false,
 )
@@ -41,7 +41,7 @@ object Classifier {
 
     /** True when the entry is a known tool regardless of any other signal. */
     fun isKnownApp(input: ClassificationInput): Boolean {
-        if (input.hasPlayniteId) return false
+        if (input.companionGame != null) return !input.companionGame
         if (input.packageName != null && nonGamePackagePrefixes.any { input.packageName.startsWith(it) }) return true
         if (!input.isRemote) return false
         return input.remoteAppUuid.equals(REMOTE_INPUT_UUID, ignoreCase = true) ||
@@ -49,7 +49,7 @@ object Classifier {
     }
 
     fun classify(input: ClassificationInput): ItemKind {
-        if (input.hasPlayniteId) return ItemKind.GAME
+        input.companionGame?.let { return if (it) ItemKind.GAME else ItemKind.APP }
         if (isKnownApp(input)) return ItemKind.APP
 
         if (input.androidGameFlag) return ItemKind.GAME

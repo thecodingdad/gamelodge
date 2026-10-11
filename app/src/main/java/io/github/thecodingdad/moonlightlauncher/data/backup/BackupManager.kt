@@ -106,6 +106,8 @@ data class HostConfigBackup(
     val haSleepEntity: String?,
     val autoSleepMinutes: Int?,
     val vibepolloUrl: String?,
+    val apiType: String? = null,
+    val apiUser: String? = null,
 )
 
 @Serializable
@@ -173,7 +175,7 @@ class BackupManager(
             },
             haTiles = db.haTileDao().getAll().map { HaTileBackup(it.entityId, it.type, it.label, it.showOnHome) },
             hostConfigs = db.hostConfigDao().observeAll().first().map {
-                HostConfigBackup(it.hostUuid, it.wakeMethod, it.haWakeEntity, it.haShutdownEntity, it.haRestartEntity, it.haSleepEntity, it.autoSleepMinutes, it.vibepolloUrl)
+                HostConfigBackup(it.hostUuid, it.wakeMethod, it.haWakeEntity, it.haShutdownEntity, it.haRestartEntity, it.haSleepEntity, it.autoSleepMinutes, it.vibepolloUrl, it.apiType, it.apiUser)
             },
             baseStreamSettings = PreferenceManager.getDefaultSharedPreferences(context).all.toJsonMap(),
             profiles = manager.profiles.map { ProfileBackup(it.name, it.options.orEmpty().toJsonMap(), manager.active?.uuid == it.uuid) },
@@ -250,7 +252,7 @@ class BackupManager(
         db.haTileDao().upsert(backup.haTiles.mapIndexed { i, t -> HaTileEntity(t.entityId, t.type, t.label, i, t.showOnHome) })
         backup.hostConfigs.forEach {
             db.hostConfigDao().upsert(
-                HostConfigEntity(it.hostUuid, it.wakeMethod, it.haWakeEntity, it.haShutdownEntity, it.haRestartEntity, it.haSleepEntity, it.autoSleepMinutes, it.vibepolloUrl),
+                HostConfigEntity(it.hostUuid, it.wakeMethod, it.haWakeEntity, it.haShutdownEntity, it.haRestartEntity, it.haSleepEntity, it.autoSleepMinutes, it.vibepolloUrl, it.apiType, it.apiUser),
             )
         }
 

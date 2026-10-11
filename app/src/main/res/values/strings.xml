@@ -383,17 +383,11 @@
     <string name="backup_wrong_password">Wrong password – credentials were not restored.</string>
 
     <!-- Vibepollo -->
-    <string name="vibepollo_section">Vibepollo (optional)</string>
-    <string name="vibepollo_help">With an access token for the Vibepollo web interface (Settings → Access tokens, read access to apps is enough) games synced from Playnite are always recognised as games.</string>
     <string name="vibepollo_url">Web interface URL</string>
     <string name="vibepollo_token">Access token</string>
     <string name="vibepollo_test">Test connection</string>
-    <string name="vibepollo_ok">Connected: %1$d apps, %2$d from Playnite.</string>
-    <string name="vibepollo_failed">Not reachable or token rejected.</string>
 
     <!-- Vibepollo Playnite -->
-    <string name="vibepollo_playnite_ok">Playnite details: %d games</string>
-    <string name="vibepollo_playnite_denied">Playnite details not available (HTTP %d) – token needs read access to /api/playnite/games</string>
 
     <!-- Filters, platforms, sounds -->
     <string name="filter_hosts">Hosts</string>
@@ -773,4 +767,17 @@
     <!-- Appearance -->
     <string name="setting_start_tab">Start screen</string>
     <string name="setting_start_tab_sub">Shown after starting and when Home is pressed in the launcher</string>
+
+    <!-- Host API -->
+    <string name="host_api_section">Host API (companion)</string>
+    <string name="host_api_help">With access to the host\'s web interface the launcher reads the data of the Moonlight Launcher Companion (Windows): game or app, platform, store, groups and whether a game is installed.</string>
+    <string name="host_api_type">Host software</string>
+    <string name="host_api_user">User name</string>
+    <string name="host_api_password">Password</string>
+    <string name="host_api_apollo_hint">Apollo allows a single login: when the launcher reads the app list, the web interface in a browser is signed out.</string>
+    <string name="host_api_ok">Connected: %1$d apps, %2$d from the companion.</string>
+    <string name="host_api_failed">Not reachable or login rejected.</string>
+    <string name="platform_source_companion">from the companion</string>
+    <string name="action_install">Install</string>
+    <string name="not_installed">Not installed</string>
 </resources>

@@ -124,30 +124,35 @@ class MetadataClientsTest {
 
 @org.junit.runner.RunWith(org.robolectric.RobolectricTestRunner::class)
 @org.robolectric.annotation.Config(application = android.app.Application::class, sdk = [34])
-class VibepolloParseTest {
-    private val client = io.github.thecodingdad.moonlightlauncher.data.remote.VibepolloClient(
+class HostApiParseTest {
+    private val client = io.github.thecodingdad.moonlightlauncher.data.remote.HostApiClient(
         OkHttpClient(), FakeConfigs, FakeSecrets.instance,
     )
 
     @Test
-    fun `apps with a playnite id are reported by uuid`() {
+    fun `companion entries are reported by upper case uuid`() {
         val r = client.parse(
-            """{"apps":[{"name":"Desktop","uuid":"aaa"},{"name":"Hades","uuid":"bbb","playnite-id":"123"},{"name":"X","uuid":"ccc","playnite-id":""}],"current_app":0}""",
+            """{"apps":[{"name":"Desktop","uuid":"aaa"},{"name":"Hades","uuid":"bbb","x-companion":{"id":"steam:1145360","kind":"game","source":"steam","platform":"pc","installed":false,"collections":["Roguelike"],"v":1}},{"name":"X","uuid":"ccc","x-companion":{"kind":"game"}}],"current_app":0}""",
         )
         assertEquals(3, r.apps)
-        assertEquals(setOf("BBB"), r.playniteUuids)
+        assertEquals(setOf("BBB"), r.companion.keys)
+        val info = r.infoForApp("bbb")!!
+        assertEquals("steam:1145360", info.id)
+        assertEquals(false, info.installed)
+        assertEquals(true, info.isGame)
+        assertEquals("Steam", info.sourceLabel)
+        assertEquals(listOf("Roguelike"), info.collections)
     }
 
     @Test
-    fun `playnite games give plugin and categories per app`() {
-        val apps = client.parse("""{"apps":[{"name":"Hades","uuid":"bbb","playnite-id":"ABC-1"}]}""")
-        val games = client.parseGames(
-            """[{"id":"abc-1","name":"Hades","pluginName":"Steam","categories":["Roguelike",{"name":"Couch"}]},{"id":"x","pluginName":""}]""",
+    fun `apps, emulators and bare arrays`() {
+        val r = client.parse(
+            """[{"uuid":"a","x-companion":{"id":"x:1","kind":"app"}},{"uuid":"b","x-companion":{"id":"rom:1","source":"emulator","emulator":"Dolphin","platform":"wii"}}]""",
         )
-        val info = apps.copy(games = games).infoForApp("bbb")
-        assertEquals("Steam", info?.plugin)
-        assertEquals(listOf("Roguelike", "Couch"), info?.categories)
-        assertEquals(null, games["x"]?.plugin)
+        assertEquals(false, r.infoForApp("A")!!.isGame)
+        assertEquals(true, r.infoForApp("A")!!.installed)
+        assertEquals("Dolphin", r.infoForApp("b")!!.sourceLabel)
+        assertEquals("wii", r.infoForApp("b")!!.platform)
     }
 }
 

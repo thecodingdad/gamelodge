@@ -147,40 +147,53 @@ private fun VibepolloSection(host: HostState, cfg: HostConfigEntity, save: (Host
     val c = LocalContext.current.container
     val scope = rememberCoroutineScope()
     var revision by remember { mutableStateOf(0) }
-    val token = remember(revision) { c.secrets.get(io.github.thecodingdad.moonlightlauncher.data.settings.SecretStore.Keys.vibepolloToken(host.uuid)).orEmpty() }
+    val secretKey = io.github.thecodingdad.moonlightlauncher.data.settings.SecretStore.Keys.vibepolloToken(host.uuid)
+    val secret = remember(revision) { c.secrets.get(secretKey).orEmpty() }
     var result by remember { mutableStateOf<String?>(null) }
-    val okText = stringResource(R.string.vibepollo_ok)
-    val failText = stringResource(R.string.vibepollo_failed)
-    val playniteOkText = stringResource(R.string.vibepollo_playnite_ok)
-    val playniteDeniedText = stringResource(R.string.vibepollo_playnite_denied)
+    val okText = stringResource(R.string.host_api_ok)
+    val failText = stringResource(R.string.host_api_failed)
+    val type = runCatching { io.github.thecodingdad.moonlightlauncher.data.remote.HostApiType.valueOf(cfg.apiType ?: "VIBEPOLLO") }
+        .getOrDefault(io.github.thecodingdad.moonlightlauncher.data.remote.HostApiType.VIBEPOLLO)
+    val isToken = type == io.github.thecodingdad.moonlightlauncher.data.remote.HostApiType.VIBEPOLLO
 
-    SectionHeader(stringResource(R.string.vibepollo_section))
-    Text(stringResource(R.string.vibepollo_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+    SectionHeader(stringResource(R.string.host_api_section))
+    Text(stringResource(R.string.host_api_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+    ChoiceRow(
+        stringResource(R.string.host_api_type), io.github.thecodingdad.moonlightlauncher.data.remote.HostApiType.entries, type,
+        label = { it.name.lowercase().replaceFirstChar(Char::uppercase) },
+        onSelect = { save(cfg.copy(apiType = it.name)); c.hostApi.invalidate(host.uuid) },
+    )
     io.github.thecodingdad.moonlightlauncher.ui.components.LauncherTextField(
         stringResource(R.string.vibepollo_url), cfg.vibepolloUrl ?: "",
-        { save(cfg.copy(vibepolloUrl = it.trim().ifEmpty { null })); c.vibepollo.invalidate(host.uuid) },
+        { save(cfg.copy(vibepolloUrl = it.trim().ifEmpty { null })); c.hostApi.invalidate(host.uuid) },
         kind = io.github.thecodingdad.moonlightlauncher.ui.components.TextKind.URL,
         placeholder = host.address?.let { "https://$it:47990" },
     )
+    if (!isToken) {
+        io.github.thecodingdad.moonlightlauncher.ui.components.LauncherTextField(
+            stringResource(R.string.host_api_user), cfg.apiUser ?: "",
+            { save(cfg.copy(apiUser = it.trim().ifEmpty { null })); c.hostApi.invalidate(host.uuid) },
+        )
+    }
     io.github.thecodingdad.moonlightlauncher.ui.components.LauncherTextField(
-        stringResource(R.string.vibepollo_token), token,
+        stringResource(if (isToken) R.string.vibepollo_token else R.string.host_api_password), secret,
         {
-            c.secrets.put(io.github.thecodingdad.moonlightlauncher.data.settings.SecretStore.Keys.vibepolloToken(host.uuid), it.trim())
-            c.vibepollo.invalidate(host.uuid)
+            c.secrets.put(secretKey, if (isToken) it.trim() else it)
+            c.hostApi.invalidate(host.uuid)
             revision++
         },
         kind = io.github.thecodingdad.moonlightlauncher.ui.components.TextKind.PASSWORD,
     )
+    if (type == io.github.thecodingdad.moonlightlauncher.data.remote.HostApiType.APOLLO) {
+        Text(stringResource(R.string.host_api_apollo_hint), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+    }
     io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton(
-        stringResource(R.string.vibepollo_test), enabled = !cfg.vibepolloUrl.isNullOrBlank() && token.isNotEmpty(),
+        stringResource(R.string.vibepollo_test), enabled = !cfg.vibepolloUrl.isNullOrBlank() && secret.isNotEmpty() && (isToken || !cfg.apiUser.isNullOrBlank()),
         onClick = {
             scope.launch {
-                val r = c.vibepollo.fetch(host.uuid)
-                result = if (r != null) {
-                    okText.format(r.apps, r.playniteUuids.size) + "\n" +
-                        if (r.gamesError != null) playniteDeniedText.format(r.gamesError) else playniteOkText.format(r.games.size)
-                } else failText
-                if (r != null) c.library.resyncHost(host.uuid)
+                val r = c.hostApi.fetch(host.uuid)
+                result = if (r != null) okText.format(r.apps, r.companion.size) else failText
+                if (r != null) { c.hostApi.invalidate(host.uuid); c.library.resyncHost(host.uuid) }
             }
         },
     )

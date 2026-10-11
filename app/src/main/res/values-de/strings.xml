@@ -381,17 +381,11 @@
     <string name="backup_wrong_password">Falsches Passwort – Zugangsdaten wurden nicht wiederhergestellt.</string>
 
     <!-- Vibepollo -->
-    <string name="vibepollo_section">Vibepollo (optional)</string>
-    <string name="vibepollo_help">Mit einem Zugriffstoken für die Vibepollo-Weboberfläche (Einstellungen → Zugriffstoken, Lesezugriff auf Apps genügt) werden aus Playnite synchronisierte Spiele immer als Spiel erkannt.</string>
     <string name="vibepollo_url">URL der Weboberfläche</string>
     <string name="vibepollo_token">Zugriffstoken</string>
     <string name="vibepollo_test">Verbindung testen</string>
-    <string name="vibepollo_ok">Verbunden: %1$d Apps, davon %2$d aus Playnite.</string>
-    <string name="vibepollo_failed">Nicht erreichbar oder Token abgelehnt.</string>
 
     <!-- Vibepollo Playnite -->
-    <string name="vibepollo_playnite_ok">Playnite-Details: %d Spiele</string>
-    <string name="vibepollo_playnite_denied">Playnite-Details nicht verfügbar (HTTP %d) – Token braucht Leserecht für /api/playnite/games</string>
 
     <!-- Filters, platforms, sounds -->
     <string name="filter_hosts">Hosts</string>
@@ -771,4 +765,17 @@
     <!-- Appearance -->
     <string name="setting_start_tab">Startbildschirm</string>
     <string name="setting_start_tab_sub">Wird nach dem Start und bei Home im Launcher angezeigt</string>
+
+    <!-- Host API -->
+    <string name="host_api_section">Host-API (Companion)</string>
+    <string name="host_api_help">Mit Zugriff auf die Weboberfläche des Hosts liest der Launcher die Daten des Moonlight Launcher Companion (Windows): Spiel oder App, Plattform, Store, Gruppen und ob ein Spiel installiert ist.</string>
+    <string name="host_api_type">Host-Software</string>
+    <string name="host_api_user">Benutzername</string>
+    <string name="host_api_password">Passwort</string>
+    <string name="host_api_apollo_hint">Apollo erlaubt nur eine Anmeldung: Liest der Launcher die App-Liste, wird die Weboberfläche im Browser abgemeldet.</string>
+    <string name="host_api_ok">Verbunden: %1$d Apps, %2$d vom Companion.</string>
+    <string name="host_api_failed">Nicht erreichbar oder Anmeldung abgelehnt.</string>
+    <string name="platform_source_companion">vom Companion</string>
+    <string name="action_install">Installieren</string>
+    <string name="not_installed">Nicht installiert</string>
 </resources>

@@ -16,7 +16,7 @@ import androidx.room.RoomDatabase
         HaTileEntity::class,
         FilterEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = true,
 )
 abstract class LauncherDatabase : RoomDatabase() {
@@ -30,8 +30,17 @@ abstract class LauncherDatabase : RoomDatabase() {
     companion object {
         fun create(context: Context): LauncherDatabase =
             Room.databaseBuilder(context, LauncherDatabase::class.java, "launcher.db")
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                 .build()
+
+        /** v4: host API type/user (companion data from Vibepollo, Apollo or Sunshine), not installed targets. */
+        val MIGRATION_3_4 = object : androidx.room.migration.Migration(3, 4) {
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE host_config ADD COLUMN apiType TEXT")
+                db.execSQL("ALTER TABLE host_config ADD COLUMN apiUser TEXT")
+                db.execSQL("ALTER TABLE launch_targets ADD COLUMN installed INTEGER NOT NULL DEFAULT 1")
+            }
+        }
 
         /** v3: more metadata (publisher, series, features, age ratings, release date) and per-field edits. */
         val MIGRATION_2_3 = object : androidx.room.migration.Migration(2, 3) {

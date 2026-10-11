@@ -6,17 +6,11 @@ import io.github.thecodingdad.moonlightlauncher.data.db.PlatformSource
 
 /**
  * Decides which platform an item belongs to. Sources in order of trust:
- * manual choice > Playnite library plugin > IGDB > suggestion from the launch targets.
+ * manual choice > companion data of the host > IGDB > suggestion from the launch targets.
  */
 object PlatformResolver {
     const val PC = "PC"
     const val ANDROID = "Android"
-
-    /** Playnite library plugins whose games are all PC games. */
-    private val pcPlugins = listOf(
-        "steam", "epic", "gog", "xbox", "ea app", "origin", "ubisoft", "uplay", "humble", "itch",
-        "battle.net", "amazon", "rockstar", "bethesda", "legacy games", "indiegala", "game pass",
-    )
 
     /** Console names, newest first: used when IGDB lists several platforms and none is preferred. */
     private val consoleRank = listOf(
@@ -26,11 +20,6 @@ object PlatformResolver {
         "PlayStation", "Nintendo 64", "Game Boy Color", "Game Boy", "Sega Saturn", "Super Nintendo Entertainment System",
         "Sega Mega Drive/Genesis", "Nintendo Entertainment System",
     )
-
-    fun fromPlaynitePlugin(pluginName: String?): String? {
-        val name = pluginName?.trim()?.lowercase()?.takeIf { it.isNotEmpty() } ?: return null
-        return if (pcPlugins.any { name.contains(it) }) PC else null
-    }
 
     /** Short display name for an IGDB platform name. */
     fun normalizeIgdb(name: String): String = when {
