@@ -7,6 +7,7 @@ import android.os.VibrationEffect
 import android.view.InputDevice
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.SportsEsports
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -40,6 +41,8 @@ data class ControllerInfo(
     val productId: Int = 0,
     val descriptor: String = "",
     val hasTouchpad: Boolean = false,
+    /** Odin Mapping's copy of an external controller (no battery, no rumble). */
+    val odinCopy: Boolean = false,
 )
 
 /** All connected gamepads (built-in, Bluetooth, USB). */
@@ -56,8 +59,11 @@ fun connectedControllers(): List<ControllerInfo> = InputDevice.getDeviceIds().to
             d.batteryState.takeIf { it.isPresent }?.capacity?.takeIf { !it.isNaN() }?.let { (it * 100).toInt() }
         } else null
         val vibrate = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) d.vibratorManager.vibratorIds.isNotEmpty() else d.vibrator.hasVibrator()
+        val odin = io.github.thecodingdad.moonlightlauncher.system.OdinMapping
         ControllerInfo(
-            d.id, d.name, d.isExternal, battery, vibrate, d.vendorId, d.productId, d.descriptor,
+            // AYN's built-in controls report themselves as external.
+            d.id, d.name, d.isExternal && !odin.isBuiltIn(d), battery, vibrate, d.vendorId, d.productId, d.descriptor,
+            odinCopy = odin.isOdinCopy(d),
             hasTouchpad = (d.sources and InputDevice.SOURCE_TOUCHPAD) == InputDevice.SOURCE_TOUCHPAD ||
                 d.vendorId == 0x054c, // Sony pads report their touchpad as a separate device
         )
@@ -126,12 +132,14 @@ fun ControllersScreen() {
                 onClick = { selected = c },
                 subtitle = listOfNotNull(
                     stringResource(if (c.external) R.string.controller_external else R.string.controller_builtin),
+                    if (c.odinCopy) stringResource(R.string.controller_odin_copy) else null,
                     c.batteryPercent?.let { stringResource(R.string.controller_battery, it) },
                 ).joinToString("  ·  "),
                 icon = Icons.Filled.SportsEsports,
                 initialFocus = index == 0,
             )
         }
+        OdinMappingSection()
         if (gamepadOptions.isNotEmpty()) {
             SectionHeader(stringResource(R.string.controllers_stream_settings))
             Text(stringResource(R.string.controllers_stream_settings_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
@@ -159,7 +167,10 @@ fun ControllerDetailDialog(controller: ControllerInfo?, onDismiss: () -> Unit) {
         ) {
             InfoRow(
                 stringResource(R.string.controller_info_type),
-                stringResource(if (c.external) R.string.controller_external else R.string.controller_builtin),
+                listOfNotNull(
+                    stringResource(if (c.external) R.string.controller_external else R.string.controller_builtin),
+                    if (c.odinCopy) stringResource(R.string.controller_odin_copy) else null,
+                ).joinToString(" · "),
             )
             c.batteryPercent?.let { InfoRow(stringResource(R.string.controller_info_battery), "$it %") }
             InfoRow(stringResource(R.string.controller_info_ids), "%04x:%04x".format(c.vendorId, c.productId))
@@ -278,4 +289,41 @@ private fun OdinMappingRow(c: ControllerInfo) {
         },
         subtitle = stringResource(R.string.odin_mapping_keep_sub, c.name),
     )
+}
+
+/** AYN Odin only: keep all external controllers away from Odin Mapping, plus its name list. */
+@Composable
+private fun OdinMappingSection() {
+    val context = LocalContext.current
+    val odin = remember { io.github.thecodingdad.moonlightlauncher.system.OdinMapping(context.applicationContext) }
+    if (!remember { odin.isAvailable }) return
+    val repo = context.container.settings
+    val settings by repo.settings.collectAsState(null)
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    var blacklist by remember { mutableStateOf<List<String>?>(null) }
+    // Re-read when controllers change: the watcher may just have added a name.
+    val controllers = rememberControllers()
+    androidx.compose.runtime.LaunchedEffect(controllers, settings?.odinKeepControllers) {
+        kotlinx.coroutines.delay(500)
+        blacklist = odin.blacklist()
+    }
+    val s = settings ?: return
+    SectionHeader(stringResource(R.string.odin_mapping_section))
+    SwitchRow(
+        stringResource(R.string.odin_mapping_all), s.odinKeepControllers,
+        { on -> scope.launch { repo.update { it.copy(odinKeepControllers = on) } } },
+        subtitle = stringResource(R.string.odin_mapping_all_sub),
+    )
+    blacklist?.forEach { name ->
+        NavRow(
+            name, {
+                scope.launch {
+                    odin.setBlacklisted(name, false)
+                    blacklist = odin.blacklist()
+                }
+            },
+            subtitle = stringResource(if (s.odinKeepControllers) R.string.odin_mapping_remove_auto else R.string.odin_mapping_remove),
+            icon = androidx.compose.material.icons.Icons.Filled.Delete,
+        )
+    }
 }

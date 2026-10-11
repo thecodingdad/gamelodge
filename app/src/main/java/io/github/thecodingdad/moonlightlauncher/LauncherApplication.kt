@@ -8,6 +8,7 @@ import coil3.gif.AnimatedImageDecoder
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.crossfade
 import com.limelight.ArtemisApplication
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 /**
@@ -47,6 +48,8 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
             }
         }
         container.metadata.start()
+        io.github.thecodingdad.moonlightlauncher.system.OdinMapping(this)
+            .watch(container.scope, container.settings.settings.map { it.odinKeepControllers })
         container.vpn.startNetworkWatch()
         // Host polling is driven by MainActivity's lifecycle: Artemis' stream activity runs in
         // this process too, and polling must not compete with an active stream.

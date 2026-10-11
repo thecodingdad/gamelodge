@@ -332,7 +332,7 @@
     <string name="controllers_intro">In a stream every controller is passed to the host as its own gamepad. Select a controller to give it its own settings or a fixed player number.</string>
     <string name="controllers_none">No controllers connected.</string>
     <string name="controller_external">External</string>
-    <string name="controller_builtin">Built-in</string>
+    <string name="controller_builtin">Internal</string>
     <string name="controller_battery">Battery %d %%</string>
     <string name="controller_vibrate_test">Test vibration</string>
 
@@ -662,5 +662,14 @@
     <!-- Odin -->
     <string name="odin_mapping_section">Odin Mapping</string>
     <string name="odin_mapping_keep">Keep away from Odin Mapping</string>
-    <string name="odin_mapping_keep_sub">Odin otherwise replaces the first external controller with a copy without battery and rumble. Applies to every device named \"%1$s\" (possibly the built-in controls too) and after reconnecting the controller.</string>
+    <string name="odin_mapping_keep_sub">Odin otherwise replaces the first external controller with a copy without battery and rumble. Applies to every device named \"%1$s\" (possibly the internal controls too) and after reconnecting the controller.</string>
+
+    <!-- Odin -->
+    <string name="odin_mapping_all">Keep external controllers away from Odin Mapping</string>
+    <string name="odin_mapping_all_sub">Odin otherwise replaces the first external controller with a copy without battery and rumble. New controllers are added below when they connect and stay untouched from their next connection on.</string>
+    <string name="odin_mapping_remove">Excluded from Odin Mapping · select to remove</string>
+    <string name="odin_mapping_remove_auto">Excluded from Odin Mapping · select to remove (re-added on the next connection while the switch is on)</string>
+
+    <!-- Odin -->
+    <string name="controller_odin_copy">taken over by Odin Mapping</string>
 </resources>

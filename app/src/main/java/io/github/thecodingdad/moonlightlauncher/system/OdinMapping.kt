@@ -6,9 +6,12 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
 import android.os.Parcel
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.coroutines.resume
 
@@ -65,7 +68,52 @@ class OdinMapping(private val context: Context) {
         }
     }
 
+    /**
+     * Adds every real external controller to the blacklist as it connects (and those already
+     * connected) while [enabled] says so. Odin is faster on a controller's very first connection;
+     * from the next one on it stays untouched.
+     */
+    fun watch(scope: kotlinx.coroutines.CoroutineScope, enabled: kotlinx.coroutines.flow.Flow<Boolean>) {
+        if (!isAvailable) return
+        val im = context.getSystemService(android.hardware.input.InputManager::class.java)
+        val added = kotlinx.coroutines.flow.MutableSharedFlow<Int>(extraBufferCapacity = 64)
+        im.registerInputDeviceListener(object : android.hardware.input.InputManager.InputDeviceListener {
+            override fun onInputDeviceAdded(id: Int) { added.tryEmit(id) }
+            override fun onInputDeviceRemoved(id: Int) = Unit
+            override fun onInputDeviceChanged(id: Int) = Unit
+        }, android.os.Handler(android.os.Looper.getMainLooper()))
+        scope.launch {
+            enabled.distinctUntilChanged().collectLatest { on ->
+                if (!on) return@collectLatest
+                // Name captured right away: Odin removes the original device ~0.1 s later.
+                val names = kotlinx.coroutines.flow.merge(
+                    android.view.InputDevice.getDeviceIds().asList().asFlow(),
+                    added,
+                ).mapNotNull { id -> android.view.InputDevice.getDevice(id)?.takeIf(::isExternalPad)?.name }
+                names.collect { name ->
+                    val list = blacklist() ?: return@collect
+                    if (name !in list) setBlacklisted(name, true)
+                }
+            }
+        }
+    }
+
     companion object {
+        private const val AYN_VENDOR = 0x2020
+        private const val COPY_PRODUCT = 0x0111
+
+        /** AYN's built-in controls: AYN vendor id, reported as "external" by Android. */
+        fun isBuiltIn(d: android.view.InputDevice): Boolean = d.vendorId == AYN_VENDOR && d.productId != COPY_PRODUCT
+
+        /** Odin Mapping's virtual stand-in for an external controller it took over. */
+        fun isOdinCopy(d: android.view.InputDevice): Boolean = d.vendorId == AYN_VENDOR && d.productId == COPY_PRODUCT
+
+        /** Real external gamepads; Odin's own devices (built-in controls, virtual copies) use vendor 0x2020. */
+        fun isExternalPad(d: android.view.InputDevice): Boolean =
+            !d.isVirtual && d.isExternal && d.vendorId != AYN_VENDOR &&
+                (d.sources and android.view.InputDevice.SOURCE_GAMEPAD) == android.view.InputDevice.SOURCE_GAMEPAD
+
+
         private const val PACKAGE = "com.odin.mapping"
         private const val ACTION = "com.ro.mapping.action.MAPPING_SERVICE"
         private const val DESCRIPTOR = "com.ro.mapping.sdk.IServerApi"

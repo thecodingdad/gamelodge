@@ -330,7 +330,7 @@
     <string name="controllers_intro">Im Stream wird jeder Controller als eigenes Gamepad an den Host gereicht. Wähle einen Controller, um ihm eigene Einstellungen oder eine feste Spielernummer zu geben.</string>
     <string name="controllers_none">Keine Controller verbunden.</string>
     <string name="controller_external">Extern</string>
-    <string name="controller_builtin">Eingebaut</string>
+    <string name="controller_builtin">Intern</string>
     <string name="controller_battery">Akku %d %%</string>
     <string name="controller_vibrate_test">Vibration testen</string>
 
@@ -660,5 +660,14 @@
     <!-- Odin -->
     <string name="odin_mapping_section">Odin Mapping</string>
     <string name="odin_mapping_keep">Nicht von Odin Mapping übernehmen</string>
-    <string name="odin_mapping_keep_sub">Odin ersetzt sonst den ersten externen Controller durch eine Kopie ohne Akku und Vibration. Gilt für alle Geräte namens „%1$s“ (eventuell auch die eingebaute Steuerung) und erst nach erneutem Verbinden.</string>
+    <string name="odin_mapping_keep_sub">Odin ersetzt sonst den ersten externen Controller durch eine Kopie ohne Akku und Vibration. Gilt für alle Geräte namens „%1$s“ (eventuell auch die interne Steuerung) und erst nach erneutem Verbinden.</string>
+
+    <!-- Odin -->
+    <string name="odin_mapping_all">Externe Controller nicht von Odin Mapping übernehmen</string>
+    <string name="odin_mapping_all_sub">Odin ersetzt sonst den ersten externen Controller durch eine Kopie ohne Akku und Vibration. Neue Controller werden beim Verbinden unten eingetragen und bleiben ab dem nächsten Verbinden unberührt.</string>
+    <string name="odin_mapping_remove">Von Odin Mapping ausgenommen · auswählen zum Entfernen</string>
+    <string name="odin_mapping_remove_auto">Von Odin Mapping ausgenommen · auswählen zum Entfernen (wird beim nächsten Verbinden wieder eingetragen, solange der Schalter an ist)</string>
+
+    <!-- Odin -->
+    <string name="controller_odin_copy">von Odin Mapping übernommen</string>
 </resources>
