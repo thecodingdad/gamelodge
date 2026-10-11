@@ -14,7 +14,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
-enum class HomeLayout { HERO, GRID, CAROUSEL }
+/** Tab shown first after start and on the second Home press. */
+enum class StartTab { HOME, LIBRARY, APPS }
 enum class ThemeMode { DARK, BLACK, LIGHT }
 enum class AccentMode { FIXED, COVER }
 enum class CardSize { SMALL, MEDIUM, LARGE }
@@ -25,7 +26,7 @@ enum class AutoVpnTrigger { HOST_UNREACHABLE, OUTSIDE_HOME }
 @kotlinx.serialization.Serializable
 data class LauncherSettings(
     // Appearance
-    val homeLayout: HomeLayout = HomeLayout.HERO,
+    val startTab: StartTab = StartTab.HOME,
     val themeMode: ThemeMode = ThemeMode.DARK,
     val accentMode: AccentMode = AccentMode.COVER,
     val accentColor: Int = 0xFF7C9CFF.toInt(),
@@ -97,7 +98,7 @@ class SettingsRepository(context: Context) {
     private val store = context.dataStore
 
     private object K {
-        val homeLayout = stringPreferencesKey("home_layout")
+        val startTab = stringPreferencesKey("start_tab")
         val themeMode = stringPreferencesKey("theme_mode")
         val accentMode = stringPreferencesKey("accent_mode")
         val accentColor = intPreferencesKey("accent_color")
@@ -154,7 +155,7 @@ class SettingsRepository(context: Context) {
     private fun Preferences.toSettings(): LauncherSettings {
         val d = LauncherSettings()
         return LauncherSettings(
-            homeLayout = enumOr(this[K.homeLayout], d.homeLayout),
+            startTab = enumOr(this[K.startTab], d.startTab),
             themeMode = enumOr(this[K.themeMode], d.themeMode),
             accentMode = enumOr(this[K.accentMode], d.accentMode),
             accentColor = this[K.accentColor] ?: d.accentColor,
@@ -204,7 +205,7 @@ class SettingsRepository(context: Context) {
     }
 
     private fun MutablePreferences.write(s: LauncherSettings) {
-        this[K.homeLayout] = s.homeLayout.name
+        this[K.startTab] = s.startTab.name
         this[K.themeMode] = s.themeMode.name
         this[K.accentMode] = s.accentMode.name
         this[K.accentColor] = s.accentColor

@@ -55,8 +55,8 @@ import io.github.thecodingdad.moonlightlauncher.ui.screens.metadata.FixMetadataD
 import io.github.thecodingdad.moonlightlauncher.ui.screens.metadata.MetadataSettings
 import io.github.thecodingdad.moonlightlauncher.ui.screens.metadata.ReviewScreen
 import androidx.compose.runtime.mutableStateOf
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import io.github.thecodingdad.moonlightlauncher.data.settings.HomeLayout
 import io.github.thecodingdad.moonlightlauncher.ui.components.ButtonHint
 import io.github.thecodingdad.moonlightlauncher.ui.components.ButtonHintBar
 import io.github.thecodingdad.moonlightlauncher.ui.components.ControllerKeyboardHost
@@ -75,8 +75,6 @@ import io.github.thecodingdad.moonlightlauncher.ui.screens.apps.AppsScreen
 import io.github.thecodingdad.moonlightlauncher.ui.screens.detail.DetailScreen
 import io.github.thecodingdad.moonlightlauncher.ui.screens.ha.HaHomeRow
 import io.github.thecodingdad.moonlightlauncher.ui.screens.ha.HaSettings
-import io.github.thecodingdad.moonlightlauncher.ui.screens.home.CarouselHome
-import io.github.thecodingdad.moonlightlauncher.ui.screens.home.GridHome
 import io.github.thecodingdad.moonlightlauncher.ui.screens.home.HeroHome
 import io.github.thecodingdad.moonlightlauncher.ui.screens.profiles.ProfileEditor
 import io.github.thecodingdad.moonlightlauncher.ui.screens.profiles.ProfilesList
@@ -172,13 +170,27 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
     var hostInfoFor by remember { mutableStateOf<String?>(null) }
     var controllerPopup by remember { mutableStateOf(false) }
     var quickMenu by remember { mutableStateOf(false) }
+    // After start: the configured start tab (read from storage, not the not-yet-loaded default).
+    LaunchedEffect(Unit) {
+        if (!vm.startTabApplied) {
+            vm.startTabApplied = true
+            val before = vm.tab
+            val start = MainTab.valueOf(activity.container.settings.settings.first().startTab.name).ordinal
+            // Unless the user already switched tabs in the meantime.
+            if (vm.tab == before) vm.tab = start
+        }
+    }
     LaunchedEffect(Unit) {
         vm.homePressed.collect {
+            // Home while the launcher is shown: to the configured start tab. (Coming back from
+            // another app or a stream, the first Home just shows what was there before.)
+            val start = MainTab.valueOf(vm.settings.value.startTab.name).ordinal
             // Already at the untouched start screen: nothing to do (don't reload artwork).
-            val alreadyHome = vm.tab == 0 && nav.currentDestination?.route == Routes.MAIN && vm.homeAtStart
+            val alreadyHome = vm.tab == start && nav.currentDestination?.route == Routes.MAIN &&
+                (start != MainTab.HOME.ordinal || vm.homeAtStart)
             nav.popBackStack(Routes.MAIN, inclusive = false)
-            vm.tab = 0
-            if (!alreadyHome) {
+            vm.tab = start
+            if (!alreadyHome && start == MainTab.HOME.ordinal) {
                 // Home starts at the top again: forget the remembered position of the start tab.
                 vm.focusKeys.remove(MainTab.HOME.name)
                 vm.homeResets.intValue++
@@ -539,7 +551,7 @@ private fun MainShell(
     val showHints = io.github.thecodingdad.moonlightlauncher.ui.components.LocalShowHintBar.current
     // A hidden hint bar takes no space; its last measured height must not linger.
     LaunchedEffect(showHints, compactShell) { if (!showHints && !compactShell) hintBarHeight = 0.dp }
-    val fullBleed = tabs[tab] == MainTab.HOME && settings.homeLayout != HomeLayout.GRID
+    val fullBleed = tabs[tab] == MainTab.HOME
     val bg = LauncherTheme.colors.background
     Box(Modifier.fillMaxSize().statusBarsPadding()) {
         Box(Modifier.fillMaxSize()) {
@@ -553,7 +565,7 @@ private fun MainShell(
                 tabStates.SaveableStateProvider(stateKey) {
                 // Each tab applies the bar insets itself (full-bleed home draws behind them), so the
                 // outgoing and incoming tab keep their own layout during the cross-fade.
-                val tabFullBleed = current == MainTab.HOME && settings.homeLayout != HomeLayout.GRID
+                val tabFullBleed = current == MainTab.HOME
                 Box(Modifier.fillMaxSize().then(if (tabFullBleed) Modifier else Modifier.padding(top = topBarHeight, bottom = hintBarHeight))) {
                 when (current) {
                     MainTab.HOME -> {
@@ -579,15 +591,11 @@ private fun MainShell(
                             ),
                         )
                         val empty: @Composable () -> Unit = { EmptyHome { tab = MainTab.SETTINGS.ordinal } }
-                        when (settings.homeLayout) {
-                            HomeLayout.HERO -> HeroHome(
-                                rows, callbacks, homeFilters,
-                                haRow = if (settings.showHaRowOnHome) ({ HaHomeRow() }) else null,
-                                emptyContent = empty,
-                            )
-                            HomeLayout.GRID -> GridHome(games, running, callbacks, empty)
-                            HomeLayout.CAROUSEL -> CarouselHome(rows, callbacks, openTab = { tab = it }, emptyContent = empty)
-                        }
+                        HeroHome(
+                            rows, callbacks, homeFilters,
+                            haRow = if (settings.showHaRowOnHome) ({ HaHomeRow() }) else null,
+                            emptyContent = empty,
+                        )
                     }
                     MainTab.LIBRARY -> LibraryScreen(
                         allEntries, libraryFilters, settings.animatedArtwork, vm.focusKeys[MainTab.LIBRARY.name], openStats,

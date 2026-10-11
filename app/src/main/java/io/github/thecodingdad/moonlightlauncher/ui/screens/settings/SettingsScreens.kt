@@ -26,7 +26,7 @@ import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.data.settings.AccentMode
 import io.github.thecodingdad.moonlightlauncher.data.settings.ButtonLayout
 import io.github.thecodingdad.moonlightlauncher.data.settings.CardSize
-import io.github.thecodingdad.moonlightlauncher.data.settings.HomeLayout
+import io.github.thecodingdad.moonlightlauncher.data.settings.StartTab
 import io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings
 import io.github.thecodingdad.moonlightlauncher.data.settings.ThemeMode
 
@@ -80,17 +80,18 @@ fun AppearanceSettings(
 ) {
     SettingsPage(stringResource(R.string.settings_appearance)) {
         ChoiceRow(
-            stringResource(R.string.setting_home_layout), HomeLayout.entries, settings.homeLayout,
+            stringResource(R.string.setting_start_tab), StartTab.entries, settings.startTab,
             label = {
                 stringResource(
                     when (it) {
-                        HomeLayout.HERO -> R.string.layout_hero
-                        HomeLayout.GRID -> R.string.layout_grid
-                        HomeLayout.CAROUSEL -> R.string.layout_carousel
+                        StartTab.HOME -> R.string.tab_home
+                        StartTab.LIBRARY -> R.string.tab_library
+                        StartTab.APPS -> R.string.tab_apps
                     },
                 )
             },
-            onSelect = { v -> update { it.copy(homeLayout = v) } },
+            onSelect = { v -> update { it.copy(startTab = v) } },
+            subtitle = stringResource(R.string.setting_start_tab_sub),
             initialFocus = true,
         )
         ChoiceRow(

@@ -130,10 +130,6 @@
     <string name="settings_about">Info</string>
 
     <!-- Appearance -->
-    <string name="setting_home_layout">Startbildschirm</string>
-    <string name="layout_hero">Hero + Reihen</string>
-    <string name="layout_grid">Bibliotheksraster</string>
-    <string name="layout_carousel">Karussell</string>
     <string name="setting_theme">Theme</string>
     <string name="theme_dark">Dunkel</string>
     <string name="theme_black">Schwarz (OLED)</string>
@@ -771,4 +767,8 @@
 
     <!-- Detail -->
     <string name="hint_prev_next">Voriges/Nächstes</string>
+
+    <!-- Appearance -->
+    <string name="setting_start_tab">Startbildschirm</string>
+    <string name="setting_start_tab_sub">Wird nach dem Start und bei Home im Launcher angezeigt</string>
 </resources>

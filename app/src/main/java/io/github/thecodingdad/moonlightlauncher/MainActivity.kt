@@ -69,7 +69,9 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         // Home pressed while we are the home app: back to the start screen.
-        if (intent.hasCategory(Intent.CATEGORY_HOME)) vm.homePressed.tryEmit(Unit)
+        // Home while the launcher is shown: to the start tab. Coming back from another app or a
+        // stream, the first Home just brings back what was shown before.
+        if (intent.hasCategory(Intent.CATEGORY_HOME) && !returningFromBackground) vm.homePressed.tryEmit(Unit)
         handleQuickMenuExtra(intent)
     }
 
@@ -87,7 +89,11 @@ class MainActivity : ComponentActivity() {
         container.ha.client.start()
     }
 
+    /** Stopped (another app, stream) and not resumed since: Home only returns to the launcher. */
+    private var returningFromBackground = false
+
     override fun onStop() {
+        returningFromBackground = true
         container.hosts.stopPolling()
         container.ha.client.stop()
         super.onStop()
@@ -105,6 +111,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        returningFromBackground = false
         resumed = true
         vm.touch()
         // Back from a game or stream: close the play session, undo a one-off profile.

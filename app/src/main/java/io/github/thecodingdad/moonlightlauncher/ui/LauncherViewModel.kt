@@ -178,6 +178,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     /** Selected main tab; lives here so the Home button can reset it from the activity. */
     val tabState = androidx.compose.runtime.mutableIntStateOf(0)
+
+    /** The configured start tab was applied once for this process (not again on recreation). */
+    var startTabApplied = false
     var tab: Int
         get() = tabState.intValue
         set(value) { tabState.intValue = value }
