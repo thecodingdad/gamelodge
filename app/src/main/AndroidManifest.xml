@@ -13,6 +13,8 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <!-- Number of connected Bluetooth devices in the quick menu (Android 12+). -->
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <!-- Quick menu tiles: "Do not disturb" and silent mode. -->
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
 
     <!-- Package visibility (Android 11+): list every launchable app for the library. -->
     <queries>

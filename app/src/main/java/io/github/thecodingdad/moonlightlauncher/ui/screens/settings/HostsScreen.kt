@@ -30,7 +30,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.runtime.collectAsState
-import kotlinx.coroutines.flow.map
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Bedtime
@@ -84,9 +83,8 @@ fun HostsSettings(hosts: List<HostState>, openHostConfig: (HostState) -> Unit) {
     val c = androidx.compose.ui.platform.LocalContext.current.container
     val waking = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateListOf<String>() }
     val notes = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateMapOf<String, String>() }
-    val hostConfigs by c.database.hostConfigDao().observeAll()
-        .map { list -> list.associateBy { it.hostUuid } }
-        .collectAsState(emptyMap())
+    val hostConfigList by androidx.compose.runtime.remember { c.database.hostConfigDao().observeAll() }.collectAsState(emptyList())
+    val hostConfigs = hostConfigList.associateBy { it.hostUuid }
     val wakeSentMsg = stringResource(R.string.host_wake_sending)
     val wakeFailedMsg = stringResource(R.string.host_wake_failed)
     val wakeOnlineMsg = stringResource(R.string.host_wake_online)

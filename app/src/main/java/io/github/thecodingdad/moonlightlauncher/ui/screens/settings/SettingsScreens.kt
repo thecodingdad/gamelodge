@@ -7,6 +7,7 @@ import androidx.compose.material.icons.filled.Computer
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Android
 import androidx.compose.material.icons.filled.Gamepad
 import androidx.compose.material.icons.filled.Image
@@ -29,7 +30,7 @@ import io.github.thecodingdad.moonlightlauncher.data.settings.HomeLayout
 import io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings
 import io.github.thecodingdad.moonlightlauncher.data.settings.ThemeMode
 
-enum class SettingsPageId { HOSTS, PROFILES, APPEARANCE, FILTERS, APP_FILTERS, CONTROLS, SOUNDS, METADATA, HOME_ASSISTANT, VPN, LAUNCHER, BACKUP, LANGUAGE, ABOUT }
+enum class SettingsPageId { HOSTS, PROFILES, APPEARANCE, FILTERS, APP_FILTERS, QUICK_MENU, CONTROLS, SOUNDS, METADATA, HOME_ASSISTANT, VPN, LAUNCHER, BACKUP, LANGUAGE, ABOUT }
 
 @Composable
 fun SettingsHome(open: (SettingsPageId) -> Unit, isFirstVisit: Boolean, openControllers: () -> Unit = {}) {
@@ -48,6 +49,7 @@ fun SettingsHome(open: (SettingsPageId) -> Unit, isFirstVisit: Boolean, openCont
         SectionHeader(stringResource(R.string.settings_group_controls))
         NavRow(stringResource(R.string.settings_controls), { open(SettingsPageId.CONTROLS) }, stringResource(R.string.settings_controls_sub), Icons.Filled.SportsEsports)
         NavRow(stringResource(R.string.settings_controllers), openControllers, stringResource(R.string.settings_controllers_sub), Icons.Filled.Gamepad)
+        NavRow(stringResource(R.string.settings_quick_menu), { open(SettingsPageId.QUICK_MENU) }, stringResource(R.string.settings_quick_menu_sub), Icons.Filled.Dashboard)
         NavRow(stringResource(R.string.settings_sounds), { open(SettingsPageId.SOUNDS) }, stringResource(R.string.settings_sounds_sub), Icons.Filled.VolumeUp)
 
         SectionHeader(stringResource(R.string.settings_group_display))

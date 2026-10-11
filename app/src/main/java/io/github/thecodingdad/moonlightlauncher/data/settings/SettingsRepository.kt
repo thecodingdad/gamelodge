@@ -72,6 +72,8 @@ data class LauncherSettings(
     val hideNavigationBar: Boolean = false,
     /** Show the button hint bar (only while a controller is connected). */
     val showHintBar: Boolean = true,
+    /** Tiles in the quick menu, in order (see QuickTile ids; apps as "app:<package>"). */
+    val quickTiles: List<String> = listOf("controllers", "hosts", "vpn", "wifi", "bluetooth", "android"),
     /** Shrink the UI while a TV/monitor is attached (the layout is sized for the handheld). */
     val tvScaleAuto: Boolean = true,
     /** UI size on an external display, percent of the handheld size. */
@@ -123,6 +125,7 @@ class SettingsRepository(context: Context) {
         val filtersSeeded = booleanPreferencesKey("filters_seeded")
         val hideNavigationBar = booleanPreferencesKey("hide_navigation_bar")
         val showHintBar = booleanPreferencesKey("show_hint_bar")
+        val quickTiles = stringPreferencesKey("quick_tiles")
         val tvScaleAuto = booleanPreferencesKey("tv_scale_auto")
         val tvScale = intPreferencesKey("tv_scale")
         val uiScale = intPreferencesKey("ui_scale")
@@ -177,6 +180,7 @@ class SettingsRepository(context: Context) {
             filtersSeeded = this[K.filtersSeeded] ?: d.filtersSeeded,
             hideNavigationBar = this[K.hideNavigationBar] ?: d.hideNavigationBar,
             showHintBar = this[K.showHintBar] ?: d.showHintBar,
+            quickTiles = this[K.quickTiles]?.split(',')?.filter { it.isNotBlank() } ?: d.quickTiles,
             tvScaleAuto = this[K.tvScaleAuto] ?: d.tvScaleAuto,
             tvScale = this[K.tvScale] ?: d.tvScale,
             uiScale = this[K.uiScale] ?: d.uiScale,
@@ -220,6 +224,7 @@ class SettingsRepository(context: Context) {
         this[K.filtersSeeded] = s.filtersSeeded
         this[K.hideNavigationBar] = s.hideNavigationBar
         this[K.showHintBar] = s.showHintBar
+        this[K.quickTiles] = s.quickTiles.joinToString(",")
         this[K.tvScaleAuto] = s.tvScaleAuto
         this[K.tvScale] = s.tvScale
         this[K.uiScale] = s.uiScale

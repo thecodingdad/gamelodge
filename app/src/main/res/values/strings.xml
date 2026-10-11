@@ -602,4 +602,31 @@
     <string name="filter_field_played">Played</string>
     <string name="filter_field_review">Needs review</string>
     <string name="action_done">Done</string>
+
+    <!-- Quick tiles -->
+    <string name="qt_group_launcher">Launcher</string>
+    <string name="qt_group_network">Network</string>
+    <string name="qt_group_device">Device</string>
+    <string name="qt_group_sound">Sound &amp; interruptions</string>
+    <string name="qt_group_other">Other</string>
+    <string name="qt_group_apps">App shortcuts</string>
+    <string name="qt_hotspot">Hotspot</string>
+    <string name="qt_airplane">Airplane mode</string>
+    <string name="qt_mobile_data">Mobile data</string>
+    <string name="qt_flashlight">Flashlight</string>
+    <string name="qt_rotation">Rotation lock</string>
+    <string name="qt_battery_saver">Battery saver</string>
+    <string name="qt_sound_mode">Sound mode</string>
+    <string name="qt_sound_normal">Sound on</string>
+    <string name="qt_sound_vibrate">Vibrate</string>
+    <string name="qt_sound_silent">Silent</string>
+    <string name="qt_dnd">Do not disturb</string>
+    <string name="settings_quick_menu">Quick menu</string>
+    <string name="settings_quick_menu_sub">Tiles, order, app shortcuts</string>
+    <string name="qt_settings_help">Tiles appear in this order in the quick settings (Y). Select a tile to move or remove it.</string>
+    <string name="qt_add">Add tile</string>
+    <string name="qt_remove">Remove</string>
+    <string name="qt_reset">Reset to defaults</string>
+    <string name="qt_info_toggle">Switches directly</string>
+    <string name="qt_info_opens">Opens the Android setting</string>
 </resources>

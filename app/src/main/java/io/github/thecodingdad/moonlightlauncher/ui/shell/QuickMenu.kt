@@ -114,11 +114,14 @@ fun QuickMenu(
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             // Status and shortcuts as tiles: controllers, hosts, VPN, Wi-Fi, Bluetooth, Android settings.
-            StatusTiles(
-                onHost = onHost, onControllers = onControllers,
-                vpnAvailable = tunnels.isNotEmpty() && c.vpn.consentIntent() == null,
-                canWriteSettings = canWriteSettings,
-            )
+            // Configurable tiles (Settings -> Quick menu), at most two rows, scrolling sideways.
+            val tileIds by c.settings.settings.collectAsState(io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings())
+            QuickTileGrid(rememberQuickTiles(tileIds.quickTiles, onHost = onHost, onControllers = onControllers))
+            if (!canWriteSettings) {
+                LauncherButton(stringResource(R.string.qm_brightness_permission), icon = Icons.Filled.BrightnessMedium, onClick = {
+                    context.startActivity(Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:${context.packageName}")))
+                })
+            }
 
             SectionHeader(stringResource(R.string.qm_system))
             SliderRow(
@@ -138,127 +141,6 @@ fun QuickMenu(
                 )
             }
 
-        }
-    }
-}
-
-@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
-/** Controllers, hosts and VPN as small tiles in one row; colors as in the status bar. */
-@Composable
-private fun StatusTiles(onHost: (String) -> Unit, onControllers: () -> Unit, vpnAvailable: Boolean, canWriteSettings: Boolean) {
-    val context = LocalContext.current
-    val c = context.container
-    val colors = LauncherTheme.colors
-    val scope = rememberCoroutineScope()
-    val hosts by c.hosts.hosts.collectAsState()
-    val vpnState by c.vpn.state.collectAsState()
-    val controllers = io.github.thecodingdad.moonlightlauncher.ui.screens.settings.rememberControllers()
-    androidx.compose.foundation.layout.FlowRow(
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        StatusTile(
-            icon = Icons.Filled.SportsEsports,
-            label = if (controllers.isEmpty()) stringResource(R.string.qm_no_controller) else stringResource(R.string.qm_controllers, controllers.size),
-            tint = if (controllers.isEmpty()) colors.danger else colors.success,
-            onClick = onControllers,
-            initialFocus = true,
-        )
-        hosts.values.sortedBy { it.name }.forEach { host ->
-            StatusTile(
-                icon = Icons.Filled.Computer,
-                label = host.name,
-                tint = when {
-                    host.isStreaming -> colors.accent
-                    host.status == io.github.thecodingdad.moonlightlauncher.data.remote.HostStatus.ONLINE -> colors.success
-                    host.status == io.github.thecodingdad.moonlightlauncher.data.remote.HostStatus.OFFLINE -> colors.danger
-                    else -> colors.onSurfaceMuted
-                },
-                onClick = { onHost(host.uuid) },
-            )
-        }
-        if (vpnAvailable) {
-            val up = vpnState.status == io.github.thecodingdad.moonlightlauncher.vpn.VpnStatus.UP
-            StatusTile(
-                icon = Icons.Filled.VpnLock,
-                label = stringResource(if (up) R.string.qm_vpn_on else R.string.qm_vpn_off),
-                tint = if (up) colors.success else colors.onSurfaceMuted,
-                onClick = { scope.launch { c.vpn.toggle() } },
-            )
-        }
-        // Ask once for the permissions behind the Wi-Fi name and the Bluetooth device count.
-        var permissionRevision by remember { mutableIntStateOf(0) }
-        val permissionRequest = androidx.activity.compose.rememberLauncherForActivityResult(
-            androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions(),
-        ) { permissionRevision++ }
-        LaunchedEffect(Unit) {
-            val prefs = context.getSharedPreferences("launcher_ui", android.content.Context.MODE_PRIVATE)
-            val missing = missingConnectivityPermissions(context)
-            if (missing.isNotEmpty() && !prefs.getBoolean("connectivity_permissions_asked", false)) {
-                prefs.edit().putBoolean("connectivity_permissions_asked", true).apply()
-                permissionRequest.launch(missing.toTypedArray())
-            }
-        }
-        val wifi = rememberWifiState(permissionRevision)
-        val bluetooth = rememberBluetoothState(permissionRevision)
-        val system = rememberSystemStatus()
-        if (system.ethernet) StatusTile(
-            Icons.Filled.SettingsEthernet, stringResource(R.string.qm_lan), colors.success,
-            { context.startActivity(Intent(Settings.ACTION_WIRELESS_SETTINGS)) },
-        ) else StatusTile(
-            Icons.Filled.Wifi,
-            when {
-                !wifi.connected -> stringResource(R.string.qm_wifi)
-                wifi.ssid != null -> wifi.ssid
-                else -> stringResource(R.string.qm_connected)
-            },
-            if (wifi.connected) colors.success else colors.onSurfaceMuted,
-            { context.startActivity(Intent(Settings.Panel.ACTION_WIFI)) },
-        )
-        val btCount = bluetooth.connectedDevices
-        StatusTile(
-            Icons.Filled.Bluetooth,
-            when {
-                !bluetooth.enabled -> stringResource(R.string.qm_bluetooth_off)
-                btCount != null && btCount > 0 -> pluralStringResource(R.plurals.qm_bluetooth_devices, btCount, btCount)
-                else -> stringResource(R.string.qm_bluetooth)
-            },
-            if (btCount != null && btCount > 0) colors.success else colors.onSurfaceMuted,
-            { context.startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS)) },
-        )
-        if (!canWriteSettings) {
-            StatusTile(Icons.Filled.BrightnessMedium, stringResource(R.string.qm_brightness), colors.onSurfaceMuted, {
-                context.startActivity(Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:${context.packageName}")))
-            })
-        }
-        StatusTile(Icons.Filled.Settings, stringResource(R.string.qm_android), colors.onSurface, { context.startActivity(Intent(Settings.ACTION_SETTINGS)) })
-    }
-}
-
-@Composable
-private fun StatusTile(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: String,
-    tint: androidx.compose.ui.graphics.Color,
-    onClick: () -> Unit,
-    initialFocus: Boolean = false,
-) {
-    io.github.thecodingdad.moonlightlauncher.ui.components.FocusSurface(
-        onClick = onClick,
-        modifier = Modifier.width(140.dp).then(if (initialFocus) Modifier.restoreFocusIf(true) else Modifier),
-        color = LauncherTheme.colors.surfaceRaised,
-        focusScale = 1.05f,
-    ) {
-        Column(
-            Modifier.fillMaxWidth().padding(vertical = 14.dp, horizontal = 8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            androidx.compose.material3.Icon(icon, null, tint = tint, modifier = Modifier.size(30.dp))
-            Text(
-                label, style = MaterialTheme.typography.labelMedium, color = LauncherTheme.colors.onSurface,
-                maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 6.dp),
-            )
         }
     }
 }

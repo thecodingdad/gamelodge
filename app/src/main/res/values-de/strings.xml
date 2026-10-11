@@ -600,4 +600,31 @@
     <string name="filter_field_played">Gespielt</string>
     <string name="filter_field_review">Bitte prüfen</string>
     <string name="action_done">Fertig</string>
+
+    <!-- Quick tiles -->
+    <string name="qt_group_launcher">Launcher</string>
+    <string name="qt_group_network">Netzwerk</string>
+    <string name="qt_group_device">Gerät</string>
+    <string name="qt_group_sound">Ton &amp; Störungen</string>
+    <string name="qt_group_other">Sonstiges</string>
+    <string name="qt_group_apps">App-Verknüpfungen</string>
+    <string name="qt_hotspot">Hotspot</string>
+    <string name="qt_airplane">Flugmodus</string>
+    <string name="qt_mobile_data">Mobile Daten</string>
+    <string name="qt_flashlight">Taschenlampe</string>
+    <string name="qt_rotation">Drehung sperren</string>
+    <string name="qt_battery_saver">Energiesparen</string>
+    <string name="qt_sound_mode">Tonmodus</string>
+    <string name="qt_sound_normal">Ton an</string>
+    <string name="qt_sound_vibrate">Vibration</string>
+    <string name="qt_sound_silent">Lautlos</string>
+    <string name="qt_dnd">Nicht stören</string>
+    <string name="settings_quick_menu">Schnellmenü</string>
+    <string name="settings_quick_menu_sub">Kacheln, Reihenfolge, App-Verknüpfungen</string>
+    <string name="qt_settings_help">Die Kacheln erscheinen in dieser Reihenfolge in den Schnelleinstellungen (Y). Kachel auswählen zum Verschieben oder Entfernen.</string>
+    <string name="qt_add">Kachel hinzufügen</string>
+    <string name="qt_remove">Entfernen</string>
+    <string name="qt_reset">Standard wiederherstellen</string>
+    <string name="qt_info_toggle">Schaltet direkt</string>
+    <string name="qt_info_opens">Öffnet die Android-Einstellung</string>
 </resources>
