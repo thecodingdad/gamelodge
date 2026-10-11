@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.VpnLock
 import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.core.os.LocaleListCompat
 import io.github.thecodingdad.moonlightlauncher.BuildConfig
 import io.github.thecodingdad.moonlightlauncher.R
@@ -57,7 +58,7 @@ fun SettingsHome(open: (SettingsPageId) -> Unit, isFirstVisit: Boolean, openCont
         NavRow(stringResource(R.string.settings_sounds), { open(SettingsPageId.SOUNDS) }, stringResource(R.string.settings_sounds_sub), Icons.Filled.VolumeUp)
 
         SectionHeader(stringResource(R.string.settings_group_smart_home))
-        NavRow(stringResource(R.string.settings_home_assistant), { open(SettingsPageId.HOME_ASSISTANT) }, stringResource(R.string.settings_home_assistant_sub), Icons.Filled.Widgets)
+        NavRow(stringResource(R.string.settings_home_assistant), { open(SettingsPageId.HOME_ASSISTANT) }, stringResource(R.string.settings_home_assistant_sub), androidx.compose.ui.graphics.vector.ImageVector.vectorResource(R.drawable.ic_home_assistant))
 
         SectionHeader(stringResource(R.string.settings_group_system))
         NavRow(stringResource(R.string.settings_launcher), { open(SettingsPageId.LAUNCHER) }, stringResource(R.string.settings_launcher_sub), Icons.Filled.Home)
