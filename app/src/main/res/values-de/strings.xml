@@ -656,4 +656,9 @@
     <string name="combo_off">Aus</string>
     <string name="combo_global_value">Global (%1$s)</string>
     <string name="combo_recording_help_controller">Tasten an diesem Controller gemeinsam gedrückt halten, dann loslassen. Bricht nach 10 Sekunden ab.</string>
+
+    <!-- Odin -->
+    <string name="odin_mapping_section">Odin Mapping</string>
+    <string name="odin_mapping_keep">Nicht von Odin Mapping übernehmen</string>
+    <string name="odin_mapping_keep_sub">Odin ersetzt sonst den ersten externen Controller durch eine Kopie ohne Akku und Vibration. Gilt für alle Geräte namens „%1$s“ (eventuell auch die eingebaute Steuerung) und erst nach erneutem Verbinden.</string>
 </resources>

@@ -658,4 +658,9 @@
     <string name="combo_off">Off</string>
     <string name="combo_global_value">Global (%1$s)</string>
     <string name="combo_recording_help_controller">Hold the buttons together on this controller, then release them. Cancels after 10 seconds.</string>
+
+    <!-- Odin -->
+    <string name="odin_mapping_section">Odin Mapping</string>
+    <string name="odin_mapping_keep">Keep away from Odin Mapping</string>
+    <string name="odin_mapping_keep_sub">Odin otherwise replaces the first external controller with a copy without battery and rumble. Applies to every device named \"%1$s\" (possibly the built-in controls too) and after reconnecting the controller.</string>
 </resources>

@@ -27,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import io.github.thecodingdad.moonlightlauncher.R
+import kotlinx.coroutines.launch
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 
 data class ControllerInfo(
@@ -164,6 +165,7 @@ fun ControllerDetailDialog(controller: ControllerInfo?, onDismiss: () -> Unit) {
             InfoRow(stringResource(R.string.controller_info_ids), "%04x:%04x".format(c.vendorId, c.productId))
             InfoRow(stringResource(R.string.controller_info_vibration), stringResource(if (c.canVibrate) R.string.yes else R.string.no))
             ControllerOverrideRows(c)
+            if (c.external) OdinMappingRow(c)
             Text(
                 stringResource(R.string.controller_info_player_order),
                 style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted,
@@ -248,5 +250,32 @@ private fun ControllerOverrideRows(c: ControllerInfo) {
             save { if (isHome) it.copy(comboHome = list) else it.copy(comboQuickMenu = list) }
         },
         onDismiss = { editing = null },
+    )
+}
+
+/**
+ * AYN Odin only: keep Odin Mapping from taking over this controller (it otherwise replaces the
+ * first external pad with a copy without battery and rumble). Matched by name by Odin.
+ */
+@Composable
+private fun OdinMappingRow(c: ControllerInfo) {
+    val context = LocalContext.current
+    val odin = remember { io.github.thecodingdad.moonlightlauncher.system.OdinMapping(context.applicationContext) }
+    if (!remember { odin.isAvailable }) return
+    var blacklist by remember { mutableStateOf<List<String>?>(null) }
+    androidx.compose.runtime.LaunchedEffect(Unit) { blacklist = odin.blacklist() }
+    val list = blacklist ?: return
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    SectionHeader(stringResource(R.string.odin_mapping_section))
+    SwitchRow(
+        stringResource(R.string.odin_mapping_keep),
+        c.name in list,
+        { on ->
+            scope.launch {
+                odin.setBlacklisted(c.name, on)
+                blacklist = odin.blacklist()
+            }
+        },
+        subtitle = stringResource(R.string.odin_mapping_keep_sub, c.name),
     )
 }
