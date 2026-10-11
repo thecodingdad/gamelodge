@@ -29,7 +29,6 @@ import androidx.compose.material.icons.filled.CollectionsBookmark
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.PlayArrow
@@ -262,9 +261,8 @@ fun EntryContextMenu(
     onKind: (LibraryEntry, ItemKind) -> Unit,
     onHide: (LibraryEntry) -> Unit,
     onCollections: (LibraryEntry) -> Unit,
-    onPlatform: (LibraryEntry) -> Unit,
     onEditMetadata: (LibraryEntry) -> Unit,
-    /** Opened from the game's own detail page: its buttons already cover play, favorite and platform. */
+    /** Opened from the game's own detail page: its buttons already cover play and favorite. */
     inDetail: Boolean = false,
 ) {
     Modal(
@@ -300,11 +298,6 @@ fun EntryContextMenu(
                 LauncherButton(stringResource(R.string.action_mark_game), act { onKind(e, ItemKind.GAME) }, Modifier.fillMaxWidth(), Icons.Filled.SportsEsports)
             }
             LauncherButton(stringResource(R.string.action_collections), act { onCollections(e) }, Modifier.fillMaxWidth(), Icons.Filled.CollectionsBookmark)
-            if (!inDetail) {
-                LauncherButton(
-                    stringResource(R.string.action_platform, e.item.platform ?: "–"), act { onPlatform(e) }, Modifier.fillMaxWidth(), Icons.Filled.Devices,
-                )
-            }
             LauncherButton(stringResource(R.string.action_hide), act { onHide(e) }, Modifier.fillMaxWidth(), Icons.Filled.VisibilityOff)
         }
     }

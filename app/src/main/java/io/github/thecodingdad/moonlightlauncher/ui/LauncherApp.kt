@@ -339,7 +339,6 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                     onKind = vm::setKind,
                     onHide = { vm.setHidden(it, true) },
                     onCollections = { collectionsFor = it },
-                    onPlatform = { platformFor = it },
                     onEditMetadata = { metaEditorFor = it.item.id },
                     inDetail = detailOpenFor == entryActions.contextMenuFor?.item?.id,
                 )

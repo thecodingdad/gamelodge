@@ -434,7 +434,6 @@
     <string name="filter_delete">Hold to delete</string>
     <string name="move_up">Move up</string>
     <string name="move_down">Move down</string>
-    <string name="action_platform">Platform: %s</string>
     <string name="platform_title">Platform</string>
     <string name="platform_current">Current: %1$s (%2$s)</string>
     <string name="platform_source_manual">set manually</string>
