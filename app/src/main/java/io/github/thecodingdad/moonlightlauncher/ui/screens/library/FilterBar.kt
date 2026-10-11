@@ -1,5 +1,7 @@
 package io.github.thecodingdad.moonlightlauncher.ui.screens.library
 
+import androidx.compose.foundation.gestures.animateScrollBy
+import kotlinx.coroutines.flow.first
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -56,12 +58,27 @@ fun FilterBar(
     val selectedIndex = filters.indexOfFirst { it.key == selectedKey || (selectedKey == null && it.builtin == BuiltinFilter.ALL) }
         .takeIf { it >= 0 }?.let { if (search.isNotEmpty()) it + 1 else it }
     // Keep the active chip visible, e.g. after switching with LT/RT.
-    LaunchedEffect(selectedIndex) {
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    LaunchedEffect(selectedIndex, filters.size, search.isNotEmpty()) {
         val index = selectedIndex ?: return@LaunchedEffect
+        // Wait for a layout that contains the chips (e.g. right after the list changed).
+        androidx.compose.runtime.snapshotFlow { listState.layoutInfo.totalItemsCount > index }.first { it }
+        // The first chip: back to the very start (not just "visible with margin").
+        if (index == 0) { listState.animateScrollToItem(0); return@LaunchedEffect }
+        if (listState.layoutInfo.visibleItemsInfo.none { it.index == index }) listState.scrollToItem(index)
+        // Exactly as far as needed for the whole chip plus a little margin to show it isn't the edge.
+        val margin = with(density) { 24.dp.toPx() }
         val info = listState.layoutInfo
-        val item = info.visibleItemsInfo.firstOrNull { it.index == index }
-        val fullyVisible = item != null && item.offset >= info.viewportStartOffset && item.offset + item.size <= info.viewportEndOffset
-        if (!fullyVisible) listState.animateScrollToItem((index - 1).coerceAtLeast(0))
+        val item = info.visibleItemsInfo.firstOrNull { it.index == index } ?: return@LaunchedEffect
+        val start = info.viewportStartOffset + margin
+        val end = info.viewportEndOffset - margin
+        val delta = when {
+            item.size > end - start -> item.offset - start
+            item.offset < start -> item.offset - start
+            item.offset + item.size > end -> item.offset + item.size - end
+            else -> 0f
+        }
+        if (delta != 0f) listState.animateScrollBy(delta.toFloat())
     }
     LaunchedEffect(focusRequests) {
         if (focusRequests == 0) return@LaunchedEffect
