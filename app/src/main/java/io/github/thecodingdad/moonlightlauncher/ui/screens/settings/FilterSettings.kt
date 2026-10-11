@@ -32,6 +32,8 @@ import androidx.compose.ui.unit.dp
 import io.github.thecodingdad.moonlightlauncher.R
 import androidx.compose.material.icons.filled.Add
 import io.github.thecodingdad.moonlightlauncher.data.library.FilterField
+import io.github.thecodingdad.moonlightlauncher.data.library.FieldSection
+import io.github.thecodingdad.moonlightlauncher.data.library.FieldType
 import io.github.thecodingdad.moonlightlauncher.data.library.FilterCondition
 import io.github.thecodingdad.moonlightlauncher.data.db.FilterEntity
 import io.github.thecodingdad.moonlightlauncher.data.db.FilterKind
@@ -171,22 +173,22 @@ private fun FilterEditorDialog(
                     SectionHeader(stringResource(R.string.filter_conditions))
                     Text(stringResource(R.string.filter_conditions_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
                     val labelFor = conditionValueLabel(entries, hostNames, vm)
+                    // Playnite style: field name as title, the chosen values below.
                     current.conditions.forEachIndexed { index, condition ->
                         NavRow(
-                            title = fieldLabel(condition.field) + "  " + stringResource(if (condition.negate) R.string.filter_is_not else R.string.filter_is),
+                            title = conditionTitle(condition),
                             onClick = { editingCondition = index },
-                            subtitle = if (condition.field.boolean) null else condition.values.joinToString(", ") { labelFor(condition.field, it) }
-                                .ifEmpty { stringResource(R.string.filter_condition_no_values) },
+                            subtitle = conditionValues(condition, labelFor),
                             icon = Icons.Filled.FilterAlt,
                         )
                     }
-                    LauncherButton(
-                        stringResource(R.string.filter_condition_add), icon = Icons.Filled.Add,
-                        onClick = {
-                            saveConditions(current.conditions + FilterCondition(FilterField.PLATFORM))
-                            editingCondition = current.conditions.size
-                        },
-                    )
+                    var pickingField by remember(f.id) { mutableStateOf(false) }
+                    LauncherButton(stringResource(R.string.filter_condition_add), icon = Icons.Filled.Add, onClick = { pickingField = true })
+                    FieldPickerDialog(pickingField, onDismiss = { pickingField = false }) { field ->
+                        pickingField = false
+                        saveConditions(current.conditions + FilterCondition(field, if (field.boolean) setOf("true") else emptySet()))
+                        editingCondition = current.conditions.size
+                    }
                     ChoiceRow(
                         stringResource(R.string.filter_group_by), listOf<GroupBy?>(null) + GroupBy.entries, current.groupBy,
                         label = { groupByLabel(it) },
@@ -267,11 +269,18 @@ private fun ValuePicker(title: String, values: List<String>, selected: Set<Strin
 private fun groupByLabel(g: GroupBy?): String = stringResource(
     when (g) {
         null -> R.string.filter_group_none
-        GroupBy.PLATFORM -> R.string.filter_platforms
-        GroupBy.GENRE -> R.string.filter_genres
-        GroupBy.CATEGORY -> R.string.filter_categories
-        GroupBy.SOURCE -> R.string.filter_sources
-        GroupBy.HOST -> R.string.filter_hosts
+        GroupBy.PLATFORM -> R.string.filter_field_platform
+        GroupBy.GENRE -> R.string.filter_field_genre
+        GroupBy.CATEGORY -> R.string.filter_field_category
+        GroupBy.SOURCE -> R.string.filter_field_source
+        GroupBy.HOST -> R.string.filter_field_host
+        GroupBy.LIBRARY -> R.string.filter_field_library
+        GroupBy.DEVELOPER -> R.string.filter_field_developer
+        GroupBy.PUBLISHER -> R.string.filter_field_publisher
+        GroupBy.SERIES -> R.string.filter_field_series
+        GroupBy.FEATURE -> R.string.filter_field_feature
+        GroupBy.AGE_RATING -> R.string.filter_field_age_rating
+        GroupBy.RELEASE_YEAR -> R.string.filter_field_release_year
     },
 )
 
@@ -287,26 +296,30 @@ private fun sortLabel(sort: LibrarySort?): String = stringResource(
 )
 
 @Composable
-private fun triLabel(v: Boolean?): String = stringResource(
-    when (v) {
-        null -> R.string.filter_any
-        true -> R.string.yes
-        false -> R.string.no
-    },
-)
-
-@Composable
 private fun fieldLabel(field: FilterField): String = stringResource(
     when (field) {
+        FilterField.NAME -> R.string.filter_field_name
         FilterField.PLATFORM -> R.string.filter_field_platform
-        FilterField.GENRE -> R.string.filter_field_genre
-        FilterField.CATEGORY -> R.string.filter_field_category
         FilterField.SOURCE -> R.string.filter_field_source
+        FilterField.LIBRARY -> R.string.filter_field_library
+        FilterField.CATEGORY -> R.string.filter_field_category
         FilterField.GROUP -> R.string.filter_field_group
-        FilterField.FAVORITE -> R.string.filter_field_favorite
+        FilterField.INSTALLED -> R.string.filter_field_installed
+        FilterField.GENRE -> R.string.filter_field_genre
+        FilterField.DEVELOPER -> R.string.filter_field_developer
+        FilterField.PUBLISHER -> R.string.filter_field_publisher
+        FilterField.SERIES -> R.string.filter_field_series
+        FilterField.FEATURE -> R.string.filter_field_feature
+        FilterField.AGE_RATING -> R.string.filter_field_age_rating
+        FilterField.RELEASE_YEAR -> R.string.filter_field_release_year
+        FilterField.RATING -> R.string.filter_field_rating
         FilterField.PLAYED -> R.string.filter_field_played
-        FilterField.REVIEW -> R.string.filter_field_review
+        FilterField.LAST_PLAYED -> R.string.filter_field_last_played
+        FilterField.PLAYTIME -> R.string.filter_field_playtime
+        FilterField.ADDED -> R.string.filter_field_added
+        FilterField.FAVORITE -> R.string.filter_field_favorite
         FilterField.HIDDEN -> R.string.filter_field_hidden
+        FilterField.REVIEW -> R.string.filter_field_review
     },
 )
 
@@ -320,17 +333,18 @@ private fun conditionValueLabel(
     val localLabel = stringResource(R.string.filter_local)
     val collections by vm.collections.collectAsState()
     val groupNames = collections.associate { (c, _) -> c.id to c.name }
+    val bucketLabels = FilterField.entries.flatMap { f -> f.buckets.map { (f to it) to bucketLabel(f, it) } }.toMap()
     return { field, value ->
         when (field) {
             FilterField.SOURCE -> if (value == FilterRules.SOURCE_LOCAL) localLabel else hostNames[value]
                 ?: entries.firstNotNullOfOrNull { e -> e.remoteTargets.firstOrNull { t -> t.hostUuid == value }?.hostName } ?: value
             FilterField.GROUP -> groupNames[value] ?: value
-            else -> value
+            else -> if (field.type == FieldType.BUCKET) bucketLabels[field to value] ?: value else value
         }
     }
 }
 
-/** Edit one condition: field, "is / is not" and its values. */
+/** Edit one condition: include / exclude and its values (yes / no for switches). */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ConditionDialog(
@@ -342,39 +356,58 @@ private fun ConditionDialog(
     onDelete: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    Modal(visible = condition != null, onDismiss = onDismiss, title = stringResource(R.string.filter_condition), maxWidth = 760.dp) {
+    val keyboard = LocalKeyboardController.current
+    Modal(visible = condition != null, onDismiss = onDismiss, title = condition?.let { fieldLabel(it.field) }, maxWidth = 760.dp) {
         val c = condition ?: return@Modal
+        val field = c.field
         Column(
             Modifier.heightIn(max = 560.dp).controllerScroll(),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            ChoiceRow(
-                stringResource(R.string.filter_field), FilterField.entries, c.field,
-                label = { fieldLabel(it) },
-                onSelect = { onChange(FilterCondition(it, if (it.boolean) setOf("true") else emptySet(), c.negate)) },
-                initialFocus = true,
-            )
-            ChoiceRow(
-                stringResource(R.string.filter_operator), listOf(false, true), c.negate,
-                label = { stringResource(if (it) R.string.filter_is_not else R.string.filter_is) },
-                onSelect = { onChange(c.copy(negate = it)) },
-            )
-            if (!c.field.boolean) {
-                val options = when (c.field) {
-                    FilterField.PLATFORM -> FilterEngine.allValues(entries, GroupBy.PLATFORM)
-                    FilterField.GENRE -> FilterEngine.allValues(entries, GroupBy.GENRE)
-                    FilterField.CATEGORY -> FilterEngine.allValues(entries, GroupBy.CATEGORY)
-                    FilterField.SOURCE -> FilterEngine.allValues(entries, GroupBy.SOURCE)
-                    FilterField.GROUP -> groupIds
-                    else -> emptyList()
+            if (field.boolean) {
+                ChoiceRow(
+                    fieldLabel(field), listOf(false, true), c.negate,
+                    label = { booleanLabel(field, !it) },
+                    onSelect = { onChange(c.copy(negate = it)) },
+                    initialFocus = true,
+                )
+            } else {
+                ChoiceRow(
+                    stringResource(R.string.filter_mode), listOf(false, true), c.negate,
+                    label = { stringResource(if (it) R.string.filter_mode_exclude else R.string.filter_mode_include) },
+                    onSelect = { onChange(c.copy(negate = it)) },
+                    subtitle = stringResource(if (c.negate) R.string.filter_mode_exclude_sub else R.string.filter_mode_include_sub),
+                    initialFocus = true,
+                )
+                if (field.multiValue || field.type == FieldType.TEXT) {
+                    SwitchRow(
+                        stringResource(R.string.filter_match_all), c.matchAll, { onChange(c.copy(matchAll = it)) },
+                        subtitle = stringResource(R.string.filter_match_all_sub),
+                    )
                 }
-                Text(stringResource(R.string.filter_values_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
-                if (options.isEmpty()) {
-                    Text(stringResource(R.string.filter_values_none), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+                val options = when (field.type) {
+                    FieldType.BUCKET -> field.buckets
+                    FieldType.TEXT -> emptyList()
+                    else -> if (field == FilterField.GROUP) groupIds
+                    else entries.flatMap { FilterEngine.values(it, field) }.distinct().let { list ->
+                        if (field == FilterField.RELEASE_YEAR) list.sortedDescending() else list.sortedBy { it.lowercase() }
+                    }
+                }
+                if (field.type == FieldType.TEXT) {
+                    Text(stringResource(R.string.filter_name_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+                    val title = stringResource(R.string.filter_name_add)
+                    LauncherButton(title, icon = Icons.Filled.Add, onClick = {
+                        keyboard.open(title, "") { text -> text.trim().takeIf { it.isNotEmpty() }?.let { onChange(c.copy(values = c.values + it)) } }
+                    })
+                } else {
+                    Text(stringResource(R.string.filter_values_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+                    if (options.isEmpty()) {
+                        Text(stringResource(R.string.filter_values_none), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+                    }
                 }
                 FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     (options + c.values.filter { it !in options }).forEach { v ->
-                        Chip(labelFor(c.field, v), selected = v in c.values, onClick = { onChange(c.copy(values = c.values.toggle(v))) })
+                        Chip(labelFor(field, v), selected = v in c.values, onClick = { onChange(c.copy(values = c.values.toggle(v))) })
                     }
                 }
             }
@@ -384,4 +417,82 @@ private fun ConditionDialog(
             }
         }
     }
+}
+
+/** Picks the field of a new condition, sorted into sections like Playnite's filter panel. */
+@Composable
+private fun FieldPickerDialog(visible: Boolean, onDismiss: () -> Unit, onPick: (FilterField) -> Unit) {
+    Modal(visible = visible, onDismiss = onDismiss, title = stringResource(R.string.filter_condition_add), maxWidth = 640.dp) {
+        Column(Modifier.heightIn(max = 600.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            FieldSection.entries.forEachIndexed { s, section ->
+                SectionHeader(
+                    stringResource(
+                        when (section) {
+                            FieldSection.GAME -> R.string.filter_section_game
+                            FieldSection.METADATA -> R.string.filter_section_metadata
+                            FieldSection.ACTIVITY -> R.string.filter_section_activity
+                            FieldSection.STATUS -> R.string.filter_section_status
+                        },
+                    ),
+                )
+                FilterField.entries.filter { it.section == section }.forEachIndexed { i, field ->
+                    NavRow(fieldLabel(field), { onPick(field) }, initialFocus = s == 0 && i == 0)
+                }
+            }
+        }
+    }
+}
+
+/** "Plattform" or "Plattform (nicht)"; switches just show their name. */
+@Composable
+private fun conditionTitle(c: FilterCondition): String =
+    if (!c.field.boolean && c.negate) stringResource(R.string.filter_field_negated, fieldLabel(c.field)) else fieldLabel(c.field)
+
+/** "PC, Nintendo Switch" (or "… und …" when all must match), "Ja" / "Nie" for switches. */
+@Composable
+private fun conditionValues(c: FilterCondition, labelFor: (FilterField, String) -> String): String {
+    if (c.field.boolean) return booleanLabel(c.field, !c.negate)
+    if (c.values.isEmpty()) return stringResource(R.string.filter_condition_no_values)
+    val separator = if (c.matchAll) stringResource(R.string.filter_values_and) else ", "
+    val texts = c.values.map { labelFor(c.field, it) }
+    return if (c.field.type == FieldType.TEXT) texts.joinToString(separator) { "„$it“" } else texts.joinToString(separator)
+}
+
+@Composable
+private fun booleanLabel(field: FilterField, yes: Boolean): String = stringResource(
+    when {
+        yes -> R.string.yes
+        field == FilterField.PLAYED -> R.string.filter_never
+        else -> R.string.no
+    },
+)
+
+@Composable
+private fun bucketLabel(field: FilterField, key: String): String = when (field) {
+    FilterField.PLAYTIME -> stringResource(
+        when (key) {
+            "none" -> R.string.filter_playtime_none
+            "lt1" -> R.string.filter_playtime_lt1
+            "1to10" -> R.string.filter_playtime_1to10
+            "10to100" -> R.string.filter_playtime_10to100
+            "100to500" -> R.string.filter_playtime_100to500
+            else -> R.string.filter_playtime_gt500
+        },
+    )
+    FilterField.RATING -> when (key) {
+        "lt60" -> stringResource(R.string.filter_rating_lt60)
+        "none" -> stringResource(R.string.filter_rating_none)
+        else -> stringResource(R.string.filter_rating_from, key)
+    }
+    else -> stringResource(
+        when (key) {
+            "today" -> R.string.filter_period_today
+            "yesterday" -> R.string.filter_period_yesterday
+            "week" -> R.string.filter_period_week
+            "month" -> R.string.filter_period_month
+            "year" -> R.string.filter_period_year
+            "older" -> R.string.filter_period_older
+            else -> R.string.filter_never
+        },
+    )
 }

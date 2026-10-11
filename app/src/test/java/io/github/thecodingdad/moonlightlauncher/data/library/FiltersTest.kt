@@ -141,4 +141,18 @@ class FiltersTest {
         val r = FilterEngine.apply(entries, rules)
         assertEquals(listOf("a", "b"), r.map { it.item.id })
     }
+
+    @Test
+    fun `name, multi-value and bucket conditions`() {
+        val e = entry("Super Mario Odyssey", "Nintendo Switch", "Platform, Adventure", favorite = true)
+        assertTrue(FilterEngine.matches(e, FilterCondition(FilterField.NAME, setOf("mario"))))
+        assertFalse(FilterEngine.matches(e, FilterCondition(FilterField.NAME, setOf("zelda"))))
+        val genres = FilterCondition(FilterField.GENRE, setOf("Platform", "Shooter"))
+        assertTrue(FilterEngine.matches(e, genres))
+        assertFalse(FilterEngine.matches(e, genres.copy(matchAll = true)))
+        assertTrue(FilterEngine.matches(e, FilterCondition(FilterField.PLAYTIME, setOf("none"))))
+        assertTrue(FilterEngine.matches(e, FilterCondition(FilterField.LAST_PLAYED, setOf("never"))))
+        assertTrue(FilterEngine.matches(e, FilterCondition(FilterField.RATING, setOf("none"))))
+        assertFalse(FilterEngine.matches(e, FilterCondition(FilterField.INSTALLED, setOf("true"))))
+    }
 }

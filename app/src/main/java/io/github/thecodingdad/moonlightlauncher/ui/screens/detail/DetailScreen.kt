@@ -247,7 +247,11 @@ private fun InfoBlock(entry: LibraryEntry, sessions: List<PlaySessionEntity>) {
     val colors = LauncherTheme.colors
     val rows = buildList {
         entry.item.developer?.let { add(stringResource(R.string.detail_developer) to it) }
+        entry.item.publisher?.takeIf { it != entry.item.developer }?.let { add(stringResource(R.string.filter_field_publisher) to it) }
+        entry.item.series?.let { add(stringResource(R.string.filter_field_series) to it) }
         entry.item.genres?.let { add(stringResource(R.string.detail_genres) to it) }
+        entry.item.features?.let { add(stringResource(R.string.filter_field_feature) to it) }
+        io.github.thecodingdad.moonlightlauncher.metadata.AgeRatings.display(entry.item.ageRatings)?.let { add(stringResource(R.string.filter_field_age_rating) to it) }
         entry.item.rating?.let { add(stringResource(R.string.detail_rating) to "%.0f / 100".format(it)) }
         add(stringResource(R.string.detail_available) to entry.targets.map { targetLabelText(it) }.joinToString(", "))
         entry.item.lastPlayedAt?.let { add(stringResource(R.string.detail_last_played) to DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(it))) }

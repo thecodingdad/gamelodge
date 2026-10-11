@@ -4,6 +4,7 @@ import io.github.thecodingdad.moonlightlauncher.data.db.ItemKind
 import io.github.thecodingdad.moonlightlauncher.data.db.LauncherDatabase
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryItemEntity
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry
+import io.github.thecodingdad.moonlightlauncher.data.db.MetaField
 import io.github.thecodingdad.moonlightlauncher.data.db.MetadataState
 import io.github.thecodingdad.moonlightlauncher.data.db.PlatformSource
 import io.github.thecodingdad.moonlightlauncher.data.library.PlatformResolver
@@ -89,6 +90,7 @@ class MetadataService(
         scope.launch(Dispatchers.IO) {
             delay(10_000)
             runCatching { backfillPlatforms() }.onFailure { Log.w("Platform backfill failed", it) }
+            runCatching { backfillDetails() }.onFailure { Log.w("Metadata details backfill failed", it) }
         }
     }
 
@@ -105,6 +107,21 @@ class MetadataService(
                 if (PlatformResolver.mayReplace(entry.item, PlatformSource.IGDB, platform)) {
                     dao.setPlatform(entry.item.id, platform, PlatformSource.IGDB)
                 }
+            }
+            delay(300)
+        }
+    }
+
+    /** Matches from before publisher, series, features and age ratings were stored. */
+    private suspend fun backfillDetails() {
+        if (!igdb.isConfigured) return
+        val items = dao.observeAll().first().map { it.item }.filter { it.igdbId != null && it.metadataVersion < 1 }.associateBy { it.igdbId!! }
+        items.keys.chunked(100).forEach { ids ->
+            igdb.details(ids).forEach { game ->
+                val item = items[game.id] ?: return@forEach
+                // Only the new fields: everything else may have been chosen differently since.
+                val fresh = dao.getItem(item.id) ?: return@forEach
+                dao.upsertItem(fresh.withIgdbDetails(game))
             }
             delay(300)
         }
@@ -245,16 +262,68 @@ class MetadataService(
         dao.getItem(itemId)?.let { dao.upsertItem(it.copy(metadataState = MetadataState.LOCKED)) }
     }
 
-    private fun LibraryItemEntity.withIgdb(game: IgdbGame) = copy(
-        igdbId = game.id,
-        description = game.summary,
-        genres = game.genres.joinToString(", ") { it.name }.ifEmpty { null },
-        developer = game.developer,
-        releaseYear = game.releaseYear,
-        rating = game.total_rating?.toFloat(),
-        coverUrl = coverUrl ?: game.coverUrl,
-        heroUrl = heroUrl ?: game.heroUrl,
-    )
+    /** IGDB data for every field not edited by hand. */
+    private fun LibraryItemEntity.withIgdb(game: IgdbGame): LibraryItemEntity {
+        val m = manual
+        return copy(
+            igdbId = game.id,
+            description = if (MetaField.DESCRIPTION in m) description else game.summary,
+            genres = if (MetaField.GENRES in m) genres else game.genres.joinToString(", ") { it.name }.ifEmpty { null },
+            developer = if (MetaField.DEVELOPER in m) developer else game.developer,
+            releaseYear = if (MetaField.RELEASE in m) releaseYear else game.releaseYear,
+            releaseDate = if (MetaField.RELEASE in m) releaseDate else game.releaseMillis,
+            rating = if (MetaField.RATING in m) rating else game.total_rating?.toFloat(),
+            coverUrl = coverUrl ?: game.coverUrl,
+            heroUrl = heroUrl ?: game.heroUrl,
+        ).withIgdbDetails(game)
+    }
+
+    /** The fields added in schema v3 (publisher, series, features, age ratings). */
+    private fun LibraryItemEntity.withIgdbDetails(game: IgdbGame): LibraryItemEntity {
+        val m = manual
+        return copy(
+            publisher = if (MetaField.PUBLISHER in m) publisher else game.publisher,
+            series = if (MetaField.SERIES in m) series else game.series,
+            features = if (MetaField.FEATURES in m) features else game.features,
+            ageRatings = if (MetaField.AGE_RATING in m) ageRatings else game.ageRatings,
+            releaseDate = if (MetaField.RELEASE in m) releaseDate else releaseDate ?: game.releaseMillis,
+            metadataVersion = 1,
+        )
+    }
+
+    /** Hand edit of one item: [transform] sets the value(s), [field] becomes protected. */
+    suspend fun edit(itemId: String, field: MetaField?, transform: (LibraryItemEntity) -> LibraryItemEntity) = withContext(Dispatchers.IO) {
+        val item = dao.getItem(itemId) ?: return@withContext
+        val edited = transform(item)
+        val fields = if (field == null) edited.manual else edited.manual + field
+        dao.upsertItem(edited.copy(manualFields = fields.joinToString(",") { it.name }.ifEmpty { null }))
+    }
+
+    /** Drops a hand edit: the field follows IGDB again (fetched right away when matched). */
+    suspend fun resetField(itemId: String, field: MetaField) = withContext(Dispatchers.IO) {
+        val item = dao.getItem(itemId) ?: return@withContext
+        val unlocked = item.copy(manualFields = (item.manual - field).joinToString(",") { it.name }.ifEmpty { null })
+        val game = item.igdbId?.takeIf { igdb.isConfigured }?.let { runCatching { igdb.byId(it) }.getOrNull() }
+        val restored = when {
+            // The name back to the one the source (app / host) reports.
+            field == MetaField.TITLE -> unlocked.copy(title = dao.getTargetsForItem(itemId).firstOrNull()?.name ?: item.title)
+            game != null -> unlocked.withIgdb(game)
+            // No IGDB match (or offline): nothing to restore, the field becomes empty.
+            else -> when (field) {
+                MetaField.DESCRIPTION -> unlocked.copy(description = null)
+                MetaField.GENRES -> unlocked.copy(genres = null)
+                MetaField.DEVELOPER -> unlocked.copy(developer = null)
+                MetaField.PUBLISHER -> unlocked.copy(publisher = null)
+                MetaField.SERIES -> unlocked.copy(series = null)
+                MetaField.FEATURES -> unlocked.copy(features = null)
+                MetaField.RELEASE -> unlocked.copy(releaseDate = null, releaseYear = null)
+                MetaField.RATING -> unlocked.copy(rating = null)
+                MetaField.AGE_RATING -> unlocked.copy(ageRatings = null)
+                MetaField.TITLE -> unlocked
+            }
+        }
+        dao.upsertItem(restored)
+    }
 
     private fun LibraryItemEntity.withSgdbArtwork(gameId: Long): LibraryItemEntity {
         val grid = sgdb.assets(gameId, SgdbAssetType.GRID).firstOrNull { it.height > it.width }
@@ -276,9 +345,22 @@ class MetadataService(
         )
     }
 
-    private fun LibraryItemEntity.clearedMetadata() = copy(
-        metadataState = MetadataState.NONE, matchConfidence = 0f, igdbId = null, sgdbId = null,
-        description = null, genres = null, developer = null, releaseYear = null, rating = null,
-        coverUrl = null, heroUrl = null, logoUrl = null, iconUrl = null, animatedCoverUrl = null, animatedHeroUrl = null,
-    )
+    /** Forgets the automatic match; hand-edited fields stay. */
+    private fun LibraryItemEntity.clearedMetadata(): LibraryItemEntity {
+        val m = manual
+        return copy(
+            metadataState = MetadataState.NONE, matchConfidence = 0f, igdbId = null, sgdbId = null, metadataVersion = 0,
+            description = description.takeIf { MetaField.DESCRIPTION in m },
+            genres = genres.takeIf { MetaField.GENRES in m },
+            developer = developer.takeIf { MetaField.DEVELOPER in m },
+            publisher = publisher.takeIf { MetaField.PUBLISHER in m },
+            series = series.takeIf { MetaField.SERIES in m },
+            features = features.takeIf { MetaField.FEATURES in m },
+            ageRatings = ageRatings.takeIf { MetaField.AGE_RATING in m },
+            releaseYear = releaseYear.takeIf { MetaField.RELEASE in m },
+            releaseDate = releaseDate.takeIf { MetaField.RELEASE in m },
+            rating = rating.takeIf { MetaField.RATING in m },
+            coverUrl = null, heroUrl = null, logoUrl = null, iconUrl = null, animatedCoverUrl = null, animatedHeroUrl = null,
+        )
+    }
 }

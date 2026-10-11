@@ -250,6 +250,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                             entry?.let { e ->
                                 var fixing by remember { mutableStateOf(false) }
                                 var artwork by remember { mutableStateOf(false) }
+                                var editingMeta by remember { mutableStateOf(false) }
                                 val scope = rememberCoroutineScope()
                                 val detailProfiles by vm.profiles.collectAsState()
                                 val detailActive by vm.activeProfile.collectAsState()
@@ -263,10 +264,16 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                                         onFix = { fixing = true },
                                         onArtwork = { artwork = true },
                                         onConfirm = { scope.launch { activity.container.metadata.confirm(e.item.id) } },
+                                        onEdit = { editingMeta = true },
                                     )
                                 }
                                 FixMetadataDialog(if (fixing) e.item else null) { fixing = false }
                                 ArtworkPickerDialog(if (artwork) e.item else null) { artwork = false }
+                                val library by vm.allEntries.collectAsState()
+                                io.github.thecodingdad.moonlightlauncher.ui.screens.metadata.MetadataEditorDialog(
+                                    entry = if (editingMeta) e else null, library = library,
+                                    onPlatform = { platformFor = it }, onDismiss = { editingMeta = false },
+                                )
                             }
                         }
                     }

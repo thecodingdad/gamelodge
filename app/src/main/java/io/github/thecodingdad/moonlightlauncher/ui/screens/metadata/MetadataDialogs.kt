@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
@@ -182,6 +183,7 @@ fun MetadataActions(
     onFix: () -> Unit,
     onArtwork: () -> Unit,
     onConfirm: () -> Unit,
+    onEdit: () -> Unit,
 ) {
     io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 10.dp) {
         if (entry.item.metadataState == io.github.thecodingdad.moonlightlauncher.data.db.MetadataState.REVIEW) {
@@ -190,6 +192,10 @@ fun MetadataActions(
                 icon = androidx.compose.material.icons.Icons.Filled.Check,
             )
         }
+        io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton(
+            stringResource(R.string.meta_edit_title), onClick = onEdit,
+            icon = androidx.compose.material.icons.Icons.Filled.Edit,
+        )
         io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton(
             stringResource(R.string.metadata_fix_title), onClick = onFix,
             icon = androidx.compose.material.icons.Icons.Filled.Search,

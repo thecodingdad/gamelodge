@@ -67,7 +67,26 @@ data class LibraryItemEntity(
     /** Playnite categories (comma separated) and library plugin, via the Vibepollo API. */
     val playniteCategories: String? = null,
     val playnitePlugin: String? = null,
-)
+    // --- added in schema v3 ---
+    val publisher: String? = null,
+    /** Franchise or collection, e.g. "Super Mario". */
+    val series: String? = null,
+    /** Game modes / features, comma separated ("Single player, Co-operative"). */
+    val features: String? = null,
+    /** Age ratings of all systems, "PEGI:12;USK:12;ESRB:T". */
+    val ageRatings: String? = null,
+    /** First release (UTC millis); [releaseYear] stays the filterable year. */
+    val releaseDate: Long? = null,
+    /** Fields edited by hand ([MetaField] names, comma separated): never overwritten automatically. */
+    val manualFields: String? = null,
+    /** 1 = the IGDB fields of schema v3 were fetched for this match. */
+    val metadataVersion: Int = 0,
+) {
+    val manual: Set<MetaField> get() = manualFields.orEmpty().split(',').mapNotNull { n -> MetaField.entries.firstOrNull { it.name == n } }.toSet()
+}
+
+/** Metadata fields that can be edited (and then are protected against automatic updates). */
+enum class MetaField { TITLE, DESCRIPTION, GENRES, DEVELOPER, PUBLISHER, SERIES, FEATURES, RELEASE, RATING, AGE_RATING }
 
 /** Where [LibraryItemEntity.platform] came from; higher sources are never overwritten by lower ones. */
 enum class PlatformSource { SUGGESTED, IGDB, PLAYNITE, MANUAL }

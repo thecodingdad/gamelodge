@@ -589,11 +589,11 @@
     <string name="filter_operator">Vergleich</string>
     <string name="filter_is">ist</string>
     <string name="filter_is_not">ist nicht</string>
-    <string name="filter_values_help">Einer der gewählten Werte muss zutreffen.</string>
+    <string name="filter_values_help">Werte auswählen; ohne Auswahl schränkt die Bedingung nichts ein.</string>
     <string name="filter_values_none">Noch keine Werte in der Bibliothek.</string>
     <string name="filter_field_platform">Plattform</string>
     <string name="filter_field_genre">Genre</string>
-    <string name="filter_field_category">Playnite-Kategorie</string>
+    <string name="filter_field_category">Kategorie</string>
     <string name="filter_field_source">Quelle</string>
     <string name="filter_field_group">Gruppe</string>
     <string name="filter_field_favorite">Favorit</string>
@@ -688,4 +688,71 @@
     <string name="filters_reset_help">Standardfilter auf ihre ursprünglichen Einstellungen zurücksetzen oder komplett neu anfangen: Das löscht auch deine eigenen Filter und Gruppen (samt Zuordnungen) und stellt die ursprüngliche Reihenfolge wieder her.</string>
     <string name="filters_reset_defaults">Standardfilter zurücksetzen</string>
     <string name="filters_reset_all">Alle Filter und die Reihenfolge zurücksetzen (halten)</string>
+
+    <!-- Filters -->
+    <string name="filter_field_name">Name</string>
+    <string name="filter_field_host">Host</string>
+    <string name="filter_field_library">Bibliothek</string>
+    <string name="filter_field_installed">Auf dem Gerät installiert</string>
+    <string name="filter_field_developer">Entwickler</string>
+    <string name="filter_field_publisher">Publisher</string>
+    <string name="filter_field_series">Serie</string>
+    <string name="filter_field_feature">Features</string>
+    <string name="filter_field_age_rating">Altersfreigabe</string>
+    <string name="filter_field_release_year">Erscheinungsjahr</string>
+    <string name="filter_field_rating">Bewertung</string>
+    <string name="filter_field_last_played">Zuletzt gespielt</string>
+    <string name="filter_field_playtime">Spielzeit</string>
+    <string name="filter_field_added">Hinzugefügt</string>
+    <string name="filter_field_negated">%1$s (nicht)</string>
+    <string name="filter_mode">Modus</string>
+    <string name="filter_mode_include">Einschließen</string>
+    <string name="filter_mode_exclude">Ausschließen</string>
+    <string name="filter_mode_include_sub">Spiele mit einem der gewählten Werte</string>
+    <string name="filter_mode_exclude_sub">Spiele ohne die gewählten Werte</string>
+    <string name="filter_match_all">Alle gewählten Werte</string>
+    <string name="filter_match_all_sub">Jeder gewählte Wert muss zutreffen statt nur einer</string>
+    <string name="filter_name_help">Spiele, deren Name den Text enthält</string>
+    <string name="filter_name_add">Text hinzufügen</string>
+    <string name="filter_values_and">" und "</string>
+    <string name="filter_never">Nie</string>
+    <string name="filter_playtime_none">Nicht gespielt</string>
+    <string name="filter_playtime_lt1">Unter 1 Stunde</string>
+    <string name="filter_playtime_1to10">1–10 Stunden</string>
+    <string name="filter_playtime_10to100">10–100 Stunden</string>
+    <string name="filter_playtime_100to500">100–500 Stunden</string>
+    <string name="filter_playtime_gt500">Über 500 Stunden</string>
+    <string name="filter_rating_from">Ab %1$s</string>
+    <string name="filter_rating_lt60">Unter 60</string>
+    <string name="filter_rating_none">Ohne Bewertung</string>
+    <string name="filter_period_today">Heute</string>
+    <string name="filter_period_yesterday">Gestern</string>
+    <string name="filter_period_week">Letzte 7 Tage</string>
+    <string name="filter_period_month">Letzte 30 Tage</string>
+    <string name="filter_period_year">Letztes Jahr</string>
+    <string name="filter_period_older">Vor über einem Jahr</string>
+    <string name="filter_section_game">Spiel</string>
+    <string name="filter_section_metadata">Metadaten</string>
+    <string name="filter_section_activity">Aktivität</string>
+    <string name="filter_section_status">Status</string>
+
+    <!-- Metadata editor -->
+    <string name="meta_edit_title">Metadaten bearbeiten</string>
+    <string name="meta_edit_help">Bearbeitete Felder sind markiert und behalten ihren Wert, wenn die Metadaten neu abgeglichen werden.</string>
+    <string name="meta_edited">Bearbeitet</string>
+    <string name="meta_none">–</string>
+    <string name="meta_name">Name</string>
+    <string name="meta_description">Beschreibung</string>
+    <string name="meta_release">Erscheinungsdatum</string>
+    <string name="meta_hours">%1$s Std.</string>
+    <string name="meta_change">Ändern</string>
+    <string name="meta_reset">Auf IGDB-Wert zurücksetzen</string>
+    <string name="meta_reset_title">Auf den Namen der Quelle zurücksetzen</string>
+    <string name="meta_invalid">Ungültige Eingabe</string>
+    <string name="meta_date_hint">z. B. 2017, 03.03.2017 oder 2017-03-03; leer = keins</string>
+    <string name="meta_rating_hint">0–100; leer = keine</string>
+    <string name="meta_playtime_hint">Stunden, z. B. 12,5</string>
+    <string name="meta_chips_multi">Werte auswählen oder einen neuen hinzufügen</string>
+    <string name="meta_chips_single">Wert auswählen oder neu hinzufügen; erneut auswählen zum Leeren</string>
+    <string name="meta_new_value">Neuer Wert</string>
 </resources>

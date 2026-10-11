@@ -10,14 +10,64 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 /** Dimension a filter can be split by: one chip/row per distinct value. */
-enum class GroupBy { PLATFORM, GENRE, CATEGORY, SOURCE, HOST }
+enum class GroupBy {
+    PLATFORM, GENRE, CATEGORY, SOURCE, HOST,
+    LIBRARY, DEVELOPER, PUBLISHER, SERIES, FEATURE, AGE_RATING, RELEASE_YEAR,
+}
 
-/** Item property a filter condition looks at. */
-enum class FilterField(val boolean: Boolean = false) {
-    PLATFORM, GENRE, CATEGORY, SOURCE, GROUP,
-    FAVORITE(boolean = true), PLAYED(boolean = true), REVIEW(boolean = true),
+/** How a condition's values are chosen. */
+enum class FieldType {
+    /** Values present in the library (chips). */
+    LIST,
+    /** Yes / no. */
+    BOOLEAN,
+    /** Free text the name contains. */
+    TEXT,
+    /** Fixed ranges (play time, periods, rating). */
+    BUCKET,
+}
+
+/** Sections of the field picker. */
+enum class FieldSection { GAME, METADATA, ACTIVITY, STATUS }
+
+/** Item property a filter condition looks at (Playnite's filter scope). */
+enum class FilterField(val type: FieldType, val section: FieldSection, val multiValue: Boolean = false) {
+    NAME(FieldType.TEXT, FieldSection.GAME),
+    PLATFORM(FieldType.LIST, FieldSection.GAME),
+    SOURCE(FieldType.LIST, FieldSection.GAME),
+    LIBRARY(FieldType.LIST, FieldSection.GAME),
+    CATEGORY(FieldType.LIST, FieldSection.GAME, multiValue = true),
+    GROUP(FieldType.LIST, FieldSection.GAME, multiValue = true),
+    INSTALLED(FieldType.BOOLEAN, FieldSection.GAME),
+    GENRE(FieldType.LIST, FieldSection.METADATA, multiValue = true),
+    DEVELOPER(FieldType.LIST, FieldSection.METADATA),
+    PUBLISHER(FieldType.LIST, FieldSection.METADATA),
+    SERIES(FieldType.LIST, FieldSection.METADATA),
+    FEATURE(FieldType.LIST, FieldSection.METADATA, multiValue = true),
+    AGE_RATING(FieldType.LIST, FieldSection.METADATA),
+    RELEASE_YEAR(FieldType.LIST, FieldSection.METADATA),
+    RATING(FieldType.BUCKET, FieldSection.METADATA),
+    PLAYED(FieldType.BOOLEAN, FieldSection.ACTIVITY),
+    LAST_PLAYED(FieldType.BUCKET, FieldSection.ACTIVITY),
+    PLAYTIME(FieldType.BUCKET, FieldSection.ACTIVITY),
+    ADDED(FieldType.BUCKET, FieldSection.ACTIVITY),
+    FAVORITE(FieldType.BOOLEAN, FieldSection.STATUS),
     /** Hidden items only show in filters with a condition on this field. */
-    HIDDEN(boolean = true),
+    HIDDEN(FieldType.BOOLEAN, FieldSection.STATUS),
+    REVIEW(FieldType.BOOLEAN, FieldSection.STATUS),
+    ;
+
+    val boolean: Boolean get() = type == FieldType.BOOLEAN
+
+    /** Fixed options of a BUCKET field. */
+    val buckets: List<String>
+        get() = when (this) {
+            PLAYTIME -> listOf("none", "lt1", "1to10", "10to100", "100to500", "gt500")
+            LAST_PLAYED -> listOf("today", "yesterday", "week", "month", "year", "older", "never")
+            ADDED -> listOf("today", "week", "month", "year", "older")
+            RATING -> listOf("90", "80", "70", "60", "lt60", "none")
+            else -> emptyList()
+        }
 }
 
 /**
@@ -29,6 +79,8 @@ data class FilterCondition(
     val field: FilterField,
     val values: Set<String> = emptySet(),
     val negate: Boolean = false,
+    /** Multi-value fields (genres …): every chosen value must be present instead of one of them. */
+    val matchAll: Boolean = false,
 )
 
 /**
@@ -240,33 +292,126 @@ object FilterEngine {
         if (by == GroupBy.SOURCE || by == GroupBy.HOST) hostNames[value] ?: value else value
 
     fun values(entry: LibraryEntry, by: GroupBy): List<String> = when (by) {
-        GroupBy.PLATFORM -> listOfNotNull(entry.item.platform)
-        GroupBy.GENRE -> splitList(entry.item.genres)
-        GroupBy.CATEGORY -> splitList(entry.item.playniteCategories)
-        GroupBy.SOURCE -> buildList {
-            if (entry.localTarget != null) add(FilterRules.SOURCE_LOCAL)
-            entry.remoteTargets.mapNotNull { it.hostUuid }.distinct().forEach(::add)
-        }
+        GroupBy.PLATFORM -> values(entry, FilterField.PLATFORM)
+        GroupBy.GENRE -> values(entry, FilterField.GENRE)
+        GroupBy.CATEGORY -> values(entry, FilterField.CATEGORY)
+        GroupBy.SOURCE -> values(entry, FilterField.SOURCE)
         GroupBy.HOST -> entry.remoteTargets.mapNotNull { it.hostUuid }.distinct()
+        GroupBy.LIBRARY -> values(entry, FilterField.LIBRARY)
+        GroupBy.DEVELOPER -> values(entry, FilterField.DEVELOPER)
+        GroupBy.PUBLISHER -> values(entry, FilterField.PUBLISHER)
+        GroupBy.SERIES -> values(entry, FilterField.SERIES)
+        GroupBy.FEATURE -> values(entry, FilterField.FEATURE)
+        GroupBy.AGE_RATING -> values(entry, FilterField.AGE_RATING)
+        GroupBy.RELEASE_YEAR -> values(entry, FilterField.RELEASE_YEAR)
+    }
+
+    /** Values of a LIST field for one item (what its chips offer and conditions compare). */
+    fun values(entry: LibraryEntry, field: FilterField): List<String> {
+        val item = entry.item
+        return when (field) {
+            FilterField.PLATFORM -> listOfNotNull(item.platform)
+            FilterField.GENRE -> splitList(item.genres)
+            FilterField.CATEGORY -> splitList(item.playniteCategories)
+            FilterField.SOURCE -> buildList {
+                if (entry.localTarget != null) add(FilterRules.SOURCE_LOCAL)
+                entry.remoteTargets.mapNotNull { it.hostUuid }.distinct().forEach(::add)
+            }
+            FilterField.LIBRARY -> listOfNotNull(item.playnitePlugin?.takeIf { it.isNotBlank() })
+            FilterField.DEVELOPER -> listOfNotNull(item.developer?.takeIf { it.isNotBlank() })
+            FilterField.PUBLISHER -> listOfNotNull(item.publisher?.takeIf { it.isNotBlank() })
+            FilterField.SERIES -> listOfNotNull(item.series?.takeIf { it.isNotBlank() })
+            FilterField.FEATURE -> splitList(item.features)
+            FilterField.AGE_RATING -> listOfNotNull(io.github.thecodingdad.moonlightlauncher.metadata.AgeRatings.display(item.ageRatings))
+            FilterField.RELEASE_YEAR -> listOfNotNull(item.releaseYear?.toString())
+            else -> emptyList()
+        }
+    }
+
+    /** Which fixed range ([FilterField.buckets]) an item falls into; several for cumulative ranges. */
+    fun buckets(entry: LibraryEntry, field: FilterField, now: Long): Set<String> {
+        val item = entry.item
+        val day = 24 * 60 * 60 * 1000L
+        fun period(at: Long?, never: String?): Set<String> {
+            at ?: return setOfNotNull(never)
+            val age = now - at
+            val startOfToday = java.util.Calendar.getInstance().apply {
+                timeInMillis = now
+                set(java.util.Calendar.HOUR_OF_DAY, 0); set(java.util.Calendar.MINUTE, 0)
+                set(java.util.Calendar.SECOND, 0); set(java.util.Calendar.MILLISECOND, 0)
+            }.timeInMillis
+            return buildSet {
+                if (at >= startOfToday) add("today")
+                if (at in (startOfToday - day) until startOfToday) add("yesterday")
+                if (age <= 7 * day) add("week")
+                if (age <= 30 * day) add("month")
+                if (age <= 365 * day) add("year") else add("older")
+            }
+        }
+        return when (field) {
+            FilterField.LAST_PLAYED -> period(item.lastPlayedAt, "never")
+            FilterField.ADDED -> period(item.addedAt, null)
+            FilterField.PLAYTIME -> {
+                val hours = item.playtimeSeconds / 3600.0
+                setOf(
+                    when {
+                        item.playtimeSeconds <= 0 -> "none"
+                        hours < 1 -> "lt1"
+                        hours < 10 -> "1to10"
+                        hours < 100 -> "10to100"
+                        hours < 500 -> "100to500"
+                        else -> "gt500"
+                    },
+                )
+            }
+            FilterField.RATING -> {
+                val r = item.rating ?: return setOf("none")
+                buildSet {
+                    if (r >= 90) add("90")
+                    if (r >= 80) add("80")
+                    if (r >= 70) add("70")
+                    if (r >= 60) add("60") else add("lt60")
+                }
+            }
+            else -> emptySet()
+        }
     }
 
     fun matches(entry: LibraryEntry, rules: FilterRules, groupMembers: Map<String, Set<String>> = emptyMap()): Boolean =
         rules.effectiveConditions.all { matches(entry, it, groupMembers) }
 
-    fun matches(entry: LibraryEntry, condition: FilterCondition, groupMembers: Map<String, Set<String>> = emptyMap()): Boolean {
-        val hit = when (condition.field) {
-            FilterField.PLATFORM -> values(entry, GroupBy.PLATFORM).any { it in condition.values }
-            FilterField.GENRE -> values(entry, GroupBy.GENRE).any { it in condition.values }
-            FilterField.CATEGORY -> values(entry, GroupBy.CATEGORY).any { it in condition.values }
-            FilterField.SOURCE -> values(entry, GroupBy.SOURCE).any { it in condition.values }
-            FilterField.GROUP -> condition.values.any { entry.item.id in groupMembers[it].orEmpty() }
-            FilterField.FAVORITE -> entry.item.favorite
-            FilterField.PLAYED -> entry.item.lastPlayedAt != null
-            FilterField.REVIEW -> entry.item.metadataState == MetadataState.REVIEW
-            FilterField.HIDDEN -> entry.item.hidden
+    fun matches(
+        entry: LibraryEntry,
+        condition: FilterCondition,
+        groupMembers: Map<String, Set<String>> = emptyMap(),
+        now: Long = System.currentTimeMillis(),
+    ): Boolean {
+        val field = condition.field
+        // A condition without values doesn't restrict anything (yet).
+        if (field.type != FieldType.BOOLEAN && condition.values.isEmpty()) return true
+        val item = entry.item
+        val hit = when (field.type) {
+            FieldType.BOOLEAN -> when (field) {
+                FilterField.INSTALLED -> entry.localTarget != null
+                FilterField.FAVORITE -> item.favorite
+                FilterField.PLAYED -> item.lastPlayedAt != null
+                FilterField.REVIEW -> item.metadataState == MetadataState.REVIEW
+                FilterField.HIDDEN -> item.hidden
+                else -> false
+            }
+            FieldType.TEXT -> {
+                val title = TitleNormalizer.normalize(item.title)
+                condition.values.map { TitleNormalizer.normalize(it) }.filter { it.isNotEmpty() }.let { terms ->
+                    if (condition.matchAll) terms.all { it in title } else terms.any { it in title }
+                }
+            }
+            FieldType.BUCKET -> buckets(entry, field, now).any { it in condition.values }
+            FieldType.LIST -> {
+                val have = if (field == FilterField.GROUP) condition.values.filter { item.id in groupMembers[it].orEmpty() }.toSet()
+                else values(entry, field).toSet()
+                if (condition.matchAll && field.multiValue) condition.values.all { it in have } else condition.values.any { it in have }
+            }
         }
-        // A list condition without values doesn't restrict anything (yet).
-        if (!condition.field.boolean && condition.values.isEmpty()) return true
         return hit != condition.negate
     }
 
@@ -281,7 +426,8 @@ object FilterEngine {
     fun query(entries: List<LibraryEntry>, sort: LibrarySort, search: String): List<LibraryEntry> {
         val q = TitleNormalizer.normalize(search)
         return entries.asSequence()
-            .filter { q.isEmpty() || it.item.normalizedTitle.contains(q) }
+            // The source name (normalizedTitle) and a name edited by hand both count.
+            .filter { q.isEmpty() || it.item.normalizedTitle.contains(q) || TitleNormalizer.normalize(it.item.title).contains(q) }
             .let { seq ->
                 when (sort) {
                     LibrarySort.TITLE -> seq.sortedBy { TitleNormalizer.sortKey(it.item.title) }

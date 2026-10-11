@@ -16,7 +16,7 @@ import androidx.room.RoomDatabase
         HaTileEntity::class,
         FilterEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = true,
 )
 abstract class LauncherDatabase : RoomDatabase() {
@@ -30,8 +30,19 @@ abstract class LauncherDatabase : RoomDatabase() {
     companion object {
         fun create(context: Context): LauncherDatabase =
             Room.databaseBuilder(context, LauncherDatabase::class.java, "launcher.db")
-                .addMigrations(MIGRATION_1_2)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                 .build()
+
+        /** v3: more metadata (publisher, series, features, age ratings, release date) and per-field edits. */
+        val MIGRATION_2_3 = object : androidx.room.migration.Migration(2, 3) {
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                listOf("publisher", "series", "features", "ageRatings", "manualFields").forEach {
+                    db.execSQL("ALTER TABLE library_items ADD COLUMN $it TEXT")
+                }
+                db.execSQL("ALTER TABLE library_items ADD COLUMN releaseDate INTEGER")
+                db.execSQL("ALTER TABLE library_items ADD COLUMN metadataVersion INTEGER NOT NULL DEFAULT 0")
+            }
+        }
 
         /** v2: platform + Playnite data per item, filters table (existing collections become groups). */
         val MIGRATION_1_2 = object : androidx.room.migration.Migration(1, 2) {
