@@ -1,5 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher.ui.screens.home
 
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import kotlinx.coroutines.flow.first
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
@@ -263,18 +264,25 @@ private fun androidx.compose.foundation.lazy.LazyListScope.homeRow(
     item(key = key) { pinned(key) {
         RowTitle(titleText?.invoke() ?: stringResource(title))
         val rowState = androidx.compose.foundation.lazy.rememberLazyListState()
+        val rowBringIntoView = androidx.compose.runtime.remember { androidx.compose.foundation.relocation.BringIntoViewRequester() }
         // Back from paging through details: bring the last game viewed into the row's view.
         androidx.compose.runtime.LaunchedEffect(Unit) {
             val id = callbacks.lastFocusedKey?.takeIf { it.startsWith("$key:") }?.removePrefix("$key:") ?: return@LaunchedEffect
             val index = entries.indexOfFirst { it.item.id == id }
             androidx.compose.runtime.snapshotFlow { rowState.layoutInfo.visibleItemsInfo.isNotEmpty() }.first { it }
-            if (index >= 0 && rowState.layoutInfo.visibleItemsInfo.none { it.index == index }) rowState.scrollToItem(index)
+            if (index < 0) return@LaunchedEffect
+            val info = rowState.layoutInfo
+            val item = info.visibleItemsInfo.firstOrNull { it.index == index }
+            val fullyVisible = item != null && item.offset >= info.viewportStartOffset && item.offset + item.size <= info.viewportEndOffset
+            if (!fullyVisible) rowState.scrollToItem(index)
+            // The row itself may be scrolled out of the screen (touch has no focus to follow).
+            rowBringIntoView.bringIntoView()
         }
         LazyRow(
             state = rowState,
             contentPadding = PaddingValues(horizontal = 40.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.focusRestorer(),
+            modifier = Modifier.focusRestorer().bringIntoViewRequester(rowBringIntoView),
         ) {
             items(entries, key = { it.item.id }) { entry ->
                 val focusKey = "$key:${entry.item.id}"

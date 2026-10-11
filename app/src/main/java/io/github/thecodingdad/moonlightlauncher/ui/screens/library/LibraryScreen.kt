@@ -183,7 +183,12 @@ fun LibraryScreen(
         LaunchedEffect(Unit) {
             val index = shown.indexOfFirst { it.item.id == targetId }
             androidx.compose.runtime.snapshotFlow { gridState.layoutInfo.visibleItemsInfo.isNotEmpty() }.first { it }
-            if (index >= 0 && gridState.layoutInfo.visibleItemsInfo.none { it.index == index }) gridState.scrollToItem(index)
+            // Not (fully) on screen: put its line at the top, like the controller focus does.
+            val info = gridState.layoutInfo
+            val item = info.visibleItemsInfo.firstOrNull { it.index == index }
+            val fullyVisible = item != null && item.offset.y >= info.viewportStartOffset &&
+                item.offset.y + item.size.height <= info.viewportEndOffset
+            if (index >= 0 && !fullyVisible) gridState.scrollToItem(index)
         }
         // The focused line always sits at the top, so lines don't jump around while navigating.
         val snapTo = io.github.thecodingdad.moonlightlauncher.ui.components.rememberFocusLineSnap(gridState)
