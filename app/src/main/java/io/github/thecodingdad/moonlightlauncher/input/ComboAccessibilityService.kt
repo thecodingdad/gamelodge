@@ -7,6 +7,7 @@ import android.provider.Settings
 import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
 import io.github.thecodingdad.moonlightlauncher.MainActivity
+import io.github.thecodingdad.moonlightlauncher.QuickMenuActivity
 
 /**
  * Optional system-wide button combinations: filters controller key events in every app (also
@@ -25,11 +26,17 @@ class ComboAccessibilityService : AccessibilityService() {
     override fun onKeyEvent(event: KeyEvent): Boolean = ButtonCombos.handle(event) { action ->
         when (action) {
             ComboAction.HOME -> performGlobalAction(GLOBAL_ACTION_HOME)
-            ComboAction.QUICK_MENU -> startActivity(
-                Intent(this, MainActivity::class.java)
-                    .putExtra(MainActivity.EXTRA_QUICK_MENU, true)
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT),
-            )
+            // In the launcher: its own quick menu; anywhere else: the overlay above the app.
+            ComboAction.QUICK_MENU ->
+                if (MainActivity.resumed) {
+                    startActivity(
+                        Intent(this, MainActivity::class.java)
+                            .putExtra(MainActivity.EXTRA_QUICK_MENU, true)
+                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT),
+                    )
+                } else {
+                    QuickMenuActivity.toggle(this)
+                }
         }
     }
 

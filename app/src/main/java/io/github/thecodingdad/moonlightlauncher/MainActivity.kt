@@ -98,8 +98,14 @@ class MainActivity : ComponentActivity() {
         vm.touch()
     }
 
+    override fun onPause() {
+        resumed = false
+        super.onPause()
+    }
+
     override fun onResume() {
         super.onResume()
+        resumed = true
         vm.touch()
         // Back from a game or stream: close the play session, undo a one-off profile.
         container.launcher.restoreProfile()
@@ -161,5 +167,9 @@ class MainActivity : ComponentActivity() {
 
     companion object {
         const val EXTRA_QUICK_MENU = "io.github.thecodingdad.moonlightlauncher.QUICK_MENU"
+
+        /** Launcher in the foreground: combinations act inside it instead of as an overlay. */
+        @Volatile var resumed = false
+            private set
     }
 }

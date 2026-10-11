@@ -192,8 +192,13 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
             quickMenu = false
         }
     }
+    val inputModeManager = androidx.compose.ui.platform.LocalInputModeManager.current
     LaunchedEffect(Unit) {
-        vm.quickMenuRequests.collect { open -> quickMenu = open || !quickMenu }
+        vm.quickMenuRequests.collect { open ->
+            // Opened by a controller combination: show the focus right away.
+            inputModeManager.requestInputMode(androidx.compose.ui.input.InputMode.Keyboard)
+            quickMenu = open || !quickMenu
+        }
     }
     var platformFor by remember { mutableStateOf<io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry?>(null) }
     var collectionsFor by remember { mutableStateOf<io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry?>(null) }

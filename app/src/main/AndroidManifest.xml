@@ -45,6 +45,17 @@
             </intent-filter>
         </activity>
 
+        <!-- Quick menu as an overlay above other apps and the stream (own task). -->
+        <activity
+            android:name=".QuickMenuActivity"
+            android:exported="false"
+            android:theme="@style/Theme.MoonlightLauncher.Overlay"
+            android:taskAffinity="${applicationId}.quickmenu"
+            android:launchMode="singleTask"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboard|keyboardHidden|navigation|uiMode" />
+
         <!-- Launcher mode: enabled at runtime from Settings -> Launcher mode. -->
         <activity-alias
             android:name=".HomeAlias"
