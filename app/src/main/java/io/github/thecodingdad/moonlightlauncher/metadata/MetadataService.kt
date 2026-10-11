@@ -91,6 +91,7 @@ class MetadataService(
             delay(10_000)
             runCatching { backfillPlatforms() }.onFailure { Log.w("Platform backfill failed", it) }
             runCatching { backfillDetails() }.onFailure { Log.w("Metadata details backfill failed", it) }
+            runCatching { fillArtworkGaps() }.onFailure { Log.w("Artwork gap fill failed", it) }
             // Also catches games matched before IGDB keys were entered.
             refreshPending()
         }
@@ -210,7 +211,7 @@ class MetadataService(
             return
         }
         val game = best.first
-        var updated = fresh.withIgdb(game)
+        var updated = fresh.withIgdb(game).withMissingArtwork(game).copy(metadataVersion = ART_FILL_VERSION)
         platformFor(fresh, game)?.let { updated = updated.copy(platform = it.first, platformSource = it.second) }
         val state = when (fresh.metadataState) {
             MetadataState.NOT_FOUND -> if (confident) MetadataState.OK else MetadataState.REVIEW
@@ -281,7 +282,8 @@ class MetadataService(
         } ?: item
         val withArt = sgdbBest?.first?.takeIf { sgdbBest.second >= MatchScorer.REVIEW }
             ?.let { withText.withSgdbArtwork(it.id) } ?: withText
-        dao.upsertItem(withArt.copy(metadataState = state, matchConfidence = confidence))
+        val complete = igdbBest?.first?.let { withArt.withMissingArtwork(it).copy(metadataVersion = ART_FILL_VERSION) } ?: withArt
+        dao.upsertItem(complete.copy(metadataState = state, matchConfidence = confidence))
     }
 
     /** Manual search for the correction dialog (IGDB preferred, SteamGridDB otherwise). */
@@ -431,6 +433,64 @@ class MetadataService(
         )
     }
 
+    /**
+     * Fills missing artwork (cover, background, logo, icon) from SteamGridDB, searching with
+     * the IGDB titles (English main title first): SteamGridDB knows no localized names, so a
+     * German title may have found an entry without a logo or none at all. Existing art stays.
+     */
+    private suspend fun LibraryItemEntity.withMissingArtwork(game: IgdbGame): LibraryItemEntity {
+        if (!sgdb.isConfigured) return this
+        fun missing(i: LibraryItemEntity) = listOf(i.coverUrl, i.heroUrl, i.logoUrl, i.iconUrl).any { it == null }
+        if (!missing(this)) return this
+        var item = this
+        // Entries to look at: the current one, then the best hit for each IGDB title.
+        val candidates = LinkedHashSet<Long>()
+        item.sgdbId?.let(candidates::add)
+        for (name in game.allNames.take(3)) {
+            sgdb.search(name).map { it to MatchScorer.score(name, it.name) }
+                .filter { it.second >= MatchScorer.AUTO_ACCEPT }.maxByOrNull { it.second }
+                ?.let { candidates += it.first.id }
+            delay(200)
+        }
+        for (id in candidates) {
+            if (!missing(item)) break
+            val cover = if (item.coverUrl == null) sgdb.assets(id, SgdbAssetType.GRID).firstOrNull { it.height > it.width } else null
+            val hero = if (item.heroUrl == null) sgdb.assets(id, SgdbAssetType.HERO).firstOrNull() else null
+            val logo = if (item.logoUrl == null) sgdb.assets(id, SgdbAssetType.LOGO).firstOrNull() else null
+            val icon = if (item.iconUrl == null) sgdb.assets(id, SgdbAssetType.ICON).firstOrNull() else null
+            item = item.copy(
+                sgdbId = item.sgdbId ?: id,
+                coverUrl = item.coverUrl ?: cover?.url,
+                heroUrl = item.heroUrl ?: hero?.url,
+                logoUrl = item.logoUrl ?: logo?.url,
+                iconUrl = item.iconUrl ?: icon?.url,
+            )
+        }
+        return item
+    }
+
+    /** Games with an IGDB match but gaps in their artwork: try the IGDB titles on SteamGridDB once. */
+    private suspend fun fillArtworkGaps() {
+        if (!igdb.isConfigured || !sgdb.isConfigured) return
+        val items = dao.observeAll().first().map { it.item }.filter {
+            it.kind == ItemKind.GAME && it.igdbId != null && it.metadataVersion < ART_FILL_VERSION &&
+                listOf(it.coverUrl, it.heroUrl, it.logoUrl, it.iconUrl).any { url -> url == null }
+        }
+        for (item in items) {
+            try {
+                val game = igdb.byId(item.igdbId!!) ?: continue
+                val fresh = dao.getItem(item.id) ?: continue
+                dao.upsertItem(fresh.withMissingArtwork(game).copy(metadataVersion = ART_FILL_VERSION))
+            } catch (e: MetadataAuthException) {
+                _lastError.value = e.message
+                return
+            } catch (e: Exception) {
+                Log.w("Artwork gap fill for ${item.title} failed", e)
+            }
+            delay(300)
+        }
+    }
+
     /** Forgets the automatic match; hand-edited fields stay. */
     private fun LibraryItemEntity.clearedMetadata(): LibraryItemEntity {
         val m = manual
@@ -456,3 +516,6 @@ class MetadataService(
  * localized titles are searched too).
  */
 private const val IGDB_LOOKUP_VERSION = 2
+
+/** Games with an IGDB match got the SteamGridDB gap fill via their IGDB titles (3). */
+private const val ART_FILL_VERSION = 3
