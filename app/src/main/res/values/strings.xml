@@ -215,7 +215,7 @@
     <string name="artwork_hero">Background</string>
     <string name="artwork_logo">Logo</string>
     <string name="artwork_switch_kind">Switch type</string>
-    <string name="metadata_intro">Covers, backgrounds and logos come from SteamGridDB, descriptions and genres from IGDB. Both are free; create your own keys with the links below.</string>
+    <string name="metadata_intro">Covers, backgrounds and logos come from SteamGridDB; descriptions, genres, developer, publisher, series, features, age ratings and release dates from IGDB. Both are free for non-commercial use; create your own keys below.</string>
     <string name="metadata_auto">Fetch metadata automatically</string>
     <string name="metadata_review_list">Needs review</string>
     <string name="metadata_review_count">%d games with uncertain matches</string>
@@ -224,7 +224,7 @@
     <string name="metadata_fetch_now">Fetch now</string>
     <string name="metadata_refetch_all">Re-fetch all</string>
     <string name="metadata_sgdb_help">Create a key at steamgriddb.com → Preferences → API.</string>
-    <string name="metadata_igdb_help">Register an app at dev.twitch.tv/console (category: Application Integration) and copy client ID and secret.</string>
+    <string name="metadata_igdb_help">Register an app at dev.twitch.tv/console (category: Application Integration, OAuth redirect URL: http://localhost, client type: Confidential), create a secret and copy client ID and secret.</string>
     <string name="metadata_api_key">API key</string>
     <string name="metadata_client_id">Client ID</string>
     <string name="metadata_client_secret">Client secret</string>
@@ -762,4 +762,9 @@
 
     <!-- Controllers -->
     <string name="controller_device_info">Device information</string>
+
+    <!-- Metadata -->
+    <string name="metadata_igdb_ok">IGDB connected</string>
+    <string name="metadata_igdb_rejected">IGDB rejected the client ID or secret</string>
+    <string name="metadata_igdb_unknown">IGDB not reachable right now</string>
 </resources>

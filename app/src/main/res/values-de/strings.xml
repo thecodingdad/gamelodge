@@ -213,7 +213,7 @@
     <string name="artwork_hero">Hintergrund</string>
     <string name="artwork_logo">Logo</string>
     <string name="artwork_switch_kind">Typ wechseln</string>
-    <string name="metadata_intro">Cover, Hintergründe und Logos kommen von SteamGridDB, Beschreibungen und Genres von IGDB. Beide sind kostenlos, die Keys legst du selbst an (siehe unten).</string>
+    <string name="metadata_intro">Cover, Hintergründe und Logos kommen von SteamGridDB; Beschreibung, Genres, Entwickler, Publisher, Serie, Features, Altersfreigaben und Erscheinungsdatum von IGDB. Beide sind für nicht-kommerzielle Nutzung kostenlos, die Keys legst du unten selbst an.</string>
     <string name="metadata_auto">Metadaten automatisch abrufen</string>
     <string name="metadata_review_list">Bitte prüfen</string>
     <string name="metadata_review_count">%d Spiele mit unsicherem Treffer</string>
@@ -222,7 +222,7 @@
     <string name="metadata_fetch_now">Jetzt abrufen</string>
     <string name="metadata_refetch_all">Alles neu abrufen</string>
     <string name="metadata_sgdb_help">Key erstellen unter steamgriddb.com → Preferences → API.</string>
-    <string name="metadata_igdb_help">App unter dev.twitch.tv/console registrieren (Kategorie: Application Integration) und Client-ID und Secret kopieren.</string>
+    <string name="metadata_igdb_help">App unter dev.twitch.tv/console registrieren (Kategorie: Application Integration, OAuth-Redirect-URL: http://localhost, Client-Typ: Vertraulich), ein Secret erzeugen und Client-ID und Secret kopieren.</string>
     <string name="metadata_api_key">API-Key</string>
     <string name="metadata_client_id">Client-ID</string>
     <string name="metadata_client_secret">Client-Secret</string>
@@ -760,4 +760,9 @@
 
     <!-- Controllers -->
     <string name="controller_device_info">Geräte-Informationen</string>
+
+    <!-- Metadata -->
+    <string name="metadata_igdb_ok">IGDB verbunden</string>
+    <string name="metadata_igdb_rejected">IGDB hat Client-ID oder Secret abgelehnt</string>
+    <string name="metadata_igdb_unknown">IGDB gerade nicht erreichbar</string>
 </resources>

@@ -86,5 +86,21 @@ fun MetadataSettings(
         Text(stringResource(R.string.metadata_igdb_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
         LauncherTextField(stringResource(R.string.metadata_client_id), igdbId, { save(SecretStore.Keys.IGDB_CLIENT_ID, it) })
         LauncherTextField(stringResource(R.string.metadata_client_secret), igdbSecret, { save(SecretStore.Keys.IGDB_CLIENT_SECRET, it) }, kind = TextKind.PASSWORD)
+        // Whether the keys work, checked after every change.
+        var igdbStatus by remember { mutableStateOf<Boolean?>(null) }
+        androidx.compose.runtime.LaunchedEffect(revision) { igdbStatus = metadata.testIgdb() }
+        if (igdbId.isNotBlank() && igdbSecret.isNotBlank()) {
+            Text(
+                stringResource(
+                    when (igdbStatus) {
+                        true -> R.string.metadata_igdb_ok
+                        false -> R.string.metadata_igdb_rejected
+                        null -> R.string.metadata_igdb_unknown
+                    },
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+                color = when (igdbStatus) { true -> LauncherTheme.colors.success; false -> LauncherTheme.colors.danger; null -> LauncherTheme.colors.onSurfaceMuted },
+            )
+        }
     }
 }

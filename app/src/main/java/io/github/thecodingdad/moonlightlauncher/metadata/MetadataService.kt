@@ -91,6 +91,8 @@ class MetadataService(
             delay(10_000)
             runCatching { backfillPlatforms() }.onFailure { Log.w("Platform backfill failed", it) }
             runCatching { backfillDetails() }.onFailure { Log.w("Metadata details backfill failed", it) }
+            // Also catches games matched before IGDB keys were entered.
+            refreshPending()
         }
     }
 
@@ -145,8 +147,14 @@ class MetadataService(
             try {
                 val pending = dao.getItemsWithMetadataState(listOf(MetadataState.NONE)).filter { it.kind == ItemKind.GAME }
                 _lastError.value = null
+                // Games matched before IGDB keys existed (e.g. SteamGridDB only) get their IGDB text once.
+                val withoutIgdb = if (igdb.isConfigured) {
+                    dao.getItemsWithMetadataState(listOf(MetadataState.OK, MetadataState.REVIEW, MetadataState.NOT_FOUND, MetadataState.LOCKED))
+                        .filter { it.kind == ItemKind.GAME && it.igdbId == null && it.metadataVersion < 1 }
+                } else emptyList()
+                val total = pending.size + withoutIgdb.size
                 pending.forEachIndexed { index, item ->
-                    _progress.value = MetadataProgress(index, pending.size)
+                    _progress.value = MetadataProgress(index, total)
                     try {
                         lookupAndApply(item)
                     } catch (e: MetadataAuthException) {
@@ -156,6 +164,18 @@ class MetadataService(
                         Log.w("Metadata lookup for ${item.title} failed", e)
                     }
                     delay(250) // stay well below IGDB's 4 requests/s
+                }
+                withoutIgdb.forEachIndexed { index, item ->
+                    _progress.value = MetadataProgress(pending.size + index, total)
+                    try {
+                        addIgdb(item)
+                    } catch (e: MetadataAuthException) {
+                        _lastError.value = e.message
+                        return@launch
+                    } catch (e: Exception) {
+                        Log.w("IGDB lookup for ${item.title} failed", e)
+                    }
+                    delay(250)
                 }
             } finally {
                 _progress.value = null
@@ -172,6 +192,44 @@ class MetadataService(
         }
         dao.getItemsWithMetadataState(states).forEach { dao.upsertItem(it.clearedMetadata()) }
         refreshPending()
+    }
+
+    /**
+     * IGDB text for a game that already has a (SteamGridDB) match: artwork stays. Uncertain
+     * hits only fill games nothing was found for (they go to the review list).
+     */
+    private suspend fun addIgdb(item: LibraryItemEntity) {
+        val query = item.metadataQuery ?: item.title
+        val best = igdb.search(query).map { it to MatchScorer.score(query, it.name) }.maxByOrNull { it.second }
+        val fresh = dao.getItem(item.id) ?: return
+        val confident = best != null && best.second >= MatchScorer.AUTO_ACCEPT
+        val usable = best != null && best.second >= MatchScorer.REVIEW && fresh.metadataState == MetadataState.NOT_FOUND
+        if (best == null || !(confident || usable)) {
+            // Tried once: don't search again on every start ("fetch all again" retries).
+            dao.upsertItem(fresh.copy(metadataVersion = 1))
+            return
+        }
+        val game = best.first
+        var updated = fresh.withIgdb(game)
+        platformFor(fresh, game)?.let { updated = updated.copy(platform = it.first, platformSource = it.second) }
+        val state = when (fresh.metadataState) {
+            MetadataState.NOT_FOUND -> if (confident) MetadataState.OK else MetadataState.REVIEW
+            else -> fresh.metadataState
+        }
+        dao.upsertItem(updated.copy(metadataState = state, matchConfidence = maxOf(fresh.matchConfidence, best.second)))
+    }
+
+    /** Checks the IGDB keys with one tiny request: true = works, false = rejected, null = not set / offline. */
+    suspend fun testIgdb(): Boolean? = withContext(Dispatchers.IO) {
+        if (!igdb.isConfigured) return@withContext null
+        try {
+            igdb.search("Mario", limit = 1)
+            true
+        } catch (e: MetadataAuthException) {
+            false
+        } catch (e: Exception) {
+            null
+        }
     }
 
     private suspend fun lookupAndApply(item: LibraryItemEntity) {
