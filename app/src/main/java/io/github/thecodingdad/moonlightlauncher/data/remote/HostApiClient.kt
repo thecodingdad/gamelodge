@@ -100,13 +100,24 @@ class HostApiClient(
         val apps: Int,
         /** App UUID (upper case) → companion data, for entries the companion manages. */
         val companion: Map<String, CompanionInfo>,
+        /** Every app UUID (upper case) in the list, to notice when the cached copy is outdated. */
+        val uuids: Set<String> = companion.keys,
+        val type: HostApiType = HostApiType.VIBEPOLLO,
     ) {
         fun infoForApp(appUuid: String?): CompanionInfo? = appUuid?.uppercase()?.let { companion[it] }
     }
 
-    /** Cached (10 min) result, or null when the host API isn't configured/reachable. */
-    suspend fun cached(hostUuid: String): Result? {
-        cache[hostUuid]?.takeIf { System.currentTimeMillis() - it.first < 10 * 60_000 }?.let { return it.second }
+    /**
+     * Cached result, or null when the host API isn't configured/reachable. Apollo keeps a single
+     * web session, so it is read at most every 10 minutes; the others every minute. An app the
+     * cached copy doesn't know yet (e.g. just added by the companion) always triggers a fresh read.
+     */
+    suspend fun cached(hostUuid: String, appUuids: Collection<String?> = emptyList()): Result? {
+        cache[hostUuid]?.let { (at, result) ->
+            val maxAge = if (result.type == HostApiType.APOLLO) 10 * 60_000 else 60_000
+            val complete = appUuids.all { it == null || it.uppercase() in result.uuids }
+            if (complete && System.currentTimeMillis() - at < maxAge) return result
+        }
         return fetch(hostUuid)?.also { cache[hostUuid] = System.currentTimeMillis() to it }
     }
 
@@ -126,7 +137,7 @@ class HostApiClient(
             Log.w("Host API /api/apps failed: $code")
             return@withContext null
         }
-        parse(body)
+        parse(body).copy(type = type)
     }
 
     private fun apolloLogin(base: String, user: String, password: String): Boolean {
@@ -153,6 +164,7 @@ class HostApiClient(
     internal fun parse(body: String): Result {
         val root = json.parseToJsonElement(body)
         val apps: JsonArray = (root as? JsonArray) ?: root.jsonObject["apps"]?.jsonArray ?: JsonArray(emptyList())
+        val uuids = apps.mapNotNull { (it as? JsonObject)?.get("uuid")?.jsonPrimitive?.contentOrNull?.uppercase() }.toSet()
         val companion = apps.mapNotNull { it as? JsonObject }.mapNotNull { app ->
             val uuid = app["uuid"]?.jsonPrimitive?.contentOrNull?.uppercase() ?: return@mapNotNull null
             val c = app["x-companion"] as? JsonObject ?: return@mapNotNull null
@@ -167,6 +179,6 @@ class HostApiClient(
                 collections = (c["collections"] as? JsonArray).orEmpty().mapNotNull { (it as? kotlinx.serialization.json.JsonPrimitive)?.contentOrNull },
             )
         }.toMap()
-        return Result(apps.size, companion)
+        return Result(apps.size, companion, uuids)
     }
 }

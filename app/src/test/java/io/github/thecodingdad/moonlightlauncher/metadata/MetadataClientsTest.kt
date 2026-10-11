@@ -136,6 +136,7 @@ class HostApiParseTest {
         )
         assertEquals(3, r.apps)
         assertEquals(setOf("BBB"), r.companion.keys)
+        assertEquals(setOf("AAA", "BBB", "CCC"), r.uuids)
         val info = r.infoForApp("bbb")!!
         assertEquals("steam:1145360", info.id)
         assertEquals(false, info.installed)

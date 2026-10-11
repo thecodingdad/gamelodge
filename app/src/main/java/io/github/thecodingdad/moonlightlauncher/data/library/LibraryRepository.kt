@@ -89,7 +89,7 @@ class LibraryRepository(
     private suspend fun syncHost(hostUuid: String, apps: List<RemoteApp>) {
         // Optional: the host API carries the companion's data (game/app, platform, store, groups,
         // installed) for the entries it manages.
-        val api = hostApi?.cached(hostUuid)
+        val api = hostApi?.cached(hostUuid, apps.map { it.app.appUUID })
         sync.syncHost(
             hostUuid,
             apps.map { remote ->
