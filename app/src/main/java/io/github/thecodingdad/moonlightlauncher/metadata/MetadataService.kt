@@ -307,16 +307,20 @@ class MetadataService(
             sgdb.search(igdbBest?.first?.name ?: query).map { it to MatchScorer.score(query, it.name) }.maxByOrNull { it.second }
         } else null
 
+        // The lookups take a while: apply the result to the row as it is now (play time, favourite
+        // or a restored backup may have changed meanwhile) and leave games that got metadata
+        // from elsewhere alone.
+        val fresh = dao.getItem(item.id)?.takeIf { it.metadataState == MetadataState.NONE } ?: return
         val confidence = igdbBest?.second ?: sgdbBest?.second ?: 0f
         if (confidence < MatchScorer.REVIEW) {
-            dao.upsertItem(item.copy(metadataState = MetadataState.NOT_FOUND, matchConfidence = confidence))
+            dao.upsertItem(fresh.copy(metadataState = MetadataState.NOT_FOUND, matchConfidence = confidence))
             return
         }
         val state = if (confidence >= MatchScorer.AUTO_ACCEPT) MetadataState.OK else MetadataState.REVIEW
         val withText = igdbBest?.first?.let { game ->
-            val platform = platformFor(item, game)
-            item.withIgdb(game).let { if (platform != null) it.copy(platform = platform.first, platformSource = platform.second) else it }
-        } ?: item
+            val platform = platformFor(fresh, game)
+            fresh.withIgdb(game).let { if (platform != null) it.copy(platform = platform.first, platformSource = platform.second) else it }
+        } ?: fresh
         val withArt = sgdbBest?.first?.takeIf { sgdbBest.second >= MatchScorer.REVIEW }
             ?.let { withText.withSgdbArtwork(it.id) } ?: withText
         val complete = igdbBest?.first?.let { withArt.withMissingArtwork(it).copy(metadataVersion = ART_FILL_VERSION) } ?: withArt
