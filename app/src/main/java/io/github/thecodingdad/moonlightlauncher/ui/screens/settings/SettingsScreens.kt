@@ -115,6 +115,7 @@ fun HomeScreenSettings(
         )
         SectionHeader(stringResource(R.string.home_rows_section))
         Text(stringResource(R.string.home_rows_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+        NavRow(stringResource(R.string.settings_filters), openFilters, stringResource(R.string.settings_filters_sub), Icons.Filled.FilterAlt)
         val gameFilters = filters.filter { it.scope != io.github.thecodingdad.moonlightlauncher.data.db.FilterScope.APPS }.sortedBy { it.sortOrder }
         val byId = gameFilters.associateBy { it.id }
         val HA = io.github.thecodingdad.moonlightlauncher.data.library.HomeRowOrder.HA
@@ -130,7 +131,6 @@ fun HomeScreenSettings(
                 byId[id]?.let { f -> SwitchRow(filterEntityLabel(f), f.showOnHome, { vm.saveFilter(f.copy(showOnHome = it)) }) }
             }
         }
-        NavRow(stringResource(R.string.settings_filters), openFilters, stringResource(R.string.settings_filters_sub), Icons.Filled.FilterAlt)
     }
 }
 
