@@ -58,6 +58,22 @@ class LibrarySyncTest {
     }
 
     @Test
+    fun `a renamed host app with a new id keeps its item via the app uuid`() = runTest {
+        sync.syncHost("h1", listOf(remote("h1", 100, "Batman").copy(appUuid = "U-1")))
+        val before = entries().single().item
+        db.libraryDao().upsertItem(before.copy(playtimeSeconds = 3600, favorite = true))
+
+        // The host derives a new numeric id from the new name; the UUID stays.
+        sync.syncHost("h1", listOf(remote("h1", 200, "LEGO Batman").copy(appUuid = "u-1")))
+        val after = entries().single()
+        assertEquals(before.id, after.item.id)
+        assertEquals(3600L, after.item.playtimeSeconds)
+        assertTrue(after.item.favorite)
+        assertEquals("LEGO Batman", after.item.title)
+        assertEquals(listOf(SourceEntry.remoteId("h1", 200)), after.targets.map { it.id })
+    }
+
+    @Test
     fun `local app without game flag is promoted when the host reports it as game`() = runTest {
         sync.syncLocal(listOf(local("com.example.stardew", "Stardew Valley")))
         assertEquals(ItemKind.APP, entries().single().item.kind)

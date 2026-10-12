@@ -65,8 +65,14 @@ class LibrarySync(
             val now = clock()
             val existing = dao.getAllTargets().filter(ownedBySource).associateBy { it.id }
 
+            val reportedIds = entries.mapTo(HashSet()) { it.targetId }
             for (entry in entries.distinctBy { it.targetId }) {
-                val known = existing[entry.targetId]
+                // Hosts may derive the numeric app id from the name: a renamed app is found again
+                // by its UUID (Apollo/Vibepollo) and keeps its item with play time and metadata.
+                val known = existing[entry.targetId] ?: entry.appUuid?.let { uuid ->
+                    existing.values.firstOrNull { it.appUuid.equals(uuid, ignoreCase = true) && it.id !in reportedIds }
+                }
+                if (known != null && known.name != entry.name) followRename(known, entry)
                 val itemId = if (known != null) {
                     reclassifyIfAuto(known.itemId, entry)
                     splitIfSharedWithSameSource(known, entry, now)
@@ -76,11 +82,17 @@ class LibrarySync(
                 dao.upsertTargets(listOf(entry.toTarget(itemId, known?.boxArtPath, now)))
             }
 
-            val reported = entries.mapTo(HashSet()) { it.targetId }
-            val gone = existing.keys.filterNot { it in reported }
+            val gone = existing.keys.filterNot { it in reportedIds }
             if (gone.isNotEmpty()) dao.deleteTargets(gone)
             dao.deleteItemsWithoutTargets()
         }
+    }
+
+    /** The item takes the source's new name unless the user set the title (or another source named it). */
+    private suspend fun followRename(known: LaunchTargetEntity, entry: SourceEntry) {
+        val item = dao.getItem(known.itemId) ?: return
+        if (item.title != known.name || io.github.thecodingdad.moonlightlauncher.data.db.MetaField.TITLE in item.manual) return
+        dao.upsertItem(item.copy(title = entry.name, normalizedTitle = TitleNormalizer.normalize(entry.name)))
     }
 
     private suspend fun findOrCreateItem(entry: SourceEntry, now: Long): String {
