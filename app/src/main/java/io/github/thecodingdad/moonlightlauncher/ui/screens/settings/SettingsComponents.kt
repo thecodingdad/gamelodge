@@ -28,6 +28,8 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,6 +47,65 @@ import io.github.thecodingdad.moonlightlauncher.ui.feedback.LocalUiFeedback
 import io.github.thecodingdad.moonlightlauncher.ui.feedback.UiSound
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 
+/** Where a sub page sits ("Settings › Hosts") and how to leave it; none on the main tabs. */
+class PagePath(val parents: List<String>, val onBack: () -> Unit)
+
+val LocalPagePath = androidx.compose.runtime.staticCompositionLocalOf<PagePath?> { null }
+
+/**
+ * Page heading. On sub pages: "‹ Settings › Appearance", the arrow goes back; when the path
+ * doesn't fit, only "‹ Appearance".
+ */
+@Composable
+fun PageTitle(title: String, modifier: Modifier = Modifier) {
+    val colors = LauncherTheme.colors
+    val style = MaterialTheme.typography.headlineMedium
+    val path = LocalPagePath.current
+    if (path == null) {
+        Text(title, style = style, color = colors.onSurface, modifier = modifier)
+        return
+    }
+    androidx.compose.foundation.layout.BoxWithConstraints(modifier.fillMaxWidth()) {
+        val measurer = androidx.compose.ui.text.rememberTextMeasurer()
+        val full = (path.parents + title).joinToString(SEPARATOR)
+        val arrowWidth = 56.dp
+        val density = androidx.compose.ui.platform.LocalDensity.current
+        val available = constraints.maxWidth - with(density) { arrowWidth.roundToPx() }
+        val fits = remember(full, available) { measurer.measure(full, style, maxLines = 1).size.width <= available }
+        androidx.compose.foundation.layout.Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+            FocusSurface(
+                onClick = path.onBack,
+                shape = androidx.compose.foundation.shape.CircleShape,
+                color = androidx.compose.ui.graphics.Color.Transparent,
+                focusScale = 1f,
+                // Controllers go back with B; the arrow is for touch.
+                dpadFocusable = false,
+                modifier = Modifier.size(48.dp),
+            ) {
+                androidx.compose.material3.Icon(
+                    androidx.compose.material.icons.Icons.AutoMirrored.Filled.KeyboardArrowLeft, null,
+                    tint = colors.onSurface, modifier = Modifier.align(androidx.compose.ui.Alignment.Center).size(36.dp),
+                )
+            }
+            Spacer(Modifier.width(8.dp))
+            Text(
+                androidx.compose.ui.text.buildAnnotatedString {
+                    if (fits) {
+                        path.parents.forEach {
+                            withStyle(androidx.compose.ui.text.SpanStyle(color = colors.onSurfaceMuted)) { append(it); append(SEPARATOR) }
+                        }
+                    }
+                    append(title)
+                },
+                style = style, color = colors.onSurface, maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+private const val SEPARATOR = "  ›  "
+
 /** Scrollable settings page with title; the first focusable element gets initial focus. */
 @Composable
 fun SettingsPage(title: String, content: @Composable ColumnScope.() -> Unit) {
@@ -54,12 +115,15 @@ fun SettingsPage(title: String, content: @Composable ColumnScope.() -> Unit) {
             .controllerScroll()
             .padding(horizontal = if (io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current) 20.dp else 48.dp, vertical = 16.dp)
             .focusRestorer(),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
     ) {
-        Text(title, style = MaterialTheme.typography.headlineMedium, color = LauncherTheme.colors.onSurface)
-        Spacer(Modifier.height(6.dp))
-        Column(Modifier.widthIn(max = 900.dp), verticalArrangement = Arrangement.spacedBy(10.dp), content = content)
-        Spacer(Modifier.height(24.dp))
+        // Limited width, centred on wide screens; the title lines up with the entries.
+        Column(Modifier.widthIn(max = 900.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            PageTitle(title)
+            Spacer(Modifier.height(6.dp))
+            content()
+            Spacer(Modifier.height(24.dp))
+        }
     }
 }
 

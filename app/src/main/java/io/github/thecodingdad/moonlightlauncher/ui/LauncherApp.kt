@@ -298,7 +298,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                     }
                     composable(Routes.SETTINGS) { backStack ->
                         val page = SettingsPageId.valueOf(backStack.arguments?.getString("page") ?: SettingsPageId.ABOUT.name)
-                        ShellFrame(hints) {
+                        SubpageFrame(vm, nav, hints, MainTab.SETTINGS, listOf(stringResource(R.string.tab_settings)), { hostInfoFor = it }, { controllerPopup = true }) {
                             SettingsPageContent(
                                 page, vm,
                                 openReview = { nav.navigate(Routes.REVIEW) },
@@ -311,25 +311,43 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                     composable(Routes.HOST) { backStack ->
                         val uuid = backStack.arguments?.getString("uuid").orEmpty()
                         val hosts by vm.hosts.collectAsState()
-                        ShellFrame(hints) { hosts[uuid]?.let { HostConfigScreen(it) } }
+                        SubpageFrame(
+                            vm, nav, hints, MainTab.SETTINGS,
+                            listOf(stringResource(R.string.tab_settings), stringResource(R.string.settings_hosts)),
+                            { hostInfoFor = it }, { controllerPopup = true },
+                        ) { hosts[uuid]?.let { HostConfigScreen(it) } }
                     }
-                    composable(Routes.CONTROLLERS) { ShellFrame(hints) { ControllersScreen() } }
+                    composable(Routes.CONTROLLERS) {
+                        SubpageFrame(vm, nav, hints, MainTab.SETTINGS, listOf(stringResource(R.string.tab_settings)), { hostInfoFor = it }, { controllerPopup = true }) {
+                            ControllersScreen()
+                        }
+                    }
                     composable(Routes.STATS) {
                         val all by vm.allEntries.collectAsState()
                         val sessions by vm.finishedSessions.collectAsState()
-                        ShellFrame(hints) { StatsScreen(all, sessions) }
+                        SubpageFrame(vm, nav, hints, MainTab.LIBRARY, listOf(stringResource(R.string.tab_library)), { hostInfoFor = it }, { controllerPopup = true }) {
+                            StatsScreen(all, sessions)
+                        }
                     }
                     composable(Routes.PROFILE) { backStack ->
                         val raw = backStack.arguments?.getString("uuid")
                         val uuid = raw?.takeIf { it != "base" }?.let(java.util.UUID::fromString)
                         val profiles by vm.profiles.collectAsState()
                         val name = profiles.firstOrNull { it.uuid == uuid }?.name ?: stringResource(R.string.profile_default)
-                        ShellFrame(hints) { ProfileEditor(uuid, name, onDeleted = { nav.popBackStack() }) }
+                        SubpageFrame(
+                            vm, nav, hints, MainTab.SETTINGS,
+                            listOf(stringResource(R.string.tab_settings), stringResource(R.string.settings_profiles)),
+                            { hostInfoFor = it }, { controllerPopup = true },
+                        ) { ProfileEditor(uuid, name, onDeleted = { nav.popBackStack() }) }
                     }
                     composable(Routes.REVIEW) {
                         val all by vm.allEntries.collectAsState()
                         val review = remember(all) { all.filter { it.item.metadataState == MetadataState.REVIEW } }
-                        ShellFrame(hints) { ReviewScreen(review) }
+                        SubpageFrame(
+                            vm, nav, hints, MainTab.SETTINGS,
+                            listOf(stringResource(R.string.tab_settings), stringResource(R.string.settings_metadata)),
+                            { hostInfoFor = it }, { controllerPopup = true },
+                        ) { ReviewScreen(review) }
                     }
                 }
 
@@ -617,44 +635,16 @@ private fun MainShell(
             }
           }
         }
-        Row(
-            Modifier.align(Alignment.TopCenter).fillMaxWidth()
+        ShellTopBar(
+            selected = tab, onSelect = { tab = it }, hosts = hosts, controllerCount = controllers.size,
+            onHostInfo = onHostInfo, onControllers = onControllers,
+            modifier = Modifier.align(Alignment.TopCenter)
                 .background(
                     if (fullBleed) androidx.compose.ui.graphics.Brush.verticalGradient(listOf(bg.copy(alpha = 0.85f), androidx.compose.ui.graphics.Color.Transparent))
                     else androidx.compose.ui.graphics.SolidColor(bg),
                 )
-                .onSizeChanged { topBarHeight = with(density) { it.height.toDp() } }
-                // Constant height for every tab: a changing bar height would shift all content.
-                .padding(start = 28.dp, end = 28.dp, top = 10.dp, bottom = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            val compact = io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current
-            val status: @Composable () -> Unit = {
-                StatusCluster(
-                    hosts,
-                    onHostClick = { onHostInfo(it.uuid) },
-                    controllerCount = controllers.size,
-                    onControllerClick = onControllers,
-                )
-            }
-            val tabRow: @Composable (Modifier) -> Unit = { m ->
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    modifier = m.horizontalScroll(androidx.compose.foundation.rememberScrollState()),
-                ) {
-                    tabs.forEachIndexed { index, t ->
-                        TabChip(stringResource(t.title), selected = index == tab, onClick = { tab = index })
-                    }
-                }
-            }
-            if (compact) {
-                // Narrow screen: only the status at the top; the tabs move to the bottom navigation bar.
-                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) { status() }
-            } else {
-                tabRow(Modifier.weight(1f))
-                status()
-            }
-        }
+                .onSizeChanged { topBarHeight = with(density) { it.height.toDp() } },
+        )
         ButtonHintBar(
             hints.hints,
             hideWhenCompact = true,
@@ -671,6 +661,95 @@ private fun MainShell(
                 tabs = tabs, selected = tab, onSelect = { tab = it },
                 modifier = Modifier.align(Alignment.BottomCenter)
                     .onSizeChanged { hintBarHeight = with(density) { it.height.toDp() } },
+            )
+        }
+    }
+}
+
+/** Tabs and status cluster: the top bar of the main screen and of its sub pages. */
+@Composable
+private fun ShellTopBar(
+    selected: Int,
+    onSelect: (Int) -> Unit,
+    hosts: List<io.github.thecodingdad.moonlightlauncher.data.remote.HostState>,
+    controllerCount: Int,
+    onHostInfo: (String) -> Unit,
+    onControllers: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier.fillMaxWidth()
+            // Constant height for every tab: a changing bar height would shift all content.
+            .padding(start = 28.dp, end = 28.dp, top = 10.dp, bottom = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        val compact = io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current
+        val status: @Composable () -> Unit = {
+            StatusCluster(
+                hosts,
+                onHostClick = { onHostInfo(it.uuid) },
+                controllerCount = controllerCount,
+                onControllerClick = onControllers,
+            )
+        }
+        if (compact) {
+            // Narrow screen: only the status at the top; the tabs move to the bottom navigation bar.
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) { status() }
+        } else {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                modifier = Modifier.weight(1f).horizontalScroll(androidx.compose.foundation.rememberScrollState()),
+            ) {
+                MainTab.entries.forEachIndexed { index, t ->
+                    TabChip(stringResource(t.title), selected = index == selected, onClick = { onSelect(index) })
+                }
+            }
+            status()
+        }
+    }
+}
+
+/**
+ * Frame of a page opened from a main tab (settings pages, statistics): the main screen's top
+ * bar with [tab] selected, the page with its path ([parents] › title) and the hint bar.
+ * Choosing a tab leaves the page.
+ */
+@Composable
+private fun SubpageFrame(
+    vm: LauncherViewModel,
+    nav: NavHostController,
+    hints: HintHolder,
+    tab: MainTab,
+    parents: List<String>,
+    onHostInfo: (String) -> Unit,
+    onControllers: () -> Unit,
+    content: @Composable () -> Unit,
+) {
+    val hostsMap by vm.hosts.collectAsState()
+    val controllers = io.github.thecodingdad.moonlightlauncher.ui.screens.settings.rememberControllers()
+    val compact = io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current
+    fun openTab(index: Int) {
+        vm.tabState.intValue = index
+        nav.popBackStack(Routes.MAIN, inclusive = false)
+    }
+    Column(Modifier.fillMaxSize().statusBarsPadding()) {
+        ShellTopBar(
+            selected = tab.ordinal, onSelect = ::openTab, hosts = hostsMap.values.sortedBy { it.name },
+            controllerCount = controllers.size, onHostInfo = onHostInfo, onControllers = onControllers,
+            modifier = Modifier.background(LauncherTheme.colors.background),
+        )
+        CompositionLocalProvider(
+            io.github.thecodingdad.moonlightlauncher.ui.screens.settings.LocalPagePath provides
+                io.github.thecodingdad.moonlightlauncher.ui.screens.settings.PagePath(parents) { nav.popBackStack() },
+        ) {
+            Box(Modifier.fillMaxWidth().weight(1f)) { content() }
+        }
+        if (compact) {
+            BottomNavBar(tabs = MainTab.entries, selected = tab.ordinal, onSelect = ::openTab)
+        } else {
+            ButtonHintBar(
+                hints.hints.ifEmpty { listOf(ButtonHint(PadButton.A, stringResource(R.string.hint_select)), ButtonHint(PadButton.B, stringResource(R.string.hint_back))) },
+                hideWhenCompact = true,
             )
         }
     }

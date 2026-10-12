@@ -60,7 +60,7 @@ fun ReviewScreen(items: List<LibraryEntry>) {
     )
 
     Column(Modifier.fillMaxSize().padding(horizontal = 48.dp, vertical = 16.dp)) {
-        Text(stringResource(R.string.metadata_review_list), style = MaterialTheme.typography.headlineMedium, color = LauncherTheme.colors.onSurface)
+        io.github.thecodingdad.moonlightlauncher.ui.screens.settings.PageTitle(stringResource(R.string.metadata_review_list))
         Text(stringResource(R.string.metadata_review_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted, modifier = Modifier.padding(vertical = 8.dp))
         if (items.isEmpty()) {
             Text(stringResource(R.string.metadata_review_done), style = MaterialTheme.typography.titleMedium, color = LauncherTheme.colors.success)

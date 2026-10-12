@@ -82,7 +82,7 @@ fun StatsScreen(entries: List<LibraryEntry>, sessions: List<PlaySessionEntity>) 
             .padding(horizontal = 48.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text(stringResource(R.string.stats_title), style = MaterialTheme.typography.headlineMedium, color = colors.onSurface)
+        io.github.thecodingdad.moonlightlauncher.ui.screens.settings.PageTitle(stringResource(R.string.stats_title))
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             StatTile(stringResource(R.string.stats_total), formatDuration(stats.totalSeconds), Modifier.weight(1f))
             StatTile(stringResource(R.string.stats_sessions), stats.sessions.toString(), Modifier.weight(1f))
