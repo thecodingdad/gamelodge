@@ -215,7 +215,8 @@ class BackupManager(
 
     suspend fun restore(backup: BackupFile, password: String?) = withContext(Dispatchers.IO) {
         if (backup.secrets != null && !password.isNullOrEmpty()) decryptSecrets(backup.secrets, password)
-        settings.update { backup.settings }
+        // Whether this launcher is the home app depends on the device, not on the backup.
+        settings.update { backup.settings.copy(launcherMode = it.launcherMode) }
 
         val dao = db.libraryDao()
         val items = dao.getAllItems()
