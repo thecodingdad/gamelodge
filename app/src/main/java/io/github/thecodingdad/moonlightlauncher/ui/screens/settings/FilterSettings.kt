@@ -31,8 +31,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
-import androidx.compose.material.icons.filled.ArrowDownward
-import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.Restore
@@ -290,14 +288,11 @@ private fun FilterEditorDialog(
                 }
             }
 
-            io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 12.dp, modifier = Modifier.padding(top = 8.dp)) {
-                LauncherButton(stringResource(R.string.move_up), icon = Icons.Filled.ArrowUpward, onClick = { vm.moveFilter(f.id, -1) })
-                LauncherButton(stringResource(R.string.move_down), icon = Icons.Filled.ArrowDownward, onClick = { vm.moveFilter(f.id, 1) })
-                HoldToConfirmButton(
-                    stringResource(R.string.filter_delete), icon = Icons.Filled.Delete,
-                    onConfirmed = { vm.deleteFilter(f); onDismiss() },
-                )
-            }
+            HoldToConfirmButton(
+                stringResource(R.string.filter_delete), icon = Icons.Filled.Delete,
+                modifier = Modifier.padding(top = 8.dp),
+                onConfirmed = { vm.deleteFilter(f); onDismiss() },
+            )
         }
     }
 }

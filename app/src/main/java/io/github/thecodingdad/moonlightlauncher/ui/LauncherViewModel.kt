@@ -153,10 +153,6 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch { c.filters.reorder(ids) }
     }
 
-    fun moveFilter(id: String, delta: Int) {
-        viewModelScope.launch { c.filters.move(id, delta) }
-    }
-
     fun createSmartFilter(name: String, scope: FilterScope, onCreated: (FilterEntity) -> Unit = {}) {
         viewModelScope.launch { onCreated(c.filters.createSmart(name, FilterRules(), scope)) }
     }
