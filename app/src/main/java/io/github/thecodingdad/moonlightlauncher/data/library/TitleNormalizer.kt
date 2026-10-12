@@ -18,6 +18,9 @@ object TitleNormalizer {
         "vi" to "6", "vii" to "7", "viii" to "8", "ix" to "9", "x" to "10",
     )
 
+    /** Title as a search term: store names carry ™/® that IGDB and SteamGridDB don't match. */
+    fun searchTerm(title: String): String = trademarks.replace(title, "").replace(Regex("\\s+"), " ").trim()
+
     fun normalize(title: String): String {
         // Strip ™/®/© first: NFKD would decompose "™" into the letters "TM".
         var s = trademarks.replace(title, "")

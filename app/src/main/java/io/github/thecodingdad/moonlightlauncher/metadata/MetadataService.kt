@@ -228,7 +228,7 @@ class MetadataService(
      * hits only fill games nothing was found for (they go to the review list).
      */
     private suspend fun addIgdb(item: LibraryItemEntity) {
-        val query = item.metadataQuery ?: item.title
+        val query = searchQuery(item)
         val best = igdbBest(query)
         val fresh = dao.getItem(item.id) ?: return
         val confident = best != null && best.second >= MatchScorer.AUTO_ACCEPT
@@ -277,6 +277,9 @@ class MetadataService(
      * Best IGDB hit for a title: the regular search first, then alternative / localized titles
      * when that finds nothing confident (e.g. German titles from Playnite).
      */
+    private fun searchQuery(item: LibraryItemEntity) =
+        item.metadataQuery ?: io.github.thecodingdad.moonlightlauncher.data.library.TitleNormalizer.searchTerm(item.title)
+
     private suspend fun igdbBest(query: String): Pair<IgdbGame, Float>? {
         val regular = igdb.search(query).map { it to scoreAll(query, it) }.maxByOrNull { it.second }
         if (regular != null && regular.second >= MatchScorer.AUTO_ACCEPT) return regular
@@ -299,7 +302,7 @@ class MetadataService(
     }
 
     private suspend fun lookupAndApply(item: LibraryItemEntity) {
-        val query = item.metadataQuery ?: item.title
+        val query = searchQuery(item)
         val igdbBest = if (igdb.isConfigured) {
             igdbBest(query)
         } else null
@@ -363,7 +366,7 @@ class MetadataService(
     /** Alternative images for the artwork picker. */
     suspend fun artworkOptions(item: LibraryItemEntity, kind: ArtworkKind): List<SgdbAsset> = withContext(Dispatchers.IO) {
         if (!sgdb.isConfigured) return@withContext emptyList()
-        val gameId = item.sgdbId ?: sgdb.search(item.metadataQuery ?: item.title).firstOrNull()?.id ?: return@withContext emptyList()
+        val gameId = item.sgdbId ?: sgdb.search(searchQuery(item)).firstOrNull()?.id ?: return@withContext emptyList()
         val type = when (kind) {
             ArtworkKind.COVER -> SgdbAssetType.GRID
             ArtworkKind.HERO -> SgdbAssetType.HERO
@@ -521,7 +524,7 @@ class MetadataService(
         items.keys.chunked(100).forEach { ids ->
             igdb.details(ids).filter { it.isUnofficial }.forEach { game ->
                 val item = dao.getItem(items[game.id]?.id ?: return@forEach) ?: return@forEach
-                val best = igdbBest(item.metadataQuery ?: item.title)
+                val best = igdbBest(searchQuery(item))
                 if (best != null && best.first.id != game.id && best.second >= MatchScorer.REVIEW) {
                     var updated = item.copy(platform = item.platform.takeIf { item.platformSource in setOf(PlatformSource.MANUAL, PlatformSource.PLAYNITE, PlatformSource.COMPANION) },
                         platformSource = item.platformSource.takeIf { it in setOf(PlatformSource.MANUAL, PlatformSource.PLAYNITE, PlatformSource.COMPANION) })
@@ -579,9 +582,10 @@ class MetadataService(
 
 /**
  * Games without an IGDB match are looked up again when this grows (2: alternative and
- * localized titles are searched too).
+ * localized titles are searched too; 4: search terms without ™/®; 3 is taken by ART_FILL_VERSION
+ * on the same counter).
  */
-private const val IGDB_LOOKUP_VERSION = 2
+private const val IGDB_LOOKUP_VERSION = 4
 
 /** Games with an IGDB match got the SteamGridDB gap fill via their IGDB titles (3). */
 private const val ART_FILL_VERSION = 3

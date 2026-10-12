@@ -62,7 +62,7 @@ fun FixMetadataDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
     val scope = rememberCoroutineScope()
     Modal(visible = item != null, onDismiss = onDismiss, title = stringResource(R.string.metadata_fix_title), maxWidth = 860.dp) {
         val target = item ?: return@Modal
-        var query by remember(target.id) { mutableStateOf(target.metadataQuery ?: target.title) }
+        var query by remember(target.id) { mutableStateOf(target.metadataQuery ?: io.github.thecodingdad.moonlightlauncher.data.library.TitleNormalizer.searchTerm(target.title)) }
         var results by remember(target.id) { mutableStateOf<List<MetadataCandidate>?>(null) }
         var applying by remember(target.id) { mutableStateOf(false) }
         LaunchedEffect(query, target.id) {

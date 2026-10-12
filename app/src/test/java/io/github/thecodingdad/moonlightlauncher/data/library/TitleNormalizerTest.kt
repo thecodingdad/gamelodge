@@ -35,4 +35,10 @@ class TitleNormalizerTest {
     fun `sort key ignores leading article`() {
         assertEquals("witcher 3", TitleNormalizer.sortKey("The Witcher 3"))
     }
+
+    @Test
+    fun `search terms drop trademark signs but keep the title readable`() {
+        assertEquals("LEGO Batman: Legacy of the Dark Knight", TitleNormalizer.searchTerm("LEGO® Batman™: Legacy of the Dark Knight"))
+        assertEquals("Hades II", TitleNormalizer.searchTerm("Hades  II"))
+    }
 }
