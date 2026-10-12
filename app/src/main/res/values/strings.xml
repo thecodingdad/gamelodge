@@ -402,8 +402,8 @@
     <string name="filter_hosts">Hosts</string>
     <string name="filter_platforms">Platforms</string>
     <string name="filters_edit">Edit filters</string>
-    <string name="settings_filters">Filters &amp; groups</string>
-    <string name="settings_filters_sub">Library chips, home rows, custom filters and groups</string>
+    <string name="settings_filters">Library filters</string>
+    <string name="settings_filters_sub">Custom library filters, groups and chip order</string>
     <string name="filters_help">Each filter can appear as a chip in the library, as a row on the home screen and as a chip in the Apps tab. Default filters are ordinary filters: edit, hide or delete them like your own.</string>
     <string name="filter_new_smart">New filter</string>
     <string name="filter_new_group">New group</string>
@@ -467,7 +467,7 @@
 
     <!-- App filters -->
     <string name="settings_app_filters">App filters</string>
-    <string name="settings_app_filters_sub">Chips in the Apps tab, custom filters and app groups</string>
+    <string name="settings_app_filters_sub">Custom app filters, groups and chip order</string>
     <string name="app_filters_help">App filters appear as chips in the Apps tab and optionally as rows on the home screen. They are separate from the game filters of the library.</string>
     <string name="filter_match_count_apps">%d apps match</string>
 

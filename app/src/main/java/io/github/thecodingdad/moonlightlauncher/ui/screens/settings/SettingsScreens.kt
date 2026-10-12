@@ -89,6 +89,7 @@ fun HomeScreenSettings(
     settings: LauncherSettings,
     update: ((LauncherSettings) -> LauncherSettings) -> Unit,
     vm: io.github.thecodingdad.moonlightlauncher.ui.LauncherViewModel,
+    openFilters: () -> Unit,
 ) {
     val filters by vm.filters.collectAsState()
     SettingsPage(stringResource(R.string.settings_home_screen)) {
@@ -129,6 +130,7 @@ fun HomeScreenSettings(
                 byId[id]?.let { f -> SwitchRow(filterEntityLabel(f), f.showOnHome, { vm.saveFilter(f.copy(showOnHome = it)) }) }
             }
         }
+        NavRow(stringResource(R.string.settings_filters), openFilters, stringResource(R.string.settings_filters_sub), Icons.Filled.FilterAlt)
     }
 }
 

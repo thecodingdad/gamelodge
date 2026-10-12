@@ -304,6 +304,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                                 openProfile = { nav.navigate(Routes.profile(it)) },
                                 openHost = { nav.navigate(Routes.host(it)) },
                                 openControllers = { nav.navigate(Routes.CONTROLLERS) },
+                                openPage = { nav.navigate(Routes.settings(it)) },
                             )
                         }
                     }
@@ -858,6 +859,7 @@ private fun SettingsPageContent(
     openProfile: (java.util.UUID?) -> Unit,
     openHost: (String) -> Unit,
     openControllers: () -> Unit,
+    openPage: (SettingsPageId) -> Unit,
 ) {
     val settings by vm.settings.collectAsState()
     val hosts by vm.hosts.collectAsState()
@@ -870,7 +872,7 @@ private fun SettingsPageContent(
             openReview = openReview,
         )
         SettingsPageId.HOSTS -> HostsSettings(hosts.values.toList(), openHostConfig = { openHost(it.uuid) })
-        SettingsPageId.HOME_SCREEN -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.HomeScreenSettings(settings, vm::updateSettings, vm)
+        SettingsPageId.HOME_SCREEN -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.HomeScreenSettings(settings, vm::updateSettings, vm, openFilters = { openPage(SettingsPageId.FILTERS) })
         SettingsPageId.THEME -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.ThemeSettings(settings, vm::updateSettings)
         SettingsPageId.DISPLAY -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.DisplaySettings(settings, vm::updateSettings)
         SettingsPageId.TV -> {

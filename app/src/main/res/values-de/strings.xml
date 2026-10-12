@@ -400,8 +400,8 @@
     <string name="filter_hosts">Hosts</string>
     <string name="filter_platforms">Plattformen</string>
     <string name="filters_edit">Filter bearbeiten</string>
-    <string name="settings_filters">Filter &amp; Gruppen</string>
-    <string name="settings_filters_sub">Bibliothek-Chips, Startseiten-Reihen, eigene Filter und Gruppen</string>
+    <string name="settings_filters">Bibliothek-Filter</string>
+    <string name="settings_filters_sub">Eigene Bibliothek-Filter, Gruppen und Chip-Reihenfolge</string>
     <string name="filters_help">Jeder Filter kann als Chip in der Bibliothek, als Reihe auf der Startseite und als Chip im Apps-Tab erscheinen. Standardfilter sind normale Filter: bearbeiten, ausblenden oder löschen wie eigene.</string>
     <string name="filter_new_smart">Neuer Filter</string>
     <string name="filter_new_group">Neue Gruppe</string>
@@ -465,7 +465,7 @@
 
     <!-- App filters -->
     <string name="settings_app_filters">App-Filter</string>
-    <string name="settings_app_filters_sub">Chips im Apps-Tab, eigene Filter und App-Gruppen</string>
+    <string name="settings_app_filters_sub">Eigene App-Filter, Gruppen und Chip-Reihenfolge</string>
     <string name="app_filters_help">App-Filter erscheinen als Chips im Apps-Tab und optional als Reihe auf der Startseite. Sie sind getrennt von den Spiele-Filtern der Bibliothek.</string>
     <string name="filter_match_count_apps">%d Apps passen</string>
 
