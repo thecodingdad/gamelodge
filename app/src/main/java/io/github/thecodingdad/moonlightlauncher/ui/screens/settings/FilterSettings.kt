@@ -102,8 +102,8 @@ fun FilterSettings(vm: LauncherViewModel, scope: FilterScope) {
             LauncherButton(stringResource(R.string.filters_restore), icon = Icons.Filled.Restore, onClick = { resetting = true })
         }
         val members = collections.associate { (c, ids) -> c.id to ids.size }
-        ReorderableFilterList(
-            filters = filters.sortedBy { it.sortOrder },
+        ReorderableList(
+            items = filters.sortedBy { it.sortOrder }, id = { it.id },
             onReorder = vm::reorderFilters,
         ) { index, f ->
             val places = buildList {
@@ -152,7 +152,7 @@ fun FilterSettings(vm: LauncherViewModel, scope: FilterScope) {
 }
 
 @Composable
-private fun filterEntityLabel(f: FilterEntity): String =
+internal fun filterEntityLabel(f: FilterEntity): String =
     f.name.ifBlank { f.builtin?.let { builtinLabel(it) } ?: "?" }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -524,13 +524,15 @@ private fun bucketLabel(field: FilterField, key: String): String = when (field) 
  * handle picks the filter up, D-pad up/down moves it, A or B drops it.
  */
 @Composable
-private fun ReorderableFilterList(
-    filters: List<FilterEntity>,
+internal fun <T> ReorderableList(
+    items: List<T>,
+    id: (T) -> String,
     onReorder: (List<String>) -> Unit,
-    row: @Composable (Int, FilterEntity) -> Unit,
+    row: @Composable (Int, T) -> Unit,
 ) {
-    val byId = filters.associateBy { it.id }
-    var order by remember(filters.map { it.id }) { mutableStateOf(filters.map { it.id }) }
+    val ids = items.map(id)
+    val byId = items.associateBy(id)
+    var order by remember(ids) { mutableStateOf(ids) }
     var dragging by remember { mutableStateOf<String?>(null) }
     var picked by remember { mutableStateOf<String?>(null) }
     var dragOffset by remember { mutableFloatStateOf(0f) }
@@ -538,7 +540,7 @@ private fun ReorderableFilterList(
     val heights = remember { HashMap<String, Float>() }
 
     fun commit() {
-        if (order != filters.map { it.id }) onReorder(order)
+        if (order != ids) onReorder(order)
     }
     fun move(id: String, delta: Int): Boolean {
         val from = order.indexOf(id)
@@ -547,7 +549,7 @@ private fun ReorderableFilterList(
         order = order.toMutableList().also { it.add(to, it.removeAt(from)) }
         return true
     }
-    // B drops a picked-up filter instead of leaving the page.
+    // B drops a picked-up row instead of leaving the page.
     io.github.thecodingdad.moonlightlauncher.ui.input.PadAction(
         io.github.thecodingdad.moonlightlauncher.ui.input.PadButton.B, enabled = picked != null,
     ) { picked = null; commit() }
@@ -590,7 +592,7 @@ private fun ReorderableFilterList(
                                 detectDragGestures(
                                     onDragStart = { dragging = id; dragOffset = 0f },
                                     onDragEnd = { dragging = null; dragOffset = 0f; commit() },
-                                    onDragCancel = { dragging = null; dragOffset = 0f; order = filters.map { it.id } },
+                                    onDragCancel = { dragging = null; dragOffset = 0f; order = ids },
                                 ) { change, amount ->
                                     change.consume()
                                     dragOffset += amount.y

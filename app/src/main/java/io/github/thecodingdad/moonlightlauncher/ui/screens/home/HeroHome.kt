@@ -81,6 +81,8 @@ fun HeroHome(
     filterRows: List<ResolvedFilter>,
     haRow: (@Composable () -> Unit)?,
     emptyContent: @Composable () -> Unit,
+    /** Index in [filterRows] before which [haRow] goes (rows.size = after the last). */
+    haIndex: Int = 2,
 ) {
     val actions = LocalEntryActions.current
     var focused by remember { mutableStateOf<LibraryEntry?>(null) }
@@ -134,10 +136,10 @@ fun HeroHome(
             val rowKeys = buildList {
                 if (rows.running.isNotEmpty()) add("running")
                 filterRows.forEachIndexed { index, row ->
-                    if (index == 2 && haRow != null) add("ha")
+                    if (index == haIndex && haRow != null) add("ha")
                     if (row.entries.isNotEmpty()) add("row:${row.key}")
                 }
-                if (filterRows.size < 2 && haRow != null) add("ha")
+                if (haIndex >= filterRows.size && haRow != null) add("ha")
             }
             var snapped by remember { mutableStateOf(false) }
             // Initial state: list at the top and the first card of the first row focused (or nothing yet).
@@ -233,8 +235,7 @@ fun HeroHome(
                 }
                 val firstFilled = filterRows.indexOfFirst { it.entries.isNotEmpty() }
                 filterRows.forEachIndexed { index, row ->
-                    // The smart home row keeps its place after the first two rows.
-                    if (index == 2 && haRow != null) item(key = "ha") { pinned("ha") { haRow() } }
+                    if (index == haIndex && haRow != null) item(key = "ha") { pinned("ha") { haRow() } }
                     homeRow(
                         "row:${row.key}", 0, row.entries, callbacks, pinned,
                         firstRow = rows.running.isEmpty() && index == firstFilled,
@@ -242,7 +243,7 @@ fun HeroHome(
                         titleText = { filterLabel(row, row = true) },
                     )
                 }
-                if (filterRows.size < 2 && haRow != null) item(key = "ha") { pinned("ha") { haRow() } }
+                if (haIndex >= filterRows.size && haRow != null) item(key = "ha") { pinned("ha") { haRow() } }
             }
             }
         }

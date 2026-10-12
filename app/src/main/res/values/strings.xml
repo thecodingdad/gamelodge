@@ -114,6 +114,9 @@
     <string name="settings_profiles_sub">Resolution, frame rate, bitrate, HDR</string>
     <string name="settings_home_screen">Home screen</string>
     <string name="settings_home_screen_sub">Start tab, screensaver</string>
+    <string name="home_rows_section">Rows on the start tab</string>
+    <string name="home_rows_help">Which filters appear as rows on the start tab and in which order (independent of the library). Move a row with the handle: drag it, or select it and use up/down.</string>
+    <string name="home_row_ha">Smart home favourites</string>
     <string name="settings_theme">Theme &amp; colours</string>
     <string name="settings_theme_sub">Dark, black, light, accent colour</string>
     <string name="settings_display">Display</string>

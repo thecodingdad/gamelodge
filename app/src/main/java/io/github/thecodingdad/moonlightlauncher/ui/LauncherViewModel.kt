@@ -12,6 +12,7 @@ import io.github.thecodingdad.moonlightlauncher.data.db.FilterScope
 import io.github.thecodingdad.moonlightlauncher.data.db.ItemKind
 import io.github.thecodingdad.moonlightlauncher.data.library.FilterEngine
 import io.github.thecodingdad.moonlightlauncher.data.library.FilterPlace
+import io.github.thecodingdad.moonlightlauncher.data.library.HomeRowOrder
 import io.github.thecodingdad.moonlightlauncher.data.library.FilterRules
 import io.github.thecodingdad.moonlightlauncher.data.library.ResolvedFilter
 import io.github.thecodingdad.moonlightlauncher.data.db.PlaySessionEntity
@@ -119,7 +120,10 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val libraryFilters = resolved(FilterPlace.LIBRARY)
-    val homeFilters = resolved(FilterPlace.HOME)
+    /** Start tab rows in their own order (settings), independent of the library chips. */
+    val homeFilters: StateFlow<List<ResolvedFilter>> =
+        combine(resolved(FilterPlace.HOME), settings) { rows, s -> HomeRowOrder.sort(rows, s.homeRowOrder) }
+            .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     val appsFilters = resolved(FilterPlace.APPS)
 
     fun createGroup(name: String, scope: FilterScope, addItem: String? = null) {

@@ -34,6 +34,8 @@ data class LauncherSettings(
     val reduceMotion: Boolean = false,
     val animatedArtwork: Boolean = true,
     val showHaRowOnHome: Boolean = true,
+    /** Order of the start tab rows (filter ids, "ha" for the smart home row); empty = filter order. */
+    val homeRowOrder: List<String> = emptyList(),
     // Input & feedback
     val buttonLayout: ButtonLayout = ButtonLayout.XBOX,
     val uiSounds: Boolean = true,
@@ -108,6 +110,7 @@ class SettingsRepository(context: Context) {
         val reduceMotion = booleanPreferencesKey("reduce_motion")
         val animatedArtwork = booleanPreferencesKey("animated_artwork")
         val showHaRowOnHome = booleanPreferencesKey("show_ha_row_on_home")
+        val homeRowOrder = stringPreferencesKey("home_row_order")
         val buttonLayout = stringPreferencesKey("button_layout")
         val uiSounds = booleanPreferencesKey("ui_sounds")
         val uiSoundVolume = intPreferencesKey("ui_sound_volume")
@@ -166,6 +169,7 @@ class SettingsRepository(context: Context) {
             reduceMotion = this[K.reduceMotion] ?: d.reduceMotion,
             animatedArtwork = this[K.animatedArtwork] ?: d.animatedArtwork,
             showHaRowOnHome = this[K.showHaRowOnHome] ?: d.showHaRowOnHome,
+            homeRowOrder = this[K.homeRowOrder]?.split(',')?.filter { it.isNotEmpty() } ?: d.homeRowOrder,
             buttonLayout = enumOr(this[K.buttonLayout], d.buttonLayout),
             uiSounds = this[K.uiSounds] ?: d.uiSounds,
             uiSoundVolume = this[K.uiSoundVolume] ?: d.uiSoundVolume,
@@ -217,6 +221,7 @@ class SettingsRepository(context: Context) {
         this[K.reduceMotion] = s.reduceMotion
         this[K.animatedArtwork] = s.animatedArtwork
         this[K.showHaRowOnHome] = s.showHaRowOnHome
+        this[K.homeRowOrder] = s.homeRowOrder.joinToString(",")
         this[K.buttonLayout] = s.buttonLayout.name
         this[K.uiSounds] = s.uiSounds
         this[K.uiSoundVolume] = s.uiSoundVolume

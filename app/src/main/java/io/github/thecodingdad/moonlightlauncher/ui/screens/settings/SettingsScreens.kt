@@ -21,6 +21,11 @@ import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.VpnLock
 import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.core.os.LocaleListCompat
@@ -78,12 +83,14 @@ fun SettingsHome(open: (SettingsPageId) -> Unit, isFirstVisit: Boolean, openCont
     }
 }
 
-/** What the launcher shows after starting and when idle. */
+/** What the launcher shows after starting and when idle, and which rows the start tab has. */
 @Composable
 fun HomeScreenSettings(
     settings: LauncherSettings,
     update: ((LauncherSettings) -> LauncherSettings) -> Unit,
+    vm: io.github.thecodingdad.moonlightlauncher.ui.LauncherViewModel,
 ) {
+    val filters by vm.filters.collectAsState()
     SettingsPage(stringResource(R.string.settings_home_screen)) {
         ChoiceRow(
             stringResource(R.string.setting_start_tab), StartTab.entries, settings.startTab,
@@ -105,6 +112,23 @@ fun HomeScreenSettings(
             label = { if (it == 0) stringResource(R.string.off) else stringResource(R.string.minutes_short, it) },
             onSelect = { v -> update { it.copy(screensaverMinutes = v) } },
         )
+        SectionHeader(stringResource(R.string.home_rows_section))
+        Text(stringResource(R.string.home_rows_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+        val gameFilters = filters.filter { it.scope != io.github.thecodingdad.moonlightlauncher.data.db.FilterScope.APPS }.sortedBy { it.sortOrder }
+        val byId = gameFilters.associateBy { it.id }
+        val HA = io.github.thecodingdad.moonlightlauncher.data.library.HomeRowOrder.HA
+        ReorderableList(
+            items = io.github.thecodingdad.moonlightlauncher.data.library.HomeRowOrder.ids(gameFilters.map { it.id }, settings.homeRowOrder),
+            id = { it },
+            onReorder = { ids -> update { it.copy(homeRowOrder = ids) } },
+        ) { _, id ->
+            if (id == HA) {
+                SwitchRow(stringResource(R.string.home_row_ha), settings.showHaRowOnHome, { v -> update { it.copy(showHaRowOnHome = v) } })
+            } else {
+                // Same switch as "Show on start tab" in the filter settings.
+                byId[id]?.let { f -> SwitchRow(filterEntityLabel(f), f.showOnHome, { vm.saveFilter(f.copy(showOnHome = it)) }) }
+            }
+        }
     }
 }
 

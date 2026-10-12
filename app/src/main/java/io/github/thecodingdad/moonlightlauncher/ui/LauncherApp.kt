@@ -612,6 +612,7 @@ private fun MainShell(
                             rows, callbacks, homeFilters,
                             haRow = if (settings.showHaRowOnHome) ({ HaHomeRow() }) else null,
                             emptyContent = empty,
+                            haIndex = io.github.thecodingdad.moonlightlauncher.data.library.HomeRowOrder.haIndex(homeFilters, settings.homeRowOrder),
                         )
                     }
                     MainTab.LIBRARY -> LibraryScreen(
@@ -869,7 +870,7 @@ private fun SettingsPageContent(
             openReview = openReview,
         )
         SettingsPageId.HOSTS -> HostsSettings(hosts.values.toList(), openHostConfig = { openHost(it.uuid) })
-        SettingsPageId.HOME_SCREEN -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.HomeScreenSettings(settings, vm::updateSettings)
+        SettingsPageId.HOME_SCREEN -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.HomeScreenSettings(settings, vm::updateSettings, vm)
         SettingsPageId.THEME -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.ThemeSettings(settings, vm::updateSettings)
         SettingsPageId.DISPLAY -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.DisplaySettings(settings, vm::updateSettings)
         SettingsPageId.TV -> {
