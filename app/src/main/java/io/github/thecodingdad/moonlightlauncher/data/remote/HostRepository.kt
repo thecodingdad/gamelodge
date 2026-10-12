@@ -139,7 +139,9 @@ class HostRepository(
 
     private fun onComputerUpdated(details: ComputerDetails) {
         val uuid = details.uuid ?: return
-        val paired = details.pairState == PairingManager.PairState.PAIRED
+        // Live state while the host answers; otherwise the stored server certificate says it was paired.
+        val paired = details.pairState == PairingManager.PairState.PAIRED ||
+            (details.state != ComputerDetails.State.ONLINE && details.serverCert != null)
         val state = HostState(
             uuid = uuid,
             name = details.name ?: uuid,

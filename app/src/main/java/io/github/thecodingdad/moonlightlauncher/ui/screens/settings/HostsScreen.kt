@@ -273,14 +273,14 @@ private fun HostCard(
                     onClick = onWake, enabled = !waking, primary = waking,
                 )
             }
-            // Power actions (Home Assistant), only while the host is on and when configured.
-            if (online && power != null) {
+            // Power actions (Home Assistant), only for a paired host that is on, when configured.
+            if (online && host.paired && power != null) {
                 if (power.haSleepEntity != null) HoldToConfirmButton(stringResource(R.string.power_sleep), { onPower(io.github.thecodingdad.moonlightlauncher.stream.PowerAction.SLEEP) }, icon = Icons.Filled.Bedtime)
                 if (power.haRestartEntity != null) HoldToConfirmButton(stringResource(R.string.power_restart), { onPower(io.github.thecodingdad.moonlightlauncher.stream.PowerAction.RESTART) }, icon = Icons.Filled.RestartAlt)
                 if (power.haShutdownEntity != null) HoldToConfirmButton(stringResource(R.string.power_shutdown), { onPower(io.github.thecodingdad.moonlightlauncher.stream.PowerAction.SHUTDOWN) }, icon = Icons.Filled.PowerSettingsNew)
             }
             if (online && host.paired) LauncherButton(stringResource(R.string.host_unpair), icon = Icons.Filled.LinkOff, onClick = onUnpair)
-            HoldToConfirmButton(stringResource(R.string.host_remove), onConfirmed = onRemove, icon = Icons.Filled.Delete)
+            if (host.paired) HoldToConfirmButton(stringResource(R.string.host_remove), onConfirmed = onRemove, icon = Icons.Filled.Delete)
         }
         note?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = if (waking) colors.accent else colors.onSurfaceMuted) }
     }
