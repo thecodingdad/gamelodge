@@ -33,6 +33,9 @@ fun SoundSettings(settings: LauncherSettings, update: ((LauncherSettings) -> Lau
             label = {
                 stringResource(
                     when (it) {
+                        "MUFFLED" -> R.string.sound_style_muffled
+                        "WOOD" -> R.string.sound_style_wood
+                        "DEEP" -> R.string.sound_style_deep
                         "CLICK" -> R.string.sound_style_click
                         "RETRO" -> R.string.sound_style_retro
                         "GLASS" -> R.string.sound_style_glass

@@ -41,7 +41,7 @@ data class LauncherSettings(
     val uiSounds: Boolean = true,
     val uiSoundVolume: Int = 60,
     val haptics: Boolean = true,
-    val soundStyle: String = "SOFT",
+    val soundStyle: String = "MUFFLED",
     val soundPitch: Int = 0,
     /** UiSound names that stay silent. */
     val mutedSounds: Set<String> = emptySet(),

@@ -112,7 +112,7 @@ fun io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings.feed
         soundsEnabled = uiSounds,
         volume = uiSoundVolume / 100f,
         style = runCatching { io.github.thecodingdad.moonlightlauncher.ui.feedback.SoundStyle.valueOf(soundStyle) }
-            .getOrDefault(io.github.thecodingdad.moonlightlauncher.ui.feedback.SoundStyle.SOFT),
+            .getOrDefault(io.github.thecodingdad.moonlightlauncher.ui.feedback.SoundStyle.MUFFLED),
         pitch = soundPitch,
         mutedSounds = mutedSounds.mapNotNull { name ->
             io.github.thecodingdad.moonlightlauncher.ui.feedback.UiSound.entries.firstOrNull { it.name == name }

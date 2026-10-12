@@ -18,8 +18,8 @@ import kotlin.math.sin
 
 enum class UiSound { FOCUS, CONFIRM, BACK, ERROR, LAUNCH, TOGGLE }
 
-/** Timbre of the synthesised UI sounds. */
-enum class SoundStyle { SOFT, CLICK, RETRO, GLASS }
+/** Timbre of the synthesised UI sounds; [scale] lowers the base frequencies of the duller styles. */
+enum class SoundStyle(val scale: Double = 1.0) { MUFFLED(0.45), WOOD(0.35), DEEP(0.25), SOFT, CLICK, RETRO, GLASS }
 
 enum class HapticStrength { LIGHT, MEDIUM, STRONG }
 
@@ -27,7 +27,7 @@ enum class HapticStrength { LIGHT, MEDIUM, STRONG }
 data class FeedbackConfig(
     val soundsEnabled: Boolean = true,
     val volume: Float = 0.6f,
-    val style: SoundStyle = SoundStyle.SOFT,
+    val style: SoundStyle = SoundStyle.MUFFLED,
     /** Pitch shift in semitones (-6..+6). */
     val pitch: Int = 0,
     val mutedSounds: Set<UiSound> = emptySet(),
@@ -147,21 +147,35 @@ class UiFeedback(private val context: Context) {
     /** Short sequence of decaying "plinks", one per frequency, evenly spread; timbre per style. */
     private fun tone(freqs: List<Double>, seconds: Double, amp: Double): ShortArray {
         val style = config.style
-        val length = if (style == SoundStyle.CLICK) seconds * 0.6 else if (style == SoundStyle.GLASS) seconds * 1.6 else seconds
+        val length = when (style) {
+            SoundStyle.CLICK -> seconds * 0.6
+            SoundStyle.GLASS -> seconds * 1.6
+            SoundStyle.DEEP -> seconds * 1.3
+            else -> seconds
+        }
         val total = (SAMPLE_RATE * length).toInt()
         val per = total / freqs.size
         val noise = java.util.Random(7)
+        // Small speakers hardly reproduce anything below ~140 Hz.
+        val scaled = freqs.map { (it * style.scale).coerceAtLeast(140.0) }
         return ShortArray(total) { i ->
-            val idx = (i / per).coerceAtMost(freqs.lastIndex)
+            val idx = (i / per).coerceAtMost(scaled.lastIndex)
             val t = (i - idx * per).toDouble() / SAMPLE_RATE
-            val phase = 2 * PI * freqs[idx] * t
+            val phase = 2 * PI * scaled[idx] * t
+            // Pitch that starts higher and quickly falls to the base (knock/drop), integrated into the phase.
+            fun drop(amount: Double, rate: Double) = 2 * PI * scaled[idx] * (t + amount / rate * (1 - exp(-t * rate)))
             val (wave, decay) = when (style) {
+                SoundStyle.MUFFLED -> (sin(phase) * 0.85 + sin(phase * 2) * 0.15) to 42.0
+                SoundStyle.WOOD -> drop(0.6, 70.0).let { sin(it) * 0.8 + sin(it * 2.3) * 0.2 } to 60.0
+                SoundStyle.DEEP -> sin(drop(0.35, 30.0)) to 24.0
                 SoundStyle.SOFT -> sin(phase) to 38.0
                 SoundStyle.CLICK -> (sin(phase) * 0.6 + (noise.nextDouble() * 2 - 1) * 0.4) to 90.0
                 SoundStyle.RETRO -> (if (sin(phase) >= 0) 0.55 else -0.55) to 22.0
                 SoundStyle.GLASS -> (sin(phase) * 0.6 + sin(phase * 2.76) * 0.25 + sin(phase * 5.4) * 0.15) to 16.0
             }
-            val envelope = exp(-t * decay) * (1 - exp(-t * 900))
+            // The dull styles fade in a little slower so the onset doesn't click.
+            val attack = if (style.scale < 1.0) 350.0 else 900.0
+            val envelope = exp(-t * decay) * (1 - exp(-t * attack))
             (wave * envelope * amp * Short.MAX_VALUE).toInt().coerceIn(-32767, 32767).toShort()
         }
     }

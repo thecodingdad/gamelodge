@@ -803,4 +803,9 @@
 
     <!-- Filters -->
     <string name="group_member_count">%d ausgewählt</string>
+
+    <!-- Sounds -->
+    <string name="sound_style_muffled">Gedämpft</string>
+    <string name="sound_style_wood">Holz</string>
+    <string name="sound_style_deep">Tief</string>
 </resources>
