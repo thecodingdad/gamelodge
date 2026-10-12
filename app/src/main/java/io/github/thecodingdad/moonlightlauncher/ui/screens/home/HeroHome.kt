@@ -88,8 +88,13 @@ fun HeroHome(
     var focused by remember { mutableStateOf<LibraryEntry?>(null) }
     var focusedSession by remember { mutableStateOf<RunningSession?>(null) }
     var shown by remember { mutableStateOf<LibraryEntry?>(null) }
+    // Back on the tab (e.g. from a detail page): the game focused, tapped or browsed to last.
+    // By controller the card regains focus anyway; by touch nothing has focus, so the hero
+    // starts with that game instead of the first one.
+    val lastId = callbacks.lastFocusedKey?.substringAfterLast(':')
+    val remembered = lastId?.let { id -> filterRows.firstNotNullOfOrNull { row -> row.entries.firstOrNull { it.item.id == id } } }
     // Avoid reloading artwork for every item while the user scrolls fast.
-    val fallback = rows.running.firstOrNull()?.entry ?: filterRows.firstOrNull()?.entries?.firstOrNull()
+    val fallback = remembered ?: rows.running.firstOrNull()?.entry ?: filterRows.firstOrNull()?.entries?.firstOrNull()
         ?: rows.continuePlaying.firstOrNull() ?: rows.recentlyAdded.firstOrNull()
     LaunchedEffect(focused, fallback) {
         if (focused != null) delay(140)

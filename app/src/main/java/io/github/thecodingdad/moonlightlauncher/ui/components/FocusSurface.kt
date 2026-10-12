@@ -8,6 +8,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -125,6 +126,14 @@ fun FocusSurface(
             if (controllerMode) feedback?.play(UiSound.FOCUS)
             currentOnFocused?.invoke()
         }
+    }
+
+    // Touch: already the press (not only the release) makes this the current element, so
+    // screens update their artwork for it. Compose reports a press only after the tap timeout
+    // and cancels it when the finger scrolls, so swiping through a row changes nothing.
+    val pressed by interactionSource.collectIsPressedAsState()
+    LaunchedEffect(pressed) {
+        if (pressed) touched()
     }
 
     val ring = LauncherTheme.colors.focusRing
