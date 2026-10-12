@@ -76,11 +76,13 @@ fun FixMetadataDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
         }
         LauncherTextField(stringResource(R.string.hint_search), query, onValueChange = { q -> query = q })
         Spacer(Modifier.height(14.dp))
+        // Local copy: the list content is evaluated lazily and may run after a new search reset the state.
+        val found = results
         when {
-            applying || results == null -> CircularProgressIndicator(color = LauncherTheme.colors.accent, modifier = Modifier.align(Alignment.CenterHorizontally))
-            results!!.isEmpty() -> Text(stringResource(R.string.metadata_no_results), color = LauncherTheme.colors.onSurfaceMuted)
+            applying || found == null -> CircularProgressIndicator(color = LauncherTheme.colors.accent, modifier = Modifier.align(Alignment.CenterHorizontally))
+            found.isEmpty() -> Text(stringResource(R.string.metadata_no_results), color = LauncherTheme.colors.onSurfaceMuted)
             else -> LazyColumn(Modifier.heightIn(max = 340.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(results!!, key = { c -> "${c.source}:${c.id}" }) { c ->
+                items(found, key = { c -> "${c.source}:${c.id}" }) { c ->
                     FocusSurface(
                         onClick = {
                             applying = true
