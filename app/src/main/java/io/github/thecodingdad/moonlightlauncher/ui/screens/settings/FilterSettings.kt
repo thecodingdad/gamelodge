@@ -588,7 +588,9 @@ internal fun <T> ReorderableList(
                                 if (event.type == KeyEventType.KeyDown && delta != 0) move(id, delta)
                                 true
                             }
-                            .pointerInput(id) {
+                            // Keyed by the list as well: after a reorder the list state is new, and a
+                            // gesture still bound to the old one moved nothing and saved the old order.
+                            .pointerInput(id, ids) {
                                 detectDragGestures(
                                     onDragStart = { dragging = id; dragOffset = 0f },
                                     onDragEnd = { dragging = null; dragOffset = 0f; commit() },
