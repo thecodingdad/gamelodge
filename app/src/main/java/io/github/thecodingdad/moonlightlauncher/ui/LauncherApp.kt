@@ -526,7 +526,13 @@ private fun ShellFrame(hints: HintHolder, content: @Composable () -> Unit) {
     Column(Modifier.fillMaxSize().statusBarsPadding()) {
         Box(Modifier.fillMaxWidth().weight(1f)) { content() }
         ButtonHintBar(
-            hints.hints.ifEmpty { listOf(ButtonHint(PadButton.A, stringResource(R.string.hint_select)), ButtonHint(PadButton.B, stringResource(R.string.hint_back))) },
+            hints.hints.ifEmpty {
+                    listOf(
+                        ButtonHint(PadButton.A, stringResource(R.string.hint_select)),
+                        ButtonHint(PadButton.B, stringResource(R.string.hint_back)),
+                        ButtonHint(PadButton.L1, stringResource(R.string.hint_tabs), secondButton = PadButton.R1),
+                    )
+                },
             hideWhenCompact = true,
         )
     }
@@ -760,6 +766,8 @@ private fun SubpageFrame(
     val controllers = io.github.thecodingdad.moonlightlauncher.ui.screens.settings.rememberControllers()
     val compact = io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current
     fun openTab(index: Int) = openMainTab(vm, nav, MainTab.entries[index])
+    PadAction(PadButton.L1) { openTab((tab.ordinal - 1).mod(MainTab.entries.size)) }
+    PadAction(PadButton.R1) { openTab((tab.ordinal + 1).mod(MainTab.entries.size)) }
     Column(Modifier.fillMaxSize().statusBarsPadding()) {
         ShellTopBar(
             selected = tab.ordinal, onSelect = ::openTab, hosts = hostsMap.values.sortedBy { it.name },
@@ -776,7 +784,13 @@ private fun SubpageFrame(
             BottomNavBar(tabs = MainTab.entries, selected = tab.ordinal, onSelect = ::openTab)
         } else {
             ButtonHintBar(
-                hints.hints.ifEmpty { listOf(ButtonHint(PadButton.A, stringResource(R.string.hint_select)), ButtonHint(PadButton.B, stringResource(R.string.hint_back))) },
+                hints.hints.ifEmpty {
+                    listOf(
+                        ButtonHint(PadButton.A, stringResource(R.string.hint_select)),
+                        ButtonHint(PadButton.B, stringResource(R.string.hint_back)),
+                        ButtonHint(PadButton.L1, stringResource(R.string.hint_tabs), secondButton = PadButton.R1),
+                    )
+                },
                 hideWhenCompact = true,
             )
         }
