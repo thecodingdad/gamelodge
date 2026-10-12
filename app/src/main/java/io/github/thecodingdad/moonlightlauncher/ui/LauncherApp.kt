@@ -90,7 +90,6 @@ import io.github.thecodingdad.moonlightlauncher.ui.screens.home.HomeCallbacks
 import io.github.thecodingdad.moonlightlauncher.ui.screens.home.HomeRows
 import io.github.thecodingdad.moonlightlauncher.ui.screens.library.LibraryScreen
 import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.AboutSettings
-import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.AppearanceSettings
 import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.ControlsSettings
 import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.HostsSettings
 import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.LanguageSettings
@@ -298,7 +297,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                     }
                     composable(Routes.SETTINGS) { backStack ->
                         val page = SettingsPageId.valueOf(backStack.arguments?.getString("page") ?: SettingsPageId.ABOUT.name)
-                        SubpageFrame(vm, nav, hints, MainTab.SETTINGS, listOf(stringResource(R.string.tab_settings)), { hostInfoFor = it }, { controllerPopup = true }) {
+                        SubpageFrame(vm, nav, hints, MainTab.SETTINGS, listOf(tabCrumb(vm, nav, MainTab.SETTINGS)), { hostInfoFor = it }, { controllerPopup = true }) {
                             SettingsPageContent(
                                 page, vm,
                                 openReview = { nav.navigate(Routes.REVIEW) },
@@ -313,19 +312,19 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                         val hosts by vm.hosts.collectAsState()
                         SubpageFrame(
                             vm, nav, hints, MainTab.SETTINGS,
-                            listOf(stringResource(R.string.tab_settings), stringResource(R.string.settings_hosts)),
+                            listOf(tabCrumb(vm, nav, MainTab.SETTINGS), backCrumb(nav, R.string.settings_hosts)),
                             { hostInfoFor = it }, { controllerPopup = true },
                         ) { hosts[uuid]?.let { HostConfigScreen(it) } }
                     }
                     composable(Routes.CONTROLLERS) {
-                        SubpageFrame(vm, nav, hints, MainTab.SETTINGS, listOf(stringResource(R.string.tab_settings)), { hostInfoFor = it }, { controllerPopup = true }) {
+                        SubpageFrame(vm, nav, hints, MainTab.SETTINGS, listOf(tabCrumb(vm, nav, MainTab.SETTINGS)), { hostInfoFor = it }, { controllerPopup = true }) {
                             ControllersScreen()
                         }
                     }
                     composable(Routes.STATS) {
                         val all by vm.allEntries.collectAsState()
                         val sessions by vm.finishedSessions.collectAsState()
-                        SubpageFrame(vm, nav, hints, MainTab.LIBRARY, listOf(stringResource(R.string.tab_library)), { hostInfoFor = it }, { controllerPopup = true }) {
+                        SubpageFrame(vm, nav, hints, MainTab.LIBRARY, listOf(tabCrumb(vm, nav, MainTab.LIBRARY)), { hostInfoFor = it }, { controllerPopup = true }) {
                             StatsScreen(all, sessions)
                         }
                     }
@@ -336,7 +335,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                         val name = profiles.firstOrNull { it.uuid == uuid }?.name ?: stringResource(R.string.profile_default)
                         SubpageFrame(
                             vm, nav, hints, MainTab.SETTINGS,
-                            listOf(stringResource(R.string.tab_settings), stringResource(R.string.settings_profiles)),
+                            listOf(tabCrumb(vm, nav, MainTab.SETTINGS), backCrumb(nav, R.string.settings_profiles)),
                             { hostInfoFor = it }, { controllerPopup = true },
                         ) { ProfileEditor(uuid, name, onDeleted = { nav.popBackStack() }) }
                     }
@@ -345,7 +344,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                         val review = remember(all) { all.filter { it.item.metadataState == MetadataState.REVIEW } }
                         SubpageFrame(
                             vm, nav, hints, MainTab.SETTINGS,
-                            listOf(stringResource(R.string.tab_settings), stringResource(R.string.settings_metadata)),
+                            listOf(tabCrumb(vm, nav, MainTab.SETTINGS), backCrumb(nav, R.string.settings_metadata)),
                             { hostInfoFor = it }, { controllerPopup = true },
                         ) { ReviewScreen(review) }
                     }
@@ -709,6 +708,22 @@ private fun ShellTopBar(
     }
 }
 
+/** Leaves any sub page for a main tab. */
+private fun openMainTab(vm: LauncherViewModel, nav: NavHostController, tab: MainTab) {
+    vm.tabState.intValue = tab.ordinal
+    nav.popBackStack(Routes.MAIN, inclusive = false)
+}
+
+/** Path step to a main tab. */
+@Composable
+private fun tabCrumb(vm: LauncherViewModel, nav: NavHostController, tab: MainTab) =
+    io.github.thecodingdad.moonlightlauncher.ui.screens.settings.Crumb(stringResource(tab.title)) { openMainTab(vm, nav, tab) }
+
+/** Path step back to the page this one was opened from. */
+@Composable
+private fun backCrumb(nav: NavHostController, label: Int) =
+    io.github.thecodingdad.moonlightlauncher.ui.screens.settings.Crumb(stringResource(label)) { nav.popBackStack() }
+
 /**
  * Frame of a page opened from a main tab (settings pages, statistics): the main screen's top
  * bar with [tab] selected, the page with its path ([parents] › title) and the hint bar.
@@ -720,7 +735,7 @@ private fun SubpageFrame(
     nav: NavHostController,
     hints: HintHolder,
     tab: MainTab,
-    parents: List<String>,
+    parents: List<io.github.thecodingdad.moonlightlauncher.ui.screens.settings.Crumb>,
     onHostInfo: (String) -> Unit,
     onControllers: () -> Unit,
     content: @Composable () -> Unit,
@@ -728,10 +743,7 @@ private fun SubpageFrame(
     val hostsMap by vm.hosts.collectAsState()
     val controllers = io.github.thecodingdad.moonlightlauncher.ui.screens.settings.rememberControllers()
     val compact = io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current
-    fun openTab(index: Int) {
-        vm.tabState.intValue = index
-        nav.popBackStack(Routes.MAIN, inclusive = false)
-    }
+    fun openTab(index: Int) = openMainTab(vm, nav, MainTab.entries[index])
     Column(Modifier.fillMaxSize().statusBarsPadding()) {
         ShellTopBar(
             selected = tab.ordinal, onSelect = ::openTab, hosts = hostsMap.values.sortedBy { it.name },
@@ -857,9 +869,12 @@ private fun SettingsPageContent(
             openReview = openReview,
         )
         SettingsPageId.HOSTS -> HostsSettings(hosts.values.toList(), openHostConfig = { openHost(it.uuid) })
-        SettingsPageId.APPEARANCE -> {
+        SettingsPageId.HOME_SCREEN -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.HomeScreenSettings(settings, vm::updateSettings)
+        SettingsPageId.THEME -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.ThemeSettings(settings, vm::updateSettings)
+        SettingsPageId.DISPLAY -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.DisplaySettings(settings, vm::updateSettings)
+        SettingsPageId.TV -> {
             val external by vm.externalDisplay.collectAsState()
-            AppearanceSettings(settings, vm::updateSettings, external)
+            io.github.thecodingdad.moonlightlauncher.ui.screens.settings.TvSettings(settings, vm::updateSettings, external)
         }
         SettingsPageId.CONTROLS -> ControlsSettings(settings, vm::updateSettings, openControllers = openControllers)
         SettingsPageId.LANGUAGE -> LanguageSettings(settings, vm::updateSettings)

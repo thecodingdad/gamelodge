@@ -14,6 +14,8 @@ import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.AspectRatio
+import androidx.compose.material.icons.filled.Tv
 import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.VpnLock
@@ -31,14 +33,17 @@ import io.github.thecodingdad.moonlightlauncher.data.settings.StartTab
 import io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings
 import io.github.thecodingdad.moonlightlauncher.data.settings.ThemeMode
 
-enum class SettingsPageId { HOSTS, PROFILES, APPEARANCE, FILTERS, APP_FILTERS, QUICK_MENU, CONTROLS, SOUNDS, METADATA, HOME_ASSISTANT, VPN, LAUNCHER, BACKUP, LANGUAGE, ABOUT }
+enum class SettingsPageId { HOSTS, PROFILES, HOME_SCREEN, THEME, DISPLAY, TV, FILTERS, APP_FILTERS, QUICK_MENU, CONTROLS, SOUNDS, METADATA, HOME_ASSISTANT, VPN, LAUNCHER, BACKUP, LANGUAGE, ABOUT }
 
 @Composable
 fun SettingsHome(open: (SettingsPageId) -> Unit, isFirstVisit: Boolean, openControllers: () -> Unit = {}) {
     val context = androidx.compose.ui.platform.LocalContext.current
     SettingsPage(stringResource(R.string.tab_settings)) {
         SectionHeader(stringResource(R.string.settings_group_display))
-        NavRow(stringResource(R.string.settings_appearance), { open(SettingsPageId.APPEARANCE) }, stringResource(R.string.settings_appearance_sub), Icons.Filled.Palette, initialFocus = isFirstVisit)
+        NavRow(stringResource(R.string.settings_home_screen), { open(SettingsPageId.HOME_SCREEN) }, stringResource(R.string.settings_home_screen_sub), Icons.Filled.Home, initialFocus = isFirstVisit)
+        NavRow(stringResource(R.string.settings_theme), { open(SettingsPageId.THEME) }, stringResource(R.string.settings_theme_sub), Icons.Filled.Palette)
+        NavRow(stringResource(R.string.settings_display), { open(SettingsPageId.DISPLAY) }, stringResource(R.string.settings_display_sub), Icons.Filled.AspectRatio)
+        NavRow(stringResource(R.string.tv_section), { open(SettingsPageId.TV) }, stringResource(R.string.settings_tv_sub), Icons.Filled.Tv)
         NavRow(stringResource(R.string.settings_language), { open(SettingsPageId.LANGUAGE) }, null, Icons.Filled.Language)
 
         SectionHeader(stringResource(R.string.settings_group_library))
@@ -73,13 +78,13 @@ fun SettingsHome(open: (SettingsPageId) -> Unit, isFirstVisit: Boolean, openCont
     }
 }
 
+/** What the launcher shows after starting and when idle. */
 @Composable
-fun AppearanceSettings(
+fun HomeScreenSettings(
     settings: LauncherSettings,
     update: ((LauncherSettings) -> LauncherSettings) -> Unit,
-    externalDisplay: io.github.thecodingdad.moonlightlauncher.system.ExternalDisplayInfo? = null,
 ) {
-    SettingsPage(stringResource(R.string.settings_appearance)) {
+    SettingsPage(stringResource(R.string.settings_home_screen)) {
         ChoiceRow(
             stringResource(R.string.setting_start_tab), StartTab.entries, settings.startTab,
             label = {
@@ -96,6 +101,20 @@ fun AppearanceSettings(
             initialFocus = true,
         )
         ChoiceRow(
+            stringResource(R.string.setting_screensaver), listOf(0, 2, 5, 10, 20), settings.screensaverMinutes,
+            label = { if (it == 0) stringResource(R.string.off) else stringResource(R.string.minutes_short, it) },
+            onSelect = { v -> update { it.copy(screensaverMinutes = v) } },
+        )
+    }
+}
+
+@Composable
+fun ThemeSettings(
+    settings: LauncherSettings,
+    update: ((LauncherSettings) -> LauncherSettings) -> Unit,
+) {
+    SettingsPage(stringResource(R.string.settings_theme)) {
+        ChoiceRow(
             stringResource(R.string.setting_theme), ThemeMode.entries, settings.themeMode,
             label = {
                 stringResource(
@@ -107,6 +126,7 @@ fun AppearanceSettings(
                 )
             },
             onSelect = { v -> update { it.copy(themeMode = v) } },
+            initialFocus = true,
         )
         ChoiceRow(
             stringResource(R.string.setting_accent), AccentMode.entries, settings.accentMode,
@@ -118,6 +138,16 @@ fun AppearanceSettings(
             label = { c -> stringResource(accentNames[accentPresets.indexOf(c)]) },
             onSelect = { v -> update { it.copy(accentColor = v) } },
         )
+    }
+}
+
+/** Sizes, motion and system bars. */
+@Composable
+fun DisplaySettings(
+    settings: LauncherSettings,
+    update: ((LauncherSettings) -> LauncherSettings) -> Unit,
+) {
+    SettingsPage(stringResource(R.string.settings_display)) {
         ChoiceRow(
             stringResource(R.string.setting_card_size), CardSize.entries, settings.cardSize,
             label = {
@@ -130,6 +160,7 @@ fun AppearanceSettings(
                 )
             },
             onSelect = { v -> update { it.copy(cardSize = v) } },
+            initialFocus = true,
         )
         SwitchRow(stringResource(R.string.setting_animated_artwork), settings.animatedArtwork, { v -> update { it.copy(animatedArtwork = v) } })
         SwitchRow(stringResource(R.string.setting_reduce_motion), settings.reduceMotion, { v -> update { it.copy(reduceMotion = v) } })
@@ -137,7 +168,20 @@ fun AppearanceSettings(
             stringResource(R.string.setting_ui_scale), settings.uiScale, 60..130, 5,
             { v -> update { it.copy(uiScale = v) } }, { "$it %" },
         )
-        SectionHeader(stringResource(R.string.tv_section))
+        SwitchRow(
+            stringResource(R.string.setting_hide_nav_bar), settings.hideNavigationBar, { v -> update { it.copy(hideNavigationBar = v) } },
+            subtitle = stringResource(R.string.setting_hide_nav_bar_sub),
+        )
+    }
+}
+
+@Composable
+fun TvSettings(
+    settings: LauncherSettings,
+    update: ((LauncherSettings) -> LauncherSettings) -> Unit,
+    externalDisplay: io.github.thecodingdad.moonlightlauncher.system.ExternalDisplayInfo? = null,
+) {
+    SettingsPage(stringResource(R.string.tv_section)) {
         InfoRow(
             stringResource(R.string.tv_detected),
             externalDisplay?.let { "${it.name} (${it.width}×${it.height})" } ?: stringResource(R.string.tv_none),
@@ -149,16 +193,6 @@ fun AppearanceSettings(
         SliderRow(
             stringResource(R.string.setting_tv_scale), settings.tvScale, 40..100, 5,
             { v -> update { it.copy(tvScale = v) } }, { "$it %" },
-        )
-        SectionHeader(stringResource(R.string.system_section))
-        SwitchRow(
-            stringResource(R.string.setting_hide_nav_bar), settings.hideNavigationBar, { v -> update { it.copy(hideNavigationBar = v) } },
-            subtitle = stringResource(R.string.setting_hide_nav_bar_sub),
-        )
-        ChoiceRow(
-            stringResource(R.string.setting_screensaver), listOf(0, 2, 5, 10, 20), settings.screensaverMinutes,
-            label = { if (it == 0) stringResource(R.string.off) else stringResource(R.string.minutes_short, it) },
-            onSelect = { v -> update { it.copy(screensaverMinutes = v) } },
         )
     }
 }
