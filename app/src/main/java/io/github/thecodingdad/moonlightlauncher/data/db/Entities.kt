@@ -234,3 +234,22 @@ data class LibraryEntry(
     /** "Start with…" only makes sense when the game is installed on more than one device/host. */
     val hasTargetChoice: Boolean get() = targets.count { it.type == TargetType.LOCAL || it.installed } > 1
 }
+
+/** Item without its automatic metadata (fields the user edited stay), ready for a new lookup. */
+fun LibraryItemEntity.clearedMetadata(): LibraryItemEntity {
+    val m = manual
+    return copy(
+        metadataState = MetadataState.NONE, matchConfidence = 0f, igdbId = null, sgdbId = null, metadataVersion = 0,
+        description = description.takeIf { MetaField.DESCRIPTION in m },
+        genres = genres.takeIf { MetaField.GENRES in m },
+        developer = developer.takeIf { MetaField.DEVELOPER in m },
+        publisher = publisher.takeIf { MetaField.PUBLISHER in m },
+        series = series.takeIf { MetaField.SERIES in m },
+        features = features.takeIf { MetaField.FEATURES in m },
+        ageRatings = ageRatings.takeIf { MetaField.AGE_RATING in m },
+        releaseYear = releaseYear.takeIf { MetaField.RELEASE in m },
+        releaseDate = releaseDate.takeIf { MetaField.RELEASE in m },
+        rating = rating.takeIf { MetaField.RATING in m },
+        coverUrl = null, heroUrl = null, logoUrl = null, iconUrl = null, animatedCoverUrl = null, animatedHeroUrl = null,
+    )
+}

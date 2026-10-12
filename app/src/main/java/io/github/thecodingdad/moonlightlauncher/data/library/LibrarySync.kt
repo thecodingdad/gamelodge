@@ -7,6 +7,7 @@ import io.github.thecodingdad.moonlightlauncher.data.db.LaunchTargetEntity
 import io.github.thecodingdad.moonlightlauncher.data.db.LauncherDatabase
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryItemEntity
 import io.github.thecodingdad.moonlightlauncher.data.db.TargetType
+import io.github.thecodingdad.moonlightlauncher.data.db.clearedMetadata
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.util.UUID
@@ -88,11 +89,17 @@ class LibrarySync(
         }
     }
 
-    /** The item takes the source's new name unless the user set the title (or another source named it). */
+    /**
+     * The item takes the source's new name unless the user set the title (or another source named
+     * it). Metadata found automatically for the old name is dropped and looked up again (a rename
+     * usually corrects a wrongly recognised game); a match picked by hand stays.
+     */
     private suspend fun followRename(known: LaunchTargetEntity, entry: SourceEntry) {
         val item = dao.getItem(known.itemId) ?: return
         if (item.title != known.name || io.github.thecodingdad.moonlightlauncher.data.db.MetaField.TITLE in item.manual) return
-        dao.upsertItem(item.copy(title = entry.name, normalizedTitle = TitleNormalizer.normalize(entry.name)))
+        val base = if (item.metadataState == io.github.thecodingdad.moonlightlauncher.data.db.MetadataState.LOCKED) item
+        else item.clearedMetadata()
+        dao.upsertItem(base.copy(title = entry.name, normalizedTitle = TitleNormalizer.normalize(entry.name)))
     }
 
     private suspend fun findOrCreateItem(entry: SourceEntry, now: Long): String {

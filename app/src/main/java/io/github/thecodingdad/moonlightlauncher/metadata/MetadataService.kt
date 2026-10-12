@@ -3,6 +3,7 @@ package io.github.thecodingdad.moonlightlauncher.metadata
 import io.github.thecodingdad.moonlightlauncher.data.db.ItemKind
 import io.github.thecodingdad.moonlightlauncher.data.db.LauncherDatabase
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryItemEntity
+import io.github.thecodingdad.moonlightlauncher.data.db.clearedMetadata
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry
 import io.github.thecodingdad.moonlightlauncher.data.db.MetaField
 import io.github.thecodingdad.moonlightlauncher.data.db.MetadataState
@@ -578,23 +579,6 @@ class MetadataService(
     }
 
     /** Forgets the automatic match; hand-edited fields stay. */
-    private fun LibraryItemEntity.clearedMetadata(): LibraryItemEntity {
-        val m = manual
-        return copy(
-            metadataState = MetadataState.NONE, matchConfidence = 0f, igdbId = null, sgdbId = null, metadataVersion = 0,
-            description = description.takeIf { MetaField.DESCRIPTION in m },
-            genres = genres.takeIf { MetaField.GENRES in m },
-            developer = developer.takeIf { MetaField.DEVELOPER in m },
-            publisher = publisher.takeIf { MetaField.PUBLISHER in m },
-            series = series.takeIf { MetaField.SERIES in m },
-            features = features.takeIf { MetaField.FEATURES in m },
-            ageRatings = ageRatings.takeIf { MetaField.AGE_RATING in m },
-            releaseYear = releaseYear.takeIf { MetaField.RELEASE in m },
-            releaseDate = releaseDate.takeIf { MetaField.RELEASE in m },
-            rating = rating.takeIf { MetaField.RATING in m },
-            coverUrl = null, heroUrl = null, logoUrl = null, iconUrl = null, animatedCoverUrl = null, animatedHeroUrl = null,
-        )
-    }
 }
 
 /**

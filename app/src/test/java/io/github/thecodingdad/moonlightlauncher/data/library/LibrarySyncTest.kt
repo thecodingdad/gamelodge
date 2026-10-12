@@ -61,7 +61,7 @@ class LibrarySyncTest {
     fun `a renamed host app with a new id keeps its item via the app uuid`() = runTest {
         sync.syncHost("h1", listOf(remote("h1", 100, "Batman").copy(appUuid = "U-1")))
         val before = entries().single().item
-        db.libraryDao().upsertItem(before.copy(playtimeSeconds = 3600, favorite = true))
+        db.libraryDao().upsertItem(before.copy(playtimeSeconds = 3600, favorite = true, metadataState = io.github.thecodingdad.moonlightlauncher.data.db.MetadataState.OK, coverUrl = "https://x/default-dan.png"))
 
         // The host derives a new numeric id from the new name; the UUID stays.
         sync.syncHost("h1", listOf(remote("h1", 200, "LEGO Batman").copy(appUuid = "u-1")))
@@ -70,6 +70,8 @@ class LibrarySyncTest {
         assertEquals(3600L, after.item.playtimeSeconds)
         assertTrue(after.item.favorite)
         assertEquals("LEGO Batman", after.item.title)
+        // Metadata found for the old name is looked up again.
+        assertEquals(io.github.thecodingdad.moonlightlauncher.data.db.MetadataState.NONE, after.item.metadataState)
         assertEquals(listOf(SourceEntry.remoteId("h1", 200)), after.targets.map { it.id })
     }
 
