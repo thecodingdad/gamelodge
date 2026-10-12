@@ -173,7 +173,7 @@
     <!-- Hosts -->
     <string name="hosts_empty">Noch keine Hosts. Hosts im Netzwerk erscheinen automatisch.</string>
     <string name="hosts_refresh">Aktualisieren</string>
-    <string name="hosts_discovery_hint">Hosts mit Sunshine, Apollo oder Vibepollo im selben Netzwerk werden automatisch gefunden. Für Hosts in anderen Netzwerken „Host hinzufügen“ verwenden.</string>
+    <string name="hosts_discovery_hint">Hosts mit Sunshine, Apollo oder Vibepollo im selben Netzwerk werden automatisch gefunden, solange diese Seite geöffnet ist. Für Hosts in anderen Netzwerken „Host hinzufügen“ verwenden.</string>
     <string name="host_add">Host hinzufügen</string>
     <string name="host_add_title">Host-Adresse (IP oder Name)</string>
     <string name="host_added">Host hinzugefügt.</string>

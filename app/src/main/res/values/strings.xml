@@ -175,7 +175,7 @@
     <!-- Hosts -->
     <string name="hosts_empty">No hosts yet. Hosts in your network appear automatically.</string>
     <string name="hosts_refresh">Refresh</string>
-    <string name="hosts_discovery_hint">Hosts running Sunshine, Apollo or Vibepollo in the same network are found automatically. Use \"Add host\" for hosts in other networks.</string>
+    <string name="hosts_discovery_hint">Hosts running Sunshine, Apollo or Vibepollo in the same network are found automatically while this screen is open. Use \"Add host\" for hosts in other networks.</string>
     <string name="host_add">Add host</string>
     <string name="host_add_title">Host address (IP or name)</string>
     <string name="host_added">Host added.</string>

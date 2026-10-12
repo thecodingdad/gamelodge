@@ -71,6 +71,8 @@ class HostRepository(
     private val appListPollers = mutableMapOf<String, ComputerManagerService.ApplistPoller>()
     private val lastRawAppLists = mutableMapOf<String, String>()
     private var polling = false
+    /** mDNS discovery runs only while the hosts screen is open (jmDNS caches everything it hears). */
+    private var discovery = false
 
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
@@ -116,7 +118,14 @@ class HostRepository(
     }
 
     private fun startPollingInternal(b: ComputerManagerService.ComputerManagerBinder) {
+        b.setDiscoveryActive(discovery)
         b.startPolling(listener)
+    }
+
+    /** Looks for new hosts in the network (mDNS) while [active]; known hosts are polled anyway. */
+    fun setDiscovery(active: Boolean) {
+        discovery = active
+        if (polling) binder?.setDiscoveryActive(active)
     }
 
     /** Forces an immediate app list refresh for every reachable host. */

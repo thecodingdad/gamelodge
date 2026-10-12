@@ -22,6 +22,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -70,6 +71,11 @@ fun HostsSettings(hosts: List<HostState>, openHostConfig: (HostState) -> Unit) {
     var pairUi by remember { mutableStateOf<PairUi?>(null) }
     var message by remember { mutableStateOf<String?>(null) }
     var adding by remember { mutableStateOf(false) }
+    // New hosts are only searched for while this screen is open.
+    DisposableEffect(Unit) {
+        context.container.hosts.setDiscovery(true)
+        onDispose { context.container.hosts.setDiscovery(false) }
+    }
 
     fun startPairing(host: HostState) {
         val pin = actions.generatePin()
