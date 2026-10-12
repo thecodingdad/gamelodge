@@ -98,6 +98,8 @@ fun FilterSettings(vm: LauncherViewModel, scope: FilterScope) {
     val hosts by vm.hosts.collectAsState()
     val keyboard = LocalKeyboardController.current
     var editing by remember { mutableStateOf<String?>(null) }
+    // A new group opens straight into picking its members.
+    var pickMembers by remember { mutableStateOf(false) }
     var resetting by remember { mutableStateOf(false) }
     val smartTitle = stringResource(R.string.filter_new_smart)
     val groupTitle = stringResource(R.string.filter_new_group)
@@ -111,7 +113,7 @@ fun FilterSettings(vm: LauncherViewModel, scope: FilterScope) {
             )
             LauncherButton(
                 groupTitle, icon = Icons.AutoMirrored.Filled.PlaylistAdd,
-                onClick = { keyboard.open(groupTitle, "") { name -> if (name.isNotBlank()) vm.createGroup(name.trim(), scope) } },
+                onClick = { keyboard.open(groupTitle, "") { name -> if (name.isNotBlank()) vm.createGroup(name.trim(), scope) { editing = it.id; pickMembers = true } } },
             )
             LauncherButton(stringResource(R.string.filters_restore), icon = Icons.Filled.Restore, onClick = { resetting = true })
         }
@@ -161,7 +163,8 @@ fun FilterSettings(vm: LauncherViewModel, scope: FilterScope) {
         entries = all,
         hostNames = hosts.mapValues { it.value.name },
         vm = vm,
-        onDismiss = { editing = null },
+        pickMembers = pickMembers,
+        onDismiss = { editing = null; pickMembers = false },
     )
 }
 
@@ -176,6 +179,7 @@ private fun FilterEditorDialog(
     entries: List<LibraryEntry>,
     hostNames: Map<String, String>,
     vm: LauncherViewModel,
+    pickMembers: Boolean,
     onDismiss: () -> Unit,
 ) {
     Modal(visible = filter != null, onDismiss = onDismiss, title = filter?.let { filterEntityLabel(it) }, maxWidth = 760.dp) {
@@ -269,7 +273,7 @@ private fun FilterEditorDialog(
                     Text(stringResource(R.string.filter_group_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
                     val collections by vm.collections.collectAsState()
                     val memberIds = collections.firstOrNull { it.first.id == f.id }?.second.orEmpty()
-                    var picking by remember(f.id) { mutableStateOf(false) }
+                    var picking by remember(f.id) { mutableStateOf(pickMembers) }
                     val apps = f.scope == FilterScope.APPS
                     NavRow(
                         title = stringResource(if (apps) R.string.group_pick_apps else R.string.group_pick_games),

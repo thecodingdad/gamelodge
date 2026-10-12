@@ -126,10 +126,11 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     val appsFilters = resolved(FilterPlace.APPS)
 
-    fun createGroup(name: String, scope: FilterScope, addItem: String? = null) {
+    fun createGroup(name: String, scope: FilterScope, addItem: String? = null, onCreated: (FilterEntity) -> Unit = {}) {
         viewModelScope.launch {
             val group = c.filters.createGroup(name, scope)
             if (addItem != null) c.library.setInCollection(addItem, group.id, true)
+            onCreated(group)
         }
     }
 
