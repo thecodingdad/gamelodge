@@ -366,7 +366,8 @@
     <string name="qm_quit_game">Spiel beenden</string>
 
     <!-- Backup -->
-    <string name="backup_intro">Sichert Einstellungen, Stream-Profile, Host-Einstellungen, Favoriten, Sammlungen, korrigierte Metadaten und Smart-Home-Kacheln. Die Kopplung mit Hosts ist nicht enthalten, nach einer Neuinstallation neu koppeln.</string>
+    <string name="backup_intro">Sichert Einstellungen, Stream-Profile, Host-Einstellungen, Favoriten, Sammlungen, korrigierte Metadaten und Smart-Home-Kacheln. Die Kopplung mit Hosts ist nicht enthalten, auf einem neuen Gerät die Hosts erst neu koppeln.</string>
+    <string name="backup_restore_hint">Vor dem Wiederherstellen alle Hosts unter Einstellungen → Hosts koppeln und warten, bis ihre Spiele erscheinen. Favoriten, Spielzeiten und Metadaten werden nur Spielen zugeordnet, die schon in der Bibliothek sind.</string>
     <string name="backup_folder">Backup-Ordner</string>
     <string name="backup_auto">Tägliches automatisches Backup</string>
     <string name="backup_auto_sub">In den Backup-Ordner, ohne Zugangsdaten</string>

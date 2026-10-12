@@ -114,6 +114,7 @@ fun BackupSettings(settings: LauncherSettings, update: ((LauncherSettings) -> La
             { on -> if (on) keyboard.open(pwTitle, "", TextKind.PASSWORD) { pw -> password = pw.ifEmpty { null } } else password = null },
             subtitle = stringResource(R.string.backup_with_credentials_sub), icon = Icons.Filled.Key,
         )
+        Text(stringResource(R.string.backup_restore_hint), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.accent)
         io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 12.dp) {
             LauncherButton(stringResource(R.string.backup_now), icon = Icons.Filled.Save, primary = true, onClick = ::backupNow)
             HoldToConfirmButton(stringResource(R.string.backup_restore), { openFile.launch(arrayOf("application/json", "*/*")) }, icon = Icons.Filled.Restore)

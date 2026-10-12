@@ -368,7 +368,8 @@
     <string name="qm_quit_game">Quit game</string>
 
     <!-- Backup -->
-    <string name="backup_intro">Saves settings, stream profiles, host settings, favourites, collections, corrected metadata and smart home tiles. Pairing with hosts is not included; pair again after a reinstall.</string>
+    <string name="backup_intro">Saves settings, stream profiles, host settings, favourites, collections, corrected metadata and smart home tiles. Pairing with hosts is not included; on a new device pair the hosts first.</string>
+    <string name="backup_restore_hint">Before restoring, pair all hosts under Settings → Hosts and wait until their games appear. Favourites, play time and metadata are only applied to games already in the library.</string>
     <string name="backup_folder">Backup folder</string>
     <string name="backup_auto">Daily automatic backup</string>
     <string name="backup_auto_sub">Into the backup folder, without credentials</string>
