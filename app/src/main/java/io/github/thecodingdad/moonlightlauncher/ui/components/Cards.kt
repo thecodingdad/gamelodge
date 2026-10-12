@@ -102,6 +102,32 @@ fun CoverCard(
     }
 }
 
+/** Landscape (16:9) tile of an app, for app rows on the start tab. */
+@Composable
+fun AppTileCard(
+    entry: LibraryEntry,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    width: Dp = LauncherTheme.dimens.coverWidth * 1.6f,
+    onLongClick: (() -> Unit)? = null,
+    onFocused: (() -> Unit)? = null,
+) {
+    FocusSurface(
+        onClick = onClick,
+        onLongClick = onLongClick,
+        onFocused = onFocused,
+        modifier = modifier.width(width).aspectRatio(16f / 9f),
+    ) {
+        AppTileImage(entry, Modifier.fillMaxSize())
+        if (entry.item.favorite) {
+            Icon(
+                Icons.Filled.Favorite, null, tint = Color(0xFFFF5C8A),
+                modifier = Modifier.align(Alignment.TopStart).padding(8.dp).size(18.dp),
+            )
+        }
+    }
+}
+
 @Composable
 fun SourceBadges(entry: LibraryEntry, modifier: Modifier = Modifier) {
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(4.dp)) {

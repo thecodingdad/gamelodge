@@ -789,4 +789,13 @@
     <string name="platform_source_companion">from the companion</string>
     <string name="action_install">Install</string>
     <string name="not_installed">Not installed</string>
+
+    <!-- Apps -->
+    <string name="action_start">Start</string>
+    <string name="action_app_artwork">Change tile</string>
+    <string name="app_tile_title">Start tab tile</string>
+    <string name="app_tile_own">Own image …</string>
+    <string name="app_tile_reset">Back to the app\'s own tile</string>
+    <string name="app_tile_help">Shown when the app is in a row of the start tab. Without a choice: the app\'s TV banner or a tile made from its icon.</string>
+    <string name="app_tile_none">SteamGridDB has no landscape images for this app (or no key is set).</string>
 </resources>

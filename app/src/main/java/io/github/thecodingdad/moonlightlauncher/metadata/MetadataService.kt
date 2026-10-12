@@ -378,6 +378,23 @@ class MetadataService(
         } else emptyList()
     }
 
+    /** Landscape SteamGridDB grids for an app's start tab tile. */
+    suspend fun tileOptions(item: LibraryItemEntity): List<SgdbAsset> = withContext(Dispatchers.IO) {
+        if (!sgdb.isConfigured) return@withContext emptyList()
+        runCatching {
+            val gameId = sgdb.search(searchQuery(item)).firstOrNull()?.id ?: return@runCatching emptyList()
+            sgdb.assets(gameId, SgdbAssetType.GRID, landscape = true)
+        }.getOrDefault(emptyList())
+    }
+
+    /** Tile of an app: SteamGridDB URL, own image file, or null for the default tile. */
+    suspend fun setTile(itemId: String, url: String?) = withContext(Dispatchers.IO) {
+        val item = dao.getItem(itemId) ?: return@withContext
+        // An own image replaced or removed: its copy isn't needed any more.
+        item.tileUrl?.takeIf { !it.startsWith("http") && it != url }?.let { java.io.File(it).delete() }
+        dao.upsertItem(item.copy(tileUrl = url))
+    }
+
     suspend fun setArtwork(itemId: String, kind: ArtworkKind, asset: SgdbAsset) = withContext(Dispatchers.IO) {
         val item = dao.getItem(itemId) ?: return@withContext
         val updated = when (kind) {

@@ -75,6 +75,8 @@ data class ItemBackup(
     val animatedHeroUrl: String?,
     /** Only manual platform choices are kept; automatic ones are detected again. */
     val manualPlatform: String? = null,
+    /** App tile from SteamGridDB (own images are files on the device and stay there). */
+    val tileUrl: String? = null,
 )
 
 @Serializable
@@ -155,7 +157,8 @@ class BackupManager(
                 // Only what the user changed or what took effort to fetch.
                 .filter {
                     it.favorite || it.hidden || it.kindSource == KindSource.MANUAL || it.playtimeSeconds > 0 ||
-                        it.metadataState != MetadataState.NONE || it.platformSource == PlatformSource.MANUAL
+                        it.metadataState != MetadataState.NONE || it.platformSource == PlatformSource.MANUAL ||
+                        it.tileUrl?.startsWith("http") == true
                 }
                 .map {
                     ItemBackup(
@@ -164,6 +167,7 @@ class BackupManager(
                         it.developer, it.releaseYear, it.rating, it.coverUrl, it.heroUrl, it.logoUrl, it.iconUrl,
                         it.animatedCoverUrl, it.animatedHeroUrl,
                         manualPlatform = it.platform.takeIf { _ -> it.platformSource == PlatformSource.MANUAL },
+                        tileUrl = it.tileUrl?.takeIf { url -> url.startsWith("http") },
                     )
                 },
             collections = collections.sortedBy { it.sortOrder }.map { c ->
@@ -235,6 +239,7 @@ class BackupManager(
                     rating = b.rating, coverUrl = b.coverUrl, heroUrl = b.heroUrl, logoUrl = b.logoUrl, iconUrl = b.iconUrl,
                     animatedCoverUrl = b.animatedCoverUrl, animatedHeroUrl = b.animatedHeroUrl,
                     platform = b.manualPlatform ?: existing.platform,
+                    tileUrl = b.tileUrl ?: existing.tileUrl,
                     platformSource = if (b.manualPlatform != null) PlatformSource.MANUAL else existing.platformSource,
                 ),
             )

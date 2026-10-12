@@ -81,6 +81,8 @@ data class LibraryItemEntity(
     val manualFields: String? = null,
     /** 1 = the IGDB fields of schema v3 were fetched for this match. */
     val metadataVersion: Int = 0,
+    /** Apps: landscape tile for the start tab (SteamGridDB, own image); null = TV banner or generated. */
+    val tileUrl: String? = null,
 ) {
     val manual: Set<MetaField> get() = manualFields.orEmpty().split(',').mapNotNull { n -> MetaField.entries.firstOrNull { it.name == n } }.toSet()
 }

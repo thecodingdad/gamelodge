@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Restore
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -186,4 +187,72 @@ fun ReviewConfirmAction(entry: io.github.thecodingdad.moonlightlauncher.data.db.
         stringResource(R.string.metadata_confirm), onClick = onConfirm,
         icon = androidx.compose.material.icons.Icons.Filled.Check,
     )
+}
+
+/** Start tab tile of an app: SteamGridDB landscape images, an own image, or the default tile. */
+@Composable
+fun AppTileDialog(entry: io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry?, onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    val metadata = context.container.metadata
+    val scope = rememberCoroutineScope()
+    val target = entry
+    val pickImage = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        if (uri == null || target == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            // Copy into the app's storage: the picked document may not stay readable.
+            val file = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                val dir = java.io.File(context.filesDir, "tiles").apply { mkdirs() }
+                val out = java.io.File(dir, "${target.item.id}-${System.currentTimeMillis()}.img")
+                context.contentResolver.openInputStream(uri)?.use { input -> out.outputStream().use { input.copyTo(it) } }?.let { out }
+            }
+            if (file != null) metadata.setTile(target.item.id, file.absolutePath)
+            onDismiss()
+        }
+    }
+    Modal(visible = target != null, onDismiss = onDismiss, title = stringResource(R.string.app_tile_title), maxWidth = 1000.dp) {
+        val e = target ?: return@Modal
+        var options by remember(e.item.id) { mutableStateOf<List<SgdbAsset>?>(null) }
+        LaunchedEffect(e.item.id) { options = metadata.tileOptions(e.item) }
+        Text(stringResource(R.string.app_tile_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+        Spacer(Modifier.height(12.dp))
+        io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 10.dp) {
+            io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton(
+                stringResource(R.string.app_tile_own), onClick = { pickImage.launch(arrayOf("image/*")) },
+                icon = androidx.compose.material.icons.Icons.Filled.Image,
+            )
+            if (e.item.tileUrl != null) {
+                io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton(
+                    stringResource(R.string.app_tile_reset), onClick = { scope.launch { metadata.setTile(e.item.id, null); onDismiss() } },
+                    icon = androidx.compose.material.icons.Icons.Filled.Restore,
+                )
+            }
+        }
+        Spacer(Modifier.height(14.dp))
+        val list = options
+        when {
+            list == null -> CircularProgressIndicator(color = LauncherTheme.colors.accent)
+            list.isEmpty() -> Text(stringResource(R.string.app_tile_none), color = LauncherTheme.colors.onSurfaceMuted)
+            else -> LazyVerticalGrid(
+                columns = GridCells.Adaptive(240.dp),
+                modifier = Modifier.heightIn(max = 380.dp),
+                contentPadding = PaddingValues(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                items(list, key = { a -> a.id }) { asset ->
+                    FocusSurface(
+                        onClick = { scope.launch { metadata.setTile(e.item.id, asset.url); onDismiss() } },
+                        modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f),
+                        color = LauncherTheme.colors.surfaceRaised,
+                    ) {
+                        ArtworkImage(asset.thumb ?: asset.url, e.item.title, Modifier, showTitleOnPlaceholder = false)
+                    }
+                }
+            }
+        }
+        Spacer(Modifier.height(8.dp))
+        ButtonHintBar(listOf(ButtonHint(PadButton.B, stringResource(R.string.action_close), onClick = onDismiss)))
+    }
 }

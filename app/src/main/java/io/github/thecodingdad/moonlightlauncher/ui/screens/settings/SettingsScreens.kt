@@ -116,8 +116,11 @@ fun HomeScreenSettings(
         SectionHeader(stringResource(R.string.home_rows_section))
         Text(stringResource(R.string.home_rows_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
         NavRow(stringResource(R.string.settings_filters), openFilters, stringResource(R.string.settings_filters_sub), Icons.Filled.FilterAlt)
-        val gameFilters = filters.filter { it.scope != io.github.thecodingdad.moonlightlauncher.data.db.FilterScope.APPS }.sortedBy { it.sortOrder }
+        // Game filters first, then app filters (their rows show landscape app tiles).
+        val isApps = { f: io.github.thecodingdad.moonlightlauncher.data.db.FilterEntity -> f.scope == io.github.thecodingdad.moonlightlauncher.data.db.FilterScope.APPS }
+        val gameFilters = filters.sortedWith(compareBy({ isApps(it) }, { it.sortOrder }))
         val byId = gameFilters.associateBy { it.id }
+        val appsPrefix = stringResource(R.string.tab_apps)
         val HA = io.github.thecodingdad.moonlightlauncher.data.library.HomeRowOrder.HA
         ReorderableList(
             items = io.github.thecodingdad.moonlightlauncher.data.library.HomeRowOrder.ids(gameFilters.map { it.id }, settings.homeRowOrder),
@@ -128,7 +131,10 @@ fun HomeScreenSettings(
                 SwitchRow(stringResource(R.string.home_row_ha), settings.showHaRowOnHome, { v -> update { it.copy(showHaRowOnHome = v) } })
             } else {
                 // Same switch as "Show on start tab" in the filter settings.
-                byId[id]?.let { f -> SwitchRow(filterEntityLabel(f), f.showOnHome, { vm.saveFilter(f.copy(showOnHome = it)) }) }
+                byId[id]?.let { f ->
+                    val label = if (isApps(f)) "$appsPrefix · ${filterEntityLabel(f)}" else filterEntityLabel(f)
+                    SwitchRow(label, f.showOnHome, { vm.saveFilter(f.copy(showOnHome = it)) })
+                }
             }
         }
     }

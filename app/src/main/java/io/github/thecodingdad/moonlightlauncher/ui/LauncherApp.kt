@@ -214,6 +214,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
     var metaEditorFor by remember { mutableStateOf<String?>(null) }
     var fixingFor by remember { mutableStateOf<String?>(null) }
     var artworkFor by remember { mutableStateOf<String?>(null) }
+    var appTileFor by remember { mutableStateOf<String?>(null) }
     val metaScope = rememberCoroutineScope()
     // Game whose detail page is on screen (its menu leaves out what the page offers itself).
     // Game whose detail page is on screen (paging through a list changes it without navigating).
@@ -379,12 +380,24 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                     onDismiss = entryActions::closeContext,
                     onPlay = entryActions::play,
                     onPlayWith = entryActions::playWith,
-                    onDetails = entryActions::showDetail,
+                    onDetails = { e ->
+                        // Apps have no detail page: Android's app info instead.
+                        val pkg = e.localTarget?.packageName
+                        if (e.item.kind == io.github.thecodingdad.moonlightlauncher.data.db.ItemKind.APP && pkg != null) {
+                            runCatching {
+                                activity.startActivity(
+                                    android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, android.net.Uri.fromParts("package", pkg, null))
+                                        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK),
+                                )
+                            }
+                        } else entryActions.showDetail(e)
+                    },
                     onFavorite = vm::setFavorite,
                     onKind = vm::setKind,
                     onHide = { vm.setHidden(it, true) },
                     onCollections = { collectionsFor = it },
                     onEditMetadata = { metaEditorFor = it.item.id },
+                    onAppArtwork = { appTileFor = it.item.id },
                     inDetail = detailOpenFor == entryActions.contextMenuFor?.item?.id,
                 )
                 // Metadata editor with its match and artwork dialogs, reachable from every menu.
@@ -397,6 +410,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                 )
                 FixMetadataDialog(fixingFor?.let { id -> metaLibrary.firstOrNull { it.item.id == id }?.item }) { fixingFor = null }
                 ArtworkPickerDialog(artworkFor?.let { id -> metaLibrary.firstOrNull { it.item.id == id }?.item }) { artworkFor = null }
+                io.github.thecodingdad.moonlightlauncher.ui.screens.metadata.AppTileDialog(appTileFor?.let { id -> metaLibrary.firstOrNull { it.item.id == id } }) { appTileFor = null }
                 val allForPlatforms by vm.allEntries.collectAsState()
                 io.github.thecodingdad.moonlightlauncher.ui.shell.PlatformDialog(
                     entry = platformFor,

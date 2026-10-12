@@ -162,3 +162,71 @@ fun PublishAccentFrom(model: Any?) {
         holder.coverAccent.value = color
     }
 }
+
+private val tileCache = LruCache<String, ImageBitmap>(80)
+
+/** Model of an app tile set by the user (SteamGridDB URL or own image file). */
+fun LibraryEntry.tileModel(): Any? = item.tileUrl?.let { if (it.startsWith("http")) it else File(it) }
+
+/**
+ * Landscape tile of an app for the start tab: the tile the user picked, the app's Android TV
+ * banner, or one generated from its icon (host apps: their box art) on a background in the
+ * icon's main colour.
+ */
+@Composable
+fun AppTileImage(entry: LibraryEntry, modifier: Modifier = Modifier) {
+    entry.tileModel()?.let {
+        ArtworkImage(it, entry.item.title, modifier)
+        return
+    }
+    val context = LocalContext.current
+    val pkg = entry.localTarget?.packageName
+    val source = if (pkg == null) entry.coverModel() else null
+    val key = pkg ?: "remote:${entry.item.id}:$source"
+    val bitmap by produceState(tileCache.get(key), key) {
+        if (value == null) {
+            value = withContext(Dispatchers.IO) {
+                runCatching { buildAppTile(context, pkg, source) }.getOrNull()?.also { tileCache.put(key, it) }
+            }
+        }
+    }
+    val image = bitmap
+    if (image == null) TitlePlaceholder(entry.item.title, modifier, showTitle = true)
+    else Image(image, contentDescription = entry.item.title, contentScale = ContentScale.Crop, modifier = modifier)
+}
+
+private suspend fun buildAppTile(context: android.content.Context, pkg: String?, source: Any?): ImageBitmap? {
+    if (pkg != null) {
+        val pm = context.packageManager
+        // Apps made for Android TV bring their own 16:9 banner.
+        val banner = runCatching { pm.getApplicationBanner(pkg) }.getOrNull()
+            ?: pm.getLeanbackLaunchIntentForPackage(pkg)?.let { runCatching { pm.getActivityBanner(it) }.getOrNull() }
+        if (banner != null) return banner.toBitmap(640, 360).asImageBitmap()
+        return generatedTile(pm.getApplicationIcon(pkg).toBitmap(256, 256))
+    }
+    source ?: return null
+    val request = ImageRequest.Builder(context).data(source).size(512).allowHardware(false).build()
+    val art = (context.imageLoader.execute(request) as? SuccessResult)?.image?.toBitmap() ?: return null
+    return generatedTile(art)
+}
+
+/** 16:9 tile: gradient in the image's main colour with the image (icon / box art) centred. */
+private fun generatedTile(icon: Bitmap): ImageBitmap {
+    val w = 640
+    val h = 360
+    val palette = Palette.from(icon).generate()
+    val base = palette.vibrantSwatch?.rgb ?: palette.dominantSwatch?.rgb ?: android.graphics.Color.DKGRAY
+    val dark = androidx.core.graphics.ColorUtils.blendARGB(base, android.graphics.Color.BLACK, 0.5f)
+    val out = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+    val canvas = android.graphics.Canvas(out)
+    val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG or android.graphics.Paint.FILTER_BITMAP_FLAG)
+    paint.shader = android.graphics.LinearGradient(0f, 0f, w.toFloat(), h.toFloat(), base, dark, android.graphics.Shader.TileMode.CLAMP)
+    canvas.drawRect(0f, 0f, w.toFloat(), h.toFloat(), paint)
+    paint.shader = null
+    val target = h * 0.6f
+    val scale = target / maxOf(icon.width, icon.height)
+    val iw = icon.width * scale
+    val ih = icon.height * scale
+    canvas.drawBitmap(icon, null, android.graphics.RectF((w - iw) / 2, (h - ih) / 2, (w + iw) / 2, (h + ih) / 2), paint)
+    return out.asImageBitmap()
+}

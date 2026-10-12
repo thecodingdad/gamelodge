@@ -787,4 +787,13 @@
     <string name="platform_source_companion">vom Companion</string>
     <string name="action_install">Installieren</string>
     <string name="not_installed">Nicht installiert</string>
+
+    <!-- Apps -->
+    <string name="action_start">Starten</string>
+    <string name="action_app_artwork">Kachel ändern</string>
+    <string name="app_tile_title">Kachel im Start-Tab</string>
+    <string name="app_tile_own">Eigenes Bild …</string>
+    <string name="app_tile_reset">Zurück zur Standard-Kachel</string>
+    <string name="app_tile_help">Wird gezeigt, wenn die App in einer Reihe des Start-Tabs steht. Ohne Auswahl: das TV-Banner der App oder eine Kachel aus ihrem Icon.</string>
+    <string name="app_tile_none">SteamGridDB hat für diese App keine Querformat-Bilder (oder es ist kein Key eingetragen).</string>
 </resources>

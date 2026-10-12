@@ -288,15 +288,27 @@ private fun androidx.compose.foundation.lazy.LazyListScope.homeRow(
             items(entries, key = { it.item.id }) { entry ->
                 val focusKey = "$key:${entry.item.id}"
                 val isDefault = callbacks.lastFocusedKey == null && firstRow && entry === entries.first()
-                CoverCard(
-                    entry = entry,
-                    width = LauncherTheme.dimens.coverWidth * 0.82f,
-                    onClick = { actions.open(entry, entries) { id -> callbacks.onFocusKey("$key:$id") } },
-                    onLongClick = { actions.context(entry) },
-                    onFocused = { onFocus(entry); callbacks.onFocusKey(focusKey) },
-                    animated = callbacks.animatedArtwork,
-                    modifier = Modifier.restoreFocusIf(isDefault || callbacks.lastFocusedKey == focusKey).focusAfterBrowse(entry.item.id),
-                )
+                val cardModifier = Modifier.restoreFocusIf(isDefault || callbacks.lastFocusedKey == focusKey).focusAfterBrowse(entry.item.id)
+                if (entry.item.kind == io.github.thecodingdad.moonlightlauncher.data.db.ItemKind.APP) {
+                    // Apps on the start tab: landscape tiles.
+                    io.github.thecodingdad.moonlightlauncher.ui.components.AppTileCard(
+                        entry = entry,
+                        onClick = { actions.open(entry, entries) },
+                        onLongClick = { actions.context(entry) },
+                        onFocused = { onFocus(entry); callbacks.onFocusKey(focusKey) },
+                        modifier = cardModifier,
+                    )
+                } else {
+                    CoverCard(
+                        entry = entry,
+                        width = LauncherTheme.dimens.coverWidth * 0.82f,
+                        onClick = { actions.open(entry, entries) { id -> callbacks.onFocusKey("$key:$id") } },
+                        onLongClick = { actions.context(entry) },
+                        onFocused = { onFocus(entry); callbacks.onFocusKey(focusKey) },
+                        animated = callbacks.animatedArtwork,
+                        modifier = cardModifier,
+                    )
+                }
             }
         }
     } }
