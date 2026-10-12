@@ -429,7 +429,7 @@
     <string name="filter_sources">Sources</string>
     <string name="filter_any">Any</string>
     <string name="filter_match_count">%d games match</string>
-    <string name="filter_group_help">Add entries to this group with X → Groups.</string>
+    <string name="filter_group_help">Pick entries here or add them via X → Groups.</string>
     <string name="filter_delete">Hold to delete</string>
     <string name="move_up">Move up</string>
     <string name="move_down">Move down</string>
@@ -798,4 +798,11 @@
     <string name="app_tile_reset">Back to the app\'s own tile</string>
     <string name="app_tile_help">Shown when the app is in a row of the start tab. Without a choice: the app\'s TV banner or a tile made from its icon.</string>
     <string name="app_tile_none">SteamGridDB has no landscape images for this app (or no key is set).</string>
+
+    <!-- Filters -->
+    <string name="group_pick_games">Select games</string>
+    <string name="group_pick_apps">Select apps</string>
+
+    <!-- Filters -->
+    <string name="group_member_count">%d selected</string>
 </resources>

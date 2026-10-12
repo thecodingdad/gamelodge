@@ -427,7 +427,7 @@
     <string name="filter_sources">Quellen</string>
     <string name="filter_any">Egal</string>
     <string name="filter_match_count">%d Spiele passen</string>
-    <string name="filter_group_help">Einträge fügst du über X → Gruppen hinzu.</string>
+    <string name="filter_group_help">Wähle Einträge hier aus oder füge sie über X → Gruppen hinzu.</string>
     <string name="filter_delete">Halten zum Löschen</string>
     <string name="move_up">Nach oben</string>
     <string name="move_down">Nach unten</string>
@@ -796,4 +796,11 @@
     <string name="app_tile_reset">Zurück zur Standard-Kachel</string>
     <string name="app_tile_help">Wird gezeigt, wenn die App in einer Reihe des Start-Tabs steht. Ohne Auswahl: das TV-Banner der App oder eine Kachel aus ihrem Icon.</string>
     <string name="app_tile_none">SteamGridDB hat für diese App keine Querformat-Bilder (oder es ist kein Key eingetragen).</string>
+
+    <!-- Filters -->
+    <string name="group_pick_games">Spiele auswählen</string>
+    <string name="group_pick_apps">Apps auswählen</string>
+
+    <!-- Filters -->
+    <string name="group_member_count">%d ausgewählt</string>
 </resources>

@@ -48,6 +48,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.thecodingdad.moonlightlauncher.R
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.Checklist
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.style.TextOverflow
+import io.github.thecodingdad.moonlightlauncher.ui.components.AppIcon
+import io.github.thecodingdad.moonlightlauncher.ui.components.ArtworkImage
+import io.github.thecodingdad.moonlightlauncher.ui.components.FocusSurface
+import io.github.thecodingdad.moonlightlauncher.ui.components.coverModel
 import androidx.compose.material.icons.filled.Add
 import io.github.thecodingdad.moonlightlauncher.data.library.FilterField
 import io.github.thecodingdad.moonlightlauncher.data.library.FieldSection
@@ -61,6 +76,7 @@ import io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry
 import io.github.thecodingdad.moonlightlauncher.data.library.FilterEngine
 import io.github.thecodingdad.moonlightlauncher.data.library.FilterRules
 import io.github.thecodingdad.moonlightlauncher.data.library.GroupBy
+import io.github.thecodingdad.moonlightlauncher.data.library.TitleNormalizer
 import io.github.thecodingdad.moonlightlauncher.data.library.LibrarySort
 import io.github.thecodingdad.moonlightlauncher.ui.LauncherViewModel
 import io.github.thecodingdad.moonlightlauncher.ui.components.HoldToConfirmButton
@@ -251,9 +267,27 @@ private fun FilterEditorDialog(
                         onDismiss = { editingCondition = null },
                     )
                 }
-                FilterKind.GROUP -> Text(
-                    stringResource(R.string.filter_group_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted,
-                )
+                FilterKind.GROUP -> {
+                    Text(stringResource(R.string.filter_group_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+                    val collections by vm.collections.collectAsState()
+                    val memberIds = collections.firstOrNull { it.first.id == f.id }?.second.orEmpty()
+                    var picking by remember(f.id) { mutableStateOf(false) }
+                    val apps = f.scope == FilterScope.APPS
+                    NavRow(
+                        title = stringResource(if (apps) R.string.group_pick_apps else R.string.group_pick_games),
+                        onClick = { picking = true },
+                        subtitle = stringResource(R.string.group_member_count, games.count { it.item.id in memberIds }),
+                        icon = Icons.Filled.Checklist,
+                    )
+                    GroupMembersDialog(
+                        visible = picking,
+                        title = filterEntityLabel(f),
+                        entries = games,
+                        members = memberIds,
+                        onToggle = { id, member -> vm.setInCollection(id, f.id, member) },
+                        onDismiss = { picking = false },
+                    )
+                }
             }
 
             io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 12.dp, modifier = Modifier.padding(top = 8.dp)) {
@@ -265,6 +299,72 @@ private fun FilterEditorDialog(
                 )
             }
         }
+    }
+}
+
+/** Checklist of all games (or apps) to pick the members of a group in one go. */
+@Composable
+private fun GroupMembersDialog(
+    visible: Boolean,
+    title: String,
+    entries: List<LibraryEntry>,
+    members: Set<String>,
+    onToggle: (String, Boolean) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    Modal(visible = visible, onDismiss = onDismiss, title = title, maxWidth = 720.dp) {
+        var query by remember { mutableStateOf("") }
+        LauncherTextField(stringResource(R.string.hint_search), query, { query = it })
+        Spacer(Modifier.height(12.dp))
+        val q = TitleNormalizer.normalize(query)
+        val shown = remember(entries, q) {
+            entries
+                .filter { q.isEmpty() || TitleNormalizer.normalize(it.item.title).contains(q) }
+                .sortedBy { it.item.title.lowercase() }
+        }
+        LazyColumn(Modifier.heightIn(max = 460.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            items(shown, key = { it.item.id }) { entry ->
+                val member = entry.item.id in members
+                FocusSurface(
+                    onClick = { onToggle(entry.item.id, !member) },
+                    modifier = Modifier.fillMaxWidth(),
+                    color = LauncherTheme.colors.surfaceRaised,
+                    focusScale = 1.02f,
+                ) {
+                    Row(
+                        Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    ) {
+                        MemberThumb(entry)
+                        Text(
+                            entry.item.title, style = MaterialTheme.typography.titleSmall, color = LauncherTheme.colors.onSurface,
+                            maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f),
+                        )
+                        Checkbox(
+                            checked = member, onCheckedChange = null,
+                            colors = CheckboxDefaults.colors(checkedColor = LauncherTheme.colors.accent),
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** Small cover (games) or icon (local apps) in front of a checklist row. */
+@Composable
+private fun MemberThumb(entry: LibraryEntry) {
+    val pkg = entry.localTarget?.packageName
+    val shape = RoundedCornerShape(6.dp)
+    if (entry.item.kind == ItemKind.APP && pkg != null) {
+        Box(Modifier.size(44.dp), contentAlignment = Alignment.Center) { AppIcon(pkg, Modifier.size(40.dp)) }
+    } else {
+        ArtworkImage(
+            entry.coverModel(), entry.item.title,
+            Modifier.width(33.dp).height(44.dp).clip(shape),
+            showTitleOnPlaceholder = false,
+        )
     }
 }
 
