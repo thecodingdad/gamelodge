@@ -86,9 +86,10 @@ fun DetailScreen(
     val actions = LocalEntryActions.current
     val colors = LauncherTheme.colors
     val hasRemote = entry.remoteTargets.isNotEmpty()
+    val hasTargetChoice = entry.hasTargetChoice
     if (active) PublishAccentFrom(entry.coverModel())
 
-    if (hasRemote) PadAction(PadButton.X, enabled = active) { actions.playWith(entry) }
+    if (hasTargetChoice) PadAction(PadButton.X, enabled = active) { actions.playWith(entry) }
     PadAction(PadButton.START, enabled = active) { actions.play(entry) }
     // Remote games: LB/RB switch the stream profile used for the next start.
     var profilePicker by remember { mutableStateOf(false) }
@@ -108,7 +109,7 @@ fun DetailScreen(
     if (active) ScreenHints(
         buildList {
             add(ButtonHint(PadButton.A, stringResource(R.string.hint_select)))
-            if (hasRemote) add(ButtonHint(PadButton.X, stringResource(R.string.action_play_with), onClick = { actions.playWith(entry) }))
+            if (hasTargetChoice) add(ButtonHint(PadButton.X, stringResource(R.string.action_play_with), onClick = { actions.playWith(entry) }))
             if (onBrowse != null) add(ButtonHint(PadButton.RS_RIGHT, stringResource(R.string.hint_prev_next), onClick = { onBrowse(1) }))
             if (hasRemote && profiles.size > 1) {
                 add(ButtonHint(PadButton.L1, stringResource(R.string.profile_picker_title), onClick = { stepProfile(1) }, secondButton = PadButton.R1))
@@ -160,7 +161,7 @@ fun DetailScreen(
                         icon = if (entry.notInstalled) Icons.Filled.Download else Icons.Filled.PlayArrow, primary = true,
                         modifier = Modifier.focusWhenActive(active),
                     )
-                    if (hasRemote) LauncherButton(stringResource(R.string.action_play_with), onClick = { actions.playWith(entry) }, icon = Icons.Filled.Tune)
+                    if (hasTargetChoice) LauncherButton(stringResource(R.string.action_play_with), onClick = { actions.playWith(entry) }, icon = Icons.Filled.Tune)
                     LauncherButton(
                         "", onClick = { onFavorite(!entry.item.favorite) },
                         icon = if (entry.item.favorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,

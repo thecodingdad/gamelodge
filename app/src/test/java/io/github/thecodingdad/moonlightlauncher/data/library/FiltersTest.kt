@@ -48,6 +48,18 @@ class FiltersTest {
     }
 
     @Test
+    fun `start with is offered only for games installed on more than one target`() {
+        val remote = entry("x", "PC")
+        val local = LaunchTargetEntity("l:x", "x", TargetType.LOCAL, "x", packageName = "x", lastSeenAt = 0)
+        val secondHost = remote.targets.single().copy(id = "r2:x", hostUuid = "H2")
+        assertFalse(remote.hasTargetChoice)
+        assertTrue(remote.copy(targets = remote.targets + local).hasTargetChoice)
+        assertTrue(remote.copy(targets = remote.targets + secondHost).hasTargetChoice)
+        // Owned but not installed on the second host: nothing to choose.
+        assertFalse(remote.copy(targets = remote.targets + secondHost.copy(installed = false)).hasTargetChoice)
+    }
+
+    @Test
     fun `platform builtin splits into one chip per platform`() {
         val r = FilterEngine.resolve(listOf(builtin(BuiltinFilter.PLATFORMS, 0)), FilterPlace.LIBRARY, entries, emptyMap(), emptyMap())
         assertEquals(listOf("Android", "Nintendo Switch", "PC"), r.map { it.value })

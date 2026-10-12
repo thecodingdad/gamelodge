@@ -284,7 +284,7 @@ fun EntryContextMenu(
                         Modifier.fillMaxWidth(), if (e.notInstalled) Icons.Filled.Download else Icons.Filled.PlayArrow, primary = true,
                     )
                 }
-                if (e.remoteTargets.isNotEmpty()) {
+                if (e.hasTargetChoice) {
                     LauncherButton(stringResource(R.string.action_play_with), act { onPlayWith(e) }, Modifier.fillMaxWidth(), Icons.Filled.Tune)
                 }
                 LauncherButton(stringResource(R.string.action_details), act { onDetails(e) }, Modifier.fillMaxWidth(), Icons.Filled.Info)

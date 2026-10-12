@@ -228,4 +228,7 @@ data class LibraryEntry(
 
     /** Only owned: no local app and every host entry would install the game first. */
     val notInstalled: Boolean get() = targets.isNotEmpty() && localTarget == null && remoteTargets.none { it.installed }
+
+    /** "Start with…" only makes sense when the game is installed on more than one device/host. */
+    val hasTargetChoice: Boolean get() = targets.count { it.type == TargetType.LOCAL || it.installed } > 1
 }
