@@ -77,7 +77,7 @@ fun CoverCard(
             onFocused = onFocused,
             modifier = Modifier.fillMaxWidth().aspectRatio(2f / 3f),
         ) { focused ->
-            ArtworkImage(entry.coverModel(animated && focused), entry.item.title, Modifier.fillMaxSize())
+            CoverImage(entry, Modifier.fillMaxSize(), animated = animated && focused)
             // Owned but not installed on the host: dimmed, playing it starts the installation.
             if (entry.notInstalled) Box(Modifier.fillMaxSize().background(Color(0x99000000)))
             SourceBadges(entry, Modifier.align(Alignment.TopEnd).padding(6.dp))

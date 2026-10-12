@@ -58,9 +58,8 @@ import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import io.github.thecodingdad.moonlightlauncher.ui.components.AppIcon
-import io.github.thecodingdad.moonlightlauncher.ui.components.ArtworkImage
+import io.github.thecodingdad.moonlightlauncher.ui.components.CoverImage
 import io.github.thecodingdad.moonlightlauncher.ui.components.FocusSurface
-import io.github.thecodingdad.moonlightlauncher.ui.components.coverModel
 import androidx.compose.material.icons.filled.Add
 import io.github.thecodingdad.moonlightlauncher.data.library.FilterField
 import io.github.thecodingdad.moonlightlauncher.data.library.FieldSection
@@ -359,11 +358,7 @@ private fun MemberThumb(entry: LibraryEntry) {
     if (entry.item.kind == ItemKind.APP && pkg != null) {
         Box(Modifier.size(44.dp), contentAlignment = Alignment.Center) { AppIcon(pkg, Modifier.size(40.dp)) }
     } else {
-        ArtworkImage(
-            entry.coverModel(), entry.item.title,
-            Modifier.width(33.dp).height(44.dp).clip(shape),
-            showTitleOnPlaceholder = false,
-        )
+        CoverImage(entry, Modifier.width(33.dp).height(44.dp).clip(shape), showTitleOnPlaceholder = false)
     }
 }
 

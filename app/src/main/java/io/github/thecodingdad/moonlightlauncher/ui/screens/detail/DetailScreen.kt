@@ -183,9 +183,8 @@ fun DetailScreen(
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.Bottom) {
-                    ArtworkImage(
-                        entry.coverModel(animatedArtwork), entry.item.title,
-                        Modifier.width(150.dp).aspectRatio(2f / 3f).clip(RoundedCornerShape(14.dp)),
+                    io.github.thecodingdad.moonlightlauncher.ui.components.CoverImage(
+                        entry, Modifier.width(150.dp).aspectRatio(2f / 3f).clip(RoundedCornerShape(14.dp)), animated = animatedArtwork,
                     )
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         if (entry.item.logoUrl != null) {
@@ -218,9 +217,8 @@ fun DetailScreen(
             horizontalArrangement = Arrangement.spacedBy(gap),
             verticalAlignment = if (roomy) Alignment.CenterVertically else Alignment.Top,
         ) {
-            ArtworkImage(
-                entry.coverModel(animatedArtwork), entry.item.title,
-                Modifier.width(coverWidth).aspectRatio(2f / 3f).clip(RoundedCornerShape(if (roomy) 22.dp else 16.dp)),
+            io.github.thecodingdad.moonlightlauncher.ui.components.CoverImage(
+                entry, Modifier.width(coverWidth).aspectRatio(2f / 3f).clip(RoundedCornerShape(if (roomy) 22.dp else 16.dp)), animated = animatedArtwork,
             )
             Column(
                 Modifier.width(textWidth).controllerScroll(),

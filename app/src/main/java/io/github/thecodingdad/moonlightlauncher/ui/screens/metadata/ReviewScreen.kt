@@ -31,10 +31,8 @@ import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.container
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryItemEntity
-import io.github.thecodingdad.moonlightlauncher.ui.components.ArtworkImage
 import io.github.thecodingdad.moonlightlauncher.ui.components.ButtonHint
 import io.github.thecodingdad.moonlightlauncher.ui.components.FocusSurface
-import io.github.thecodingdad.moonlightlauncher.ui.components.coverModel
 import io.github.thecodingdad.moonlightlauncher.ui.components.restoreFocusIf
 import io.github.thecodingdad.moonlightlauncher.ui.input.PadAction
 import io.github.thecodingdad.moonlightlauncher.ui.input.PadButton
@@ -80,7 +78,7 @@ fun ReviewScreen(items: List<LibraryEntry>) {
                     focusScale = 1.02f,
                 ) {
                     Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                        ArtworkImage(entry.coverModel(), entry.item.title, Modifier.width(56.dp).aspectRatio(2f / 3f).clip(RoundedCornerShape(8.dp)))
+                        io.github.thecodingdad.moonlightlauncher.ui.components.CoverImage(entry, Modifier.width(56.dp).aspectRatio(2f / 3f).clip(RoundedCornerShape(8.dp)))
                         Column(Modifier.padding(start = 16.dp).weight(1f)) {
                             Text(entry.item.title, style = MaterialTheme.typography.titleMedium, color = LauncherTheme.colors.onSurface)
                             Text(

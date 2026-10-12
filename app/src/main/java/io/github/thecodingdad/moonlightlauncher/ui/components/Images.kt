@@ -210,10 +210,35 @@ private suspend fun buildAppTile(context: android.content.Context, pkg: String?,
     return generatedTile(art)
 }
 
-/** 16:9 tile: gradient in the image's main colour with the image (icon / box art) centred. */
-private fun generatedTile(icon: Bitmap): ImageBitmap {
-    val w = 640
-    val h = 360
+/**
+ * Portrait cover of a game: its artwork, or, for a local Android game without any, one
+ * generated from the app icon like the app tiles.
+ */
+@Composable
+fun CoverImage(entry: LibraryEntry, modifier: Modifier = Modifier, animated: Boolean = false, showTitleOnPlaceholder: Boolean = true) {
+    val model = entry.coverModel(animated)
+    val pkg = entry.localTarget?.packageName
+    if (model != null || pkg == null) {
+        ArtworkImage(model, entry.item.title, modifier, showTitleOnPlaceholder = showTitleOnPlaceholder)
+        return
+    }
+    val context = LocalContext.current
+    val key = "cover:$pkg"
+    val bitmap by produceState(tileCache.get(key), key) {
+        if (value == null) {
+            value = withContext(Dispatchers.IO) {
+                runCatching { generatedTile(context.packageManager.getApplicationIcon(pkg).toBitmap(256, 256), 400, 600) }
+                    .getOrNull()?.also { tileCache.put(key, it) }
+            }
+        }
+    }
+    val image = bitmap
+    if (image == null) TitlePlaceholder(entry.item.title, modifier, showTitleOnPlaceholder)
+    else Image(image, contentDescription = entry.item.title, contentScale = ContentScale.Crop, modifier = modifier)
+}
+
+/** Gradient in the image's main colour with the image (icon / box art) centred; 16:9 by default. */
+private fun generatedTile(icon: Bitmap, w: Int = 640, h: Int = 360): ImageBitmap {
     val palette = Palette.from(icon).generate()
     val base = palette.vibrantSwatch?.rgb ?: palette.dominantSwatch?.rgb ?: android.graphics.Color.DKGRAY
     val dark = androidx.core.graphics.ColorUtils.blendARGB(base, android.graphics.Color.BLACK, 0.5f)
@@ -223,7 +248,7 @@ private fun generatedTile(icon: Bitmap): ImageBitmap {
     paint.shader = android.graphics.LinearGradient(0f, 0f, w.toFloat(), h.toFloat(), base, dark, android.graphics.Shader.TileMode.CLAMP)
     canvas.drawRect(0f, 0f, w.toFloat(), h.toFloat(), paint)
     paint.shader = null
-    val target = h * 0.6f
+    val target = minOf(w, h) * 0.6f
     val scale = target / maxOf(icon.width, icon.height)
     val iw = icon.width * scale
     val ih = icon.height * scale
