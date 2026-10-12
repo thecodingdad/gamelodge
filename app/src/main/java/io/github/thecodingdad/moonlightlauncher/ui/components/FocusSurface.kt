@@ -1,5 +1,9 @@
 package io.github.thecodingdad.moonlightlauncher.ui.components
 
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -8,7 +12,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -128,13 +131,9 @@ fun FocusSurface(
         }
     }
 
-    // Touch: already the press (not only the release) makes this the current element, so
-    // screens update their artwork for it. Compose reports a press only after the tap timeout
-    // and cancels it when the finger scrolls, so swiping through a row changes nothing.
-    val pressed by interactionSource.collectIsPressedAsState()
-    LaunchedEffect(pressed) {
-        if (pressed) touched()
-    }
+    // Touch: the moment a finger lands on the element it becomes the current one (screens
+    // update their artwork), also when the touch turns into a swipe right away.
+    val currentTouched by rememberUpdatedState(::touched)
 
     val ring = LauncherTheme.colors.focusRing
     Box(
@@ -147,6 +146,13 @@ fun FocusSurface(
             .clip(shape)
             .background(color)
             .then(if (dpadFocusable) Modifier.focusRequester(requester) else Modifier.focusProperties { canFocus = false })
+            .pointerInput(Unit) {
+                awaitEachGesture {
+                    // Observe only: nothing is consumed, so scrolling and clicks work as before.
+                    awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                    currentTouched()
+                }
+            }
             .combinedClickable(
                 interactionSource = interactionSource,
                 indication = ripple(),
