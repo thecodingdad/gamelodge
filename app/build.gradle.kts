@@ -109,3 +109,11 @@ dependencies {
     testImplementation(platform(libs.compose.bom))
     testImplementation(libs.compose.ui.test.junit4)
 }
+
+// Latest debug APK in bin/ (git-ignored) for easy access from the repo folder.
+val copyDebugApk by tasks.registering(Copy::class) {
+    from(layout.buildDirectory.dir("outputs/apk/debug")) { include("*.apk") }
+    into(rootProject.layout.projectDirectory.dir("bin"))
+    rename { "moonlight-launcher-debug.apk" }
+}
+tasks.matching { it.name == "assembleDebug" }.configureEach { finalizedBy(copyDebugApk) }
