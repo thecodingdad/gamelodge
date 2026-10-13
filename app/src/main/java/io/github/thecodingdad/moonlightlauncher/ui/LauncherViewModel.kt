@@ -98,11 +98,14 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     val finishedSessions: StateFlow<List<PlaySessionEntity>> =
         c.database.sessionDao().observeFinished().stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-    /** Collections with their member item ids. */
-    val collections: StateFlow<List<Pair<CollectionEntity, Set<String>>>> =
+    /**
+     * Collections with their member item ids in the group's manual order. Lists, not sets: a set
+     * compares equal regardless of order, so a reorder would never reach the screens.
+     */
+    val collections: StateFlow<List<Pair<CollectionEntity, List<String>>>> =
         combine(c.library.collections, c.library.memberships) { cols, refs ->
             val byCollection = refs.groupBy({ it.collectionId }, { it.itemId })
-            cols.map { it to byCollection[it.id].orEmpty().toSet() }
+            cols.map { it to byCollection[it.id].orEmpty() }
         }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val filters: StateFlow<List<FilterEntity>> =
@@ -116,7 +119,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     private fun resolved(place: FilterPlace): StateFlow<List<ResolvedFilter>> =
         combine(filters, allEntries, hostNames, collections) { f, list, names, cols ->
-            FilterEngine.resolve(f, place, list, names, cols.associate { (col, members) -> col.id to members })
+            FilterEngine.resolve(f, place, list, names, cols.associate { (col, members) -> col.id to members.toSet() })
         }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val libraryFilters = resolved(FilterPlace.LIBRARY)

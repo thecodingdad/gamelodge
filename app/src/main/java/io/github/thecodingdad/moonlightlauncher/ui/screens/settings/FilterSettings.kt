@@ -257,7 +257,7 @@ private fun FilterEditorDialog(
                         onSelect = { v -> saveRules(current.copy(limit = v)) },
                     )
                     val members by vm.collections.collectAsState()
-                    val memberMap = members.associate { (c, ids) -> c.id to ids }
+                    val memberMap = members.associate { (c, ids) -> c.id to ids.toSet() }
                     val count = FilterEngine.apply(games, current, memberMap).size
                     Text(stringResource(if (f.scope == FilterScope.APPS) R.string.filter_match_count_apps else R.string.filter_match_count, count), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
 
@@ -274,7 +274,7 @@ private fun FilterEditorDialog(
                 FilterKind.GROUP -> {
                     Text(stringResource(R.string.filter_group_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
                     val collections by vm.collections.collectAsState()
-                    val memberIds = collections.firstOrNull { it.first.id == f.id }?.second.orEmpty()
+                    val memberIds = collections.firstOrNull { it.first.id == f.id }?.second.orEmpty().toSet()
                     var picking by remember(f.id) { mutableStateOf(pickMembers) }
                     val apps = f.scope == FilterScope.APPS
                     NavRow(

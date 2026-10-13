@@ -26,7 +26,7 @@ import io.github.thecodingdad.moonlightlauncher.ui.components.Modal
 @Composable
 fun CollectionsDialog(
     entry: LibraryEntry?,
-    collections: List<Pair<CollectionEntity, Set<String>>>,
+    collections: List<Pair<CollectionEntity, List<String>>>,
     onToggle: (collectionId: String, member: Boolean) -> Unit,
     onCreate: (name: String) -> Unit,
     onDismiss: () -> Unit,
