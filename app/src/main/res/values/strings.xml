@@ -120,8 +120,7 @@
     <string name="settings_theme">Theme &amp; colours</string>
     <string name="settings_theme_sub">Dark, black, light, accent colour</string>
     <string name="settings_display">Display</string>
-    <string name="settings_display_sub">Card size, scaling, animations, navigation bar</string>
-    <string name="settings_tv_sub">Detected display, scaling</string>
+    <string name="settings_display_sub">Card size, scaling, animations, navigation bar, TV</string>
     <string name="settings_controls">Controls</string>
     <string name="settings_controls_sub">Button layout, sounds, vibration</string>
     <string name="settings_controllers">Controllers</string>

@@ -902,10 +902,9 @@ private fun SettingsPageContent(
         SettingsPageId.HOSTS -> HostsSettings(hosts.values.toList(), openHostConfig = { openHost(it.uuid) })
         SettingsPageId.HOME_SCREEN -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.HomeScreenSettings(settings, vm::updateSettings, vm, openFilters = { openPage(SettingsPageId.FILTERS) })
         SettingsPageId.THEME -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.ThemeSettings(settings, vm::updateSettings)
-        SettingsPageId.DISPLAY -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.DisplaySettings(settings, vm::updateSettings)
-        SettingsPageId.TV -> {
+        SettingsPageId.DISPLAY -> {
             val external by vm.externalDisplay.collectAsState()
-            io.github.thecodingdad.moonlightlauncher.ui.screens.settings.TvSettings(settings, vm::updateSettings, external)
+            io.github.thecodingdad.moonlightlauncher.ui.screens.settings.DisplaySettings(settings, vm::updateSettings, external)
         }
         SettingsPageId.CONTROLS -> ControlsSettings(settings, vm::updateSettings, openControllers = openControllers)
         SettingsPageId.LANGUAGE -> LanguageSettings(settings, vm::updateSettings)

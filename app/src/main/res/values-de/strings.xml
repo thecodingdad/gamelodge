@@ -118,8 +118,7 @@
     <string name="settings_theme">Theme &amp; Farben</string>
     <string name="settings_theme_sub">Dunkel, Schwarz, Hell, Akzentfarbe</string>
     <string name="settings_display">Anzeige</string>
-    <string name="settings_display_sub">Kartengröße, Skalierung, Animationen, Navigationsleiste</string>
-    <string name="settings_tv_sub">Erkannter Bildschirm, Skalierung</string>
+    <string name="settings_display_sub">Kartengröße, Skalierung, Animationen, Navigationsleiste, TV</string>
     <string name="settings_controls">Steuerung</string>
     <string name="settings_controls_sub">Tastenbelegung, Sounds, Vibration</string>
     <string name="settings_controllers">Controller</string>

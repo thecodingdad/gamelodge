@@ -15,7 +15,6 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.AspectRatio
-import androidx.compose.material.icons.filled.Tv
 import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.VpnLock
@@ -38,7 +37,7 @@ import io.github.thecodingdad.moonlightlauncher.data.settings.StartTab
 import io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings
 import io.github.thecodingdad.moonlightlauncher.data.settings.ThemeMode
 
-enum class SettingsPageId { HOSTS, PROFILES, HOME_SCREEN, THEME, DISPLAY, TV, FILTERS, APP_FILTERS, QUICK_MENU, CONTROLS, SOUNDS, METADATA, HOME_ASSISTANT, VPN, LAUNCHER, BACKUP, LANGUAGE, ABOUT }
+enum class SettingsPageId { HOSTS, PROFILES, HOME_SCREEN, THEME, DISPLAY, FILTERS, APP_FILTERS, QUICK_MENU, CONTROLS, SOUNDS, METADATA, HOME_ASSISTANT, VPN, LAUNCHER, BACKUP, LANGUAGE, ABOUT }
 
 @Composable
 fun SettingsHome(open: (SettingsPageId) -> Unit, isFirstVisit: Boolean, openControllers: () -> Unit = {}) {
@@ -48,7 +47,6 @@ fun SettingsHome(open: (SettingsPageId) -> Unit, isFirstVisit: Boolean, openCont
         NavRow(stringResource(R.string.settings_home_screen), { open(SettingsPageId.HOME_SCREEN) }, stringResource(R.string.settings_home_screen_sub), Icons.Filled.Home, initialFocus = isFirstVisit)
         NavRow(stringResource(R.string.settings_theme), { open(SettingsPageId.THEME) }, stringResource(R.string.settings_theme_sub), Icons.Filled.Palette)
         NavRow(stringResource(R.string.settings_display), { open(SettingsPageId.DISPLAY) }, stringResource(R.string.settings_display_sub), Icons.Filled.AspectRatio)
-        NavRow(stringResource(R.string.tv_section), { open(SettingsPageId.TV) }, stringResource(R.string.settings_tv_sub), Icons.Filled.Tv)
         NavRow(stringResource(R.string.settings_language), { open(SettingsPageId.LANGUAGE) }, null, Icons.Filled.Language)
 
         SectionHeader(stringResource(R.string.settings_group_library))
@@ -178,6 +176,7 @@ fun ThemeSettings(
 fun DisplaySettings(
     settings: LauncherSettings,
     update: ((LauncherSettings) -> LauncherSettings) -> Unit,
+    externalDisplay: io.github.thecodingdad.moonlightlauncher.system.ExternalDisplayInfo? = null,
 ) {
     SettingsPage(stringResource(R.string.settings_display)) {
         ChoiceRow(
@@ -204,16 +203,7 @@ fun DisplaySettings(
             stringResource(R.string.setting_hide_nav_bar), settings.hideNavigationBar, { v -> update { it.copy(hideNavigationBar = v) } },
             subtitle = stringResource(R.string.setting_hide_nav_bar_sub),
         )
-    }
-}
-
-@Composable
-fun TvSettings(
-    settings: LauncherSettings,
-    update: ((LauncherSettings) -> LauncherSettings) -> Unit,
-    externalDisplay: io.github.thecodingdad.moonlightlauncher.system.ExternalDisplayInfo? = null,
-) {
-    SettingsPage(stringResource(R.string.tv_section)) {
+        SectionHeader(stringResource(R.string.tv_section))
         InfoRow(
             stringResource(R.string.tv_detected),
             externalDisplay?.let { "${it.name} (${it.width}×${it.height})" } ?: stringResource(R.string.tv_none),
