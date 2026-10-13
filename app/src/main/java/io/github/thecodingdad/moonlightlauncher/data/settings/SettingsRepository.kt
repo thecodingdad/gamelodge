@@ -77,6 +77,8 @@ data class LauncherSettings(
     val hideNavigationBar: Boolean = false,
     /** Show the button hint bar (only while a controller is connected). */
     val showHintBar: Boolean = true,
+    /** A / tap on a game starts (or installs) it instead of opening its detail page. */
+    val gamesDirectStart: Boolean = false,
     /** Version of the automatic platform rules the library was last re-evaluated with. */
     val platformRule: Int = 0,
     /** AYN Odin: put every external controller on Odin Mapping's blacklist (keeps battery/rumble). */
@@ -139,6 +141,7 @@ class SettingsRepository(context: Context) {
         val notInstalledFilterSeeded = booleanPreferencesKey("not_installed_filter_seeded")
         val hideNavigationBar = booleanPreferencesKey("hide_navigation_bar")
         val showHintBar = booleanPreferencesKey("show_hint_bar")
+        val gamesDirectStart = booleanPreferencesKey("games_direct_start")
         val platformRule = intPreferencesKey("platform_rule")
         val odinKeepControllers = booleanPreferencesKey("odin_keep_controllers")
         val quickTiles = stringPreferencesKey("quick_tiles")
@@ -200,6 +203,7 @@ class SettingsRepository(context: Context) {
             notInstalledFilterSeeded = this[K.notInstalledFilterSeeded] ?: d.notInstalledFilterSeeded,
             hideNavigationBar = this[K.hideNavigationBar] ?: d.hideNavigationBar,
             showHintBar = this[K.showHintBar] ?: d.showHintBar,
+            gamesDirectStart = this[K.gamesDirectStart] ?: d.gamesDirectStart,
             platformRule = this[K.platformRule] ?: d.platformRule,
             odinKeepControllers = this[K.odinKeepControllers] ?: d.odinKeepControllers,
             quickTiles = this[K.quickTiles]?.split(',')?.filter { it.isNotBlank() } ?: d.quickTiles,
@@ -250,6 +254,7 @@ class SettingsRepository(context: Context) {
         this[K.notInstalledFilterSeeded] = s.notInstalledFilterSeeded
         this[K.hideNavigationBar] = s.hideNavigationBar
         this[K.showHintBar] = s.showHintBar
+        this[K.gamesDirectStart] = s.gamesDirectStart
         this[K.platformRule] = s.platformRule
         this[K.odinKeepControllers] = s.odinKeepControllers
         this[K.quickTiles] = s.quickTiles.joinToString(",")

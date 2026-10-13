@@ -236,6 +236,10 @@ fun ControlsSettings(settings: LauncherSettings, update: ((LauncherSettings) -> 
             stringResource(R.string.setting_hint_bar), settings.showHintBar, { v -> update { it.copy(showHintBar = v) } },
             subtitle = stringResource(R.string.setting_hint_bar_sub),
         )
+        SwitchRow(
+            stringResource(R.string.setting_games_direct_start), settings.gamesDirectStart, { v -> update { it.copy(gamesDirectStart = v) } },
+            subtitle = stringResource(R.string.setting_games_direct_start_sub),
+        )
         NavRow(stringResource(R.string.settings_controllers), openControllers, stringResource(R.string.settings_controllers_sub))
         ButtonComboRows(settings, update)
     }

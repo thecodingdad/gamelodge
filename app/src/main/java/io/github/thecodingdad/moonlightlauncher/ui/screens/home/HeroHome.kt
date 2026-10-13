@@ -71,6 +71,8 @@ class HomeCallbacks(
     val animatedArtwork: Boolean,
     /** Reports whether the layout is in its initial state (top, first item focused). */
     val onAtStart: (Boolean) -> Unit = {},
+    /** The entry the user is on (for the A hint). */
+    val onFocusedEntry: (LibraryEntry?) -> Unit = {},
 )
 
 /** PS5/Netflix style: large artwork of the focused game on top, rows below. */
@@ -102,6 +104,7 @@ fun HeroHome(
         shown = focused ?: fallback
     }
     PublishAccentFrom(shown?.coverModel())
+    LaunchedEffect(focused) { callbacks.onFocusedEntry(focused) }
     // Start: quick start of the focused game (no hint, a shortcut for those who know it).
     PadAction(PadButton.START) { focused?.let(actions::play) }
     PadAction(PadButton.X) {

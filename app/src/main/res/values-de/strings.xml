@@ -42,6 +42,15 @@
     <string name="home_empty_message">Füge einen Streaming-Host hinzu oder installiere Spiele auf diesem Gerät.</string>
     <string name="running_on">Läuft auf %s</string>
     <string name="never_played">Noch nie gespielt</string>
+    <string name="never_used">Noch nie genutzt</string>
+    <plurals name="usage_hours">
+        <item quantity="one">%d Stunde genutzt</item>
+        <item quantity="other">%d Stunden genutzt</item>
+    </plurals>
+    <plurals name="usage_minutes">
+        <item quantity="one">%d Minute genutzt</item>
+        <item quantity="other">%d Minuten genutzt</item>
+    </plurals>
     <plurals name="playtime_hours">
         <item quantity="one">%d Stunde gespielt</item>
         <item quantity="other">%d Stunden gespielt</item>
@@ -813,4 +822,14 @@
     <string name="filter_sort_manual">Eigene Reihenfolge</string>
     <string name="group_order">Reihenfolge ändern</string>
     <string name="group_order_sub">Einträge in die gewünschte Reihenfolge ziehen</string>
+
+    <!-- Controls -->
+    <string name="setting_games_direct_start">Spiele direkt starten</string>
+    <string name="setting_games_direct_start_sub">A bzw. Tippen startet (oder installiert) ein Spiel sofort; Details über X bzw. lange drücken</string>
+
+    <!-- Launcher -->
+    <string name="usage_section">Spielzeit</string>
+    <string name="usage_access">Nutzungsdaten von Android</string>
+    <string name="usage_access_on">Erlaubt: Spielzeit lokaler Apps und Spiele kommt von Android, auch bei Starts außerhalb des Launchers</string>
+    <string name="usage_access_off">Nicht erlaubt: Der Launcher misst nur Starts aus sich selbst. Auswählen zum Erlauben</string>
 </resources>

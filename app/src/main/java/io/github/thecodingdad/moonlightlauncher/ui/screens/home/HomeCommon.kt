@@ -46,10 +46,12 @@ fun MetaLine(entry: LibraryEntry, modifier: Modifier = Modifier) {
         entry.item.releaseYear?.let { add(it.toString()) }
         val hours = entry.item.playtimeSeconds / 3600
         val minutes = entry.item.playtimeSeconds / 60
+        // Apps are used, not played.
+        val app = entry.item.kind == io.github.thecodingdad.moonlightlauncher.data.db.ItemKind.APP
         when {
-            hours > 0 -> add(pluralStringResource(R.plurals.playtime_hours, hours.toInt(), hours))
-            minutes > 0 -> add(pluralStringResource(R.plurals.playtime_minutes, minutes.toInt(), minutes))
-            entry.item.lastPlayedAt == null -> add(stringResource(R.string.never_played))
+            hours > 0 -> add(pluralStringResource(if (app) R.plurals.usage_hours else R.plurals.playtime_hours, hours.toInt(), hours))
+            minutes > 0 -> add(pluralStringResource(if (app) R.plurals.usage_minutes else R.plurals.playtime_minutes, minutes.toInt(), minutes))
+            entry.item.lastPlayedAt == null -> add(stringResource(if (app) R.string.never_used else R.string.never_played))
         }
         entry.remoteTargets.firstOrNull()?.hostName?.let { add(it) }
         if (entry.notInstalled) add(stringResource(R.string.not_installed))

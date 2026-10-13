@@ -47,15 +47,30 @@ class EntryActions(
     /** Game paged to in the detail view: its card takes the focus when the list is back. */
     var returnFocusId by mutableStateOf<String?>(null)
 
-    /** A on a tile: games open their detail page, apps start right away. [siblings] = its list. */
+    /** Setting: A on a game starts/installs it; the detail page is then reached via X. */
+    var directStart by mutableStateOf(false)
+
+    /**
+     * A on a tile: games open their detail page (or start right away with [directStart]), apps
+     * always start. [siblings] = its list.
+     */
     fun open(entry: LibraryEntry, siblings: List<LibraryEntry>? = null, onShown: (String) -> Unit = {}) {
-        if (entry.item.kind == io.github.thecodingdad.moonlightlauncher.data.db.ItemKind.APP) {
+        if (entry.item.kind == io.github.thecodingdad.moonlightlauncher.data.db.ItemKind.APP || directStart) {
             play(entry)
             return
         }
         browse = siblings?.filter { it.item.kind != io.github.thecodingdad.moonlightlauncher.data.db.ItemKind.APP }
             ?.map { it.item.id }?.let { DetailBrowse(it, onShown) }
         openDetail(entry)
+    }
+
+    /** Hint label for A on [entry], matching what [open] does. */
+    fun openLabel(entry: LibraryEntry?): Int = when {
+        entry == null -> io.github.thecodingdad.moonlightlauncher.R.string.hint_open
+        entry.item.kind == io.github.thecodingdad.moonlightlauncher.data.db.ItemKind.APP -> io.github.thecodingdad.moonlightlauncher.R.string.hint_start
+        !directStart -> io.github.thecodingdad.moonlightlauncher.R.string.action_details
+        entry.notInstalled -> io.github.thecodingdad.moonlightlauncher.R.string.action_install
+        else -> io.github.thecodingdad.moonlightlauncher.R.string.action_play
     }
 
     fun showDetail(entry: LibraryEntry) {

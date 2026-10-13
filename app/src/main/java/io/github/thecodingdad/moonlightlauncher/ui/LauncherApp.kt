@@ -165,6 +165,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
             launchDirect = { entry, target -> vm.launch(activity, entry, target) },
         )
     }
+    entryActions.directStart = settings.gamesDirectStart
 
     var hostInfoFor by remember { mutableStateOf<String?>(null) }
     var controllerPopup by remember { mutableStateOf(false) }
@@ -608,6 +609,7 @@ private fun MainShell(
                 when (current) {
                     MainTab.HOME -> {
                         val rows = remember(games, running) { HomeRows.from(games, running) }
+                        var homeFocused by remember { mutableStateOf<io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry?>(null) }
                         val callbacks = HomeCallbacks(
                             onResume = { session ->
                                 val entry = session.entry
@@ -618,11 +620,12 @@ private fun MainShell(
                             lastFocusedKey = vm.focusKeys[MainTab.HOME.name],
                             onFocusKey = { vm.focusKeys[MainTab.HOME.name] = it },
                             onAtStart = { vm.homeAtStart = it },
+                            onFocusedEntry = { homeFocused = it },
                             animatedArtwork = settings.animatedArtwork,
                         )
                         io.github.thecodingdad.moonlightlauncher.ui.shell.ScreenHints(
                             listOf(
-                                ButtonHint(PadButton.A, stringResource(R.string.hint_open)),
+                                ButtonHint(PadButton.A, stringResource(entryActions.openLabel(homeFocused))),
                                 ButtonHint(PadButton.X, stringResource(R.string.hint_options)),
                                 ButtonHint(PadButton.Y, stringResource(R.string.quick_menu)),
                                 ButtonHint(PadButton.L1, stringResource(R.string.hint_tabs), secondButton = PadButton.R1),

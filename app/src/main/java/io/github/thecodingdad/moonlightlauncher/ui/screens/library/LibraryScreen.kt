@@ -139,7 +139,7 @@ fun LibraryScreen(
 
     ScreenHints(
         listOf(
-            ButtonHint(PadButton.A, stringResource(R.string.hint_open)),
+            ButtonHint(PadButton.A, stringResource(actions.openLabel(focused))),
             ButtonHint(PadButton.X, stringResource(R.string.hint_options), onClick = { focused?.let(actions::context) }),
             ButtonHint(PadButton.L2, stringResource(R.string.hint_filters), onClick = { stepFilter(1) }, secondButton = PadButton.R2),
             ButtonHint(PadButton.SELECT, sortLabel(sort), onClick = { sort = sort.next(manualSort) }),
