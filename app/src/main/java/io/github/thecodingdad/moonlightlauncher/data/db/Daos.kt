@@ -81,6 +81,9 @@ interface LibraryDao {
     @Query("UPDATE library_items SET lastPlayedAt = :at WHERE id = :id")
     suspend fun setLastPlayed(id: String, at: Long)
 
+    @Query("UPDATE library_items SET lastPlayedAt = :at WHERE id = :id AND (lastPlayedAt IS NULL OR lastPlayedAt < :at)")
+    suspend fun setLastPlayedIfNewer(id: String, at: Long)
+
     @Query("UPDATE library_items SET playtimeSeconds = playtimeSeconds + :seconds WHERE id = :id")
     suspend fun addPlaytime(id: String, seconds: Long)
 }

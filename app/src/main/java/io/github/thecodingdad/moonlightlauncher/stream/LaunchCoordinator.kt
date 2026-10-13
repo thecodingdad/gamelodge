@@ -99,7 +99,8 @@ class LaunchCoordinator(private val container: AppContainer) {
             _state.value = LaunchState.Failed(entry, LaunchError.APP_NOT_INSTALLED)
             return
         }
-        container.playtime.start(entry.item.id, target.id, null)
+        // With usage access Android's statistics count the time (see UsageSync).
+        if (!container.usage.granted) container.playtime.start(entry.item.id, target.id, null)
         activity.startActivity(intent)
         _state.value = LaunchState.Idle
     }

@@ -3,6 +3,7 @@ package io.github.thecodingdad.moonlightlauncher.ui.screens.settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.MaterialTheme
@@ -17,6 +18,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import io.github.thecodingdad.moonlightlauncher.R
+import io.github.thecodingdad.moonlightlauncher.container
 import io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings
 import io.github.thecodingdad.moonlightlauncher.system.LauncherMode
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
@@ -60,5 +62,21 @@ fun LauncherModeSettings(settings: LauncherSettings, update: ((LauncherSettings)
             NavRow(stringResource(R.string.launcher_make_default), { mode.requestDefaultHomeIntent()?.let(roleRequest::launch) }, icon = Icons.Filled.Home)
         }
         NavRow(stringResource(R.string.launcher_system_settings), { context.startActivity(mode.homeSettingsIntent()) }, icon = Icons.Filled.Settings)
+
+        // Play time of local apps and games from Android (usage access is granted in system settings).
+        val usage = context.container.usage
+        val usageGranted = remember(tick) { usage.granted }
+        SectionHeader(stringResource(R.string.usage_section))
+        NavRow(
+            stringResource(R.string.usage_access),
+            {
+                val intent = android.content.Intent(android.provider.Settings.ACTION_USAGE_ACCESS_SETTINGS)
+                    .setData(android.net.Uri.parse("package:${context.packageName}"))
+                runCatching { context.startActivity(intent) }
+                    .onFailure { context.startActivity(android.content.Intent(android.provider.Settings.ACTION_USAGE_ACCESS_SETTINGS)) }
+            },
+            subtitle = stringResource(if (usageGranted) R.string.usage_access_on else R.string.usage_access_off),
+            icon = Icons.Filled.BarChart,
+        )
     }
 }

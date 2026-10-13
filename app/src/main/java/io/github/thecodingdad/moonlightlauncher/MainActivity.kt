@@ -118,6 +118,7 @@ class MainActivity : ComponentActivity() {
         container.launcher.restoreProfile()
         lifecycleScope.launch {
             val closed = container.playtime.finishOpenSession()
+            container.usage.sync()
             if (closed != null && closed.targetId.startsWith("remote:")) {
                 val title = container.database.libraryDao().getItem(closed.itemId)?.title
                 val target = container.database.libraryDao().getTarget(closed.targetId)
