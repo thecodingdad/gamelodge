@@ -120,14 +120,14 @@
     <string name="settings_profiles">Stream-Profile</string>
     <string name="settings_profiles_sub">Auflösung, Bildrate, Bitrate, HDR</string>
     <string name="settings_home_screen">Startbildschirm</string>
-    <string name="settings_home_screen_sub">Start-Tab, Bildschirmschoner</string>
+    <string name="settings_home_screen_sub">Start-Tab, Reihen</string>
     <string name="home_rows_section">Reihen im Start-Tab</string>
     <string name="home_rows_help">Welche Filter als Reihen im Start-Tab erscheinen und in welcher Reihenfolge (unabhängig von der Bibliothek). Reihe am Griff verschieben: ziehen oder auswählen und mit hoch/runter bewegen.</string>
     <string name="home_row_ha">Smart-Home-Favoriten</string>
     <string name="settings_theme">Theme &amp; Farben</string>
     <string name="settings_theme_sub">Dunkel, Schwarz, Hell, Akzentfarbe</string>
     <string name="settings_display">Anzeige</string>
-    <string name="settings_display_sub">Kartengröße, Skalierung, Animationen, Navigationsleiste, TV</string>
+    <string name="settings_display_sub">Kartengröße, Skalierung, Animationen, Bildschirmschoner, TV</string>
     <string name="settings_controls">Steuerung</string>
     <string name="settings_controls_sub">Tastenbelegung, Sounds, Vibration</string>
     <string name="settings_controllers">Controller</string>

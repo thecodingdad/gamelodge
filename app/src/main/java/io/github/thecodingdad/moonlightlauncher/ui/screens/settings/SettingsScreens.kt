@@ -106,11 +106,6 @@ fun HomeScreenSettings(
             subtitle = stringResource(R.string.setting_start_tab_sub),
             initialFocus = true,
         )
-        ChoiceRow(
-            stringResource(R.string.setting_screensaver), listOf(0, 2, 5, 10, 20), settings.screensaverMinutes,
-            label = { if (it == 0) stringResource(R.string.off) else stringResource(R.string.minutes_short, it) },
-            onSelect = { v -> update { it.copy(screensaverMinutes = v) } },
-        )
         SectionHeader(stringResource(R.string.home_rows_section))
         Text(stringResource(R.string.home_rows_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
         NavRow(stringResource(R.string.settings_filters), openFilters, stringResource(R.string.settings_filters_sub), Icons.Filled.FilterAlt)
@@ -202,6 +197,11 @@ fun DisplaySettings(
         SwitchRow(
             stringResource(R.string.setting_hide_nav_bar), settings.hideNavigationBar, { v -> update { it.copy(hideNavigationBar = v) } },
             subtitle = stringResource(R.string.setting_hide_nav_bar_sub),
+        )
+        ChoiceRow(
+            stringResource(R.string.setting_screensaver), listOf(0, 2, 5, 10, 20), settings.screensaverMinutes,
+            label = { if (it == 0) stringResource(R.string.off) else stringResource(R.string.minutes_short, it) },
+            onSelect = { v -> update { it.copy(screensaverMinutes = v) } },
         )
         SectionHeader(stringResource(R.string.tv_section))
         InfoRow(

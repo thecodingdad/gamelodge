@@ -122,14 +122,14 @@
     <string name="settings_profiles">Stream profiles</string>
     <string name="settings_profiles_sub">Resolution, frame rate, bitrate, HDR</string>
     <string name="settings_home_screen">Home screen</string>
-    <string name="settings_home_screen_sub">Start tab, screensaver</string>
+    <string name="settings_home_screen_sub">Start tab, rows</string>
     <string name="home_rows_section">Rows on the start tab</string>
     <string name="home_rows_help">Which filters appear as rows on the start tab and in which order (independent of the library). Move a row with the handle: drag it, or select it and use up/down.</string>
     <string name="home_row_ha">Smart home favourites</string>
     <string name="settings_theme">Theme &amp; colours</string>
     <string name="settings_theme_sub">Dark, black, light, accent colour</string>
     <string name="settings_display">Display</string>
-    <string name="settings_display_sub">Card size, scaling, animations, navigation bar, TV</string>
+    <string name="settings_display_sub">Card size, scaling, animations, screensaver, TV</string>
     <string name="settings_controls">Controls</string>
     <string name="settings_controls_sub">Button layout, sounds, vibration</string>
     <string name="settings_controllers">Controllers</string>
