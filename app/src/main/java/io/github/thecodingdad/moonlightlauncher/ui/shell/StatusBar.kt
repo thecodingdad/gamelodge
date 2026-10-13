@@ -224,10 +224,11 @@ fun StatusCluster(
             Text("${status.batteryPercent}%", style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceMuted)
         }
         // Touch only (controllers open the quick menu with Y / Select).
+        val clockTap by androidx.compose.runtime.rememberUpdatedState(onClockClick)
         Clock(
             if (onClockClick == null) Modifier
             else Modifier.clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
-                .pointerInput(onClockClick) { detectTapGestures { onClockClick() } }
+                .pointerInput(Unit) { detectTapGestures { clockTap?.invoke() } }
                 .padding(horizontal = 4.dp, vertical = 2.dp),
         )
     }

@@ -28,6 +28,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
@@ -70,7 +71,8 @@ fun PageTitle(title: String, modifier: Modifier = Modifier) {
         return
     }
     // Taps only: controllers go back with B, the path takes no focus.
-    fun Modifier.tap(action: () -> Unit) = pointerInput(action) { detectTapGestures { action() } }
+    // Keyed by a stable value, not the (new every recomposition) lambda, so a tap isn't lost.
+    fun Modifier.tap(key: Any, action: () -> Unit) = pointerInput(key) { detectTapGestures { action() } }
     androidx.compose.foundation.layout.BoxWithConstraints(modifier.fillMaxWidth()) {
         val measurer = androidx.compose.ui.text.rememberTextMeasurer()
         val full = (path.parents.map { it.label } + title).joinToString(SEPARATOR)
@@ -80,13 +82,13 @@ fun PageTitle(title: String, modifier: Modifier = Modifier) {
         androidx.compose.foundation.layout.Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
             if (fits) {
                 path.parents.forEach { crumb ->
-                    Text(crumb.label, style = style, color = colors.onSurfaceMuted, maxLines = 1, modifier = Modifier.tap(crumb.onClick))
+                    Text(crumb.label, style = style, color = colors.onSurfaceMuted, maxLines = 1, modifier = Modifier.tap(crumb.label, crumb.onClick))
                     Text(SEPARATOR, style = style, color = colors.onSurfaceMuted, maxLines = 1)
                 }
                 Text(title, style = style, color = colors.onSurface, maxLines = 1)
             } else {
                 androidx.compose.foundation.layout.Row(
-                    Modifier.tap(path.onBack),
+                    Modifier.tap("back", path.onBack),
                     verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
                 ) {
                     androidx.compose.material3.Icon(
@@ -260,8 +262,11 @@ fun <T> ChoiceRow(
 
 @Composable
 private fun ChoiceArrow(icon: ImageVector, onTap: () -> Unit) {
+    // Keyed on Unit: a new lambda per recomposition would restart the detector mid-tap (the row's
+    // press feedback recomposes), and the tap got lost or went to the row instead.
+    val tap by androidx.compose.runtime.rememberUpdatedState(onTap)
     Box(
-        Modifier.size(48.dp).clip(RoundedCornerShape(24.dp)).pointerInput(onTap) { detectTapGestures { onTap() } },
+        Modifier.size(48.dp).clip(RoundedCornerShape(24.dp)).pointerInput(Unit) { detectTapGestures { tap() } },
         contentAlignment = Alignment.Center,
     ) {
         Icon(icon, null, tint = LauncherTheme.colors.onSurfaceMuted)
