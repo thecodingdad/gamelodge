@@ -211,6 +211,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
             quickMenu = open || !quickMenu
         }
     }
+    LaunchedEffect(Unit) { vm.quickMenuTouch.collect { quickMenu = true } }
     var platformFor by remember { mutableStateOf<io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry?>(null) }
     var metaEditorFor by remember { mutableStateOf<String?>(null) }
     var fixingFor by remember { mutableStateOf<String?>(null) }
@@ -661,7 +662,7 @@ private fun MainShell(
         }
         ShellTopBar(
             selected = tab, onSelect = { tab = it }, hosts = hosts, controllerCount = controllers.size,
-            onHostInfo = onHostInfo, onControllers = onControllers,
+            onHostInfo = onHostInfo, onControllers = onControllers, onClock = { vm.quickMenuTouch.tryEmit(Unit) },
             modifier = Modifier.align(Alignment.TopCenter)
                 .background(
                     if (fullBleed) androidx.compose.ui.graphics.Brush.verticalGradient(listOf(bg.copy(alpha = 0.85f), androidx.compose.ui.graphics.Color.Transparent))
@@ -700,6 +701,8 @@ private fun ShellTopBar(
     onHostInfo: (String) -> Unit,
     onControllers: () -> Unit,
     modifier: Modifier = Modifier,
+    /** Tap on the clock opens the quick menu. */
+    onClock: () -> Unit = {},
 ) {
     Row(
         modifier.fillMaxWidth()
@@ -714,6 +717,7 @@ private fun ShellTopBar(
                 onHostClick = { onHostInfo(it.uuid) },
                 controllerCount = controllerCount,
                 onControllerClick = onControllers,
+                onClockClick = onClock,
             )
         }
         if (compact) {
@@ -775,6 +779,7 @@ private fun SubpageFrame(
         ShellTopBar(
             selected = tab.ordinal, onSelect = ::openTab, hosts = hostsMap.values.sortedBy { it.name },
             controllerCount = controllers.size, onHostInfo = onHostInfo, onControllers = onControllers,
+            onClock = { vm.quickMenuTouch.tryEmit(Unit) },
             modifier = Modifier.background(LauncherTheme.colors.background),
         )
         CompositionLocalProvider(

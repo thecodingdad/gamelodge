@@ -42,6 +42,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -137,6 +139,7 @@ fun StatusCluster(
     onHostClick: (HostState) -> Unit = {},
     controllerCount: Int = 0,
     onControllerClick: () -> Unit = {},
+    onClockClick: (() -> Unit)? = null,
 ) {
     val status = rememberSystemStatus()
     val colors = LauncherTheme.colors
@@ -220,7 +223,13 @@ fun StatusCluster(
             )
             Text("${status.batteryPercent}%", style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceMuted)
         }
-        Clock()
+        // Touch only (controllers open the quick menu with Y / Select).
+        Clock(
+            if (onClockClick == null) Modifier
+            else Modifier.clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
+                .pointerInput(onClockClick) { detectTapGestures { onClockClick() } }
+                .padding(horizontal = 4.dp, vertical = 2.dp),
+        )
     }
 }
 
