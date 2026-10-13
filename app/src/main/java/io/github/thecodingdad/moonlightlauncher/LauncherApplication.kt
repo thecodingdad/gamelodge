@@ -8,6 +8,7 @@ import coil3.gif.AnimatedImageDecoder
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.crossfade
 import com.limelight.ArtemisApplication
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
@@ -45,6 +46,11 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
                     io.github.thecodingdad.moonlightlauncher.input.ComboAction.HOME to it.comboHome,
                     io.github.thecodingdad.moonlightlauncher.input.ComboAction.QUICK_MENU to it.comboQuickMenu,
                 )
+            }
+        }
+        container.scope.launch(kotlinx.coroutines.Dispatchers.Main) {
+            container.settings.settings.map { it.quickMenuEdgeHandle }.distinctUntilChanged().collect {
+                io.github.thecodingdad.moonlightlauncher.system.EdgeHandle.update(this@LauncherApplication, it)
             }
         }
         container.metadata.start()

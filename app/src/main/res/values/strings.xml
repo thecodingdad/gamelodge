@@ -832,4 +832,12 @@
     <string name="usage_access">Usage data from Android</string>
     <string name="usage_access_on">Allowed: play time of local apps and games comes from Android, also for starts outside the launcher</string>
     <string name="usage_access_off">Not allowed: the launcher only measures starts from itself. Select to allow</string>
+
+    <!-- Quick menu -->
+    <string name="qm_touch_section">Open by touch in other apps</string>
+    <string name="qm_edge_handle">Handle at the right edge</string>
+    <string name="qm_edge_handle_sub">A narrow bar at the right screen edge above every app; tap it to open the quick menu</string>
+    <string name="qm_edge_handle_permission">Needs the permission to display over other apps; select to allow</string>
+    <string name="qm_tile_add">Add quick settings tile</string>
+    <string name="qm_tile_sub">The tile “Quick menu” in Android’s quick settings (swipe down from the top) opens the menu over any app</string>
 </resources>

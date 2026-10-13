@@ -83,10 +83,12 @@ class QuickMenuActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         resumed = true
+        io.github.thecodingdad.moonlightlauncher.system.EdgeHandle.refresh(this)
     }
 
     override fun onPause() {
         resumed = false
+        io.github.thecodingdad.moonlightlauncher.system.EdgeHandle.refresh(this)
         super.onPause()
     }
 
@@ -115,9 +117,9 @@ class QuickMenuActivity : ComponentActivity() {
         val keyboard = remember { KeyboardController() }
         val hints = remember { HintHolder() }
         LaunchedEffect(settings) { feedback.configure(settings.feedbackConfig()) }
-        // Opened with a controller combination: show the focus right away.
+        // Opened with a controller combination: show the focus right away (not when opened by touch).
         val inputMode = LocalInputModeManager.current
-        LaunchedEffect(Unit) { inputMode.requestInputMode(InputMode.Keyboard) }
+        LaunchedEffect(Unit) { if (!intent.getBooleanExtra(EXTRA_TOUCH, false)) inputMode.requestInputMode(InputMode.Keyboard) }
         LaunchedEffect(menuOpen) {
             if (!menuOpen) {
                 delay(250) // let the panel slide out
@@ -212,18 +214,21 @@ class QuickMenuActivity : ComponentActivity() {
 
     companion object {
         private const val EXTRA_TOGGLE = "toggle"
+        private const val EXTRA_TOUCH = "touch"
 
         @Volatile var resumed = false
             private set
 
         /** Opens the overlay, or closes it when it is already showing. */
-        fun toggle(context: Context) {
-            context.startActivity(
-                Intent(context, QuickMenuActivity::class.java)
-                    .putExtra(EXTRA_TOGGLE, resumed)
-                    // No user-leave hint: the stream must not switch to picture-in-picture.
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_USER_ACTION or Intent.FLAG_ACTIVITY_NO_ANIMATION),
-            )
+        fun toggle(context: Context, touch: Boolean = false) {
+            context.startActivity(intent(context, touch))
         }
+
+        fun intent(context: Context, touch: Boolean): Intent =
+            Intent(context, QuickMenuActivity::class.java)
+                .putExtra(EXTRA_TOGGLE, resumed)
+                .putExtra(EXTRA_TOUCH, touch)
+                // No user-leave hint: the stream must not switch to picture-in-picture.
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_USER_ACTION or Intent.FLAG_ACTIVITY_NO_ANIMATION)
     }
 }

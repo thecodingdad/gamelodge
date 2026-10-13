@@ -12,6 +12,8 @@
     <uses-permission android:name="android.permission.WRITE_SETTINGS" tools:ignore="ProtectedPermissions" />
     <!-- Play time of local apps/games from Android's usage statistics (granted by the user in settings). -->
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
+    <!-- Optional quick menu handle at the screen edge above other apps. -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <!-- Number of connected Bluetooth devices in the quick menu (Android 12+). -->
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
@@ -82,6 +84,16 @@
             <intent-filter tools:node="removeAll" />
         </activity>
         <!-- Optional: system-wide controller button combinations (Home, quick menu). -->
+        <service
+            android:name=".system.QuickMenuTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_quick_menu"
+            android:label="@string/quick_menu"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
         <service
             android:name=".input.ComboAccessibilityService"
             android:exported="true"

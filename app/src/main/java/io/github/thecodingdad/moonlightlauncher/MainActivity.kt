@@ -106,6 +106,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onPause() {
         resumed = false
+        io.github.thecodingdad.moonlightlauncher.system.EdgeHandle.refresh(this)
         super.onPause()
     }
 
@@ -113,6 +114,8 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         returningFromBackground = false
         resumed = true
+        // Also picks up a just granted overlay permission.
+        io.github.thecodingdad.moonlightlauncher.system.EdgeHandle.refresh(this)
         vm.touch()
         // Back from a game or stream: close the play session, undo a one-off profile.
         container.launcher.restoreProfile()

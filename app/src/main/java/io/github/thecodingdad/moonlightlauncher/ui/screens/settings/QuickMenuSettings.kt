@@ -57,6 +57,34 @@ fun QuickMenuSettings(vm: LauncherViewModel, settings: LauncherSettings, update:
             LauncherButton(stringResource(R.string.qt_add), icon = Icons.Filled.Add, onClick = { adding = true })
             LauncherButton(stringResource(R.string.qt_reset), icon = Icons.Filled.Restore, onClick = { save(QuickTile.defaults) })
         }
+
+        // Opening the menu by touch while another app is in front.
+        SectionHeader(stringResource(R.string.qm_touch_section))
+        var tick by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+        androidx.lifecycle.compose.LifecycleResumeEffect(Unit) { tick++; onPauseOrDispose { } }
+        val canOverlay = remember(tick) { android.provider.Settings.canDrawOverlays(tileContext) }
+        SwitchRow(
+            stringResource(R.string.qm_edge_handle), settings.quickMenuEdgeHandle,
+            { on ->
+                update { it.copy(quickMenuEdgeHandle = on) }
+                if (on && !canOverlay) {
+                    runCatching {
+                        tileContext.startActivity(
+                            android.content.Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION, android.net.Uri.parse("package:${tileContext.packageName}")),
+                        )
+                    }
+                }
+            },
+            subtitle = stringResource(if (settings.quickMenuEdgeHandle && !canOverlay) R.string.qm_edge_handle_permission else R.string.qm_edge_handle_sub),
+        )
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            NavRow(
+                stringResource(R.string.qm_tile_add), { requestQuickMenuTile(tileContext) },
+                subtitle = stringResource(R.string.qm_tile_sub), icon = Icons.Filled.Add,
+            )
+        } else {
+            Text(stringResource(R.string.qm_tile_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+        }
     }
 
     Modal(visible = selected != null, onDismiss = { selected = null }, title = selected?.let { quickTileName(it) }, maxWidth = 560.dp) {
@@ -106,4 +134,16 @@ fun QuickMenuSettings(vm: LauncherViewModel, settings: LauncherSettings, update:
             }
         }
     }
+}
+
+/** Asks Android to add the quick menu tile to the quick settings (Android 13+). */
+@androidx.annotation.RequiresApi(android.os.Build.VERSION_CODES.TIRAMISU)
+private fun requestQuickMenuTile(context: android.content.Context) {
+    val sbm = context.getSystemService(android.app.StatusBarManager::class.java) ?: return
+    sbm.requestAddTileService(
+        android.content.ComponentName(context, io.github.thecodingdad.moonlightlauncher.system.QuickMenuTileService::class.java),
+        context.getString(R.string.quick_menu),
+        android.graphics.drawable.Icon.createWithResource(context, R.drawable.ic_quick_menu),
+        context.mainExecutor,
+    ) { }
 }

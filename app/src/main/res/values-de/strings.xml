@@ -830,4 +830,12 @@
     <string name="usage_access">Nutzungsdaten von Android</string>
     <string name="usage_access_on">Erlaubt: Spielzeit lokaler Apps und Spiele kommt von Android, auch bei Starts außerhalb des Launchers</string>
     <string name="usage_access_off">Nicht erlaubt: Der Launcher misst nur Starts aus sich selbst. Auswählen zum Erlauben</string>
+
+    <!-- Quick menu -->
+    <string name="qm_touch_section">Per Touch in anderen Apps öffnen</string>
+    <string name="qm_edge_handle">Griff am rechten Rand</string>
+    <string name="qm_edge_handle_sub">Schmaler Balken am rechten Bildschirmrand über allen Apps; antippen öffnet das Schnellmenü</string>
+    <string name="qm_edge_handle_permission">Braucht die Berechtigung „Über anderen Apps anzeigen“; auswählen zum Erlauben</string>
+    <string name="qm_tile_add">Kachel zu den Schnelleinstellungen hinzufügen</string>
+    <string name="qm_tile_sub">Die Kachel „Schnellmenü“ in Androids Schnelleinstellungen (von oben wischen) öffnet das Menü über jeder App</string>
 </resources>
