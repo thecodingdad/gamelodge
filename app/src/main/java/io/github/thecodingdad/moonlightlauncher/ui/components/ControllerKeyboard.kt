@@ -33,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -139,10 +140,20 @@ private val qwerty = listOf("1234567890", "qwertyuiop", "asdfghjkl'", "zxcvbnm,.
 private val symbols = listOf("1234567890", "@#\$%&*+=/\\", ":;!?()[]{}", "_~\"'<>|^`")
 private val urlRow = listOf("https://", "http://", ".", "/", ":", ".local", "-")
 
-/** Full-screen-width on-screen keyboard driven by D-pad/stick + shortcut buttons. */
+/**
+ * Text entry dialog: the on-screen keyboard driven by D-pad/stick + shortcut buttons, or in
+ * touch mode a plain text field with the system keyboard.
+ */
 @Composable
 fun ControllerKeyboardHost(controller: KeyboardController) {
     val request = controller.request
+    // The mode at the moment the dialog opens decides; switching while typing doesn't swap it.
+    val controllerMode = isControllerMode()
+    val touch = remember(request) { !controllerMode }
+    if (request != null && touch) {
+        TouchTextDialog(request, controller)
+        return
+    }
     var text by remember(request) { mutableStateOf(request?.initial.orEmpty()) }
     var cursor by remember(request) { mutableIntStateOf(request?.initial.orEmpty().length) }
     var shift by remember(request) { mutableStateOf(false) }
@@ -223,6 +234,9 @@ fun ControllerKeyboardHost(controller: KeyboardController) {
             german -> qwertz
             else -> qwerty
         }
+        // Shrinks to the room left (small or portrait screens): every key always stays visible.
+        Box(Modifier.fillMaxWidth().weight(1f, fill = false), contentAlignment = Alignment.TopCenter) {
+        ScaleToFit {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             if (request.kind == TextKind.URL) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -245,6 +259,8 @@ fun ControllerKeyboardHost(controller: KeyboardController) {
                 KeyCap("", icon = Icons.AutoMirrored.Filled.Backspace, onClick = { backspace() }, minWidth = 88.dp)
                 KeyCap(stringResource(R.string.keyboard_done), icon = Icons.Filled.Check, onClick = { done() }, minWidth = 140.dp, highlighted = true)
             }
+        }
+        }
         }
         Spacer(Modifier.height(12.dp))
         ButtonHintBar(
@@ -281,5 +297,66 @@ private fun KeyCap(
             if (icon != null && label.isNotEmpty()) Spacer(Modifier.width(6.dp))
             if (label.isNotEmpty()) Text(label, style = MaterialTheme.typography.titleMedium, color = colors.onSurface)
         }
+    }
+}
+
+/** Lays [content] out at its natural size and scales it down (never up) to fit the constraints. */
+@Composable
+private fun ScaleToFit(content: @Composable () -> Unit) {
+    androidx.compose.ui.layout.Layout(content) { measurables, constraints ->
+        val placeable = measurables.first().measure(androidx.compose.ui.unit.Constraints())
+        val scale = minOf(
+            1f,
+            if (constraints.hasBoundedWidth) constraints.maxWidth / placeable.width.toFloat() else 1f,
+            if (constraints.hasBoundedHeight) constraints.maxHeight / placeable.height.toFloat() else 1f,
+        )
+        layout((placeable.width * scale).toInt(), (placeable.height * scale).toInt()) {
+            placeable.placeWithLayer(0, 0) {
+                scaleX = scale
+                scaleY = scale
+                transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0f, 0f)
+            }
+        }
+    }
+}
+
+/** Touch mode: text field with the system keyboard, opened right away. */
+@Composable
+private fun TouchTextDialog(request: KeyboardRequest, controller: KeyboardController) {
+    var text by remember(request) {
+        mutableStateOf(androidx.compose.ui.text.input.TextFieldValue(request.initial, androidx.compose.ui.text.TextRange(request.initial.length)))
+    }
+    val focus = remember { androidx.compose.ui.focus.FocusRequester() }
+    fun done() {
+        request.onDone(text.text)
+        controller.close()
+    }
+    Modal(visible = true, onDismiss = controller::close, title = request.title, maxWidth = 720.dp) {
+        OutlinedTextField(
+            value = text,
+            onValueChange = { text = it },
+            singleLine = true,
+            visualTransformation = if (request.kind == TextKind.PASSWORD) PasswordVisualTransformation() else VisualTransformation.None,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = when (request.kind) {
+                    TextKind.URL -> KeyboardType.Uri
+                    TextKind.NUMBER -> KeyboardType.Number
+                    TextKind.PASSWORD -> KeyboardType.Password
+                    TextKind.TEXT -> KeyboardType.Text
+                },
+                imeAction = androidx.compose.ui.text.input.ImeAction.Done,
+            ),
+            keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { done() }),
+            modifier = Modifier.fillMaxWidth().focusRequester(focus),
+        )
+        Spacer(Modifier.height(16.dp))
+        ButtonRow(spacing = 12.dp) {
+            LauncherButton(stringResource(R.string.action_cancel), onClick = controller::close)
+            LauncherButton(stringResource(R.string.keyboard_done), icon = Icons.Filled.Check, primary = true, onClick = { done() })
+        }
+    }
+    androidx.compose.runtime.LaunchedEffect(request) {
+        kotlinx.coroutines.delay(100)
+        runCatching { focus.requestFocus() }
     }
 }
