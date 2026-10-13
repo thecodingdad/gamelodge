@@ -115,7 +115,7 @@ fun SettingsPage(title: String, content: @Composable ColumnScope.() -> Unit) {
     val horizontal = if (io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current) 20.dp else 48.dp
     Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
         // Limited width, centred on wide screens; the title lines up with the entries.
-        PageTitle(title, Modifier.padding(horizontal = horizontal).padding(top = 16.dp, bottom = 12.dp).widthIn(max = 900.dp))
+        PageTitle(title, Modifier.padding(horizontal = horizontal).padding(top = 16.dp, bottom = 12.dp).widthIn(max = 900.dp).fillMaxWidth())
         io.github.thecodingdad.moonlightlauncher.ui.components.ScrollAreaColumn(
             modifier = Modifier.fillMaxWidth().weight(1f),
             horizontalAlignment = Alignment.CenterHorizontally,
