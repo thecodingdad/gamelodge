@@ -112,7 +112,7 @@ fun HeroHome(
     Box(Modifier.fillMaxSize()) {
         Crossfade(shown, animationSpec = tween(400), label = "hero") { entry ->
             if (entry != null) {
-                ArtworkImage(entry.heroModel(callbacks.animatedArtwork), entry.item.title, Modifier.fillMaxSize(), ContentScale.Crop, showTitleOnPlaceholder = false)
+                io.github.thecodingdad.moonlightlauncher.ui.components.HeroImage(entry, Modifier.fillMaxSize(), animated = callbacks.animatedArtwork)
             }
         }
         val bg = LauncherTheme.colors.background

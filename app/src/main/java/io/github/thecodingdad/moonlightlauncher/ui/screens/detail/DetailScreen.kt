@@ -119,7 +119,7 @@ fun DetailScreen(
     )
 
     Box(Modifier.fillMaxSize()) {
-        ArtworkImage(entry.heroModel(animatedArtwork), entry.item.title, Modifier.fillMaxSize(), ContentScale.Crop, showTitleOnPlaceholder = false)
+        io.github.thecodingdad.moonlightlauncher.ui.components.HeroImage(entry, Modifier.fillMaxSize(), animated = animatedArtwork)
         val bg = colors.background
         Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(0f to bg, 0.5f to bg.copy(alpha = 0.85f), 1f to bg.copy(alpha = 0.25f))))
         Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.5f to Color.Transparent, 1f to bg)))

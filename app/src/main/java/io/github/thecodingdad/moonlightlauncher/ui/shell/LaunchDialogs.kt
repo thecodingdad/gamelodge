@@ -415,10 +415,8 @@ fun StreamProgressContent(
     }
 
     Box(Modifier.fillMaxSize().background(colors.background)) {
-        ArtworkImage(
-            entry.heroModel(), entry.item.title,
-            Modifier.fillMaxSize().graphicsLayer { scaleX = zoom; scaleY = zoom },
-            showTitleOnPlaceholder = false,
+        io.github.thecodingdad.moonlightlauncher.ui.components.HeroImage(
+            entry, Modifier.fillMaxSize().graphicsLayer { scaleX = zoom; scaleY = zoom },
         )
         val bg = colors.background
         Box(

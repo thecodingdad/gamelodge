@@ -237,6 +237,86 @@ fun CoverImage(entry: LibraryEntry, modifier: Modifier = Modifier, animated: Boo
     else Image(image, contentDescription = entry.item.title, contentScale = ContentScale.Crop, modifier = modifier)
 }
 
+/**
+ * Wide background of an entry. A local app or game without any artwork gets a generated one:
+ * a gradient in the icon's colours with the icon large on the right, softly glowing.
+ */
+@Composable
+fun HeroImage(entry: LibraryEntry, modifier: Modifier = Modifier, animated: Boolean = false) {
+    val model = entry.heroModel(animated)
+    val pkg = entry.localTarget?.packageName
+    if (model != null || pkg == null) {
+        ArtworkImage(model, entry.item.title, modifier, ContentScale.Crop, showTitleOnPlaceholder = false)
+        return
+    }
+    val context = LocalContext.current
+    val key = "hero:$pkg"
+    val bitmap by produceState(tileCache.get(key), key) {
+        if (value == null) {
+            value = withContext(Dispatchers.IO) {
+                runCatching { generatedHero(context.packageManager.getApplicationIcon(pkg)) }
+                    .getOrNull()?.also { tileCache.put(key, it) }
+            }
+        }
+    }
+    val image = bitmap
+    if (image == null) TitlePlaceholder(entry.item.title, modifier, showTitle = false)
+    else Image(image, contentDescription = entry.item.title, contentScale = ContentScale.Crop, modifier = modifier)
+}
+
+/** 16:9 backdrop: dark-to-colour gradient, a soft glow and the icon on the right. */
+private fun generatedHero(drawable: android.graphics.drawable.Drawable): ImageBitmap {
+    val w = 1280
+    val h = 720
+    val icon = drawable.toBitmap(384, 384)
+    // Adaptive icons: only the motif, without the launcher's background shape. The foreground
+    // layer is 108 units wide with the visible part in the middle 72.
+    val glyph = (drawable as? android.graphics.drawable.AdaptiveIconDrawable)?.foreground?.let { fg ->
+        val full = fg.toBitmap(576, 576)
+        Bitmap.createBitmap(full, 96, 96, 384, 384)
+    } ?: icon
+    val palette = Palette.from(icon).generate()
+    val base = palette.vibrantSwatch?.rgb ?: palette.dominantSwatch?.rgb ?: android.graphics.Color.DKGRAY
+    val deep = palette.darkMutedSwatch?.rgb ?: palette.darkVibrantSwatch?.rgb
+        ?: androidx.core.graphics.ColorUtils.blendARGB(base, android.graphics.Color.BLACK, 0.7f)
+    val dark = androidx.core.graphics.ColorUtils.blendARGB(deep, android.graphics.Color.BLACK, 0.55f)
+    val out = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+    val canvas = android.graphics.Canvas(out)
+    val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG or android.graphics.Paint.FILTER_BITMAP_FLAG)
+    // The left side stays dark (title and info sit there), the colour builds up to the right.
+    paint.shader = android.graphics.LinearGradient(
+        0f, 0f, w.toFloat(), h.toFloat(),
+        intArrayOf(dark, dark, androidx.core.graphics.ColorUtils.blendARGB(base, dark, 0.45f)),
+        floatArrayOf(0f, 0.35f, 1f), android.graphics.Shader.TileMode.CLAMP,
+    )
+    canvas.drawRect(0f, 0f, w.toFloat(), h.toFloat(), paint)
+    // Upper right: the rows at the bottom must not cover it.
+    val cx = w * 0.72f
+    val cy = h * 0.3f
+    val size = h * 0.36f
+    // Soft glow in the icon's colour behind it.
+    paint.shader = android.graphics.RadialGradient(
+        cx, cy, size * 1.4f,
+        intArrayOf(androidx.core.graphics.ColorUtils.setAlphaComponent(base, 150), androidx.core.graphics.ColorUtils.setAlphaComponent(base, 0)),
+        null, android.graphics.Shader.TileMode.CLAMP,
+    )
+    canvas.drawCircle(cx, cy, size * 1.4f, paint)
+    paint.shader = null
+    val scale = size / maxOf(glyph.width, glyph.height)
+    val iw = glyph.width * scale
+    val ih = glyph.height * scale
+    val rect = android.graphics.RectF(cx - iw / 2, cy - ih / 2, cx + iw / 2, cy + ih / 2)
+    // Soft shadow in the motif's own shape.
+    val shadow = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG or android.graphics.Paint.FILTER_BITMAP_FLAG).apply {
+        color = android.graphics.Color.BLACK
+        alpha = 110
+        maskFilter = android.graphics.BlurMaskFilter(size * 0.06f, android.graphics.BlurMaskFilter.Blur.NORMAL)
+    }
+    canvas.drawBitmap(glyph.extractAlpha(), null, android.graphics.RectF(rect).apply { offset(0f, size * 0.04f) }, shadow)
+    canvas.drawBitmap(glyph, null, rect, paint)
+    return out.asImageBitmap()
+}
+
 /** Gradient in the image's main colour with the image (icon / box art) centred; 16:9 by default. */
 private fun generatedTile(icon: Bitmap, w: Int = 640, h: Int = 360): ImageBitmap {
     val palette = Palette.from(icon).generate()
