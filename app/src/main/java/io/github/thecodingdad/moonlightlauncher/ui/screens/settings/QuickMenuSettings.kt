@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Apps
-import androidx.compose.material.icons.filled.ArrowDownward
-import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Restore
 import androidx.compose.material3.MaterialTheme
@@ -46,7 +44,8 @@ fun QuickMenuSettings(vm: LauncherViewModel, settings: LauncherSettings, update:
         Text(stringResource(R.string.qt_settings_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
         val tileContext = androidx.compose.ui.platform.LocalContext.current
         val unavailable = remember(tiles) { tiles.filterNot { QuickTile.isAvailable(tileContext, it) }.toSet() }
-        tiles.forEachIndexed { index, id ->
+        // Order by dragging the handle (controller: A on the handle, then up/down), like the filters.
+        ReorderableList(tiles, id = { it }, onReorder = ::save) { index, id ->
             NavRow(
                 quickTileName(id), { selected = id },
                 subtitle = if (id in unavailable) stringResource(R.string.qt_unavailable) else null,
@@ -89,18 +88,9 @@ fun QuickMenuSettings(vm: LauncherViewModel, settings: LauncherSettings, update:
 
     Modal(visible = selected != null, onDismiss = { selected = null }, title = selected?.let { quickTileName(it) }, maxWidth = 560.dp) {
         val id = selected ?: return@Modal
-        val i = tiles.indexOf(id)
-        ButtonRow {
-            LauncherButton(stringResource(R.string.move_up), icon = Icons.Filled.ArrowUpward, onClick = {
-                if (i > 0) save(tiles.toMutableList().apply { add(i - 1, removeAt(i)) })
-            })
-            LauncherButton(stringResource(R.string.move_down), icon = Icons.Filled.ArrowDownward, onClick = {
-                if (i in 0 until tiles.lastIndex) save(tiles.toMutableList().apply { add(i + 1, removeAt(i)) })
-            })
-            LauncherButton(stringResource(R.string.qt_remove), icon = Icons.Filled.Delete, onClick = {
-                save(tiles - id); selected = null
-            })
-        }
+        LauncherButton(stringResource(R.string.qt_remove), icon = Icons.Filled.Delete, onClick = {
+            save(tiles - id); selected = null
+        })
     }
 
     // Picker: system tiles by group, then installed apps as shortcuts.

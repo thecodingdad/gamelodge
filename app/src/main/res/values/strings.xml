@@ -437,8 +437,6 @@
     <string name="filter_match_count">%d games match</string>
     <string name="filter_group_help">Pick entries here or add them via X → Groups.</string>
     <string name="filter_delete">Hold to delete</string>
-    <string name="move_up">Move up</string>
-    <string name="move_down">Move down</string>
     <string name="platform_title">Platform</string>
     <string name="platform_current">Current: %1$s (%2$s)</string>
     <string name="platform_source_manual">set manually</string>
@@ -627,7 +625,7 @@
     <string name="qt_dnd">Do not disturb</string>
     <string name="settings_quick_menu">Quick menu</string>
     <string name="settings_quick_menu_sub">Tiles, order, app shortcuts</string>
-    <string name="qt_settings_help">Tiles appear in this order in the quick settings (Y). Select a tile to move or remove it.</string>
+    <string name="qt_settings_help">The tiles appear in this order in the quick settings (Y). Drag the handle to move a tile, select it to remove it.</string>
     <string name="qt_add">Add tile</string>
     <string name="qt_remove">Remove</string>
     <string name="qt_reset">Reset to defaults</string>
