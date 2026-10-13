@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -163,13 +164,22 @@ fun HeroHome(
                 if (firstRowKey != null && callbacks.lastFocusedKey == null && !snapped) listState.scrollToItem(0)
             }
             LaunchedEffect(focusedRow) {
-                val index = rowKeys.indexOf(focusedRow).takeIf { it >= 0 } ?: return@LaunchedEffect
+                val row = rowKeys.indexOf(focusedRow).takeIf { it >= 0 } ?: return@LaunchedEffect
+                // The first row returns to its start position at the bottom (the spacer item 0
+                // in view), every other row snaps to the top.
+                val index = if (row == 0) 0 else row + 1
                 // First focus (e.g. restored after returning) jumps, later changes glide.
                 if (snapped) listState.animateScrollToItem(index) else listState.scrollToItem(index)
                 snapped = true
             }
+            // Height of the first row, so the spacer above it can put it at the bottom edge.
+            var firstRowHeight by remember { mutableStateOf(0) }
             val pinned: @Composable (String, @Composable () -> Unit) -> Unit = { key, content ->
-                Column(Modifier.onFocusChanged { if (it.hasFocus) focusedRow = key }) {
+                Column(
+                    Modifier
+                        .onFocusChanged { if (it.hasFocus) focusedRow = key }
+                        .then(if (key == rowKeys.firstOrNull()) Modifier.onSizeChanged { firstRowHeight = it.height } else Modifier),
+                ) {
                     androidx.compose.runtime.CompositionLocalProvider(
                         androidx.compose.foundation.gestures.LocalBringIntoViewSpec provides outerSpec, content = content,
                     )
@@ -214,6 +224,14 @@ fun HeroHome(
                 contentPadding = PaddingValues(top = 48.dp, bottom = 24.dp + insets.calculateBottomPadding()),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
+                // Start position: the top row sits at the bottom edge with the artwork above it.
+                // Scrolling the spacer away still lets the rows go up to below the info block.
+                item(key = "start-spacer") {
+                    val viewport = listState.layoutInfo.viewportSize.height
+                    val gap = with(density) { 10.dp.roundToPx() + 48.dp.roundToPx() } + fadePx.toInt()
+                    val height = if (firstRowHeight == 0) 0 else (viewport - firstRowHeight - gap).coerceAtLeast(0)
+                    androidx.compose.foundation.layout.Spacer(Modifier.fillMaxWidth().height(with(density) { height.toDp() }))
+                }
                 if (rows.running.isNotEmpty()) {
                     item(key = "running") { pinned("running") {
                         RowTitle(stringResource(R.string.home_running))
