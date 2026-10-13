@@ -18,7 +18,6 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.ui.zIndex
@@ -666,11 +665,11 @@ internal fun <T> ReorderableList(
     var dragging by remember { mutableStateOf<String?>(null) }
     var picked by remember { mutableStateOf<String?>(null) }
     var dragOffset by remember { mutableFloatStateOf(0f) }
-    val tops = remember { HashMap<String, Float>() }
     val heights = remember { HashMap<String, Float>() }
     val rootTops = remember { HashMap<String, Float>() }
     val scrollArea = io.github.thecodingdad.moonlightlauncher.ui.components.LocalScrollArea.current
     val edge = with(androidx.compose.ui.platform.LocalDensity.current) { 72.dp.toPx() }
+    val gap = with(androidx.compose.ui.platform.LocalDensity.current) { 10.dp.toPx() }
 
     fun commit() {
         if (order != ids) onReorder(order)
@@ -683,20 +682,21 @@ internal fun <T> ReorderableList(
         return true
     }
     // Swaps the dragged row with a neighbour once its centre passes the neighbour's centre.
+    // Positions come from the current order and the row heights, not from the last layout: after
+    // a swap the layout lags a frame behind, and stale positions made the row swap back and forth
+    // (it jumped away from the finger, most of all while the page scrolled along).
     fun reposition(id: String) {
         val i = order.indexOf(id)
-        val top = tops[id] ?: return
         val h = heights[id] ?: return
-        val center = top + dragOffset + h / 2
+        val center = dragOffset + h / 2
         order.getOrNull(i + 1)?.let { next ->
-            val nTop = tops[next] ?: return@let
             val nH = heights[next] ?: return@let
-            if (center > nTop + nH / 2 && move(id, 1)) dragOffset -= nTop + nH - (top + h)
+            // Next row's centre relative to the dragged row's resting top.
+            if (center > h + gap + nH / 2 && move(id, 1)) dragOffset -= nH + gap
         }
         order.getOrNull(i - 1)?.let { prev ->
-            val pTop = tops[prev] ?: return@let
             val pH = heights[prev] ?: return@let
-            if (center < pTop + pH / 2 && move(id, -1)) dragOffset += top - pTop
+            if (center < -gap - pH / 2 && move(id, -1)) dragOffset += pH + gap
         }
     }
     // Touch drag near the top/bottom edge of the page scrolls along; the row stays under the finger.
@@ -734,7 +734,6 @@ internal fun <T> ReorderableList(
                         .zIndex(if (active) 1f else 0f)
                         // Measured before the drag translation: the row's resting place.
                         .onGloballyPositioned {
-                            tops[id] = it.positionInParent().y
                             heights[id] = it.size.height.toFloat()
                             rootTops[id] = it.positionInRoot().y
                         }
