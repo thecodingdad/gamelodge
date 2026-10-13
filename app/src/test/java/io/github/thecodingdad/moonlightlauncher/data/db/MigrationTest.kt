@@ -40,4 +40,11 @@ class MigrationTest {
             assertEquals(1, it.getInt(4))
         }
     }
+
+    @Test
+    fun `v5 to v6 adds the member position`() {
+        helper.createDatabase("m6.db", 5).close()
+        val db = helper.runMigrationsAndValidate("m6.db", 6, true, LauncherDatabase.MIGRATION_5_6)
+        db.query("SELECT position FROM item_collections").close()
+    }
 }

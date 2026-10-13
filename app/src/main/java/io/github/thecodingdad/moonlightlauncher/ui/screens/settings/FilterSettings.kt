@@ -19,6 +19,8 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.ui.zIndex
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -56,6 +58,7 @@ import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.background
 import androidx.compose.ui.text.style.TextOverflow
 import io.github.thecodingdad.moonlightlauncher.ui.components.AppIcon
 import io.github.thecodingdad.moonlightlauncher.ui.components.CoverImage
@@ -244,7 +247,7 @@ private fun FilterEditorDialog(
                         )
                     }
                     ChoiceRow(
-                        stringResource(R.string.filter_sort), listOf<LibrarySort?>(null) + LibrarySort.entries, current.sort,
+                        stringResource(R.string.filter_sort), listOf<LibrarySort?>(null) + LibrarySort.entries.filter { it != LibrarySort.MANUAL }, current.sort,
                         label = { sortLabel(it) },
                         onSelect = { v -> saveRules(current.copy(sort = v)) },
                     )
@@ -280,6 +283,38 @@ private fun FilterEditorDialog(
                         subtitle = stringResource(R.string.group_member_count, games.count { it.item.id in memberIds }),
                         icon = Icons.Filled.Checklist,
                     )
+                    var ordering by remember(f.id) { mutableStateOf(false) }
+                    val byId = games.associateBy { it.item.id }
+                    val ordered = memberIds.mapNotNull { byId[it] }
+                    if (ordered.size > 1) {
+                        NavRow(
+                            title = stringResource(R.string.group_order),
+                            onClick = { ordering = true },
+                            subtitle = stringResource(R.string.group_order_sub),
+                            icon = Icons.Filled.DragHandle,
+                        )
+                    }
+                    Modal(visible = ordering, onDismiss = { ordering = false }, title = filterEntityLabel(f), maxWidth = 720.dp) {
+                        io.github.thecodingdad.moonlightlauncher.ui.components.ScrollAreaColumn(Modifier.heightIn(max = 560.dp)) {
+                            ReorderableList(ordered, id = { it.item.id }, onReorder = { vm.reorderGroup(f.id, it) }) { _, entry ->
+                                Row(
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(LauncherTheme.dimens.cornerRadius))
+                                        .background(LauncherTheme.colors.surfaceRaised)
+                                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                                ) {
+                                    MemberThumb(entry)
+                                    Text(
+                                        entry.item.title, style = MaterialTheme.typography.titleSmall, color = LauncherTheme.colors.onSurface,
+                                        maxLines = 1, overflow = TextOverflow.Ellipsis,
+                                    )
+                                }
+                            }
+                        }
+                    }
                     GroupMembersDialog(
                         visible = picking,
                         title = filterEntityLabel(f),
@@ -407,6 +442,7 @@ private fun sortLabel(sort: LibrarySort?): String = stringResource(
         LibrarySort.LAST_PLAYED -> R.string.filter_sort_last_played
         LibrarySort.ADDED -> R.string.filter_sort_added
         LibrarySort.PLAYTIME -> R.string.filter_sort_playtime
+        LibrarySort.MANUAL -> R.string.filter_sort_manual
     },
 )
 
@@ -632,6 +668,9 @@ internal fun <T> ReorderableList(
     var dragOffset by remember { mutableFloatStateOf(0f) }
     val tops = remember { HashMap<String, Float>() }
     val heights = remember { HashMap<String, Float>() }
+    val rootTops = remember { HashMap<String, Float>() }
+    val scrollArea = io.github.thecodingdad.moonlightlauncher.ui.components.LocalScrollArea.current
+    val edge = with(androidx.compose.ui.platform.LocalDensity.current) { 72.dp.toPx() }
 
     fun commit() {
         if (order != ids) onReorder(order)
@@ -642,6 +681,42 @@ internal fun <T> ReorderableList(
         if (from < 0 || to !in order.indices) return false
         order = order.toMutableList().also { it.add(to, it.removeAt(from)) }
         return true
+    }
+    // Swaps the dragged row with a neighbour once its centre passes the neighbour's centre.
+    fun reposition(id: String) {
+        val i = order.indexOf(id)
+        val top = tops[id] ?: return
+        val h = heights[id] ?: return
+        val center = top + dragOffset + h / 2
+        order.getOrNull(i + 1)?.let { next ->
+            val nTop = tops[next] ?: return@let
+            val nH = heights[next] ?: return@let
+            if (center > nTop + nH / 2 && move(id, 1)) dragOffset -= nTop + nH - (top + h)
+        }
+        order.getOrNull(i - 1)?.let { prev ->
+            val pTop = tops[prev] ?: return@let
+            val pH = heights[prev] ?: return@let
+            if (center < pTop + pH / 2 && move(id, -1)) dragOffset += top - pTop
+        }
+    }
+    // Touch drag near the top/bottom edge of the page scrolls along; the row stays under the finger.
+    androidx.compose.runtime.LaunchedEffect(dragging, scrollArea) {
+        val id = dragging ?: return@LaunchedEffect
+        val area = scrollArea ?: return@LaunchedEffect
+        while (true) {
+            androidx.compose.runtime.withFrameNanos { }
+            val top = (rootTops[id] ?: continue) + dragOffset
+            val bottom = top + (heights[id] ?: continue)
+            val speed = when {
+                top < area.top + edge -> -((area.top + edge - top) / edge).coerceAtMost(1f) * 24f
+                bottom > area.bottom - edge -> ((bottom - (area.bottom - edge)) / edge).coerceAtMost(1f) * 24f
+                else -> 0f
+            }
+            if (speed == 0f) continue
+            val consumed = area.state.scrollBy(speed)
+            dragOffset += consumed
+            reposition(id)
+        }
     }
     // B drops a picked-up row instead of leaving the page.
     io.github.thecodingdad.moonlightlauncher.ui.input.PadAction(
@@ -658,7 +733,11 @@ internal fun <T> ReorderableList(
                         .fillMaxWidth()
                         .zIndex(if (active) 1f else 0f)
                         // Measured before the drag translation: the row's resting place.
-                        .onGloballyPositioned { tops[id] = it.positionInParent().y; heights[id] = it.size.height.toFloat() }
+                        .onGloballyPositioned {
+                            tops[id] = it.positionInParent().y
+                            heights[id] = it.size.height.toFloat()
+                            rootTops[id] = it.positionInRoot().y
+                        }
                         .graphicsLayer { translationY = if (dragging == id) dragOffset else 0f },
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -692,21 +771,7 @@ internal fun <T> ReorderableList(
                                 ) { change, amount ->
                                     change.consume()
                                     dragOffset += amount.y
-                                    val i = order.indexOf(id)
-                                    val top = tops[id] ?: return@detectDragGestures
-                                    val h = heights[id] ?: return@detectDragGestures
-                                    val center = top + dragOffset + h / 2
-                                    // Swap with a neighbour once the dragged row's centre passes its centre.
-                                    order.getOrNull(i + 1)?.let { next ->
-                                        val nTop = tops[next] ?: return@let
-                                        val nH = heights[next] ?: return@let
-                                        if (center > nTop + nH / 2 && move(id, 1)) dragOffset -= nTop + nH - (top + h)
-                                    }
-                                    order.getOrNull(i - 1)?.let { prev ->
-                                        val pTop = tops[prev] ?: return@let
-                                        val pH = heights[prev] ?: return@let
-                                        if (center < pTop + pH / 2 && move(id, -1)) dragOffset += top - pTop
-                                    }
+                                    reposition(id)
                                 }
                             },
                     ) {

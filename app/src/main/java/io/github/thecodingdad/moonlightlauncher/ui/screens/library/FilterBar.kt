@@ -50,10 +50,13 @@ fun FilterBar(
     onSort: () -> Unit,
     onEdit: () -> Unit,
     onStats: (() -> Unit)? = null,
+    /** The selected filter is a group: its own order is the default sort. */
+    manualSort: Boolean = false,
     /** Incremented by the screen to move focus to the active filter chip (B button). */
     focusRequests: Int = 0,
 ) {
     val listState = rememberLazyListState()
+    val defaultSort = if (manualSort) LibrarySort.MANUAL else LibrarySort.TITLE
     val selectedRequester = androidx.compose.runtime.remember { androidx.compose.ui.focus.FocusRequester() }
     val selectedIndex = filters.indexOfFirst { it.key == selectedKey || (selectedKey == null && it.builtin == BuiltinFilter.ALL) }
         .takeIf { it >= 0 }?.let { if (search.isNotEmpty()) it + 1 else it }
@@ -128,7 +131,7 @@ fun FilterBar(
         if (io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current) {
             // Narrow screens: the tools sit behind one menu button, the chips get the width.
             var menu by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
-            Chip("", selected = search.isNotEmpty() || sort != LibrarySort.TITLE, onClick = { menu = true }, icon = {
+            Chip("", selected = search.isNotEmpty() || sort != defaultSort, onClick = { menu = true }, icon = {
                 Icon(Icons.Filled.MoreVert, stringResource(R.string.hint_options))
             })
             io.github.thecodingdad.moonlightlauncher.ui.components.Modal(
@@ -142,7 +145,7 @@ fun FilterBar(
                         )
                     }
                     item(Icons.Filled.Search, stringResource(R.string.hint_search), onSearch)
-                    item(Icons.AutoMirrored.Filled.Sort, sortLabel(sort) + "  →  " + sortLabel(sort.next()).substringAfter(": "), onSort)
+                    item(Icons.AutoMirrored.Filled.Sort, sortLabel(sort) + "  →  " + sortLabel(sort.next(manualSort)).substringAfter(": "), onSort)
                     if (onStats != null) item(Icons.Filled.BarChart, stringResource(R.string.stats_title), onStats)
                     item(Icons.Filled.Edit, stringResource(R.string.filters_edit), onEdit)
                 }
@@ -154,7 +157,7 @@ fun FilterBar(
                 icon = { Icon(Icons.Filled.Search, stringResource(R.string.hint_search)) },
             )
             Chip(
-                "", selected = sort != LibrarySort.TITLE, onClick = onSort,
+                "", selected = sort != defaultSort, onClick = onSort,
                 icon = { Icon(Icons.AutoMirrored.Filled.Sort, sortLabel(sort)) },
             )
             if (onStats != null) {
@@ -175,7 +178,11 @@ fun List<ResolvedFilter>.step(selectedKey: String?, delta: Int): String? {
     return if (next == current) null else this[next].key
 }
 
-fun LibrarySort.next(): LibrarySort = LibrarySort.entries[(ordinal + 1) % LibrarySort.entries.size]
+/** Next sort order; [LibrarySort.MANUAL] only when the filter has its own order (groups). */
+fun LibrarySort.next(manual: Boolean = false): LibrarySort {
+    val options = LibrarySort.entries.filter { manual || it != LibrarySort.MANUAL }
+    return options[(options.indexOf(this) + 1).mod(options.size)]
+}
 
 @Composable
 fun sortLabel(sort: LibrarySort): String = stringResource(
@@ -184,5 +191,6 @@ fun sortLabel(sort: LibrarySort): String = stringResource(
         LibrarySort.LAST_PLAYED -> R.string.sort_last_played
         LibrarySort.ADDED -> R.string.sort_added
         LibrarySort.PLAYTIME -> R.string.sort_playtime
+        LibrarySort.MANUAL -> R.string.sort_manual
     },
 )

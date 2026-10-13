@@ -108,8 +108,15 @@ interface CollectionDao {
     @Query("SELECT * FROM collections ORDER BY sortOrder")
     fun observeCollections(): Flow<List<CollectionEntity>>
 
-    @Query("SELECT * FROM item_collections")
+    /** In each group's manual order (members from before v6 share position 0: insertion order). */
+    @Query("SELECT * FROM item_collections ORDER BY position, rowid")
     fun observeMemberships(): Flow<List<ItemCollectionCrossRef>>
+
+    @Query("SELECT COALESCE(MAX(position), -1) FROM item_collections WHERE collectionId = :collectionId")
+    suspend fun maxPosition(collectionId: String): Int
+
+    @Query("UPDATE item_collections SET position = :position WHERE itemId = :itemId AND collectionId = :collectionId")
+    suspend fun setPosition(itemId: String, collectionId: String, position: Int)
 
     @Upsert
     suspend fun upsert(collection: CollectionEntity)

@@ -73,6 +73,14 @@ fun AppsScreen(
     ) { androidx.compose.runtime.mutableStateMapOf<String, String>() }
     var search by rememberSaveable { mutableStateOf("") }
     val selected = filters.firstOrNull { it.key == selectedKey }
+    // Groups open in their own order; other filters fall back to the name order.
+    val manualSort = selected?.manualOrder == true
+    var sortFor by rememberSaveable { mutableStateOf<String?>(null) }
+    androidx.compose.runtime.LaunchedEffect(selected?.key) {
+        if (sortFor == selected?.key) return@LaunchedEffect
+        sortFor = selected?.key
+        if (manualSort) sort = LibrarySort.MANUAL else if (sort == LibrarySort.MANUAL) sort = LibrarySort.TITLE
+    }
     val keyboard = io.github.thecodingdad.moonlightlauncher.ui.components.LocalKeyboardController.current
     val searchTitle = stringResource(R.string.hint_search)
     fun openSearch() = keyboard.open(title = searchTitle, initial = search) { search = it }
@@ -88,7 +96,7 @@ fun AppsScreen(
     androidx.activity.compose.BackHandler { filterFocusRequests++ }
     PadAction(PadButton.L2) { stepFilter(-1) }
     PadAction(PadButton.R2) { stepFilter(1) }
-    PadAction(PadButton.SELECT) { sort = sort.next() }
+    PadAction(PadButton.SELECT) { sort = sort.next(manualSort) }
     PadAction(PadButton.START) { openSearch() }
     PadAction(PadButton.X) { focused?.let(actions::context) }
     ScreenHints(
@@ -96,7 +104,7 @@ fun AppsScreen(
             ButtonHint(PadButton.A, stringResource(R.string.hint_start)),
             ButtonHint(PadButton.X, stringResource(R.string.hint_options), onClick = { focused?.let(actions::context) }),
             ButtonHint(PadButton.L2, stringResource(R.string.hint_filters), onClick = { stepFilter(1) }, secondButton = PadButton.R2),
-            ButtonHint(PadButton.SELECT, sortLabel(sort), onClick = { sort = sort.next() }),
+            ButtonHint(PadButton.SELECT, sortLabel(sort), onClick = { sort = sort.next(manualSort) }),
             ButtonHint(PadButton.START, stringResource(R.string.hint_search), onClick = ::openSearch),
         ),
     )
@@ -118,7 +126,8 @@ fun AppsScreen(
         onSearch = ::openSearch,
         onClearSearch = { search = "" },
         sort = sort,
-        onSort = { sort = sort.next() },
+        manualSort = manualSort,
+        onSort = { sort = sort.next(manualSort) },
         onEdit = openFilterSettings,
         focusRequests = filterFocusRequests,
     )

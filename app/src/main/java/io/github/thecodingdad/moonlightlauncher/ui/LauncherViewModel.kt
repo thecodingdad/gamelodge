@@ -138,6 +138,10 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch { c.library.setInCollection(itemId, collectionId, member) }
     }
 
+    fun reorderGroup(collectionId: String, itemIds: List<String>) {
+        viewModelScope.launch { c.library.reorderCollection(collectionId, itemIds) }
+    }
+
     fun saveFilter(filter: FilterEntity) {
         viewModelScope.launch { c.filters.save(filter) }
     }

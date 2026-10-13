@@ -808,4 +808,10 @@
     <string name="sound_style_muffled">Gedämpft</string>
     <string name="sound_style_wood">Holz</string>
     <string name="sound_style_deep">Tief</string>
+
+    <!-- Filters -->
+    <string name="sort_manual">Sortierung: Eigene Reihenfolge</string>
+    <string name="filter_sort_manual">Eigene Reihenfolge</string>
+    <string name="group_order">Reihenfolge ändern</string>
+    <string name="group_order_sub">Einträge in die gewünschte Reihenfolge ziehen</string>
 </resources>

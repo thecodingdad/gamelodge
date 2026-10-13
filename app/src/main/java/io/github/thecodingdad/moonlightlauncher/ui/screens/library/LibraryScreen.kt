@@ -107,6 +107,14 @@ fun LibraryScreen(
 
     val selected = filters.firstOrNull { it.key == selectedKey }
         ?: filters.firstOrNull { it.builtin == BuiltinFilter.ALL } ?: filters.firstOrNull()
+    // Groups open in their own order; other filters fall back to the name order.
+    val manualSort = selected?.manualOrder == true
+    var sortFor by rememberSaveable { mutableStateOf<String?>(null) }
+    androidx.compose.runtime.LaunchedEffect(selected?.key) {
+        if (sortFor == selected?.key) return@LaunchedEffect
+        sortFor = selected?.key
+        if (manualSort) sort = LibrarySort.MANUAL else if (sort == LibrarySort.MANUAL) sort = LibrarySort.TITLE
+    }
     val base = selected?.entries ?: remember(allEntries) { allEntries.filter { it.item.kind == ItemKind.GAME && !it.item.hidden } }
     val shown = remember(base, sort, search) { FilterEngine.query(base, sort, search) }
 
@@ -125,7 +133,7 @@ fun LibraryScreen(
     androidx.activity.compose.BackHandler { filterFocusRequests++ }
     PadAction(PadButton.L2) { stepFilter(-1) }
     PadAction(PadButton.R2) { stepFilter(1) }
-    PadAction(PadButton.SELECT) { sort = sort.next() }
+    PadAction(PadButton.SELECT) { sort = sort.next(manualSort) }
     PadAction(PadButton.START) { openSearch() }
     PadAction(PadButton.X) { focused?.let(actions::context) }
 
@@ -134,7 +142,7 @@ fun LibraryScreen(
             ButtonHint(PadButton.A, stringResource(R.string.hint_open)),
             ButtonHint(PadButton.X, stringResource(R.string.hint_options), onClick = { focused?.let(actions::context) }),
             ButtonHint(PadButton.L2, stringResource(R.string.hint_filters), onClick = { stepFilter(1) }, secondButton = PadButton.R2),
-            ButtonHint(PadButton.SELECT, sortLabel(sort), onClick = { sort = sort.next() }),
+            ButtonHint(PadButton.SELECT, sortLabel(sort), onClick = { sort = sort.next(manualSort) }),
             ButtonHint(PadButton.START, stringResource(R.string.hint_search), onClick = ::openSearch),
         ),
     )
@@ -157,7 +165,8 @@ fun LibraryScreen(
             onSearch = ::openSearch,
             onClearSearch = { search = "" },
             sort = sort,
-            onSort = { sort = sort.next() },
+            manualSort = manualSort,
+            onSort = { sort = sort.next(manualSort) },
             onEdit = openFilterSettings,
         focusRequests = filterFocusRequests,
             onStats = openStats,

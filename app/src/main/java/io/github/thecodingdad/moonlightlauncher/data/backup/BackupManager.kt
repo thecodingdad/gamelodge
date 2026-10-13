@@ -251,7 +251,7 @@ class BackupManager(
             val id = existingCollections[c.name]?.id ?: UUID.randomUUID().toString().also {
                 collectionDao.upsert(CollectionEntity(it, c.name, existingCollections.size + index))
             }
-            c.members.mapNotNull { byTitle[it]?.id }.forEach { collectionDao.addItem(ItemCollectionCrossRef(it, id)) }
+            c.members.mapNotNull { byTitle[it]?.id }.forEachIndexed { i, item -> collectionDao.addItem(ItemCollectionCrossRef(item, id, i)) }
         }
         restoreFilters(backup)
 

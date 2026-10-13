@@ -16,7 +16,7 @@ import androidx.room.RoomDatabase
         HaTileEntity::class,
         FilterEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = true,
 )
 abstract class LauncherDatabase : RoomDatabase() {
@@ -30,10 +30,17 @@ abstract class LauncherDatabase : RoomDatabase() {
     companion object {
         fun create(context: Context): LauncherDatabase =
             Room.databaseBuilder(context, LauncherDatabase::class.java, "launcher.db")
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
                 .build()
 
         /** v4: host API type/user (companion data from Vibepollo, Apollo or Sunshine), not installed targets. */
+        /** v6: manual order of group members. */
+        val MIGRATION_5_6 = object : androidx.room.migration.Migration(5, 6) {
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE item_collections ADD COLUMN position INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
         /** v5: landscape tiles for apps on the start tab. */
         val MIGRATION_4_5 = object : androidx.room.migration.Migration(4, 5) {
             override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {

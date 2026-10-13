@@ -195,7 +195,8 @@ object BuiltinFilter {
     data class Default(val key: String, val library: Boolean, val home: Boolean)
 }
 
-enum class LibrarySort { TITLE, LAST_PLAYED, ADDED, PLAYTIME }
+/** [MANUAL]: the filter's own order (a group's manual order); only offered for groups. */
+enum class LibrarySort { TITLE, LAST_PLAYED, ADDED, PLAYTIME, MANUAL }
 
 /** Where a filter is being shown; decides which items it sees. */
 enum class FilterPlace { LIBRARY, HOME, APPS }
@@ -216,6 +217,8 @@ data class ResolvedFilter(
     val valueLabel: String? = null,
     val chipShowName: Boolean = true,
     val rowShowName: Boolean = true,
+    /** Group: entries are in the user's own order. */
+    val manualOrder: Boolean = false,
 )
 
 object FilterEngine {
@@ -259,8 +262,10 @@ object FilterEngine {
     ): List<ResolvedFilter> {
         val name = filter.name.ifBlank { null }
         if (filter.kind == FilterKind.GROUP) {
-            val members = groupMembers[filter.id].orEmpty()
-            return listOf(ResolvedFilter(filter.id, filter.id, name, filter.builtin, null, pool.filter { !it.item.hidden && it.item.id in members }, null))
+            // Members come in the group's manual order.
+            val order = groupMembers[filter.id].orEmpty().withIndex().associate { it.value to it.index }
+            val entries = pool.filter { !it.item.hidden && it.item.id in order }.sortedBy { order[it.item.id] }
+            return listOf(ResolvedFilter(filter.id, filter.id, name, filter.builtin, null, entries, null, manualOrder = true))
         }
         val rules = effectiveRules(filter)
         val matching = apply(pool, rules, groupMembers)
@@ -440,6 +445,7 @@ object FilterEngine {
                     LibrarySort.LAST_PLAYED -> seq.sortedByDescending { it.item.lastPlayedAt ?: 0L }
                     LibrarySort.ADDED -> seq.sortedByDescending { it.item.addedAt }
                     LibrarySort.PLAYTIME -> seq.sortedByDescending { it.item.playtimeSeconds }
+                    LibrarySort.MANUAL -> seq
                 }
             }
             .toList()

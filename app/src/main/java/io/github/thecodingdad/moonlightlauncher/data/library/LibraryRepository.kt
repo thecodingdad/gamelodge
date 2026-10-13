@@ -1,5 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher.data.library
 
+import androidx.room.withTransaction
 import io.github.thecodingdad.moonlightlauncher.data.db.ItemCollectionCrossRef
 import io.github.thecodingdad.moonlightlauncher.data.db.ItemKind
 import io.github.thecodingdad.moonlightlauncher.data.db.KindSource
@@ -174,8 +175,14 @@ class LibraryRepository(
     val memberships = db.collectionDao().observeMemberships()
 
     suspend fun setInCollection(itemId: String, collectionId: String, member: Boolean) {
-        val ref = ItemCollectionCrossRef(itemId, collectionId)
-        if (member) db.collectionDao().addItem(ref) else db.collectionDao().removeItem(ref)
+        val dao = db.collectionDao()
+        if (member) dao.addItem(ItemCollectionCrossRef(itemId, collectionId, dao.maxPosition(collectionId) + 1))
+        else dao.removeItem(ItemCollectionCrossRef(itemId, collectionId))
+    }
+
+    /** Stores the manual order of a group's members. */
+    suspend fun reorderCollection(collectionId: String, itemIds: List<String>) = db.withTransaction {
+        itemIds.forEachIndexed { index, id -> db.collectionDao().setPosition(id, collectionId, index) }
     }
 
     /** User correction "this is a game / an app"; survives every future sync. */

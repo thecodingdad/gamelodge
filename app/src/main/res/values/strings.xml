@@ -810,4 +810,10 @@
     <string name="sound_style_muffled">Muffled</string>
     <string name="sound_style_wood">Wood</string>
     <string name="sound_style_deep">Deep</string>
+
+    <!-- Filters -->
+    <string name="sort_manual">Sort: Custom order</string>
+    <string name="filter_sort_manual">Custom order</string>
+    <string name="group_order">Change order</string>
+    <string name="group_order_sub">Drag entries into the order you want</string>
 </resources>

@@ -183,6 +183,8 @@ data class CollectionEntity(
 data class ItemCollectionCrossRef(
     val itemId: String,
     val collectionId: String,
+    /** Manual order inside the group; new members go to the end. */
+    @androidx.room.ColumnInfo(defaultValue = "0") val position: Int = 0,
 )
 
 enum class WakeMethod { NONE, WOL, HOME_ASSISTANT, BOTH }
