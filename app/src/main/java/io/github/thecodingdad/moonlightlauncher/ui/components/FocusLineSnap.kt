@@ -20,7 +20,7 @@ object NoScrollBringIntoView : BringIntoViewSpec {
  * Keeps the focused line of a grid at the top (console style), so every line sits at the same
  * height instead of scrolling "just enough". Call the returned function with the grid item
  * index to show at the top (the focused item, or the header above its line). Use together with
- * [NoScrollBringIntoView] on the grid.
+ * [NoScrollBringIntoView] on the grid. Only acts in controller mode.
  */
 @Composable
 fun rememberFocusLineSnap(state: LazyGridState): (Int) -> Unit {
@@ -32,5 +32,7 @@ fun rememberFocusLineSnap(state: LazyGridState): (Int) -> Unit {
         if (snapped) state.animateScrollToItem(index) else state.scrollToItem(index)
         snapped = true
     }
-    return remember { { index -> target = index } }
+    // Touch scrolls freely: a finger landing on a card must not pull its line to the top.
+    val controller by androidx.compose.runtime.rememberUpdatedState(isControllerMode())
+    return remember { { index -> if (controller) target = index } }
 }
