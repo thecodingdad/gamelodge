@@ -117,6 +117,15 @@ fun LibraryScreen(
     }
     val base = selected?.entries ?: remember(allEntries) { allEntries.filter { it.item.kind == ItemKind.GAME && !it.item.hidden } }
     val shown = remember(base, sort, search) { FilterEngine.query(base, sort, search) }
+    // Saveable: survives switching tabs (the tab's saved state is kept while another tab is shown).
+    val focusByFilter = androidx.compose.runtime.saveable.rememberSaveable(
+        saver = androidx.compose.runtime.saveable.Saver<androidx.compose.runtime.snapshots.SnapshotStateMap<String, String>, HashMap<String, String>>(
+            save = { HashMap(it) }, restore = { androidx.compose.runtime.mutableStateMapOf<String, String>().apply { putAll(it) } },
+        ),
+    ) { androidx.compose.runtime.mutableStateMapOf<String, String>() }
+    val filterKey = selected?.key ?: BuiltinFilter.ALL
+    // Context menu of a card: its "Details" pages through this list like A does.
+    fun openContext(entry: LibraryEntry) = actions.context(entry, shown) { id -> focusByFilter[filterKey] = id; onFocusKey("library:$id") }
 
     val searchTitle = stringResource(R.string.hint_search)
     fun openSearch() = keyboard.open(title = searchTitle, initial = search) { search = it }
@@ -135,12 +144,12 @@ fun LibraryScreen(
     PadAction(PadButton.R2) { stepFilter(1) }
     PadAction(PadButton.SELECT) { sort = sort.next(manualSort) }
     PadAction(PadButton.START) { openSearch() }
-    PadAction(PadButton.X) { focused?.let(actions::context) }
+    PadAction(PadButton.X) { focused?.let { openContext(it) } }
 
     ScreenHints(
         listOf(
             ButtonHint(PadButton.A, stringResource(actions.openLabel(focused))),
-            ButtonHint(PadButton.X, stringResource(R.string.hint_options), onClick = { focused?.let(actions::context) }),
+            ButtonHint(PadButton.X, stringResource(R.string.hint_options), onClick = { focused?.let { openContext(it) } }),
             ButtonHint(PadButton.L2, stringResource(R.string.hint_filters), onClick = { stepFilter(1) }, secondButton = PadButton.R2),
             ButtonHint(PadButton.SELECT, sortLabel(sort), onClick = { sort = sort.next(manualSort) }),
             ButtonHint(PadButton.START, stringResource(R.string.hint_search), onClick = ::openSearch),
@@ -148,13 +157,6 @@ fun LibraryScreen(
     )
     // Scroll position and focused game are kept per filter.
     val gridStates = androidx.compose.runtime.saveable.rememberSaveableStateHolder()
-    // Saveable: survives switching tabs (the tab's saved state is kept while another tab is shown).
-    val focusByFilter = androidx.compose.runtime.saveable.rememberSaveable(
-        saver = androidx.compose.runtime.saveable.Saver<androidx.compose.runtime.snapshots.SnapshotStateMap<String, String>, HashMap<String, String>>(
-            save = { HashMap(it) }, restore = { androidx.compose.runtime.mutableStateMapOf<String, String>().apply { putAll(it) } },
-        ),
-    ) { androidx.compose.runtime.mutableStateMapOf<String, String>() }
-    val filterKey = selected?.key ?: BuiltinFilter.ALL
 
     Column(Modifier.fillMaxSize()) {
         FilterBar(
@@ -224,7 +226,7 @@ fun LibraryScreen(
                     onClick = {
                         actions.open(entry, shown) { id -> focusByFilter[filterKey] = id; onFocusKey("library:$id") }
                     },
-                    onLongClick = { actions.context(entry) },
+                    onLongClick = { openContext(entry) },
                     onFocused = { focused = entry; focusByFilter[filterKey] = entry.item.id; onFocusKey(key); snapTo(index) },
                     showTitle = true,
                     animated = animatedArtwork,

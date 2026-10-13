@@ -90,6 +90,9 @@ fun HeroHome(
     val actions = LocalEntryActions.current
     var focused by remember { mutableStateOf<LibraryEntry?>(null) }
     var focusedSession by remember { mutableStateOf<RunningSession?>(null) }
+    // Row of the focused card, for the context menu's "Details" (pages through the row).
+    var focusedList by remember { mutableStateOf<List<LibraryEntry>?>(null) }
+    var focusedListKey by remember { mutableStateOf<String?>(null) }
     var shown by remember { mutableStateOf<LibraryEntry?>(null) }
     // Back on the tab (e.g. from a detail page): the game focused, tapped or browsed to last.
     // By controller the card regains focus anyway; by touch nothing has focus, so the hero
@@ -109,7 +112,8 @@ fun HeroHome(
     PadAction(PadButton.START) { focused?.let(actions::play) }
     PadAction(PadButton.X) {
         val session = focusedSession
-        if (session != null) callbacks.onRunningMenu(session) else focused?.let(actions::context)
+        if (session != null) callbacks.onRunningMenu(session)
+        else focused?.let { e -> actions.context(e, focusedList) { id -> focusedListKey?.let { callbacks.onFocusKey("$it:$id") } } }
     }
 
     Box(Modifier.fillMaxSize()) {
@@ -265,7 +269,8 @@ fun HeroHome(
                     homeRow(
                         "row:${row.key}", 0, row.entries, callbacks, pinned,
                         firstRow = rows.running.isEmpty() && index == firstFilled,
-                        onFocus = { focused = it; focusedSession = null }, actions = actions,
+                        onFocus = { entry, list -> focused = entry; focusedSession = null; focusedList = list; focusedListKey = "row:${row.key}" },
+                        actions = actions,
                         titleText = { filterLabel(row, row = true) },
                     )
                 }
@@ -283,7 +288,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.homeRow(
     callbacks: HomeCallbacks,
     pinned: @Composable (String, @Composable () -> Unit) -> Unit,
     firstRow: Boolean,
-    onFocus: (LibraryEntry) -> Unit,
+    onFocus: (LibraryEntry, List<LibraryEntry>) -> Unit,
     actions: io.github.thecodingdad.moonlightlauncher.ui.shell.EntryActions,
     titleText: (@Composable () -> String)? = null,
 ) {
@@ -320,8 +325,8 @@ private fun androidx.compose.foundation.lazy.LazyListScope.homeRow(
                     io.github.thecodingdad.moonlightlauncher.ui.components.AppTileCard(
                         entry = entry,
                         onClick = { actions.open(entry, entries) },
-                        onLongClick = { actions.context(entry) },
-                        onFocused = { onFocus(entry); callbacks.onFocusKey(focusKey) },
+                        onLongClick = { actions.context(entry, entries) { id -> callbacks.onFocusKey("$key:$id") } },
+                        onFocused = { onFocus(entry, entries); callbacks.onFocusKey(focusKey) },
                         modifier = cardModifier,
                     )
                 } else {
@@ -329,8 +334,8 @@ private fun androidx.compose.foundation.lazy.LazyListScope.homeRow(
                         entry = entry,
                         width = LauncherTheme.dimens.coverWidth * 0.82f,
                         onClick = { actions.open(entry, entries) { id -> callbacks.onFocusKey("$key:$id") } },
-                        onLongClick = { actions.context(entry) },
-                        onFocused = { onFocus(entry); callbacks.onFocusKey(focusKey) },
+                        onLongClick = { actions.context(entry, entries) { id -> callbacks.onFocusKey("$key:$id") } },
+                        onFocused = { onFocus(entry, entries); callbacks.onFocusKey(focusKey) },
                         animated = callbacks.animatedArtwork,
                         modifier = cardModifier,
                     )

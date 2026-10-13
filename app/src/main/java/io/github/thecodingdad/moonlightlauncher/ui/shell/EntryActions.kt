@@ -25,8 +25,12 @@ class EntryActions(
     /** Running session the context menu was opened for (resume card); adds stream options. */
     var contextSession by mutableStateOf<io.github.thecodingdad.moonlightlauncher.ui.RunningSession?>(null)
 
+    /** List the context menu was opened from: "Details" there pages through it like A does. */
+    private var contextBrowse: DetailBrowse? = null
+
     fun contextForSession(session: io.github.thecodingdad.moonlightlauncher.ui.RunningSession) {
         contextSession = session
+        contextBrowse = null
         contextMenuFor = session.entry
     }
 
@@ -59,10 +63,12 @@ class EntryActions(
             play(entry)
             return
         }
-        browse = siblings?.filter { it.item.kind != io.github.thecodingdad.moonlightlauncher.data.db.ItemKind.APP }
-            ?.map { it.item.id }?.let { DetailBrowse(it, onShown) }
+        browse = siblings?.let { browseOf(it, onShown) }
         openDetail(entry)
     }
+
+    private fun browseOf(siblings: List<LibraryEntry>, onShown: (String) -> Unit) =
+        DetailBrowse(siblings.filter { it.item.kind != io.github.thecodingdad.moonlightlauncher.data.db.ItemKind.APP }.map { it.item.id }, onShown)
 
     /** Hint label for A on [entry], matching what [open] does. */
     fun openLabel(entry: LibraryEntry?): Int = when {
@@ -73,8 +79,9 @@ class EntryActions(
         else -> io.github.thecodingdad.moonlightlauncher.R.string.action_play
     }
 
+    /** "Details" in the context menu. */
     fun showDetail(entry: LibraryEntry) {
-        browse = null
+        browse = contextBrowse?.takeIf { entry.item.id in it.ids }
         openDetail(entry)
     }
 
@@ -92,8 +99,10 @@ class EntryActions(
         pick = LaunchPick(entry, chooseProfile = true)
     }
 
-    fun context(entry: LibraryEntry) {
+    /** Context menu (X / long press); [siblings] and [onShown] as for [open]. */
+    fun context(entry: LibraryEntry, siblings: List<LibraryEntry>? = null, onShown: (String) -> Unit = {}) {
         contextMenuFor = entry
+        contextBrowse = siblings?.let { browseOf(it, onShown) }
     }
 }
 
