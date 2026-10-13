@@ -116,14 +116,10 @@ fun SettingsPage(title: String, content: @Composable ColumnScope.() -> Unit) {
     Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
         // Limited width, centred on wide screens; the title lines up with the entries.
         PageTitle(title, Modifier.padding(horizontal = horizontal).padding(top = 16.dp, bottom = 12.dp).widthIn(max = 900.dp))
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .controllerScroll()
-                .padding(horizontal = horizontal)
-                .focusRestorer(),
+        io.github.thecodingdad.moonlightlauncher.ui.components.ScrollAreaColumn(
+            modifier = Modifier.fillMaxWidth().weight(1f),
             horizontalAlignment = Alignment.CenterHorizontally,
+            inner = Modifier.padding(horizontal = horizontal).focusRestorer(),
         ) {
             Column(Modifier.widthIn(max = 900.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 content()

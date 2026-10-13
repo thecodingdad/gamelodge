@@ -5,6 +5,8 @@ import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -54,3 +56,40 @@ fun Modifier.controllerScroll(state: ScrollState = androidx.compose.foundation.r
         }
         .verticalScroll(state)
 }
+
+/**
+ * A page's scroll container and where it sits on screen (root coordinates), so drag and drop
+ * inside can scroll along when a row is dragged to the edge.
+ */
+class ScrollArea(val state: ScrollState) {
+    var top = 0f
+    var bottom = 0f
+}
+
+val LocalScrollArea = androidx.compose.runtime.staticCompositionLocalOf<ScrollArea?> { null }
+
+/** [controllerScroll] that also publishes itself as [LocalScrollArea] for the content. */
+@Composable
+fun ScrollAreaColumn(
+    modifier: Modifier = Modifier,
+    horizontalAlignment: androidx.compose.ui.Alignment.Horizontal = androidx.compose.ui.Alignment.Start,
+    inner: Modifier = Modifier,
+    content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit,
+) {
+    val state = androidx.compose.foundation.rememberScrollState()
+    val area = androidx.compose.runtime.remember(state) { ScrollArea(state) }
+    androidx.compose.foundation.layout.Column(
+        modifier
+            .onGloballyPositioned {
+                val bounds = it.boundsInRoot()
+                area.top = bounds.top
+                area.bottom = bounds.bottom
+            }
+            .controllerScroll(state)
+            .then(inner),
+        horizontalAlignment = horizontalAlignment,
+    ) {
+        androidx.compose.runtime.CompositionLocalProvider(LocalScrollArea provides area) { content() }
+    }
+}
+
