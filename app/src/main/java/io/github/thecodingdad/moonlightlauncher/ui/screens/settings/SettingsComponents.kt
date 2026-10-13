@@ -106,23 +106,29 @@ fun PageTitle(title: String, modifier: Modifier = Modifier) {
 
 private const val SEPARATOR = "  ›  "
 
-/** Scrollable settings page with title; the first focusable element gets initial focus. */
+/**
+ * Settings page: the title (path) stays fixed at the top, the content below scrolls; the first
+ * focusable element gets initial focus.
+ */
 @Composable
 fun SettingsPage(title: String, content: @Composable ColumnScope.() -> Unit) {
-    Column(
-        Modifier
-            .fillMaxSize()
-            .controllerScroll()
-            .padding(horizontal = if (io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current) 20.dp else 48.dp, vertical = 16.dp)
-            .focusRestorer(),
-        horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
-    ) {
+    val horizontal = if (io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current) 20.dp else 48.dp
+    Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
         // Limited width, centred on wide screens; the title lines up with the entries.
-        Column(Modifier.widthIn(max = 900.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            PageTitle(title)
-            Spacer(Modifier.height(6.dp))
-            content()
-            Spacer(Modifier.height(24.dp))
+        PageTitle(title, Modifier.padding(horizontal = horizontal).padding(top = 16.dp, bottom = 12.dp).widthIn(max = 900.dp))
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .controllerScroll()
+                .padding(horizontal = horizontal)
+                .focusRestorer(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Column(Modifier.widthIn(max = 900.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                content()
+                Spacer(Modifier.height(24.dp))
+            }
         }
     }
 }
@@ -242,16 +248,27 @@ fun <T> ChoiceRow(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Texts(title, subtitle, icon, Modifier.weight(1f))
-            Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, null, tint = LauncherTheme.colors.onSurfaceMuted)
+            // Touch: the arrows step in their direction (the tap doesn't reach the row).
+            ChoiceArrow(Icons.AutoMirrored.Filled.KeyboardArrowLeft) { step(-1) }
             Text(
                 label(options[index]),
                 style = MaterialTheme.typography.labelLarge,
                 color = LauncherTheme.colors.onSurface,
-                modifier = Modifier.widthIn(min = 120.dp).padding(horizontal = 8.dp),
+                modifier = Modifier.widthIn(min = 120.dp).padding(horizontal = 4.dp),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
             )
-            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = LauncherTheme.colors.onSurfaceMuted)
+            ChoiceArrow(Icons.AutoMirrored.Filled.KeyboardArrowRight) { step(1) }
         }
+    }
+}
+
+@Composable
+private fun ChoiceArrow(icon: ImageVector, onTap: () -> Unit) {
+    Box(
+        Modifier.size(48.dp).clip(RoundedCornerShape(24.dp)).pointerInput(onTap) { detectTapGestures { onTap() } },
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(icon, null, tint = LauncherTheme.colors.onSurfaceMuted)
     }
 }
 
