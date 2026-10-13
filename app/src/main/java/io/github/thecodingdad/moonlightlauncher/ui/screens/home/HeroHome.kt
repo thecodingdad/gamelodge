@@ -145,6 +145,7 @@ fun HeroHome(
             val density = androidx.compose.ui.platform.LocalDensity.current
             val outerSpec = androidx.compose.foundation.gestures.LocalBringIntoViewSpec.current
             val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+            io.github.thecodingdad.moonlightlauncher.ui.input.RegisterStickScroll(listState)
             var focusedRow by remember { mutableStateOf<String?>(null) }
             val rowKeys = buildList {
                 if (rows.running.isNotEmpty()) add("running")

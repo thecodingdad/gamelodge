@@ -41,6 +41,7 @@ fun Modifier.dpadScroll(state: ScrollState, step: Float = 220f): Modifier {
 fun Modifier.controllerScroll(state: ScrollState = androidx.compose.foundation.rememberScrollState()): Modifier {
     val scope = rememberCoroutineScope()
     val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
+    io.github.thecodingdad.moonlightlauncher.ui.input.RegisterStickScroll(state)
     return this
         .onKeyEvent { e ->
             if (e.type != KeyEventType.KeyDown) return@onKeyEvent false

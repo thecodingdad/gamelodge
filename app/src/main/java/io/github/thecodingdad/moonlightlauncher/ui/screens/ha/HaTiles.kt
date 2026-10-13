@@ -123,9 +123,7 @@ fun HaTile(tile: HaTileEntity, entity: HaEntity?, modifier: Modifier = Modifier,
     }
     var focused by remember { mutableStateOf(false) }
     PadAction(PadButton.RS_RIGHT, enabled = focused && adjustable) { step(1) }
-    PadAction(PadButton.RS_UP, enabled = focused && adjustable) { step(1) }
     PadAction(PadButton.RS_LEFT, enabled = focused && adjustable) { step(-1) }
-    PadAction(PadButton.RS_DOWN, enabled = focused && adjustable) { step(-1) }
 
     FocusSurface(
         onClick = { if (entity != null && tile.type != HaTileType.SENSOR) scope.launch { ha.primaryAction(entity) } },

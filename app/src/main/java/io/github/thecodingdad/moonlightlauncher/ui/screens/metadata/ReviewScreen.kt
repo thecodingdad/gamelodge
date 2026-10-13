@@ -65,6 +65,7 @@ fun ReviewScreen(items: List<LibraryEntry>) {
             return@Column
         }
         LazyColumn(
+            state = io.github.thecodingdad.moonlightlauncher.ui.input.rememberStickLazyListState(),
             contentPadding = PaddingValues(vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier.focusRestorer(),

@@ -148,6 +148,7 @@ fun AppsScreen(
     val hostTitles = byHost.keys.associateWith { stringResource(R.string.apps_on_host, it) }
     gridStates.SaveableStateProvider(filterKey) {
     val gridState = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
+    io.github.thecodingdad.moonlightlauncher.ui.input.RegisterStickScroll(gridState)
     // Focused line snaps to the top; in a section's first line the section header stays visible.
     val snapTo = io.github.thecodingdad.moonlightlauncher.ui.components.rememberFocusLineSnap(gridState)
     androidx.compose.runtime.CompositionLocalProvider(

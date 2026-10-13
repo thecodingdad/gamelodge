@@ -139,6 +139,7 @@ class QuickMenuActivity : ComponentActivity() {
                 LocalHintHolder provides hints,
                 LocalButtonLayout provides settings.buttonLayout,
             ) {
+                io.github.thecodingdad.moonlightlauncher.ui.input.RightStickScrollDriver()
                 BoxWithConstraints(Modifier.fillMaxSize()) {
                     val controllers = rememberControllers()
                     CompositionLocalProvider(

@@ -82,7 +82,7 @@ fun FixMetadataDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
         when {
             applying || found == null -> CircularProgressIndicator(color = LauncherTheme.colors.accent, modifier = Modifier.align(Alignment.CenterHorizontally))
             found.isEmpty() -> Text(stringResource(R.string.metadata_no_results), color = LauncherTheme.colors.onSurfaceMuted)
-            else -> LazyColumn(Modifier.heightIn(max = 340.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            else -> LazyColumn(state = io.github.thecodingdad.moonlightlauncher.ui.input.rememberStickLazyListState(), modifier = Modifier.heightIn(max = 340.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(found, key = { c -> "${c.source}:${c.id}" }) { c ->
                     FocusSurface(
                         onClick = {

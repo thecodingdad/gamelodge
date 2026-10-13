@@ -191,6 +191,7 @@ fun LibraryScreen(
             ?: shown.first().item.id
         gridStates.SaveableStateProvider(filterKey) {
         val gridState = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
+        io.github.thecodingdad.moonlightlauncher.ui.input.RegisterStickScroll(gridState)
         // Back from paging through details: the last game viewed may be off screen.
         LaunchedEffect(Unit) {
             val index = shown.indexOfFirst { it.item.id == targetId }

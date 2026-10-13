@@ -354,7 +354,7 @@ private fun GroupMembersDialog(
                 .filter { q.isEmpty() || TitleNormalizer.normalize(it.item.title).contains(q) }
                 .sortedBy { it.item.title.lowercase() }
         }
-        LazyColumn(Modifier.heightIn(max = 460.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        LazyColumn(state = io.github.thecodingdad.moonlightlauncher.ui.input.rememberStickLazyListState(), modifier = Modifier.heightIn(max = 460.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             items(shown, key = { it.item.id }) { entry ->
                 val member = entry.item.id in members
                 FocusSurface(

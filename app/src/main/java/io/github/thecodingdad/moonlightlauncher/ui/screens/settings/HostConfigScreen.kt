@@ -121,7 +121,7 @@ fun HostConfigScreen(host: HostState) {
     val onPick = picking
     Modal(visible = onPick != null, onDismiss = { picking = null }, title = stringResource(R.string.host_pick_action), maxWidth = 760.dp) {
         val candidates = entities.values.filter { it.domain in actionDomains }.sortedWith(compareBy({ it.domain }, { it.name }))
-        LazyColumn(Modifier.heightIn(max = 400.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        LazyColumn(state = io.github.thecodingdad.moonlightlauncher.ui.input.rememberStickLazyListState(), modifier = Modifier.heightIn(max = 400.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             item {
                 EntityRow(null) { onPick?.invoke(null); picking = null }
             }

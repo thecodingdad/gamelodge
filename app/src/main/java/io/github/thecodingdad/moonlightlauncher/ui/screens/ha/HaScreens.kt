@@ -224,7 +224,7 @@ private fun EntityPicker(visible: Boolean, entities: List<HaEntity>, onPick: (Ha
         val shown = entities
             .filter { q.isEmpty() || TitleNormalizer.normalize(it.name).contains(q) || it.id.contains(query.trim(), ignoreCase = true) }
             .sortedWith(compareBy({ it.domain }, { it.name }))
-        LazyColumn(Modifier.heightIn(max = 380.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        LazyColumn(state = io.github.thecodingdad.moonlightlauncher.ui.input.rememberStickLazyListState(), modifier = Modifier.heightIn(max = 380.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(shown, key = { it.id }) { entity ->
                 FocusSurface(
                     onClick = { onPick(entity) },

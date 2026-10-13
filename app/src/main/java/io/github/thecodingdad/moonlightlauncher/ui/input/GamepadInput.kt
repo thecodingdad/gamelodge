@@ -5,6 +5,10 @@ import android.view.KeyEvent
 import android.view.MotionEvent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.foundation.gestures.scrollBy
+import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.staticCompositionLocalOf
 
@@ -40,6 +44,25 @@ class InputDispatcher {
     }
     private var selectDownAt = 0L
     private var selectHoldFired = false
+
+    // Right stick up/down scrolls the screen's (single) vertical scroll area like a swipe;
+    // left/right stay direction buttons (paging details, dimming lights).
+    private val scrollTargets = ArrayList<androidx.compose.foundation.gestures.ScrollableState>()
+
+    /** Vertical right stick deflection for scrolling (-1..1, 0 in the dead zone). */
+    var scrollVelocity by androidx.compose.runtime.mutableFloatStateOf(0f)
+        private set
+
+    internal fun registerScroll(state: androidx.compose.foundation.gestures.ScrollableState) {
+        scrollTargets += state
+    }
+
+    internal fun unregisterScroll(state: androidx.compose.foundation.gestures.ScrollableState) {
+        scrollTargets.remove(state)
+    }
+
+    /** The most recently shown scroll area (a popup's, else the screen's). */
+    val scrollTarget: androidx.compose.foundation.gestures.ScrollableState? get() = scrollTargets.lastOrNull()
 
     internal fun register(button: PadButton, action: () -> Unit): Any {
         val handler = Handler(button, action)
@@ -93,12 +116,13 @@ class InputDispatcher {
         val useZ = device == null || device.getMotionRange(MotionEvent.AXIS_Z, event.source) != null
         val x = event.getAxisValue(if (useZ) MotionEvent.AXIS_Z else MotionEvent.AXIS_RX)
         val y = event.getAxisValue(if (useZ) MotionEvent.AXIS_RZ else MotionEvent.AXIS_RY)
+        scrollVelocity = if (kotlin.math.abs(y) > SCROLL_DEAD_ZONE && kotlin.math.abs(y) > kotlin.math.abs(x)) y else 0f
         val direction = when {
             maxOf(kotlin.math.abs(x), kotlin.math.abs(y)) < STICK_RELEASE -> null
             stickDirection != null && maxOf(kotlin.math.abs(x), kotlin.math.abs(y)) < STICK_PRESS -> stickDirection
             maxOf(kotlin.math.abs(x), kotlin.math.abs(y)) < STICK_PRESS -> null
             kotlin.math.abs(x) >= kotlin.math.abs(y) -> if (x > 0) PadButton.RS_RIGHT else PadButton.RS_LEFT
-            else -> if (y > 0) PadButton.RS_DOWN else PadButton.RS_UP
+            else -> null
         }
         if (direction == stickDirection) return
         mainHandler.removeCallbacks(stickRepeat)
@@ -153,6 +177,7 @@ class InputDispatcher {
         const val HOLD_MS = 450L
         const val TRIGGER_DEDUP_MS = 250L
         const val STICK_PRESS = 0.6f
+        const val SCROLL_DEAD_ZONE = 0.15f
         const val STICK_RELEASE = 0.3f
         const val STICK_FIRST_REPEAT_MS = 350L
         const val STICK_REPEAT_MS = 120L
@@ -200,3 +225,42 @@ fun PadAction(button: PadButton, enabled: Boolean = true, onPress: () -> Unit) {
         onDispose { token?.let(dispatcher::unregister) }
     }
 }
+
+/** Makes [state] the target of right stick scrolling while it is in the composition. */
+@Composable
+fun RegisterStickScroll(state: androidx.compose.foundation.gestures.ScrollableState) {
+    val dispatcher = LocalInputDispatcher.current
+    DisposableEffect(dispatcher, state) {
+        dispatcher.registerScroll(state)
+        onDispose { dispatcher.unregisterScroll(state) }
+    }
+}
+
+/**
+ * Scrolls the current scroll area while the right stick is held up/down; the further the stick
+ * is pushed, the faster (eased, so small deflections allow fine control). Place once per window.
+ */
+@Composable
+fun RightStickScrollDriver() {
+    val dispatcher = LocalInputDispatcher.current
+    val maxSpeed = with(androidx.compose.ui.platform.LocalDensity.current) { 2400.dp.toPx() } // px per second
+    androidx.compose.runtime.LaunchedEffect(dispatcher) {
+        androidx.compose.runtime.snapshotFlow { dispatcher.scrollVelocity != 0f }.collect { active ->
+            if (!active) return@collect
+            var last = androidx.compose.runtime.withFrameNanos { it }
+            while (dispatcher.scrollVelocity != 0f) {
+                val now = androidx.compose.runtime.withFrameNanos { it }
+                val seconds = (now - last) / 1_000_000_000f
+                last = now
+                val v = dispatcher.scrollVelocity
+                val strength = ((kotlin.math.abs(v) - InputDispatcher.SCROLL_DEAD_ZONE) / (1f - InputDispatcher.SCROLL_DEAD_ZONE)).coerceIn(0f, 1f)
+                dispatcher.scrollTarget?.scrollBy(kotlin.math.sign(v) * strength * strength * maxSpeed * seconds)
+            }
+        }
+    }
+}
+
+/** Lazy list state that the right stick scrolls. */
+@Composable
+fun rememberStickLazyListState(): androidx.compose.foundation.lazy.LazyListState =
+    androidx.compose.foundation.lazy.rememberLazyListState().also { RegisterStickScroll(it) }

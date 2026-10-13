@@ -246,6 +246,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
             LocalButtonLayout provides settings.buttonLayout,
             LocalBringIntoViewSpec provides scrollSpec,
         ) {
+            io.github.thecodingdad.moonlightlauncher.ui.input.RightStickScrollDriver()
             androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
             // Button hints only make sense with a controller (and can be turned off entirely).
             val hintControllers = io.github.thecodingdad.moonlightlauncher.ui.screens.settings.rememberControllers()
