@@ -623,7 +623,7 @@
     <string name="qt_dnd">Nicht stören</string>
     <string name="settings_quick_menu">Schnellmenü</string>
     <string name="settings_quick_menu_sub">Kacheln, Reihenfolge, App-Verknüpfungen</string>
-    <string name="qt_settings_help">Die Kacheln erscheinen in dieser Reihenfolge in den Schnelleinstellungen (Y). Am Griff ziehen zum Verschieben, Kachel auswählen zum Entfernen.</string>
+    <string name="qt_settings_help">Die Kacheln erscheinen in dieser Reihenfolge in den Schnelleinstellungen (Y). Am Griff ziehen zum Verschieben.</string>
     <string name="qt_add">Kachel hinzufügen</string>
     <string name="qt_remove">Entfernen</string>
     <string name="qt_reset">Standard wiederherstellen</string>

@@ -88,7 +88,7 @@ object QuickTile {
     const val ANDROID = "android"
     const val APP_PREFIX = "app:"
 
-    val defaults = listOf(CONTROLLERS, HOSTS, VPN, WIFI, BLUETOOTH, ANDROID)
+    val defaults = listOf(CONTROLLERS, HOSTS, VPN, WIFI, BLUETOOTH, AIRPLANE)
 
     /** Groups for the "add tile" picker. */
     val groups = listOf(

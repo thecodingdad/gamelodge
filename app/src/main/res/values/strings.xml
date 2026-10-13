@@ -625,7 +625,7 @@
     <string name="qt_dnd">Do not disturb</string>
     <string name="settings_quick_menu">Quick menu</string>
     <string name="settings_quick_menu_sub">Tiles, order, app shortcuts</string>
-    <string name="qt_settings_help">The tiles appear in this order in the quick settings (Y). Drag the handle to move a tile, select it to remove it.</string>
+    <string name="qt_settings_help">The tiles appear in this order in the quick settings (Y). Drag the handle to move a tile.</string>
     <string name="qt_add">Add tile</string>
     <string name="qt_remove">Remove</string>
     <string name="qt_reset">Reset to defaults</string>

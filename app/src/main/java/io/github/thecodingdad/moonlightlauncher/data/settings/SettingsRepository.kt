@@ -86,7 +86,7 @@ data class LauncherSettings(
     /** AYN Odin: put every external controller on Odin Mapping's blacklist (keeps battery/rumble). */
     val odinKeepControllers: Boolean = true,
     /** Tiles in the quick menu, in order (see QuickTile ids; apps as "app:<package>"). */
-    val quickTiles: List<String> = listOf("controllers", "hosts", "vpn", "wifi", "bluetooth", "android"),
+    val quickTiles: List<String> = listOf("controllers", "hosts", "vpn", "wifi", "bluetooth", "airplane"),
     /** Controller button combinations (key codes) for Android Home and the quick menu; empty = off. */
     val comboHome: Set<Int> = emptySet(),
     val comboQuickMenu: Set<Int> = emptySet(),

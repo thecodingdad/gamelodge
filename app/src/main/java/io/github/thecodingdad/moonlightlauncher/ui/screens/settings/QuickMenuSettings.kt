@@ -1,6 +1,19 @@
 package io.github.thecodingdad.moonlightlauncher.ui.screens.settings
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import io.github.thecodingdad.moonlightlauncher.ui.components.FocusSurface
+import io.github.thecodingdad.moonlightlauncher.ui.components.restoreFocusIf
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -36,7 +49,6 @@ import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 @Composable
 fun QuickMenuSettings(vm: LauncherViewModel, settings: LauncherSettings, update: ((LauncherSettings) -> LauncherSettings) -> Unit) {
     val tiles = settings.quickTiles
-    var selected by remember { mutableStateOf<String?>(null) }
     var adding by remember { mutableStateOf(false) }
     fun save(list: List<String>) = update { it.copy(quickTiles = list) }
 
@@ -46,11 +58,7 @@ fun QuickMenuSettings(vm: LauncherViewModel, settings: LauncherSettings, update:
         val unavailable = remember(tiles) { tiles.filterNot { QuickTile.isAvailable(tileContext, it) }.toSet() }
         // Order by dragging the handle (controller: A on the handle, then up/down), like the filters.
         ReorderableList(tiles, id = { it }, onReorder = ::save) { index, id ->
-            NavRow(
-                quickTileName(id), { selected = id },
-                subtitle = if (id in unavailable) stringResource(R.string.qt_unavailable) else null,
-                icon = quickTileIcon(id) ?: Icons.Filled.Apps, initialFocus = index == 0,
-            )
+            TileRow(id, unavailable = id in unavailable, initialFocus = index == 0, onRemove = { save(tiles - id) })
         }
         ButtonRow {
             LauncherButton(stringResource(R.string.qt_add), icon = Icons.Filled.Add, onClick = { adding = true })
@@ -86,13 +94,6 @@ fun QuickMenuSettings(vm: LauncherViewModel, settings: LauncherSettings, update:
         }
     }
 
-    Modal(visible = selected != null, onDismiss = { selected = null }, title = selected?.let { quickTileName(it) }, maxWidth = 560.dp) {
-        val id = selected ?: return@Modal
-        LauncherButton(stringResource(R.string.qt_remove), icon = Icons.Filled.Delete, onClick = {
-            save(tiles - id); selected = null
-        })
-    }
-
     // Picker: system tiles by group, then installed apps as shortcuts.
     val entries by vm.allEntries.collectAsState()
     val apps = remember(entries) {
@@ -101,25 +102,20 @@ fun QuickMenuSettings(vm: LauncherViewModel, settings: LauncherSettings, update:
     val context = androidx.compose.ui.platform.LocalContext.current
     // Only tiles the device has the hardware for.
     val available = remember { QuickTile.groups.flatMap { it.second }.filter { QuickTile.isAvailable(context, it) }.toSet() }
-    Modal(visible = adding, onDismiss = { adding = false }, title = stringResource(R.string.qt_add), maxWidth = 640.dp) {
+    Modal(visible = adding, onDismiss = { adding = false }, title = stringResource(R.string.qt_add), maxWidth = 760.dp) {
         Column(Modifier.heightIn(max = 600.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            fun add(id: String) { save(tiles + id); adding = false }
             QuickTile.groups.forEach { (title, ids) ->
                 val free = ids.filter { it !in tiles && it in available }
                 if (free.isEmpty()) return@forEach
                 SectionHeader(stringResource(title))
-                free.forEach { id ->
-                    LauncherButton(quickTileName(id), icon = quickTileIcon(id), modifier = Modifier.fillMaxWidth(), onClick = {
-                        save(tiles + id); adding = false
-                    })
-                }
+                TwoColumns(free) { id -> PickerTile(quickTileName(id), onClick = { add(id) }) { TileIcon(id) } }
             }
             val freeApps = apps.filter { QuickTile.appId(it.first) !in tiles }
             if (freeApps.isNotEmpty()) {
                 SectionHeader(stringResource(R.string.qt_group_apps))
-                freeApps.forEach { (pkg, title) ->
-                    LauncherButton(title, icon = Icons.Filled.Apps, modifier = Modifier.fillMaxWidth(), onClick = {
-                        save(tiles + QuickTile.appId(pkg)); adding = false
-                    })
+                TwoColumns(freeApps) { (pkg, title) ->
+                    PickerTile(title, onClick = { add(QuickTile.appId(pkg)) }) { TileIcon(QuickTile.appId(pkg)) }
                 }
             }
         }
@@ -136,4 +132,77 @@ private fun requestQuickMenuTile(context: android.content.Context) {
         android.graphics.drawable.Icon.createWithResource(context, R.drawable.ic_quick_menu),
         context.mainExecutor,
     ) { }
+}
+
+/** Icon of a tile: the app's own icon for app shortcuts, otherwise the tile's symbol. */
+@Composable
+private fun TileIcon(id: String) {
+    if (id.startsWith(QuickTile.APP_PREFIX)) {
+        io.github.thecodingdad.moonlightlauncher.ui.components.AppIcon(id.removePrefix(QuickTile.APP_PREFIX), Modifier.size(28.dp))
+    } else {
+        Icon(quickTileIcon(id) ?: Icons.Filled.Apps, null, tint = LauncherTheme.colors.accent, modifier = Modifier.size(26.dp))
+    }
+}
+
+/** Row of the tile list: icon, name and a delete button (the drag handle comes from the list). */
+@Composable
+private fun TileRow(id: String, unavailable: Boolean, initialFocus: Boolean, onRemove: () -> Unit) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = 68.dp)
+            .clip(RoundedCornerShape(LauncherTheme.dimens.cornerRadius))
+            .background(LauncherTheme.colors.surface)
+            .padding(start = 20.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        TileIcon(id)
+        Spacer(Modifier.width(16.dp))
+        Column(Modifier.weight(1f)) {
+            Text(quickTileName(id), style = MaterialTheme.typography.titleMedium, color = LauncherTheme.colors.onSurface)
+            if (unavailable) {
+                Text(stringResource(R.string.qt_unavailable), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+            }
+        }
+        FocusSurface(
+            onClick = onRemove,
+            modifier = Modifier.size(48.dp).restoreFocusIf(initialFocus),
+            color = LauncherTheme.colors.surfaceRaised,
+        ) {
+            Icon(
+                Icons.Filled.Delete, stringResource(R.string.qt_remove), tint = LauncherTheme.colors.onSurfaceMuted,
+                modifier = Modifier.align(Alignment.Center),
+            )
+        }
+    }
+}
+
+/** Items two per row (a lone last item keeps half the width). */
+@Composable
+private fun <T> TwoColumns(items: List<T>, cell: @Composable (T) -> Unit) {
+    items.chunked(2).forEach { pair ->
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            pair.forEach { Box(Modifier.weight(1f)) { cell(it) } }
+            if (pair.size == 1) Spacer(Modifier.weight(1f))
+        }
+    }
+}
+
+@Composable
+private fun PickerTile(label: String, onClick: () -> Unit, icon: @Composable () -> Unit) {
+    FocusSurface(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+        color = LauncherTheme.colors.surfaceRaised,
+        focusScale = 1.03f,
+    ) {
+        Row(
+            Modifier.align(Alignment.CenterStart).padding(horizontal = 14.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            icon()
+            Spacer(Modifier.width(12.dp))
+            Text(label, style = MaterialTheme.typography.titleSmall, color = LauncherTheme.colors.onSurface, maxLines = 2)
+        }
+    }
 }
