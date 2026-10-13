@@ -3,7 +3,6 @@ package io.github.thecodingdad.moonlightlauncher.ui.screens.settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.MaterialTheme
@@ -18,7 +17,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import io.github.thecodingdad.moonlightlauncher.R
-import io.github.thecodingdad.moonlightlauncher.container
 import io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings
 import io.github.thecodingdad.moonlightlauncher.system.LauncherMode
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
@@ -32,51 +30,42 @@ fun LauncherModeSettings(settings: LauncherSettings, update: ((LauncherSettings)
     LifecycleResumeEffect(Unit) { tick++; onPauseOrDispose { } }
     val isDefault = remember(tick) { mode.isDefaultHome }
 
-    val roleRequest = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { tick++ }
+    // The switch shows whether we are the default home app. Turning it on asks Android; if the
+    // user picks another launcher there, it springs back to off.
+    val roleRequest = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        val held = mode.isDefaultHome
+        if (!held) mode.setAvailable(false)
+        update { it.copy(launcherMode = held) }
+        tick++
+    }
 
-    // Keep the alias in sync with the stored setting (e.g. after restoring a backup), but never
-    // disable it while we are the default home app.
-    LaunchedEffect(settings.launcherMode, isDefault) {
-        when {
-            isDefault && !settings.launcherMode -> update { it.copy(launcherMode = true) }
-            mode.isAvailable != settings.launcherMode -> mode.setAvailable(settings.launcherMode)
-        }
+    // Default app changed outside (system settings, another launcher): follow it. The home
+    // alias only stays enabled while we hold the role.
+    LaunchedEffect(isDefault) {
+        if (settings.launcherMode != isDefault) update { it.copy(launcherMode = isDefault) }
+        if (mode.isAvailable != isDefault) mode.setAvailable(isDefault)
     }
 
     SettingsPage(stringResource(R.string.settings_launcher)) {
         Text(stringResource(R.string.launcher_intro), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
         SwitchRow(
-            stringResource(R.string.launcher_enable), settings.launcherMode,
+            stringResource(R.string.launcher_enable), isDefault,
             onChange = { enabled ->
-                update { it.copy(launcherMode = enabled) }
-                mode.setAvailable(enabled)
-                if (enabled) mode.requestDefaultHomeIntent()?.let(roleRequest::launch)
-                else if (isDefault) context.startActivity(mode.homeSettingsIntent())
+                if (enabled) {
+                    mode.setAvailable(true)
+                    val request = mode.requestDefaultHomeIntent()
+                    if (request != null) roleRequest.launch(request) else context.startActivity(mode.homeSettingsIntent())
+                } else {
+                    // Android can't give the role back from here: choose another launcher.
+                    update { it.copy(launcherMode = false) }
+                    mode.setAvailable(false)
+                    context.startActivity(mode.homeSettingsIntent())
+                }
             },
             subtitle = stringResource(R.string.launcher_enable_sub),
             icon = Icons.Filled.Home,
             initialFocus = true,
         )
-        InfoRow(stringResource(R.string.launcher_is_default), stringResource(if (isDefault) R.string.yes else R.string.no))
-        if (settings.launcherMode && !isDefault) {
-            NavRow(stringResource(R.string.launcher_make_default), { mode.requestDefaultHomeIntent()?.let(roleRequest::launch) }, icon = Icons.Filled.Home)
-        }
         NavRow(stringResource(R.string.launcher_system_settings), { context.startActivity(mode.homeSettingsIntent()) }, icon = Icons.Filled.Settings)
-
-        // Play time of local apps and games from Android (usage access is granted in system settings).
-        val usage = context.container.usage
-        val usageGranted = remember(tick) { usage.granted }
-        SectionHeader(stringResource(R.string.usage_section))
-        NavRow(
-            stringResource(R.string.usage_access),
-            {
-                val intent = android.content.Intent(android.provider.Settings.ACTION_USAGE_ACCESS_SETTINGS)
-                    .setData(android.net.Uri.parse("package:${context.packageName}"))
-                runCatching { context.startActivity(intent) }
-                    .onFailure { context.startActivity(android.content.Intent(android.provider.Settings.ACTION_USAGE_ACCESS_SETTINGS)) }
-            },
-            subtitle = stringResource(if (usageGranted) R.string.usage_access_on else R.string.usage_access_off),
-            icon = Icons.Filled.BarChart,
-        )
     }
 }

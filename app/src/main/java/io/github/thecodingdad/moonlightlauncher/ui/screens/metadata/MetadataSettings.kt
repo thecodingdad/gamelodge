@@ -3,6 +3,7 @@ package io.github.thecodingdad.moonlightlauncher.ui.screens.metadata
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.Refresh
@@ -88,6 +89,25 @@ fun MetadataSettings(
         LauncherTextField(stringResource(R.string.metadata_client_id), igdbId, { save(SecretStore.Keys.IGDB_CLIENT_ID, it) })
         LauncherTextField(stringResource(R.string.metadata_client_secret), igdbSecret, { save(SecretStore.Keys.IGDB_CLIENT_SECRET, it) }, kind = TextKind.PASSWORD)
         if (igdbId.isNotBlank() && igdbSecret.isNotBlank()) ConnectionStatus("IGDB", revision) { metadata.testIgdb() }
+        // Granted outside the app: re-check on every resume.
+        var usageTick by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+        androidx.lifecycle.compose.LifecycleResumeEffect(Unit) { usageTick++; onPauseOrDispose { } }
+        val context = LocalContext.current
+        // Play time of local apps and games from Android (usage access is granted in system settings).
+        val usage = container.usage
+        val usageGranted = remember(usageTick) { usage.granted }
+        SectionHeader(stringResource(R.string.usage_section))
+        NavRow(
+            stringResource(R.string.usage_access),
+            {
+                val intent = android.content.Intent(android.provider.Settings.ACTION_USAGE_ACCESS_SETTINGS)
+                    .setData(android.net.Uri.parse("package:${context.packageName}"))
+                runCatching { context.startActivity(intent) }
+                    .onFailure { context.startActivity(android.content.Intent(android.provider.Settings.ACTION_USAGE_ACCESS_SETTINGS)) }
+            },
+            subtitle = stringResource(if (usageGranted) R.string.usage_access_on else R.string.usage_access_off),
+            icon = Icons.Filled.BarChart,
+        )
     }
 }
 

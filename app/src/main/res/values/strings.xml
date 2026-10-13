@@ -260,8 +260,6 @@
     <string name="launcher_intro">Use Moonlight Launcher as your home screen. You can switch back at any time; the app keeps working as a normal app too.</string>
     <string name="launcher_enable">Use as home screen</string>
     <string name="launcher_enable_sub">Shows up as a launcher choice; Android asks to make it the default</string>
-    <string name="launcher_is_default">Default home screen</string>
-    <string name="launcher_make_default">Make default home screen</string>
     <string name="launcher_system_settings">Android home screen settings</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>

@@ -258,8 +258,6 @@
     <string name="launcher_intro">Moonlight Launcher als Startbildschirm verwenden. Du kannst jederzeit zurückwechseln, die App funktioniert auch weiter als normale App.</string>
     <string name="launcher_enable">Als Startbildschirm verwenden</string>
     <string name="launcher_enable_sub">Erscheint als Launcher-Auswahl, Android fragt nach dem Standard</string>
-    <string name="launcher_is_default">Standard-Startbildschirm</string>
-    <string name="launcher_make_default">Als Standard festlegen</string>
     <string name="launcher_system_settings">Android-Startbildschirm-Einstellungen</string>
     <string name="yes">Ja</string>
     <string name="no">Nein</string>
