@@ -910,4 +910,7 @@
     <!-- Emulation -->
     <string name="action_emulator">Choose emulator</string>
     <string name="emu_use_default">Platform default (%s)</string>
+
+    <!-- Emulators -->
+    <string name="emu_esde_notice">Emulator start commands and packages from ES-DE (https://es-de.org), Copyright (c) Leon Styhre, MIT License.</string>
 </resources>

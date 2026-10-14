@@ -908,4 +908,7 @@
     <!-- Emulation -->
     <string name="action_emulator">Emulator wählen</string>
     <string name="emu_use_default">Standard der Plattform (%s)</string>
+
+    <!-- Emulators -->
+    <string name="emu_esde_notice">Startbefehle und Pakete der Emulatoren stammen von ES-DE (https://es-de.org), Copyright (c) Leon Styhre, MIT-Lizenz.</string>
 </resources>

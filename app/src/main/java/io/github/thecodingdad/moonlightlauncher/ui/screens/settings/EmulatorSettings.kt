@@ -155,7 +155,7 @@ fun EmulatorSettings(vm: LauncherViewModel) {
             editingCustom = CustomEmulator(id = java.util.UUID.randomUUID().toString(), name = "", packageName = "")
         })
 
-        Text(catalog.catalog.notice, style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+        Text(stringResource(R.string.emu_esde_notice), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
     }
 
     FolderDialog(editingFolder, catalog.platforms, onDismiss = { editingFolder = null }, onSave = { updated ->
