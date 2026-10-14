@@ -117,7 +117,8 @@ private fun statusText(server: PairedServer, online: Boolean?): String {
 
 @Composable
 private fun PairDialog(target: PairTarget?, onDismiss: () -> Unit) {
-    val repo = LocalContext.current.container.servers
+    val container = LocalContext.current.container
+    val repo = container.servers
     val scope = rememberCoroutineScope()
     var state by remember(target) { mutableStateOf<PairState>(PairState.Address) }
     var address by remember(target) { mutableStateOf(target?.address.orEmpty()) }
@@ -149,7 +150,12 @@ private fun PairDialog(target: PairTarget?, onDismiss: () -> Unit) {
                         job = scope.launch {
                             state = try {
                                 val server = repo.pair(url) { pin -> state = PairState.ShowPin(pin) }
-                                if (server.kind != t.kind) PairState.Failed(R.string.servers_error_kind).also { repo.remove(server.id) } else PairState.Done(server)
+                                if (server.kind != t.kind) PairState.Failed(R.string.servers_error_kind).also { repo.remove(server.id) }
+                                else {
+                                    // The host's games get the companion's data right away.
+                                    server.hostId?.let { hostId -> launch { container.library.resyncHost(hostId.uppercase()) } }
+                                    PairState.Done(server)
+                                }
                             } catch (e: ServerException) {
                                 PairState.Failed(if (e.code == "pairing_closed") R.string.servers_error_closed else R.string.servers_error_failed)
                             } catch (e: PairingFailed) {
@@ -201,8 +207,16 @@ private fun ServerDetailsDialog(server: PairedServer?, online: Boolean?, onDismi
             InfoRow("SteamGridDB", stringResource(if (s.steamGridDb) R.string.yes else R.string.no))
             InfoRow("IGDB", stringResource(if (s.igdb) R.string.yes else R.string.no))
             Text(stringResource(R.string.servers_fingerprint) + "\n" + Fingerprint.pretty(s.fingerprint), style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = LauncherTheme.colors.onSurfaceMuted)
-            LauncherButton(stringResource(R.string.servers_check), modifier = Modifier.fillMaxWidth(), onClick = { scope.launch { repo.refresh(s) } })
-            HoldToConfirmButton(stringResource(R.string.servers_remove), { repo.remove(s.id); onDismiss() }, Modifier.fillMaxWidth())
+            val library = LocalContext.current.container.library
+            LauncherButton(stringResource(R.string.servers_check), modifier = Modifier.fillMaxWidth(), onClick = {
+                scope.launch {
+                    repo.refresh(s)
+                    // A companion: its host games are read again.
+                    s.hostId?.let { library.resyncHost(it.uppercase()) }
+                }
+            })
+            val feed = LocalContext.current.container.companionFeed
+            HoldToConfirmButton(stringResource(R.string.servers_remove), { repo.remove(s.id); feed.forget(s.id); onDismiss() }, Modifier.fillMaxWidth())
             Text(stringResource(R.string.servers_remove_hint), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
         }
     }
