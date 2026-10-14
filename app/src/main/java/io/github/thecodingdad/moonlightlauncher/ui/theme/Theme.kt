@@ -103,6 +103,24 @@ private val LauncherTypography = Typography(
     labelSmall = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.Medium, letterSpacing = 0.4.sp),
 )
 
+fun dimensFor(cardSize: CardSize): LauncherDimens = when (cardSize) {
+    CardSize.SMALL -> LauncherDimens(coverWidth = 124.dp, iconTile = 96.dp)
+    CardSize.MEDIUM -> LauncherDimens(coverWidth = 150.dp, iconTile = 112.dp)
+    CardSize.LARGE -> LauncherDimens(coverWidth = 184.dp, iconTile = 132.dp)
+}
+
+/**
+ * Density for a window of [widthPx] x [heightPx]: [density] (already scaled by the user), lowered
+ * on small landscape screens so the top tabs and the status icons fit next to each other (about
+ * 780 dp) and the home tab shows at least one full row of covers (header and hero take about
+ * 255 dp above it).
+ */
+fun fittedDensity(density: Float, widthPx: Int, heightPx: Int, cardSize: CardSize): Float {
+    if (widthPx <= 0 || heightPx <= 0 || widthPx <= heightPx) return density
+    val minHeight = 255f + dimensFor(cardSize).coverWidth.value * 1.5f
+    return minOf(density, heightPx / minHeight, widthPx / 780f)
+}
+
 @Composable
 fun LauncherTheme(settings: LauncherSettings, content: @Composable () -> Unit) {
     val accentHolder = remember { AccentHolder() }
@@ -113,11 +131,7 @@ fun LauncherTheme(settings: LauncherSettings, content: @Composable () -> Unit) {
     val accent by animateColorAsState(targetAccent, tween(if (settings.reduceMotion) 0 else 600), label = "accent")
 
     val colors = palette(settings.themeMode, accent)
-    val dimens = when (settings.cardSize) {
-        CardSize.SMALL -> LauncherDimens(coverWidth = 124.dp, iconTile = 96.dp)
-        CardSize.MEDIUM -> LauncherDimens(coverWidth = 150.dp, iconTile = 112.dp)
-        CardSize.LARGE -> LauncherDimens(coverWidth = 184.dp, iconTile = 132.dp)
-    }
+    val dimens = dimensFor(settings.cardSize)
     val scheme = if (colors.isDark) {
         darkColorScheme(
             primary = colors.accent, onPrimary = colors.onAccent, background = colors.background,

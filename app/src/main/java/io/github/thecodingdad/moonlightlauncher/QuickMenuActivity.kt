@@ -130,7 +130,11 @@ class QuickMenuActivity : ComponentActivity() {
         val baseDensity = LocalDensity.current
         val external by vm.externalDisplay.collectAsState()
         val uiScale = (if (settings.tvScaleAuto && external != null) settings.tvScale else settings.uiScale) / 100f
-        val density = remember(baseDensity, uiScale) { Density(baseDensity.density * uiScale, baseDensity.fontScale) }
+        // Same size as the launcher, also on small handhelds.
+        val window = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize
+        val density = remember(baseDensity, uiScale, window, settings.cardSize) {
+            Density(io.github.thecodingdad.moonlightlauncher.ui.theme.fittedDensity(baseDensity.density * uiScale, window.width, window.height, settings.cardSize), baseDensity.fontScale)
+        }
         LauncherTheme(settings) {
             CompositionLocalProvider(
                 LocalDensity provides density,

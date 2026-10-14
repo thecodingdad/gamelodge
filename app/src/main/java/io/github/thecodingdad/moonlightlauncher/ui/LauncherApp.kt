@@ -239,9 +239,12 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
     val onTv = remember(configuration) { hostActivity?.let(io.github.thecodingdad.moonlightlauncher.system.TvSession::isOnTv) == true }
     // The TV size setting applies on the TV either way (mirrored or running there).
     val uiScale = (if (settings.tvScaleAuto && (external != null || onTv)) settings.tvScale else settings.uiScale) / 100f
-    val scaledDensity = remember(baseDensity, uiScale, onTv, configuration.screenWidthDp) {
+    // Small handhelds: lowered further so a row of covers always fits (see fittedDensity).
+    val window = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize
+    val scaledDensity = remember(baseDensity, uiScale, onTv, configuration.screenWidthDp, window, settings.cardSize) {
         val base = if (onTv) configuration.screenWidthDp * baseDensity.density / 960f else baseDensity.density
-        androidx.compose.ui.unit.Density(base * uiScale, baseDensity.fontScale)
+        val fitted = io.github.thecodingdad.moonlightlauncher.ui.theme.fittedDensity(base * uiScale, window.width, window.height, settings.cardSize)
+        androidx.compose.ui.unit.Density(fitted, baseDensity.fontScale)
     }
 
     LauncherTheme(settings) {
