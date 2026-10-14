@@ -140,6 +140,8 @@ fun StatusCluster(
     hosts: List<HostState>,
     modifier: Modifier = Modifier,
     onHostClick: (HostState) -> Unit = {},
+    /** Combined host icon (two or more hosts): show the list of them. */
+    onHostsClick: () -> Unit = {},
     controllerCount: Int = 0,
     onControllerClick: () -> Unit = {},
     onClockClick: (() -> Unit)? = null,
@@ -175,7 +177,9 @@ fun StatusCluster(
                 Text(" $controllerCount", style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceMuted)
             }
         }
-        hosts.forEach { host ->
+        // One icon per host; from two hosts on a single one with their number (tap: list of all).
+        val combined = showHostsCombined(hosts)
+        (if (combined) listOf(hosts) else hosts.map { listOf(it) }).forEach { group ->
             // Touch target for the host popup; like the other status icons not in D-pad navigation.
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -183,20 +187,16 @@ fun StatusCluster(
                 modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))
                     .focusProperties { canFocus = false }
-                    .clickable { onHostClick(host) }
+                    .clickable { if (combined) onHostsClick() else onHostClick(group.first()) }
                     .padding(horizontal = 6.dp, vertical = 4.dp),
             ) {
                 // The icon itself carries the state: accent = streaming, green = online, red = offline.
                 Icon(
-                    Icons.Filled.Computer, host.name,
-                    tint = when {
-                        host.isStreaming -> colors.accent
-                        host.status == HostStatus.ONLINE -> colors.success
-                        host.status == HostStatus.OFFLINE -> colors.danger
-                        else -> colors.onSurfaceMuted
-                    },
+                    Icons.Filled.Computer, group.singleOrNull()?.name,
+                    tint = hostTint(group, colors.accent, colors.success, colors.danger, colors.onSurfaceMuted),
                     modifier = Modifier.size(22.dp),
                 )
+                if (combined) Text("${group.size}", style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceMuted)
             }
         }
         val context = LocalContext.current

@@ -174,6 +174,13 @@ class QuickMenuActivity : ComponentActivity() {
                             onOpenSettings = ::openLauncher,
                             onDismiss = { controllerPopup = false },
                         )
+                        io.github.thecodingdad.moonlightlauncher.ui.shell.HostListPopup(
+                            visible = hostInfoFor == io.github.thecodingdad.moonlightlauncher.ui.shell.ALL_HOSTS,
+                            hosts = hosts.values,
+                            runningGame = { uuid -> running.firstOrNull { it.host.uuid == uuid }?.appName },
+                            onSelect = { hostInfoFor = it },
+                            onDismiss = { hostInfoFor = null },
+                        )
                         HostInfoPopup(
                             host = hostInfoFor?.let { hosts[it] },
                             runningGame = running.firstOrNull { it.host.uuid == hostInfoFor }?.appName,

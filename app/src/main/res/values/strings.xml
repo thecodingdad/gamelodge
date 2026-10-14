@@ -921,4 +921,7 @@
     <string name="about_source_sgdb">Covers, backgrounds, logos and icons</string>
     <string name="about_source_igdb">Descriptions, genres, developers and release dates</string>
     <string name="about_source_esde">Emulator start commands (MIT License)</string>
+
+    <!-- Quick tiles -->
+    <string name="qt_hosts_count">%d hosts</string>
 </resources>

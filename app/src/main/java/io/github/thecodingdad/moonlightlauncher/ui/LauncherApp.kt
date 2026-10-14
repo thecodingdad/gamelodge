@@ -520,6 +520,13 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
             onOpenSettings = { nav.navigate(Routes.CONTROLLERS) },
             onDismiss = { controllerPopup = false },
         )
+        io.github.thecodingdad.moonlightlauncher.ui.shell.HostListPopup(
+            visible = hostInfoFor == io.github.thecodingdad.moonlightlauncher.ui.shell.ALL_HOSTS,
+            hosts = hostsGlobal.values,
+            runningGame = { uuid -> running.firstOrNull { it.host.uuid == uuid }?.appName },
+            onSelect = { hostInfoFor = it },
+            onDismiss = { hostInfoFor = null },
+        )
         io.github.thecodingdad.moonlightlauncher.ui.shell.HostInfoPopup(
             host = hostInfoFor?.let { hostsGlobal[it] },
             runningGame = running.firstOrNull { it.host.uuid == hostInfoFor }?.appName,
@@ -765,6 +772,7 @@ private fun ShellTopBar(
                 hosts,
                 modifier = Modifier.padding(end = endShift),
                 onHostClick = { onHostInfo(it.uuid) },
+                onHostsClick = { onHostInfo(io.github.thecodingdad.moonlightlauncher.ui.shell.ALL_HOSTS) },
                 controllerCount = controllerCount,
                 onControllerClick = onControllers,
                 onClockClick = onClock,

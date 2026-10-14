@@ -41,6 +41,8 @@ import io.github.thecodingdad.moonlightlauncher.ui.components.HoldToConfirmButto
 import io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton
 import io.github.thecodingdad.moonlightlauncher.ui.components.Modal
 import io.github.thecodingdad.moonlightlauncher.ui.components.StatusDot
+import io.github.thecodingdad.moonlightlauncher.ui.components.FocusSurface
+import androidx.compose.ui.graphics.Color
 import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.InfoRow
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 import kotlinx.coroutines.launch
@@ -160,6 +162,60 @@ fun HostInfoPopup(
             )
             message?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceMuted) }
         }
+        }
+    }
+}
+
+/** [HostInfoPopup] target meaning "all hosts": the list of them. */
+const val ALL_HOSTS = "*"
+
+/** From two hosts on, the status bar and the quick menu show one combined icon for all of them. */
+fun showHostsCombined(hosts: Collection<HostState>): Boolean = hosts.size >= 2
+
+/** Colour of a host icon; combined, the "best" state wins (streaming, then online, then offline). */
+fun hostTint(hosts: Collection<HostState>, streaming: Color, online: Color, offline: Color, unknown: Color): Color = when {
+    hosts.any { it.isStreaming } -> streaming
+    hosts.any { it.status == HostStatus.ONLINE } -> online
+    hosts.isNotEmpty() && hosts.all { it.status == HostStatus.OFFLINE } -> offline
+    else -> unknown
+}
+
+/** Every host with its state; selecting one opens its [HostInfoPopup]. */
+@Composable
+fun HostListPopup(
+    visible: Boolean,
+    hosts: Collection<HostState>,
+    runningGame: (String) -> String?,
+    onSelect: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    Modal(visible = visible, onDismiss = onDismiss, title = stringResource(R.string.settings_hosts), maxWidth = 560.dp) {
+        val colors = LauncherTheme.colors
+        Column(Modifier.heightIn(max = 600.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            hosts.sortedBy { it.name.lowercase() }.forEach { h ->
+                FocusSurface(onClick = { onSelect(h.uuid) }, modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        Modifier.padding(horizontal = 18.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        StatusDot(hostTint(listOf(h), colors.accent, colors.success, colors.danger, colors.onSurfaceMuted))
+                        Column(Modifier.weight(1f)) {
+                            Text(h.name, style = MaterialTheme.typography.titleMedium, color = colors.onSurface, maxLines = 1)
+                            Text(
+                                when {
+                                    h.isStreaming -> stringResource(R.string.host_state_streaming, runningGame(h.uuid) ?: "?")
+                                    h.status == HostStatus.ONLINE -> stringResource(R.string.host_state_online)
+                                    h.status == HostStatus.OFFLINE -> stringResource(R.string.host_state_offline)
+                                    else -> stringResource(R.string.host_state_unknown)
+                                },
+                                style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceMuted, maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }

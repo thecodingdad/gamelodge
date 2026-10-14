@@ -227,6 +227,7 @@ fun rememberQuickTiles(ids: List<String>, onHost: (String) -> Unit, onController
     val labelVpnOn = stringResource(R.string.qm_vpn_on)
     val labelVpnOff = stringResource(R.string.qm_vpn_off)
     val labelLan = stringResource(R.string.qm_lan)
+    val labelHosts = stringResource(R.string.qt_hosts_count)
     val labelWifi = stringResource(R.string.qm_wifi)
     val labelConnected = stringResource(R.string.qm_connected)
     val labelBtOff = stringResource(R.string.qm_bluetooth_off)
@@ -251,15 +252,17 @@ fun rememberQuickTiles(ids: List<String>, onHost: (String) -> Unit, onController
                 QuickTile.CONTROLLERS -> listOf(
                     TileModel(id, Icons.Filled.SportsEsports, controllersLabel, if (controllers.isEmpty()) colors.danger else on, onControllers),
                 )
-                QuickTile.HOSTS -> hosts.values.sortedBy { it.name }.map { host ->
+                // From two hosts on one tile for all of them (tap: list of hosts).
+                QuickTile.HOSTS -> if (showHostsCombined(hosts.values)) listOf(
+                    TileModel(
+                        id, Icons.Filled.Computer, labelHosts.format(hosts.size),
+                        hostTint(hosts.values, colors.accent, on, colors.danger, off),
+                        { onHost(ALL_HOSTS) },
+                    ),
+                ) else hosts.values.map { host ->
                     TileModel(
                         "$id:${host.uuid}", Icons.Filled.Computer, host.name,
-                        when {
-                            host.isStreaming -> colors.accent
-                            host.status == HostStatus.ONLINE -> on
-                            host.status == HostStatus.OFFLINE -> colors.danger
-                            else -> off
-                        },
+                        hostTint(listOf(host), colors.accent, on, colors.danger, off),
                         { onHost(host.uuid) },
                     )
                 }

@@ -919,4 +919,7 @@
     <string name="about_source_sgdb">Cover, Hintergründe, Logos und Icons</string>
     <string name="about_source_igdb">Beschreibungen, Genres, Entwickler und Erscheinungsdaten</string>
     <string name="about_source_esde">Startbefehle der Emulatoren (MIT-Lizenz)</string>
+
+    <!-- Quick tiles -->
+    <string name="qt_hosts_count">%d Hosts</string>
 </resources>
