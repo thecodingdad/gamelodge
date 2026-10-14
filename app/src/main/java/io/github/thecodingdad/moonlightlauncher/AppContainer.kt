@@ -10,7 +10,6 @@ import io.github.thecodingdad.moonlightlauncher.data.local.LocalAppScanner
 import io.github.thecodingdad.moonlightlauncher.data.remote.BoxArtCache
 import io.github.thecodingdad.moonlightlauncher.data.remote.HostActions
 import io.github.thecodingdad.moonlightlauncher.data.remote.HostRepository
-import io.github.thecodingdad.moonlightlauncher.data.remote.HostApiClient
 import io.github.thecodingdad.moonlightlauncher.data.settings.SecretStore
 import io.github.thecodingdad.moonlightlauncher.data.settings.SettingsRepository
 import io.github.thecodingdad.moonlightlauncher.stream.AutoSleep
@@ -40,9 +39,11 @@ class AppContainer(context: Context) {
     val hosts: HostRepository by lazy { HostRepository(appContext, scope) }
     val boxArt: BoxArtCache by lazy { BoxArtCache(appContext) }
 
-    val hostApi: HostApiClient by lazy { HostApiClient(http, database.hostConfigDao(), secrets) }
+    val companionFeed: io.github.thecodingdad.moonlightlauncher.data.companion.CompanionFeed by lazy {
+        io.github.thecodingdad.moonlightlauncher.data.companion.CompanionFeed(appContext, servers)
+    }
     val library: LibraryRepository by lazy {
-        LibraryRepository(database, LibrarySync(database), localApps, hosts, boxArt, scope, hostApi)
+        LibraryRepository(database, LibrarySync(database), localApps, hosts, boxArt, scope, companionFeed)
     }
     val playtime: PlaytimeTracker by lazy { PlaytimeTracker(database) }
     val emulation: io.github.thecodingdad.moonlightlauncher.data.emulation.EmulationRepository by lazy {
@@ -70,7 +71,9 @@ class AppContainer(context: Context) {
     val servers: io.github.thecodingdad.moonlightlauncher.data.companion.ServerRepository by lazy {
         io.github.thecodingdad.moonlightlauncher.data.companion.ServerRepository(appContext, http, scope)
     }
-    val metadata: MetadataService by lazy { MetadataService(database, secrets, settings, http, scope, servers) }
+    val metadata: MetadataService by lazy {
+        MetadataService(database, secrets, settings, http, scope, servers).also { it.onCorrected = { id -> library.pushCorrection(id) } }
+    }
 
     val haAuth: HaAuth by lazy { HaAuth(appContext, http, secrets) }
     val ha: HaRepository by lazy {

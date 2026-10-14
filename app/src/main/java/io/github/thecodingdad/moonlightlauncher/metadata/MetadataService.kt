@@ -57,6 +57,13 @@ class MetadataService(
     private val scope: CoroutineScope,
     private val servers: io.github.thecodingdad.moonlightlauncher.data.companion.ServerRepository? = null,
 ) {
+    /** Called after a hand correction (the library sends it on to the host's companion). */
+    var onCorrected: (suspend (itemId: String) -> Unit)? = null
+
+    private suspend fun corrected(itemId: String) {
+        runCatching { onCorrected?.invoke(itemId) }.onFailure { Log.w("Correction not passed on", it) }
+    }
+
     private val dao = db.libraryDao()
     private val mutex = Mutex()
 
@@ -385,6 +392,7 @@ class MetadataService(
             MetadataSource.STEAMGRIDDB -> updated = updated.withSgdbArtwork(candidate.id)
         }
         dao.upsertItem(updated.copy(metadataState = MetadataState.LOCKED, matchConfidence = 1f, metadataQuery = candidate.name))
+        corrected(itemId)
     }
 
     /** Alternative images for the artwork picker. */
@@ -428,6 +436,7 @@ class MetadataService(
             ArtworkKind.ICON -> item.copy(iconUrl = asset.url)
         }
         dao.upsertItem(updated.copy(metadataState = MetadataState.LOCKED))
+        corrected(itemId)
     }
 
     /** Marks a REVIEW match as correct. */
@@ -470,6 +479,7 @@ class MetadataService(
         val edited = transform(item)
         val fields = if (field == null) edited.manual else edited.manual + field
         dao.upsertItem(edited.copy(manualFields = fields.joinToString(",") { it.name }.ifEmpty { null }))
+        corrected(itemId)
     }
 
     /** Drops a hand edit: the field follows IGDB again (fetched right away when matched). */
@@ -496,6 +506,7 @@ class MetadataService(
             }
         }
         dao.upsertItem(restored)
+        corrected(itemId)
     }
 
     private fun LibraryItemEntity.withSgdbArtwork(gameId: Long): LibraryItemEntity {

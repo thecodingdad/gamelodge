@@ -92,7 +92,7 @@ data class LibraryItemEntity(
 enum class MetaField { TITLE, DESCRIPTION, GENRES, DEVELOPER, PUBLISHER, SERIES, FEATURES, RELEASE, RATING, AGE_RATING }
 
 /** Where [LibraryItemEntity.platform] came from; higher sources are never overwritten by lower ones. */
-/** Trust order (later wins): PLAYNITE is the old Vibepollo/Playnite source, COMPANION the host API data. */
+/** Trust order (later wins): PLAYNITE is the old Vibepollo/Playnite source, COMPANION the companion's host games. */
 enum class PlatformSource { SUGGESTED, IGDB, PLAYNITE, COMPANION, MANUAL }
 
 enum class FilterKind { BUILTIN, SMART, GROUP }
@@ -211,12 +211,6 @@ data class HostConfigEntity(
     val haSleepEntity: String? = null,
     /** Minutes after a stream ends before the host is put to sleep; null = never. */
     val autoSleepMinutes: Int? = null,
-    /** Optional host web API base URL, e.g. `https://192.168.1.10:47990` (companion data). */
-    val vibepolloUrl: String? = null,
-    /** Host software of that API (HostApiType name); null = Vibepollo. */
-    val apiType: String? = null,
-    /** User name for Apollo / Sunshine logins. */
-    val apiUser: String? = null,
 )
 
 enum class HaTileType { SWITCH, LIGHT, BUTTON, SENSOR, COVER, CLIMATE }

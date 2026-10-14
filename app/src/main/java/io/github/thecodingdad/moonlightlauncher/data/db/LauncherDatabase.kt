@@ -16,7 +16,7 @@ import androidx.room.RoomDatabase
         HaTileEntity::class,
         FilterEntity::class,
     ],
-    version = 7,
+    version = 8,
     exportSchema = true,
 )
 abstract class LauncherDatabase : RoomDatabase() {
@@ -30,10 +30,26 @@ abstract class LauncherDatabase : RoomDatabase() {
     companion object {
         fun create(context: Context): LauncherDatabase =
             Room.databaseBuilder(context, LauncherDatabase::class.java, "launcher.db")
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
                 .build()
 
         /** v4: host API type/user (companion data from Vibepollo, Apollo or Sunshine), not installed targets. */
+        /** v8: the host web API (Vibepollo/Apollo/Sunshine logins) is gone; the companion delivers its data. */
+        val MIGRATION_7_8 = object : androidx.room.migration.Migration(7, 8) {
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `host_config_new` (`hostUuid` TEXT NOT NULL, `wakeMethod` TEXT NOT NULL, `haWakeEntity` TEXT, " +
+                        "`haShutdownEntity` TEXT, `haRestartEntity` TEXT, `haSleepEntity` TEXT, `autoSleepMinutes` INTEGER, PRIMARY KEY(`hostUuid`))",
+                )
+                db.execSQL(
+                    "INSERT INTO host_config_new (hostUuid, wakeMethod, haWakeEntity, haShutdownEntity, haRestartEntity, haSleepEntity, autoSleepMinutes) " +
+                        "SELECT hostUuid, wakeMethod, haWakeEntity, haShutdownEntity, haRestartEntity, haSleepEntity, autoSleepMinutes FROM host_config",
+                )
+                db.execSQL("DROP TABLE host_config")
+                db.execSQL("ALTER TABLE host_config_new RENAME TO host_config")
+            }
+        }
+
         /** v7: ROM targets (emulators). */
         val MIGRATION_6_7 = object : androidx.room.migration.Migration(6, 7) {
             override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {

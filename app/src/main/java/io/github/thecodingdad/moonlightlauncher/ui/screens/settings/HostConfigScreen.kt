@@ -68,7 +68,7 @@ fun MissingPermissionsNote(host: HostState) {
 }
 
 @Composable
-fun HostConfigScreen(host: HostState) {
+fun HostConfigScreen(host: HostState, openServers: () -> Unit = {}) {
     val c = LocalContext.current.container
     val scope = rememberCoroutineScope()
     val entities by c.ha.client.entities.collectAsState()
@@ -115,7 +115,7 @@ fun HostConfigScreen(host: HostState) {
             onSelect = { save(cfg.copy(autoSleepMinutes = it)) },
             subtitle = stringResource(R.string.host_auto_sleep_sub),
         )
-        VibepolloSection(host, cfg, ::save)
+        CompanionSection(host, openServers)
     }
 
     val onPick = picking
@@ -142,60 +142,20 @@ private fun EntityRow(entity: HaEntity?, onClick: () -> Unit) {
     }
 }
 
+/** The companion on this host (paired or not); pairing lives in the companion settings. */
 @Composable
-private fun VibepolloSection(host: HostState, cfg: HostConfigEntity, save: (HostConfigEntity) -> Unit) {
-    val c = LocalContext.current.container
-    val scope = rememberCoroutineScope()
-    var revision by remember { mutableStateOf(0) }
-    val secretKey = io.github.thecodingdad.moonlightlauncher.data.settings.SecretStore.Keys.vibepolloToken(host.uuid)
-    val secret = remember(revision) { c.secrets.get(secretKey).orEmpty() }
-    var result by remember { mutableStateOf<String?>(null) }
-    val okText = stringResource(R.string.host_api_ok)
-    val failText = stringResource(R.string.host_api_failed)
-    val type = runCatching { io.github.thecodingdad.moonlightlauncher.data.remote.HostApiType.valueOf(cfg.apiType ?: "VIBEPOLLO") }
-        .getOrDefault(io.github.thecodingdad.moonlightlauncher.data.remote.HostApiType.VIBEPOLLO)
-    val isToken = type == io.github.thecodingdad.moonlightlauncher.data.remote.HostApiType.VIBEPOLLO
-
-    SectionHeader(stringResource(R.string.host_api_section))
-    Text(stringResource(R.string.host_api_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
-    ChoiceRow(
-        stringResource(R.string.host_api_type), io.github.thecodingdad.moonlightlauncher.data.remote.HostApiType.entries, type,
-        label = { it.name.lowercase().replaceFirstChar(Char::uppercase) },
-        onSelect = { save(cfg.copy(apiType = it.name)); c.hostApi.invalidate(host.uuid) },
-    )
-    io.github.thecodingdad.moonlightlauncher.ui.components.LauncherTextField(
-        stringResource(R.string.vibepollo_url), cfg.vibepolloUrl ?: "",
-        { save(cfg.copy(vibepolloUrl = it.trim().ifEmpty { null })); c.hostApi.invalidate(host.uuid) },
-        kind = io.github.thecodingdad.moonlightlauncher.ui.components.TextKind.URL,
-        placeholder = host.address?.let { "https://$it:47990" },
-    )
-    if (!isToken) {
-        io.github.thecodingdad.moonlightlauncher.ui.components.LauncherTextField(
-            stringResource(R.string.host_api_user), cfg.apiUser ?: "",
-            { save(cfg.copy(apiUser = it.trim().ifEmpty { null })); c.hostApi.invalidate(host.uuid) },
-        )
-    }
-    io.github.thecodingdad.moonlightlauncher.ui.components.LauncherTextField(
-        stringResource(if (isToken) R.string.vibepollo_token else R.string.host_api_password), secret,
-        {
-            c.secrets.put(secretKey, if (isToken) it.trim() else it)
-            c.hostApi.invalidate(host.uuid)
-            revision++
-        },
-        kind = io.github.thecodingdad.moonlightlauncher.ui.components.TextKind.PASSWORD,
-    )
-    if (type == io.github.thecodingdad.moonlightlauncher.data.remote.HostApiType.APOLLO) {
-        Text(stringResource(R.string.host_api_apollo_hint), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
-    }
-    io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton(
-        stringResource(R.string.vibepollo_test), enabled = !cfg.vibepolloUrl.isNullOrBlank() && secret.isNotEmpty() && (isToken || !cfg.apiUser.isNullOrBlank()),
-        onClick = {
-            scope.launch {
-                val r = c.hostApi.fetch(host.uuid)
-                result = if (r != null) okText.format(r.apps, r.companion.size) else failText
-                if (r != null) { c.hostApi.invalidate(host.uuid); c.library.resyncHost(host.uuid) }
-            }
+private fun CompanionSection(host: HostState, openServers: () -> Unit) {
+    val repo = LocalContext.current.container.servers
+    val servers by repo.servers.collectAsState()
+    val online by repo.online.collectAsState()
+    val companion = servers.firstOrNull { it.isCompanion && it.hostId.equals(host.uuid, ignoreCase = true) }
+    SectionHeader(stringResource(R.string.host_companion_section))
+    NavRow(
+        companion?.name ?: stringResource(R.string.servers_not_paired), openServers,
+        subtitle = when {
+            companion == null -> stringResource(R.string.host_companion_hint)
+            online[companion.id] == true -> stringResource(R.string.servers_online)
+            else -> stringResource(R.string.servers_offline)
         },
     )
-    result?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurface) }
 }

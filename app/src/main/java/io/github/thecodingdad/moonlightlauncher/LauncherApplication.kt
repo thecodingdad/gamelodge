@@ -58,6 +58,9 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
                 io.github.thecodingdad.moonlightlauncher.system.EdgeHandle.update(this@LauncherApplication, it)
             }
         }
+        // Host web API logins of older versions aren't used any more.
+        container.secrets.keys().filter { it.startsWith(io.github.thecodingdad.moonlightlauncher.data.settings.SecretStore.Keys.LEGACY_HOST_API_PREFIX) }
+            .forEach { container.secrets.put(it, null) }
         container.servers.start()
         container.metadata.start()
         io.github.thecodingdad.moonlightlauncher.system.OdinMapping(this)

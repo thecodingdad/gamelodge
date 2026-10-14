@@ -122,49 +122,23 @@ class MetadataClientsTest {
     }
 }
 
-@org.junit.runner.RunWith(org.robolectric.RobolectricTestRunner::class)
-@org.robolectric.annotation.Config(application = android.app.Application::class, sdk = [34])
-class HostApiParseTest {
-    private val client = io.github.thecodingdad.moonlightlauncher.data.remote.HostApiClient(
-        OkHttpClient(), FakeConfigs, FakeSecrets.instance,
-    )
+class CompanionFeedParseTest {
+    private val json = kotlinx.serialization.json.Json { ignoreUnknownKeys = true; explicitNulls = false }
 
     @Test
-    fun `companion entries are reported by upper case uuid`() {
-        val r = client.parse(
-            """{"apps":[{"name":"Desktop","uuid":"aaa"},{"name":"Hades","uuid":"bbb","x-companion":{"id":"steam:1145360","kind":"game","source":"steam","platform":"pc","installed":false,"collections":["Roguelike"],"v":1}},{"name":"X","uuid":"ccc","x-companion":{"kind":"game"}}],"current_app":0}""",
+    fun `host games of the companion`() {
+        val list = json.decodeFromString<io.github.thecodingdad.moonlightlauncher.data.companion.HostGamesList>(
+            """{"hostId":"ABC","games":[{"id":"steam:1145360","appUuid":"bbb","name":"Hades","kind":"game","source":"steam","platform":"PC","installed":false,"collections":["Roguelike"],"cover":"image:steam_1145360","genres":["Action"],"releaseDate":1600300800,"newField":1},
+               {"id":"x:1","name":"Desktop","kind":"app"},{"id":"rom:1","name":"Zelda","source":"emulator","emulator":"Dolphin","platform":"Wii"}]}""",
         )
-        assertEquals(3, r.apps)
-        assertEquals(setOf("BBB"), r.companion.keys)
-        assertEquals(setOf("AAA", "BBB", "CCC"), r.uuids)
-        val info = r.infoForApp("bbb")!!
-        assertEquals("steam:1145360", info.id)
-        assertEquals(false, info.installed)
-        assertEquals(true, info.isGame)
-        assertEquals("Steam", info.sourceLabel)
-        assertEquals(listOf("Roguelike"), info.collections)
-    }
-
-    @Test
-    fun `apps, emulators and bare arrays`() {
-        val r = client.parse(
-            """[{"uuid":"a","x-companion":{"id":"x:1","kind":"app"}},{"uuid":"b","x-companion":{"id":"rom:1","source":"emulator","emulator":"Dolphin","platform":"wii"}}]""",
-        )
-        assertEquals(false, r.infoForApp("A")!!.isGame)
-        assertEquals(true, r.infoForApp("A")!!.installed)
-        assertEquals("Dolphin", r.infoForApp("b")!!.sourceLabel)
-        assertEquals("wii", r.infoForApp("b")!!.platform)
-    }
-}
-
-private object FakeConfigs : io.github.thecodingdad.moonlightlauncher.data.db.HostConfigDao {
-    override fun observeAll() = kotlinx.coroutines.flow.flowOf(emptyList<io.github.thecodingdad.moonlightlauncher.data.db.HostConfigEntity>())
-    override suspend fun get(uuid: String) = null
-    override suspend fun upsert(config: io.github.thecodingdad.moonlightlauncher.data.db.HostConfigEntity) = Unit
-}
-
-private object FakeSecrets {
-    val instance: io.github.thecodingdad.moonlightlauncher.data.settings.SecretStore by lazy {
-        io.github.thecodingdad.moonlightlauncher.data.settings.SecretStore(androidx.test.core.app.ApplicationProvider.getApplicationContext())
+        assertEquals("ABC", list.hostId)
+        val hades = list.games[0]
+        assertEquals(true, hades.isGame)
+        assertEquals(false, hades.installed)
+        assertEquals("Steam", hades.sourceLabel)
+        assertEquals(listOf("Roguelike"), hades.collections)
+        assertEquals(false, list.games[1].isGame)
+        assertEquals(true, list.games[1].installed)
+        assertEquals("Dolphin", list.games[2].sourceLabel)
     }
 }

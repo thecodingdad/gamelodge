@@ -354,7 +354,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                             vm, nav, hints, MainTab.SETTINGS,
                             listOf(tabCrumb(vm, nav, MainTab.SETTINGS), backCrumb(nav, R.string.settings_hosts)),
                             { hostInfoFor = it }, { controllerPopup = true },
-                        ) { hosts[uuid]?.let { HostConfigScreen(it) } }
+                        ) { hosts[uuid]?.let { HostConfigScreen(it, openServers = { nav.navigate(Routes.settings(SettingsPageId.SERVERS)) }) } }
                     }
                     composable(Routes.CONTROLLERS) {
                         SubpageFrame(vm, nav, hints, MainTab.SETTINGS, listOf(tabCrumb(vm, nav, MainTab.SETTINGS)), { hostInfoFor = it }, { controllerPopup = true }) {

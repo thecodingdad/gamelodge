@@ -54,4 +54,22 @@ class MigrationTest {
         val db = helper.runMigrationsAndValidate("m7.db", 7, true, LauncherDatabase.MIGRATION_6_7)
         db.query("SELECT romUri, romPath, romPlatform, emulatorKey FROM launch_targets").close()
     }
+
+    @Test
+    fun `v7 to v8 drops the host API columns and keeps the host settings`() {
+        helper.createDatabase("m8.db", 7).use { db ->
+            db.execSQL("INSERT INTO host_config (hostUuid, wakeMethod, haWakeEntity, autoSleepMinutes, vibepolloUrl, apiType, apiUser) VALUES ('h1', 'WOL', 'script.wake', 15, 'https://x:47990', 'VIBEPOLLO', 'u')")
+        }
+        val db = helper.runMigrationsAndValidate("m8.db", 8, true, LauncherDatabase.MIGRATION_7_8)
+        db.query("SELECT hostUuid, haWakeEntity, autoSleepMinutes FROM host_config").use { c ->
+            org.junit.Assert.assertTrue(c.moveToFirst())
+            org.junit.Assert.assertEquals("h1", c.getString(0))
+            org.junit.Assert.assertEquals("script.wake", c.getString(1))
+            org.junit.Assert.assertEquals(15, c.getInt(2))
+        }
+        db.query("PRAGMA table_info(host_config)").use { c ->
+            val columns = generateSequence { if (c.moveToNext()) c.getString(1) else null }.toList()
+            org.junit.Assert.assertFalse("vibepolloUrl" in columns)
+        }
+    }
 }

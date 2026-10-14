@@ -4,6 +4,8 @@ import androidx.room.withTransaction
 import io.github.thecodingdad.moonlightlauncher.data.db.ItemCollectionCrossRef
 import io.github.thecodingdad.moonlightlauncher.data.db.ItemKind
 import io.github.thecodingdad.moonlightlauncher.data.db.KindSource
+import io.github.thecodingdad.moonlightlauncher.data.db.MetaField
+import io.github.thecodingdad.moonlightlauncher.data.db.MetadataState
 import io.github.thecodingdad.moonlightlauncher.data.db.LauncherDatabase
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry
 import io.github.thecodingdad.moonlightlauncher.data.db.PlatformSource
@@ -34,7 +36,7 @@ class LibraryRepository(
     private val hosts: HostRepository,
     private val boxArt: BoxArtCache,
     private val scope: CoroutineScope,
-    private val hostApi: io.github.thecodingdad.moonlightlauncher.data.remote.HostApiClient? = null,
+    private val companion: io.github.thecodingdad.moonlightlauncher.data.companion.CompanionFeed? = null,
 ) {
     private val dao = db.libraryDao()
 
@@ -109,19 +111,19 @@ class LibraryRepository(
         Log.d("ROM sync: ${roms.size} games")
     }
 
-    /** Re-applies a host's app list, e.g. after its Vibepollo access changed. */
+    /** Re-applies a host's app list, e.g. after a companion was paired. */
     suspend fun resyncHost(hostUuid: String) {
         hosts.appLists.value[hostUuid]?.let { syncHost(hostUuid, it) }
     }
 
     private suspend fun syncHost(hostUuid: String, apps: List<RemoteApp>) {
-        // Optional: the host API carries the companion's data (game/app, platform, store, groups,
-        // installed) for the entries it manages.
-        val api = hostApi?.cached(hostUuid, apps.map { it.app.appUUID })
+        // Optional: the host's paired companion knows what each entry is (game/app, platform,
+        // store, groups, installed) and brings its metadata.
+        val feed = companion?.games(hostUuid)
         sync.syncHost(
             hostUuid,
             apps.map { remote ->
-                val info = api?.infoForApp(remote.app.appUUID)
+                val info = remote.app.appUUID?.uppercase()?.let { feed?.get(it) }
                 SourceEntry(
                     targetId = SourceEntry.remoteId(hostUuid, remote.app.appId),
                     type = TargetType.REMOTE,
@@ -136,27 +138,84 @@ class LibraryRepository(
                 )
             },
         )
-        Log.d("Host sync ${apps.firstOrNull()?.hostName}: ${apps.size} apps (${api?.companion?.size ?: 0} from the companion)")
-        api?.let { applyCompanionInfo(hostUuid, it) }
+        Log.d("Host sync ${apps.firstOrNull()?.hostName}: ${apps.size} apps (${feed?.size ?: 0} from the companion)")
+        feed?.let { applyCompanion(hostUuid, it) }
         suggestPlatforms()
         fetchBoxArt(hostUuid, apps)
     }
 
-    /** Groups, store name and platform from the companion data of each managed entry. */
-    private suspend fun applyCompanionInfo(hostUuid: String, result: io.github.thecodingdad.moonlightlauncher.data.remote.HostApiClient.Result) {
-        if (result.companion.isEmpty()) return
+    /**
+     * Groups, store, platform and metadata of each host entry the companion knows. Items whose
+     * metadata was chosen here by hand (locked) keep it; hand-edited fields always stay.
+     */
+    private suspend fun applyCompanion(hostUuid: String, games: Map<String, io.github.thecodingdad.moonlightlauncher.data.companion.HostGame>) {
+        val feed = companion ?: return
         for (target in dao.getAllTargets().filter { it.hostUuid == hostUuid }) {
-            val info = result.infoForApp(target.appUuid) ?: continue
+            val game = target.appUuid?.uppercase()?.let { games[it] } ?: continue
             val item = dao.getItem(target.itemId) ?: continue
-            val groups = info.collections.joinToString(", ").ifEmpty { null }
-            if (item.playniteCategories != groups || item.playnitePlugin != info.sourceLabel) {
-                dao.setPlayniteInfo(item.id, groups, info.sourceLabel)
+            val groups = game.collections.joinToString(", ").ifEmpty { null }
+            if (item.playniteCategories != groups || item.playnitePlugin != game.sourceLabel) {
+                dao.setPlayniteInfo(item.id, groups, game.sourceLabel)
             }
-            val platform = info.platform?.let(PlatformResolver::normalizeIgdb)
+            val platform = game.platform?.let(PlatformResolver::normalizeIgdb)
             if (PlatformResolver.mayReplace(item, PlatformSource.COMPANION, platform)) {
                 dao.setPlatform(item.id, platform, PlatformSource.COMPANION)
             }
+            val hasMetadata = game.igdbId != null || game.summary != null || game.cover != null
+            if (!hasMetadata || item.metadataState == MetadataState.LOCKED) continue
+            val fresh = dao.getItem(item.id) ?: continue
+            val m = fresh.manual
+            fun list(values: List<String>) = values.joinToString(", ").ifEmpty { null }
+            val updated = fresh.copy(
+                igdbId = game.igdbId ?: fresh.igdbId,
+                sgdbId = game.steamGridDbId ?: fresh.sgdbId,
+                description = if (MetaField.DESCRIPTION in m) fresh.description else game.summary ?: fresh.description,
+                genres = if (MetaField.GENRES in m) fresh.genres else list(game.genres) ?: fresh.genres,
+                developer = if (MetaField.DEVELOPER in m) fresh.developer else list(game.developers) ?: fresh.developer,
+                publisher = if (MetaField.PUBLISHER in m) fresh.publisher else list(game.publishers) ?: fresh.publisher,
+                series = if (MetaField.SERIES in m) fresh.series else list(game.series) ?: fresh.series,
+                releaseDate = if (MetaField.RELEASE in m) fresh.releaseDate else game.releaseDate?.times(1000) ?: fresh.releaseDate,
+                releaseYear = if (MetaField.RELEASE in m) fresh.releaseYear
+                    else game.releaseDate?.let { java.time.Instant.ofEpochSecond(it).atZone(java.time.ZoneOffset.UTC).year } ?: fresh.releaseYear,
+                rating = if (MetaField.RATING in m) fresh.rating else game.rating?.toFloat() ?: fresh.rating,
+                coverUrl = feed.artwork(hostUuid, game.cover) ?: fresh.coverUrl,
+                heroUrl = feed.artwork(hostUuid, game.hero) ?: fresh.heroUrl,
+                logoUrl = feed.artwork(hostUuid, game.logo) ?: fresh.logoUrl,
+                iconUrl = feed.artwork(hostUuid, game.icon) ?: fresh.iconUrl,
+                metadataState = MetadataState.OK,
+                matchConfidence = 1f,
+            )
+            if (updated != fresh) dao.upsertItem(updated)
         }
+    }
+
+    /**
+     * A correction made here (match, artwork, edited fields, game/app) goes to the companion of
+     * every host this item is on, so the other launchers get it too.
+     */
+    suspend fun pushCorrection(itemId: String) {
+        val feed = companion ?: return
+        val item = dao.getItem(itemId) ?: return
+        val targets = dao.getTargetsForItem(itemId).filter { it.type == TargetType.REMOTE && it.hostUuid != null && it.appUuid != null }
+        if (targets.isEmpty()) return
+        fun https(url: String?) = url?.takeIf { it.startsWith("https://") }
+        fun split(value: String?) = value?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() }
+        val correction = io.github.thecodingdad.moonlightlauncher.data.companion.HostGameCorrection(
+            igdbId = item.igdbId,
+            steamGridDbId = item.sgdbId,
+            name = item.title.takeIf { MetaField.TITLE in item.manual },
+            cover = https(item.coverUrl),
+            hero = https(item.heroUrl),
+            logo = https(item.logoUrl),
+            icon = https(item.iconUrl),
+            summary = item.description,
+            genres = split(item.genres),
+            developers = split(item.developer),
+            publishers = split(item.publisher),
+            releaseDate = item.releaseDate?.div(1000),
+            kind = if (item.kindSource == KindSource.MANUAL) (if (item.kind == ItemKind.APP) "app" else "game") else null,
+        )
+        targets.forEach { feed.correct(it.hostUuid!!, it.appUuid!!, correction) }
     }
 
     /** Items nobody knows a platform for get a suggestion from how they are launched. */
@@ -213,5 +272,8 @@ class LibraryRepository(
     }
 
     /** User correction "this is a game / an app"; survives every future sync. */
-    suspend fun setKind(id: String, kind: ItemKind) = dao.setKind(id, kind, KindSource.MANUAL)
+    suspend fun setKind(id: String, kind: ItemKind) {
+        dao.setKind(id, kind, KindSource.MANUAL)
+        pushCorrection(id)
+    }
 }
