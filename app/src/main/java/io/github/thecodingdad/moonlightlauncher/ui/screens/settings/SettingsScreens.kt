@@ -23,6 +23,8 @@ import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
@@ -44,7 +46,24 @@ enum class SettingsPageId { HOSTS, PROFILES, HOME_SCREEN, THEME, DISPLAY, FILTER
 @Composable
 fun SettingsHome(open: (SettingsPageId) -> Unit, isFirstVisit: Boolean, openControllers: () -> Unit = {}) {
     val context = androidx.compose.ui.platform.LocalContext.current
+    var query by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("") }
+    val keyboard = io.github.thecodingdad.moonlightlauncher.ui.components.LocalKeyboardController.current
+    val searchTitle = stringResource(R.string.settings_search)
+    // START: search with the controller keyboard (the field itself works by touch and A too).
+    io.github.thecodingdad.moonlightlauncher.ui.input.PadAction(io.github.thecodingdad.moonlightlauncher.ui.input.PadButton.START) {
+        keyboard.open(searchTitle, query) { query = it }
+    }
     SettingsPage(stringResource(R.string.tab_settings)) {
+        io.github.thecodingdad.moonlightlauncher.ui.components.LauncherTextField(searchTitle, query, { query = it })
+        if (query.isNotBlank()) {
+            SettingsSearchResults(query) { target ->
+                when (target) {
+                    is SettingsTarget.Page -> open(target.id)
+                    SettingsTarget.Controllers -> openControllers()
+                }
+            }
+            return@SettingsPage
+        }
         SectionHeader(stringResource(R.string.settings_group_display))
         NavRow(stringResource(R.string.settings_home_screen), { open(SettingsPageId.HOME_SCREEN) }, stringResource(R.string.settings_home_screen_sub), Icons.Filled.Home, initialFocus = isFirstVisit)
         NavRow(stringResource(R.string.settings_theme), { open(SettingsPageId.THEME) }, stringResource(R.string.settings_theme_sub), Icons.Filled.Palette)

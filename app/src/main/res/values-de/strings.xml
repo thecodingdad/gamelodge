@@ -852,4 +852,8 @@
     <string name="usage_stats_sub">Spielzeit, Sitzungen und Favoriten im Verlauf</string>
     <string name="filters_scope_games">Spiele</string>
     <string name="filters_scope_apps">Apps</string>
+
+    <!-- Settings -->
+    <string name="settings_search">Einstellungen durchsuchen</string>
+    <string name="settings_search_none">Keine passende Einstellung</string>
 </resources>

@@ -854,4 +854,8 @@
     <string name="usage_stats_sub">Play time, sessions and favourites over time</string>
     <string name="filters_scope_games">Games</string>
     <string name="filters_scope_apps">Apps</string>
+
+    <!-- Settings -->
+    <string name="settings_search">Search settings</string>
+    <string name="settings_search_none">No matching setting</string>
 </resources>
