@@ -129,7 +129,7 @@
     <string name="settings_display">Anzeige</string>
     <string name="settings_display_sub">Kartengröße, Skalierung, Animationen, Bildschirmschoner, TV</string>
     <string name="settings_controls">Steuerung</string>
-    <string name="settings_controls_sub">Tastenbelegung, Sounds, Vibration</string>
+    <string name="settings_controls_sub">Tastenbelegung, Hilfe-Leiste, Direktstart, Tastenkombinationen</string>
     <string name="settings_controllers">Controller</string>
     <string name="settings_controllers_sub">Verbundene Controller und Spielerreihenfolge</string>
     <string name="settings_metadata">Metadaten-Quellen</string>

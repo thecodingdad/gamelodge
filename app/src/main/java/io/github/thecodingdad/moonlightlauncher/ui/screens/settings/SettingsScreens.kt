@@ -241,7 +241,7 @@ private val accentPresets = listOf(0xFF7C9CFF, 0xFF4CD787, 0xFFFF7A59, 0xFFFF5C8
 private val accentNames = listOf(R.string.color_blue, R.string.color_green, R.string.color_orange, R.string.color_pink, R.string.color_purple, R.string.color_yellow, R.string.color_teal)
 
 @Composable
-fun ControlsSettings(settings: LauncherSettings, update: ((LauncherSettings) -> LauncherSettings) -> Unit, openControllers: () -> Unit) {
+fun ControlsSettings(settings: LauncherSettings, update: ((LauncherSettings) -> LauncherSettings) -> Unit) {
     SettingsPage(stringResource(R.string.settings_controls)) {
         ChoiceRow(
             stringResource(R.string.setting_button_layout), ButtonLayout.entries, settings.buttonLayout,
@@ -258,7 +258,6 @@ fun ControlsSettings(settings: LauncherSettings, update: ((LauncherSettings) -> 
             stringResource(R.string.setting_games_direct_start), settings.gamesDirectStart, { v -> update { it.copy(gamesDirectStart = v) } },
             subtitle = stringResource(R.string.setting_games_direct_start_sub),
         )
-        NavRow(stringResource(R.string.settings_controllers), openControllers, stringResource(R.string.settings_controllers_sub))
         ButtonComboRows(settings, update)
     }
 }

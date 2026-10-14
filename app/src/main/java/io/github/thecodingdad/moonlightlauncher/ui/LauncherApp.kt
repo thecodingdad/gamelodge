@@ -334,7 +334,6 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                                 openReview = { nav.navigate(Routes.REVIEW) },
                                 openProfile = { nav.navigate(Routes.profile(it)) },
                                 openHost = { nav.navigate(Routes.host(it)) },
-                                openControllers = { nav.navigate(Routes.CONTROLLERS) },
                                 openPage = { nav.navigate(Routes.settings(it)) },
                             )
                         }
@@ -972,7 +971,6 @@ private fun SettingsPageContent(
     openReview: () -> Unit,
     openProfile: (java.util.UUID?) -> Unit,
     openHost: (String) -> Unit,
-    openControllers: () -> Unit,
     openPage: (SettingsPageId) -> Unit,
 ) {
     val settings by vm.settings.collectAsState()
@@ -992,7 +990,7 @@ private fun SettingsPageContent(
             val external by vm.externalDisplay.collectAsState()
             io.github.thecodingdad.moonlightlauncher.ui.screens.settings.DisplaySettings(settings, vm::updateSettings, external)
         }
-        SettingsPageId.CONTROLS -> ControlsSettings(settings, vm::updateSettings, openControllers = openControllers)
+        SettingsPageId.CONTROLS -> ControlsSettings(settings, vm::updateSettings)
         SettingsPageId.LANGUAGE -> LanguageSettings(settings, vm::updateSettings)
         SettingsPageId.FILTERS -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.FilterSettings(vm, io.github.thecodingdad.moonlightlauncher.data.db.FilterScope.GAMES)
         SettingsPageId.QUICK_MENU -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.QuickMenuSettings(vm, settings, vm::updateSettings)

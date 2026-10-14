@@ -131,7 +131,7 @@
     <string name="settings_display">Display</string>
     <string name="settings_display_sub">Card size, scaling, animations, screensaver, TV</string>
     <string name="settings_controls">Controls</string>
-    <string name="settings_controls_sub">Button layout, sounds, vibration</string>
+    <string name="settings_controls_sub">Button layout, hint bar, direct start, button combinations</string>
     <string name="settings_controllers">Controllers</string>
     <string name="settings_controllers_sub">Connected controllers and player order</string>
     <string name="settings_metadata">Metadata sources</string>
