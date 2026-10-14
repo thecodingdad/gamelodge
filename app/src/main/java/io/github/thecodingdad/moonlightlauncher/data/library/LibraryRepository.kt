@@ -29,7 +29,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /** Image hosts the companion accepts in corrections (Companion.Protocol ApiServer.ArtworkHosts). */
-private val ARTWORK_HOSTS = listOf("steamgriddb.com", "images.igdb.com")
+private val ARTWORK_HOSTS = listOf("steamgriddb.com", "images.igdb.com", "steamstatic.com", "gog-statics.com", "cdn1.epicgames.com")
 
 /** Entry point for everything library related: keeps sources in sync and exposes entries. */
 class LibraryRepository(
@@ -181,10 +181,13 @@ class LibraryRepository(
                 releaseYear = if (MetaField.RELEASE in m) fresh.releaseYear
                     else game.releaseDate?.let { java.time.Instant.ofEpochSecond(it).atZone(java.time.ZoneOffset.UTC).year } ?: fresh.releaseYear,
                 rating = if (MetaField.RATING in m) fresh.rating else game.rating?.toFloat() ?: fresh.rating,
-                coverUrl = feed.artwork(hostUuid, game.cover) ?: fresh.coverUrl,
-                heroUrl = feed.artwork(hostUuid, game.hero) ?: fresh.heroUrl,
-                logoUrl = feed.artwork(hostUuid, game.logo) ?: fresh.logoUrl,
-                iconUrl = feed.artwork(hostUuid, game.icon) ?: fresh.iconUrl,
+                // Images picked by hand here stay (the companion got them as a correction anyway).
+                coverUrl = if (MetaField.COVER in m) fresh.coverUrl else feed.artwork(hostUuid, game.cover) ?: fresh.coverUrl,
+                heroUrl = if (MetaField.HERO in m) fresh.heroUrl else feed.artwork(hostUuid, game.hero) ?: fresh.heroUrl,
+                logoUrl = if (MetaField.LOGO in m) fresh.logoUrl else feed.artwork(hostUuid, game.logo) ?: fresh.logoUrl,
+                iconUrl = if (MetaField.ICON in m) fresh.iconUrl else feed.artwork(hostUuid, game.icon) ?: fresh.iconUrl,
+                animatedCoverUrl = if (MetaField.COVER in m) fresh.animatedCoverUrl else game.animatedCover ?: fresh.animatedCoverUrl,
+                animatedHeroUrl = if (MetaField.HERO in m) fresh.animatedHeroUrl else game.animatedHero ?: fresh.animatedHeroUrl,
                 metadataState = MetadataState.OK,
                 matchConfidence = 1f,
             )
@@ -196,7 +199,7 @@ class LibraryRepository(
      * A correction made here (match, artwork, edited fields, game/app) goes to the companion of
      * every host this item is on, so the other launchers get it too.
      */
-    suspend fun pushCorrection(itemId: String) {
+    suspend fun pushCorrection(itemId: String, reset: List<String> = emptyList()) {
         val feed = companion ?: return
         val item = dao.getItem(itemId) ?: return
         val targets = dao.getTargetsForItem(itemId).filter { it.type == TargetType.REMOTE && it.hostUuid != null && it.appUuid != null }
@@ -209,22 +212,37 @@ class LibraryRepository(
                 ARTWORK_HOSTS.any { host == it || host.endsWith(".$it") }
         }
         fun split(value: String?) = value?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() }
+        // Only what was picked or edited by hand: the companion keeps choosing the rest itself.
+        val m = item.manual
+        val matched = item.metadataState == MetadataState.LOCKED
         val correction = io.github.thecodingdad.moonlightlauncher.data.companion.HostGameCorrection(
-            igdbId = item.igdbId,
-            steamGridDbId = item.sgdbId,
-            name = item.title.takeIf { MetaField.TITLE in item.manual },
-            cover = https(item.coverUrl),
-            hero = https(item.heroUrl),
-            logo = https(item.logoUrl),
-            icon = https(item.iconUrl),
-            summary = item.description,
-            genres = split(item.genres),
-            developers = split(item.developer),
-            publishers = split(item.publisher),
-            releaseDate = item.releaseDate?.div(1000),
+            igdbId = item.igdbId.takeIf { matched },
+            steamGridDbId = item.sgdbId.takeIf { matched },
+            name = item.title.takeIf { MetaField.TITLE in m },
+            cover = https(item.coverUrl).takeIf { MetaField.COVER in m },
+            hero = https(item.heroUrl).takeIf { MetaField.HERO in m },
+            logo = https(item.logoUrl).takeIf { MetaField.LOGO in m },
+            icon = https(item.iconUrl).takeIf { MetaField.ICON in m },
+            animatedCover = https(item.animatedCoverUrl).takeIf { MetaField.COVER in m },
+            animatedHero = https(item.animatedHeroUrl).takeIf { MetaField.HERO in m },
+            summary = item.description.takeIf { MetaField.DESCRIPTION in m },
+            genres = split(item.genres).takeIf { MetaField.GENRES in m },
+            developers = split(item.developer).takeIf { MetaField.DEVELOPER in m },
+            publishers = split(item.publisher).takeIf { MetaField.PUBLISHER in m },
+            releaseDate = item.releaseDate?.div(1000).takeIf { MetaField.RELEASE in m },
             kind = if (item.kindSource == KindSource.MANUAL) (if (item.kind == ItemKind.APP) "app" else "game") else null,
+            reset = reset.ifEmpty { null },
         )
         targets.forEach { feed.correct(it.hostUuid!!, it.appUuid!!, correction) }
+    }
+
+    /** The host game behind [itemId] as its companion delivers it (first host that has one). */
+    suspend fun companionGame(itemId: String): io.github.thecodingdad.moonlightlauncher.data.companion.HostGame? {
+        val feed = companion ?: return null
+        for (t in dao.getTargetsForItem(itemId).filter { it.type == TargetType.REMOTE && it.hostUuid != null && it.appUuid != null }) {
+            feed.games(t.hostUuid!!)?.get(t.appUuid!!.uppercase())?.let { return it }
+        }
+        return null
     }
 
     /** Items nobody knows a platform for get a suggestion from how they are launched. */

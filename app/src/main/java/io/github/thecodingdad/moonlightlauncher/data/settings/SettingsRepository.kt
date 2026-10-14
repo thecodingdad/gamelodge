@@ -33,6 +33,10 @@ data class LauncherSettings(
     val cardSize: CardSize = CardSize.MEDIUM,
     val reduceMotion: Boolean = false,
     val animatedArtwork: Boolean = true,
+    /** Animated covers on tiles: only the focused one (controller) or all visible ones. */
+    val animatedTilesAlways: Boolean = false,
+    /** Animated artwork of games matched before it was switched on has been looked up. */
+    val animatedBackfillDone: Boolean = false,
     val showHaRowOnHome: Boolean = true,
     /** Order of the start tab rows (filter ids, "ha" for the smart home row); empty = filter order. */
     val homeRowOrder: List<String> = emptyList(),
@@ -122,6 +126,8 @@ class SettingsRepository(context: Context) {
         val cardSize = stringPreferencesKey("card_size")
         val reduceMotion = booleanPreferencesKey("reduce_motion")
         val animatedArtwork = booleanPreferencesKey("animated_artwork")
+        val animatedTilesAlways = booleanPreferencesKey("animated_tiles_always")
+        val animatedBackfillDone = booleanPreferencesKey("animated_backfill_done")
         val showHaRowOnHome = booleanPreferencesKey("show_ha_row_on_home")
         val homeRowOrder = stringPreferencesKey("home_row_order")
         val buttonLayout = stringPreferencesKey("button_layout")
@@ -188,6 +194,8 @@ class SettingsRepository(context: Context) {
             cardSize = enumOr(this[K.cardSize], d.cardSize),
             reduceMotion = this[K.reduceMotion] ?: d.reduceMotion,
             animatedArtwork = this[K.animatedArtwork] ?: d.animatedArtwork,
+            animatedTilesAlways = this[K.animatedTilesAlways] ?: d.animatedTilesAlways,
+            animatedBackfillDone = this[K.animatedBackfillDone] ?: d.animatedBackfillDone,
             showHaRowOnHome = this[K.showHaRowOnHome] ?: d.showHaRowOnHome,
             homeRowOrder = this[K.homeRowOrder]?.split(',')?.filter { it.isNotEmpty() } ?: d.homeRowOrder,
             buttonLayout = enumOr(this[K.buttonLayout], d.buttonLayout),
@@ -247,6 +255,8 @@ class SettingsRepository(context: Context) {
         this[K.cardSize] = s.cardSize.name
         this[K.reduceMotion] = s.reduceMotion
         this[K.animatedArtwork] = s.animatedArtwork
+        this[K.animatedTilesAlways] = s.animatedTilesAlways
+        this[K.animatedBackfillDone] = s.animatedBackfillDone
         this[K.showHaRowOnHome] = s.showHaRowOnHome
         this[K.homeRowOrder] = s.homeRowOrder.joinToString(",")
         this[K.buttonLayout] = s.buttonLayout.name

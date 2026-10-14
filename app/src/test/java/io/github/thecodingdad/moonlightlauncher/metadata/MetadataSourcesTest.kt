@@ -9,26 +9,23 @@ class MetadataSourcesTest {
     private val companion = PairedServer("c1", PairedServer.KIND_COMPANION, "PC", "https://pc:47910", "BB", hostId = "H")
 
     private fun ids(stored: List<String>, sgdb: Boolean = true, igdb: Boolean = true) =
-        MetadataSources.store(MetadataSources.resolve(stored, listOf(server, companion), sgdb, igdb))
+        MetadataSources.resolve(stored, listOf(companion, server), sgdb, igdb).map { if (it.enabled) it.id else "!${it.id}" }
 
     @Test
-    fun `nothing stored lists every configured source`() {
-        assertEquals(listOf("server:s1", "companion:c1", "sgdb", "igdb"), ids(emptyList()))
-        assertEquals(listOf("server:s1", "companion:c1"), ids(emptyList(), sgdb = false, igdb = false))
+    fun `own keys first, then servers, then companions`() {
+        assertEquals(listOf("sgdb", "igdb", "server:s1", "companion:c1"), ids(emptyList()))
+        assertEquals(listOf("server:s1", "companion:c1"), ids(listOf("igdb", "sgdb"), sgdb = false, igdb = false))
     }
 
     @Test
-    fun `stored order and switched off sources are kept`() {
-        assertEquals(listOf("igdb", "!companion:c1", "sgdb", "server:s1"), ids(listOf("igdb", "!companion:c1", "sgdb", "server:s1")))
+    fun `switched off sources are remembered, also from the first version`() {
+        assertEquals(listOf("sgdb", "igdb", "server:s1", "!companion:c1"), ids(listOf("igdb", "!companion:c1", "sgdb")))
+        assertEquals(listOf("!sgdb", "!igdb", "server:s1", "companion:c1"), ids(listOf("!own", "companion", "server")))
     }
 
     @Test
-    fun `sources no longer configured drop out and new ones are appended`() {
-        assertEquals(listOf("sgdb", "server:s1", "companion:c1"), ids(listOf("sgdb", "server:gone", "igdb"), igdb = false))
-    }
-
-    @Test
-    fun `ids of the first version are expanded`() {
-        assertEquals(listOf("!sgdb", "!igdb", "companion:c1", "server:s1"), ids(listOf("!own", "companion", "server")))
+    fun `switching keeps only the off markers`() {
+        assertEquals(listOf("!server:s1"), MetadataSources.set(listOf("sgdb", "server:s1", "own"), "server:s1", false))
+        assertEquals(emptyList<String>(), MetadataSources.set(listOf("!server:s1"), "server:s1", true))
     }
 }

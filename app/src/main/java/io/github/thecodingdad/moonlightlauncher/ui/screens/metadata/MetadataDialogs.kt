@@ -44,7 +44,12 @@ import io.github.thecodingdad.moonlightlauncher.container
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryItemEntity
 import io.github.thecodingdad.moonlightlauncher.metadata.ArtworkKind
 import io.github.thecodingdad.moonlightlauncher.metadata.MetadataCandidate
+import io.github.thecodingdad.moonlightlauncher.metadata.ArtworkOption
+import io.github.thecodingdad.moonlightlauncher.metadata.ArtworkSource
 import io.github.thecodingdad.moonlightlauncher.metadata.SgdbAsset
+import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import io.github.thecodingdad.moonlightlauncher.ui.components.ArtworkImage
 import io.github.thecodingdad.moonlightlauncher.ui.components.ButtonHint
 import io.github.thecodingdad.moonlightlauncher.ui.components.ButtonHintBar
@@ -115,68 +120,123 @@ fun FixMetadataDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
     }
 }
 
-/** Choose cover, background or logo from SteamGridDB alternatives (L1/R1 switches kind). */
+/**
+ * Choose cover, background, logo or icon (L1/R1 switches kind): the current image on top with
+ * "back to automatic", below everything the sources offer (companion, IGDB, SteamGridDB).
+ */
 @Composable
 fun ArtworkPickerDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
     val metadata = LocalContext.current.container.metadata
     val scope = rememberCoroutineScope()
     Modal(visible = item != null, onDismiss = onDismiss, title = stringResource(R.string.artwork_title), maxWidth = 1000.dp) {
         val target = item ?: return@Modal
-        val kinds = listOf(ArtworkKind.COVER, ArtworkKind.HERO, ArtworkKind.LOGO)
+        val kinds = ArtworkKind.entries
         var kindIndex by remember(target.id) { mutableStateOf(0) }
         val kind = kinds[kindIndex]
-        var options by remember(target.id, kind) { mutableStateOf<List<SgdbAsset>?>(null) }
+        var options by remember(target.id, kind) { mutableStateOf<List<ArtworkOption>?>(null) }
         LaunchedEffect(target.id, kind) { options = runCatching { metadata.artworkOptions(target, kind) }.getOrDefault(emptyList()) }
         PadAction(PadButton.L1) { kindIndex = (kindIndex - 1).mod(kinds.size) }
         PadAction(PadButton.R1) { kindIndex = (kindIndex + 1).mod(kinds.size) }
-
-        io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 10.dp) {
-            kinds.forEachIndexed { index, k ->
-                io.github.thecodingdad.moonlightlauncher.ui.screens.library.Chip(
-                    stringResource(
-                        when (k) {
-                            ArtworkKind.COVER -> R.string.artwork_cover
-                            ArtworkKind.HERO -> R.string.artwork_hero
-                            ArtworkKind.LOGO -> R.string.artwork_logo
-                            ArtworkKind.ICON -> R.string.artwork_logo
-                        },
-                    ),
-                    selected = index == kindIndex,
-                    onClick = { kindIndex = index },
-                )
-            }
+        val wide = kind == ArtworkKind.HERO
+        val square = kind == ArtworkKind.LOGO || kind == ArtworkKind.ICON
+        val ratio = when (kind) {
+            ArtworkKind.COVER -> 2f / 3f
+            ArtworkKind.HERO -> 1920f / 620f
+            ArtworkKind.LOGO -> 5f / 2f
+            ArtworkKind.ICON -> 1f
         }
-        Spacer(Modifier.height(14.dp))
-        val list = options
-        when {
-            !metadata.sgdb.isConfigured -> Text(stringResource(R.string.metadata_sgdb_required), color = LauncherTheme.colors.onSurfaceMuted)
-            list == null -> CircularProgressIndicator(color = LauncherTheme.colors.accent)
-            list.isEmpty() -> Text(stringResource(R.string.metadata_no_results), color = LauncherTheme.colors.onSurfaceMuted)
-            else -> LazyVerticalGrid(
-                columns = GridCells.Adaptive(if (kind == ArtworkKind.COVER) 120.dp else 260.dp),
-                modifier = Modifier.heightIn(max = 380.dp),
-                contentPadding = PaddingValues(4.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                items(list, key = { a -> a.id }) { asset ->
-                    FocusSurface(
-                        onClick = { scope.launch { metadata.setArtwork(target.id, kind, asset); onDismiss() } },
-                        modifier = Modifier.fillMaxWidth().aspectRatio(if (kind == ArtworkKind.COVER) 2f / 3f else 1920f / 620f),
-                        color = LauncherTheme.colors.surfaceRaised,
-                    ) {
-                        ArtworkImage(
-                            asset.thumb ?: asset.url, target.title, Modifier.padding(if (kind == ArtworkKind.LOGO) 12.dp else 0.dp),
-                            contentScale = if (kind == ArtworkKind.LOGO) ContentScale.Fit else ContentScale.Crop,
-                            showTitleOnPlaceholder = false,
+
+        Column(Modifier.verticalScroll(rememberScrollState())) {
+            io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 10.dp) {
+                kinds.forEachIndexed { index, k ->
+                    io.github.thecodingdad.moonlightlauncher.ui.screens.library.Chip(kindLabel(k), selected = index == kindIndex, onClick = { kindIndex = index })
+                }
+            }
+            Spacer(Modifier.height(14.dp))
+            // The current image (and its animated variant), picked by hand or automatic.
+            val (current, moving) = when (kind) {
+                ArtworkKind.COVER -> target.coverUrl to target.animatedCoverUrl
+                ArtworkKind.HERO -> target.heroUrl to target.animatedHeroUrl
+                ArtworkKind.LOGO -> target.logoUrl to null
+                ArtworkKind.ICON -> target.iconUrl to null
+            }
+            val manual = kind.field in target.manual
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                listOfNotNull(current, moving).forEach { url ->
+                    ArtworkImage(
+                        url, target.title,
+                        Modifier.height(if (wide) 90.dp else 120.dp).aspectRatio(ratio).clip(RoundedCornerShape(8.dp)),
+                        contentScale = if (square) ContentScale.Fit else ContentScale.Crop, showTitleOnPlaceholder = false,
+                    )
+                }
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        stringResource(if (manual) R.string.artwork_manual else R.string.artwork_auto),
+                        style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted,
+                    )
+                    if (manual) {
+                        io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton(
+                            stringResource(R.string.artwork_reset_auto), icon = androidx.compose.material.icons.Icons.Filled.Restore,
+                            onClick = { scope.launch { metadata.resetArtwork(target.id, kind); onDismiss() } },
                         )
                     }
                 }
             }
+            Spacer(Modifier.height(14.dp))
+            val list = options
+            when {
+                !metadata.isConfigured && list.isNullOrEmpty() -> Text(stringResource(R.string.metadata_not_configured), color = LauncherTheme.colors.onSurfaceMuted)
+                list == null -> CircularProgressIndicator(color = LauncherTheme.colors.accent)
+                list.isEmpty() -> Text(stringResource(R.string.metadata_no_results), color = LauncherTheme.colors.onSurfaceMuted)
+                else -> LazyVerticalGrid(
+                    columns = GridCells.Adaptive(if (wide) 260.dp else if (square) 150.dp else 120.dp),
+                    modifier = Modifier.heightIn(max = 380.dp),
+                    contentPadding = PaddingValues(4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    items(list, key = { o -> o.url }) { option ->
+                        FocusSurface(
+                            onClick = { scope.launch { metadata.setArtwork(target.id, kind, option); onDismiss() } },
+                            modifier = Modifier.fillMaxWidth().aspectRatio(ratio),
+                            color = LauncherTheme.colors.surfaceRaised,
+                        ) {
+                            ArtworkImage(
+                                option.thumb, target.title, Modifier.padding(if (square) 12.dp else 0.dp),
+                                contentScale = if (square) ContentScale.Fit else ContentScale.Crop,
+                                showTitleOnPlaceholder = false,
+                            )
+                            Text(
+                                listOfNotNull(sourceLabel(option.source), stringResource(R.string.artwork_animated).takeIf { option.animated }).joinToString(" · "),
+                                style = MaterialTheme.typography.labelSmall, color = androidx.compose.ui.graphics.Color.White,
+                                modifier = Modifier.align(Alignment.BottomStart).padding(6.dp)
+                                    .background(androidx.compose.ui.graphics.Color(0x99000000), RoundedCornerShape(6.dp)).padding(horizontal = 6.dp, vertical = 2.dp),
+                            )
+                        }
+                    }
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+            ButtonHintBar(listOf(ButtonHint(PadButton.L1, stringResource(R.string.artwork_switch_kind)), ButtonHint(PadButton.B, stringResource(R.string.action_close), onClick = onDismiss)))
         }
-        Spacer(Modifier.height(8.dp))
-        ButtonHintBar(listOf(ButtonHint(PadButton.L1, stringResource(R.string.artwork_switch_kind)), ButtonHint(PadButton.B, stringResource(R.string.action_close), onClick = onDismiss)))
     }
+}
+
+@Composable
+private fun kindLabel(kind: ArtworkKind) = stringResource(
+    when (kind) {
+        ArtworkKind.COVER -> R.string.artwork_cover
+        ArtworkKind.HERO -> R.string.artwork_hero
+        ArtworkKind.LOGO -> R.string.artwork_logo
+        ArtworkKind.ICON -> R.string.artwork_icon
+    },
+)
+
+@Composable
+private fun sourceLabel(source: ArtworkSource) = when (source) {
+    ArtworkSource.COMPANION -> stringResource(R.string.metadata_source_companion)
+    ArtworkSource.IGDB -> "IGDB"
+    ArtworkSource.STEAMGRIDDB -> "SteamGridDB"
 }
 
 /** Detail page: confirm a match that is waiting for review. */

@@ -42,12 +42,21 @@ data class MetadataCandidate(
 
 data class MetadataProgress(val done: Int, val total: Int)
 
-enum class ArtworkKind { COVER, HERO, LOGO, ICON }
+enum class ArtworkKind(val field: MetaField) { COVER(MetaField.COVER), HERO(MetaField.HERO), LOGO(MetaField.LOGO), ICON(MetaField.ICON) }
+
+/** Where an image to choose from comes from. */
+enum class ArtworkSource { COMPANION, IGDB, STEAMGRIDDB }
+
+/** One image in the picker: [url] is stored, [thumb] previewed. */
+data class ArtworkOption(val url: String, val thumb: String, val source: ArtworkSource, val animated: Boolean = false)
 
 /**
- * Looks up descriptions (IGDB) and artwork (SteamGridDB) for games. Confident matches are
- * applied automatically; uncertain ones are applied but flagged REVIEW; manual choices are
- * LOCKED and never touched again.
+ * Looks up descriptions (IGDB) and artwork (IGDB, SteamGridDB) for games. Confident matches are
+ * applied automatically; uncertain ones are applied but flagged REVIEW; a hand-picked match is
+ * LOCKED, hand-edited fields and images (manual) are never touched again. Order per field:
+ * texts IGDB; cover IGDB, then SteamGridDB; background SteamGridDB, then IGDB; logo and icon
+ * SteamGridDB; animated cover / background SteamGridDB (only while switched on). Host games
+ * get all of it from their companion, which also takes the store's data first.
  */
 class MetadataService(
     private val db: LauncherDatabase,
@@ -57,11 +66,17 @@ class MetadataService(
     private val scope: CoroutineScope,
     private val servers: io.github.thecodingdad.moonlightlauncher.data.companion.ServerRepository? = null,
 ) {
-    /** Called after a hand correction (the library sends it on to the host's companion). */
-    var onCorrected: (suspend (itemId: String) -> Unit)? = null
+    /**
+     * Called after a hand correction (the library sends it on to the host's companion);
+     * [reset] names the fields handed back to automatic (HostGameCorrection.reset).
+     */
+    var onCorrected: (suspend (itemId: String, reset: List<String>) -> Unit)? = null
 
-    private suspend fun corrected(itemId: String) {
-        runCatching { onCorrected?.invoke(itemId) }.onFailure { Log.w("Correction not passed on", it) }
+    /** The host game behind an item, when its companion delivers it (images to choose from). */
+    var companionGame: (suspend (itemId: String) -> io.github.thecodingdad.moonlightlauncher.data.companion.HostGame?)? = null
+
+    private suspend fun corrected(itemId: String, reset: List<String> = emptyList()) {
+        runCatching { onCorrected?.invoke(itemId, reset) }.onFailure { Log.w("Correction not passed on", it) }
     }
 
     private val dao = db.libraryDao()
@@ -75,8 +90,18 @@ class MetadataService(
 
     @Volatile private var sources: List<String> = io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings().metadataSources
 
+    /** Animated artwork is wanted (Display settings): only then it is looked up. */
+    @Volatile private var animated: Boolean = true
+
     init {
-        scope.launch { settings.settings.collect { sources = it.metadataSources } }
+        scope.launch {
+            settings.settings.collect {
+                sources = it.metadataSources
+                val switchedOn = it.animatedArtwork && !animated
+                animated = it.animatedArtwork
+                if (switchedOn && !it.animatedBackfillDone) launch(Dispatchers.IO) { backfillAnimated() }
+            }
+        }
     }
 
     /** Configured sources in the user's order (see [MetadataSources]). */
@@ -129,6 +154,7 @@ class MetadataService(
             runCatching { backfillPlatforms() }.onFailure { Log.w("Platform backfill failed", it) }
             runCatching { backfillDetails() }.onFailure { Log.w("Metadata details backfill failed", it) }
             runCatching { fillArtworkGaps() }.onFailure { Log.w("Artwork gap fill failed", it) }
+            runCatching { backfillAnimated() }.onFailure { Log.w("Animated artwork backfill failed", it) }
             // Also catches games matched before IGDB keys were entered.
             refreshPending()
         }
@@ -399,19 +425,54 @@ class MetadataService(
         corrected(itemId)
     }
 
-    /** Alternative images for the artwork picker. */
-    suspend fun artworkOptions(item: LibraryItemEntity, kind: ArtworkKind): List<SgdbAsset> = withContext(Dispatchers.IO) {
-        if (!sgdb.isConfigured) return@withContext emptyList()
-        val gameId = item.sgdbId ?: sgdb.search(searchQuery(item)).firstOrNull()?.id ?: return@withContext emptyList()
-        val type = when (kind) {
-            ArtworkKind.COVER -> SgdbAssetType.GRID
-            ArtworkKind.HERO -> SgdbAssetType.HERO
-            ArtworkKind.LOGO -> SgdbAssetType.LOGO
-            ArtworkKind.ICON -> SgdbAssetType.ICON
+    /**
+     * Everything to choose from for one kind of image: the companion's (host games), IGDB's
+     * (cover; artworks and screenshots as background) and SteamGridDB's (animated ones for cover
+     * and background while animated artwork is switched on).
+     */
+    suspend fun artworkOptions(item: LibraryItemEntity, kind: ArtworkKind): List<ArtworkOption> = withContext(Dispatchers.IO) {
+        val result = mutableListOf<ArtworkOption>()
+        runCatching { companionGame?.invoke(item.id) }.getOrNull()?.let { game ->
+            val (still, moving) = when (kind) {
+                ArtworkKind.COVER -> game.cover to game.animatedCover
+                ArtworkKind.HERO -> game.hero to game.animatedHero
+                ArtworkKind.LOGO -> game.logo to null
+                ArtworkKind.ICON -> game.icon to null
+            }
+            still?.takeIf { it.startsWith("https://") }?.let { result += ArtworkOption(it, it, ArtworkSource.COMPANION) }
+            moving?.takeIf { animated && it.startsWith("https://") }?.let { result += ArtworkOption(it, it, ArtworkSource.COMPANION, animated = true) }
         }
-        sgdb.assets(gameId, type) + if (kind == ArtworkKind.COVER || kind == ArtworkKind.HERO) {
-            sgdb.assets(gameId, type, animated = true).filter { it.isPlayableAnimation }
-        } else emptyList()
+        if (igdb.isConfigured && (kind == ArtworkKind.COVER || kind == ArtworkKind.HERO)) {
+            runCatching { item.igdbId?.let { igdb.byId(it) } ?: igdb.search(searchQuery(item), limit = 1).firstOrNull() }.getOrNull()?.let { game ->
+                if (kind == ArtworkKind.COVER) game.coverUrl?.let { result += ArtworkOption(it, it.replace("t_cover_big_2x", "t_cover_big"), ArtworkSource.IGDB) }
+                else (game.artworks + game.screenshots).mapNotNull { it.image_id?.takeIf { id -> id.isNotEmpty() } }.forEach { id ->
+                    result += ArtworkOption(
+                        "https://images.igdb.com/igdb/image/upload/t_1080p/$id.jpg",
+                        "https://images.igdb.com/igdb/image/upload/t_screenshot_med/$id.jpg", ArtworkSource.IGDB,
+                    )
+                }
+            }
+        }
+        if (sgdb.isConfigured) {
+            runCatching {
+                val gameId = item.sgdbId ?: sgdb.search(searchQuery(item)).firstOrNull()?.id ?: return@runCatching
+                val type = when (kind) {
+                    ArtworkKind.COVER -> SgdbAssetType.GRID
+                    ArtworkKind.HERO -> SgdbAssetType.HERO
+                    ArtworkKind.LOGO -> SgdbAssetType.LOGO
+                    ArtworkKind.ICON -> SgdbAssetType.ICON
+                }
+                sgdb.assets(gameId, type).forEach { result += ArtworkOption(it.url, it.thumb ?: it.url, ArtworkSource.STEAMGRIDDB) }
+                if (animated && (kind == ArtworkKind.COVER || kind == ArtworkKind.HERO)) {
+                    sgdb.assets(gameId, type, animated = true).filter { it.isPlayableAnimation }
+                        .forEach { result += ArtworkOption(it.url, it.thumb ?: it.url, ArtworkSource.STEAMGRIDDB, animated = true) }
+                }
+            }.onFailure { Log.w("SteamGridDB artwork for ${item.title} failed", it) }
+        }
+        // In the order of the sources for this kind (background: SteamGridDB before IGDB).
+        val rank = if (kind == ArtworkKind.HERO) listOf(ArtworkSource.COMPANION, ArtworkSource.STEAMGRIDDB, ArtworkSource.IGDB)
+        else listOf(ArtworkSource.COMPANION, ArtworkSource.IGDB, ArtworkSource.STEAMGRIDDB)
+        result.distinctBy { it.url }.sortedBy { rank.indexOf(it.source) }
     }
 
     /** Landscape SteamGridDB grids for an app's start tab tile. */
@@ -431,17 +492,46 @@ class MetadataService(
         dao.upsertItem(item.copy(tileUrl = url))
     }
 
-    suspend fun setArtwork(itemId: String, kind: ArtworkKind, asset: SgdbAsset) = withContext(Dispatchers.IO) {
+    /** A hand-picked image: protected against automatic changes and sent to the companion. */
+    suspend fun setArtwork(itemId: String, kind: ArtworkKind, option: ArtworkOption) = withContext(Dispatchers.IO) {
         val item = dao.getItem(itemId) ?: return@withContext
         val updated = when (kind) {
-            ArtworkKind.COVER -> if (asset.isAnimated) item.copy(animatedCoverUrl = asset.url) else item.copy(coverUrl = asset.url, animatedCoverUrl = null)
-            ArtworkKind.HERO -> if (asset.isAnimated) item.copy(animatedHeroUrl = asset.url) else item.copy(heroUrl = asset.url, animatedHeroUrl = null)
-            ArtworkKind.LOGO -> item.copy(logoUrl = asset.url)
-            ArtworkKind.ICON -> item.copy(iconUrl = asset.url)
+            ArtworkKind.COVER -> if (option.animated) item.copy(animatedCoverUrl = option.url) else item.copy(coverUrl = option.url)
+            ArtworkKind.HERO -> if (option.animated) item.copy(animatedHeroUrl = option.url) else item.copy(heroUrl = option.url)
+            ArtworkKind.LOGO -> item.copy(logoUrl = option.url)
+            ArtworkKind.ICON -> item.copy(iconUrl = option.url)
         }
-        dao.upsertItem(updated.copy(metadataState = MetadataState.LOCKED))
+        dao.upsertItem(updated.withManual(updated.manual + kind.field))
         corrected(itemId)
     }
+
+    /** Hands an image (with its animated variant) back to automatic: looked up again in the fixed order. */
+    suspend fun resetArtwork(itemId: String, kind: ArtworkKind) = withContext(Dispatchers.IO) {
+        val item = dao.getItem(itemId) ?: return@withContext
+        var auto = item.withManual(item.manual - kind.field).let {
+            when (kind) {
+                ArtworkKind.COVER -> it.copy(coverUrl = null, animatedCoverUrl = null)
+                ArtworkKind.HERO -> it.copy(heroUrl = null, animatedHeroUrl = null)
+                ArtworkKind.LOGO -> it.copy(logoUrl = null)
+                ArtworkKind.ICON -> it.copy(iconUrl = null)
+            }
+        }
+        runCatching {
+            item.igdbId?.takeIf { igdb.isConfigured }?.let { igdb.byId(it) }?.let { auto = auto.withIgdbArtwork(it) }
+            item.sgdbId?.takeIf { sgdb.isConfigured }?.let { auto = auto.withSgdbArtwork(it) }
+        }.onFailure { Log.w("Artwork for ${item.title} not looked up again", it) }
+        dao.upsertItem(auto)
+        val reset = when (kind) {
+            ArtworkKind.COVER -> listOf("cover", "animatedCover")
+            ArtworkKind.HERO -> listOf("hero", "animatedHero")
+            ArtworkKind.LOGO -> listOf("logo")
+            ArtworkKind.ICON -> listOf("icon")
+        }
+        corrected(itemId, reset)
+    }
+
+    private fun LibraryItemEntity.withManual(fields: Set<MetaField>) =
+        copy(manualFields = fields.joinToString(",") { it.name }.ifEmpty { null })
 
     /** Marks a REVIEW match as correct. */
     suspend fun confirm(itemId: String) = withContext(Dispatchers.IO) {
@@ -459,9 +549,16 @@ class MetadataService(
             releaseYear = if (MetaField.RELEASE in m) releaseYear else game.releaseYear,
             releaseDate = if (MetaField.RELEASE in m) releaseDate else game.releaseMillis,
             rating = if (MetaField.RATING in m) rating else game.total_rating?.toFloat(),
-            coverUrl = coverUrl ?: game.coverUrl,
-            heroUrl = heroUrl ?: game.heroUrl,
-        ).withIgdbDetails(game)
+        ).withIgdbArtwork(game).withIgdbDetails(game)
+    }
+
+    /** IGDB's cover comes first; its background only fills in (SteamGridDB's is preferred). */
+    private fun LibraryItemEntity.withIgdbArtwork(game: IgdbGame): LibraryItemEntity {
+        val m = manual
+        return copy(
+            coverUrl = if (MetaField.COVER in m) coverUrl else game.coverUrl ?: coverUrl,
+            heroUrl = if (MetaField.HERO in m) heroUrl else heroUrl ?: game.heroUrl,
+        )
     }
 
     /** The fields added in schema v3 (publisher, series, features, age ratings). */
@@ -506,31 +603,73 @@ class MetadataService(
                 MetaField.RELEASE -> unlocked.copy(releaseDate = null, releaseYear = null)
                 MetaField.RATING -> unlocked.copy(rating = null)
                 MetaField.AGE_RATING -> unlocked.copy(ageRatings = null)
+                // Images go through resetArtwork.
+                MetaField.COVER, MetaField.HERO, MetaField.LOGO, MetaField.ICON -> unlocked
                 MetaField.TITLE -> unlocked
             }
         }
         dao.upsertItem(restored)
-        corrected(itemId)
+        // The companion follows its automatic choice again too.
+        val name = when (field) {
+            MetaField.TITLE -> "name"
+            MetaField.DESCRIPTION -> "summary"
+            MetaField.GENRES -> "genres"
+            MetaField.DEVELOPER -> "developers"
+            MetaField.PUBLISHER -> "publishers"
+            MetaField.RELEASE -> "release"
+            else -> null
+        }
+        corrected(itemId, listOfNotNull(name))
     }
 
     private fun LibraryItemEntity.withSgdbArtwork(gameId: Long): LibraryItemEntity {
-        val grid = sgdb.assets(gameId, SgdbAssetType.GRID).firstOrNull { it.height > it.width }
-        val hero = sgdb.assets(gameId, SgdbAssetType.HERO).firstOrNull()
-        val logo = sgdb.assets(gameId, SgdbAssetType.LOGO).firstOrNull()
-        val icon = sgdb.assets(gameId, SgdbAssetType.ICON).firstOrNull()
-        val animatedGrid = sgdb.assets(gameId, SgdbAssetType.GRID, animated = true)
-            .firstOrNull { it.isPlayableAnimation && it.height > it.width }
-        val animatedHero = sgdb.assets(gameId, SgdbAssetType.HERO, animated = true).firstOrNull { it.isPlayableAnimation }
+        val m = manual
+        val grid = if (MetaField.COVER in m || coverUrl != null) null else sgdb.assets(gameId, SgdbAssetType.GRID).firstOrNull { it.height > it.width }
+        val hero = if (MetaField.HERO in m) null else sgdb.assets(gameId, SgdbAssetType.HERO).firstOrNull()
+        val logo = if (MetaField.LOGO in m) null else sgdb.assets(gameId, SgdbAssetType.LOGO).firstOrNull()
+        val icon = if (MetaField.ICON in m) null else sgdb.assets(gameId, SgdbAssetType.ICON).firstOrNull()
         return copy(
             sgdbId = gameId,
-            // SteamGridDB artwork is usually nicer than IGDB's, so it wins when present.
-            coverUrl = grid?.url ?: coverUrl,
+            // Cover: IGDB's first (SteamGridDB only fills in); background, logo, icon: SteamGridDB's.
+            coverUrl = coverUrl ?: grid?.url,
             heroUrl = hero?.url ?: heroUrl,
             logoUrl = logo?.url ?: logoUrl,
             iconUrl = icon?.url ?: iconUrl,
-            animatedCoverUrl = animatedGrid?.url,
-            animatedHeroUrl = animatedHero?.url,
-        )
+        ).withSgdbAnimated(gameId)
+    }
+
+    /** Animated cover and background from SteamGridDB, only while animated artwork is switched on. */
+    private fun LibraryItemEntity.withSgdbAnimated(gameId: Long): LibraryItemEntity {
+        if (!animated) return this
+        val m = manual
+        val grid = if (MetaField.COVER in m) null else sgdb.assets(gameId, SgdbAssetType.GRID, animated = true)
+            .firstOrNull { it.isPlayableAnimation && it.height > it.width }
+        val hero = if (MetaField.HERO in m) null else sgdb.assets(gameId, SgdbAssetType.HERO, animated = true).firstOrNull { it.isPlayableAnimation }
+        return copy(animatedCoverUrl = grid?.url ?: animatedCoverUrl, animatedHeroUrl = hero?.url ?: animatedHeroUrl)
+    }
+
+    /** Games matched while animated artwork was off: their animated cover / background once. */
+    private suspend fun backfillAnimated() {
+        val s = settings.current()
+        if (!s.animatedArtwork || s.animatedBackfillDone || !sgdb.isConfigured) return
+        val items = dao.observeAll().first().map { it.item }.filter {
+            it.kind == ItemKind.GAME && it.sgdbId != null && it.animatedCoverUrl == null && it.animatedHeroUrl == null
+        }
+        for (item in items) {
+            if (!animated) return
+            try {
+                val fresh = dao.getItem(item.id) ?: continue
+                val updated = fresh.withSgdbAnimated(fresh.sgdbId ?: continue)
+                if (updated != fresh) dao.upsertItem(updated)
+            } catch (e: MetadataAuthException) {
+                _lastError.value = e.message
+                return
+            } catch (e: Exception) {
+                Log.w("Animated artwork for ${item.title} failed", e)
+            }
+            delay(300)
+        }
+        settings.update { it.copy(animatedBackfillDone = true) }
     }
 
     /**

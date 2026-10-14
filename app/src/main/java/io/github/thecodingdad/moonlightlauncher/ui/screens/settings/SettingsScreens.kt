@@ -209,7 +209,15 @@ fun DisplaySettings(
             onSelect = { v -> update { it.copy(cardSize = v) } },
             initialFocus = true,
         )
-        SwitchRow(stringResource(R.string.setting_animated_artwork), settings.animatedArtwork, { v -> update { it.copy(animatedArtwork = v) } })
+        // Switched on again: games matched meanwhile get their animated artwork looked up.
+        SwitchRow(stringResource(R.string.setting_animated_artwork), settings.animatedArtwork, { v -> update { it.copy(animatedArtwork = v, animatedBackfillDone = it.animatedBackfillDone && v) } })
+        if (settings.animatedArtwork) {
+            ChoiceRow(
+                stringResource(R.string.setting_animated_tiles), listOf(false, true), settings.animatedTilesAlways,
+                label = { stringResource(if (it) R.string.setting_animated_tiles_always else R.string.setting_animated_tiles_focus) },
+                onSelect = { v -> update { it.copy(animatedTilesAlways = v) } },
+            )
+        }
         SwitchRow(stringResource(R.string.setting_reduce_motion), settings.reduceMotion, { v -> update { it.copy(reduceMotion = v) } })
         SliderRow(
             stringResource(R.string.setting_ui_scale), settings.uiScale, 60..130, 5,

@@ -74,7 +74,10 @@ class AppContainer(context: Context) {
         io.github.thecodingdad.moonlightlauncher.data.companion.ServerRepository(appContext, http, scope)
     }
     val metadata: MetadataService by lazy {
-        MetadataService(database, secrets, settings, http, scope, servers).also { it.onCorrected = { id -> library.pushCorrection(id) } }
+        MetadataService(database, secrets, settings, http, scope, servers).also {
+            it.onCorrected = { id, reset -> library.pushCorrection(id, reset) }
+            it.companionGame = { id -> library.companionGame(id) }
+        }
     }
 
     val haAuth: HaAuth by lazy { HaAuth(appContext, http, secrets) }

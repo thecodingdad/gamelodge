@@ -257,6 +257,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
             LocalEntryActions provides entryActions,
             LocalButtonLayout provides settings.buttonLayout,
             LocalBringIntoViewSpec provides scrollSpec,
+            io.github.thecodingdad.moonlightlauncher.ui.components.LocalAnimatedTilesAlways provides settings.animatedTilesAlways,
         ) {
             io.github.thecodingdad.moonlightlauncher.ui.input.RightStickScrollDriver()
             androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {

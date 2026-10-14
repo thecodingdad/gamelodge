@@ -59,7 +59,13 @@ fun Modifier.restoreFocusIf(shouldFocus: Boolean): Modifier {
     return this.focusRequester(requester)
 }
 
-/** Portrait game cover with source badges. */
+/** Animated covers on every visible tile, not only on the focused one (display settings). */
+val LocalAnimatedTilesAlways = androidx.compose.runtime.staticCompositionLocalOf { false }
+
+/**
+ * Portrait game cover with source badges. [animated]: animated covers are wanted; they play on
+ * the focused tile (controller; touch has no focus) or, if so set, on all.
+ */
 @Composable
 fun CoverCard(
     entry: LibraryEntry,
@@ -78,7 +84,8 @@ fun CoverCard(
             onFocused = onFocused,
             modifier = Modifier.fillMaxWidth().aspectRatio(2f / 3f),
         ) { focused ->
-            CoverImage(entry, Modifier.fillMaxSize(), animated = animated && focused)
+            val play = animated && (LocalAnimatedTilesAlways.current || (focused && isControllerMode()))
+            CoverImage(entry, Modifier.fillMaxSize(), animated = play)
             // Owned but not installed on the host: dimmed, playing it starts the installation.
             if (entry.notInstalled) Box(Modifier.fillMaxSize().background(Color(0x99000000)))
             SourceBadges(entry, Modifier.align(Alignment.TopEnd).padding(6.dp))

@@ -49,7 +49,6 @@ import io.github.thecodingdad.moonlightlauncher.ui.components.Modal
 import io.github.thecodingdad.moonlightlauncher.ui.components.TextKind
 import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.InfoRow
 import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.NavRow
-import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.ReorderableList
 import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.SectionHeader
 import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.SwitchRow
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
@@ -88,10 +87,7 @@ internal fun SourcesSection(stored: List<String>) {
     if (entries.isEmpty()) {
         Text(stringResource(R.string.metadata_sources_empty), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurface)
     }
-    ReorderableList(entries, id = { it.id }, onReorder = { ids ->
-        val byId = entries.associateBy { it.id }
-        container.scope.launch { container.settings.update { s -> s.copy(metadataSources = MetadataSources.store(ids.mapNotNull(byId::get))) } }
-    }) { _, entry ->
+    entries.forEach { entry ->
         val server = entry.server
         NavRow(
             sourceTitle(entry, hosts),
@@ -173,21 +169,10 @@ private fun companionTarget(host: HostState?) = PairTarget(
     host?.name,
 )
 
-/** Puts the newly configured source [entry] at the end of the order. */
-private suspend fun appendSource(container: io.github.thecodingdad.moonlightlauncher.AppContainer, entry: MetadataSources.Entry) {
-    container.settings.update { s ->
-        s.copy(metadataSources = MetadataSources.store(resolve(container, s.metadataSources).filterNot { it.id == entry.id } + entry))
-    }
-}
-
-/** Changes the stored order: switches [id] on/off, or drops it (removed). */
+/** Switches [id] on or off, or forgets it (null: removed). */
 private fun storeSource(container: io.github.thecodingdad.moonlightlauncher.AppContainer, id: String, enabled: Boolean?) {
     container.scope.launch {
-        container.settings.update { s ->
-            val entries = resolve(container, s.metadataSources)
-            val next = if (enabled == null) entries.filterNot { it.id == id } else entries.map { if (it.id == id) it.copy(enabled = enabled) else it }
-            s.copy(metadataSources = MetadataSources.store(next))
-        }
+        container.settings.update { s -> s.copy(metadataSources = MetadataSources.set(s.metadataSources, id, enabled)) }
         container.metadata.refreshPending()
     }
 }
@@ -292,7 +277,6 @@ private fun KeySourceDialog(id: String, entry: MetadataSources.Entry?, onChanged
                     secrets.put(SecretStore.Keys.IGDB_CLIENT_SECRET, second.trim())
                     secrets.put(SecretStore.Keys.IGDB_ACCESS_TOKEN, null)
                 }
-                if (entry == null) container.scope.launch { appendSource(container, MetadataSources.Entry(id, true)) }
                 saved++
                 onChanged()
                 metadata.refreshPending()
@@ -360,7 +344,6 @@ internal fun PairDialog(target: PairTarget, onDismiss: () -> Unit) {
                                 val server = repo.pair(url) { pin -> state = PairState.ShowPin(pin) }
                                 if (server.kind != target.kind) PairState.Failed(R.string.servers_error_kind).also { repo.remove(server.id) }
                                 else {
-                                    appendSource(container, MetadataSources.Entry(MetadataSources.idOf(server), true, server))
                                     // The host's games get the companion's data right away.
                                     server.hostId?.let { hostId -> launch { container.library.resyncHost(hostId.uppercase()) } }
                                     PairState.Done(server)

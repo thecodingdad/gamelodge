@@ -3,10 +3,9 @@ package io.github.thecodingdad.moonlightlauncher.metadata
 import io.github.thecodingdad.moonlightlauncher.data.companion.PairedServer
 
 /**
- * The configured metadata sources in the user's order. Stored as ids in the settings
- * ("sgdb", "igdb", "server:<id>", "companion:<id>"; a leading "!" means switched off). Only
- * sources that are still configured count; configured ones missing from the stored order (an
- * older launcher, or added elsewhere) are appended.
+ * The configured ways to SteamGridDB / IGDB in their fixed order: own keys first (shortest
+ * way), then paired metadata servers, then companions. The settings only remember which are
+ * switched off ("!sgdb", "!server:<id>", "!companion:<id>").
  */
 object MetadataSources {
     const val SGDB = "sgdb"
@@ -19,33 +18,23 @@ object MetadataSources {
     fun idOf(server: PairedServer): String = (if (server.isCompanion) COMPANION else SERVER) + server.id
 
     fun resolve(stored: List<String>, servers: List<PairedServer>, hasSgdb: Boolean, hasIgdb: Boolean): List<Entry> {
-        val byId = servers.associateBy(::idOf)
-        val result = LinkedHashMap<String, Entry>()
-        fun add(id: String, enabled: Boolean) {
-            if (id in result) return
-            when {
-                id == SGDB -> if (hasSgdb) result[id] = Entry(id, enabled)
-                id == IGDB -> if (hasIgdb) result[id] = Entry(id, enabled)
-                else -> byId[id]?.let { result[id] = Entry(id, enabled, it) }
-            }
+        val off = stored.filter { it.startsWith("!") }.map { it.removePrefix("!") }.toSet()
+        // Older versions stored an order; "!own" switched both own keys off.
+        val ownOff = "own" in off
+        fun entry(id: String, server: PairedServer? = null) = Entry(id, id !in off && !(server == null && ownOff), server)
+        return buildList {
+            if (hasSgdb) add(entry(SGDB))
+            if (hasIgdb) add(entry(IGDB))
+            servers.filter { !it.isCompanion }.forEach { add(entry(idOf(it), it)) }
+            servers.filter { it.isCompanion }.forEach { add(entry(idOf(it), it)) }
         }
-        for (raw in stored) {
-            val enabled = !raw.startsWith("!")
-            when (val id = raw.removePrefix("!")) {
-                // Ids of the first version: one entry per kind.
-                "own" -> { add(SGDB, enabled); add(IGDB, enabled) }
-                "server" -> servers.filter { !it.isCompanion }.forEach { add(idOf(it), enabled) }
-                "companion" -> servers.filter { it.isCompanion }.forEach { add(idOf(it), enabled) }
-                else -> add(id, enabled)
-            }
-        }
-        servers.filter { !it.isCompanion }.forEach { add(idOf(it), true) }
-        servers.filter { it.isCompanion }.forEach { add(idOf(it), true) }
-        add(SGDB, true)
-        add(IGDB, true)
-        return result.values.toList()
     }
 
-    /** What to store for [entries]. */
-    fun store(entries: List<Entry>): List<String> = entries.map { if (it.enabled) it.id else "!${it.id}" }
+    /** [stored] with [id] switched on or off, or forgotten (null: removed); only off markers are kept. */
+    fun set(stored: List<String>, id: String, enabled: Boolean?): List<String> {
+        val off = stored.filter { it.startsWith("!") }.map { it.removePrefix("!") }
+            .flatMap { if (it == "own") listOf(SGDB, IGDB) else listOf(it) }
+            .filter { it != id && it != "server" && it != "companion" }.distinct()
+        return off.map { "!$it" } + listOfNotNull("!$id".takeIf { enabled == false })
+    }
 }
