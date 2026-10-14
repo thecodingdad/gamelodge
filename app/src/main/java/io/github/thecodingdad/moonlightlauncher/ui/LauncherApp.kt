@@ -760,6 +760,16 @@ private fun ShellTopBar(
         }
         val centreHole = cutout.position == io.github.thecodingdad.moonlightlauncher.ui.shell.TopCutout.Position.CENTER
         if (onBack != null) {
+            // Landscape: the tabs set the bar's height on the main screens; an invisible stand-in
+            // (height only, no width, not placed) keeps it identical here.
+            if (!compact) {
+                Box(
+                    Modifier.layout { measurable, constraints ->
+                        val placeable = measurable.measure(constraints.copy(minWidth = 0, maxWidth = androidx.compose.ui.unit.Constraints.Infinity))
+                        layout(0, placeable.height) {}
+                    },
+                ) { TabChip(stringResource(MainTab.HOME.title), selected = false, onClick = {}) }
+            }
             BackButton(onBack)
             // The back button takes the left half: with a centre hole only battery and clock fit.
             Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) { status(false, centreHole) }
