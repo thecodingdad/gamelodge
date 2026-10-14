@@ -57,7 +57,6 @@ fun AboutSettings(openLicenses: () -> Unit) {
     var showing by remember { mutableStateOf<LicenseText?>(null) }
     SettingsPage(stringResource(R.string.settings_about)) {
         InfoRow(stringResource(R.string.launcher_name), BuildConfig.VERSION_NAME)
-        InfoRow(stringResource(R.string.about_streaming), "Artemis / Moonlight")
         NavRow(
             stringResource(R.string.about_license), { showing = LicenseText("GNU General Public License v3.0", "gpl-3.0") },
             icon = Icons.Filled.Gavel, trailing = "GPLv3",
