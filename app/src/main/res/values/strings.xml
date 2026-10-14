@@ -219,7 +219,7 @@
 
     <!-- Metadata -->
     <string name="metadata_fix_title">Fix match</string>
-    <string name="metadata_not_configured">Add a SteamGridDB API key or IGDB credentials under Settings → Library &amp; artwork first.</string>
+    <string name="metadata_not_configured">Add a SteamGridDB API key or IGDB credentials under Settings → Metadata &amp; artwork first.</string>
     <string name="metadata_no_results">No results.</string>
     <string name="metadata_sgdb_required">Artwork selection needs a SteamGridDB API key.</string>
     <string name="artwork_title">Change artwork</string>
@@ -259,7 +259,7 @@
     <string name="profile_essentials">Most important</string>
     <string name="launcher_intro">Use Moonlight Launcher as your home screen. You can switch back at any time; the app keeps working as a normal app too.</string>
     <string name="launcher_enable">Use as home screen</string>
-    <string name="launcher_enable_sub">Shows up as a launcher choice; Android asks to make it the default</string>
+    <string name="launcher_enable_sub">Shows whether the launcher is the default home app; turning it on opens Android\'s choice</string>
     <string name="launcher_system_settings">Android home screen settings</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
@@ -382,7 +382,7 @@
     <string name="qm_quit_game">Quit game</string>
 
     <!-- Backup -->
-    <string name="backup_intro">Saves settings, stream profiles, host settings, favourites, collections, corrected metadata and smart home tiles. Pairing with hosts is not included; on a new device pair the hosts first.</string>
+    <string name="backup_intro">Saves settings, stream profiles, host settings, favourites, filters and groups, corrected metadata and smart home tiles. Pairing with hosts is not included; on a new device pair the hosts first.</string>
     <string name="backup_restore_hint">Before restoring, pair all hosts under Settings → Hosts and wait until their games appear. Favourites, play time and metadata are only applied to games already in the library.</string>
     <string name="backup_folder">Backup folder</string>
     <string name="backup_auto">Daily automatic backup</string>
@@ -581,7 +581,7 @@
 
     <!-- Free filters -->
     <string name="filter_conditions">Conditions</string>
-    <string name="filter_conditions_help">A game is shown when all conditions apply.</string>
+    <string name="filter_conditions_help">An entry is shown when all conditions apply.</string>
     <string name="filter_condition">Condition</string>
     <string name="filter_condition_add">Add condition</string>
     <string name="filter_condition_delete">Remove condition</string>
@@ -622,7 +622,7 @@
     <string name="qt_dnd">Do not disturb</string>
     <string name="settings_quick_menu">Quick menu</string>
     <string name="settings_quick_menu_sub">Tiles, order, app shortcuts</string>
-    <string name="qt_settings_help">The tiles appear in this order in the quick settings (Y). Drag the handle to move a tile.</string>
+    <string name="qt_settings_help">The tiles appear in this order in the quick menu (Y) under “Quick settings”. Drag the handle to move a tile.</string>
     <string name="qt_add">Add tile</string>
     <string name="qt_remove">Remove</string>
     <string name="qt_reset">Reset to defaults</string>
@@ -634,7 +634,7 @@
     <string name="combo_home">Android Home</string>
     <string name="combo_home_sub">Acts like the Home button</string>
     <string name="combo_quick_menu">Open quick menu</string>
-    <string name="combo_quick_menu_sub">Opens the sidebar</string>
+    <string name="combo_quick_menu_sub">Opens the quick menu</string>
     <string name="combo_service">System-wide (accessibility)</string>
     <string name="combo_service_sub">Enable \"Moonlight Launcher combos\" in the accessibility settings so the combinations also work in other apps and in the stream</string>
     <string name="combo_service_on">On</string>
@@ -709,11 +709,11 @@
     <string name="filter_mode">Mode</string>
     <string name="filter_mode_include">Include</string>
     <string name="filter_mode_exclude">Exclude</string>
-    <string name="filter_mode_include_sub">Games with one of the chosen values</string>
-    <string name="filter_mode_exclude_sub">Games without the chosen values</string>
+    <string name="filter_mode_include_sub">Entries with one of the chosen values</string>
+    <string name="filter_mode_exclude_sub">Entries without the chosen values</string>
     <string name="filter_match_all">All chosen values</string>
     <string name="filter_match_all_sub">Every chosen value must apply instead of one of them</string>
-    <string name="filter_name_help">Games whose name contains the text</string>
+    <string name="filter_name_help">Entries whose name contains the text</string>
     <string name="filter_name_add">Add text</string>
     <string name="filter_values_and">" and "</string>
     <string name="filter_never">Never</string>
@@ -832,12 +832,12 @@
     <string name="qm_edge_handle">Handle at the right edge</string>
     <string name="qm_edge_handle_sub">A narrow bar at the right screen edge above every app; tap it to open the quick menu</string>
     <string name="qm_edge_handle_permission">Needs the permission to display over other apps; select to allow</string>
-    <string name="qm_tile_add">Add quick settings tile</string>
+    <string name="qm_tile_add">Add tile to Android\'s quick settings</string>
     <string name="qm_tile_sub">The tile “Quick menu” in Android’s quick settings (swipe down from the top) opens the menu over any app</string>
 
     <!-- TV -->
     <string name="setting_tv_launcher">Show the launcher on the TV</string>
-    <string name="setting_tv_launcher_sub">Runs on the TV itself in its resolution instead of mirroring the handheld (falls back to mirroring if the device does not allow it)</string>
+    <string name="setting_tv_launcher_sub">Runs on the TV itself in its resolution while the handheld shows a black screen. Mirrors if the device does not allow it</string>
     <string name="setting_tv_resolution">Resolution on the TV</string>
     <string name="setting_tv_resolution_auto">Automatic (native)</string>
     <string name="setting_tv_resolution_sub">Modes the connected TV offers</string>

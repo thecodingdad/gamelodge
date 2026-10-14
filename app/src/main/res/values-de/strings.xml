@@ -217,7 +217,7 @@
 
     <!-- Metadata -->
     <string name="metadata_fix_title">Treffer korrigieren</string>
-    <string name="metadata_not_configured">Hinterlege zuerst einen SteamGridDB-API-Key oder IGDB-Zugangsdaten unter Einstellungen → Bibliothek &amp; Artwork.</string>
+    <string name="metadata_not_configured">Hinterlege zuerst einen SteamGridDB-API-Key oder IGDB-Zugangsdaten unter Einstellungen → Metadaten &amp; Artwork.</string>
     <string name="metadata_no_results">Keine Treffer.</string>
     <string name="metadata_sgdb_required">Die Artwork-Auswahl braucht einen SteamGridDB-API-Key.</string>
     <string name="artwork_title">Artwork ändern</string>
@@ -257,7 +257,7 @@
     <string name="profile_essentials">Wichtigste Einstellungen</string>
     <string name="launcher_intro">Moonlight Launcher als Startbildschirm verwenden. Du kannst jederzeit zurückwechseln, die App funktioniert auch weiter als normale App.</string>
     <string name="launcher_enable">Als Startbildschirm verwenden</string>
-    <string name="launcher_enable_sub">Erscheint als Launcher-Auswahl, Android fragt nach dem Standard</string>
+    <string name="launcher_enable_sub">Zeigt an, ob der Launcher der Standard-Startbildschirm ist; Einschalten öffnet Androids Auswahl</string>
     <string name="launcher_system_settings">Android-Startbildschirm-Einstellungen</string>
     <string name="yes">Ja</string>
     <string name="no">Nein</string>
@@ -380,7 +380,7 @@
     <string name="qm_quit_game">Spiel beenden</string>
 
     <!-- Backup -->
-    <string name="backup_intro">Sichert Einstellungen, Stream-Profile, Host-Einstellungen, Favoriten, Sammlungen, korrigierte Metadaten und Smart-Home-Kacheln. Die Kopplung mit Hosts ist nicht enthalten, auf einem neuen Gerät die Hosts erst neu koppeln.</string>
+    <string name="backup_intro">Sichert Einstellungen, Stream-Profile, Host-Einstellungen, Favoriten, Filter und Gruppen, korrigierte Metadaten und Smart-Home-Kacheln. Die Kopplung mit Hosts ist nicht enthalten, auf einem neuen Gerät die Hosts erst neu koppeln.</string>
     <string name="backup_restore_hint">Vor dem Wiederherstellen alle Hosts unter Einstellungen → Hosts koppeln und warten, bis ihre Spiele erscheinen. Favoriten, Spielzeiten und Metadaten werden nur Spielen zugeordnet, die schon in der Bibliothek sind.</string>
     <string name="backup_folder">Backup-Ordner</string>
     <string name="backup_auto">Tägliches automatisches Backup</string>
@@ -579,7 +579,7 @@
 
     <!-- Free filters -->
     <string name="filter_conditions">Bedingungen</string>
-    <string name="filter_conditions_help">Ein Spiel wird angezeigt, wenn alle Bedingungen zutreffen.</string>
+    <string name="filter_conditions_help">Ein Eintrag wird angezeigt, wenn alle Bedingungen zutreffen.</string>
     <string name="filter_condition">Bedingung</string>
     <string name="filter_condition_add">Bedingung hinzufügen</string>
     <string name="filter_condition_delete">Bedingung entfernen</string>
@@ -620,7 +620,7 @@
     <string name="qt_dnd">Nicht stören</string>
     <string name="settings_quick_menu">Schnellmenü</string>
     <string name="settings_quick_menu_sub">Kacheln, Reihenfolge, App-Verknüpfungen</string>
-    <string name="qt_settings_help">Die Kacheln erscheinen in dieser Reihenfolge in den Schnelleinstellungen (Y). Am Griff ziehen zum Verschieben.</string>
+    <string name="qt_settings_help">Die Kacheln erscheinen in dieser Reihenfolge im Schnellmenü (Y) unter „Schnelleinstellungen“. Am Griff ziehen zum Verschieben.</string>
     <string name="qt_add">Kachel hinzufügen</string>
     <string name="qt_remove">Entfernen</string>
     <string name="qt_reset">Standard wiederherstellen</string>
@@ -632,7 +632,7 @@
     <string name="combo_home">Android-Home</string>
     <string name="combo_home_sub">Wirkt wie die Home-Taste</string>
     <string name="combo_quick_menu">Schnellmenü öffnen</string>
-    <string name="combo_quick_menu_sub">Öffnet die Seitenleiste</string>
+    <string name="combo_quick_menu_sub">Öffnet das Schnellmenü</string>
     <string name="combo_service">Systemweit (Bedienungshilfe)</string>
     <string name="combo_service_sub">„Moonlight Launcher Tastenkombinationen“ in den Bedienungshilfen aktivieren, damit die Kombinationen auch in anderen Apps und im Stream funktionieren</string>
     <string name="combo_service_on">An</string>
@@ -707,11 +707,11 @@
     <string name="filter_mode">Modus</string>
     <string name="filter_mode_include">Einschließen</string>
     <string name="filter_mode_exclude">Ausschließen</string>
-    <string name="filter_mode_include_sub">Spiele mit einem der gewählten Werte</string>
-    <string name="filter_mode_exclude_sub">Spiele ohne die gewählten Werte</string>
+    <string name="filter_mode_include_sub">Einträge mit einem der gewählten Werte</string>
+    <string name="filter_mode_exclude_sub">Einträge ohne die gewählten Werte</string>
     <string name="filter_match_all">Alle gewählten Werte</string>
     <string name="filter_match_all_sub">Jeder gewählte Wert muss zutreffen statt nur einer</string>
-    <string name="filter_name_help">Spiele, deren Name den Text enthält</string>
+    <string name="filter_name_help">Einträge, deren Name den Text enthält</string>
     <string name="filter_name_add">Text hinzufügen</string>
     <string name="filter_values_and">" und "</string>
     <string name="filter_never">Nie</string>
@@ -830,12 +830,12 @@
     <string name="qm_edge_handle">Griff am rechten Rand</string>
     <string name="qm_edge_handle_sub">Schmaler Balken am rechten Bildschirmrand über allen Apps; antippen öffnet das Schnellmenü</string>
     <string name="qm_edge_handle_permission">Braucht die Berechtigung „Über anderen Apps anzeigen“; auswählen zum Erlauben</string>
-    <string name="qm_tile_add">Kachel zu den Schnelleinstellungen hinzufügen</string>
+    <string name="qm_tile_add">Kachel zu Androids Schnelleinstellungen hinzufügen</string>
     <string name="qm_tile_sub">Die Kachel „Schnellmenü“ in Androids Schnelleinstellungen (von oben wischen) öffnet das Menü über jeder App</string>
 
     <!-- TV -->
     <string name="setting_tv_launcher">Launcher auf dem TV anzeigen</string>
-    <string name="setting_tv_launcher_sub">Läuft direkt auf dem TV in dessen Auflösung statt das Handy zu spiegeln (sonst wird gespiegelt)</string>
+    <string name="setting_tv_launcher_sub">Läuft direkt auf dem TV in dessen Auflösung, das Handy zeigt dabei einen schwarzen Bildschirm. Erlaubt das Gerät das nicht, wird gespiegelt</string>
     <string name="setting_tv_resolution">Auflösung am TV</string>
     <string name="setting_tv_resolution_auto">Automatisch (nativ)</string>
     <string name="setting_tv_resolution_sub">Modi, die der angeschlossene TV anbietet</string>
