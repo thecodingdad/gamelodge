@@ -889,7 +889,7 @@
     <string name="emu_all_files">Access to all files</string>
     <string name="emu_all_files_sub">Optional: reads the ROM folders directly (faster) and finds ES-DE covers. Folders are still picked above.</string>
     <string name="emu_emulators">Emulator per platform</string>
-    <string name="emu_no_platforms">Add a ROM folder to choose emulators.</string>
+    <string name="emu_no_platforms">No emulator installed. Install an Android emulator or add a ROM folder.</string>
     <string name="emu_none_installed">No emulator installed</string>
     <string name="emu_experimental">experimental</string>
     <string name="emu_bios_hint">needs BIOS/firmware in the emulator</string>

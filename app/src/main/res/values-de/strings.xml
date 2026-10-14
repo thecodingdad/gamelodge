@@ -887,7 +887,7 @@
     <string name="emu_all_files">Zugriff auf alle Dateien</string>
     <string name="emu_all_files_sub">Optional: liest die ROM-Ordner direkt (schneller) und findet ES-DE-Cover. Die Ordner wählst du trotzdem oben aus.</string>
     <string name="emu_emulators">Emulator pro Plattform</string>
-    <string name="emu_no_platforms">Füge einen ROM-Ordner hinzu, um Emulatoren zu wählen.</string>
+    <string name="emu_no_platforms">Kein Emulator installiert. Installiere einen Android-Emulator oder füge einen ROM-Ordner hinzu.</string>
     <string name="emu_none_installed">Kein Emulator installiert</string>
     <string name="emu_experimental">experimentell</string>
     <string name="emu_bios_hint">braucht BIOS/Firmware im Emulator</string>

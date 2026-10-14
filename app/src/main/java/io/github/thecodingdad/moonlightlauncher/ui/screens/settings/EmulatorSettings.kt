@@ -131,10 +131,12 @@ fun EmulatorSettings(vm: LauncherViewModel) {
             )
         }
 
-        // Platforms with ROMs or folders: their emulator.
+        // Platforms with ROMs, folders or an installed emulator: their emulator.
+        val withEmulator = remember(tick, config) { catalog.platforms.filter { emulation.choices(it.id).isNotEmpty() }.mapTo(HashSet()) { it.id } }
         val used = buildSet {
             entries.flatMap { it.romTargets }.mapNotNullTo(this) { it.romPlatform }
             config.folders.mapNotNullTo(this) { it.platform }
+            addAll(withEmulator)
         }
         SectionHeader(stringResource(R.string.emu_emulators))
         if (used.isEmpty()) {
