@@ -410,7 +410,7 @@
     <string name="filters_edit">Edit filters</string>
     <string name="settings_filters">Filters &amp; groups</string>
     <string name="settings_filters_sub">Own filters, groups and chip order for games and apps</string>
-    <string name="filters_help">Each filter can appear as a chip in the library, as a row on the home screen and as a chip in the Apps tab. Default filters are ordinary filters: edit, hide or delete them like your own.</string>
+    <string name="filters_help">Game filters and groups appear as chips in the library and optionally as rows on the home screen. The eye shows or hides a chip, drag the handle to change the order. Default filters are ordinary filters: edit, hide or delete them like your own.</string>
     <string name="filter_new_smart">New filter</string>
     <string name="filter_new_group">New group</string>
     <string name="filters_restore">Restore defaults</string>
@@ -470,7 +470,7 @@
     <string name="setting_haptic_focus">Vibrate while navigating</string>
 
     <!-- App filters -->
-    <string name="app_filters_help">App filters appear as chips in the Apps tab and optionally as rows on the home screen. They are separate from the game filters of the library.</string>
+    <string name="app_filters_help">App filters and groups appear as chips in the Apps tab and optionally as rows on the home screen. The eye shows or hides a chip, drag the handle to change the order. Default filters are ordinary filters: edit, hide or delete them like your own.</string>
     <string name="filter_match_count_apps">%d apps match</string>
 
     <!-- Filter bar -->

@@ -408,7 +408,7 @@
     <string name="filters_edit">Filter bearbeiten</string>
     <string name="settings_filters">Filter &amp; Gruppen</string>
     <string name="settings_filters_sub">Eigene Filter, Gruppen und Chip-Reihenfolge für Spiele und Apps</string>
-    <string name="filters_help">Jeder Filter kann als Chip in der Bibliothek, als Reihe auf der Startseite und als Chip im Apps-Tab erscheinen. Standardfilter sind normale Filter: bearbeiten, ausblenden oder löschen wie eigene.</string>
+    <string name="filters_help">Spiele-Filter und -Gruppen erscheinen als Chips in der Bibliothek und optional als Reihe auf der Startseite. Das Auge blendet einen Chip ein oder aus, am Griff ziehst du die Reihenfolge. Standardfilter sind normale Filter: bearbeiten, ausblenden oder löschen wie eigene.</string>
     <string name="filter_new_smart">Neuer Filter</string>
     <string name="filter_new_group">Neue Gruppe</string>
     <string name="filters_restore">Standards wiederherstellen</string>
@@ -468,7 +468,7 @@
     <string name="setting_haptic_focus">Beim Navigieren vibrieren</string>
 
     <!-- App filters -->
-    <string name="app_filters_help">App-Filter erscheinen als Chips im Apps-Tab und optional als Reihe auf der Startseite. Sie sind getrennt von den Spiele-Filtern der Bibliothek.</string>
+    <string name="app_filters_help">App-Filter und -Gruppen erscheinen als Chips im Apps-Tab und optional als Reihe auf der Startseite. Das Auge blendet einen Chip ein oder aus, am Griff ziehst du die Reihenfolge. Standardfilter sind normale Filter: bearbeiten, ausblenden oder löschen wie eigene.</string>
     <string name="filter_match_count_apps">%d Apps passen</string>
 
     <!-- Filter bar -->
