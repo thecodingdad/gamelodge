@@ -90,6 +90,8 @@ data class LauncherSettings(
     val odinKeepControllers: Boolean = true,
     /** Tiles in the quick menu, in order (see QuickTile ids; apps as "app:<package>"). */
     val quickTiles: List<String> = listOf("controllers", "hosts", "vpn", "wifi", "bluetooth", "airplane"),
+    /** Order of the metadata sources ("server", "companion", "own"); missing ones are off. */
+    val metadataSources: List<String> = listOf("server", "companion", "own"),
     /** Controller button combinations (key codes) for Android Home and the quick menu; empty = off. */
     val comboHome: Set<Int> = emptySet(),
     val comboQuickMenu: Set<Int> = emptySet(),
@@ -157,6 +159,7 @@ class SettingsRepository(context: Context) {
         val platformRule = intPreferencesKey("platform_rule")
         val odinKeepControllers = booleanPreferencesKey("odin_keep_controllers")
         val quickTiles = stringPreferencesKey("quick_tiles")
+        val metadataSources = stringPreferencesKey("metadata_sources")
         val comboHome = stringPreferencesKey("combo_home")
         val comboQuickMenu = stringPreferencesKey("combo_quick_menu")
         val tvScaleAuto = booleanPreferencesKey("tv_scale_auto")
@@ -224,6 +227,7 @@ class SettingsRepository(context: Context) {
             platformRule = this[K.platformRule] ?: d.platformRule,
             odinKeepControllers = this[K.odinKeepControllers] ?: d.odinKeepControllers,
             quickTiles = this[K.quickTiles]?.split(',')?.filter { it.isNotBlank() } ?: d.quickTiles,
+            metadataSources = this[K.metadataSources]?.split(',')?.filter { it.isNotBlank() } ?: d.metadataSources,
             comboHome = this[K.comboHome]?.split(',')?.mapNotNull { it.toIntOrNull() }?.toSet() ?: d.comboHome,
             comboQuickMenu = this[K.comboQuickMenu]?.split(',')?.mapNotNull { it.toIntOrNull() }?.toSet() ?: d.comboQuickMenu,
             tvScaleAuto = this[K.tvScaleAuto] ?: d.tvScaleAuto,
@@ -280,6 +284,7 @@ class SettingsRepository(context: Context) {
         this[K.platformRule] = s.platformRule
         this[K.odinKeepControllers] = s.odinKeepControllers
         this[K.quickTiles] = s.quickTiles.joinToString(",")
+        this[K.metadataSources] = s.metadataSources.joinToString(",")
         this[K.comboHome] = s.comboHome.joinToString(",")
         this[K.comboQuickMenu] = s.comboQuickMenu.joinToString(",")
         this[K.tvScaleAuto] = s.tvScaleAuto

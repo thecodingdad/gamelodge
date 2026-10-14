@@ -67,7 +67,10 @@ class AppContainer(context: Context) {
             .readTimeout(30, TimeUnit.SECONDS)
             .build()
     }
-    val metadata: MetadataService by lazy { MetadataService(database, secrets, settings, http, scope) }
+    val servers: io.github.thecodingdad.moonlightlauncher.data.companion.ServerRepository by lazy {
+        io.github.thecodingdad.moonlightlauncher.data.companion.ServerRepository(appContext, http, scope)
+    }
+    val metadata: MetadataService by lazy { MetadataService(database, secrets, settings, http, scope, servers) }
 
     val haAuth: HaAuth by lazy { HaAuth(appContext, http, secrets) }
     val ha: HaRepository by lazy {

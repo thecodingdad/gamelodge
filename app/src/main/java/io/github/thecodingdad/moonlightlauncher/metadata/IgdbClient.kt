@@ -115,18 +115,31 @@ interface IgdbCredentials {
     var tokenExpiresAt: Long
 }
 
-/** IGDB v4 client using Twitch client-credentials auth (https://api-docs.igdb.com). */
+/**
+ * IGDB v4 client using Twitch client-credentials auth (https://api-docs.igdb.com). [routes] are
+ * tried in order: own credentials or a paired server's proxy.
+ */
 class IgdbClient(
     private val http: OkHttpClient,
     private val credentials: IgdbCredentials,
     private val apiUrl: HttpUrl = "https://api.igdb.com/v4/".toHttpUrl(),
     private val tokenUrl: HttpUrl = "https://id.twitch.tv/oauth2/token".toHttpUrl(),
     private val clock: () -> Long = System::currentTimeMillis,
+    private val routes: () -> List<MetadataRoute> = { listOf(MetadataRoute.Own) },
 ) {
     private val json = Json { ignoreUnknownKeys = true }
 
-    val isConfigured: Boolean
+    /** This device's own client id and secret are set. */
+    val hasOwnCredentials: Boolean
         get() = !credentials.clientId.isNullOrBlank() && !credentials.clientSecret.isNullOrBlank()
+
+    private fun usable(): List<MetadataRoute> = routes().filter { it != MetadataRoute.Own || hasOwnCredentials }
+
+    val isConfigured: Boolean get() = usable().isNotEmpty()
+
+    /** Search with the own credentials only (settings: do they work?). */
+    fun searchOwn(title: String): List<IgdbGame> =
+        executeOwn("games", "search \"${escape(title)}\"; fields name; limit 1;")?.let { json.decodeFromString<List<IgdbGame>>(it) }.orEmpty()
 
     fun search(title: String, limit: Int = 8): List<IgdbGame> =
         post("games", "search \"${escape(title)}\"; fields $GAME_FIELDS; limit $limit;")
@@ -170,8 +183,21 @@ class IgdbClient(
     private inline fun <reified T> postRaw(endpoint: String, query: String): List<T> =
         execute(endpoint, query)?.let { json.decodeFromString<List<T>>(it) }.orEmpty()
 
+    /** Response body from the first route that answers, or null. */
+    private fun execute(endpoint: String, query: String): String? {
+        for (route in usable()) {
+            when (route) {
+                MetadataRoute.Own -> return executeOwn(endpoint, query)
+                is MetadataRoute.Via -> runCatching {
+                    route.server.rawPost("/v1/igdb/$endpoint", query).use { r -> if (r.isSuccessful) r.body?.string() else null }
+                }.getOrNull()?.let { return it }
+            }
+        }
+        return null
+    }
+
     /** Response body, or null on failure; 401 retries once with a new token. */
-    private fun execute(endpoint: String, query: String, retried: Boolean = false): String? {
+    private fun executeOwn(endpoint: String, query: String, retried: Boolean = false): String? {
         val token = token() ?: return null
         val request = Request.Builder()
             .url(apiUrl.newBuilder().addPathSegment(endpoint).build())
@@ -182,7 +208,7 @@ class IgdbClient(
         http.newCall(request).execute().use { response ->
             if (response.code == 401 && !retried) {
                 credentials.token = null
-                return execute(endpoint, query, retried = true)
+                return executeOwn(endpoint, query, retried = true)
             }
             if (response.code == 401) throw MetadataAuthException("IGDB")
             if (!response.isSuccessful) return null

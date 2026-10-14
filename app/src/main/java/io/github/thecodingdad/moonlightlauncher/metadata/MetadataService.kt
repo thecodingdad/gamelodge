@@ -55,6 +55,7 @@ class MetadataService(
     private val settings: SettingsRepository,
     http: OkHttpClient,
     private val scope: CoroutineScope,
+    private val servers: io.github.thecodingdad.moonlightlauncher.data.companion.ServerRepository? = null,
 ) {
     private val dao = db.libraryDao()
     private val mutex = Mutex()
@@ -65,8 +66,30 @@ class MetadataService(
     private val _lastError = MutableStateFlow<String?>(null)
     val lastError: StateFlow<String?> = _lastError.asStateFlow()
 
-    val sgdb = SteamGridDbClient(http, { secrets.get(SecretStore.Keys.SGDB_API_KEY) })
-    val igdb = IgdbClient(http, object : IgdbCredentials {
+    @Volatile private var sources: List<String> = io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings().metadataSources
+
+    init {
+        scope.launch { settings.settings.collect { sources = it.metadataSources } }
+    }
+
+    /**
+     * Sources in the user's order: paired metadata servers, then companions (both only when they
+     * offer the provider), then this device's own keys.
+     */
+    private fun routes(provider: (io.github.thecodingdad.moonlightlauncher.data.companion.PairedServer) -> Boolean): List<MetadataRoute> {
+        val paired = servers?.servers?.value.orEmpty()
+        return sources.flatMap { source ->
+            when (source) {
+                "server" -> paired.filter { !it.isCompanion && provider(it) }.map { MetadataRoute.Via(servers!!.client(it)) }
+                "companion" -> paired.filter { it.isCompanion && provider(it) }.map { MetadataRoute.Via(servers!!.client(it)) }
+                "own" -> listOf(MetadataRoute.Own)
+                else -> emptyList()
+            }
+        }
+    }
+
+    val sgdb = SteamGridDbClient(http, { secrets.get(SecretStore.Keys.SGDB_API_KEY) }, routes = { routes { it.steamGridDb } })
+    val igdb = IgdbClient(http, routes = { routes { it.igdb } }, credentials = object : IgdbCredentials {
         override val clientId get() = secrets.get(SecretStore.Keys.IGDB_CLIENT_ID)
         override val clientSecret get() = secrets.get(SecretStore.Keys.IGDB_CLIENT_SECRET)
         override var token: String?
@@ -251,9 +274,9 @@ class MetadataService(
 
     /** Same check for the SteamGridDB key. */
     suspend fun testSgdb(): Boolean? = withContext(Dispatchers.IO) {
-        if (!sgdb.isConfigured) return@withContext null
+        if (!sgdb.hasOwnKey) return@withContext null
         try {
-            sgdb.search("Mario")
+            sgdb.searchOwn("Mario")
             true
         } catch (e: MetadataAuthException) {
             false
@@ -291,9 +314,9 @@ class MetadataService(
 
     /** Checks the IGDB keys with one tiny request: true = works, false = rejected, null = not set / offline. */
     suspend fun testIgdb(): Boolean? = withContext(Dispatchers.IO) {
-        if (!igdb.isConfigured) return@withContext null
+        if (!igdb.hasOwnCredentials) return@withContext null
         try {
-            igdb.search("Mario", limit = 1)
+            igdb.searchOwn("Mario")
             true
         } catch (e: MetadataAuthException) {
             false

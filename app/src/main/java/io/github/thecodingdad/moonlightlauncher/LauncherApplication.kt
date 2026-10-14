@@ -58,6 +58,7 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
                 io.github.thecodingdad.moonlightlauncher.system.EdgeHandle.update(this@LauncherApplication, it)
             }
         }
+        container.servers.start()
         container.metadata.start()
         io.github.thecodingdad.moonlightlauncher.system.OdinMapping(this)
             .watch(container.scope, container.settings.settings.map { it.odinKeepControllers })

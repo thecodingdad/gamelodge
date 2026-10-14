@@ -924,4 +924,46 @@
 
     <!-- Quick tiles -->
     <string name="qt_hosts_count">%d hosts</string>
+
+    <!-- Companion & metadata server -->
+    <string name="settings_servers">Companion &amp; metadata server</string>
+    <string name="settings_servers_sub">Pairing, host games, SteamGridDB/IGDB through a server</string>
+    <string name="servers_intro">Both are optional: everything works without them. Pairing uses a PIN shown here and typed on the server; afterwards only this device\'s key opens the connection.</string>
+    <string name="servers_companion">Companion (per host)</string>
+    <string name="servers_companion_help">The companion on the gaming PC delivers the host games with all their metadata. Start pairing in the companion first.</string>
+    <string name="servers_not_paired">Not paired</string>
+    <string name="servers_pair">Pair</string>
+    <string name="servers_pair_companion_manual">Pair a companion by address</string>
+    <string name="servers_metadata">Metadata server</string>
+    <string name="servers_metadata_help">A metadata server (Docker) answers SteamGridDB and IGDB with its keys for all your devices. Start pairing in its web UI first.</string>
+    <string name="servers_pair_metadata">Pair a metadata server</string>
+    <string name="servers_online">online</string>
+    <string name="servers_offline">not reachable</string>
+    <string name="servers_checking">checking …</string>
+    <string name="servers_pair_title_host">Pair companion of %s</string>
+    <string name="servers_pair_step1">1. On the server: start \"Pair device\". 2. Enter its address here.</string>
+    <string name="servers_address">Address</string>
+    <string name="servers_error_address">This address can\'t be used. Example: 192.168.1.20 or nas.local:47900</string>
+    <string name="servers_error_kind">This server is of another kind (companion instead of metadata server or vice versa).</string>
+    <string name="servers_error_closed">Pairing isn\'t open on the server. Start \"Pair device\" there first, then try again.</string>
+    <string name="servers_error_failed">Pairing failed. Was the PIN typed correctly?</string>
+    <string name="servers_error_timeout">No PIN was entered on the server in time.</string>
+    <string name="servers_error_unreachable">The server can\'t be reached at this address.</string>
+    <string name="servers_connecting">Connecting …</string>
+    <string name="servers_pin_intro">Enter this PIN on the server next to this device:</string>
+    <string name="servers_pin_wait">Waiting for the server … The PIN is valid for this attempt only.</string>
+    <string name="servers_paired">Paired with %s.</string>
+    <string name="servers_state">State</string>
+    <string name="servers_fingerprint">Server certificate fingerprint</string>
+    <string name="servers_check">Check connection</string>
+    <string name="servers_remove">Hold to remove</string>
+    <string name="servers_remove_hint">Remove the device on the server too, so its access ends there.</string>
+    <string name="metadata_sources">Sources</string>
+    <string name="metadata_sources_help">Tried in this order; when one is not reachable or can\'t answer, the next one is used. Drag to sort.</string>
+    <string name="metadata_source_server">Metadata server</string>
+    <string name="metadata_source_server_sub">Paired metadata servers (Settings → Companion &amp; metadata server)</string>
+    <string name="metadata_source_companion">Companion</string>
+    <string name="metadata_source_companion_sub">Paired companions that offer SteamGridDB/IGDB (only while the host is on)</string>
+    <string name="metadata_source_own">Own keys</string>
+    <string name="metadata_source_own_sub">The SteamGridDB key and IGDB credentials below</string>
 </resources>

@@ -922,4 +922,46 @@
 
     <!-- Quick tiles -->
     <string name="qt_hosts_count">%d Hosts</string>
+
+    <!-- Companion & metadata server -->
+    <string name="settings_servers">Companion &amp; Metadaten-Server</string>
+    <string name="settings_servers_sub">Koppeln, Host-Spiele, SteamGridDB/IGDB über einen Server</string>
+    <string name="servers_intro">Beides ist optional: alles funktioniert auch ohne. Gekoppelt wird mit einer PIN, die hier erscheint und am Server eingegeben wird; danach öffnet nur der Schlüssel dieses Geräts die Verbindung.</string>
+    <string name="servers_companion">Companion (pro Host)</string>
+    <string name="servers_companion_help">Die Companion auf dem Spiele-PC liefert die Host-Spiele mit allen Metadaten. Starte das Koppeln zuerst in der Companion.</string>
+    <string name="servers_not_paired">Nicht gekoppelt</string>
+    <string name="servers_pair">Koppeln</string>
+    <string name="servers_pair_companion_manual">Companion per Adresse koppeln</string>
+    <string name="servers_metadata">Metadaten-Server</string>
+    <string name="servers_metadata_help">Ein Metadaten-Server (Docker) beantwortet SteamGridDB und IGDB mit seinen Schlüsseln für alle deine Geräte. Starte das Koppeln zuerst in seiner Weboberfläche.</string>
+    <string name="servers_pair_metadata">Metadaten-Server koppeln</string>
+    <string name="servers_online">online</string>
+    <string name="servers_offline">nicht erreichbar</string>
+    <string name="servers_checking">wird geprüft …</string>
+    <string name="servers_pair_title_host">Companion von %s koppeln</string>
+    <string name="servers_pair_step1">1. Am Server „Gerät koppeln“ starten. 2. Hier seine Adresse eingeben.</string>
+    <string name="servers_address">Adresse</string>
+    <string name="servers_error_address">Diese Adresse ist ungültig. Beispiel: 192.168.1.20 oder nas.local:47900</string>
+    <string name="servers_error_kind">Dieser Server ist von anderer Art (Companion statt Metadaten-Server oder umgekehrt).</string>
+    <string name="servers_error_closed">Am Server ist Koppeln nicht gestartet. Starte dort zuerst „Gerät koppeln“ und versuche es erneut.</string>
+    <string name="servers_error_failed">Koppeln fehlgeschlagen. Wurde die PIN richtig eingegeben?</string>
+    <string name="servers_error_timeout">Am Server wurde nicht rechtzeitig eine PIN eingegeben.</string>
+    <string name="servers_error_unreachable">Der Server ist unter dieser Adresse nicht erreichbar.</string>
+    <string name="servers_connecting">Verbinde …</string>
+    <string name="servers_pin_intro">Gib diese PIN am Server bei diesem Gerät ein:</string>
+    <string name="servers_pin_wait">Warte auf den Server … Die PIN gilt nur für diesen Versuch.</string>
+    <string name="servers_paired">Mit %s gekoppelt.</string>
+    <string name="servers_state">Status</string>
+    <string name="servers_fingerprint">Fingerabdruck des Server-Zertifikats</string>
+    <string name="servers_check">Verbindung prüfen</string>
+    <string name="servers_remove">Gedrückt halten zum Entfernen</string>
+    <string name="servers_remove_hint">Entferne das Gerät auch am Server, damit der Zugriff dort endet.</string>
+    <string name="metadata_sources">Quellen</string>
+    <string name="metadata_sources_help">Werden in dieser Reihenfolge versucht; ist eine nicht erreichbar oder kann nicht antworten, kommt die nächste dran. Zum Sortieren ziehen.</string>
+    <string name="metadata_source_server">Metadaten-Server</string>
+    <string name="metadata_source_server_sub">Gekoppelte Metadaten-Server (Einstellungen → Companion &amp; Metadaten-Server)</string>
+    <string name="metadata_source_companion">Companion</string>
+    <string name="metadata_source_companion_sub">Gekoppelte Companions mit SteamGridDB/IGDB (nur wenn der Host an ist)</string>
+    <string name="metadata_source_own">Eigene Schlüssel</string>
+    <string name="metadata_source_own_sub">Der SteamGridDB-Schlüssel und die IGDB-Zugangsdaten unten</string>
 </resources>

@@ -2,6 +2,7 @@ package io.github.thecodingdad.moonlightlauncher.ui.screens.settings
 
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Backup
 import androidx.compose.material.icons.filled.Computer
 import androidx.compose.material.icons.filled.FilterAlt
@@ -41,7 +42,7 @@ import io.github.thecodingdad.moonlightlauncher.data.settings.StartTab
 import io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings
 import io.github.thecodingdad.moonlightlauncher.data.settings.ThemeMode
 
-enum class SettingsPageId { HOSTS, PROFILES, HOME_SCREEN, THEME, DISPLAY, FILTERS, APP_FILTERS, QUICK_MENU, CONTROLS, SOUNDS, METADATA, USAGE, EMULATORS, HOME_ASSISTANT, VPN, LAUNCHER, BACKUP, LANGUAGE, ABOUT, LICENSES }
+enum class SettingsPageId { HOSTS, PROFILES, HOME_SCREEN, THEME, DISPLAY, FILTERS, APP_FILTERS, QUICK_MENU, CONTROLS, SOUNDS, METADATA, USAGE, EMULATORS, HOME_ASSISTANT, VPN, LAUNCHER, BACKUP, LANGUAGE, ABOUT, LICENSES, SERVERS }
 
 @Composable
 fun SettingsHome(open: (SettingsPageId) -> Unit, isFirstVisit: Boolean, openControllers: () -> Unit = {}) {
@@ -78,6 +79,7 @@ fun SettingsHome(open: (SettingsPageId) -> Unit, isFirstVisit: Boolean, openCont
         SectionHeader(stringResource(R.string.settings_group_streaming))
         NavRow(stringResource(R.string.settings_hosts), { open(SettingsPageId.HOSTS) }, stringResource(R.string.settings_hosts_sub), Icons.Filled.Computer)
         NavRow(stringResource(R.string.settings_profiles), { open(SettingsPageId.PROFILES) }, stringResource(R.string.settings_profiles_sub), Icons.Filled.Tune)
+        NavRow(stringResource(R.string.settings_servers), { open(SettingsPageId.SERVERS) }, stringResource(R.string.settings_servers_sub), Icons.Filled.Dns)
         NavRow(stringResource(R.string.settings_vpn), { open(SettingsPageId.VPN) }, stringResource(R.string.settings_vpn_sub), Icons.Filled.VpnLock)
         NavRow(stringResource(R.string.settings_home_assistant), { open(SettingsPageId.HOME_ASSISTANT) }, stringResource(R.string.settings_home_assistant_sub), androidx.compose.ui.graphics.vector.ImageVector.vectorResource(R.drawable.ic_home_assistant))
 

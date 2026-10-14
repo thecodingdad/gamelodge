@@ -1024,6 +1024,7 @@ private fun SettingsPageContent(
         SettingsPageId.SOUNDS -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.SoundSettings(settings, vm::updateSettings)
         SettingsPageId.ABOUT -> AboutSettings(openLicenses = { openPage(SettingsPageId.LICENSES) })
         SettingsPageId.LICENSES -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.OpenSourceLicenses()
+        SettingsPageId.SERVERS -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.ServersSettings(vm)
         SettingsPageId.PROFILES -> {
             val profiles by vm.profiles.collectAsState()
             val active by vm.activeProfile.collectAsState()

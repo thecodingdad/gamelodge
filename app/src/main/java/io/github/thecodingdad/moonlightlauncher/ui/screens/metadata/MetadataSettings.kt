@@ -78,6 +78,33 @@ fun MetadataSettings(
             HoldToConfirmButton(stringResource(R.string.metadata_refetch_all), onConfirmed = { scope.launch { metadata.resetAutomatic() } }, icon = Icons.Filled.Refresh)
         }
 
+        SectionHeader(stringResource(R.string.metadata_sources))
+        Text(stringResource(R.string.metadata_sources_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+        val sources = settings.metadataSources
+        val order = (sources.map { it.removePrefix("!") } + ALL_SOURCES).distinct().filter { it in ALL_SOURCES }
+        val off = sources.filter { it.startsWith("!") }.map { it.removePrefix("!") }.toSet()
+        fun store(ids: List<String>, disabled: Set<String>) = update { it.copy(metadataSources = ids.map { id -> if (id in disabled) "!$id" else id }) }
+        io.github.thecodingdad.moonlightlauncher.ui.screens.settings.ReorderableList(order, id = { it }, onReorder = { store(it, off) }) { _, id ->
+            SwitchRow(
+                stringResource(
+                    when (id) {
+                        "server" -> R.string.metadata_source_server
+                        "companion" -> R.string.metadata_source_companion
+                        else -> R.string.metadata_source_own
+                    },
+                ),
+                id !in off,
+                { on -> store(order, if (on) off - id else off + id) },
+                subtitle = stringResource(
+                    when (id) {
+                        "server" -> R.string.metadata_source_server_sub
+                        "companion" -> R.string.metadata_source_companion_sub
+                        else -> R.string.metadata_source_own_sub
+                    },
+                ),
+            )
+        }
+
         SectionHeader("SteamGridDB")
         Text(stringResource(R.string.metadata_sgdb_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
         LauncherTextField(stringResource(R.string.metadata_api_key), sgdbKey, { save(SecretStore.Keys.SGDB_API_KEY, it) }, kind = TextKind.PASSWORD)
@@ -90,6 +117,8 @@ fun MetadataSettings(
         if (igdbId.isNotBlank() && igdbSecret.isNotBlank()) ConnectionStatus("IGDB", revision) { metadata.testIgdb() }
     }
 }
+
+private val ALL_SOURCES = listOf("server", "companion", "own")
 
 /** Whether a provider accepts the key(s), checked again after every change ([revision]). */
 @Composable
