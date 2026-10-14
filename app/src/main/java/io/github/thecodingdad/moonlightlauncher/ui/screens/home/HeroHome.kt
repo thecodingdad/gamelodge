@@ -200,6 +200,11 @@ fun HeroHome(
             val topClearPx = with(density) { 26.dp.toPx() }
             val topFadePx = with(density) { 48.dp.toPx() }
             val fadePx = with(density) { (insets.calculateBottomPadding() + 56.dp).toPx() }
+            // Portrait: the bottom navigation bar is opaque, so the fade must end at its top edge
+            // (landscape: the hint bar is translucent and the fade runs on behind it).
+            val opaqueBottomPx = if (io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current) {
+                with(density) { insets.calculateBottomPadding().toPx() }
+            } else 0f
             LazyColumn(
                 state = listState,
                 modifier = Modifier.fillMaxWidth().weight(1f)
@@ -216,13 +221,14 @@ fun HeroHome(
                     .drawWithContent {
                         drawContent()
                         val stop = ((size.height - fadePx) / size.height).coerceIn(0f, 1f)
+                        val end = ((size.height - opaqueBottomPx) / size.height).coerceIn(stop, 1f)
                         // Top edge fades too, so rows scrolled up don't end in a hard cut.
                         val topStop = (topFadePx / size.height).coerceIn(0f, stop)
                         val clearStop = (topClearPx / size.height).coerceIn(0f, topStop)
                         drawRect(
                             Brush.verticalGradient(
                                 0f to Color.Transparent, clearStop to Color.Transparent, topStop to Color.Black,
-                                stop to Color.Black, 1f to Color.Transparent,
+                                stop to Color.Black, end to Color.Transparent,
                             ),
                             blendMode = androidx.compose.ui.graphics.BlendMode.DstIn,
                         )
