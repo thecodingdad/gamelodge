@@ -329,7 +329,11 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                     }
                     composable(Routes.SETTINGS) { backStack ->
                         val page = SettingsPageId.valueOf(backStack.arguments?.getString("page") ?: SettingsPageId.ABOUT.name)
-                        SubpageFrame(vm, nav, hints, MainTab.SETTINGS, listOf(tabCrumb(vm, nav, MainTab.SETTINGS)), { hostInfoFor = it }, { controllerPopup = true }) {
+                        val crumbs = listOfNotNull(
+                            tabCrumb(vm, nav, MainTab.SETTINGS),
+                            if (page == SettingsPageId.LICENSES) backCrumb(nav, R.string.settings_about) else null,
+                        )
+                        SubpageFrame(vm, nav, hints, MainTab.SETTINGS, crumbs, { hostInfoFor = it }, { controllerPopup = true }) {
                             SettingsPageContent(
                                 page, vm,
                                 openReview = { nav.navigate(Routes.REVIEW) },
@@ -1007,7 +1011,8 @@ private fun SettingsPageContent(
         SettingsPageId.QUICK_MENU -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.QuickMenuSettings(vm, settings, vm::updateSettings)
         SettingsPageId.APP_FILTERS -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.FilterSettings(vm, io.github.thecodingdad.moonlightlauncher.data.db.FilterScope.APPS)
         SettingsPageId.SOUNDS -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.SoundSettings(settings, vm::updateSettings)
-        SettingsPageId.ABOUT -> AboutSettings()
+        SettingsPageId.ABOUT -> AboutSettings(openLicenses = { openPage(SettingsPageId.LICENSES) })
+        SettingsPageId.LICENSES -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.OpenSourceLicenses()
         SettingsPageId.PROFILES -> {
             val profiles by vm.profiles.collectAsState()
             val active by vm.activeProfile.collectAsState()

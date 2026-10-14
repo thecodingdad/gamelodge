@@ -41,7 +41,7 @@ import io.github.thecodingdad.moonlightlauncher.data.settings.StartTab
 import io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings
 import io.github.thecodingdad.moonlightlauncher.data.settings.ThemeMode
 
-enum class SettingsPageId { HOSTS, PROFILES, HOME_SCREEN, THEME, DISPLAY, FILTERS, APP_FILTERS, QUICK_MENU, CONTROLS, SOUNDS, METADATA, USAGE, EMULATORS, HOME_ASSISTANT, VPN, LAUNCHER, BACKUP, LANGUAGE, ABOUT }
+enum class SettingsPageId { HOSTS, PROFILES, HOME_SCREEN, THEME, DISPLAY, FILTERS, APP_FILTERS, QUICK_MENU, CONTROLS, SOUNDS, METADATA, USAGE, EMULATORS, HOME_ASSISTANT, VPN, LAUNCHER, BACKUP, LANGUAGE, ABOUT, LICENSES }
 
 @Composable
 fun SettingsHome(open: (SettingsPageId) -> Unit, isFirstVisit: Boolean, openControllers: () -> Unit = {}) {
@@ -304,12 +304,3 @@ fun LanguageSettings(settings: LauncherSettings, update: ((LauncherSettings) -> 
     }
 }
 
-@Composable
-fun AboutSettings() {
-    SettingsPage(stringResource(R.string.settings_about)) {
-        InfoRow(stringResource(R.string.launcher_name), BuildConfig.VERSION_NAME)
-        InfoRow(stringResource(R.string.about_streaming), "Artemis / Moonlight")
-        InfoRow(stringResource(R.string.about_license), "GPLv3")
-        InfoRow(stringResource(R.string.about_source), "github.com/thecodingdad/moonlight-launcher")
-    }
-}

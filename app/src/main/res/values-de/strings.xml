@@ -910,5 +910,14 @@
     <string name="emu_use_default">Standard der Plattform (%s)</string>
 
     <!-- Emulators -->
-    <string name="emu_esde_notice">Startbefehle und Pakete der Emulatoren stammen von ES-DE (https://es-de.org), Copyright (c) Leon Styhre, MIT-Lizenz.</string>
+    <string name="emu_esde_notice">Startbefehle und Pakete der Emulatoren stammen von ES-DE (https://es-de.org), MIT-Lizenz. Details unter Einstellungen → Info → Open-Source-Lizenzen.</string>
+
+    <!-- About -->
+    <string name="about_open_source">Open-Source-Lizenzen</string>
+    <string name="about_open_source_sub">Komponenten, auf denen die App aufbaut</string>
+    <string name="about_open_source_intro">Moonlight Launcher nutzt diese Open-Source-Komponenten. Wähle eine aus, um ihre Lizenz zu lesen.</string>
+    <string name="about_data_sources">Datenquellen</string>
+    <string name="about_source_sgdb">Cover, Hintergründe, Logos und Icons</string>
+    <string name="about_source_igdb">Beschreibungen, Genres, Entwickler und Erscheinungsdaten</string>
+    <string name="about_source_esde">Startbefehle der Emulatoren (MIT-Lizenz)</string>
 </resources>

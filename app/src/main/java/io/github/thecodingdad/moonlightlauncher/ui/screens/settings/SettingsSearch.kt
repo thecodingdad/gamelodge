@@ -42,6 +42,7 @@ private val pageTitles: List<Pair<SettingsTarget, Int>> = listOf(
     SettingsTarget.Page(SettingsPageId.LANGUAGE) to R.string.settings_language,
     SettingsTarget.Page(SettingsPageId.BACKUP) to R.string.settings_backup,
     SettingsTarget.Page(SettingsPageId.ABOUT) to R.string.settings_about,
+    SettingsTarget.Page(SettingsPageId.LICENSES) to R.string.about_open_source,
 )
 
 /** Every visible setting by page (dialog-internal and per-item settings are left out). */
@@ -86,6 +87,7 @@ private val settingsIndex: List<SearchEntry> = buildList {
         R.string.setting_haptic_focus,
     ))
     addAll(page(SettingsPageId.LAUNCHER, R.string.launcher_enable, R.string.launcher_system_settings))
+    addAll(page(SettingsPageId.ABOUT, R.string.about_license, R.string.about_source, R.string.about_data_sources))
     addAll(page(SettingsPageId.BACKUP, R.string.backup_folder, R.string.backup_auto, R.string.backup_keep, R.string.backup_with_credentials))
 }
 
