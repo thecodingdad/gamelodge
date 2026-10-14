@@ -1,6 +1,5 @@
 package io.github.thecodingdad.moonlightlauncher
 
-import io.github.thecodingdad.moonlightlauncher.system.avoidDisplayCutout
 
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -40,7 +39,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        avoidDisplayCutout(window)
         applySystemBars()
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {

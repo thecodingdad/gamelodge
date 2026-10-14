@@ -718,18 +718,27 @@ private fun ShellTopBar(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         val compact = io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current
-        val status: @Composable () -> Unit = {
+        // Camera hole: in the middle the status splits around it, on the right it moves left.
+        val cutout = io.github.thecodingdad.moonlightlauncher.ui.shell.rememberTopCutout()
+        val endShift = if (cutout.position == io.github.thecodingdad.moonlightlauncher.ui.shell.TopCutout.Position.RIGHT) {
+            (cutout.rightInset + 8.dp - 28.dp).coerceAtLeast(0.dp)
+        } else 0.dp
+        val status: @Composable (Boolean) -> Unit = { split ->
             StatusCluster(
                 hosts,
+                modifier = Modifier.padding(end = endShift),
                 onHostClick = { onHostInfo(it.uuid) },
                 controllerCount = controllerCount,
                 onControllerClick = onControllers,
                 onClockClick = onClock,
+                split = split,
             )
         }
         if (compact) {
             // Narrow screen: only the status at the top; the tabs move to the bottom navigation bar.
-            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) { status() }
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+                status(cutout.position == io.github.thecodingdad.moonlightlauncher.ui.shell.TopCutout.Position.CENTER)
+            }
         } else {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -739,7 +748,7 @@ private fun ShellTopBar(
                     TabChip(stringResource(t.title), selected = index == selected, onClick = { onSelect(index) })
                 }
             }
-            status()
+            status(false)
         }
     }
 }
