@@ -1,5 +1,7 @@
 package io.github.thecodingdad.moonlightlauncher
 
+import io.github.thecodingdad.moonlightlauncher.system.avoidDisplayCutout
+
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
@@ -66,6 +68,7 @@ class QuickMenuActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        avoidDisplayCutout(window)
         WindowCompat.getInsetsController(window, window.decorView).apply {
             hide(WindowInsetsCompat.Type.systemBars())
             systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
