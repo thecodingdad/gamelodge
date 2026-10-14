@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -150,7 +151,9 @@ fun StatusCluster(
     val status = rememberSystemStatus()
     val colors = LauncherTheme.colors
     Row(
-        if (split) modifier.fillMaxWidth() else modifier,
+        // Always as high as the full row (the host/controller icons have a padded touch area), so
+        // the bar keeps its height and the icons their position when only battery and clock show.
+        (if (split) modifier.fillMaxWidth() else modifier).heightIn(min = 30.dp),
         horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically,
     ) {
         if (!batteryAndClockOnly) {
