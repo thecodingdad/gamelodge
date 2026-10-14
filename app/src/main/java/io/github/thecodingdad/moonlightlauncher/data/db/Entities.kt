@@ -244,8 +244,8 @@ data class LibraryEntry(
     /** Only owned: no local app and every host entry would install the game first. */
     val notInstalled: Boolean get() = targets.isNotEmpty() && localTarget == null && romTargets.isEmpty() && remoteTargets.none { it.installed }
 
-    /** "Start with…" only makes sense when the game is installed on more than one device/host. */
-    val hasTargetChoice: Boolean get() = targets.count { it.type == TargetType.LOCAL || it.installed } > 1
+    /** "Start with…" only makes sense when the game can start in more than one way (app, ROM, host). */
+    val hasTargetChoice: Boolean get() = targets.count { it.type != TargetType.REMOTE || it.installed } > 1
 }
 
 /** Item without its automatic metadata (fields the user edited stay), ready for a new lookup. */
