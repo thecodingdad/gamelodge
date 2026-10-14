@@ -72,7 +72,11 @@ fun PageTitle(title: String, modifier: Modifier = Modifier) {
     }
     // Taps only: controllers go back with B, the path takes no focus.
     // Keyed by a stable value, not the (new every recomposition) lambda, so a tap isn't lost.
-    fun Modifier.tap(key: Any, action: () -> Unit) = pointerInput(key) { detectTapGestures { action() } }
+    // Going up the path sounds (and vibrates) like the back arrow.
+    val feedback = LocalUiFeedback.current
+    fun Modifier.tap(key: Any, action: () -> Unit) = pointerInput(key) {
+        detectTapGestures { feedback?.play(UiSound.BACK); action() }
+    }
     androidx.compose.foundation.layout.BoxWithConstraints(modifier.fillMaxWidth()) {
         val measurer = androidx.compose.ui.text.rememberTextMeasurer()
         val full = (path.parents.map { it.label } + title).joinToString(SEPARATOR)
