@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.container
@@ -272,6 +273,8 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
             Box(Modifier.fillMaxSize().background(LauncherTheme.colors.background)) {
                 // The launcher behind any popup or panel is blurred (Android 12+; older versions just dim).
                 val backdropBlur by androidx.compose.animation.core.animateDpAsState(if (io.github.thecodingdad.moonlightlauncher.ui.components.OverlayHost.anyVisible) 14.dp else 0.dp, label = "backdropBlur")
+                val currentEntry by nav.currentBackStackEntryAsState()
+                CompositionLocalProvider(io.github.thecodingdad.moonlightlauncher.ui.shell.LocalCurrentNavEntry provides currentEntry) {
                 NavHost(nav, startDestination = Routes.MAIN, modifier = Modifier.blur(backdropBlur)) {
                     composable(Routes.MAIN) {
                         MainShell(
@@ -392,6 +395,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                         ) { ReviewScreen(review) }
                     }
                 }
+}
 
                 // Global overlays, above every route.
                 val profiles by vm.profiles.collectAsState()
@@ -652,6 +656,8 @@ private fun MainShell(
                   androidx.compose.foundation.layout.PaddingValues(top = topBarHeight, bottom = hintBarHeight),
           ) {
             AnimatedContent(tabs[tab], transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "tab") { current ->
+              // The tab fading out no longer provides the hints.
+              CompositionLocalProvider(io.github.thecodingdad.moonlightlauncher.ui.shell.LocalHintsActive provides (transition.targetState == androidx.compose.animation.EnterExitState.Visible)) {
                 // The start tab's saved state is keyed by the reset counter, so Home starts fresh.
                 val stateKey = if (current == MainTab.HOME) "HOME-${vm.homeResets.intValue}" else current.name
                 tabStates.SaveableStateProvider(stateKey) {
@@ -710,6 +716,7 @@ private fun MainShell(
                 }
                 }
             }
+}
           }
         }
         ShellTopBar(

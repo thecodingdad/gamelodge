@@ -10,28 +10,45 @@ import io.github.thecodingdad.moonlightlauncher.ui.components.ButtonHint
 /** Collects the button hints of the currently visible screen for the shell's hint bar. */
 @Stable
 class HintHolder {
-    private val stack = mutableStateListOf<Pair<Any, List<ButtonHint>>>()
-    val hints: List<ButtonHint> get() = stack.lastOrNull()?.second.orEmpty()
+    private class Entry(val owner: Any, val hints: List<ButtonHint>, val active: Boolean)
 
-    internal fun push(owner: Any, hints: List<ButtonHint>) {
-        val index = stack.indexOfFirst { it.first === owner }
-        if (index >= 0) stack[index] = owner to hints else stack += owner to hints
+    private val stack = mutableStateListOf<Entry>()
+
+    /** The hints of the topmost screen that is not on its way out (navigation / tab cross-fade). */
+    val hints: List<ButtonHint> get() = stack.lastOrNull { it.active }?.hints.orEmpty()
+
+    internal fun push(owner: Any, hints: List<ButtonHint>, active: Boolean = true) {
+        val index = stack.indexOfFirst { it.owner === owner }
+        // Keeps its place: a screen coming back keeps its order with the popups above it.
+        if (index >= 0) stack[index] = Entry(owner, hints, active) else stack += Entry(owner, hints, active)
     }
 
     internal fun remove(owner: Any) {
-        stack.removeAll { it.first === owner }
+        stack.removeAll { it.owner === owner }
     }
 }
 
 val LocalHintHolder = staticCompositionLocalOf { HintHolder() }
+
+/**
+ * False inside a screen that is leaving (the previous destination or tab while the next one
+ * fades in): its hints no longer count, so the new screen's (or the default) show at once.
+ */
+val LocalHintsActive = androidx.compose.runtime.compositionLocalOf { true }
+
+/** The destination navigation currently shows; screens of other back stack entries are leaving. */
+val LocalCurrentNavEntry = androidx.compose.runtime.compositionLocalOf<Any?> { null }
 
 /** Declares the hints for the calling screen while it is composed. */
 @Composable
 fun ScreenHints(hints: List<ButtonHint>) {
     val holder = LocalHintHolder.current
     val owner = androidx.compose.runtime.remember { Any() }
-    DisposableEffect(holder, hints) {
-        holder.push(owner, hints)
+    val entry = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    val current = LocalCurrentNavEntry.current
+    val active = LocalHintsActive.current && (entry !is androidx.navigation.NavBackStackEntry || current == null || entry === current)
+    DisposableEffect(holder, hints, active) {
+        holder.push(owner, hints, active)
         onDispose { }
     }
     DisposableEffect(holder) { onDispose { holder.remove(owner) } }
