@@ -49,7 +49,11 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
             }
         }
         container.scope.launch(kotlinx.coroutines.Dispatchers.Main) {
-            container.settings.settings.map { it.quickMenuEdgeHandle }.distinctUntilChanged().collect {
+            // Never with a TV attached (mirrored it would show there, and nobody touches a TV).
+            kotlinx.coroutines.flow.combine(
+                container.settings.settings.map { it.quickMenuEdgeHandle },
+                io.github.thecodingdad.moonlightlauncher.system.ExternalDisplay.observe(this@LauncherApplication),
+            ) { on, tv -> on && tv == null }.distinctUntilChanged().collect {
                 io.github.thecodingdad.moonlightlauncher.system.EdgeHandle.update(this@LauncherApplication, it)
             }
         }

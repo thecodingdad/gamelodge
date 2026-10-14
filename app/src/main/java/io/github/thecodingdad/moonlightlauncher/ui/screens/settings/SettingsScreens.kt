@@ -30,6 +30,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.core.os.LocaleListCompat
 import io.github.thecodingdad.moonlightlauncher.BuildConfig
 import io.github.thecodingdad.moonlightlauncher.R
+import kotlin.math.roundToInt
 import io.github.thecodingdad.moonlightlauncher.data.settings.AccentMode
 import io.github.thecodingdad.moonlightlauncher.data.settings.ButtonLayout
 import io.github.thecodingdad.moonlightlauncher.data.settings.CardSize
@@ -208,6 +209,23 @@ fun DisplaySettings(
             stringResource(R.string.tv_detected),
             externalDisplay?.let { "${it.name} (${it.width}×${it.height})" } ?: stringResource(R.string.tv_none),
         )
+        SwitchRow(
+            stringResource(R.string.setting_tv_launcher), settings.tvLauncher, { v -> update { it.copy(tvLauncher = v) } },
+            subtitle = stringResource(R.string.setting_tv_launcher_sub),
+        )
+        if (settings.tvLauncher) {
+            val modes = externalDisplay?.modes.orEmpty()
+            ChoiceRow(
+                stringResource(R.string.setting_tv_resolution), listOf(0) + modes.map { it.id }.filter { it != 0 },
+                settings.tvModeId.takeIf { id -> id == 0 || modes.any { it.id == id } } ?: 0,
+                label = { id ->
+                    modes.firstOrNull { it.id == id }?.let { "${it.width}×${it.height} @ ${it.refreshRate.roundToInt()} Hz" }
+                        ?: stringResource(R.string.setting_tv_resolution_auto)
+                },
+                onSelect = { v -> update { it.copy(tvModeId = v) } },
+                subtitle = stringResource(if (externalDisplay == null) R.string.setting_tv_resolution_none else R.string.setting_tv_resolution_sub),
+            )
+        }
         SwitchRow(
             stringResource(R.string.setting_tv_scale_auto), settings.tvScaleAuto, { v -> update { it.copy(tvScaleAuto = v) } },
             subtitle = stringResource(R.string.setting_tv_scale_auto_sub),

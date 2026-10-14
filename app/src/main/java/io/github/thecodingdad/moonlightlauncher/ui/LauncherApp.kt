@@ -227,12 +227,18 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
     val density = androidx.compose.ui.platform.LocalDensity.current
     val scrollSpec = remember(density) { io.github.thecodingdad.moonlightlauncher.ui.components.MarginBringIntoViewSpec(density) }
 
-    // On a TV the handheld-sized layout looks huge: scale the whole UI down by lowering the density.
+    // Mirrored to a TV the handheld-sized layout looks huge: scale the whole UI down by lowering
+    // the density. Running on the TV itself: lay out for ~960 dp width, like on the handheld.
     val external by vm.externalDisplay.collectAsState()
     val baseDensity = androidx.compose.ui.platform.LocalDensity.current
-    val uiScale = (if (settings.tvScaleAuto && external != null) settings.tvScale else settings.uiScale) / 100f
-    val scaledDensity = remember(baseDensity, uiScale) {
-        androidx.compose.ui.unit.Density(baseDensity.density * uiScale, baseDensity.fontScale)
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+    val hostActivity = androidx.activity.compose.LocalActivity.current
+    val onTv = remember(configuration) { hostActivity?.let(io.github.thecodingdad.moonlightlauncher.system.TvSession::isOnTv) == true }
+    // The TV size setting applies on the TV either way (mirrored or running there).
+    val uiScale = (if (settings.tvScaleAuto && (external != null || onTv)) settings.tvScale else settings.uiScale) / 100f
+    val scaledDensity = remember(baseDensity, uiScale, onTv, configuration.screenWidthDp) {
+        val base = if (onTv) configuration.screenWidthDp * baseDensity.density / 960f else baseDensity.density
+        androidx.compose.ui.unit.Density(base * uiScale, baseDensity.fontScale)
     }
 
     LauncherTheme(settings) {

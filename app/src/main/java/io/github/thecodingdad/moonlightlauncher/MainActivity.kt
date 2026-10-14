@@ -9,6 +9,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import io.github.thecodingdad.moonlightlauncher.system.TvSession
 import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -44,6 +45,18 @@ class MainActivity : ComponentActivity() {
                     .distinctUntilChanged().collect { applySystemBars() }
             }
         }
+        // TV attached: run on the TV itself (native resolution) when the setting allows it.
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                kotlinx.coroutines.flow.combine(vm.externalDisplay, vm.settings.map { it.tvLauncher }) { tv, on -> tv to on }
+                    .distinctUntilChanged().collect { (tv, on) -> TvSession.update(this@MainActivity, tv, on) }
+            }
+        }
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                vm.settings.map { it.tvModeId }.distinctUntilChanged().collect { checkTv() }
+            }
+        }
         feedback = UiFeedback(this).also { it.load() }
         handleQuickMenuExtra(intent)
         setContent { LauncherApp(vm, dispatcher, feedback) }
@@ -58,6 +71,17 @@ class MainActivity : ComponentActivity() {
             else show(WindowInsetsCompat.Type.navigationBars())
             systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
+    }
+
+    /** On the TV display: full screen, chosen mode, handheld side; back on the handheld: release. */
+    private fun checkTv() {
+        if (TvSession.isOnTv(this)) TvSession.onShownOnTv(this, vm.settings.value.tvModeId) else TvSession.onLeftTv(this)
+    }
+
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+        super.onConfigurationChanged(newConfig)
+        // Moving between displays arrives here (screen size changes).
+        checkTv()
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {

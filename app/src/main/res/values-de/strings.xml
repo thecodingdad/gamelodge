@@ -836,4 +836,12 @@
     <string name="qm_edge_handle_permission">Braucht die Berechtigung „Über anderen Apps anzeigen“; auswählen zum Erlauben</string>
     <string name="qm_tile_add">Kachel zu den Schnelleinstellungen hinzufügen</string>
     <string name="qm_tile_sub">Die Kachel „Schnellmenü“ in Androids Schnelleinstellungen (von oben wischen) öffnet das Menü über jeder App</string>
+
+    <!-- TV -->
+    <string name="setting_tv_launcher">Launcher auf dem TV anzeigen</string>
+    <string name="setting_tv_launcher_sub">Läuft direkt auf dem TV in dessen Auflösung statt das Handy zu spiegeln (sonst wird gespiegelt)</string>
+    <string name="setting_tv_resolution">Auflösung am TV</string>
+    <string name="setting_tv_resolution_auto">Automatisch (nativ)</string>
+    <string name="setting_tv_resolution_sub">Modi, die der angeschlossene TV anbietet</string>
+    <string name="setting_tv_resolution_none">TV anschließen, um seine Modi zu sehen</string>
 </resources>

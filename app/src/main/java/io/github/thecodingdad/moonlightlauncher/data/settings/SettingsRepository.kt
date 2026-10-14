@@ -94,6 +94,10 @@ data class LauncherSettings(
     val tvScaleAuto: Boolean = true,
     /** UI size on an external display, percent of the handheld size. */
     val tvScale: Int = 70,
+    /** Run the launcher on the TV itself (native resolution) instead of mirroring the handheld. */
+    val tvLauncher: Boolean = true,
+    /** Display mode requested on the TV; 0 = automatic (the TV's native mode). */
+    val tvModeId: Int = 0,
     /** UI size on the device's own display, percent. */
     val uiScale: Int = 100,
     /** Separate app filters were created (and shared filters turned into game filters). */
@@ -152,6 +156,8 @@ class SettingsRepository(context: Context) {
         val comboQuickMenu = stringPreferencesKey("combo_quick_menu")
         val tvScaleAuto = booleanPreferencesKey("tv_scale_auto")
         val tvScale = intPreferencesKey("tv_scale")
+        val tvLauncher = booleanPreferencesKey("tv_launcher")
+        val tvModeId = intPreferencesKey("tv_mode_id")
         val uiScale = intPreferencesKey("ui_scale")
         val appFiltersSeeded = booleanPreferencesKey("app_filters_seeded")
     }
@@ -215,6 +221,8 @@ class SettingsRepository(context: Context) {
             comboQuickMenu = this[K.comboQuickMenu]?.split(',')?.mapNotNull { it.toIntOrNull() }?.toSet() ?: d.comboQuickMenu,
             tvScaleAuto = this[K.tvScaleAuto] ?: d.tvScaleAuto,
             tvScale = this[K.tvScale] ?: d.tvScale,
+            tvLauncher = this[K.tvLauncher] ?: d.tvLauncher,
+            tvModeId = this[K.tvModeId] ?: d.tvModeId,
             uiScale = this[K.uiScale] ?: d.uiScale,
             appFiltersSeeded = this[K.appFiltersSeeded] ?: d.appFiltersSeeded,
         )
@@ -267,6 +275,8 @@ class SettingsRepository(context: Context) {
         this[K.comboQuickMenu] = s.comboQuickMenu.joinToString(",")
         this[K.tvScaleAuto] = s.tvScaleAuto
         this[K.tvScale] = s.tvScale
+        this[K.tvLauncher] = s.tvLauncher
+        this[K.tvModeId] = s.tvModeId
         this[K.uiScale] = s.uiScale
         this[K.appFiltersSeeded] = s.appFiltersSeeded
     }

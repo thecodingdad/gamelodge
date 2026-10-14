@@ -14,6 +14,8 @@
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
     <!-- Optional quick menu handle at the screen edge above other apps. -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <!-- Hand the input focus back to the launcher on the TV (multi-display). -->
+    <uses-permission android:name="android.permission.REORDER_TASKS" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <!-- Number of connected Bluetooth devices in the quick menu (Android 12+). -->
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
@@ -52,6 +54,14 @@
         </activity>
 
         <!-- Quick menu as an overlay above other apps and the stream (own task). -->
+        <!-- Handheld screen (controller, touchpad, black) while the launcher runs on a TV. -->
+        <activity
+            android:name=".PhoneScreenActivity"
+            android:exported="false"
+            android:taskAffinity="${applicationId}.phonescreen"
+            android:launchMode="singleTask"
+            android:excludeFromRecents="true"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboard|keyboardHidden|navigation|uiMode" />
         <activity
             android:name=".QuickMenuActivity"
             android:exported="false"
