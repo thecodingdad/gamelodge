@@ -114,7 +114,8 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     /** Host UUID → name, from live hosts and (for offline/removed ones) the stored targets. */
     private val hostNames = combine(hosts, allEntries) { live, list ->
         val stored = list.flatMap { it.remoteTargets }.mapNotNull { t -> t.hostUuid?.let { it to (t.hostName ?: it) } }.toMap()
-        stored + live.mapValues { it.value.name } + (FilterRules.SOURCE_LOCAL to application.getString(R.string.filter_local))
+        stored + live.mapValues { it.value.name } + (FilterRules.SOURCE_LOCAL to application.getString(R.string.filter_local)) +
+            (FilterRules.SOURCE_EMULATOR to application.getString(R.string.filter_emulation))
     }
 
     private fun resolved(place: FilterPlace): StateFlow<List<ResolvedFilter>> =
@@ -143,6 +144,11 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     fun reorderGroup(collectionId: String, itemIds: List<String>) {
         viewModelScope.launch { c.library.reorderCollection(collectionId, itemIds) }
+    }
+
+    /** Emulator for one ROM of a game; null = the platform's default. */
+    fun setGameEmulator(targetId: String, key: String?) {
+        viewModelScope.launch { c.database.libraryDao().setTargetEmulator(targetId, key) }
     }
 
     fun saveFilter(filter: FilterEntity) {
@@ -208,8 +214,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         override: StreamProfile? = null,
         quitRunning: Boolean = false,
         skipNetworkCheck: Boolean = false,
+        emulatorKey: String? = null,
     ) {
-        viewModelScope.launch { c.launcher.launch(activity, entry, target, override, quitRunning, skipNetworkCheck) }
+        viewModelScope.launch { c.launcher.launch(activity, entry, target, override, quitRunning, skipNetworkCheck, emulatorKey) }
     }
 
     fun dismissLaunch() = c.launcher.dismiss()

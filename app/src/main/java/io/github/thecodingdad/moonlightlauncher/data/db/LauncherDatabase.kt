@@ -16,7 +16,7 @@ import androidx.room.RoomDatabase
         HaTileEntity::class,
         FilterEntity::class,
     ],
-    version = 6,
+    version = 7,
     exportSchema = true,
 )
 abstract class LauncherDatabase : RoomDatabase() {
@@ -30,10 +30,20 @@ abstract class LauncherDatabase : RoomDatabase() {
     companion object {
         fun create(context: Context): LauncherDatabase =
             Room.databaseBuilder(context, LauncherDatabase::class.java, "launcher.db")
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
                 .build()
 
         /** v4: host API type/user (companion data from Vibepollo, Apollo or Sunshine), not installed targets. */
+        /** v7: ROM targets (emulators). */
+        val MIGRATION_6_7 = object : androidx.room.migration.Migration(6, 7) {
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE launch_targets ADD COLUMN romUri TEXT")
+                db.execSQL("ALTER TABLE launch_targets ADD COLUMN romPath TEXT")
+                db.execSQL("ALTER TABLE launch_targets ADD COLUMN romPlatform TEXT")
+                db.execSQL("ALTER TABLE launch_targets ADD COLUMN emulatorKey TEXT")
+            }
+        }
+
         /** v6: manual order of group members. */
         val MIGRATION_5_6 = object : androidx.room.migration.Migration(5, 6) {
             override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {

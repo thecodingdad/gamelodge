@@ -88,7 +88,16 @@ import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 fun targetLabel(target: LaunchTargetEntity): String = when (target.type) {
     TargetType.LOCAL -> stringResource(R.string.target_local)
     TargetType.REMOTE -> stringResource(R.string.target_remote, target.hostName ?: "?")
+    TargetType.ROM -> {
+        // The emulator the game starts with.
+        val emulation = androidx.compose.ui.platform.LocalContext.current.container.emulation
+        val choice = target.romPlatform?.let { emulation.resolve(it, target.emulatorKey) }
+        stringResource(R.string.target_rom, choice?.label ?: stringResource(R.string.emulator_none))
+    }
 }
+
+/** One way to start in the picker: a target, and for ROMs with "start with…" one entry per emulator. */
+private class StartOption(val target: LaunchTargetEntity, val label: String, val emulatorKey: String? = null)
 
 /** Where to start (always asked when there is more than one target) and, for "start with…", which profile. */
 @Composable
@@ -97,7 +106,7 @@ fun TargetPickerDialog(
     profiles: List<StreamProfile>,
     activeProfile: StreamProfile,
     onDismiss: () -> Unit,
-    onLaunch: (LibraryEntry, LaunchTargetEntity, StreamProfile?) -> Unit,
+    onLaunch: (LibraryEntry, LaunchTargetEntity, StreamProfile?, String?) -> Unit,
 ) {
     val startFocus = remember { FocusRequester() }
     Modal(visible = pick != null, onDismiss = onDismiss, title = pick?.entry?.item?.title, initialFocus = startFocus) {
@@ -136,13 +145,26 @@ fun TargetPickerDialog(
 
         Text(stringResource(R.string.launch_where), style = MaterialTheme.typography.labelLarge, color = LauncherTheme.colors.onSurfaceMuted)
         Spacer(Modifier.height(8.dp))
+        val emulation = androidx.compose.ui.platform.LocalContext.current.container.emulation
+        val options = p.entry.targets.sortedBy { it.type == TargetType.REMOTE }.flatMap { target ->
+            val platform = target.romPlatform
+            if (target.type == TargetType.ROM && p.chooseProfile && platform != null) {
+                // "Start with…": every installed emulator of the platform.
+                emulation.choices(platform).map { StartOption(target, stringResource(R.string.target_rom, it.label), it.key) }
+                    .ifEmpty { listOf(StartOption(target, targetLabel(target))) }
+            } else listOf(StartOption(target, targetLabel(target)))
+        }
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            p.entry.targets.sortedBy { it.type != TargetType.LOCAL }.forEachIndexed { index, target ->
+            options.forEachIndexed { index, option ->
                 LauncherButton(
-                    text = targetLabel(target),
-                    icon = if (target.type == TargetType.LOCAL) Icons.Filled.PhoneAndroid else Icons.Filled.Cloud,
+                    text = option.label,
+                    icon = when (option.target.type) {
+                        TargetType.LOCAL -> Icons.Filled.PhoneAndroid
+                        TargetType.ROM -> Icons.Filled.SportsEsports
+                        TargetType.REMOTE -> Icons.Filled.Cloud
+                    },
                     primary = true,
-                    onClick = { onLaunch(p.entry, target, if (showProfiles) chosenProfile else null) },
+                    onClick = { onLaunch(p.entry, option.target, if (showProfiles) chosenProfile else null, option.emulatorKey) },
                     modifier = Modifier.fillMaxWidth().then(if (index == 0) Modifier.focusRequester(startFocus) else Modifier),
                 )
             }
@@ -246,6 +268,8 @@ private fun errorText(error: LaunchError) = stringResource(
         LaunchError.APP_NOT_INSTALLED -> R.string.error_app_missing
         LaunchError.START_FAILED -> R.string.error_start_failed
         LaunchError.QUIT_FAILED -> R.string.error_quit_failed
+        LaunchError.NO_EMULATOR -> R.string.error_no_emulator
+        LaunchError.ROM_NEEDS_PATH -> R.string.error_rom_needs_path
     },
 )
 
@@ -266,6 +290,8 @@ fun EntryContextMenu(
     onEditMetadata: (LibraryEntry) -> Unit,
     /** Apps: tile for the start tab (apps have no metadata). */
     onAppArtwork: (LibraryEntry) -> Unit = {},
+    /** ROMs: the emulator this game starts with. */
+    onEmulator: (LibraryEntry) -> Unit = {},
     /** Opened from the game's own detail page: its buttons already cover play and favorite. */
     inDetail: Boolean = false,
 ) {
@@ -321,8 +347,48 @@ fun EntryContextMenu(
             } else {
                 LauncherButton(stringResource(R.string.action_mark_game), act { onKind(e, ItemKind.GAME) }, Modifier.fillMaxWidth(), Icons.Filled.SportsEsports)
             }
+            if (e.romTargets.isNotEmpty()) {
+                LauncherButton(stringResource(R.string.action_emulator), act { onEmulator(e) }, Modifier.fillMaxWidth(), Icons.Filled.SportsEsports)
+            }
             LauncherButton(stringResource(R.string.action_collections), act { onCollections(e) }, Modifier.fillMaxWidth(), Icons.Filled.CollectionsBookmark)
             LauncherButton(stringResource(R.string.action_hide), act { onHide(e) }, Modifier.fillMaxWidth(), Icons.Filled.VisibilityOff)
+        }
+    }
+}
+
+/**
+ * Emulator for one game: the platform's default or one of the installed emulators (kept across
+ * rescans). Several ROMs of one game (e.g. two platforms merged) each get their own choice.
+ */
+@Composable
+fun GameEmulatorDialog(entry: LibraryEntry?, onDismiss: () -> Unit, onChoose: (LaunchTargetEntity, String?) -> Unit) {
+    Modal(visible = entry != null, onDismiss = onDismiss, title = entry?.item?.title, maxWidth = 560.dp) {
+        val e = entry ?: return@Modal
+        val emulation = androidx.compose.ui.platform.LocalContext.current.container.emulation
+        val experimental = stringResource(R.string.emu_experimental)
+        Column(Modifier.heightIn(max = 480.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            for (target in e.romTargets) {
+                val platform = target.romPlatform ?: continue
+                val choices = emulation.choices(platform)
+                if (e.romTargets.size > 1) {
+                    Text(emulation.catalog.platform(platform)?.displayName ?: platform, style = MaterialTheme.typography.titleSmall, color = LauncherTheme.colors.onSurfaceMuted)
+                }
+                if (choices.isEmpty()) {
+                    Text(stringResource(R.string.emu_none_installed), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+                    continue
+                }
+                val platformDefault = emulation.resolve(platform, null)
+                LauncherButton(
+                    stringResource(R.string.emu_use_default, platformDefault?.label.orEmpty()), { onChoose(target, null) },
+                    Modifier.fillMaxWidth(), primary = target.emulatorKey == null,
+                )
+                choices.forEach { choice ->
+                    LauncherButton(
+                        if (choice.experimental) "${choice.label} ($experimental)" else choice.label, { onChoose(target, choice.key) },
+                        Modifier.fillMaxWidth(), Icons.Filled.SportsEsports, primary = target.emulatorKey == choice.key,
+                    )
+                }
+            }
         }
     }
 }

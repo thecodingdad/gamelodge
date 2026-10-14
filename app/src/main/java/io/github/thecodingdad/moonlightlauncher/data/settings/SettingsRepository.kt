@@ -73,6 +73,7 @@ data class LauncherSettings(
     val filtersSeeded: Boolean = false,
     /** The "not installed" default filter (added later) was created for existing installs. */
     val notInstalledFilterSeeded: Boolean = false,
+    val emulationFilterSeeded: Boolean = false,
     /** Hide Android's navigation bar / gesture handle while the launcher is shown. */
     val hideNavigationBar: Boolean = false,
     /** Show the button hint bar (only while a controller is connected). */
@@ -81,6 +82,8 @@ data class LauncherSettings(
     val gamesDirectStart: Boolean = false,
     /** Narrow handle at the right screen edge that opens the quick menu over other apps. */
     val quickMenuEdgeHandle: Boolean = false,
+    /** Emulators and ROM folders ([io.github.thecodingdad.moonlightlauncher.data.emulation.EmulationConfig] as JSON). */
+    val emulation: String = "",
     /** Version of the automatic platform rules the library was last re-evaluated with. */
     val platformRule: Int = 0,
     /** AYN Odin: put every external controller on Odin Mapping's blacklist (keeps battery/rumble). */
@@ -145,10 +148,12 @@ class SettingsRepository(context: Context) {
         val onboardingDone = booleanPreferencesKey("onboarding_done")
         val filtersSeeded = booleanPreferencesKey("filters_seeded")
         val notInstalledFilterSeeded = booleanPreferencesKey("not_installed_filter_seeded")
+        val emulationFilterSeeded = booleanPreferencesKey("emulation_filter_seeded")
         val hideNavigationBar = booleanPreferencesKey("hide_navigation_bar")
         val showHintBar = booleanPreferencesKey("show_hint_bar")
         val gamesDirectStart = booleanPreferencesKey("games_direct_start")
         val quickMenuEdgeHandle = booleanPreferencesKey("quick_menu_edge_handle")
+        val emulation = stringPreferencesKey("emulation")
         val platformRule = intPreferencesKey("platform_rule")
         val odinKeepControllers = booleanPreferencesKey("odin_keep_controllers")
         val quickTiles = stringPreferencesKey("quick_tiles")
@@ -210,10 +215,12 @@ class SettingsRepository(context: Context) {
             onboardingDone = this[K.onboardingDone] ?: d.onboardingDone,
             filtersSeeded = this[K.filtersSeeded] ?: d.filtersSeeded,
             notInstalledFilterSeeded = this[K.notInstalledFilterSeeded] ?: d.notInstalledFilterSeeded,
+            emulationFilterSeeded = this[K.emulationFilterSeeded] ?: d.emulationFilterSeeded,
             hideNavigationBar = this[K.hideNavigationBar] ?: d.hideNavigationBar,
             showHintBar = this[K.showHintBar] ?: d.showHintBar,
             gamesDirectStart = this[K.gamesDirectStart] ?: d.gamesDirectStart,
             quickMenuEdgeHandle = this[K.quickMenuEdgeHandle] ?: d.quickMenuEdgeHandle,
+            emulation = this[K.emulation] ?: d.emulation,
             platformRule = this[K.platformRule] ?: d.platformRule,
             odinKeepControllers = this[K.odinKeepControllers] ?: d.odinKeepControllers,
             quickTiles = this[K.quickTiles]?.split(',')?.filter { it.isNotBlank() } ?: d.quickTiles,
@@ -264,10 +271,12 @@ class SettingsRepository(context: Context) {
         this[K.onboardingDone] = s.onboardingDone
         this[K.filtersSeeded] = s.filtersSeeded
         this[K.notInstalledFilterSeeded] = s.notInstalledFilterSeeded
+        this[K.emulationFilterSeeded] = s.emulationFilterSeeded
         this[K.hideNavigationBar] = s.hideNavigationBar
         this[K.showHintBar] = s.showHintBar
         this[K.gamesDirectStart] = s.gamesDirectStart
         this[K.quickMenuEdgeHandle] = s.quickMenuEdgeHandle
+        this[K.emulation] = s.emulation
         this[K.platformRule] = s.platformRule
         this[K.odinKeepControllers] = s.odinKeepControllers
         this[K.quickTiles] = s.quickTiles.joinToString(",")

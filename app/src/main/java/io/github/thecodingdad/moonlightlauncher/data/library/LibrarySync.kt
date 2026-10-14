@@ -28,10 +28,18 @@ data class SourceEntry(
     val companionGame: Boolean? = null,
     /** Companion data: false = owned only, the entry installs the game. */
     val installed: Boolean = true,
+    /** ROMs: game file, its real path if known, catalog platform id and platform name. */
+    val romUri: String? = null,
+    val romPath: String? = null,
+    val romPlatform: String? = null,
+    val platform: String? = null,
+    /** Fallback cover: an image next to the ROM or from ES-DE's media folder (URI or path). */
+    val boxArt: String? = null,
 ) {
     companion object {
         fun localId(packageName: String) = "local:$packageName"
         fun remoteId(hostUuid: String, appId: Int) = "remote:$hostUuid:$appId"
+        fun romId(uri: String) = "rom:$uri"
     }
 }
 
@@ -52,6 +60,10 @@ class LibrarySync(
 
     suspend fun syncHost(hostUuid: String, entries: List<SourceEntry>) =
         sync(entries) { it.type == TargetType.REMOTE && it.hostUuid == hostUuid }
+
+    /** All ROMs found in the configured folders (one source); ROMs under [keepUnder] stay as they are. */
+    suspend fun syncRoms(entries: List<SourceEntry>, keepUnder: List<String> = emptyList()) =
+        sync(entries) { t -> t.type == TargetType.ROM && keepUnder.none { t.romUri.orEmpty().startsWith(it) } }
 
     /** Drops everything that belongs to a removed host. */
     suspend fun removeHost(hostUuid: String) = sync(emptyList()) {
@@ -80,7 +92,7 @@ class LibrarySync(
                 } else {
                     findOrCreateItem(entry, now)
                 }
-                dao.upsertTargets(listOf(entry.toTarget(itemId, known?.boxArtPath, now)))
+                dao.upsertTargets(listOf(entry.toTarget(itemId, known, now)))
             }
 
             val gone = existing.keys.filterNot { it in reportedIds }
@@ -110,8 +122,13 @@ class LibrarySync(
         val sameSource: (LaunchTargetEntity) -> Boolean = { t ->
             t.type == entry.type && (entry.type == TargetType.LOCAL || t.hostUuid == entry.hostUuid)
         }
+        // ROMs only merge with an item of the same platform (or one without a known platform):
+        // "Tetris" for the Game Boy is not "Tetris" for the NES.
+        val samePlatform: (LibraryItemEntity) -> Boolean = { item ->
+            entry.platform == null || item.platform == null || item.platform.equals(entry.platform, ignoreCase = true)
+        }
         val candidate = dao.findByNormalizedTitle(normalized)
-            .firstOrNull { item -> dao.getTargetsForItem(item.id).none(sameSource) }
+            .firstOrNull { item -> samePlatform(item) && dao.getTargetsForItem(item.id).none(sameSource) }
         candidate?.let { existing ->
             // Same title from another source: merge. Many Android games lack the game flag,
             // so if any source says "game" an automatically classified item becomes a game.
@@ -173,11 +190,12 @@ class LibrarySync(
         isRemote = type == TargetType.REMOTE,
         remoteAppUuid = appUuid,
         androidGameFlag = androidGameFlag,
-        companionGame = companionGame,
+        // A ROM is a game by definition.
+        companionGame = if (type == TargetType.ROM) true else companionGame,
         packageName = packageName,
     )
 
-    private fun SourceEntry.toTarget(itemId: String, boxArtPath: String?, now: Long) = LaunchTargetEntity(
+    private fun SourceEntry.toTarget(itemId: String, known: LaunchTargetEntity?, now: Long) = LaunchTargetEntity(
         id = targetId,
         itemId = itemId,
         type = type,
@@ -188,8 +206,13 @@ class LibrarySync(
         appId = appId,
         appUuid = appUuid,
         hdrSupported = hdrSupported,
-        boxArtPath = boxArtPath,
+        boxArtPath = boxArt ?: known?.boxArtPath,
         lastSeenAt = now,
         installed = installed,
+        romUri = romUri,
+        romPath = romPath,
+        romPlatform = romPlatform,
+        // Chosen by the user: kept across rescans.
+        emulatorKey = known?.emulatorKey,
     )
 }

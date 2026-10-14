@@ -25,7 +25,8 @@ enum class MetadataState {
     LOCKED,
 }
 
-enum class TargetType { LOCAL, REMOTE }
+/** LOCAL: installed Android app, REMOTE: app on a streaming host, ROM: game file for an emulator. */
+enum class TargetType { LOCAL, REMOTE, ROM }
 
 @Entity(
     tableName = "library_items",
@@ -133,7 +134,7 @@ data class FilterEntity(
     indices = [Index("itemId"), Index("hostUuid")],
 )
 data class LaunchTargetEntity(
-    /** `local:<package>` or `remote:<hostUuid>:<appId>` */
+    /** `local:<package>`, `remote:<hostUuid>:<appId>` or `rom:<document uri>` */
     @PrimaryKey val id: String,
     val itemId: String,
     val type: TargetType,
@@ -149,6 +150,15 @@ data class LaunchTargetEntity(
     val lastSeenAt: Long,
     /** False for an owned game the host entry only installs (companion data). */
     val installed: Boolean = true,
+    // --- added in schema v7 (ROMs) ---
+    /** Document URI of the game file (in a folder granted via the storage access framework). */
+    val romUri: String? = null,
+    /** Real file path when known (needed by emulators that only take paths, e.g. RetroArch). */
+    val romPath: String? = null,
+    /** Catalog platform id ("snes", "psx" …). */
+    val romPlatform: String? = null,
+    /** Emulator chosen for this game; null = the platform's default. */
+    val emulatorKey: String? = null,
 )
 
 @Entity(
@@ -228,10 +238,11 @@ data class LibraryEntry(
 ) {
     val localTarget: LaunchTargetEntity? get() = targets.firstOrNull { it.type == TargetType.LOCAL }
     val remoteTargets: List<LaunchTargetEntity> get() = targets.filter { it.type == TargetType.REMOTE }
+    val romTargets: List<LaunchTargetEntity> get() = targets.filter { it.type == TargetType.ROM }
     val boxArtPath: String? get() = targets.firstNotNullOfOrNull { it.boxArtPath }
 
     /** Only owned: no local app and every host entry would install the game first. */
-    val notInstalled: Boolean get() = targets.isNotEmpty() && localTarget == null && remoteTargets.none { it.installed }
+    val notInstalled: Boolean get() = targets.isNotEmpty() && localTarget == null && romTargets.isEmpty() && remoteTargets.none { it.installed }
 
     /** "Start with…" only makes sense when the game is installed on more than one device/host. */
     val hasTargetChoice: Boolean get() = targets.count { it.type == TargetType.LOCAL || it.installed } > 1

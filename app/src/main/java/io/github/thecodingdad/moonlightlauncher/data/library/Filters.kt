@@ -126,6 +126,8 @@ data class FilterRules(
 
     companion object {
         const val SOURCE_LOCAL = "local"
+        /** Source value of games from the ROM folders. */
+        const val SOURCE_EMULATOR = "emulator"
         private val json = Json { ignoreUnknownKeys = true; encodeDefaults = false }
         fun decode(raw: String?): FilterRules = raw?.let { runCatching { json.decodeFromString<FilterRules>(it) }.getOrNull() } ?: FilterRules()
         fun encode(rules: FilterRules): String = json.encodeToString(serializer(), rules)
@@ -145,12 +147,14 @@ object BuiltinFilter {
     const val NOT_INSTALLED = "not_installed"
     const val REVIEW = "review"
     const val HIDDEN = "hidden"
+    const val EMULATION = "emulation"
 
     /** Default game filters in display order. */
     val gameDefaults = listOf(
         Default(CONTINUE, library = false, home = true),
         Default(ALL, library = true, home = false),
         Default(LOCAL, library = true, home = false),
+        Default(EMULATION, library = true, home = false),
         Default(HOSTS, library = true, home = false),
         Default(PLATFORMS, library = true, home = false),
         Default(FAVORITES, library = true, home = true),
@@ -178,6 +182,8 @@ object BuiltinFilter {
         CONTINUE -> FilterRules(listOf(FilterCondition(FilterField.PLAYED, setOf("true"))), sort = LibrarySort.LAST_PLAYED, limit = 20)
         RECENT -> FilterRules(sort = LibrarySort.ADDED, limit = 20)
         LOCAL -> FilterRules(listOf(FilterCondition(FilterField.SOURCE, setOf(FilterRules.SOURCE_LOCAL))))
+        // ROMs, split by platform.
+        EMULATION -> FilterRules(listOf(FilterCondition(FilterField.SOURCE, setOf(FilterRules.SOURCE_EMULATOR))), groupBy = GroupBy.PLATFORM)
         HOSTS -> FilterRules(groupBy = GroupBy.HOST, chipShowName = false, rowShowName = false)
         PLATFORMS -> FilterRules(groupBy = GroupBy.PLATFORM, chipShowName = false, rowShowName = false)
         FAVORITES -> FilterRules(listOf(FilterCondition(FilterField.FAVORITE, setOf("true"))))
@@ -325,6 +331,7 @@ object FilterEngine {
             FilterField.CATEGORY -> splitList(item.playniteCategories)
             FilterField.SOURCE -> buildList {
                 if (entry.localTarget != null) add(FilterRules.SOURCE_LOCAL)
+                if (entry.romTargets.isNotEmpty()) add(FilterRules.SOURCE_EMULATOR)
                 entry.remoteTargets.mapNotNull { it.hostUuid }.distinct().forEach(::add)
             }
             FilterField.LIBRARY -> listOfNotNull(item.playnitePlugin?.takeIf { it.isNotBlank() })

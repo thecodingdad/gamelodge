@@ -60,6 +60,10 @@ interface LibraryDao {
     @Upsert
     suspend fun upsertTargets(targets: List<LaunchTargetEntity>)
 
+    /** Emulator chosen for one game (ROM target); null = the platform's default. */
+    @Query("UPDATE launch_targets SET emulatorKey = :key WHERE id = :targetId")
+    suspend fun setTargetEmulator(targetId: String, key: String?)
+
     @Query("DELETE FROM launch_targets WHERE id IN (:ids)")
     suspend fun deleteTargets(ids: List<String>)
 

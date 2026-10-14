@@ -36,7 +36,7 @@ sealed interface LaunchState {
 
 enum class LaunchStep { WAKING_HOST, CONNECTING_VPN, CHECKING_NETWORK, QUITTING_RUNNING, STARTING }
 
-enum class LaunchError { HOST_OFFLINE, WAKE_FAILED, NOT_PAIRED, NO_LAUNCH_PERMISSION, APP_NOT_INSTALLED, START_FAILED, QUIT_FAILED }
+enum class LaunchError { HOST_OFFLINE, WAKE_FAILED, NOT_PAIRED, NO_LAUNCH_PERMISSION, APP_NOT_INSTALLED, START_FAILED, QUIT_FAILED, NO_EMULATOR, ROM_NEEDS_PATH }
 
 /** Optional VPN hook, filled by the VPN module: connects if needed, returns true when it did. */
 fun interface VpnAutoConnect {
@@ -85,11 +85,35 @@ class LaunchCoordinator(private val container: AppContainer) {
         override: StreamProfile? = null,
         quitRunning: Boolean = false,
         skipNetworkCheck: Boolean = false,
+        /** ROMs: emulator for this start only ("start with…"); null = the game's / platform's choice. */
+        emulatorKey: String? = null,
     ) {
         running = kotlin.coroutines.coroutineContext[kotlinx.coroutines.Job]
         when (target.type) {
             TargetType.LOCAL -> launchLocal(activity, entry, target)
             TargetType.REMOTE -> launchRemote(activity, entry, target, override, quitRunning, skipNetworkCheck)
+            TargetType.ROM -> launchRom(activity, entry, target, emulatorKey)
+        }
+    }
+
+    private suspend fun launchRom(activity: Activity, entry: LibraryEntry, target: LaunchTargetEntity, emulatorKey: String?) {
+        val platform = target.romPlatform
+        val uri = target.romUri
+        val choice = if (platform != null) container.emulation.resolve(platform, emulatorKey ?: target.emulatorKey) else null
+        if (choice == null || uri == null) {
+            _state.value = LaunchState.Failed(entry, LaunchError.NO_EMULATOR)
+            return
+        }
+        when (val result = io.github.thecodingdad.moonlightlauncher.data.emulation.EmulatorLauncher.intent(activity, choice, uri, target.romPath)) {
+            is io.github.thecodingdad.moonlightlauncher.data.emulation.EmulatorLauncher.Result.Problem ->
+                _state.value = LaunchState.Failed(entry, LaunchError.ROM_NEEDS_PATH)
+            is io.github.thecodingdad.moonlightlauncher.data.emulation.EmulatorLauncher.Result.Ok -> {
+                val started = runCatching { activity.startActivity(result.intent) }
+                    .onFailure { io.github.thecodingdad.moonlightlauncher.util.Log.e("Emulator start failed (${choice.key})", it) }
+                // Android's usage data only sees the emulator, not the game: always measured here.
+                if (started.isSuccess) container.playtime.start(entry.item.id, target.id, null)
+                _state.value = if (started.isSuccess) LaunchState.Idle else LaunchState.Failed(entry, LaunchError.START_FAILED)
+            }
         }
     }
 

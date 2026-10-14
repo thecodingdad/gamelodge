@@ -29,6 +29,7 @@ private val pageTitles: List<Pair<SettingsTarget, Int>> = listOf(
     SettingsTarget.Page(SettingsPageId.FILTERS) to R.string.settings_filters,
     SettingsTarget.Page(SettingsPageId.METADATA) to R.string.settings_metadata,
     SettingsTarget.Page(SettingsPageId.USAGE) to R.string.settings_usage,
+    SettingsTarget.Page(SettingsPageId.EMULATORS) to R.string.settings_emulators,
     SettingsTarget.Page(SettingsPageId.HOSTS) to R.string.settings_hosts,
     SettingsTarget.Page(SettingsPageId.PROFILES) to R.string.settings_profiles,
     SettingsTarget.Page(SettingsPageId.VPN) to R.string.settings_vpn,
@@ -59,6 +60,9 @@ private val settingsIndex: List<SearchEntry> = buildList {
     ))
     addAll(page(SettingsPageId.METADATA, R.string.metadata_auto, R.string.metadata_review_list))
     addAll(page(SettingsPageId.USAGE, R.string.usage_access, R.string.stats_title))
+    addAll(page(
+        SettingsPageId.EMULATORS, R.string.emu_folders, R.string.emu_folder_add, R.string.emu_all_files, R.string.emu_emulators, R.string.emu_custom,
+    ))
     addAll(page(
         SettingsPageId.VPN, R.string.vpn_tunnels, R.string.vpn_default_tunnel, R.string.vpn_auto, R.string.vpn_auto_unreachable,
         R.string.vpn_auto_outside, R.string.vpn_disconnect_home,

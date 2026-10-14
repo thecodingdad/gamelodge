@@ -82,6 +82,33 @@ class LibraryRepository(
         suggestPlatforms()
     }
 
+    /**
+     * Games found in the ROM folders. The folder decides the platform (trusted like the companion
+     * data), so a ROM merges only with entries of the same platform.
+     */
+    suspend fun syncRoms(roms: List<io.github.thecodingdad.moonlightlauncher.data.emulation.RomFile>, keepUnder: List<String> = emptyList()) {
+        val entries = roms.map { rom ->
+            SourceEntry(
+                targetId = SourceEntry.romId(rom.uri),
+                type = TargetType.ROM,
+                name = rom.name,
+                romUri = rom.uri,
+                romPath = rom.path,
+                romPlatform = rom.platform.id,
+                platform = rom.platform.displayName,
+                boxArt = rom.image,
+            )
+        }
+        sync.syncRoms(entries, keepUnder)
+        val byTarget = entries.associateBy { it.targetId }
+        for (target in dao.getAllTargets().filter { it.type == TargetType.ROM }) {
+            val platform = byTarget[target.id]?.platform ?: continue
+            val item = dao.getItem(target.itemId) ?: continue
+            if (PlatformResolver.mayReplace(item, PlatformSource.COMPANION, platform)) dao.setPlatform(item.id, platform, PlatformSource.COMPANION)
+        }
+        Log.d("ROM sync: ${roms.size} games")
+    }
+
     /** Re-applies a host's app list, e.g. after its Vibepollo access changed. */
     suspend fun resyncHost(hostUuid: String) {
         hosts.appLists.value[hostUuid]?.let { syncHost(hostUuid, it) }

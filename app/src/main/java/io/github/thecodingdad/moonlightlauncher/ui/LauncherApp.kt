@@ -225,6 +225,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
     var detailShownId by remember { mutableStateOf<String?>(null) }
     val detailOpenFor = detailShownId
     var collectionsFor by remember { mutableStateOf<io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry?>(null) }
+    var emulatorFor by remember { mutableStateOf<String?>(null) }
 
     val density = androidx.compose.ui.platform.LocalDensity.current
     val scrollSpec = remember(density) { io.github.thecodingdad.moonlightlauncher.ui.components.MarginBringIntoViewSpec(density) }
@@ -390,9 +391,9 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                     profiles = profiles,
                     activeProfile = activeProfile,
                     onDismiss = { entryActions.pick = null },
-                    onLaunch = { entry, target, profile ->
+                    onLaunch = { entry, target, profile, emulatorKey ->
                         entryActions.pick = null
-                        vm.launch(activity, entry, target, profile)
+                        vm.launch(activity, entry, target, profile, emulatorKey = emulatorKey)
                     },
                 )
                 val runningForMenu by vm.runningSessions.collectAsState()
@@ -428,10 +429,16 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                     onCollections = { collectionsFor = it },
                     onEditMetadata = { metaEditorFor = it.item.id },
                     onAppArtwork = { appTileFor = it.item.id },
+                    onEmulator = { emulatorFor = it.item.id },
                     inDetail = detailOpenFor == entryActions.contextMenuFor?.item?.id,
                 )
                 // Metadata editor with its match and artwork dialogs, reachable from every menu.
                 val metaLibrary by vm.allEntries.collectAsState()
+                io.github.thecodingdad.moonlightlauncher.ui.shell.GameEmulatorDialog(
+                    entry = emulatorFor?.let { id -> metaLibrary.firstOrNull { it.item.id == id } },
+                    onDismiss = { emulatorFor = null },
+                    onChoose = { target, key -> vm.setGameEmulator(target.id, key); emulatorFor = null },
+                )
                 val metaEntry = metaEditorFor?.let { id -> metaLibrary.firstOrNull { it.item.id == id } }
                 io.github.thecodingdad.moonlightlauncher.ui.screens.metadata.MetadataEditorDialog(
                     entry = metaEntry, library = metaLibrary,
@@ -995,6 +1002,7 @@ private fun SettingsPageContent(
         SettingsPageId.CONTROLS -> ControlsSettings(settings, vm::updateSettings)
         SettingsPageId.LANGUAGE -> LanguageSettings(settings, vm::updateSettings)
         SettingsPageId.USAGE -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.UsageSettings(openStats)
+        SettingsPageId.EMULATORS -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.EmulatorSettings(vm)
         SettingsPageId.FILTERS -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.FilterSettings(vm, io.github.thecodingdad.moonlightlauncher.data.db.FilterScope.GAMES)
         SettingsPageId.QUICK_MENU -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.QuickMenuSettings(vm, settings, vm::updateSettings)
         SettingsPageId.APP_FILTERS -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.FilterSettings(vm, io.github.thecodingdad.moonlightlauncher.data.db.FilterScope.APPS)

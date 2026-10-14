@@ -25,6 +25,7 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
         container = AppContainer(this)
         container.hosts.bind()
         container.library.start()
+        container.emulation.start()
         container.controllerSettings.install()
         io.github.thecodingdad.moonlightlauncher.ui.shell.StreamConnectingOverlay.install(container)
         container.scope.launch { container.filters.ensureDefaults() }

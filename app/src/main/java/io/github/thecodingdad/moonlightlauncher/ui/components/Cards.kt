@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cloud
+import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.PhoneAndroid
@@ -132,6 +133,7 @@ fun AppTileCard(
 fun SourceBadges(entry: LibraryEntry, modifier: Modifier = Modifier) {
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         if (entry.localTarget != null) Badge(Icons.Filled.PhoneAndroid)
+        if (entry.romTargets.isNotEmpty()) Badge(Icons.Filled.SportsEsports)
         if (entry.remoteTargets.isNotEmpty()) Badge(Icons.Filled.Cloud)
         if (entry.notInstalled) Badge(Icons.Filled.Download)
     }

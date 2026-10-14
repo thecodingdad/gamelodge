@@ -856,4 +856,56 @@
     <!-- Settings -->
     <string name="settings_search">Einstellungen durchsuchen</string>
     <string name="settings_search_none">Keine passende Einstellung</string>
+
+    <!-- Emulation -->
+    <string name="target_rom">%s (Emulator)</string>
+    <string name="emulator_none">kein Emulator</string>
+    <string name="error_no_emulator">Für dieses Spiel ist kein passender Emulator installiert. Installiere einen für seine Plattform (Einstellungen → Emulatoren).</string>
+    <string name="error_rom_needs_path">Dieser Emulator braucht den echten Dateipfad, der für diesen Ordner nicht bekannt ist. Schalte unter Einstellungen → Emulatoren „Zugriff auf alle Dateien“ ein oder wähle einen anderen Emulator.</string>
+
+    <!-- Emulation -->
+    <string name="filter_emulation">Emulation</string>
+
+    <!-- Emulation -->
+    <string name="action_save">Speichern</string>
+    <string name="settings_emulators">Emulatoren</string>
+    <string name="settings_emulators_sub">ROM-Ordner, Emulator pro Plattform</string>
+    <string name="emu_intro">Spiele aus deinen ROM-Ordnern erscheinen in der Bibliothek und starten mit einem installierten Android-Emulator. Die Startbefehle stammen von ES-DE; nicht bestätigte Emulatoren sind als experimentell markiert.</string>
+    <string name="emu_folders">ROM-Ordner</string>
+    <string name="emu_folder_add">Ordner hinzufügen</string>
+    <string name="emu_folder_auto">Ein Unterordner pro System</string>
+    <string name="emu_folder_no_access">Kein Zugriff mehr – entfernen und neu wählen</string>
+    <string name="emu_folder_platform">Plattform</string>
+    <string name="emu_folder_platform_sub">„Ein Unterordner pro System“ erkennt Ordner wie snes, psx oder switch</string>
+    <string name="emu_folder_remove">Halten zum Entfernen</string>
+    <string name="emu_scan">Jetzt scannen</string>
+    <string name="emu_scanning">Scanne…</string>
+    <plurals name="emu_found">
+        <item quantity="one">%d Spiel gefunden</item>
+        <item quantity="other">%d Spiele gefunden</item>
+    </plurals>
+    <string name="emu_all_files">Zugriff auf alle Dateien</string>
+    <string name="emu_all_files_sub">Optional: liest die ROM-Ordner direkt (schneller) und findet ES-DE-Cover. Die Ordner wählst du trotzdem oben aus.</string>
+    <string name="emu_emulators">Emulator pro Plattform</string>
+    <string name="emu_no_platforms">Füge einen ROM-Ordner hinzu, um Emulatoren zu wählen.</string>
+    <string name="emu_none_installed">Kein Emulator installiert</string>
+    <string name="emu_experimental">experimentell</string>
+    <string name="emu_bios_hint">braucht BIOS/Firmware im Emulator</string>
+    <string name="emu_custom">Eigene Emulatoren</string>
+    <string name="emu_custom_help">Für Emulatoren, die die Liste nicht kennt. Immer als experimentell markiert.</string>
+    <string name="emu_custom_add">Emulator hinzufügen</string>
+    <string name="emu_custom_title">Eigener Emulator</string>
+    <string name="emu_custom_name">Name</string>
+    <string name="emu_custom_package">Paketname</string>
+    <string name="emu_custom_activity">Activity (optional)</string>
+    <string name="emu_custom_action">Intent-Aktion (optional)</string>
+    <string name="emu_custom_data">Daten-URI (optional)</string>
+    <string name="emu_custom_extras">Extras (optional)</string>
+    <string name="emu_custom_placeholders">Platzhalter: %ROMSAF% (Datei als URI), %ROM% (Dateipfad), %BASENAME% (Dateiname ohne Endung). Extras mit „;“ getrennt als Name=Wert, andere Typen mit bool:, int: oder long: davor.</string>
+    <string name="emu_custom_platforms">Plattformen</string>
+    <string name="emu_custom_remove">Halten zum Entfernen</string>
+
+    <!-- Emulation -->
+    <string name="action_emulator">Emulator wählen</string>
+    <string name="emu_use_default">Standard der Plattform (%s)</string>
 </resources>

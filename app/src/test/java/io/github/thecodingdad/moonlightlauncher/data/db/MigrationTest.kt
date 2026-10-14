@@ -47,4 +47,11 @@ class MigrationTest {
         val db = helper.runMigrationsAndValidate("m6.db", 6, true, LauncherDatabase.MIGRATION_5_6)
         db.query("SELECT position FROM item_collections").close()
     }
+
+    @Test
+    fun `v6 to v7 adds the ROM columns`() {
+        helper.createDatabase("m7.db", 6).close()
+        val db = helper.runMigrationsAndValidate("m7.db", 7, true, LauncherDatabase.MIGRATION_6_7)
+        db.query("SELECT romUri, romPath, romPlatform, emulatorKey FROM launch_targets").close()
+    }
 }

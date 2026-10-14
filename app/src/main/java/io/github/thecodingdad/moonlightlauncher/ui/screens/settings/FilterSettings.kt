@@ -512,12 +512,13 @@ private fun conditionValueLabel(
     vm: LauncherViewModel,
 ): (FilterField, String) -> String {
     val localLabel = stringResource(R.string.filter_local)
+    val emulatorLabel = stringResource(R.string.filter_emulation)
     val collections by vm.collections.collectAsState()
     val groupNames = collections.associate { (c, _) -> c.id to c.name }
     val bucketLabels = FilterField.entries.flatMap { f -> f.buckets.map { (f to it) to bucketLabel(f, it) } }.toMap()
     return { field, value ->
         when (field) {
-            FilterField.SOURCE -> if (value == FilterRules.SOURCE_LOCAL) localLabel else hostNames[value]
+            FilterField.SOURCE -> if (value == FilterRules.SOURCE_LOCAL) localLabel else if (value == FilterRules.SOURCE_EMULATOR) emulatorLabel else hostNames[value]
                 ?: entries.firstNotNullOfOrNull { e -> e.remoteTargets.firstOrNull { t -> t.hostUuid == value }?.hostName } ?: value
             FilterField.GROUP -> groupNames[value] ?: value
             else -> if (field.type == FieldType.BUCKET) bucketLabels[field to value] ?: value else value

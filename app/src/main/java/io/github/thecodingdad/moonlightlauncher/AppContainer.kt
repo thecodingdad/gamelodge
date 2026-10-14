@@ -45,6 +45,9 @@ class AppContainer(context: Context) {
         LibraryRepository(database, LibrarySync(database), localApps, hosts, boxArt, scope, hostApi)
     }
     val playtime: PlaytimeTracker by lazy { PlaytimeTracker(database) }
+    val emulation: io.github.thecodingdad.moonlightlauncher.data.emulation.EmulationRepository by lazy {
+        io.github.thecodingdad.moonlightlauncher.data.emulation.EmulationRepository(appContext, settings, library, scope)
+    }
     val usage: io.github.thecodingdad.moonlightlauncher.data.library.UsageSync by lazy {
         io.github.thecodingdad.moonlightlauncher.data.library.UsageSync(appContext, database)
     }

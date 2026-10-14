@@ -43,14 +43,17 @@ import kotlin.math.absoluteValue
 fun LibraryEntry.coverModel(animated: Boolean = false): Any? =
     (if (animated) item.animatedCoverUrl else null)
         ?: item.coverUrl
-        ?: boxArtPath?.let(::File)
+        ?: boxArtPath?.let(::boxArtModel)
+
+/** Host box art is a cached file; a ROM's cover may be a content URI (image next to the ROM). */
+private fun boxArtModel(value: String): Any = if (value.startsWith("content://")) android.net.Uri.parse(value) else File(value)
 
 /** Best available wide background image. */
 fun LibraryEntry.heroModel(animated: Boolean = false): Any? =
     (if (animated) item.animatedHeroUrl else null)
         ?: item.heroUrl
         ?: item.coverUrl
-        ?: boxArtPath?.let(::File)
+        ?: boxArtPath?.let(::boxArtModel)
 
 /** Image with a generated, title-based placeholder when no artwork exists (yet). */
 @Composable

@@ -41,7 +41,7 @@ import io.github.thecodingdad.moonlightlauncher.data.settings.StartTab
 import io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings
 import io.github.thecodingdad.moonlightlauncher.data.settings.ThemeMode
 
-enum class SettingsPageId { HOSTS, PROFILES, HOME_SCREEN, THEME, DISPLAY, FILTERS, APP_FILTERS, QUICK_MENU, CONTROLS, SOUNDS, METADATA, USAGE, HOME_ASSISTANT, VPN, LAUNCHER, BACKUP, LANGUAGE, ABOUT }
+enum class SettingsPageId { HOSTS, PROFILES, HOME_SCREEN, THEME, DISPLAY, FILTERS, APP_FILTERS, QUICK_MENU, CONTROLS, SOUNDS, METADATA, USAGE, EMULATORS, HOME_ASSISTANT, VPN, LAUNCHER, BACKUP, LANGUAGE, ABOUT }
 
 @Composable
 fun SettingsHome(open: (SettingsPageId) -> Unit, isFirstVisit: Boolean, openControllers: () -> Unit = {}) {
@@ -73,6 +73,7 @@ fun SettingsHome(open: (SettingsPageId) -> Unit, isFirstVisit: Boolean, openCont
         NavRow(stringResource(R.string.settings_filters), { open(SettingsPageId.FILTERS) }, stringResource(R.string.settings_filters_sub), Icons.Filled.FilterAlt)
         NavRow(stringResource(R.string.settings_metadata), { open(SettingsPageId.METADATA) }, stringResource(R.string.settings_metadata_sub), Icons.Filled.Image)
         NavRow(stringResource(R.string.settings_usage), { open(SettingsPageId.USAGE) }, stringResource(R.string.settings_usage_sub), Icons.Filled.QueryStats)
+        NavRow(stringResource(R.string.settings_emulators), { open(SettingsPageId.EMULATORS) }, stringResource(R.string.settings_emulators_sub), Icons.Filled.SportsEsports)
 
         SectionHeader(stringResource(R.string.settings_group_streaming))
         NavRow(stringResource(R.string.settings_hosts), { open(SettingsPageId.HOSTS) }, stringResource(R.string.settings_hosts_sub), Icons.Filled.Computer)

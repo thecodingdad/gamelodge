@@ -75,6 +75,7 @@ fun builtinLabel(key: String): String = when (key) {
     BuiltinFilter.CONTINUE -> stringResource(R.string.home_continue)
     BuiltinFilter.RECENT -> stringResource(R.string.home_recently_added)
     BuiltinFilter.LOCAL -> stringResource(R.string.filter_local)
+    BuiltinFilter.EMULATION -> stringResource(R.string.filter_emulation)
     BuiltinFilter.HOSTS -> stringResource(R.string.filter_hosts)
     BuiltinFilter.PLATFORMS -> stringResource(R.string.filter_platforms)
     BuiltinFilter.FAVORITES -> stringResource(R.string.filter_favorites)

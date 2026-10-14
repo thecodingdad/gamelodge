@@ -139,6 +139,7 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         returningFromBackground = false
         resumed = true
+        container.emulation.rescanIfStale()
         // Also picks up a just granted overlay permission.
         io.github.thecodingdad.moonlightlauncher.system.EdgeHandle.refresh(this)
         vm.touch()
