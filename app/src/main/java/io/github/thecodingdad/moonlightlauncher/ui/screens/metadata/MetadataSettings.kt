@@ -66,5 +66,14 @@ fun MetadataSettings(
         }
 
         SourcesSection(settings.metadataSources)
+
+        val context = LocalContext.current
+        val stored by androidx.compose.runtime.produceState(0L, progress) {
+            value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { io.github.thecodingdad.moonlightlauncher.data.artwork.ArtworkFiles.sizeBytes() }
+        }
+        Text(
+            stringResource(R.string.metadata_artwork_storage, android.text.format.Formatter.formatShortFileSize(context, stored)),
+            style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted,
+        )
     }
 }

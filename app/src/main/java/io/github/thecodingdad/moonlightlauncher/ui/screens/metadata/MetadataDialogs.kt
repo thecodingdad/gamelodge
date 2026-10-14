@@ -207,7 +207,11 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
                                 showTitleOnPlaceholder = false,
                             )
                             Text(
-                                listOfNotNull(sourceLabel(option.source), stringResource(R.string.artwork_animated).takeIf { option.animated }).joinToString(" · "),
+                                listOfNotNull(
+                                    sourceLabel(option.source),
+                                    stringResource(R.string.artwork_animated).takeIf { option.animated },
+                                    option.bytes?.let { android.text.format.Formatter.formatShortFileSize(LocalContext.current, it) },
+                                ).joinToString(" · "),
                                 style = MaterialTheme.typography.labelSmall, color = androidx.compose.ui.graphics.Color.White,
                                 modifier = Modifier.align(Alignment.BottomStart).padding(6.dp)
                                     .background(androidx.compose.ui.graphics.Color(0x99000000), RoundedCornerShape(6.dp)).padding(horizontal = 6.dp, vertical = 2.dp),

@@ -231,6 +231,9 @@
     <string name="setting_animated_tiles">Animierte Kacheln</string>
     <string name="setting_animated_tiles_focus">Beim Fokussieren (Controller)</string>
     <string name="setting_animated_tiles_always">Immer (alle sichtbaren Kacheln, braucht mehr Akku)</string>
+    <string name="setting_animated_mobile">Animierte Bilder über mobile Daten laden</string>
+    <string name="setting_animated_mobile_sub">Sie sind groß (oft 10–30 MB pro Bild); sonst nur über WLAN.</string>
+    <string name="metadata_artwork_storage">Auf dem Gerät gespeicherte Bilder: %1$s</string>
     <string name="metadata_auto">Metadaten automatisch abrufen</string>
     <string name="metadata_review_list">Bitte prüfen</string>
     <string name="metadata_review_count">%d Spiele mit unsicherem Treffer</string>

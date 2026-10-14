@@ -64,6 +64,10 @@ class AppContainer(context: Context) {
     val launcher: LaunchCoordinator by lazy { LaunchCoordinator(this).also { it.vpn = vpn } }
     val hostActions: HostActions by lazy { HostActions(hosts, library) }
 
+    val artwork: io.github.thecodingdad.moonlightlauncher.data.artwork.ArtworkStore by lazy {
+        io.github.thecodingdad.moonlightlauncher.data.artwork.ArtworkStore(appContext, http, database.libraryDao(), settings, scope)
+    }
+
     val http: OkHttpClient by lazy {
         OkHttpClient.Builder()
             .connectTimeout(15, TimeUnit.SECONDS)

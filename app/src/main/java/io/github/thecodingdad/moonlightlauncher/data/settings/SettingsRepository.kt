@@ -35,6 +35,8 @@ data class LauncherSettings(
     val animatedArtwork: Boolean = true,
     /** Animated covers on tiles: only the focused one (controller) or all visible ones. */
     val animatedTilesAlways: Boolean = false,
+    /** Animated artwork is large: over metered connections (mobile data) only when allowed. */
+    val animatedOnMobileData: Boolean = false,
     /** Animated artwork of games matched before it was switched on has been looked up. */
     val animatedBackfillDone: Boolean = false,
     val showHaRowOnHome: Boolean = true,
@@ -127,6 +129,7 @@ class SettingsRepository(context: Context) {
         val reduceMotion = booleanPreferencesKey("reduce_motion")
         val animatedArtwork = booleanPreferencesKey("animated_artwork")
         val animatedTilesAlways = booleanPreferencesKey("animated_tiles_always")
+        val animatedOnMobileData = booleanPreferencesKey("animated_on_mobile_data")
         val animatedBackfillDone = booleanPreferencesKey("animated_backfill_done")
         val showHaRowOnHome = booleanPreferencesKey("show_ha_row_on_home")
         val homeRowOrder = stringPreferencesKey("home_row_order")
@@ -195,6 +198,7 @@ class SettingsRepository(context: Context) {
             reduceMotion = this[K.reduceMotion] ?: d.reduceMotion,
             animatedArtwork = this[K.animatedArtwork] ?: d.animatedArtwork,
             animatedTilesAlways = this[K.animatedTilesAlways] ?: d.animatedTilesAlways,
+            animatedOnMobileData = this[K.animatedOnMobileData] ?: d.animatedOnMobileData,
             animatedBackfillDone = this[K.animatedBackfillDone] ?: d.animatedBackfillDone,
             showHaRowOnHome = this[K.showHaRowOnHome] ?: d.showHaRowOnHome,
             homeRowOrder = this[K.homeRowOrder]?.split(',')?.filter { it.isNotEmpty() } ?: d.homeRowOrder,
@@ -256,6 +260,7 @@ class SettingsRepository(context: Context) {
         this[K.reduceMotion] = s.reduceMotion
         this[K.animatedArtwork] = s.animatedArtwork
         this[K.animatedTilesAlways] = s.animatedTilesAlways
+        this[K.animatedOnMobileData] = s.animatedOnMobileData
         this[K.animatedBackfillDone] = s.animatedBackfillDone
         this[K.showHaRowOnHome] = s.showHaRowOnHome
         this[K.homeRowOrder] = s.homeRowOrder.joinToString(",")

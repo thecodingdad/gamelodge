@@ -217,6 +217,10 @@ fun DisplaySettings(
                 label = { stringResource(if (it) R.string.setting_animated_tiles_always else R.string.setting_animated_tiles_focus) },
                 onSelect = { v -> update { it.copy(animatedTilesAlways = v) } },
             )
+            SwitchRow(
+                stringResource(R.string.setting_animated_mobile), settings.animatedOnMobileData, { v -> update { it.copy(animatedOnMobileData = v) } },
+                subtitle = stringResource(R.string.setting_animated_mobile_sub),
+            )
         }
         SwitchRow(stringResource(R.string.setting_reduce_motion), settings.reduceMotion, { v -> update { it.copy(reduceMotion = v) } })
         SliderRow(

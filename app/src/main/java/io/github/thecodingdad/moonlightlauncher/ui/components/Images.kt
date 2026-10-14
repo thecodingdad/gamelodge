@@ -27,6 +27,9 @@ import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import androidx.palette.graphics.Palette
 import coil3.compose.SubcomposeAsyncImage
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.alpha
+import io.github.thecodingdad.moonlightlauncher.data.artwork.ArtworkFiles
 import coil3.imageLoader
 import coil3.request.ImageRequest
 import coil3.request.SuccessResult
@@ -39,21 +42,47 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import kotlin.math.absoluteValue
 
-/** Best available portrait cover for an entry: metadata cover, then host box art. */
-fun LibraryEntry.coverModel(animated: Boolean = false): Any? =
-    (if (animated) item.animatedCoverUrl else null)
-        ?: item.coverUrl
+/** Best available portrait cover for an entry: metadata cover (stored file when there), then host box art. */
+fun LibraryEntry.coverModel(): Any? =
+    ArtworkFiles.model(item.coverUrl)
         ?: boxArtPath?.let(::boxArtModel)
+
+/** The animated cover, when there is one and it may be shown now (stored, or the network allows it). */
+fun LibraryEntry.animatedCoverModel(): Any? = ArtworkFiles.animatedModel(item.animatedCoverUrl)
+
+fun LibraryEntry.animatedHeroModel(): Any? = ArtworkFiles.animatedModel(item.animatedHeroUrl)
 
 /** Host box art is a cached file; a ROM's cover may be a content URI (image next to the ROM). */
 private fun boxArtModel(value: String): Any = if (value.startsWith("content://")) android.net.Uri.parse(value) else File(value)
 
 /** Best available wide background image. */
-fun LibraryEntry.heroModel(animated: Boolean = false): Any? =
-    (if (animated) item.animatedHeroUrl else null)
-        ?: item.heroUrl
-        ?: item.coverUrl
+fun LibraryEntry.heroModel(): Any? =
+    ArtworkFiles.model(item.heroUrl)
+        ?: ArtworkFiles.model(item.coverUrl)
         ?: boxArtPath?.let(::boxArtModel)
+
+/**
+ * The still image, with the animated one laid over it once that is ready: the still one stays
+ * until then (no placeholder flash), and remains if the animated one can't be loaded.
+ */
+@Composable
+private fun WithAnimated(animated: Any?, title: String, modifier: Modifier, still: @Composable (Modifier) -> Unit) {
+    if (animated == null) {
+        still(modifier)
+        return
+    }
+    Box(modifier) {
+        still(Modifier.fillMaxSize())
+        var ready by androidx.compose.runtime.remember(animated) { androidx.compose.runtime.mutableStateOf(false) }
+        coil3.compose.AsyncImage(
+            model = animated,
+            contentDescription = title,
+            contentScale = ContentScale.Crop,
+            onSuccess = { ready = true },
+            modifier = Modifier.fillMaxSize().then(if (ready) Modifier else Modifier.alpha(0f)),
+        )
+    }
+}
 
 /** Image with a generated, title-based placeholder when no artwork exists (yet). */
 @Composable
@@ -85,7 +114,7 @@ fun ArtworkImage(
 @Composable
 fun LogoImage(url: String?, title: String, modifier: Modifier = Modifier) {
     SubcomposeAsyncImage(
-        model = url,
+        model = ArtworkFiles.model(url),
         contentDescription = title,
         contentScale = ContentScale.Fit,
         alignment = Alignment.CenterStart,
@@ -219,10 +248,12 @@ private suspend fun buildAppTile(context: android.content.Context, pkg: String?,
  */
 @Composable
 fun CoverImage(entry: LibraryEntry, modifier: Modifier = Modifier, animated: Boolean = false, showTitleOnPlaceholder: Boolean = true) {
-    val model = entry.coverModel(animated)
+    val model = entry.coverModel()
     val pkg = entry.localTarget?.packageName
     if (model != null || pkg == null) {
-        ArtworkImage(model, entry.item.title, modifier, showTitleOnPlaceholder = showTitleOnPlaceholder)
+        WithAnimated(if (animated) entry.animatedCoverModel() else null, entry.item.title, modifier) {
+            ArtworkImage(model, entry.item.title, it, showTitleOnPlaceholder = showTitleOnPlaceholder)
+        }
         return
     }
     val context = LocalContext.current
@@ -246,10 +277,12 @@ fun CoverImage(entry: LibraryEntry, modifier: Modifier = Modifier, animated: Boo
  */
 @Composable
 fun HeroImage(entry: LibraryEntry, modifier: Modifier = Modifier, animated: Boolean = false) {
-    val model = entry.heroModel(animated)
+    val model = entry.heroModel()
     val pkg = entry.localTarget?.packageName
     if (model != null || pkg == null) {
-        ArtworkImage(model, entry.item.title, modifier, ContentScale.Crop, showTitleOnPlaceholder = false)
+        WithAnimated(if (animated) entry.animatedHeroModel() else null, entry.item.title, modifier) {
+            ArtworkImage(model, entry.item.title, it, ContentScale.Crop, showTitleOnPlaceholder = false)
+        }
         return
     }
     val context = LocalContext.current

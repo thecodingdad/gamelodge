@@ -48,7 +48,7 @@ enum class ArtworkKind(val field: MetaField) { COVER(MetaField.COVER), HERO(Meta
 enum class ArtworkSource { COMPANION, IGDB, STEAMGRIDDB }
 
 /** One image in the picker: [url] is stored, [thumb] previewed. */
-data class ArtworkOption(val url: String, val thumb: String, val source: ArtworkSource, val animated: Boolean = false)
+data class ArtworkOption(val url: String, val thumb: String, val source: ArtworkSource, val animated: Boolean = false, val bytes: Long? = null)
 
 /**
  * Looks up descriptions (IGDB) and artwork (IGDB, SteamGridDB) for games. Confident matches are
@@ -62,7 +62,7 @@ class MetadataService(
     private val db: LauncherDatabase,
     private val secrets: SecretStore,
     private val settings: SettingsRepository,
-    http: OkHttpClient,
+    private val http: OkHttpClient,
     private val scope: CoroutineScope,
     private val servers: io.github.thecodingdad.moonlightlauncher.data.companion.ServerRepository? = null,
 ) {
@@ -472,8 +472,17 @@ class MetadataService(
         // In the order of the sources for this kind (background: SteamGridDB before IGDB).
         val rank = if (kind == ArtworkKind.HERO) listOf(ArtworkSource.COMPANION, ArtworkSource.STEAMGRIDDB, ArtworkSource.IGDB)
         else listOf(ArtworkSource.COMPANION, ArtworkSource.IGDB, ArtworkSource.STEAMGRIDDB)
-        result.distinctBy { it.url }.sortedBy { rank.indexOf(it.source) }
+        result.distinctBy { it.url }.sortedBy { rank.indexOf(it.source) }.map { o ->
+            // Animated files are large: their size helps choosing (from the server's answer, when it tells).
+            if (o.animated) o.copy(bytes = sizeOf(o.url)) else o
+        }
     }
+
+    private fun sizeOf(url: String): Long? = runCatching {
+        http.newCall(okhttp3.Request.Builder().url(url).head().build()).execute().use { r ->
+            r.header("Content-Length")?.toLongOrNull()?.takeIf { r.isSuccessful && it > 0 }
+        }
+    }.getOrNull()
 
     /** Landscape SteamGridDB grids for an app's start tab tile. */
     suspend fun tileOptions(item: LibraryItemEntity): List<SgdbAsset> = withContext(Dispatchers.IO) {

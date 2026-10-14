@@ -233,6 +233,9 @@
     <string name="setting_animated_tiles">Animated tiles</string>
     <string name="setting_animated_tiles_focus">When focused (controller)</string>
     <string name="setting_animated_tiles_always">Always (all visible tiles, uses more battery)</string>
+    <string name="setting_animated_mobile">Load animated images over mobile data</string>
+    <string name="setting_animated_mobile_sub">They are large (often 10–30 MB each); otherwise only over Wi-Fi.</string>
+    <string name="metadata_artwork_storage">Artwork stored on this device: %1$s</string>
     <string name="metadata_auto">Fetch metadata automatically</string>
     <string name="metadata_review_list">Needs review</string>
     <string name="metadata_review_count">%d games with uncertain matches</string>
