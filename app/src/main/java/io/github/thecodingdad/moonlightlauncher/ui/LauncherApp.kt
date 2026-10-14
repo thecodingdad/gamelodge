@@ -184,6 +184,8 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
     }
     LaunchedEffect(Unit) {
         vm.homePressed.collect {
+            // Every open popup closes, wherever it was opened.
+            io.github.thecodingdad.moonlightlauncher.ui.components.OverlayHost.dismissAll()
             // Home while the launcher is shown: to the configured start tab. (Coming back from
             // another app or a stream, the first Home just shows what was there before.)
             val start = MainTab.valueOf(vm.settings.value.startTab.name).ordinal

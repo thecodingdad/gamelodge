@@ -58,7 +58,7 @@ fun Modal(
     /** Element that gets focus when the modal opens; defaults to the first focusable child. */
     initialFocus: FocusRequester? = null,
     content: @Composable ColumnScope.() -> Unit,
-) = Overlay(visible) {
+) = Overlay(visible, onDismiss) {
     AnimatedVisibility(visible, enter = fadeIn(), exit = fadeOut()) {
         ModalScaffold(onDismiss, alignment = Alignment.Center, scrim = PopupScrim) {
             Column(
@@ -86,7 +86,7 @@ fun SidePanel(
     onDismiss: () -> Unit,
     width: Dp = 460.dp,
     content: @Composable ColumnScope.() -> Unit,
-) = Overlay(visible) {
+) = Overlay(visible, onDismiss) {
     AnimatedVisibility(visible, enter = fadeIn(), exit = fadeOut()) {
         ModalScaffold(onDismiss, alignment = Alignment.CenterEnd, scrim = PopupScrim) {
             androidx.compose.animation.AnimatedVisibility(
@@ -177,6 +177,7 @@ object OverlayHost {
     class Entry {
         internal var content by mutableStateOf<@Composable () -> Unit>({})
         internal var visible by mutableStateOf(false)
+        internal var onDismiss: () -> Unit = {}
     }
 
     internal val entries = mutableStateListOf<Entry>()
@@ -187,6 +188,11 @@ object OverlayHost {
     fun isTop(entry: Entry): Boolean = entries.lastOrNull { it.visible } === entry
 
     fun top(): Entry? = entries.lastOrNull { it.visible }
+
+    /** Closes every open popup and panel, topmost first (the Home button). */
+    fun dismissAll() {
+        entries.filter { it.visible }.asReversed().forEach { it.onDismiss() }
+    }
 }
 
 val LocalOverlayEntry = androidx.compose.runtime.compositionLocalOf<OverlayHost.Entry?> { null }
@@ -202,9 +208,12 @@ fun OverlayOutlet() {
 }
 
 @Composable
-private fun Overlay(visible: Boolean, content: @Composable () -> Unit) {
+private fun Overlay(visible: Boolean, onDismiss: () -> Unit, content: @Composable () -> Unit) {
     val entry = remember { OverlayHost.Entry() }
-    androidx.compose.runtime.SideEffect { entry.content = content }
+    androidx.compose.runtime.SideEffect {
+        entry.content = content
+        entry.onDismiss = onDismiss
+    }
     androidx.compose.runtime.DisposableEffect(entry) {
         OverlayHost.entries.add(entry)
         onDispose { OverlayHost.entries.remove(entry) }
