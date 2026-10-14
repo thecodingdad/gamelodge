@@ -32,6 +32,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -103,6 +104,7 @@ fun LibraryScreen(
     var sort by rememberSaveable { mutableStateOf(LibrarySort.TITLE) }
     var search by rememberSaveable { mutableStateOf("") }
     var focused by remember { mutableStateOf<LibraryEntry?>(null) }
+    var gridFocused by remember { mutableStateOf(true) }
     PublishAccentFrom(focused?.coverModel())
 
     val selected = filters.firstOrNull { it.key == selectedKey }
@@ -148,7 +150,8 @@ fun LibraryScreen(
 
     ScreenHints(
         listOf(
-            ButtonHint(PadButton.A, stringResource(actions.openLabel(focused))),
+            // On the filter chips A selects a filter; only on a card it opens/starts.
+            ButtonHint(PadButton.A, stringResource(if (gridFocused) actions.openLabel(focused) else R.string.hint_select)),
             ButtonHint(PadButton.X, stringResource(R.string.hint_options), onClick = { focused?.let { openContext(it) } }),
             ButtonHint(PadButton.L2, stringResource(R.string.hint_filters), onClick = { stepFilter(1) }, secondButton = PadButton.R2),
             ButtonHint(PadButton.SELECT, sortLabel(sort), onClick = { sort = sort.next(manualSort) }),
@@ -218,7 +221,7 @@ fun LibraryScreen(
             contentPadding = PaddingValues(horizontal = if (io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current) 16.dp else 36.dp, vertical = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(if (io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current) 12.dp else 18.dp),
             verticalArrangement = Arrangement.spacedBy(22.dp),
-            modifier = Modifier.focusRestorer(),
+            modifier = Modifier.focusRestorer().onFocusChanged { gridFocused = it.hasFocus },
         ) {
             itemsIndexed(shown, key = { _, it -> it.item.id }) { index, entry ->
                 val key = "library:${entry.item.id}"

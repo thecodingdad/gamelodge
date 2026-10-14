@@ -34,6 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -61,6 +62,7 @@ fun AppsScreen(
 ) {
     val actions = LocalEntryActions.current
     var focused by remember { mutableStateOf<LibraryEntry?>(null) }
+    var gridFocused by remember { mutableStateOf(true) }
     var selectedKey by rememberSaveable { mutableStateOf<String?>(null) }
     var sort by rememberSaveable { mutableStateOf(LibrarySort.TITLE) }
     // Scroll position and focused app are kept per filter.
@@ -101,7 +103,8 @@ fun AppsScreen(
     PadAction(PadButton.X) { focused?.let(actions::context) }
     ScreenHints(
         listOf(
-            ButtonHint(PadButton.A, stringResource(R.string.hint_start)),
+            // On the filter chips A selects a filter; only on an app it starts it.
+            ButtonHint(PadButton.A, stringResource(if (gridFocused) R.string.hint_start else R.string.hint_select)),
             ButtonHint(PadButton.X, stringResource(R.string.hint_options), onClick = { focused?.let(actions::context) }),
             ButtonHint(PadButton.L2, stringResource(R.string.hint_filters), onClick = { stepFilter(1) }, secondButton = PadButton.R2),
             ButtonHint(PadButton.SELECT, sortLabel(sort), onClick = { sort = sort.next(manualSort) }),
@@ -163,7 +166,7 @@ fun AppsScreen(
         contentPadding = PaddingValues(horizontal = if (io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current) 16.dp else 36.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp),
-        modifier = Modifier.fillMaxSize().focusRestorer(),
+        modifier = Modifier.fillMaxSize().focusRestorer().onFocusChanged { gridFocused = it.hasFocus },
     ) {
         var gridIndex = 0
         fun section(title: String, list: List<LibraryEntry>) {
