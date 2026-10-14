@@ -1,6 +1,7 @@
 package io.github.thecodingdad.moonlightlauncher.ui
 
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.ui.layout.layout
 import android.app.Activity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
@@ -745,7 +746,7 @@ private fun ShellTopBar(
         val endShift = if (cutout.position == io.github.thecodingdad.moonlightlauncher.ui.shell.TopCutout.Position.RIGHT) {
             (cutout.rightInset + 8.dp - 28.dp).coerceAtLeast(0.dp)
         } else 0.dp
-        val status: @Composable (Boolean) -> Unit = { split ->
+        val status: @Composable (Boolean, Boolean) -> Unit = { split, batteryOnly ->
             StatusCluster(
                 hosts,
                 modifier = Modifier.padding(end = endShift),
@@ -754,18 +755,17 @@ private fun ShellTopBar(
                 onControllerClick = onControllers,
                 onClockClick = onClock,
                 split = split,
+                batteryAndClockOnly = batteryOnly,
             )
         }
+        val centreHole = cutout.position == io.github.thecodingdad.moonlightlauncher.ui.shell.TopCutout.Position.CENTER
         if (onBack != null) {
             BackButton(onBack)
-            Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
-                status(cutout.position == io.github.thecodingdad.moonlightlauncher.ui.shell.TopCutout.Position.CENTER)
-            }
+            // The back button takes the left half: with a centre hole only battery and clock fit.
+            Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) { status(false, centreHole) }
         } else if (compact) {
             // Narrow screen: only the status at the top; the tabs move to the bottom navigation bar.
-            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
-                status(cutout.position == io.github.thecodingdad.moonlightlauncher.ui.shell.TopCutout.Position.CENTER)
-            }
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) { status(centreHole, false) }
         } else {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -775,7 +775,7 @@ private fun ShellTopBar(
                     TabChip(stringResource(t.title), selected = index == selected, onClick = { onSelect(index) })
                 }
             }
-            status(false)
+            status(false, false)
         }
     }
 }
@@ -789,7 +789,14 @@ private fun BackButton(onClick: () -> Unit) {
         color = LauncherTheme.colors.surface.copy(alpha = 0.7f),
         dpadFocusable = false,
         clickSound = io.github.thecodingdad.moonlightlauncher.ui.feedback.UiSound.BACK,
-        modifier = Modifier.padding(end = 12.dp).size(44.dp),
+        modifier = Modifier
+            // Adds no height to the bar (it stays as high as on the main tabs, the status icons at
+            // the same height): measured freely, centred on the bar's middle line.
+            .layout { measurable, constraints ->
+                val placeable = measurable.measure(constraints.copy(minHeight = 0, maxHeight = androidx.compose.ui.unit.Constraints.Infinity))
+                layout(placeable.width, 0) { placeable.place(0, -placeable.height / 2) }
+            }
+            .padding(end = 12.dp).size(44.dp),
     ) {
         androidx.compose.material3.Icon(
             androidx.compose.material.icons.Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.hint_back),

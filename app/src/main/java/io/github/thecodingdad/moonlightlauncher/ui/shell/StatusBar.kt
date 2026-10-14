@@ -144,6 +144,8 @@ fun StatusCluster(
     onClockClick: (() -> Unit)? = null,
     /** Camera hole in the middle: status icons on the left, battery and clock on the right. */
     split: Boolean = false,
+    /** Only battery and clock (no room left of a centre camera hole). */
+    batteryAndClockOnly: Boolean = false,
 ) {
     val status = rememberSystemStatus()
     val colors = LauncherTheme.colors
@@ -151,6 +153,7 @@ fun StatusCluster(
         if (split) modifier.fillMaxWidth() else modifier,
         horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically,
     ) {
+        if (!batteryAndClockOnly) {
         // Controllers: red when none is connected, green otherwise; tapping opens the overview.
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -220,6 +223,7 @@ fun StatusCluster(
             tint = if (status.ethernet || status.wifi) colors.success else colors.onSurfaceMuted, modifier = Modifier.size(20.dp),
         )
         if (split) androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
+        }
         Row(verticalAlignment = Alignment.CenterVertically) {
             StatusIcon(
                 when {
