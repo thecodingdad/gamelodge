@@ -130,11 +130,11 @@
     <string name="settings_theme_sub">Dark, black, light, accent colour</string>
     <string name="settings_display">Display</string>
     <string name="settings_display_sub">Card size, scaling, animations, screensaver, TV</string>
-    <string name="settings_controls">Controls</string>
+    <string name="settings_controls">Buttons &amp; controls</string>
     <string name="settings_controls_sub">Button layout, hint bar, direct start, button combinations</string>
     <string name="settings_controllers">Controllers</string>
     <string name="settings_controllers_sub">Connected controllers and player order</string>
-    <string name="settings_metadata">Metadata sources</string>
+    <string name="settings_metadata">Metadata &amp; artwork</string>
     <string name="settings_metadata_sub">SteamGridDB, IGDB, matching, review list</string>
     <string name="settings_home_assistant">Home Assistant</string>
     <string name="settings_home_assistant_sub">Connection and smart home tiles</string>
@@ -408,8 +408,8 @@
     <string name="filter_hosts">Hosts</string>
     <string name="filter_platforms">Platforms</string>
     <string name="filters_edit">Edit filters</string>
-    <string name="settings_filters">Library filters</string>
-    <string name="settings_filters_sub">Custom library filters, groups and chip order</string>
+    <string name="settings_filters">Filters &amp; groups</string>
+    <string name="settings_filters_sub">Own filters, groups and chip order for games and apps</string>
     <string name="filters_help">Each filter can appear as a chip in the library, as a row on the home screen and as a chip in the Apps tab. Default filters are ordinary filters: edit, hide or delete them like your own.</string>
     <string name="filter_new_smart">New filter</string>
     <string name="filter_new_group">New group</string>
@@ -470,8 +470,6 @@
     <string name="setting_haptic_focus">Vibrate while navigating</string>
 
     <!-- App filters -->
-    <string name="settings_app_filters">App filters</string>
-    <string name="settings_app_filters_sub">Custom app filters, groups and chip order</string>
     <string name="app_filters_help">App filters appear as chips in the Apps tab and optionally as rows on the home screen. They are separate from the game filters of the library.</string>
     <string name="filter_match_count_apps">%d apps match</string>
 
@@ -573,11 +571,10 @@
     <string name="setting_hint_bar_sub">Bar at the bottom with the controller buttons; only shown while a controller is connected</string>
 
     <!-- Settings groups -->
-    <string name="settings_group_streaming">Streaming</string>
+    <string name="settings_group_streaming">Streaming &amp; connections</string>
     <string name="settings_group_library">Library</string>
     <string name="settings_group_controls">Controls</string>
     <string name="settings_group_display">Display</string>
-    <string name="settings_group_smart_home">Smart home</string>
     <string name="settings_group_system">System</string>
     <string name="settings_android">Android settings</string>
     <string name="settings_android_sub">System settings of the device</string>
@@ -826,7 +823,6 @@
     <string name="setting_games_direct_start_sub">A or a tap starts (or installs) a game right away; details via X or long press</string>
 
     <!-- Launcher -->
-    <string name="usage_section">Play time</string>
     <string name="usage_access">Usage data from Android</string>
     <string name="usage_access_on">Allowed: play time of local apps and games comes from Android, also for starts outside the launcher</string>
     <string name="usage_access_off">Not allowed: the launcher only measures starts from itself. Select to allow</string>
@@ -850,4 +846,12 @@
     <!-- Filters -->
     <string name="filter_chip_visible">Chip shown, select to hide</string>
     <string name="filter_chip_hidden">Chip hidden, select to show</string>
+
+    <!-- Settings -->
+    <string name="settings_usage">Play time &amp; statistics</string>
+    <string name="settings_usage_sub">Android usage data, statistics</string>
+    <string name="usage_intro">Where the play time of local apps and games comes from, and the statistics built from it.</string>
+    <string name="usage_stats_sub">Play time, sessions and favourites over time</string>
+    <string name="filters_scope_games">Games</string>
+    <string name="filters_scope_apps">Apps</string>
 </resources>

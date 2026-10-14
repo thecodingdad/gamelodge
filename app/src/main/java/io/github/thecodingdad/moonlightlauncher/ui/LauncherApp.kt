@@ -335,6 +335,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                                 openProfile = { nav.navigate(Routes.profile(it)) },
                                 openHost = { nav.navigate(Routes.host(it)) },
                                 openPage = { nav.navigate(Routes.settings(it)) },
+                                openStats = { nav.navigate(Routes.STATS) },
                             )
                         }
                     }
@@ -972,6 +973,7 @@ private fun SettingsPageContent(
     openProfile: (java.util.UUID?) -> Unit,
     openHost: (String) -> Unit,
     openPage: (SettingsPageId) -> Unit,
+    openStats: () -> Unit,
 ) {
     val settings by vm.settings.collectAsState()
     val hosts by vm.hosts.collectAsState()
@@ -992,6 +994,7 @@ private fun SettingsPageContent(
         }
         SettingsPageId.CONTROLS -> ControlsSettings(settings, vm::updateSettings)
         SettingsPageId.LANGUAGE -> LanguageSettings(settings, vm::updateSettings)
+        SettingsPageId.USAGE -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.UsageSettings(openStats)
         SettingsPageId.FILTERS -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.FilterSettings(vm, io.github.thecodingdad.moonlightlauncher.data.db.FilterScope.GAMES)
         SettingsPageId.QUICK_MENU -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.QuickMenuSettings(vm, settings, vm::updateSettings)
         SettingsPageId.APP_FILTERS -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.FilterSettings(vm, io.github.thecodingdad.moonlightlauncher.data.db.FilterScope.APPS)

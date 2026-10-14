@@ -89,9 +89,13 @@ import io.github.thecodingdad.moonlightlauncher.ui.screens.library.Chip
 import io.github.thecodingdad.moonlightlauncher.ui.screens.library.builtinLabel
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 
-/** Manage library filters: default filters, smart filters and manual groups, and where each appears. */
+/**
+ * Manage filters: default filters, smart filters and manual groups, and where each appears. Game
+ * and app filters share the page; chips on top switch between them ([initialScope] first).
+ */
 @Composable
-fun FilterSettings(vm: LauncherViewModel, scope: FilterScope) {
+fun FilterSettings(vm: LauncherViewModel, initialScope: FilterScope) {
+    var scope by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(initialScope) }
     val apps = scope == FilterScope.APPS
     val allFilters by vm.filters.collectAsState()
     // Game and app filters are configured separately (legacy BOTH rows are game filters).
@@ -107,7 +111,12 @@ fun FilterSettings(vm: LauncherViewModel, scope: FilterScope) {
     val smartTitle = stringResource(R.string.filter_new_smart)
     val groupTitle = stringResource(R.string.filter_new_group)
 
-    SettingsPage(stringResource(if (apps) R.string.settings_app_filters else R.string.settings_filters)) {
+    SettingsPage(stringResource(R.string.settings_filters)) {
+        // Games / apps (LB/RB already switch the main tabs here).
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Chip(stringResource(R.string.filters_scope_games), selected = !apps, onClick = { scope = FilterScope.GAMES; editing = null })
+            Chip(stringResource(R.string.filters_scope_apps), selected = apps, onClick = { scope = FilterScope.APPS; editing = null })
+        }
         Text(stringResource(if (apps) R.string.app_filters_help else R.string.filters_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
         io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 12.dp, modifier = Modifier.padding(vertical = 6.dp)) {
             LauncherButton(
