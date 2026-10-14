@@ -66,6 +66,9 @@ import java.text.DateFormat
 import java.util.Date
 
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+/** Height of the bar drawn above the detail page (status icons, back button). */
+val LocalDetailTopInset = androidx.compose.runtime.compositionLocalOf { 0.dp }
+
 @Composable
 fun DetailScreen(
     entry: LibraryEntry,
@@ -127,6 +130,8 @@ fun DetailScreen(
         // Layout grows with the available space (e.g. on a TV): bigger cover, wider text column,
         // more generous spacing, content vertically centred instead of glued to the top left.
         val compact = io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current
+        // Room for the status bar / back button drawn above the page.
+        val topInset = LocalDetailTopInset.current
         val chips: @Composable () -> Unit = {
                     // Platform as a chip: shows the current value, opens the platform picker.
                     io.github.thecodingdad.moonlightlauncher.ui.screens.library.Chip(
@@ -179,7 +184,7 @@ fun DetailScreen(
         if (compact) {
             // Narrow (portrait): cover next to logo and chips on top, everything else full width below.
             Column(
-                Modifier.fillMaxSize().controllerScroll().padding(horizontal = 20.dp, vertical = 16.dp),
+                Modifier.fillMaxSize().padding(top = topInset).controllerScroll().padding(horizontal = 20.dp, vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.Bottom) {
@@ -206,7 +211,7 @@ fun DetailScreen(
                 details()
             }
         } else {
-        androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
+        androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize().padding(top = topInset)) {
         val roomy = maxWidth > 1100.dp
         val coverWidth = minOf(maxWidth * 0.26f, (maxHeight - 40.dp) * 0.82f * (2f / 3f)).coerceAtLeast(210.dp)
         val sidePadding = (maxWidth * 0.045f).coerceAtLeast(40.dp)

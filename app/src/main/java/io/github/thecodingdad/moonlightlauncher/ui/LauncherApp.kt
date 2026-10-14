@@ -1,5 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher.ui
 
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import android.app.Activity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
@@ -281,6 +282,13 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                             }
                         }
                         ShellFrame(hints) {
+                        // Status icons and a back button on top; the artwork runs on behind them.
+                        var detailBarHeight by remember { mutableStateOf(0.dp) }
+                        val detailDensity = androidx.compose.ui.platform.LocalDensity.current
+                        val detailHosts by vm.hosts.collectAsState()
+                        val detailControllers = io.github.thecodingdad.moonlightlauncher.ui.screens.settings.rememberControllers()
+                        Box(Modifier.fillMaxSize()) {
+                        CompositionLocalProvider(io.github.thecodingdad.moonlightlauncher.ui.screens.detail.LocalDetailTopInset provides detailBarHeight) {
                         io.github.thecodingdad.moonlightlauncher.ui.screens.detail.DetailBrowser(
                             startId, browse?.ids,
                             onShown = { shown -> detailShownId = shown; lastShown = shown; browse?.onShown?.invoke(shown) },
@@ -302,6 +310,18 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                                     }
                                 }
                             }
+                        }
+                        }
+                        val detailBg = LauncherTheme.colors.background
+                        ShellTopBar(
+                            selected = -1, onSelect = {}, hosts = detailHosts.values.sortedBy { it.name },
+                            controllerCount = detailControllers.size, onHostInfo = { hostInfoFor = it }, onControllers = { controllerPopup = true },
+                            onClock = { vm.quickMenuTouch.tryEmit(Unit) },
+                            onBack = { nav.popBackStack() },
+                            modifier = Modifier.align(Alignment.TopCenter)
+                                .background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(detailBg.copy(alpha = 0.85f), androidx.compose.ui.graphics.Color.Transparent)))
+                                .onSizeChanged { detailBarHeight = with(detailDensity) { it.height.toDp() } },
+                        )
                         }
                         }
                     }
@@ -710,6 +730,8 @@ private fun ShellTopBar(
     modifier: Modifier = Modifier,
     /** Tap on the clock opens the quick menu. */
     onClock: () -> Unit = {},
+    /** Detail page: a back button (touch/mouse) instead of the tabs. */
+    onBack: (() -> Unit)? = null,
 ) {
     Row(
         modifier.fillMaxWidth()
@@ -734,7 +756,12 @@ private fun ShellTopBar(
                 split = split,
             )
         }
-        if (compact) {
+        if (onBack != null) {
+            BackButton(onBack)
+            Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
+                status(cutout.position == io.github.thecodingdad.moonlightlauncher.ui.shell.TopCutout.Position.CENTER)
+            }
+        } else if (compact) {
             // Narrow screen: only the status at the top; the tabs move to the bottom navigation bar.
             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
                 status(cutout.position == io.github.thecodingdad.moonlightlauncher.ui.shell.TopCutout.Position.CENTER)
@@ -750,6 +777,24 @@ private fun ShellTopBar(
             }
             status(false)
         }
+    }
+}
+
+/** Round back arrow for touch and mouse; controllers go back with B, so it takes no D-pad focus. */
+@Composable
+private fun BackButton(onClick: () -> Unit) {
+    FocusSurface(
+        onClick = onClick,
+        shape = androidx.compose.foundation.shape.CircleShape,
+        color = LauncherTheme.colors.surface.copy(alpha = 0.7f),
+        dpadFocusable = false,
+        clickSound = io.github.thecodingdad.moonlightlauncher.ui.feedback.UiSound.BACK,
+        modifier = Modifier.padding(end = 12.dp).size(44.dp),
+    ) {
+        androidx.compose.material3.Icon(
+            androidx.compose.material.icons.Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.hint_back),
+            tint = LauncherTheme.colors.onSurface, modifier = Modifier.align(Alignment.Center).size(24.dp),
+        )
     }
 }
 
