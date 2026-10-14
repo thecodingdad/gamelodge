@@ -79,24 +79,28 @@ class MetadataService(
         scope.launch { settings.settings.collect { sources = it.metadataSources } }
     }
 
-    /**
-     * Sources in the user's order: paired metadata servers, then companions (both only when they
-     * offer the provider), then this device's own keys.
-     */
-    private fun routes(provider: (io.github.thecodingdad.moonlightlauncher.data.companion.PairedServer) -> Boolean): List<MetadataRoute> {
-        val paired = servers?.servers?.value.orEmpty()
-        return sources.flatMap { source ->
-            when (source) {
-                "server" -> paired.filter { !it.isCompanion && provider(it) }.map { MetadataRoute.Via(servers!!.client(it)) }
-                "companion" -> paired.filter { it.isCompanion && provider(it) }.map { MetadataRoute.Via(servers!!.client(it)) }
-                "own" -> listOf(MetadataRoute.Own)
-                else -> emptyList()
+    /** Configured sources in the user's order (see [MetadataSources]). */
+    fun sourceEntries(): List<MetadataSources.Entry> = MetadataSources.resolve(
+        sources, servers?.servers?.value.orEmpty(),
+        hasSgdb = !secrets.get(SecretStore.Keys.SGDB_API_KEY).isNullOrBlank(),
+        hasIgdb = !secrets.get(SecretStore.Keys.IGDB_CLIENT_ID).isNullOrBlank() && !secrets.get(SecretStore.Keys.IGDB_CLIENT_SECRET).isNullOrBlank(),
+    )
+
+    /** Whether the source [id] is configured and switched on (a switched-off companion isn't used at all). */
+    fun isEnabled(id: String): Boolean = sourceEntries().any { it.id == id && it.enabled }
+
+    /** Routes for one provider in the user's order: its own key ([own]) and the servers offering it. */
+    private fun routes(own: String, provider: (io.github.thecodingdad.moonlightlauncher.data.companion.PairedServer) -> Boolean): List<MetadataRoute> =
+        sourceEntries().filter { it.enabled }.mapNotNull { entry ->
+            when {
+                entry.id == own -> MetadataRoute.Own
+                entry.server != null && provider(entry.server) -> MetadataRoute.Via(servers!!.client(entry.server))
+                else -> null
             }
         }
-    }
 
-    val sgdb = SteamGridDbClient(http, { secrets.get(SecretStore.Keys.SGDB_API_KEY) }, routes = { routes { it.steamGridDb } })
-    val igdb = IgdbClient(http, routes = { routes { it.igdb } }, credentials = object : IgdbCredentials {
+    val sgdb = SteamGridDbClient(http, { secrets.get(SecretStore.Keys.SGDB_API_KEY) }, routes = { routes(MetadataSources.SGDB) { it.steamGridDb } })
+    val igdb = IgdbClient(http, routes = { routes(MetadataSources.IGDB) { it.igdb } }, credentials = object : IgdbCredentials {
         override val clientId get() = secrets.get(SecretStore.Keys.IGDB_CLIENT_ID)
         override val clientSecret get() = secrets.get(SecretStore.Keys.IGDB_CLIENT_SECRET)
         override var token: String?

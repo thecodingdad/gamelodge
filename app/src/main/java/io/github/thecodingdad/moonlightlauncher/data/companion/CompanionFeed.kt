@@ -85,17 +85,24 @@ data class HostGameCorrection(
  * metadata. Answers are cached per companion (ETag); while a companion is offline (host off) the
  * last list stays in use.
  */
-class CompanionFeed(context: Context, private val servers: ServerRepository) {
+class CompanionFeed(
+    context: Context,
+    private val servers: ServerRepository,
+    /** False for a companion the user switched off in the metadata sources. */
+    private val isEnabled: (PairedServer) -> Boolean = { true },
+) {
     private val json = Json { ignoreUnknownKeys = true; explicitNulls = false }
     private val imageDir = File(context.filesDir, "companion-images")
     private val cache = ConcurrentHashMap<String, Pair<String?, HostGamesList>>() // server id → (etag, list)
 
     /** App UUID (upper case) → host game, for the host's companion; null when none is paired. */
     suspend fun games(hostUuid: String): Map<String, HostGame>? = withContext(Dispatchers.IO) {
-        val server = servers.companionFor(hostUuid) ?: return@withContext null
+        val server = companionFor(hostUuid) ?: return@withContext null
         val list = fetch(server) ?: cache[server.id]?.second ?: return@withContext null
         list.games.filter { it.appUuid != null }.associateBy { it.appUuid!!.uppercase() }
     }
+
+    private fun companionFor(hostUuid: String): PairedServer? = servers.companionFor(hostUuid)?.takeIf(isEnabled)
 
     private fun fetch(server: PairedServer): HostGamesList? {
         val cached = cache[server.id]
@@ -124,7 +131,7 @@ class CompanionFeed(context: Context, private val servers: ServerRepository) {
         if (ref.startsWith("https://")) return@withContext ref
         val id = ref.removePrefix("image:").takeIf { ref.startsWith("image:") } ?: return@withContext null
         if (id.contains("..") || !id.all { it.isLetterOrDigit() || it in "-_." }) return@withContext null
-        val server = servers.companionFor(hostUuid) ?: return@withContext null
+        val server = companionFor(hostUuid) ?: return@withContext null
         val file = File(File(imageDir, server.id), "$id.png")
         if (file.exists()) return@withContext file.absolutePath
         runCatching {
@@ -141,7 +148,7 @@ class CompanionFeed(context: Context, private val servers: ServerRepository) {
 
     /** Sends a correction for the host entry [appUuid] to the host's companion. */
     suspend fun correct(hostUuid: String, appUuid: String, correction: HostGameCorrection): Boolean = withContext(Dispatchers.IO) {
-        val server = servers.companionFor(hostUuid) ?: return@withContext false
+        val server = companionFor(hostUuid) ?: return@withContext false
         val game = games(hostUuid)?.get(appUuid.uppercase()) ?: return@withContext false
         if (!server.permissions.contains("hostgames.write")) return@withContext false
         runCatching {

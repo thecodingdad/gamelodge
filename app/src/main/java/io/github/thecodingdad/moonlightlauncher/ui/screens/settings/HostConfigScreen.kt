@@ -68,7 +68,7 @@ fun MissingPermissionsNote(host: HostState) {
 }
 
 @Composable
-fun HostConfigScreen(host: HostState, openServers: () -> Unit = {}) {
+fun HostConfigScreen(host: HostState) {
     val c = LocalContext.current.container
     val scope = rememberCoroutineScope()
     val entities by c.ha.client.entities.collectAsState()
@@ -115,7 +115,7 @@ fun HostConfigScreen(host: HostState, openServers: () -> Unit = {}) {
             onSelect = { save(cfg.copy(autoSleepMinutes = it)) },
             subtitle = stringResource(R.string.host_auto_sleep_sub),
         )
-        CompanionSection(host, openServers)
+        CompanionSection(host)
     }
 
     val onPick = picking
@@ -142,20 +142,9 @@ private fun EntityRow(entity: HaEntity?, onClick: () -> Unit) {
     }
 }
 
-/** The companion on this host (paired or not); pairing lives in the companion settings. */
+/** The companion on this host (paired or not): opens its settings or pairs one. */
 @Composable
-private fun CompanionSection(host: HostState, openServers: () -> Unit) {
-    val repo = LocalContext.current.container.servers
-    val servers by repo.servers.collectAsState()
-    val online by repo.online.collectAsState()
-    val companion = servers.firstOrNull { it.isCompanion && it.hostId.equals(host.uuid, ignoreCase = true) }
+private fun CompanionSection(host: HostState) {
     SectionHeader(stringResource(R.string.host_companion_section))
-    NavRow(
-        companion?.name ?: stringResource(R.string.servers_not_paired), openServers,
-        subtitle = when {
-            companion == null -> stringResource(R.string.host_companion_hint)
-            online[companion.id] == true -> stringResource(R.string.servers_online)
-            else -> stringResource(R.string.servers_offline)
-        },
-    )
+    io.github.thecodingdad.moonlightlauncher.ui.screens.metadata.HostCompanionRow(host)
 }

@@ -90,8 +90,8 @@ data class LauncherSettings(
     val odinKeepControllers: Boolean = true,
     /** Tiles in the quick menu, in order (see QuickTile ids; apps as "app:<package>"). */
     val quickTiles: List<String> = listOf("controllers", "hosts", "vpn", "wifi", "bluetooth", "airplane"),
-    /** Order of the metadata sources ("server", "companion", "own"); missing ones are off. */
-    val metadataSources: List<String> = listOf("server", "companion", "own"),
+    /** Order of the metadata sources and which are off (see MetadataSources). */
+    val metadataSources: List<String> = emptyList(),
     /** Controller button combinations (key codes) for Android Home and the quick menu; empty = off. */
     val comboHome: Set<Int> = emptySet(),
     val comboQuickMenu: Set<Int> = emptySet(),

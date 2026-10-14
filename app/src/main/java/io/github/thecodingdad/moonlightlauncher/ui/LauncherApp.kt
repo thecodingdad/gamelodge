@@ -354,7 +354,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                             vm, nav, hints, MainTab.SETTINGS,
                             listOf(tabCrumb(vm, nav, MainTab.SETTINGS), backCrumb(nav, R.string.settings_hosts)),
                             { hostInfoFor = it }, { controllerPopup = true },
-                        ) { hosts[uuid]?.let { HostConfigScreen(it, openServers = { nav.navigate(Routes.settings(SettingsPageId.SERVERS)) }) } }
+                        ) { hosts[uuid]?.let { HostConfigScreen(it) } }
                     }
                     composable(Routes.CONTROLLERS) {
                         SubpageFrame(vm, nav, hints, MainTab.SETTINGS, listOf(tabCrumb(vm, nav, MainTab.SETTINGS)), { hostInfoFor = it }, { controllerPopup = true }) {
@@ -1024,7 +1024,6 @@ private fun SettingsPageContent(
         SettingsPageId.SOUNDS -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.SoundSettings(settings, vm::updateSettings)
         SettingsPageId.ABOUT -> AboutSettings(openLicenses = { openPage(SettingsPageId.LICENSES) })
         SettingsPageId.LICENSES -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.OpenSourceLicenses()
-        SettingsPageId.SERVERS -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.ServersSettings(vm)
         SettingsPageId.PROFILES -> {
             val profiles by vm.profiles.collectAsState()
             val active by vm.activeProfile.collectAsState()

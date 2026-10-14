@@ -133,7 +133,7 @@
     <string name="settings_controllers">Controller</string>
     <string name="settings_controllers_sub">Verbundene Controller und Spielerreihenfolge</string>
     <string name="settings_metadata">Metadaten &amp; Artwork</string>
-    <string name="settings_metadata_sub">SteamGridDB, IGDB, Abgleich, Prüfliste</string>
+    <string name="settings_metadata_sub">SteamGridDB, IGDB, Companion, Metadaten-Server, Prüfliste</string>
     <string name="settings_home_assistant">Home Assistant</string>
     <string name="settings_home_assistant_sub">Verbindung und Smart-Home-Kacheln</string>
     <string name="settings_vpn">VPN</string>
@@ -224,7 +224,6 @@
     <string name="artwork_hero">Hintergrund</string>
     <string name="artwork_logo">Logo</string>
     <string name="artwork_switch_kind">Typ wechseln</string>
-    <string name="metadata_intro">Cover, Hintergründe und Logos kommen von SteamGridDB; Beschreibung, Genres, Entwickler, Publisher, Serie, Features, Altersfreigaben und Erscheinungsdatum von IGDB. Beide sind für nicht-kommerzielle Nutzung kostenlos, die Keys legst du unten selbst an.</string>
     <string name="metadata_auto">Metadaten automatisch abrufen</string>
     <string name="metadata_review_list">Bitte prüfen</string>
     <string name="metadata_review_count">%d Spiele mit unsicherem Treffer</string>
@@ -913,16 +912,9 @@
     <string name="qt_hosts_count">%d Hosts</string>
 
     <!-- Companion & metadata server -->
-    <string name="settings_servers">Companion &amp; Metadaten-Server</string>
-    <string name="settings_servers_sub">Koppeln, Host-Spiele, SteamGridDB/IGDB über einen Server</string>
-    <string name="servers_intro">Beides ist optional: alles funktioniert auch ohne. Gekoppelt wird mit einer PIN, die hier erscheint und am Server eingegeben wird; danach öffnet nur der Schlüssel dieses Geräts die Verbindung.</string>
-    <string name="servers_companion">Companion (pro Host)</string>
-    <string name="servers_companion_help">Die Companion auf dem Spiele-PC liefert die Host-Spiele mit allen Metadaten. Starte das Koppeln zuerst in der Companion.</string>
     <string name="servers_not_paired">Nicht gekoppelt</string>
     <string name="servers_pair">Koppeln</string>
     <string name="servers_pair_companion_manual">Companion per Adresse koppeln</string>
-    <string name="servers_metadata">Metadaten-Server</string>
-    <string name="servers_metadata_help">Ein Metadaten-Server (Docker) beantwortet SteamGridDB und IGDB mit seinen Schlüsseln für alle deine Geräte. Starte das Koppeln zuerst in seiner Weboberfläche.</string>
     <string name="servers_pair_metadata">Metadaten-Server koppeln</string>
     <string name="servers_online">online</string>
     <string name="servers_offline">nicht erreichbar</string>
@@ -946,13 +938,23 @@
     <string name="servers_remove">Gedrückt halten zum Entfernen</string>
     <string name="servers_remove_hint">Entferne das Gerät auch am Server, damit der Zugriff dort endet.</string>
     <string name="metadata_sources">Quellen</string>
-    <string name="metadata_sources_help">Werden in dieser Reihenfolge versucht; ist eine nicht erreichbar oder kann nicht antworten, kommt die nächste dran. Zum Sortieren ziehen.</string>
+    <string name="metadata_intro">Cover, Hintergründe und Logos kommen von SteamGridDB; Beschreibung, Genres, Entwickler, Publisher, Serie, Features, Altersfreigaben und Erscheinungsdatum von IGDB. Füge sie unten als Quellen hinzu: mit eigenen Schlüsseln, über einen Metadaten-Server oder über die Companion.</string>
+    <string name="metadata_sources_help">Werden von oben nach unten versucht; ist eine nicht erreichbar oder kann nicht antworten, kommt die nächste dran. Zum Sortieren ziehen. Host-Spiele übernehmen immer die Daten ihrer Companion.</string>
+    <string name="metadata_sources_empty">Noch keine Quelle hinzugefügt.</string>
+    <string name="metadata_source_add">Quelle hinzufügen</string>
+    <string name="metadata_source_sgdb_sub">Cover, Hintergründe, Logos und Icons mit eigenem API-Key</string>
+    <string name="metadata_source_igdb_sub">Beschreibungen, Genres und Erscheinungsdaten mit eigener Twitch-App</string>
+    <string name="metadata_source_companion_sub">Liefert die Host-Spiele eines Spiele-PCs mit ihren Metadaten, dazu SteamGridDB/IGDB, falls angeboten</string>
+    <string name="metadata_source_server_sub">Docker-Server, der SteamGridDB und IGDB mit seinen Schlüsseln für alle deine Geräte beantwortet</string>
+    <string name="metadata_source_companion_of">Companion · %s</string>
+    <string name="metadata_source_offers">Bietet an</string>
+    <string name="metadata_source_host_games_only">nur Host-Spiele</string>
+    <string name="metadata_source_pick_host">Companion für welchen Host?</string>
+    <string name="metadata_source_active">Aktiv</string>
+    <string name="metadata_source_off">Deaktiviert</string>
+    <string name="metadata_source_companion_off_hint">Aus: Weder Host-Spiele noch SteamGridDB/IGDB kommen von dieser Companion.</string>
     <string name="metadata_source_server">Metadaten-Server</string>
-    <string name="metadata_source_server_sub">Gekoppelte Metadaten-Server (Einstellungen → Companion &amp; Metadaten-Server)</string>
     <string name="metadata_source_companion">Companion</string>
-    <string name="metadata_source_companion_sub">Gekoppelte Companions mit SteamGridDB/IGDB (nur wenn der Host an ist)</string>
-    <string name="metadata_source_own">Eigene Schlüssel</string>
-    <string name="metadata_source_own_sub">Der SteamGridDB-Schlüssel und die IGDB-Zugangsdaten unten</string>
 
     <!-- Companion & metadata server -->
     <string name="host_companion_section">Companion</string>

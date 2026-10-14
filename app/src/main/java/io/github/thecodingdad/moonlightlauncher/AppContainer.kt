@@ -40,7 +40,9 @@ class AppContainer(context: Context) {
     val boxArt: BoxArtCache by lazy { BoxArtCache(appContext) }
 
     val companionFeed: io.github.thecodingdad.moonlightlauncher.data.companion.CompanionFeed by lazy {
-        io.github.thecodingdad.moonlightlauncher.data.companion.CompanionFeed(appContext, servers)
+        io.github.thecodingdad.moonlightlauncher.data.companion.CompanionFeed(appContext, servers) {
+            metadata.isEnabled(io.github.thecodingdad.moonlightlauncher.metadata.MetadataSources.idOf(it))
+        }
     }
     val library: LibraryRepository by lazy {
         LibraryRepository(database, LibrarySync(database), localApps, hosts, boxArt, scope, companionFeed)

@@ -32,7 +32,6 @@ private val pageTitles: List<Pair<SettingsTarget, Int>> = listOf(
     SettingsTarget.Page(SettingsPageId.EMULATORS) to R.string.settings_emulators,
     SettingsTarget.Page(SettingsPageId.HOSTS) to R.string.settings_hosts,
     SettingsTarget.Page(SettingsPageId.PROFILES) to R.string.settings_profiles,
-    SettingsTarget.Page(SettingsPageId.SERVERS) to R.string.settings_servers,
     SettingsTarget.Page(SettingsPageId.VPN) to R.string.settings_vpn,
     SettingsTarget.Page(SettingsPageId.HOME_ASSISTANT) to R.string.settings_home_assistant,
     SettingsTarget.Page(SettingsPageId.CONTROLS) to R.string.settings_controls,
@@ -60,8 +59,7 @@ private val settingsIndex: List<SearchEntry> = buildList {
         SettingsPageId.DISPLAY, R.string.tv_section, R.string.setting_tv_launcher, R.string.setting_tv_resolution,
         R.string.setting_tv_scale_auto, R.string.setting_tv_scale, section = R.string.tv_section,
     ))
-    addAll(page(SettingsPageId.METADATA, R.string.metadata_auto, R.string.metadata_review_list, R.string.metadata_sources))
-    addAll(page(SettingsPageId.SERVERS, R.string.servers_companion, R.string.servers_metadata, R.string.servers_pair_metadata))
+    addAll(page(SettingsPageId.METADATA, R.string.metadata_auto, R.string.metadata_review_list, R.string.metadata_sources, R.string.metadata_source_add, R.string.metadata_source_companion, R.string.metadata_source_server))
     addAll(page(SettingsPageId.USAGE, R.string.usage_access, R.string.stats_title))
     addAll(page(
         SettingsPageId.EMULATORS, R.string.emu_folders, R.string.emu_folder_add, R.string.emu_all_files, R.string.emu_emulators, R.string.emu_custom,
