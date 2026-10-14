@@ -28,6 +28,9 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+/** Image hosts the companion accepts in corrections (Companion.Protocol ApiServer.ArtworkHosts). */
+private val ARTWORK_HOSTS = listOf("steamgriddb.com", "images.igdb.com")
+
 /** Entry point for everything library related: keeps sources in sync and exposes entries. */
 class LibraryRepository(
     private val db: LauncherDatabase,
@@ -198,7 +201,13 @@ class LibraryRepository(
         val item = dao.getItem(itemId) ?: return
         val targets = dao.getTargetsForItem(itemId).filter { it.type == TargetType.REMOTE && it.hostUuid != null && it.appUuid != null }
         if (targets.isEmpty()) return
-        fun https(url: String?) = url?.takeIf { it.startsWith("https://") }
+        // The companion only takes artwork from the providers' image servers (and no port).
+        fun https(url: String?) = url?.takeIf { u ->
+            val uri = runCatching { java.net.URI(u) }.getOrNull() ?: return@takeIf false
+            val host = uri.host?.lowercase() ?: return@takeIf false
+            uri.scheme == "https" && uri.port == -1 && u.length <= 1024 &&
+                ARTWORK_HOSTS.any { host == it || host.endsWith(".$it") }
+        }
         fun split(value: String?) = value?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() }
         val correction = io.github.thecodingdad.moonlightlauncher.data.companion.HostGameCorrection(
             igdbId = item.igdbId,
