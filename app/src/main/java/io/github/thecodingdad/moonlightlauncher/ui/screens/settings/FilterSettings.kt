@@ -35,6 +35,8 @@ import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.Restore
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -133,12 +135,31 @@ fun FilterSettings(vm: LauncherViewModel, scope: FilterScope) {
                     stringResource(if (f.builtin != null) R.string.filter_kind_builtin else R.string.filter_kind_smart)
                 FilterKind.GROUP -> stringResource(R.string.filter_kind_group, members[f.id] ?: 0)
             }
-            NavRow(
-                title = filterEntityLabel(f),
-                subtitle = "$kind  ·  ${places.joinToString(", ")}",
-                onClick = { editing = f.id },
-                initialFocus = index == 0,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.weight(1f)) {
+                    NavRow(
+                        title = filterEntityLabel(f),
+                        subtitle = "$kind  ·  ${places.joinToString(", ")}",
+                        onClick = { editing = f.id },
+                        initialFocus = index == 0,
+                    )
+                }
+                // Chip visibility at a glance and one tap/A away.
+                val visible = if (apps) f.showInApps else f.showInLibrary
+                io.github.thecodingdad.moonlightlauncher.ui.components.FocusSurface(
+                    onClick = { vm.saveFilter(if (apps) f.copy(showInApps = !visible) else f.copy(showInLibrary = !visible)) },
+                    modifier = Modifier.padding(start = 8.dp).size(56.dp),
+                    color = LauncherTheme.colors.surface,
+                    clickSound = io.github.thecodingdad.moonlightlauncher.ui.feedback.UiSound.TOGGLE,
+                ) {
+                    androidx.compose.material3.Icon(
+                        if (visible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
+                        stringResource(if (visible) R.string.filter_chip_visible else R.string.filter_chip_hidden),
+                        tint = if (visible) LauncherTheme.colors.onSurface else LauncherTheme.colors.onSurfaceMuted,
+                        modifier = Modifier.align(Alignment.Center),
+                    )
+                }
+            }
         }
     }
 

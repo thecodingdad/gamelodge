@@ -846,4 +846,8 @@
     <string name="setting_tv_resolution_auto">Automatic (native)</string>
     <string name="setting_tv_resolution_sub">Modes the connected TV offers</string>
     <string name="setting_tv_resolution_none">Connect a TV to see its modes</string>
+
+    <!-- Filters -->
+    <string name="filter_chip_visible">Chip shown, select to hide</string>
+    <string name="filter_chip_hidden">Chip hidden, select to show</string>
 </resources>

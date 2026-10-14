@@ -844,4 +844,8 @@
     <string name="setting_tv_resolution_auto">Automatisch (nativ)</string>
     <string name="setting_tv_resolution_sub">Modi, die der angeschlossene TV anbietet</string>
     <string name="setting_tv_resolution_none">TV anschließen, um seine Modi zu sehen</string>
+
+    <!-- Filters -->
+    <string name="filter_chip_visible">Chip sichtbar, auswählen zum Ausblenden</string>
+    <string name="filter_chip_hidden">Chip ausgeblendet, auswählen zum Einblenden</string>
 </resources>
