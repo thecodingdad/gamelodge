@@ -110,6 +110,38 @@ fun CoverCard(
     }
 }
 
+/**
+ * Columns of a cover grid. Grid cells always fill the width, so the card size picks the number of
+ * columns: medium as many as fit [mediumCell], small one more, large one fewer. This way every
+ * size looks different on every screen (a plain minimum width often gives the same count).
+ */
+class CoverColumns(private val mediumCell: Dp, private val step: Int) : androidx.compose.foundation.lazy.grid.GridCells {
+    override fun androidx.compose.ui.unit.Density.calculateCrossAxisCellSizes(availableSize: Int, spacing: Int): List<Int> {
+        val medium = ((availableSize + spacing) / (mediumCell.roundToPx() + spacing)).coerceAtLeast(1)
+        val count = (medium + step).coerceAtLeast(1)
+        val total = availableSize - spacing * (count - 1)
+        val cell = total / count
+        val rest = total % count
+        return List(count) { cell + if (it < rest) 1 else 0 }
+    }
+
+    override fun equals(other: Any?) = other is CoverColumns && other.mediumCell == mediumCell && other.step == step
+    override fun hashCode() = 31 * mediumCell.hashCode() + step
+}
+
+/** Cover grid columns for the chosen card size; [compact]: narrow screens (phone upright). */
+@Composable
+fun coverColumns(compact: Boolean): androidx.compose.foundation.lazy.grid.GridCells {
+    val medium = io.github.thecodingdad.moonlightlauncher.ui.theme.dimensFor(io.github.thecodingdad.moonlightlauncher.data.settings.CardSize.MEDIUM).coverWidth
+    val current = LauncherTheme.dimens.coverWidth
+    val step = when {
+        current < medium -> 1
+        current > medium -> -1
+        else -> 0
+    }
+    return CoverColumns(if (compact) medium * 0.62f else medium + 8.dp, step)
+}
+
 /** Landscape (16:9) tile of an app, for app rows on the start tab. */
 @Composable
 fun AppTileCard(

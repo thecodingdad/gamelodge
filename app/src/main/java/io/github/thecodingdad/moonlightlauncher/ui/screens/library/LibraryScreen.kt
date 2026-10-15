@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.itemsIndexed
@@ -215,10 +214,7 @@ fun LibraryScreen(
         LazyVerticalGrid(
             state = gridState,
             // Narrow screens get smaller covers (three columns instead of two huge ones).
-            columns = GridCells.Adaptive(
-                if (io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current) LauncherTheme.dimens.coverWidth * 0.62f
-                else LauncherTheme.dimens.coverWidth + 8.dp,
-            ),
+            columns = io.github.thecodingdad.moonlightlauncher.ui.components.coverColumns(io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current),
             contentPadding = PaddingValues(horizontal = if (io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current) 16.dp else 36.dp, vertical = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(if (io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current) 12.dp else 18.dp),
             verticalArrangement = Arrangement.spacedBy(22.dp),
