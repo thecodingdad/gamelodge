@@ -114,6 +114,11 @@ class LibraryRepository(
         Log.d("ROM sync: ${roms.size} games")
     }
 
+    /** Re-applies every host's app list (all metadata fetched again by hand). */
+    suspend fun resyncHosts() {
+        hosts.appLists.value.forEach { (uuid, apps) -> syncHost(uuid, apps) }
+    }
+
     /** Re-applies a host's app list, e.g. after a companion was paired. */
     suspend fun resyncHost(hostUuid: String) {
         hosts.appLists.value[hostUuid]?.let { syncHost(hostUuid, it) }
@@ -169,25 +174,26 @@ class LibraryRepository(
             val fresh = dao.getItem(item.id) ?: continue
             val m = fresh.manual
             fun list(values: List<String>) = values.joinToString(", ").ifEmpty { null }
+            // Only what is still empty: data set once is never replaced by a sync ("fetch all
+            // again" in the metadata settings starts over by hand).
+            fun <T> fill(field: MetaField, now: T?, new: T?): T? = if (field in m) now else now ?: new
             val updated = fresh.copy(
-                igdbId = game.igdbId ?: fresh.igdbId,
-                sgdbId = game.steamGridDbId ?: fresh.sgdbId,
-                description = if (MetaField.DESCRIPTION in m) fresh.description else game.summary ?: fresh.description,
-                genres = if (MetaField.GENRES in m) fresh.genres else list(game.genres) ?: fresh.genres,
-                developer = if (MetaField.DEVELOPER in m) fresh.developer else list(game.developers) ?: fresh.developer,
-                publisher = if (MetaField.PUBLISHER in m) fresh.publisher else list(game.publishers) ?: fresh.publisher,
-                series = if (MetaField.SERIES in m) fresh.series else list(game.series) ?: fresh.series,
-                releaseDate = if (MetaField.RELEASE in m) fresh.releaseDate else game.releaseDate?.times(1000) ?: fresh.releaseDate,
-                releaseYear = if (MetaField.RELEASE in m) fresh.releaseYear
-                    else game.releaseDate?.let { java.time.Instant.ofEpochSecond(it).atZone(java.time.ZoneOffset.UTC).year } ?: fresh.releaseYear,
-                rating = if (MetaField.RATING in m) fresh.rating else game.rating?.toFloat() ?: fresh.rating,
-                // Images picked by hand here stay (the companion got them as a correction anyway).
-                coverUrl = if (MetaField.COVER in m) fresh.coverUrl else feed.artwork(hostUuid, game.cover) ?: fresh.coverUrl,
-                heroUrl = if (MetaField.HERO in m) fresh.heroUrl else feed.artwork(hostUuid, game.hero) ?: fresh.heroUrl,
-                logoUrl = if (MetaField.LOGO in m) fresh.logoUrl else feed.artwork(hostUuid, game.logo) ?: fresh.logoUrl,
-                iconUrl = if (MetaField.ICON in m) fresh.iconUrl else feed.artwork(hostUuid, game.icon) ?: fresh.iconUrl,
-                animatedCoverUrl = if (MetaField.COVER in m) fresh.animatedCoverUrl else game.animatedCover ?: fresh.animatedCoverUrl,
-                animatedHeroUrl = if (MetaField.HERO in m) fresh.animatedHeroUrl else game.animatedHero ?: fresh.animatedHeroUrl,
+                igdbId = fresh.igdbId ?: game.igdbId,
+                sgdbId = fresh.sgdbId ?: game.steamGridDbId,
+                description = fill(MetaField.DESCRIPTION, fresh.description, game.summary),
+                genres = fill(MetaField.GENRES, fresh.genres, list(game.genres)),
+                developer = fill(MetaField.DEVELOPER, fresh.developer, list(game.developers)),
+                publisher = fill(MetaField.PUBLISHER, fresh.publisher, list(game.publishers)),
+                series = fill(MetaField.SERIES, fresh.series, list(game.series)),
+                releaseDate = fill(MetaField.RELEASE, fresh.releaseDate, game.releaseDate?.times(1000)),
+                releaseYear = fill(MetaField.RELEASE, fresh.releaseYear, game.releaseDate?.let { java.time.Instant.ofEpochSecond(it).atZone(java.time.ZoneOffset.UTC).year }),
+                rating = fill(MetaField.RATING, fresh.rating, game.rating?.toFloat()),
+                coverUrl = fill(MetaField.COVER, fresh.coverUrl, if (fresh.coverUrl == null) feed.artwork(hostUuid, game.cover) else null),
+                heroUrl = fill(MetaField.HERO, fresh.heroUrl, if (fresh.heroUrl == null) feed.artwork(hostUuid, game.hero) else null),
+                logoUrl = fill(MetaField.LOGO, fresh.logoUrl, if (fresh.logoUrl == null) feed.artwork(hostUuid, game.logo) else null),
+                iconUrl = fill(MetaField.ICON, fresh.iconUrl, if (fresh.iconUrl == null) feed.artwork(hostUuid, game.icon) else null),
+                animatedCoverUrl = fill(MetaField.COVER, fresh.animatedCoverUrl, game.animatedCover),
+                animatedHeroUrl = fill(MetaField.HERO, fresh.animatedHeroUrl, game.animatedHero),
                 metadataState = MetadataState.OK,
                 matchConfidence = 1f,
             )

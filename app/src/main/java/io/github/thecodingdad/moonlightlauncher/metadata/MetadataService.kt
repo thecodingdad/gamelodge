@@ -72,6 +72,9 @@ class MetadataService(
      */
     var onCorrected: (suspend (itemId: String, reset: List<String>) -> Unit)? = null
 
+    /** Full refresh by hand: the library reads the host games (companion data) again. */
+    var onFullRefresh: (suspend () -> Unit)? = null
+
     /** The host game behind an item, when its companion delivers it (images to choose from). */
     var companionGame: (suspend (itemId: String) -> io.github.thecodingdad.moonlightlauncher.data.companion.HostGame?)? = null
 
@@ -274,13 +277,17 @@ class MetadataService(
         }
     }
 
-    /** Forgets automatic matches (not locked ones) and looks everything up again. */
+    /**
+     * The only full refresh, by hand: forgets automatic matches (not locked ones, not hand-picked
+     * fields) and fetches everything again; host games first get their companion's data.
+     */
     suspend fun resetAutomatic(includeNotFound: Boolean = true) = withContext(Dispatchers.IO) {
         val states = buildList {
             add(MetadataState.OK); add(MetadataState.REVIEW)
             if (includeNotFound) add(MetadataState.NOT_FOUND)
         }
         dao.getItemsWithMetadataState(states).forEach { dao.upsertItem(it.clearedMetadata()) }
+        runCatching { onFullRefresh?.invoke() }.onFailure { Log.w("Host games not read again", it) }
         refreshPending()
     }
 
@@ -300,7 +307,7 @@ class MetadataService(
             return
         }
         val game = best.first
-        var updated = fresh.withIgdb(game).withMissingArtwork(game).copy(metadataVersion = ART_FILL_VERSION)
+        var updated = fresh.withIgdb(game).withMissingArtwork(game).withIgdbHero(game).copy(metadataVersion = ART_FILL_VERSION)
         platformFor(fresh, game)?.let { updated = updated.copy(platform = it.first, platformSource = it.second) }
         val state = when (fresh.metadataState) {
             MetadataState.NOT_FOUND -> if (confident) MetadataState.OK else MetadataState.REVIEW
@@ -387,7 +394,7 @@ class MetadataService(
         } ?: fresh
         val withArt = sgdbBest?.first?.takeIf { sgdbBest.second >= MatchScorer.REVIEW }
             ?.let { withText.withSgdbArtwork(it.id) } ?: withText
-        val complete = igdbBest?.first?.let { withArt.withMissingArtwork(it).copy(metadataVersion = ART_FILL_VERSION) } ?: withArt
+        val complete = igdbBest?.first?.let { withArt.withMissingArtwork(it).withIgdbHero(it).copy(metadataVersion = ART_FILL_VERSION) } ?: withArt
         dao.upsertItem(complete.copy(metadataState = state, matchConfidence = confidence))
     }
 
@@ -410,14 +417,16 @@ class MetadataService(
         var updated = item.clearedMetadata()
         when (candidate.source) {
             MetadataSource.IGDB -> {
-                igdb.byId(candidate.id)?.let { game ->
-                    updated = updated.withIgdb(game)
+                val game = igdb.byId(candidate.id)
+                if (game != null) {
+                    updated = updated.withIgdb(game, replace = true)
                     platformFor(item, game)?.let { updated = updated.copy(platform = it.first, platformSource = it.second) }
                 }
                 if (sgdb.isConfigured) {
                     sgdb.search(candidate.name).maxByOrNull { MatchScorer.score(candidate.name, it.name) }
                         ?.let { updated = updated.withSgdbArtwork(it.id) }
                 }
+                if (game != null) updated = updated.withIgdbHero(game)
             }
             MetadataSource.STEAMGRIDDB -> updated = updated.withSgdbArtwork(candidate.id)
         }
@@ -462,10 +471,10 @@ class MetadataService(
                     ArtworkKind.LOGO -> SgdbAssetType.LOGO
                     ArtworkKind.ICON -> SgdbAssetType.ICON
                 }
-                sgdb.assets(gameId, type).forEach { result += ArtworkOption(it.url, it.thumb ?: it.url, ArtworkSource.STEAMGRIDDB) }
+                sgdb.assets(gameId, type).forEach { result += ArtworkOption(it.url, it.previewImage, ArtworkSource.STEAMGRIDDB) }
                 if (animated && (kind == ArtworkKind.COVER || kind == ArtworkKind.HERO)) {
                     sgdb.assets(gameId, type, animated = true).filter { it.isPlayableAnimation }
-                        .forEach { result += ArtworkOption(it.url, it.thumb ?: it.url, ArtworkSource.STEAMGRIDDB, animated = true) }
+                        .forEach { result += ArtworkOption(it.url, it.previewImage, ArtworkSource.STEAMGRIDDB, animated = true) }
                 }
             }.onFailure { Log.w("SteamGridDB artwork for ${item.title} failed", it) }
         }
@@ -526,8 +535,11 @@ class MetadataService(
             }
         }
         runCatching {
-            item.igdbId?.takeIf { igdb.isConfigured }?.let { igdb.byId(it) }?.let { auto = auto.withIgdbArtwork(it) }
+            // In the order of the sources: IGDB's cover, SteamGridDB, then IGDB's background.
+            val game = item.igdbId?.takeIf { igdb.isConfigured }?.let { igdb.byId(it) }
+            if (game != null && kind == ArtworkKind.COVER) auto = auto.copy(coverUrl = auto.coverUrl ?: game.coverUrl)
             item.sgdbId?.takeIf { sgdb.isConfigured }?.let { auto = auto.withSgdbArtwork(it) }
+            if (game != null) auto = auto.withIgdbHero(game)
         }.onFailure { Log.w("Artwork for ${item.title} not looked up again", it) }
         dao.upsertItem(auto)
         val reset = when (kind) {
@@ -547,41 +559,36 @@ class MetadataService(
         dao.getItem(itemId)?.let { dao.upsertItem(it.copy(metadataState = MetadataState.LOCKED)) }
     }
 
-    /** IGDB data for every field not edited by hand. */
-    private fun LibraryItemEntity.withIgdb(game: IgdbGame): LibraryItemEntity {
+    /**
+     * IGDB's texts and cover for every field not edited by hand. Automatic lookups only fill what
+     * is still empty ([replace] false); a match chosen by hand replaces (the item was cleared first).
+     */
+    private fun LibraryItemEntity.withIgdb(game: IgdbGame, replace: Boolean = false): LibraryItemEntity {
         val m = manual
+        fun <T> pick(field: MetaField, now: T?, new: T?): T? = if (field in m) now else if (replace) new ?: now else now ?: new
         return copy(
-            igdbId = game.id,
-            description = if (MetaField.DESCRIPTION in m) description else game.summary,
-            genres = if (MetaField.GENRES in m) genres else game.genres.joinToString(", ") { it.name }.ifEmpty { null },
-            developer = if (MetaField.DEVELOPER in m) developer else game.developer,
-            releaseYear = if (MetaField.RELEASE in m) releaseYear else game.releaseYear,
-            releaseDate = if (MetaField.RELEASE in m) releaseDate else game.releaseMillis,
-            rating = if (MetaField.RATING in m) rating else game.total_rating?.toFloat(),
-        ).withIgdbArtwork(game).withIgdbDetails(game)
-    }
-
-    /** IGDB's cover comes first; its background only fills in (SteamGridDB's is preferred). */
-    private fun LibraryItemEntity.withIgdbArtwork(game: IgdbGame): LibraryItemEntity {
-        val m = manual
-        return copy(
-            coverUrl = if (MetaField.COVER in m) coverUrl else game.coverUrl ?: coverUrl,
-            heroUrl = if (MetaField.HERO in m) heroUrl else heroUrl ?: game.heroUrl,
+            igdbId = if (replace) game.id else igdbId ?: game.id,
+            description = pick(MetaField.DESCRIPTION, description, game.summary),
+            genres = pick(MetaField.GENRES, genres, game.genres.joinToString(", ") { it.name }.ifEmpty { null }),
+            developer = pick(MetaField.DEVELOPER, developer, game.developer),
+            releaseYear = pick(MetaField.RELEASE, releaseYear, game.releaseYear),
+            releaseDate = pick(MetaField.RELEASE, releaseDate, game.releaseMillis),
+            rating = pick(MetaField.RATING, rating, game.total_rating?.toFloat()),
+            publisher = pick(MetaField.PUBLISHER, publisher, game.publisher),
+            series = pick(MetaField.SERIES, series, game.series),
+            features = pick(MetaField.FEATURES, features, game.features),
+            ageRatings = pick(MetaField.AGE_RATING, ageRatings, game.ageRatings),
+            coverUrl = pick(MetaField.COVER, coverUrl, game.coverUrl),
+            metadataVersion = maxOf(metadataVersion, 1),
         )
     }
 
-    /** The fields added in schema v3 (publisher, series, features, age ratings). */
-    private fun LibraryItemEntity.withIgdbDetails(game: IgdbGame): LibraryItemEntity {
-        val m = manual
-        return copy(
-            publisher = if (MetaField.PUBLISHER in m) publisher else game.publisher,
-            series = if (MetaField.SERIES in m) series else game.series,
-            features = if (MetaField.FEATURES in m) features else game.features,
-            ageRatings = if (MetaField.AGE_RATING in m) ageRatings else game.ageRatings,
-            releaseDate = if (MetaField.RELEASE in m) releaseDate else releaseDate ?: game.releaseMillis,
-            metadataVersion = 1,
-        )
-    }
+    /** IGDB's background, only where SteamGridDB had none (it comes last in the order). */
+    private fun LibraryItemEntity.withIgdbHero(game: IgdbGame): LibraryItemEntity =
+        if (MetaField.HERO in manual) this else copy(heroUrl = heroUrl ?: game.heroUrl)
+
+    /** The fields added in schema v3 (publisher, series, features, age ratings): only filled in. */
+    private fun LibraryItemEntity.withIgdbDetails(game: IgdbGame): LibraryItemEntity = withIgdb(game)
 
     /** Hand edit of one item: [transform] sets the value(s), [field] becomes protected. */
     suspend fun edit(itemId: String, field: MetaField?, transform: (LibraryItemEntity) -> LibraryItemEntity) = withContext(Dispatchers.IO) {
@@ -597,12 +604,8 @@ class MetadataService(
         val item = dao.getItem(itemId) ?: return@withContext
         val unlocked = item.copy(manualFields = (item.manual - field).joinToString(",") { it.name }.ifEmpty { null })
         val game = item.igdbId?.takeIf { igdb.isConfigured }?.let { runCatching { igdb.byId(it) }.getOrNull() }
-        val restored = when {
-            // The name back to the one the source (app / host) reports.
-            field == MetaField.TITLE -> unlocked.copy(title = dao.getTargetsForItem(itemId).firstOrNull()?.name ?: item.title)
-            game != null -> unlocked.withIgdb(game)
-            // No IGDB match (or offline): nothing to restore, the field becomes empty.
-            else -> when (field) {
+        // The field is emptied and filled again from IGDB (stays empty without a match / offline).
+        val cleared = when (field) {
                 MetaField.DESCRIPTION -> unlocked.copy(description = null)
                 MetaField.GENRES -> unlocked.copy(genres = null)
                 MetaField.DEVELOPER -> unlocked.copy(developer = null)
@@ -615,7 +618,12 @@ class MetadataService(
                 // Images go through resetArtwork.
                 MetaField.COVER, MetaField.HERO, MetaField.LOGO, MetaField.ICON -> unlocked
                 MetaField.TITLE -> unlocked
-            }
+        }
+        val restored = when {
+            // The name back to the one the source (app / host) reports.
+            field == MetaField.TITLE -> unlocked.copy(title = dao.getTargetsForItem(itemId).firstOrNull()?.name ?: item.title)
+            game != null -> cleared.withIgdb(game)
+            else -> cleared
         }
         dao.upsertItem(restored)
         // The companion follows its automatic choice again too.
@@ -634,16 +642,16 @@ class MetadataService(
     private fun LibraryItemEntity.withSgdbArtwork(gameId: Long): LibraryItemEntity {
         val m = manual
         val grid = if (MetaField.COVER in m || coverUrl != null) null else sgdb.assets(gameId, SgdbAssetType.GRID).firstOrNull { it.height > it.width }
-        val hero = if (MetaField.HERO in m) null else sgdb.assets(gameId, SgdbAssetType.HERO).firstOrNull()
-        val logo = if (MetaField.LOGO in m) null else sgdb.assets(gameId, SgdbAssetType.LOGO).firstOrNull()
-        val icon = if (MetaField.ICON in m) null else sgdb.assets(gameId, SgdbAssetType.ICON).firstOrNull()
+        val hero = if (MetaField.HERO in m || heroUrl != null) null else sgdb.assets(gameId, SgdbAssetType.HERO).firstOrNull()
+        val logo = if (MetaField.LOGO in m || logoUrl != null) null else sgdb.assets(gameId, SgdbAssetType.LOGO).firstOrNull()
+        val icon = if (MetaField.ICON in m || iconUrl != null) null else sgdb.assets(gameId, SgdbAssetType.ICON).firstOrNull()
         return copy(
             sgdbId = gameId,
-            // Cover: IGDB's first (SteamGridDB only fills in); background, logo, icon: SteamGridDB's.
+            // Only what is still empty: set images are never replaced automatically.
             coverUrl = coverUrl ?: grid?.url,
-            heroUrl = hero?.url ?: heroUrl,
-            logoUrl = logo?.url ?: logoUrl,
-            iconUrl = icon?.url ?: iconUrl,
+            heroUrl = heroUrl ?: hero?.url,
+            logoUrl = logoUrl ?: logo?.url,
+            iconUrl = iconUrl ?: icon?.url,
         ).withSgdbAnimated(gameId)
     }
 
@@ -651,10 +659,10 @@ class MetadataService(
     private fun LibraryItemEntity.withSgdbAnimated(gameId: Long): LibraryItemEntity {
         if (!animated) return this
         val m = manual
-        val grid = if (MetaField.COVER in m) null else sgdb.assets(gameId, SgdbAssetType.GRID, animated = true)
+        val grid = if (MetaField.COVER in m || animatedCoverUrl != null) null else sgdb.assets(gameId, SgdbAssetType.GRID, animated = true)
             .firstOrNull { it.isPlayableAnimation && it.height > it.width }
-        val hero = if (MetaField.HERO in m) null else sgdb.assets(gameId, SgdbAssetType.HERO, animated = true).firstOrNull { it.isPlayableAnimation }
-        return copy(animatedCoverUrl = grid?.url ?: animatedCoverUrl, animatedHeroUrl = hero?.url ?: animatedHeroUrl)
+        val hero = if (MetaField.HERO in m || animatedHeroUrl != null) null else sgdb.assets(gameId, SgdbAssetType.HERO, animated = true).firstOrNull { it.isPlayableAnimation }
+        return copy(animatedCoverUrl = animatedCoverUrl ?: grid?.url, animatedHeroUrl = animatedHeroUrl ?: hero?.url)
     }
 
     /** Games matched while animated artwork was off: their animated cover / background once. */
@@ -732,7 +740,7 @@ class MetadataService(
                 if (best != null && best.first.id != game.id && best.second >= MatchScorer.REVIEW) {
                     var updated = item.copy(platform = item.platform.takeIf { item.platformSource in setOf(PlatformSource.MANUAL, PlatformSource.PLAYNITE, PlatformSource.COMPANION) },
                         platformSource = item.platformSource.takeIf { it in setOf(PlatformSource.MANUAL, PlatformSource.PLAYNITE, PlatformSource.COMPANION) })
-                    updated = updated.withIgdb(best.first)
+                    updated = updated.withIgdb(best.first, replace = true)
                     platformFor(updated, best.first)?.let { updated = updated.copy(platform = it.first, platformSource = it.second) }
                     dao.upsertItem(updated.copy(matchConfidence = best.second, metadataState = if (best.second >= MatchScorer.AUTO_ACCEPT) MetadataState.OK else MetadataState.REVIEW))
                 }

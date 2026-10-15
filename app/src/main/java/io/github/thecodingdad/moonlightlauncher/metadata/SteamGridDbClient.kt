@@ -24,6 +24,13 @@ data class SgdbAsset(
     val height: Int = 0,
 ) {
     val isAnimated: Boolean get() = mime == "image/webp" || mime == "image/gif" || mime == "video/webm"
+    /**
+     * What the picker can show: the thumbnail when it is an image (animated assets have WebM
+     * thumbnails the image loader can't play), else the full image.
+     */
+    val previewImage: String
+        get() = thumb?.takeIf { t -> t.substringBefore('?').substringAfterLast('.').lowercase() in setOf("png", "jpg", "jpeg", "webp", "gif") } ?: url
+
     /** Animated formats the image loader can play (WebM would need a video player). */
     val isPlayableAnimation: Boolean get() = mime == "image/webp" || mime == "image/gif"
 }

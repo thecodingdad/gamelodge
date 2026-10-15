@@ -81,6 +81,7 @@ class AppContainer(context: Context) {
         MetadataService(database, secrets, settings, http, scope, servers).also {
             it.onCorrected = { id, reset -> library.pushCorrection(id, reset) }
             it.companionGame = { id -> library.companionGame(id) }
+            it.onFullRefresh = { library.resyncHosts() }
         }
     }
 

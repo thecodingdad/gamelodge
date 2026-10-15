@@ -221,7 +221,7 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
                 }
             }
             Spacer(Modifier.height(8.dp))
-            ButtonHintBar(listOf(ButtonHint(PadButton.L1, stringResource(R.string.artwork_switch_kind)), ButtonHint(PadButton.B, stringResource(R.string.action_close), onClick = onDismiss)))
+            ButtonHintBar(listOf(ButtonHint(PadButton.A, stringResource(R.string.hint_select)), ButtonHint(PadButton.L1, stringResource(R.string.artwork_switch_kind), secondButton = PadButton.R1), ButtonHint(PadButton.B, stringResource(R.string.action_close), onClick = onDismiss)))
         }
     }
 }
@@ -317,6 +317,6 @@ fun AppTileDialog(entry: io.github.thecodingdad.moonlightlauncher.data.db.Librar
             }
         }
         Spacer(Modifier.height(8.dp))
-        ButtonHintBar(listOf(ButtonHint(PadButton.B, stringResource(R.string.action_close), onClick = onDismiss)))
+        ButtonHintBar(listOf(ButtonHint(PadButton.A, stringResource(R.string.hint_select)), ButtonHint(PadButton.B, stringResource(R.string.action_close), onClick = onDismiss)))
     }
 }

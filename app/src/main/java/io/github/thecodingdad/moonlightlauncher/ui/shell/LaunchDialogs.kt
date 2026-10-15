@@ -172,7 +172,7 @@ fun TargetPickerDialog(
         Spacer(Modifier.height(12.dp))
         ButtonHintBar(
             buildList {
-                if (showProfiles) add(ButtonHint(PadButton.L1, stringResource(R.string.hint_profile)))
+                if (showProfiles) add(ButtonHint(PadButton.L1, stringResource(R.string.hint_profile), secondButton = PadButton.R1))
                 add(ButtonHint(PadButton.A, stringResource(R.string.hint_start)))
                 add(ButtonHint(PadButton.B, stringResource(R.string.action_cancel), onClick = onDismiss))
             },
