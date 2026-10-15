@@ -224,6 +224,8 @@
     <string name="artwork_logo">Logo</string>
     <string name="artwork_switch_kind">Typ wechseln</string>
     <string name="artwork_icon">Icon</string>
+    <string name="artwork_animated_cover">Animiertes Cover</string>
+    <string name="artwork_animated_hero">Animierter Hintergrund</string>
     <string name="artwork_manual">von Hand gewählt</string>
     <string name="artwork_auto">automatisch (in der Reihenfolge der Quellen)</string>
     <string name="artwork_reset_auto">Wieder automatisch</string>

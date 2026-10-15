@@ -91,8 +91,8 @@ data class LibraryItemEntity(
 /** Metadata fields that can be edited (and then are protected against automatic updates). */
 enum class MetaField {
     TITLE, DESCRIPTION, GENRES, DEVELOPER, PUBLISHER, SERIES, FEATURES, RELEASE, RATING, AGE_RATING,
-    // Images picked by hand (the animated variant counts as part of cover / background).
-    COVER, HERO, LOGO, ICON,
+    // Images picked by hand.
+    COVER, HERO, LOGO, ICON, ANIMATED_COVER, ANIMATED_HERO,
 }
 
 /** Where [LibraryItemEntity.platform] came from; higher sources are never overwritten by lower ones. */
@@ -261,8 +261,8 @@ fun LibraryItemEntity.clearedMetadata(): LibraryItemEntity {
         releaseYear = releaseYear.takeIf { MetaField.RELEASE in m },
         releaseDate = releaseDate.takeIf { MetaField.RELEASE in m },
         rating = rating.takeIf { MetaField.RATING in m },
-        coverUrl = coverUrl.takeIf { MetaField.COVER in m }, animatedCoverUrl = animatedCoverUrl.takeIf { MetaField.COVER in m },
-        heroUrl = heroUrl.takeIf { MetaField.HERO in m }, animatedHeroUrl = animatedHeroUrl.takeIf { MetaField.HERO in m },
+        coverUrl = coverUrl.takeIf { MetaField.COVER in m }, animatedCoverUrl = animatedCoverUrl.takeIf { MetaField.ANIMATED_COVER in m },
+        heroUrl = heroUrl.takeIf { MetaField.HERO in m }, animatedHeroUrl = animatedHeroUrl.takeIf { MetaField.ANIMATED_HERO in m },
         logoUrl = logoUrl.takeIf { MetaField.LOGO in m }, iconUrl = iconUrl.takeIf { MetaField.ICON in m },
     )
 }

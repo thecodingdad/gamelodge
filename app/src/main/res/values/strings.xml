@@ -226,6 +226,8 @@
     <string name="artwork_logo">Logo</string>
     <string name="artwork_switch_kind">Switch type</string>
     <string name="artwork_icon">Icon</string>
+    <string name="artwork_animated_cover">Animated cover</string>
+    <string name="artwork_animated_hero">Animated background</string>
     <string name="artwork_manual">picked by hand</string>
     <string name="artwork_auto">automatic (in the order of the sources)</string>
     <string name="artwork_reset_auto">Back to automatic</string>

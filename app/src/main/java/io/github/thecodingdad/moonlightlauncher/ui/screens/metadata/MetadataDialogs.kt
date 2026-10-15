@@ -27,6 +27,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -130,72 +131,84 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
     val scope = rememberCoroutineScope()
     Modal(visible = item != null, onDismiss = onDismiss, title = stringResource(R.string.artwork_title), maxWidth = 1000.dp) {
         val target = item ?: return@Modal
-        val kinds = ArtworkKind.entries
+        // Animated cover / background have their own tabs (while animated artwork is wanted).
+        val animatedOn = LocalContext.current.container.settings.settings.collectAsState(null).value?.animatedArtwork ?: true
+        val kinds = ArtworkKind.entries.filter { animatedOn || !it.animated }
         var kindIndex by remember(target.id) { mutableStateOf(0) }
-        val kind = kinds[kindIndex]
+        val kind = kinds[kindIndex.coerceIn(kinds.indices)]
         var options by remember(target.id, kind) { mutableStateOf<List<ArtworkOption>?>(null) }
         LaunchedEffect(target.id, kind) { options = runCatching { metadata.artworkOptions(target, kind) }.getOrDefault(emptyList()) }
         PadAction(PadButton.L1) { kindIndex = (kindIndex - 1).mod(kinds.size) }
         PadAction(PadButton.R1) { kindIndex = (kindIndex + 1).mod(kinds.size) }
-        val wide = kind == ArtworkKind.HERO
+        val wide = kind.base == ArtworkKind.HERO
         val square = kind == ArtworkKind.LOGO || kind == ArtworkKind.ICON
-        val ratio = when (kind) {
-            ArtworkKind.COVER -> 2f / 3f
+        val ratio = when (kind.base) {
             ArtworkKind.HERO -> 1920f / 620f
             ArtworkKind.LOGO -> 5f / 2f
             ArtworkKind.ICON -> 1f
+            else -> 2f / 3f
         }
 
-        Column(Modifier.verticalScroll(rememberScrollState())) {
+        // Tabs and hints stay; current image and choices scroll together.
+        Column(Modifier.weight(1f, fill = false)) {
             io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 10.dp) {
                 kinds.forEachIndexed { index, k ->
                     io.github.thecodingdad.moonlightlauncher.ui.screens.library.Chip(kindLabel(k), selected = index == kindIndex, onClick = { kindIndex = index })
                 }
             }
             Spacer(Modifier.height(14.dp))
-            // The current image (and its animated variant), picked by hand or automatic.
-            val (current, moving) = when (kind) {
-                ArtworkKind.COVER -> target.coverUrl to target.animatedCoverUrl
-                ArtworkKind.HERO -> target.heroUrl to target.animatedHeroUrl
-                ArtworkKind.LOGO -> target.logoUrl to null
-                ArtworkKind.ICON -> target.iconUrl to null
+            // The current image of this tab, picked by hand or automatic.
+            val current = when (kind) {
+                ArtworkKind.COVER -> target.coverUrl
+                ArtworkKind.ANIMATED_COVER -> target.animatedCoverUrl
+                ArtworkKind.HERO -> target.heroUrl
+                ArtworkKind.ANIMATED_HERO -> target.animatedHeroUrl
+                ArtworkKind.LOGO -> target.logoUrl
+                ArtworkKind.ICON -> target.iconUrl
             }
             val manual = kind.field in target.manual
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                listOfNotNull(current, moving).forEach { url ->
-                    ArtworkImage(
-                        url, target.title,
-                        Modifier.height(if (wide) 90.dp else 120.dp).aspectRatio(ratio).clip(RoundedCornerShape(8.dp)),
-                        contentScale = if (square) ContentScale.Fit else ContentScale.Crop, showTitleOnPlaceholder = false,
-                    )
-                }
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        stringResource(if (manual) R.string.artwork_manual else R.string.artwork_auto),
-                        style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted,
-                    )
-                    if (manual) {
-                        io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton(
-                            stringResource(R.string.artwork_reset_auto), icon = androidx.compose.material.icons.Icons.Filled.Restore,
-                            onClick = { scope.launch { metadata.resetArtwork(target.id, kind); onDismiss() } },
-                        )
+            val list = options
+            val full = androidx.compose.foundation.lazy.grid.GridItemSpan(Int.MAX_VALUE)
+            // One scroll area: the current image first, then the choices (tabs and hints stay).
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(if (wide) 260.dp else if (square) 150.dp else 120.dp),
+                modifier = Modifier.weight(1f, fill = false),
+                contentPadding = PaddingValues(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                item(key = "current", span = { full }) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                        current?.let { url ->
+                            ArtworkImage(
+                                io.github.thecodingdad.moonlightlauncher.data.artwork.ArtworkFiles.model(url), target.title,
+                                Modifier.height(if (wide) 90.dp else 120.dp).aspectRatio(ratio).clip(RoundedCornerShape(8.dp)),
+                                contentScale = if (square) ContentScale.Fit else ContentScale.Crop, showTitleOnPlaceholder = false,
+                            )
+                        }
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(
+                                stringResource(if (manual) R.string.artwork_manual else R.string.artwork_auto),
+                                style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted,
+                            )
+                            if (manual) {
+                                io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton(
+                                    stringResource(R.string.artwork_reset_auto), icon = androidx.compose.material.icons.Icons.Filled.Restore,
+                                    onClick = { scope.launch { metadata.resetArtwork(target.id, kind); onDismiss() } },
+                                )
+                            }
+                        }
                     }
                 }
-            }
-            Spacer(Modifier.height(14.dp))
-            val list = options
-            when {
-                !metadata.isConfigured && list.isNullOrEmpty() -> Text(stringResource(R.string.metadata_not_configured), color = LauncherTheme.colors.onSurfaceMuted)
-                list == null -> CircularProgressIndicator(color = LauncherTheme.colors.accent)
-                list.isEmpty() -> Text(stringResource(R.string.metadata_no_results), color = LauncherTheme.colors.onSurfaceMuted)
-                else -> LazyVerticalGrid(
-                    columns = GridCells.Adaptive(if (wide) 260.dp else if (square) 150.dp else 120.dp),
-                    modifier = Modifier.heightIn(max = 380.dp),
-                    contentPadding = PaddingValues(4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    items(list, key = { o -> o.url }) { option ->
+                when {
+                    !metadata.isConfigured && list.isNullOrEmpty() -> item(key = "status", span = { full }) {
+                        Text(stringResource(R.string.metadata_not_configured), color = LauncherTheme.colors.onSurfaceMuted)
+                    }
+                    list == null -> item(key = "status", span = { full }) { CircularProgressIndicator(color = LauncherTheme.colors.accent) }
+                    list.isEmpty() -> item(key = "status", span = { full }) {
+                        Text(stringResource(R.string.metadata_no_results), color = LauncherTheme.colors.onSurfaceMuted)
+                    }
+                    else -> items(list, key = { o -> o.url }) { option ->
                         FocusSurface(
                             onClick = { scope.launch { metadata.setArtwork(target.id, kind, option); onDismiss() } },
                             modifier = Modifier.fillMaxWidth().aspectRatio(ratio),
@@ -230,7 +243,9 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
 private fun kindLabel(kind: ArtworkKind) = stringResource(
     when (kind) {
         ArtworkKind.COVER -> R.string.artwork_cover
+        ArtworkKind.ANIMATED_COVER -> R.string.artwork_animated_cover
         ArtworkKind.HERO -> R.string.artwork_hero
+        ArtworkKind.ANIMATED_HERO -> R.string.artwork_animated_hero
         ArtworkKind.LOGO -> R.string.artwork_logo
         ArtworkKind.ICON -> R.string.artwork_icon
     },
