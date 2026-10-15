@@ -242,7 +242,10 @@ fun HeroHome(
                 // Scrolling the spacer away still lets the rows go up to below the info block.
                 item(key = "start-spacer") {
                     val viewport = listState.layoutInfo.viewportSize.height
-                    val gap = with(density) { 10.dp.roundToPx() + 48.dp.roundToPx() } + fadePx.toInt()
+                    // Landscape: the cards end just above the hint bar (the inset includes some margin),
+                    // so with small cards the next row stays hidden too. Portrait: above the fade.
+                    val bottom = if (opaqueBottomPx > 0f) fadePx.toInt() else with(density) { (insets.calculateBottomPadding() - 16.dp).coerceAtLeast(0.dp).roundToPx() }
+                    val gap = with(density) { 10.dp.roundToPx() + 48.dp.roundToPx() } + bottom
                     val height = if (firstRowHeight == 0) 0 else (viewport - firstRowHeight - gap).coerceAtLeast(0)
                     androidx.compose.foundation.layout.Spacer(Modifier.fillMaxWidth().height(with(density) { height.toDp() }))
                 }
