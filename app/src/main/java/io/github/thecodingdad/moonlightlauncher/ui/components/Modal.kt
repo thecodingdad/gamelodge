@@ -1,9 +1,8 @@
 package io.github.thecodingdad.moonlightlauncher.ui.components
 
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.layout.displayCutout
-
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -103,7 +102,7 @@ fun SidePanel(
                         // Fixed width: the panel must not change size with its content (tabs).
                         .width(width)
                         .background(LauncherTheme.colors.surface)
-                        // Out of a camera notch / hole on top (portrait) or the side.
+                        // The panel draws into a camera notch / hole; its content stays clear of it.
                         .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.displayCutout)
                         .padding(24.dp)
                         .trapFocus(),
