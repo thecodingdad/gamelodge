@@ -1,0 +1,234 @@
+package io.github.thecodingdad.moonlightlauncher.desktop
+
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.SportsEsports
+import androidx.compose.material.icons.filled.Vibration
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings
+import io.github.thecodingdad.moonlightlauncher.resources.*
+import io.github.thecodingdad.moonlightlauncher.ui.LauncherViewModel
+import io.github.thecodingdad.moonlightlauncher.ui.PlatformUi
+import io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton
+import io.github.thecodingdad.moonlightlauncher.ui.components.Modal
+import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.ControllerInfo
+import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.NavRow
+import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.SectionHeader
+import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.SettingsPage
+import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.SettingsPageId
+import io.github.thecodingdad.moonlightlauncher.ui.shell.QuickTile
+import io.github.thecodingdad.moonlightlauncher.ui.shell.SystemStatus
+import io.github.thecodingdad.moonlightlauncher.ui.shell.TileModel
+import io.github.thecodingdad.moonlightlauncher.ui.shell.TopCutout
+import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
+import org.jetbrains.compose.resources.stringResource
+import java.awt.FileDialog
+import java.awt.Frame
+import java.io.File
+import java.net.NetworkInterface
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+import java.util.Locale
+import java.util.UUID
+
+/** The desktop's side of the shared UI. */
+class DesktopPlatformUi(
+    private val gamepads: Gamepads,
+    private val window: () -> Frame?,
+) : PlatformUi {
+    /** Bumped when the language changes: the window content is rebuilt in the new language. */
+    val languageRevision = mutableIntStateOf(0)
+
+    @Composable
+    override fun rememberSystemStatus(): SystemStatus {
+        val status by produceState(readStatus()) {
+            while (true) {
+                delay(30_000)
+                value = withContext(Dispatchers.IO) { readStatus() }
+            }
+        }
+        return status
+    }
+
+    private fun readStatus(): SystemStatus {
+        val power = if (isWindows) runCatching { SystemPowerStatus().also { WindowsPower.kernel.GetSystemPowerStatus(it) } }.getOrNull() else null
+        // 128 = no battery, 255 = unknown.
+        val hasBattery = power != null && (power.BatteryFlag.toInt() and 0xFF) != 128 && (power.BatteryFlag.toInt() and 0xFF) != 255
+        val percent = if (hasBattery) (power!!.BatteryLifePercent.toInt() and 0xFF).takeIf { it in 0..100 } else null
+        val interfaces = runCatching { NetworkInterface.networkInterfaces().toList() }.getOrDefault(emptyList())
+            .filter { runCatching { it.isUp && !it.isLoopback && !it.isVirtual }.getOrDefault(false) }
+        val wireless = interfaces.any { it.name.startsWith("wlan") || it.displayName.contains("wi-fi", true) || it.displayName.contains("wireless", true) }
+        val vpn = interfaces.any { it.displayName.contains("wireguard", true) || it.name.startsWith("wg") || it.name.startsWith("tun") }
+        return SystemStatus(
+            batteryPercent = percent,
+            charging = power != null && power.ACLineStatus.toInt() == 1,
+            wifi = wireless,
+            vpn = vpn,
+            ethernet = !wireless && interfaces.isNotEmpty(),
+        )
+    }
+
+    @Composable
+    override fun rememberTopCutout() = TopCutout(TopCutout.Position.NONE, 0.dp)
+
+    override fun formatTime(millis: Long): String =
+        DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(Locale.getDefault())
+            .format(Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()))
+
+    @Composable
+    override fun rememberControllers(): List<ControllerInfo> = gamepads.controllers.collectAsState().value
+
+    override fun vibrateController(id: Int) = gamepads.vibrate(id)
+
+    @Composable
+    override fun ControllerDetailDialog(controller: ControllerInfo?, onDismiss: () -> Unit) {
+        Modal(visible = controller != null, onDismiss = onDismiss, title = controller?.name, maxWidth = 560.dp) {
+            val c = controller ?: return@Modal
+            c.batteryPercent?.let { Text(stringResource(Res.string.controller_battery, it), color = LauncherTheme.colors.onSurfaceMuted) }
+            if (c.canVibrate) {
+                LauncherButton(
+                    stringResource(Res.string.controller_vibrate_test), onClick = { gamepads.vibrate(c.id) },
+                    icon = Icons.Filled.Vibration, modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
+    }
+
+    override fun openUrl(url: String) = BrowserOpener.open(url)
+
+    override fun bringToFront() {
+        java.awt.EventQueue.invokeLater { window()?.apply { isVisible = true; toFront(); requestFocus() } }
+    }
+
+    // A PC has no Wi-Fi/Bluetooth/flashlight tiles of its own here; the launcher's tiles remain.
+    @Composable
+    override fun rememberSystemTiles(ids: List<String>, revision: Int): Map<String, List<TileModel>> = emptyMap()
+
+    override fun quickTileAvailable(id: String) = id in LAUNCHER_TILES
+
+    @Composable
+    override fun SystemControls(visible: Boolean) = Unit
+
+    override fun appLabel(packageName: String) = packageName
+
+    @Composable
+    override fun rememberImagePicker(onPicked: (String?) -> Unit): () -> Unit = {
+        val dialog = FileDialog(window(), null, FileDialog.LOAD).apply {
+            setFilenameFilter { _, name -> name.substringAfterLast('.').lowercase() in IMAGE_TYPES }
+            file = IMAGE_TYPES.joinToString(";") { "*.$it" } // Windows reads the filter from here
+            isVisible = true
+        }
+        val picked = dialog.file?.let { File(dialog.directory, it).absolutePath }
+        onPicked(picked)
+    }
+
+    override suspend fun copyImage(address: String, dir: File, baseName: String): File? = withContext(Dispatchers.IO) {
+        runCatching {
+            val source = File(address.removePrefix("file://"))
+            dir.mkdirs()
+            val ext = source.extension.lowercase().takeIf { it in IMAGE_TYPES } ?: "img"
+            source.copyTo(File(dir, "$baseName.$ext"), overwrite = true)
+        }.getOrNull()
+    }
+
+    @Composable
+    override fun rememberOnTv() = false
+
+    @Composable
+    override fun rememberScreenKeeper(): (Boolean) -> Unit = remember { { _: Boolean -> } }
+
+    override fun openAppInfo(packageName: String) = Unit
+
+    override fun hasPage(id: SettingsPageId) = false
+
+    @Composable
+    override fun PlatformSettingsPage(id: SettingsPageId, vm: LauncherViewModel, openProfile: (UUID?) -> Unit, openStats: () -> Unit) = Unit
+
+    @Composable
+    override fun ControllersScreen() {
+        val controllers = rememberControllers()
+        var selected by remember { mutableStateOf<ControllerInfo?>(null) }
+        SettingsPage(stringResource(Res.string.settings_controllers)) {
+            SectionHeader(stringResource(Res.string.controllers_connected))
+            if (controllers.isEmpty()) Text(stringResource(Res.string.controllers_none), color = LauncherTheme.colors.onSurface)
+            controllers.forEachIndexed { index, c ->
+                NavRow(
+                    c.name, { selected = c },
+                    subtitle = c.batteryPercent?.let { stringResource(Res.string.controller_battery, it) },
+                    icon = Icons.Filled.SportsEsports, initialFocus = index == 0,
+                )
+            }
+        }
+        ControllerDetailDialog(selected) { selected = null }
+    }
+
+    @Composable
+    override fun ProfileEditor(uuid: UUID?, name: String, onDeleted: () -> Unit) = Unit
+
+    @Composable
+    override fun ControlsExtras(settings: LauncherSettings, update: ((LauncherSettings) -> LauncherSettings) -> Unit) = Unit
+
+    @Composable
+    override fun SystemSettingsRow() = Unit
+
+    override fun applyLanguage(tag: String) {
+        applyLocale(tag)
+        languageRevision.intValue++
+    }
+
+    companion object {
+        private val LAUNCHER_TILES = setOf(QuickTile.CONTROLLERS, QuickTile.HOSTS, QuickTile.VPN)
+        private val IMAGE_TYPES = setOf("png", "jpg", "jpeg", "webp", "gif", "bmp")
+        private val systemLocale: Locale = Locale.getDefault()
+
+        /** "system", "en" or "de" as the JVM's default locale (the resources follow it). */
+        fun applyLocale(tag: String) {
+            Locale.setDefault(if (tag == "system" || tag.isBlank()) systemLocale else Locale.forLanguageTag(tag))
+        }
+    }
+}
+
+/** Refreshes [content]'s language once at start (the stored setting may differ from the system). */
+@Composable
+fun ApplyStoredLanguage(language: String, platform: DesktopPlatformUi) {
+    LaunchedEffect(language) {
+        val wanted = if (language == "system" || language.isBlank()) null else Locale.forLanguageTag(language)
+        if (wanted != null && Locale.getDefault().language != wanted.language) platform.applyLanguage(language)
+    }
+}
+
+/** kernel32's battery state (SYSTEM_POWER_STATUS). */
+@com.sun.jna.Structure.FieldOrder("ACLineStatus", "BatteryFlag", "BatteryLifePercent", "SystemStatusFlag", "BatteryLifeTime", "BatteryFullLifeTime")
+class SystemPowerStatus : com.sun.jna.Structure() {
+    @JvmField var ACLineStatus: Byte = 0
+    @JvmField var BatteryFlag: Byte = 0
+    @JvmField var BatteryLifePercent: Byte = 0
+    @JvmField var SystemStatusFlag: Byte = 0
+    @JvmField var BatteryLifeTime: Int = 0
+    @JvmField var BatteryFullLifeTime: Int = 0
+}
+
+private object WindowsPower {
+    @Suppress("FunctionName")
+    interface Kernel32Power : com.sun.jna.Library {
+        fun GetSystemPowerStatus(status: SystemPowerStatus): Boolean
+    }
+
+    val kernel: Kernel32Power by lazy { com.sun.jna.Native.load("kernel32", Kernel32Power::class.java) }
+}

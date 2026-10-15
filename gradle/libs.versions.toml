@@ -28,6 +28,8 @@ jbMaterial3 = "1.9.0"
 jbMaterialIcons = "1.7.3"
 sqlite = "2.6.2"
 bouncycastle = "1.81"
+jamepad = "2.30.0.0"
+jna = "5.18.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -81,10 +83,13 @@ bouncycastle-pkix = { group = "org.bouncycastle", name = "bcpkix-jdk18on", versi
 androidx-datastore-preferences-core = { group = "androidx.datastore", name = "datastore-preferences-core", version.ref = "datastore" }
 androidx-room-runtime-kmp = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
+jamepad = { group = "com.badlogicgames.jamepad", name = "jamepad", version.ref = "jamepad" }
+jna-platform = { group = "net.java.dev.jna", name = "jna-platform", version.ref = "jna" }
 kotlinx-coroutines-swing = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-swing", version.ref = "coroutines" }
 coil-network-okhttp-jvm = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
 
 [plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
 room = { id = "androidx.room", version.ref = "room" }

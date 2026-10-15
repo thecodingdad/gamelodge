@@ -1,0 +1,120 @@
+package io.github.thecodingdad.moonlightlauncher.desktop
+
+import androidx.compose.ui.graphics.Color
+import coil3.PlatformContext
+import coil3.SingletonImageLoader
+import coil3.request.ImageRequest
+import coil3.request.SuccessResult
+import coil3.toBitmap
+import io.github.thecodingdad.moonlightlauncher.ui.components.ArtworkPlatform
+import io.github.thecodingdad.moonlightlauncher.ui.feedback.FeedbackOutput
+import io.github.thecodingdad.moonlightlauncher.ui.feedback.HapticStrength
+import io.github.thecodingdad.moonlightlauncher.ui.feedback.UiSound
+import io.github.thecodingdad.moonlightlauncher.util.Log
+import java.io.File
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
+import javax.sound.sampled.AudioSystem
+import javax.sound.sampled.Clip
+import javax.sound.sampled.FloatControl
+import kotlin.math.log10
+import kotlin.math.max
+import kotlin.math.min
+
+/** UI sounds through Java Sound; "vibration" is a short rumble on the controller in use. */
+class DesktopFeedbackOutput(private val gamepads: () -> Gamepads?) : FeedbackOutput {
+    private val ids = AtomicInteger()
+    private val clips = ConcurrentHashMap<Int, Clip>()
+
+    override fun load(file: File): Int {
+        val id = ids.incrementAndGet()
+        runCatching {
+            val clip = AudioSystem.getClip()
+            AudioSystem.getAudioInputStream(file).use { clip.open(it) }
+            clips[id] = clip
+        }.onFailure { Log.w("UI sound ${file.name} not loaded", it) }
+        return id
+    }
+
+    override fun unload(id: Int) {
+        clips.remove(id)?.close()
+    }
+
+    override fun play(id: Int, volume: Float) {
+        val clip = clips[id] ?: return
+        runCatching {
+            (clip.getControl(FloatControl.Type.MASTER_GAIN) as? FloatControl)?.let { gain ->
+                val db = if (volume <= 0.0001f) gain.minimum else (20 * log10(volume)).coerceIn(gain.minimum, gain.maximum)
+                gain.value = db
+            }
+            clip.stop()
+            clip.framePosition = 0
+            clip.start()
+        }
+    }
+
+    override fun haptic(sound: UiSound, strength: HapticStrength) {
+        if (sound == UiSound.FOCUS) return // a rumble per focus step is too much on a pad
+        val power = when (strength) {
+            HapticStrength.LIGHT -> 0.25f
+            HapticStrength.MEDIUM -> 0.45f
+            HapticStrength.STRONG -> 0.8f
+        }
+        val millis = when (sound) {
+            UiSound.LAUNCH -> 120
+            UiSound.ERROR -> 160
+            else -> 40
+        }
+        gamepads()?.vibrate(strength = power, millis = millis)
+    }
+}
+
+/** Cover colours from the image itself; generated tiles for PC games come with phase 2. */
+object DesktopArtwork : ArtworkPlatform {
+    override suspend fun accentColor(model: Any): Color? {
+        val context = PlatformContext.INSTANCE
+        val request = ImageRequest.Builder(context).data(model).size(96).build()
+        val result = SingletonImageLoader.get(context).execute(request) as? SuccessResult ?: return null
+        val bitmap = result.image.toBitmap()
+        return vibrantColor(IntArray(bitmap.width * bitmap.height) { i -> bitmap.getColor(i % bitmap.width, i / bitmap.width) })
+    }
+
+    /**
+     * The most vibrant common colour: pixels are grouped by hue, each group weighted by how
+     * saturated and bright its pixels are; the strongest group's average wins.
+     */
+    fun vibrantColor(pixels: IntArray): Color? {
+        val buckets = HashMap<Int, DoubleArray>() // hue bucket -> weight, r, g, b
+        for (argb in pixels) {
+            if ((argb ushr 24) < 128) continue
+            val r = (argb shr 16) and 0xFF
+            val g = (argb shr 8) and 0xFF
+            val b = argb and 0xFF
+            val mx = max(r, max(g, b))
+            val mn = min(r, min(g, b))
+            val value = mx / 255.0
+            val saturation = if (mx == 0) 0.0 else (mx - mn).toDouble() / mx
+            if (saturation < 0.25 || value < 0.25) continue
+            val hue = hue(r, g, b, mx, mn)
+            val weight = saturation * value
+            val bucket = buckets.getOrPut((hue / 15).toInt()) { DoubleArray(4) }
+            bucket[0] += weight
+            bucket[1] += r * weight
+            bucket[2] += g * weight
+            bucket[3] += b * weight
+        }
+        val best = buckets.values.maxByOrNull { it[0] } ?: return null
+        return Color((best[1] / best[0]).toInt(), (best[2] / best[0]).toInt(), (best[3] / best[0]).toInt())
+    }
+
+    private fun hue(r: Int, g: Int, b: Int, mx: Int, mn: Int): Double {
+        if (mx == mn) return 0.0
+        val d = (mx - mn).toDouble()
+        val h = when (mx) {
+            r -> ((g - b) / d) % 6
+            g -> (b - r) / d + 2
+            else -> (r - g) / d + 4
+        } * 60
+        return if (h < 0) h + 360 else h
+    }
+}

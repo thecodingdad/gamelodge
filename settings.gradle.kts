@@ -19,4 +19,5 @@ rootProject.name = "moonlight-launcher"
 
 include(":app")
 include(":shared")
+include(":desktop")
 include(":moonlight-core")
