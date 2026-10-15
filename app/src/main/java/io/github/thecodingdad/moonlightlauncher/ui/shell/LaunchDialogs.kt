@@ -90,7 +90,7 @@ fun targetLabel(target: LaunchTargetEntity): String = when (target.type) {
     TargetType.REMOTE -> stringResource(Res.string.target_remote, target.hostName ?: "?")
     TargetType.ROM -> {
         // The emulator the game starts with.
-        val emulation = androidx.compose.ui.platform.LocalContext.current.container.emulation
+        val emulation = io.github.thecodingdad.moonlightlauncher.LocalContainer.current.emulators
         val choice = target.romPlatform?.let { emulation.resolve(it, target.emulatorKey) }
         stringResource(Res.string.target_rom, choice?.label ?: stringResource(Res.string.emulator_none))
     }
@@ -145,7 +145,7 @@ fun TargetPickerDialog(
 
         Text(stringResource(Res.string.launch_where), style = MaterialTheme.typography.labelLarge, color = LauncherTheme.colors.onSurfaceMuted)
         Spacer(Modifier.height(8.dp))
-        val emulation = androidx.compose.ui.platform.LocalContext.current.container.emulation
+        val emulation = io.github.thecodingdad.moonlightlauncher.LocalContainer.current.emulators
         val options = p.entry.targets.sortedBy { it.type == TargetType.REMOTE }.flatMap { target ->
             val platform = target.romPlatform
             if (target.type == TargetType.ROM && p.chooseProfile && platform != null) {
@@ -365,14 +365,14 @@ fun EntryContextMenu(
 fun GameEmulatorDialog(entry: LibraryEntry?, onDismiss: () -> Unit, onChoose: (LaunchTargetEntity, String?) -> Unit) {
     Modal(visible = entry != null, onDismiss = onDismiss, title = entry?.item?.title, maxWidth = 560.dp) {
         val e = entry ?: return@Modal
-        val emulation = androidx.compose.ui.platform.LocalContext.current.container.emulation
+        val emulation = io.github.thecodingdad.moonlightlauncher.LocalContainer.current.emulators
         val experimental = stringResource(Res.string.emu_experimental)
         Column(Modifier.heightIn(max = 480.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             for (target in e.romTargets) {
                 val platform = target.romPlatform ?: continue
                 val choices = emulation.choices(platform)
                 if (e.romTargets.size > 1) {
-                    Text(emulation.catalog.platform(platform)?.displayName ?: platform, style = MaterialTheme.typography.titleSmall, color = LauncherTheme.colors.onSurfaceMuted)
+                    Text(emulation.platformName(platform) ?: platform, style = MaterialTheme.typography.titleSmall, color = LauncherTheme.colors.onSurfaceMuted)
                 }
                 if (choices.isEmpty()) {
                     Text(stringResource(Res.string.emu_none_installed), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
@@ -401,7 +401,7 @@ private fun RunningSessionActions(
     onResume: () -> Unit,
     onDone: () -> Unit,
 ) {
-    val c = androidx.compose.ui.platform.LocalContext.current.container
+    val c = io.github.thecodingdad.moonlightlauncher.LocalContainer.current
     val scope = androidx.compose.runtime.rememberCoroutineScope()
     var config by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<io.github.thecodingdad.moonlightlauncher.data.db.HostConfigEntity?>(null) }
     androidx.compose.runtime.LaunchedEffect(session.host.uuid) { config = c.hostPower.config(session.host.uuid) }

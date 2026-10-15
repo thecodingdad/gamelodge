@@ -70,12 +70,12 @@ fun MetadataEditorDialog(
     onFix: (LibraryEntry) -> Unit = {},
     onArtwork: (LibraryEntry) -> Unit = {},
 ) {
-    val service = LocalContext.current.container.metadata
+    val service = io.github.thecodingdad.moonlightlauncher.LocalContainer.current.metadata
     val scope = rememberCoroutineScope()
     var editing by remember { mutableStateOf<EditRow?>(null) }
     // Everything changed here (fields, match, artwork, platform) is a draft: "Save" keeps it,
     // "Cancel" (also B / back) restores the game as it was when the editor opened.
-    val appScope = LocalContext.current.container.scope
+    val appScope = io.github.thecodingdad.moonlightlauncher.LocalContainer.current.scope
     val itemId = entry?.item?.id
     androidx.compose.runtime.LaunchedEffect(itemId) { if (itemId != null) service.beginEdit(itemId) }
     val cancel: () -> Unit = {

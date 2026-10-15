@@ -43,7 +43,7 @@ import io.github.thecodingdad.moonlightlauncher.resources.*
 /** Uncertain matches: A = choose the right game, X = the match is correct. */
 @Composable
 fun ReviewScreen(items: List<LibraryEntry>) {
-    val metadata = LocalContext.current.container.metadata
+    val metadata = io.github.thecodingdad.moonlightlauncher.LocalContainer.current.metadata
     val scope = rememberCoroutineScope()
     var focused by remember { mutableStateOf<LibraryEntry?>(null) }
     var fixing by remember { mutableStateOf<LibraryItemEntity?>(null) }

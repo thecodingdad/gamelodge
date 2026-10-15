@@ -28,10 +28,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
-enum class VpnStatus { DOWN, CONNECTING, UP, ERROR }
-
-data class VpnState(val status: VpnStatus, val tunnel: String?, val error: String? = null)
-
 /**
  * Built-in WireGuard client (official wireguard-android tunnel library, Go backend).
  * Tunnel configs live in the encrypted [SecretStore].
@@ -41,15 +37,15 @@ class VpnManager(
     private val secrets: SecretStore,
     private val settings: SettingsRepository,
     private val scope: CoroutineScope,
-) : VpnAutoConnect {
+) : VpnAutoConnect, Vpn {
     private val backend by lazy { GoBackend(context) }
     private val mutex = Mutex()
 
     private val _state = MutableStateFlow(VpnState(VpnStatus.DOWN, null))
-    val state: StateFlow<VpnState> = _state.asStateFlow()
+    override val state: StateFlow<VpnState> = _state.asStateFlow()
 
     private val _tunnels = MutableStateFlow(loadNames())
-    val tunnels: StateFlow<List<String>> = _tunnels.asStateFlow()
+    override val tunnels: StateFlow<List<String>> = _tunnels.asStateFlow()
 
     private val _currentSsid = MutableStateFlow<String?>(null)
     val currentSsid: StateFlow<String?> = _currentSsid.asStateFlow()
@@ -85,6 +81,8 @@ class VpnManager(
     /** Intent for the one-time system VPN consent, or null when already granted. */
     fun consentIntent(): Intent? = VpnService.prepare(context)
 
+    override fun ready() = consentIntent() == null
+
     suspend fun connect(name: String): Boolean = mutex.withLock {
         withContext(Dispatchers.IO) {
             if (consentIntent() != null) {
@@ -116,7 +114,7 @@ class VpnManager(
         }
     }
 
-    suspend fun toggle() {
+    override suspend fun toggle() {
         if (_state.value.status == VpnStatus.UP) disconnect() else defaultTunnel()?.let { connect(it) }
     }
 

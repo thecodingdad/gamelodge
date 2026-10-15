@@ -76,7 +76,7 @@ fun HaTileType.icon(): ImageVector = when (this) {
  */
 @Composable
 fun HaTile(tile: HaTileEntity, entity: HaEntity?, modifier: Modifier = Modifier, width: Dp = 200.dp) {
-    val ha = LocalContext.current.container.ha
+    val ha = io.github.thecodingdad.moonlightlauncher.LocalContainer.current.ha
     val scope = rememberCoroutineScope()
     val feedback = LocalUiFeedback.current
     val colors = LauncherTheme.colors

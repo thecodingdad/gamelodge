@@ -68,7 +68,9 @@ class MainActivity : ComponentActivity() {
         }
         feedback = UiFeedback(cacheDir, io.github.thecodingdad.moonlightlauncher.ui.feedback.AndroidFeedbackOutput(this)).also { it.load() }
         handleQuickMenuExtra(intent)
-        setContent { LauncherApp(vm, dispatcher, feedback) }
+        setContent {
+            androidx.compose.runtime.CompositionLocalProvider(LocalContainer provides container) { LauncherApp(vm, dispatcher, feedback) }
+        }
     }
 
     /** Status bar always hidden; navigation bar (gesture handle) optionally. Swipe shows both briefly. */

@@ -188,7 +188,8 @@ private fun Context.open(intent: Intent) {
 @Composable
 fun rememberQuickTiles(ids: List<String>, onHost: (String) -> Unit, onControllers: () -> Unit): List<TileModel> {
     val context = LocalContext.current
-    val c = context.container
+    val launcherContainer = io.github.thecodingdad.moonlightlauncher.LocalContainer.current
+    val c = launcherContainer
     val colors = LauncherTheme.colors
     val scope = rememberCoroutineScope()
     var tick by remember { mutableIntStateOf(0) }
@@ -266,7 +267,7 @@ fun rememberQuickTiles(ids: List<String>, onHost: (String) -> Unit, onController
                         { onHost(host.uuid) },
                     )
                 }
-                QuickTile.VPN -> if (tunnels.isEmpty() || c.vpn.consentIntent() != null) emptyList() else {
+                QuickTile.VPN -> if (tunnels.isEmpty() || !c.vpn.ready()) emptyList() else {
                     val up = vpnState.status == VpnStatus.UP
                     listOf(TileModel(id, Icons.Filled.VpnLock, if (up) labelVpnOn else labelVpnOff, if (up) on else off, { scope.launch { c.vpn.toggle() } }))
                 }

@@ -65,7 +65,8 @@ private sealed interface PairUi {
 @Composable
 fun HostsSettings(hosts: List<HostState>, openHostConfig: (HostState) -> Unit) {
     val context = LocalContext.current
-    val actions = context.container.hostActions
+    val launcherContainer = io.github.thecodingdad.moonlightlauncher.LocalContainer.current
+    val actions = launcherContainer.hostActions
     val scope = rememberCoroutineScope()
     val keyboard = LocalKeyboardController.current
     var pairUi by remember { mutableStateOf<PairUi?>(null) }
@@ -73,8 +74,8 @@ fun HostsSettings(hosts: List<HostState>, openHostConfig: (HostState) -> Unit) {
     var adding by remember { mutableStateOf(false) }
     // New hosts are only searched for while this screen is open.
     DisposableEffect(Unit) {
-        context.container.hosts.setDiscovery(true)
-        onDispose { context.container.hosts.setDiscovery(false) }
+        launcherContainer.hosts.setDiscovery(true)
+        onDispose { launcherContainer.hosts.setDiscovery(false) }
     }
 
     fun startPairing(host: HostState) {
@@ -86,7 +87,7 @@ fun HostsSettings(hosts: List<HostState>, openHostConfig: (HostState) -> Unit) {
         }
     }
 
-    val c = androidx.compose.ui.platform.LocalContext.current.container
+    val c = io.github.thecodingdad.moonlightlauncher.LocalContainer.current
     val waking = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateListOf<String>() }
     val notes = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateMapOf<String, String>() }
     val hostConfigList by androidx.compose.runtime.remember { c.database.hostConfigDao().observeAll() }.collectAsState(emptyList())
@@ -155,7 +156,7 @@ fun HostsSettings(hosts: List<HostState>, openHostConfig: (HostState) -> Unit) {
                     }
                 },
             )
-            LauncherButton(stringResource(Res.string.hosts_refresh), icon = Icons.Filled.Refresh, onClick = { context.container.hosts.refreshAppLists() })
+            LauncherButton(stringResource(Res.string.hosts_refresh), icon = Icons.Filled.Refresh, onClick = { launcherContainer.hosts.refreshAppLists() })
         }
         if (adding) CircularProgressIndicator(color = LauncherTheme.colors.accent)
         message?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted) }

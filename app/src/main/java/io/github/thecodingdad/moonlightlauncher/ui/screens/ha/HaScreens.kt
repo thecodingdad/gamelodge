@@ -80,7 +80,7 @@ fun connectionLabel(state: HaConnection) = stringResource(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun HaPanel(visible: Boolean, onDismiss: () -> Unit, openSettings: () -> Unit) {
-    val ha = LocalContext.current.container.ha
+    val ha = io.github.thecodingdad.moonlightlauncher.LocalContainer.current.ha
     val tiles by ha.tiles.collectAsState(emptyList())
     val entities by ha.client.entities.collectAsState()
     val connection by ha.client.connection.collectAsState()
@@ -121,7 +121,8 @@ fun HaPanel(visible: Boolean, onDismiss: () -> Unit, openSettings: () -> Unit) {
 @Composable
 fun HaSettings(settings: LauncherSettings, update: ((LauncherSettings) -> LauncherSettings) -> Unit) {
     val context = LocalContext.current
-    val ha = context.container.ha
+    val launcherContainer = io.github.thecodingdad.moonlightlauncher.LocalContainer.current
+    val ha = launcherContainer.ha
     val scope = rememberCoroutineScope()
     val connection by ha.client.connection.collectAsState()
     val tiles by ha.tiles.collectAsState(emptyList())
@@ -249,7 +250,7 @@ private fun EntityPicker(visible: Boolean, entities: List<HaEntity>, onPick: (Ha
 /** Favourite tiles as a row on the hero home screen. */
 @Composable
 fun HaHomeRow() {
-    val ha = LocalContext.current.container.ha
+    val ha = io.github.thecodingdad.moonlightlauncher.LocalContainer.current.ha
     val tiles by ha.tiles.collectAsState(emptyList())
     val entities by ha.client.entities.collectAsState()
     val shown = tiles.filter { it.showOnHome }

@@ -73,7 +73,7 @@ private sealed interface SourceDialog {
  */
 @Composable
 internal fun SourcesSection(stored: List<String>) {
-    val container = LocalContext.current.container
+    val container = io.github.thecodingdad.moonlightlauncher.LocalContainer.current
     val servers by container.servers.servers.collectAsState()
     val online by container.servers.online.collectAsState()
     val hosts by container.hosts.hosts.collectAsState()
@@ -133,7 +133,7 @@ internal fun SourcesSection(stored: List<String>) {
  */
 @Composable
 internal fun HostCompanionRow(host: HostState) {
-    val container = LocalContext.current.container
+    val container = io.github.thecodingdad.moonlightlauncher.LocalContainer.current
     val servers by container.servers.servers.collectAsState()
     val online by container.servers.online.collectAsState()
     val settings by container.settings.settings.collectAsState<io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings, io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings?>(null)
@@ -155,7 +155,7 @@ internal fun HostCompanionRow(host: HostState) {
     else PairDialog(companionTarget(host), onDismiss = { open = false })
 }
 
-private fun resolve(container: io.github.thecodingdad.moonlightlauncher.AppContainer, stored: List<String>): List<MetadataSources.Entry> {
+private fun resolve(container: io.github.thecodingdad.moonlightlauncher.LauncherContainer, stored: List<String>): List<MetadataSources.Entry> {
     val secrets = container.secrets
     return MetadataSources.resolve(
         stored, container.servers.servers.value,
@@ -171,7 +171,7 @@ private fun companionTarget(host: HostState?) = PairTarget(
 )
 
 /** Switches [id] on or off, or forgets it (null: removed). */
-private fun storeSource(container: io.github.thecodingdad.moonlightlauncher.AppContainer, id: String, enabled: Boolean?) {
+private fun storeSource(container: io.github.thecodingdad.moonlightlauncher.LauncherContainer, id: String, enabled: Boolean?) {
     container.scope.launch {
         container.settings.update { s -> s.copy(metadataSources = MetadataSources.set(s.metadataSources, id, enabled)) }
         container.metadata.refreshPending()
@@ -249,7 +249,7 @@ private fun PickHostDialog(hosts: Collection<HostState>, onPick: (HostState?) ->
 /** SteamGridDB key or IGDB credentials: enter/change, connection state, on/off, remove. */
 @Composable
 private fun KeySourceDialog(id: String, entry: MetadataSources.Entry?, onChanged: () -> Unit, onDismiss: () -> Unit) {
-    val container = LocalContext.current.container
+    val container = io.github.thecodingdad.moonlightlauncher.LocalContainer.current
     val secrets = container.secrets
     val metadata = container.metadata
     val sgdb = id == MetadataSources.SGDB
@@ -310,7 +310,7 @@ private sealed interface PairState {
 
 @Composable
 internal fun PairDialog(target: PairTarget, onDismiss: () -> Unit) {
-    val container = LocalContext.current.container
+    val container = io.github.thecodingdad.moonlightlauncher.LocalContainer.current
     val repo = container.servers
     val scope = rememberCoroutineScope()
     var state by remember(target) { mutableStateOf<PairState>(PairState.Address) }
@@ -387,7 +387,7 @@ internal fun PairDialog(target: PairTarget, onDismiss: () -> Unit) {
 /** A paired companion or metadata server: details, check, on/off, remove. */
 @Composable
 private fun ServerSourceDialog(entry: MetadataSources.Entry, online: Boolean?, onDismiss: () -> Unit) {
-    val container = LocalContext.current.container
+    val container = io.github.thecodingdad.moonlightlauncher.LocalContainer.current
     val repo = container.servers
     val scope = rememberCoroutineScope()
     val s = entry.server ?: return

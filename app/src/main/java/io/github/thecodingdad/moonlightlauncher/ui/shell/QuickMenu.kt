@@ -78,7 +78,8 @@ fun QuickMenu(
     openHaSettings: () -> Unit = {},
 ) {
     val context = LocalContext.current
-    val c = context.container
+    val launcherContainer = io.github.thecodingdad.moonlightlauncher.LocalContainer.current
+    val c = launcherContainer
     val scope = rememberCoroutineScope()
     val audio = remember { context.getSystemService(AudioManager::class.java) }
     val vpnState by c.vpn.state.collectAsState()
@@ -155,7 +156,7 @@ fun QuickMenu(
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 private fun HomeAssistantSection(openSettings: () -> Unit) {
-    val ha = LocalContext.current.container.ha
+    val ha = io.github.thecodingdad.moonlightlauncher.LocalContainer.current.ha
     val tiles by ha.tiles.collectAsState(emptyList())
     val entities by ha.client.entities.collectAsState()
     val connection by ha.client.connection.collectAsState()

@@ -26,27 +26,27 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.Dispatchers
 
 /** Manual dependency container; one instance per process, owned by [LauncherApplication]. */
-class AppContainer(context: Context) {
+class AppContainer(context: Context) : LauncherContainer {
     val appContext: Context = context.applicationContext
-    val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    override val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
-    val platform = io.github.thecodingdad.moonlightlauncher.platform.AndroidPlatformInfo(appContext)
-    val database: LauncherDatabase by lazy { io.github.thecodingdad.moonlightlauncher.data.db.AndroidDatabase.create(appContext) }
-    val settings: SettingsRepository by lazy { io.github.thecodingdad.moonlightlauncher.platform.AndroidStores.settings(appContext) }
-    val secrets: SecretStore by lazy { io.github.thecodingdad.moonlightlauncher.platform.AndroidStores.secrets(appContext) }
+    override val platform = io.github.thecodingdad.moonlightlauncher.platform.AndroidPlatformInfo(appContext)
+    override val database: LauncherDatabase by lazy { io.github.thecodingdad.moonlightlauncher.data.db.AndroidDatabase.create(appContext) }
+    override val settings: SettingsRepository by lazy { io.github.thecodingdad.moonlightlauncher.platform.AndroidStores.settings(appContext) }
+    override val secrets: SecretStore by lazy { io.github.thecodingdad.moonlightlauncher.platform.AndroidStores.secrets(appContext) }
 
     val localApps: LocalAppScanner by lazy { LocalAppScanner(appContext) }
-    val hosts: ArtemisHostRepository by lazy { ArtemisHostRepository(appContext, scope) }
+    override val hosts: ArtemisHostRepository by lazy { ArtemisHostRepository(appContext, scope) }
 
-    val companionFeed: io.github.thecodingdad.moonlightlauncher.data.companion.CompanionFeed by lazy {
+    override val companionFeed: io.github.thecodingdad.moonlightlauncher.data.companion.CompanionFeed by lazy {
         io.github.thecodingdad.moonlightlauncher.data.companion.CompanionFeed(appContext.filesDir, servers) {
             metadata.isEnabled(io.github.thecodingdad.moonlightlauncher.metadata.MetadataSources.idOf(it))
         }
     }
-    val library: LibraryRepository by lazy {
+    override val library: LibraryRepository by lazy {
         LibraryRepository(database, LibrarySync(database, emulatorPackages = ::emulatorPackages), localApps, hosts, scope, companionFeed)
     }
-    val playtime: PlaytimeTracker by lazy { PlaytimeTracker(database) }
+    override val playtime: PlaytimeTracker by lazy { PlaytimeTracker(database) }
     /** Packages of every known emulator (catalog and own ones); some real games share a package prefix (miHoYo). */
     private fun emulatorPackages(): Set<String> =
         (emulation.catalog.catalog.emulators.values.flatten().map { it.substringBefore('/') } + emulation.config.value.custom.map { it.packageName })
@@ -58,23 +58,23 @@ class AppContainer(context: Context) {
     val usage: io.github.thecodingdad.moonlightlauncher.data.library.UsageSync by lazy {
         io.github.thecodingdad.moonlightlauncher.data.library.UsageSync(appContext, database)
     }
-    val filters: io.github.thecodingdad.moonlightlauncher.data.library.FilterRepository by lazy {
+    override val filters: io.github.thecodingdad.moonlightlauncher.data.library.FilterRepository by lazy {
         io.github.thecodingdad.moonlightlauncher.data.library.FilterRepository(database, settings)
     }
     val controllerSettings: io.github.thecodingdad.moonlightlauncher.stream.ControllerOverrideStore by lazy {
         io.github.thecodingdad.moonlightlauncher.stream.ControllerOverrideStore(appContext)
     }
-    val vpn: VpnManager by lazy { VpnManager(appContext, secrets, settings, scope) }
-    val profiles: io.github.thecodingdad.moonlightlauncher.stream.StreamProfiles = io.github.thecodingdad.moonlightlauncher.stream.ArtemisStreamProfiles
-    val launcher: LaunchCoordinator by lazy {
+    override val vpn: VpnManager by lazy { VpnManager(appContext, secrets, settings, scope) }
+    override val profiles: io.github.thecodingdad.moonlightlauncher.stream.StreamProfiles = io.github.thecodingdad.moonlightlauncher.stream.ArtemisStreamProfiles
+    override val launcher: LaunchCoordinator by lazy {
         LaunchCoordinator(
             hosts, hostActions, { hostPower }, { autoSleep }, profiles, playtime, settings, { ha }, scope,
             io.github.thecodingdad.moonlightlauncher.stream.AndroidLaunchPlatform(this),
         ).also { it.vpn = vpn }
     }
-    val hostActions: ArtemisHostActions by lazy { ArtemisHostActions(hosts, library) }
+    override val hostActions: ArtemisHostActions by lazy { ArtemisHostActions(hosts, library) }
 
-    val artwork: io.github.thecodingdad.moonlightlauncher.data.artwork.ArtworkStore by lazy {
+    override val artwork: io.github.thecodingdad.moonlightlauncher.data.artwork.ArtworkStore by lazy {
         io.github.thecodingdad.moonlightlauncher.data.artwork.ArtworkStore(io.github.thecodingdad.moonlightlauncher.platform.AndroidNetworkStatus(appContext), http, database.libraryDao(), settings, scope)
     }
 
@@ -84,10 +84,10 @@ class AppContainer(context: Context) {
             .readTimeout(30, TimeUnit.SECONDS)
             .build()
     }
-    val servers: io.github.thecodingdad.moonlightlauncher.data.companion.ServerRepository by lazy {
+    override val servers: io.github.thecodingdad.moonlightlauncher.data.companion.ServerRepository by lazy {
         io.github.thecodingdad.moonlightlauncher.data.companion.ServerRepository(platform, http, scope) { io.github.thecodingdad.moonlightlauncher.data.companion.KeystoreClientIdentity() }
     }
-    val metadata: MetadataService by lazy {
+    override val metadata: MetadataService by lazy {
         MetadataService(database, secrets, settings, http, scope, servers).also {
             it.onCorrected = { id, reset -> library.pushCorrection(id, reset) }
             it.companionGame = { id -> library.companionGame(id) }
@@ -95,12 +95,16 @@ class AppContainer(context: Context) {
         }
     }
 
-    val haAuth: HaAuth by lazy { HaAuth(io.github.thecodingdad.moonlightlauncher.platform.CustomTabOpener(appContext), http, secrets) }
-    val ha: HaRepository by lazy {
+    override val haAuth: HaAuth by lazy { HaAuth(io.github.thecodingdad.moonlightlauncher.platform.CustomTabOpener(appContext), http, secrets) }
+    override val ha: HaRepository by lazy {
         val wsHttp = http.newBuilder().pingInterval(30, TimeUnit.SECONDS).build()
         HaRepository(HaClient(wsHttp, haAuth, { haAuth.baseUrl }, scope), haAuth, database)
     }
-    val hostPower: HostPower by lazy { HostPower(database.hostConfigDao(), hosts, hostActions, ha) }
+    override val hostPower: HostPower by lazy { HostPower(database.hostConfigDao(), hosts, hostActions, ha) }
     val autoSleep: AutoSleep by lazy { io.github.thecodingdad.moonlightlauncher.stream.WorkManagerAutoSleep(appContext, database.hostConfigDao()) }
     val backup: BackupManager by lazy { BackupManager(appContext, database, settings, secrets) }
+
+    override val emulators get() = emulation.options
+
+    override fun externalDisplay() = io.github.thecodingdad.moonlightlauncher.system.ExternalDisplay.observe(appContext)
 }

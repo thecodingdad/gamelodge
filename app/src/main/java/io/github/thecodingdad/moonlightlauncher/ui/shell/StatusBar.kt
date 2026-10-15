@@ -200,7 +200,8 @@ fun StatusCluster(
             }
         }
         val context = LocalContext.current
-        val vpn = context.container.vpn
+        val launcherContainer = io.github.thecodingdad.moonlightlauncher.LocalContainer.current
+        val vpn = launcherContainer.vpn
         val tunnels by vpn.tunnels.collectAsState()
         val vpnState by vpn.state.collectAsState()
         val scope = rememberCoroutineScope()
@@ -209,7 +210,7 @@ fun StatusCluster(
                 Icons.Filled.VpnLock, null,
                 tint = if (vpnState.status == VpnStatus.UP) colors.success else colors.onSurfaceMuted,
                 modifier = Modifier.size(22.dp).focusProperties { canFocus = false }.clickable {
-                    if (vpn.consentIntent() == null) scope.launch { vpn.toggle() }
+                    if (vpn.ready()) scope.launch { vpn.toggle() }
                 },
             )
         } else if (status.vpn) {

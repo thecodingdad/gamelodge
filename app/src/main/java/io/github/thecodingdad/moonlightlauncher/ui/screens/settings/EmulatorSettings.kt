@@ -132,7 +132,7 @@ fun EmulatorSettings(vm: LauncherViewModel) {
         }
 
         // Platforms with ROMs, folders or an installed emulator: their emulator.
-        val withEmulator = remember(tick, config) { catalog.platforms.filter { emulation.choices(it.id).isNotEmpty() }.mapTo(HashSet()) { it.id } }
+        val withEmulator = remember(tick, config) { catalog.platforms.filter { emulation.choicesOf(it.id).isNotEmpty() }.mapTo(HashSet()) { it.id } }
         val used = buildSet {
             entries.flatMap { it.romTargets }.mapNotNullTo(this) { it.romPlatform }
             config.folders.mapNotNullTo(this) { it.platform }
@@ -193,7 +193,7 @@ private fun PlatformEmulatorRow(platform: CatalogPlatform, tick: Int) {
     val emulation = LocalContext.current.container.emulation
     val config by emulation.config.collectAsState()
     val scope = rememberCoroutineScope()
-    val choices = remember(tick, config) { emulation.choices(platform.id) }
+    val choices = remember(tick, config) { emulation.choicesOf(platform.id) }
     val experimental = stringResource(Res.string.emu_experimental)
     val bios = if (platform.id in needsBios) stringResource(Res.string.emu_bios_hint) else null
     if (choices.isEmpty()) {

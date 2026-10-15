@@ -43,7 +43,7 @@ fun MetadataSettings(
     reviewCount: Int,
     openReview: () -> Unit,
 ) {
-    val container = LocalContext.current.container
+    val container = io.github.thecodingdad.moonlightlauncher.LocalContainer.current
     val metadata = container.metadata
     val scope = rememberCoroutineScope()
     val progress by metadata.progress.collectAsState()

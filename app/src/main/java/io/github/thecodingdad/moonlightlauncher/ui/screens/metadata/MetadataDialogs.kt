@@ -71,7 +71,7 @@ import io.github.thecodingdad.moonlightlauncher.resources.*
 /** Search IGDB/SteamGridDB and pick the right game; the choice is locked. */
 @Composable
 fun FixMetadataDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
-    val metadata = LocalContext.current.container.metadata
+    val metadata = io.github.thecodingdad.moonlightlauncher.LocalContainer.current.metadata
     val scope = rememberCoroutineScope()
     Modal(visible = item != null, onDismiss = onDismiss, title = stringResource(Res.string.metadata_fix_title), maxWidth = 860.dp) {
         val target = item ?: return@Modal
@@ -133,7 +133,7 @@ fun FixMetadataDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
  */
 @Composable
 fun ArtworkPickerDialog(item: LibraryItemEntity?, targets: List<io.github.thecodingdad.moonlightlauncher.data.db.LaunchTargetEntity> = emptyList(), onDismiss: () -> Unit) {
-    val metadata = LocalContext.current.container.metadata
+    val metadata = io.github.thecodingdad.moonlightlauncher.LocalContainer.current.metadata
     val scope = rememberCoroutineScope()
     // An own image from the device's storage, copied into the launcher (the document may not stay readable).
     val context = LocalContext.current
@@ -153,14 +153,14 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, targets: List<io.github.thecod
     Modal(visible = item != null, onDismiss = onDismiss, title = stringResource(Res.string.artwork_title), maxWidth = 1000.dp, modifier = Modifier.fillMaxHeight()) {
         val target = item ?: return@Modal
         // Animated cover / background have their own tabs (while animated artwork is wanted).
-        val animatedOn = LocalContext.current.container.settings.settings.collectAsState(null).value?.animatedArtwork ?: true
+        val animatedOn = io.github.thecodingdad.moonlightlauncher.LocalContainer.current.settings.settings.collectAsState(null).value?.animatedArtwork ?: true
         val kinds = ArtworkKind.entries.filter { animatedOn || !it.animated }
         var kindIndex by remember(target.id) { mutableStateOf(0) }
         val kind = kinds[kindIndex.coerceIn(kinds.indices)]
         androidx.compose.runtime.SideEffect { ownKind = kind }
         var options by remember(target.id, kind) { mutableStateOf<List<ArtworkOption>?>(null) }
         // The host's box art and a cover next to the ROM come first (they are what the game had before).
-        val hostNames = LocalContext.current.container.hosts.hosts.collectAsState().value
+        val hostNames = io.github.thecodingdad.moonlightlauncher.LocalContainer.current.hosts.hosts.collectAsState().value
         val local = if (kind != ArtworkKind.COVER) emptyList() else targets.mapNotNull { t ->
             val path = t.boxArtPath ?: return@mapNotNull null
             when (t.type) {
@@ -403,7 +403,8 @@ fun ReviewConfirmAction(entry: io.github.thecodingdad.moonlightlauncher.data.db.
 @Composable
 fun AppTileDialog(entry: io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry?, onDismiss: () -> Unit) {
     val context = LocalContext.current
-    val metadata = context.container.metadata
+    val launcherContainer = io.github.thecodingdad.moonlightlauncher.LocalContainer.current
+    val metadata = launcherContainer.metadata
     val scope = rememberCoroutineScope()
     val target = entry
     val pickImage = androidx.activity.compose.rememberLauncherForActivityResult(

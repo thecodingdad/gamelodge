@@ -59,7 +59,7 @@ fun HostInfoPopup(
     onProfile: (io.github.thecodingdad.moonlightlauncher.stream.StreamProfile) -> Unit = {},
     onEditProfiles: () -> Unit = {},
 ) {
-    val c = LocalContext.current.container
+    val c = io.github.thecodingdad.moonlightlauncher.LocalContainer.current
     val scope = rememberCoroutineScope()
     var config by remember { mutableStateOf<HostConfigEntity?>(null) }
     var message by remember { mutableStateOf<String?>(null) }

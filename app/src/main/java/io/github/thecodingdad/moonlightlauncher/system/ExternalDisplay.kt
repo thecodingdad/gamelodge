@@ -10,18 +10,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 
-/** A TV or monitor attached via USB-C (DisplayPort) or HDMI. */
-data class ExternalDisplayInfo(
-    val name: String,
-    val width: Int,
-    val height: Int,
-    val id: Int = Display.INVALID_DISPLAY,
-    /** Modes the TV offers (for the resolution setting). */
-    val modes: List<TvMode> = emptyList(),
-)
-
-data class TvMode(val id: Int, val width: Int, val height: Int, val refreshRate: Float)
-
 object ExternalDisplay {
     /** Emits the attached external display (or null), and again whenever that changes. */
     fun observe(context: Context): Flow<ExternalDisplayInfo?> = callbackFlow {

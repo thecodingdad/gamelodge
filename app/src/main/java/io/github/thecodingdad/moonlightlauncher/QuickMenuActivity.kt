@@ -80,7 +80,9 @@ class QuickMenuActivity : ComponentActivity() {
             systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
         feedback = UiFeedback(cacheDir, io.github.thecodingdad.moonlightlauncher.ui.feedback.AndroidFeedbackOutput(this)).also { it.load() }
-        setContent { Content() }
+        setContent {
+            CompositionLocalProvider(LocalContainer provides container) { Content() }
+        }
     }
 
     override fun onNewIntent(intent: Intent) {

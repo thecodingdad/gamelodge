@@ -69,7 +69,7 @@ fun MissingPermissionsNote(host: HostState) {
 
 @Composable
 fun HostConfigScreen(host: HostState) {
-    val c = LocalContext.current.container
+    val c = io.github.thecodingdad.moonlightlauncher.LocalContainer.current
     val scope = rememberCoroutineScope()
     val entities by c.ha.client.entities.collectAsState()
     var config by remember { mutableStateOf<HostConfigEntity?>(null) }

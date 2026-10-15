@@ -77,7 +77,15 @@ class EmulationRepository(
         scope.launch { rescan() }
     }
 
-    fun choices(platformId: String): List<EmulatorChoice> = catalog.choices(platformId, config.value)
+    fun choicesOf(platformId: String): List<EmulatorChoice> = catalog.choices(platformId, config.value)
 
     fun resolve(platformId: String, gameKey: String?): EmulatorChoice? = catalog.resolve(platformId, config.value, gameKey)
+
+    /** The same for the shared UI. */
+    val options: Emulators = object : Emulators {
+        override fun choices(platformId: String) = choicesOf(platformId).map { EmulatorOption(it.key, it.label, it.experimental) }
+        override fun resolve(platformId: String, gameKey: String?) =
+            this@EmulationRepository.resolve(platformId, gameKey)?.let { EmulatorOption(it.key, it.label, it.experimental) }
+        override fun platformName(platformId: String) = catalog.platform(platformId)?.displayName
+    }
 }
