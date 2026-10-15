@@ -232,6 +232,8 @@
     <string name="artwork_animated">animiert</string>
     <string name="artwork_none">Löschen</string>
     <string name="artwork_own">Eigenes Bild …</string>
+    <string name="artwork_source_host">Host</string>
+    <string name="artwork_source_rom">ROM-Ordner</string>
     <string name="artwork_none_chosen">keins, von Hand gewählt (das normale Bild wird gezeigt)</string>
     <string name="artwork_removed">von Hand gelöscht</string>
     <string name="setting_animated_tiles">Animierte Kacheln</string>

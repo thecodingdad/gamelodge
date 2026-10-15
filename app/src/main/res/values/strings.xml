@@ -234,6 +234,8 @@
     <string name="artwork_animated">animated</string>
     <string name="artwork_none">Remove</string>
     <string name="artwork_own">Own image …</string>
+    <string name="artwork_source_host">Host</string>
+    <string name="artwork_source_rom">ROM folder</string>
     <string name="artwork_none_chosen">none, picked by hand (the still image shows)</string>
     <string name="artwork_removed">removed by hand</string>
     <string name="setting_animated_tiles">Animated tiles</string>

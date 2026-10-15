@@ -131,7 +131,7 @@ fun FixMetadataDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
  * "back to automatic", below everything the sources offer (companion, IGDB, SteamGridDB).
  */
 @Composable
-fun ArtworkPickerDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
+fun ArtworkPickerDialog(item: LibraryItemEntity?, targets: List<io.github.thecodingdad.moonlightlauncher.data.db.LaunchTargetEntity> = emptyList(), onDismiss: () -> Unit) {
     val metadata = LocalContext.current.container.metadata
     val scope = rememberCoroutineScope()
     // An own image from the device's storage, copied into the launcher (the document may not stay readable).
@@ -144,15 +144,7 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
         val kind = ownKind
         if (uri == null || target == null || kind == null) return@rememberLauncherForActivityResult
         scope.launch {
-            val file = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                runCatching {
-                    val dir = java.io.File(context.filesDir, "own-artwork").apply { mkdirs() }
-                    val ext = android.webkit.MimeTypeMap.getSingleton().getExtensionFromMimeType(context.contentResolver.getType(uri)) ?: "img"
-                    val out = java.io.File(dir, "${target.id.hashCode().toUInt()}-${kind.name.lowercase()}-${System.currentTimeMillis()}.$ext")
-                    context.contentResolver.openInputStream(uri)?.use { input -> out.outputStream().use { input.copyTo(it) } }?.let { out }
-                }.getOrNull()
-            }
-            if (file != null) metadata.setOwnArtwork(target.id, kind, file.absolutePath)
+            copyOwn(context, uri, target.id, kind)?.let { metadata.setOwnArtwork(target.id, kind, it.absolutePath) }
             onDismiss()
         }
     }
@@ -166,7 +158,17 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
         val kind = kinds[kindIndex.coerceIn(kinds.indices)]
         androidx.compose.runtime.SideEffect { ownKind = kind }
         var options by remember(target.id, kind) { mutableStateOf<List<ArtworkOption>?>(null) }
-        LaunchedEffect(target.id, kind) { options = runCatching { metadata.artworkOptions(target, kind) }.getOrDefault(emptyList()) }
+        // The host's box art and a cover next to the ROM come first (they are what the game had before).
+        val hostNames = LocalContext.current.container.hosts.hosts.collectAsState().value
+        val local = if (kind != ArtworkKind.COVER) emptyList() else targets.mapNotNull { t ->
+            val path = t.boxArtPath ?: return@mapNotNull null
+            when (t.type) {
+                io.github.thecodingdad.moonlightlauncher.data.db.TargetType.REMOTE -> ArtworkOption(path, thumbOf(path), ArtworkSource.HOST, detail = hostNames[t.hostUuid]?.name)
+                io.github.thecodingdad.moonlightlauncher.data.db.TargetType.ROM -> ArtworkOption(path, thumbOf(path), ArtworkSource.ROM)
+                else -> null
+            }
+        }.distinctBy { it.url }
+        LaunchedEffect(target.id, kind) { options = local + runCatching { metadata.artworkOptions(target, kind) }.getOrDefault(emptyList()) }
         // LB/RB like the library's filters: focus stays in the list (first image of the new tab)
         // or, while that is empty or loading, on the tab itself; it never gets lost.
         val tabFocus = remember(kinds.size) { List(kinds.size) { androidx.compose.ui.focus.FocusRequester() } }
@@ -290,7 +292,15 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
                     else -> items(list.size, key = { i -> list[i].url }) { i ->
                         val option = list[i]
                         FocusSurface(
-                            onClick = { scope.launch { metadata.setArtwork(target.id, kind, option); onDismiss() } },
+                            onClick = {
+                                scope.launch {
+                                    // A local file (host box art cache, ROM folder) is copied: the original may go away.
+                                    if (option.url.startsWith("http")) metadata.setArtwork(target.id, kind, option)
+                                    else copyOwn(context, android.net.Uri.parse(if (option.url.startsWith("/")) "file://${option.url}" else option.url), target.id, kind)
+                                        ?.let { metadata.setOwnArtwork(target.id, kind, it.absolutePath) }
+                                    onDismiss()
+                                }
+                            },
                             modifier = Modifier.fillMaxWidth().aspectRatio(ratio).then(if (i == 0) Modifier.focusRequester(firstChoice) else Modifier),
                             color = LauncherTheme.colors.surfaceRaised,
                         ) {
@@ -302,7 +312,7 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
                             )
                             Text(
                                 listOfNotNull(
-                                    sourceLabel(option.source),
+                                    sourceLabel(option),
                                     stringResource(R.string.artwork_animated).takeIf { option.animated },
                                     option.bytes?.let { android.text.format.Formatter.formatShortFileSize(LocalContext.current, it) },
                                 ).joinToString(" · "),
@@ -333,11 +343,31 @@ private fun kindLabel(kind: ArtworkKind) = stringResource(
 )
 
 @Composable
-private fun sourceLabel(source: ArtworkSource) = when (source) {
-    ArtworkSource.COMPANION -> stringResource(R.string.metadata_source_companion)
-    ArtworkSource.IGDB -> "IGDB"
-    ArtworkSource.STEAMGRIDDB -> "SteamGridDB"
+private fun sourceLabel(option: ArtworkOption): String {
+    val name = when (option.source) {
+        ArtworkSource.HOST -> stringResource(R.string.artwork_source_host)
+        ArtworkSource.ROM -> stringResource(R.string.artwork_source_rom)
+        ArtworkSource.COMPANION -> stringResource(R.string.metadata_source_companion)
+        ArtworkSource.IGDB -> "IGDB"
+        ArtworkSource.STEAMGRIDDB -> "SteamGridDB"
+    }
+    return listOfNotNull(name, option.detail).joinToString(" · ")
 }
+
+/** A local file path as something the image loader takes. */
+private fun thumbOf(path: String) = if (path.startsWith("/")) "file://$path" else path
+
+/** Copies an image (picked document, file) into the launcher's own-artwork folder. */
+private suspend fun copyOwn(context: android.content.Context, uri: android.net.Uri, itemId: String, kind: ArtworkKind): java.io.File? =
+    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        runCatching {
+            val dir = java.io.File(context.filesDir, "own-artwork").apply { mkdirs() }
+            val ext = context.contentResolver.getType(uri)?.let { android.webkit.MimeTypeMap.getSingleton().getExtensionFromMimeType(it) }
+                ?: uri.lastPathSegment?.substringAfterLast('.', "")?.takeIf { it.length in 2..4 } ?: "img"
+            val out = java.io.File(dir, "${itemId.hashCode().toUInt()}-${kind.name.lowercase()}-${System.currentTimeMillis()}.$ext")
+            context.contentResolver.openInputStream(uri)?.use { input -> out.outputStream().use { input.copyTo(it) } }?.let { out }
+        }.getOrNull()
+    }
 
 /** Detail page: confirm a match that is waiting for review. */
 @Composable

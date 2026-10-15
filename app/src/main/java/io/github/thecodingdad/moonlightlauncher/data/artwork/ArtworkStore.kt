@@ -73,6 +73,8 @@ object ArtworkFiles {
     /** What to show for an image: the stored file when there is one, else the address itself. */
     fun model(url: String?): Any? {
         url ?: return null
+        // Own images / companion images: files of the launcher.
+        if (url.startsWith("/")) return File(url)
         if (!url.startsWith("http")) return url
         version.intValue // recompose when the file arrives
         val name = nameOf(url)
@@ -82,6 +84,7 @@ object ArtworkFiles {
     /** An animated image: the stored file, the network only when allowed right now, else nothing. */
     fun animatedModel(url: String?): Any? {
         url ?: return null
+        if (url.startsWith("/")) return File(url)
         if (!url.startsWith("http")) return url
         version.intValue
         val name = nameOf(url)

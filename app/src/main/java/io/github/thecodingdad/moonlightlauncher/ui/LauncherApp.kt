@@ -460,7 +460,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                     onFix = { fixingFor = it.item.id }, onArtwork = { artworkFor = it.item.id },
                 )
                 FixMetadataDialog(fixingFor?.let { id -> metaLibrary.firstOrNull { it.item.id == id }?.item }) { fixingFor = null }
-                ArtworkPickerDialog(artworkFor?.let { id -> metaLibrary.firstOrNull { it.item.id == id }?.item }) { artworkFor = null }
+                artworkFor?.let { id -> metaLibrary.firstOrNull { it.item.id == id } }.let { e -> ArtworkPickerDialog(e?.item, e?.targets.orEmpty()) { artworkFor = null } }
                 io.github.thecodingdad.moonlightlauncher.ui.screens.metadata.AppTileDialog(appTileFor?.let { id -> metaLibrary.firstOrNull { it.item.id == id } }) { appTileFor = null }
                 val allForPlatforms by vm.allEntries.collectAsState()
                 io.github.thecodingdad.moonlightlauncher.ui.shell.PlatformDialog(

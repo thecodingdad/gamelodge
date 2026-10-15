@@ -60,10 +60,14 @@ enum class ArtworkKind(val field: MetaField, val animated: Boolean = false, val 
 }
 
 /** Where an image to choose from comes from. */
-enum class ArtworkSource { COMPANION, IGDB, STEAMGRIDDB }
+enum class ArtworkSource { HOST, ROM, COMPANION, IGDB, STEAMGRIDDB }
 
 /** One image in the picker: [url] is stored, [thumb] previewed. */
-data class ArtworkOption(val url: String, val thumb: String, val source: ArtworkSource, val animated: Boolean = false, val bytes: Long? = null)
+data class ArtworkOption(
+    val url: String, val thumb: String, val source: ArtworkSource, val animated: Boolean = false, val bytes: Long? = null,
+    /** More about the origin (host name, the store behind the companion's image). */
+    val detail: String? = null,
+)
 
 /**
  * Looks up descriptions (IGDB) and artwork (IGDB, SteamGridDB) for games. Confident matches are
@@ -510,7 +514,7 @@ class MetadataService(
                 ArtworkKind.LOGO -> game.logo
                 ArtworkKind.ICON -> game.icon
             }
-            url?.takeIf { it.startsWith("https://") }?.let { result += ArtworkOption(it, it, ArtworkSource.COMPANION, animated = kind.animated) }
+            url?.takeIf { it.startsWith("https://") }?.let { result += ArtworkOption(it, it, ArtworkSource.COMPANION, animated = kind.animated, detail = game.sourceLabel) }
         }
         // IGDB has still images only: its cover, and artworks / screenshots as background.
         if (igdb.isConfigured && !kind.animated && (base == ArtworkKind.COVER || base == ArtworkKind.HERO)) {
