@@ -215,7 +215,7 @@
     <string name="pair_failed">Koppeln fehlgeschlagen.</string>
 
     <!-- Metadata -->
-    <string name="metadata_fix_title">Treffer korrigieren</string>
+    <string name="metadata_fix_title">Metadaten suchen</string>
     <string name="metadata_not_configured">Hinterlege zuerst einen SteamGridDB-API-Key oder IGDB-Zugangsdaten unter Einstellungen → Metadaten &amp; Artwork.</string>
     <string name="metadata_no_results">Keine Treffer.</string>
     <string name="artwork_title">Artwork ändern</string>

@@ -98,7 +98,8 @@ fun MetadataEditorDialog(
             Text(stringResource(R.string.meta_edit_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
             // New IGDB match and other artwork (formerly buttons on the detail page).
             ButtonRow(spacing = 10.dp) {
-                LauncherButton(stringResource(R.string.metadata_fix_title), onClick = { onFix(e) }, icon = Icons.Filled.Search)
+                // Only with a source for IGDB / SteamGridDB; artwork stays (own and local images).
+                if (service.isConfigured) LauncherButton(stringResource(R.string.metadata_fix_title), onClick = { onFix(e) }, icon = Icons.Filled.Search)
                 LauncherButton(stringResource(R.string.artwork_title), onClick = { onArtwork(e) }, icon = Icons.Filled.Image)
             }
             @Composable

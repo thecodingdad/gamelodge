@@ -217,7 +217,7 @@
     <string name="pair_failed">Pairing failed.</string>
 
     <!-- Metadata -->
-    <string name="metadata_fix_title">Fix match</string>
+    <string name="metadata_fix_title">Search metadata</string>
     <string name="metadata_not_configured">Add a SteamGridDB API key or IGDB credentials under Settings → Metadata &amp; artwork first.</string>
     <string name="metadata_no_results">No results.</string>
     <string name="artwork_title">Change artwork</string>
