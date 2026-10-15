@@ -43,8 +43,10 @@ data class ButtonHint(
 /** Bottom bar listing what each button does right now. Always visible, in every screen. */
 @Composable
 fun ButtonHintBar(hints: List<ButtonHint>, modifier: Modifier = Modifier, hideWhenCompact: Boolean = false, inPopup: Boolean = false) {
+    // Button hints only with a controller connected (and the hint bar switched on), popups too.
+    if (!LocalShowHintBar.current) return
     // Portrait/phone is mostly touch: the main hint bars are hidden there (more room for content).
-    if (hideWhenCompact && (LocalCompactWidth.current || !LocalShowHintBar.current)) return
+    if (hideWhenCompact && LocalCompactWidth.current) return
     val compact = LocalCompactWidth.current
     // One line that never wraps; on narrow screens it scrolls instead.
     Row(

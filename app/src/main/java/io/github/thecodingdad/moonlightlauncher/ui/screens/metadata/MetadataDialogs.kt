@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -249,8 +250,9 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
                             modifier = Modifier.fillMaxWidth().aspectRatio(ratio).then(if (i == 0) Modifier.focusRequester(firstChoice) else Modifier),
                             color = LauncherTheme.colors.surfaceRaised,
                         ) {
+                            // Fills the tile whatever size the preview has (small thumbnails too).
                             ArtworkImage(
-                                option.thumb, target.title, Modifier.padding(if (square) 12.dp else 0.dp),
+                                option.thumb, target.title, Modifier.fillMaxSize().padding(if (square) 12.dp else 0.dp),
                                 contentScale = if (square) ContentScale.Fit else ContentScale.Crop,
                                 showTitleOnPlaceholder = false,
                             )
@@ -361,7 +363,7 @@ fun AppTileDialog(entry: io.github.thecodingdad.moonlightlauncher.data.db.Librar
                         modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f),
                         color = LauncherTheme.colors.surfaceRaised,
                     ) {
-                        ArtworkImage(asset.thumb ?: asset.url, e.item.title, Modifier, showTitleOnPlaceholder = false)
+                        ArtworkImage(asset.thumb ?: asset.url, e.item.title, Modifier.fillMaxSize(), showTitleOnPlaceholder = false)
                     }
                 }
             }
