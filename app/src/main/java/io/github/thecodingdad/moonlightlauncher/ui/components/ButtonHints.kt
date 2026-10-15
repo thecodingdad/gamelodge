@@ -42,7 +42,7 @@ data class ButtonHint(
 
 /** Bottom bar listing what each button does right now. Always visible, in every screen. */
 @Composable
-fun ButtonHintBar(hints: List<ButtonHint>, modifier: Modifier = Modifier, hideWhenCompact: Boolean = false) {
+fun ButtonHintBar(hints: List<ButtonHint>, modifier: Modifier = Modifier, hideWhenCompact: Boolean = false, inPopup: Boolean = false) {
     // Portrait/phone is mostly touch: the main hint bars are hidden there (more room for content).
     if (hideWhenCompact && (LocalCompactWidth.current || !LocalShowHintBar.current)) return
     val compact = LocalCompactWidth.current
@@ -51,7 +51,8 @@ fun ButtonHintBar(hints: List<ButtonHint>, modifier: Modifier = Modifier, hideWh
         modifier = modifier
             .fillMaxWidth()
             .horizontalScroll(androidx.compose.foundation.rememberScrollState())
-            .padding(horizontal = if (compact) 16.dp else 28.dp, vertical = 10.dp),
+            // At the screen edge it keeps a margin; in a popup the popup's own padding is enough.
+            .padding(horizontal = if (inPopup) 0.dp else if (compact) 16.dp else 28.dp, vertical = if (inPopup) 0.dp else 10.dp),
         horizontalArrangement = Arrangement.spacedBy(if (compact) 12.dp else 22.dp, Alignment.End),
         verticalAlignment = Alignment.CenterVertically,
     ) {

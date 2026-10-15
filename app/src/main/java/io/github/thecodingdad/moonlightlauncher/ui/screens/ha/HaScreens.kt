@@ -110,6 +110,7 @@ fun HaPanel(visible: Boolean, onDismiss: () -> Unit, openSettings: () -> Unit) {
                 ButtonHint(PadButton.A, stringResource(R.string.ha_hint_toggle)),
                 ButtonHint(PadButton.B, stringResource(R.string.action_close), onClick = onDismiss),
             ),
+            inPopup = true,
         )
     }
 }

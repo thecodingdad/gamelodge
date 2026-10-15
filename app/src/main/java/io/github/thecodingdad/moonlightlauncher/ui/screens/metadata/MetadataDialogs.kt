@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -129,7 +130,8 @@ fun FixMetadataDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
 fun ArtworkPickerDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
     val metadata = LocalContext.current.container.metadata
     val scope = rememberCoroutineScope()
-    Modal(visible = item != null, onDismiss = onDismiss, title = stringResource(R.string.artwork_title), maxWidth = 1000.dp) {
+    // Constant height (the whole screen but a margin): switching tabs doesn't make it jump.
+    Modal(visible = item != null, onDismiss = onDismiss, title = stringResource(R.string.artwork_title), maxWidth = 1000.dp, modifier = Modifier.fillMaxHeight()) {
         val target = item ?: return@Modal
         // Animated cover / background have their own tabs (while animated artwork is wanted).
         val animatedOn = LocalContext.current.container.settings.settings.collectAsState(null).value?.animatedArtwork ?: true
@@ -150,10 +152,7 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
         }
 
         // Tabs and hints stay; current image and choices scroll together.
-        // The scroll area gets the screen height minus title, tabs and hints.
-        val windowHeight = with(androidx.compose.ui.platform.LocalDensity.current) { androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.height.toDp() }
-        val gridMax = (windowHeight - 290.dp).coerceAtLeast(160.dp)
-        Column {
+        Column(Modifier.weight(1f)) {
             io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 10.dp) {
                 kinds.forEachIndexed { index, k ->
                     io.github.thecodingdad.moonlightlauncher.ui.screens.library.Chip(kindLabel(k), selected = index == kindIndex, onClick = { kindIndex = index })
@@ -174,7 +173,8 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
             // One scroll area: the current image first, then the choices (tabs and hints stay).
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(if (wide) 260.dp else if (square) 150.dp else 120.dp),
-                modifier = Modifier.heightIn(max = gridMax),
+                // Takes all the room between tabs and hints, which sit at the bottom.
+                modifier = Modifier.weight(1f),
                 contentPadding = PaddingValues(4.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -236,7 +236,7 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
                 }
             }
             Spacer(Modifier.height(8.dp))
-            ButtonHintBar(listOf(ButtonHint(PadButton.A, stringResource(R.string.hint_select)), ButtonHint(PadButton.L1, stringResource(R.string.artwork_switch_kind), secondButton = PadButton.R1), ButtonHint(PadButton.B, stringResource(R.string.action_close), onClick = onDismiss)))
+            ButtonHintBar(listOf(ButtonHint(PadButton.A, stringResource(R.string.hint_select)), ButtonHint(PadButton.L1, stringResource(R.string.artwork_switch_kind), secondButton = PadButton.R1), ButtonHint(PadButton.B, stringResource(R.string.action_close), onClick = onDismiss)), inPopup = true)
         }
     }
 }
@@ -334,6 +334,6 @@ fun AppTileDialog(entry: io.github.thecodingdad.moonlightlauncher.data.db.Librar
             }
         }
         Spacer(Modifier.height(8.dp))
-        ButtonHintBar(listOf(ButtonHint(PadButton.A, stringResource(R.string.hint_select)), ButtonHint(PadButton.B, stringResource(R.string.action_close), onClick = onDismiss)))
+        ButtonHintBar(listOf(ButtonHint(PadButton.A, stringResource(R.string.hint_select)), ButtonHint(PadButton.B, stringResource(R.string.action_close), onClick = onDismiss)), inPopup = true)
     }
 }

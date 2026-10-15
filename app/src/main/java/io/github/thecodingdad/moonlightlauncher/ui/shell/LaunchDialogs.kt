@@ -176,6 +176,7 @@ fun TargetPickerDialog(
                 add(ButtonHint(PadButton.A, stringResource(R.string.hint_start)))
                 add(ButtonHint(PadButton.B, stringResource(R.string.action_cancel), onClick = onDismiss))
             },
+            inPopup = true,
         )
     }
 }
@@ -243,7 +244,7 @@ fun LaunchOverlay(
             LauncherButton(stringResource(R.string.action_cancel), onClick = onDismiss)
         }
         Spacer(Modifier.height(12.dp))
-        ButtonHintBar(listOf(ButtonHint(PadButton.A, stringResource(R.string.hint_hold_to_confirm)), ButtonHint(PadButton.B, stringResource(R.string.action_cancel), onClick = onDismiss)))
+        ButtonHintBar(listOf(ButtonHint(PadButton.A, stringResource(R.string.hint_hold_to_confirm)), ButtonHint(PadButton.B, stringResource(R.string.action_cancel), onClick = onDismiss)), inPopup = true)
     }
 }
 

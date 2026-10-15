@@ -272,6 +272,7 @@ fun ControllerKeyboardHost(controller: KeyboardController) {
                 ButtonHint(PadButton.START, stringResource(R.string.keyboard_done)),
                 ButtonHint(PadButton.B, stringResource(R.string.action_cancel), onClick = controller::close),
             ),
+            inPopup = true,
         )
     }
 }
