@@ -231,8 +231,8 @@
     <string name="artwork_reset_auto">Wieder automatisch</string>
     <string name="artwork_animated">animiert</string>
     <string name="setting_animated_tiles">Animierte Kacheln</string>
-    <string name="setting_animated_tiles_focus">Beim Fokussieren (Controller)</string>
-    <string name="setting_animated_tiles_always">Immer (alle sichtbaren Kacheln, braucht mehr Akku)</string>
+    <string name="setting_animated_tiles_focus">Beim Fokussieren</string>
+    <string name="setting_animated_tiles_always">Immer</string>
     <string name="setting_animated_mobile">Animierte Bilder über mobile Daten laden</string>
     <string name="setting_animated_mobile_sub">Sie sind groß (oft 10–30 MB pro Bild); sonst nur über WLAN.</string>
     <string name="metadata_artwork_storage">Auf dem Gerät gespeicherte Bilder: %1$s</string>
