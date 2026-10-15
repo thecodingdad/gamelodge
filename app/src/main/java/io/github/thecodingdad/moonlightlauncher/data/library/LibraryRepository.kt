@@ -5,6 +5,7 @@ import io.github.thecodingdad.moonlightlauncher.data.db.ItemCollectionCrossRef
 import io.github.thecodingdad.moonlightlauncher.data.db.ItemKind
 import io.github.thecodingdad.moonlightlauncher.data.db.KindSource
 import io.github.thecodingdad.moonlightlauncher.data.db.MetaField
+import io.github.thecodingdad.moonlightlauncher.data.db.clearedMetadata
 import io.github.thecodingdad.moonlightlauncher.data.db.MetadataState
 import io.github.thecodingdad.moonlightlauncher.data.db.LauncherDatabase
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry
@@ -312,6 +313,10 @@ class LibraryRepository(
     /** User correction "this is a game / an app"; survives every future sync. */
     suspend fun setKind(id: String, kind: ItemKind) {
         dao.setKind(id, kind, KindSource.MANUAL)
+        // An app needs no game metadata: what was found for it as a game (often a wrong cover)
+        // goes; a match picked by hand and hand-edited fields stay.
+        if (kind == ItemKind.APP) dao.getItem(id)?.takeIf { it.metadataState != MetadataState.LOCKED && it.metadataState != MetadataState.NONE }
+            ?.let { dao.upsertItem(it.clearedMetadata()) }
         pushCorrection(id)
     }
 }

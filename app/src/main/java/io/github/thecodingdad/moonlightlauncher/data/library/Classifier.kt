@@ -14,6 +14,8 @@ data class ClassificationInput(
     val companionGame: Boolean? = null,
     /** Metadata lookup found a confident game match. */
     val confidentGameMatch: Boolean = false,
+    /** A known emulator (catalog or own emulator): flags itself as a game but is a tool. */
+    val isEmulator: Boolean = false,
 )
 
 /**
@@ -42,6 +44,7 @@ object Classifier {
     /** True when the entry is a known tool regardless of any other signal. */
     fun isKnownApp(input: ClassificationInput): Boolean {
         if (input.companionGame != null) return !input.companionGame
+        if (input.isEmulator) return true
         if (input.packageName != null && nonGamePackagePrefixes.any { input.packageName.startsWith(it) }) return true
         if (!input.isRemote) return false
         return input.remoteAppUuid.equals(REMOTE_INPUT_UUID, ignoreCase = true) ||

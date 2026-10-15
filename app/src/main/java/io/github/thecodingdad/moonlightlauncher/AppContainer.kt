@@ -45,9 +45,14 @@ class AppContainer(context: Context) {
         }
     }
     val library: LibraryRepository by lazy {
-        LibraryRepository(database, LibrarySync(database), localApps, hosts, boxArt, scope, companionFeed)
+        LibraryRepository(database, LibrarySync(database, emulatorPackages = ::emulatorPackages), localApps, hosts, boxArt, scope, companionFeed)
     }
     val playtime: PlaytimeTracker by lazy { PlaytimeTracker(database) }
+    /** Packages of every known emulator (catalog and own ones); some real games share a package prefix (miHoYo). */
+    private fun emulatorPackages(): Set<String> =
+        (emulation.catalog.catalog.emulators.values.flatten().map { it.substringBefore('/') } + emulation.config.value.custom.map { it.packageName })
+            .filterNot { it.startsWith("com.miHoYo.") }.toSet()
+
     val emulation: io.github.thecodingdad.moonlightlauncher.data.emulation.EmulationRepository by lazy {
         io.github.thecodingdad.moonlightlauncher.data.emulation.EmulationRepository(appContext, settings, library, scope)
     }

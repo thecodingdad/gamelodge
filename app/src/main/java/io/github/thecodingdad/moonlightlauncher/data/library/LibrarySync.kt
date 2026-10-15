@@ -50,6 +50,8 @@ data class SourceEntry(
  */
 class LibrarySync(
     private val db: LauncherDatabase,
+    /** Packages of known emulators (they are apps, not games). */
+    private val emulatorPackages: () -> Set<String> = { emptySet() },
     private val clock: () -> Long = System::currentTimeMillis,
 ) {
     private val dao = db.libraryDao()
@@ -180,8 +182,13 @@ class LibrarySync(
         when {
             // Never downgrade a merged game just because one source looks like an app...
             kind == ItemKind.GAME && item.kind != ItemKind.GAME -> dao.setKind(itemId, kind, KindSource.AUTO)
-            // ...unless it is a known tool (e.g. a streaming client flagged as game).
-            Classifier.isKnownApp(input) && item.kind != ItemKind.APP -> dao.setKind(itemId, ItemKind.APP, KindSource.AUTO)
+            // ...unless it is a known tool (e.g. a streaming client or emulator flagged as game).
+            // Metadata found for it as a game (often a wrong cover) is dropped; a hand-picked match stays.
+            Classifier.isKnownApp(input) && item.kind != ItemKind.APP -> {
+                dao.setKind(itemId, ItemKind.APP, KindSource.AUTO)
+                dao.getItem(itemId)?.takeIf { it.metadataState != io.github.thecodingdad.moonlightlauncher.data.db.MetadataState.LOCKED }
+                    ?.let { dao.upsertItem(it.clearedMetadata()) }
+            }
         }
     }
 
@@ -193,6 +200,7 @@ class LibrarySync(
         // A ROM is a game by definition.
         companionGame = if (type == TargetType.ROM) true else companionGame,
         packageName = packageName,
+        isEmulator = type == TargetType.LOCAL && packageName != null && packageName in emulatorPackages(),
     )
 
     private fun SourceEntry.toTarget(itemId: String, known: LaunchTargetEntity?, now: Long) = LaunchTargetEntity(

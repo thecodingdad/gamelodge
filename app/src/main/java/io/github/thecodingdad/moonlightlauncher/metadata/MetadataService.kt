@@ -221,6 +221,7 @@ class MetadataService(
             runCatching { backfillDetails() }.onFailure { Log.w("Metadata details backfill failed", it) }
             runCatching { fillArtworkGaps() }.onFailure { Log.w("Artwork gap fill failed", it) }
             runCatching { backfillAnimated() }.onFailure { Log.w("Animated artwork backfill failed", it) }
+            runCatching { dropAppMetadata() }.onFailure { Log.w("App metadata cleanup failed", it) }
             // Also catches games matched before IGDB keys were entered.
             refreshPending()
         }
@@ -747,6 +748,17 @@ class MetadataService(
             .firstOrNull { it.isPlayableAnimation && it.height > it.width }
         val hero = if (MetaField.ANIMATED_HERO in m || animatedHeroUrl != null) null else sgdb.assets(gameId, SgdbAssetType.HERO, animated = true).firstOrNull { it.isPlayableAnimation }
         return copy(animatedCoverUrl = animatedCoverUrl ?: grid?.url, animatedHeroUrl = animatedHeroUrl ?: hero?.url)
+    }
+
+    /**
+     * Local apps (e.g. emulators recognised as games earlier) keep no game metadata found
+     * automatically; host entries are left alone (their companion describes them).
+     */
+    private suspend fun dropAppMetadata() {
+        dao.observeAll().first().filter { e ->
+            e.item.kind == ItemKind.APP && e.item.metadataState in setOf(MetadataState.OK, MetadataState.REVIEW, MetadataState.NOT_FOUND) &&
+                e.targets.isNotEmpty() && e.targets.all { it.type == io.github.thecodingdad.moonlightlauncher.data.db.TargetType.LOCAL }
+        }.forEach { dao.upsertItem(it.item.clearedMetadata()) }
     }
 
     /** Games matched while animated artwork was off: their animated cover / background once. */

@@ -46,4 +46,11 @@ class ClassifierTest {
             Classifier.classify(ClassificationInput("Stardew Valley", isRemote = false, confidentGameMatch = true)),
         )
     }
+
+    @Test
+    fun `emulators are apps although they flag themselves as games`() {
+        val eden = ClassificationInput("Eden", isRemote = false, androidGameFlag = true, packageName = "dev.eden.eden_emulator", isEmulator = true)
+        assertEquals(ItemKind.APP, Classifier.classify(eden))
+        assertEquals(ItemKind.GAME, Classifier.classify(eden.copy(isEmulator = false)))
+    }
 }
