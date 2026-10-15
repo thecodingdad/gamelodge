@@ -36,6 +36,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -140,8 +142,34 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
         val kind = kinds[kindIndex.coerceIn(kinds.indices)]
         var options by remember(target.id, kind) { mutableStateOf<List<ArtworkOption>?>(null) }
         LaunchedEffect(target.id, kind) { options = runCatching { metadata.artworkOptions(target, kind) }.getOrDefault(emptyList()) }
-        PadAction(PadButton.L1) { kindIndex = (kindIndex - 1).mod(kinds.size) }
-        PadAction(PadButton.R1) { kindIndex = (kindIndex + 1).mod(kinds.size) }
+        // LB/RB like the library's filters: focus stays in the list (first image of the new tab)
+        // or, while that is empty or loading, on the tab itself; it never gets lost.
+        val tabFocus = remember(kinds.size) { List(kinds.size) { androidx.compose.ui.focus.FocusRequester() } }
+        val firstChoice = remember { androidx.compose.ui.focus.FocusRequester() }
+        var inGrid by remember { mutableStateOf(false) }
+        var refocus by remember { mutableStateOf(false) }
+        // Where the focus was when switching (the old list is gone a moment later).
+        var fromGrid by remember { mutableStateOf(false) }
+        fun switchTo(index: Int) {
+            fromGrid = inGrid
+            kindIndex = index
+            refocus = true
+        }
+        PadAction(PadButton.L1) { switchTo((kindIndex - 1).mod(kinds.size)) }
+        PadAction(PadButton.R1) { switchTo((kindIndex + 1).mod(kinds.size)) }
+        LaunchedEffect(kindIndex, options, refocus) {
+            if (!refocus) return@LaunchedEffect
+            val loaded = options
+            kotlinx.coroutines.delay(30)
+            val toGrid = fromGrid && !loaded.isNullOrEmpty()
+            runCatching { if (toGrid) firstChoice.requestFocus() else tabFocus[kindIndex.coerceIn(tabFocus.indices)].requestFocus() }
+            // While the list loads the tab holds the focus; it moves on into the list once there.
+            if (loaded != null || !fromGrid) refocus = false
+        }
+        // The right stick scrolls this list (not the popup behind).
+        val gridState = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
+        io.github.thecodingdad.moonlightlauncher.ui.input.RegisterStickScroll(gridState)
+        LaunchedEffect(kindIndex) { gridState.scrollToItem(0) }
         val wide = kind.base == ArtworkKind.HERO
         val square = kind == ArtworkKind.LOGO || kind == ArtworkKind.ICON
         val ratio = when (kind.base) {
@@ -155,7 +183,10 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
         Column(Modifier.weight(1f)) {
             io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 10.dp) {
                 kinds.forEachIndexed { index, k ->
-                    io.github.thecodingdad.moonlightlauncher.ui.screens.library.Chip(kindLabel(k), selected = index == kindIndex, onClick = { kindIndex = index })
+                    io.github.thecodingdad.moonlightlauncher.ui.screens.library.Chip(
+                        kindLabel(k), selected = index == kindIndex, onClick = { switchTo(index) },
+                        modifier = Modifier.focusRequester(tabFocus[index]),
+                    )
                 }
             }
             Spacer(Modifier.height(14.dp))
@@ -173,8 +204,9 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
             // One scroll area: the current image first, then the choices (tabs and hints stay).
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(if (wide) 260.dp else if (square) 150.dp else 120.dp),
+                state = gridState,
                 // Takes all the room between tabs and hints, which sit at the bottom.
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).onFocusChanged { inGrid = it.hasFocus },
                 contentPadding = PaddingValues(4.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -210,10 +242,11 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
                     list.isEmpty() -> item(key = "status", span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
                         Text(stringResource(R.string.metadata_no_results), color = LauncherTheme.colors.onSurfaceMuted)
                     }
-                    else -> items(list, key = { o -> o.url }) { option ->
+                    else -> items(list.size, key = { i -> list[i].url }) { i ->
+                        val option = list[i]
                         FocusSurface(
                             onClick = { scope.launch { metadata.setArtwork(target.id, kind, option); onDismiss() } },
-                            modifier = Modifier.fillMaxWidth().aspectRatio(ratio),
+                            modifier = Modifier.fillMaxWidth().aspectRatio(ratio).then(if (i == 0) Modifier.focusRequester(firstChoice) else Modifier),
                             color = LauncherTheme.colors.surfaceRaised,
                         ) {
                             ArtworkImage(
