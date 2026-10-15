@@ -1,25 +1,24 @@
 package io.github.thecodingdad.moonlightlauncher.stream
 
-import android.app.Activity
-import com.limelight.nvstream.http.NvApp
-import com.limelight.preferences.PreferenceConfiguration
-import com.limelight.utils.ServerHelper
-import io.github.thecodingdad.moonlightlauncher.AppContainer
 import io.github.thecodingdad.moonlightlauncher.data.db.LaunchTargetEntity
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry
 import io.github.thecodingdad.moonlightlauncher.data.db.TargetType
+import io.github.thecodingdad.moonlightlauncher.data.library.PlaytimeTracker
+import io.github.thecodingdad.moonlightlauncher.data.remote.HostActions
 import io.github.thecodingdad.moonlightlauncher.data.remote.HostPermission
+import io.github.thecodingdad.moonlightlauncher.data.remote.HostRepository
 import io.github.thecodingdad.moonlightlauncher.data.remote.HostState
 import io.github.thecodingdad.moonlightlauncher.data.remote.HostStatus
 import io.github.thecodingdad.moonlightlauncher.data.settings.NetworkCheckMode
+import io.github.thecodingdad.moonlightlauncher.data.settings.SettingsRepository
+import io.github.thecodingdad.moonlightlauncher.ha.HaRepository
 import io.github.thecodingdad.moonlightlauncher.util.Log
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import java.util.UUID
 
@@ -43,11 +42,42 @@ fun interface VpnAutoConnect {
     suspend fun connectIfNeeded(host: HostState?): Boolean
 }
 
+/** The platform's part of starting things: apps, emulators and the stream itself. */
+interface LaunchPlatform {
+    /** Starts an installed app or game; null when it started, else why not. */
+    suspend fun launchLocal(entry: LibraryEntry, target: LaunchTargetEntity): LaunchError?
+
+    /** Starts a ROM in its emulator ([emulatorKey]: one-off choice); null when it started. */
+    suspend fun launchRom(entry: LibraryEntry, target: LaunchTargetEntity, emulatorKey: String?): LaunchError?
+
+    /** The host has an address we can reach right now. */
+    fun isReachable(host: HostState): Boolean
+
+    /** We reach the host through its remote (internet) address, i.e. not from its home network. */
+    fun isRemoteConnection(host: HostState): Boolean
+
+    suspend fun measureNetwork(host: HostState): NetworkCheckResult?
+
+    /** Hands the stream of [target] on [host] to the streaming client; throws when that fails. */
+    suspend fun startStream(entry: LibraryEntry, target: LaunchTargetEntity, host: HostState)
+}
+
 /**
  * Starts local apps and streams. All pre-launch steps (wake, VPN, permissions, network check)
  * live here so every entry point (home, library, detail, resume card) behaves identically.
  */
-class LaunchCoordinator(private val container: AppContainer) {
+class LaunchCoordinator(
+    private val hosts: HostRepository,
+    private val hostActions: HostActions,
+    private val hostPower: () -> HostPower,
+    private val autoSleep: () -> AutoSleep,
+    private val profiles: StreamProfiles,
+    private val playtime: PlaytimeTracker,
+    private val settings: SettingsRepository,
+    private val ha: () -> HaRepository,
+    private val scope: CoroutineScope,
+    private val platform: LaunchPlatform,
+) {
     private val _state = MutableStateFlow<LaunchState>(LaunchState.Idle)
     val state: StateFlow<LaunchState> = _state.asStateFlow()
 
@@ -56,7 +86,7 @@ class LaunchCoordinator(private val container: AppContainer) {
 
     var vpn: VpnAutoConnect = VpnAutoConnect { false }
 
-    /** Game whose stream is being started; shown by the stream activity while it connects. */
+    /** Game whose stream is being started; shown by the stream window while it connects. */
     @Volatile
     var streamingEntry: LibraryEntry? = null
         private set
@@ -79,7 +109,6 @@ class LaunchCoordinator(private val container: AppContainer) {
      * [quitRunning]/[skipNetworkCheck]: answers to earlier confirmation dialogs.
      */
     suspend fun launch(
-        activity: Activity,
         entry: LibraryEntry,
         target: LaunchTargetEntity,
         override: StreamProfile? = null,
@@ -90,49 +119,19 @@ class LaunchCoordinator(private val container: AppContainer) {
     ) {
         running = kotlin.coroutines.coroutineContext[kotlinx.coroutines.Job]
         when (target.type) {
-            TargetType.LOCAL -> launchLocal(activity, entry, target)
-            TargetType.REMOTE -> launchRemote(activity, entry, target, override, quitRunning, skipNetworkCheck)
-            TargetType.ROM -> launchRom(activity, entry, target, emulatorKey)
+            TargetType.LOCAL -> finish(entry, platform.launchLocal(entry, target))
+            TargetType.REMOTE -> launchRemote(entry, target, override, quitRunning, skipNetworkCheck)
+            TargetType.ROM -> finish(entry, platform.launchRom(entry, target, emulatorKey))
         }
     }
 
-    private suspend fun launchRom(activity: Activity, entry: LibraryEntry, target: LaunchTargetEntity, emulatorKey: String?) {
-        val platform = target.romPlatform
-        val uri = target.romUri
-        val choice = if (platform != null) container.emulation.resolve(platform, emulatorKey ?: target.emulatorKey) else null
-        if (choice == null || uri == null) {
-            _state.value = LaunchState.Failed(entry, LaunchError.NO_EMULATOR)
-            return
-        }
-        when (val result = io.github.thecodingdad.moonlightlauncher.data.emulation.EmulatorLauncher.intent(activity, choice, uri, target.romPath)) {
-            is io.github.thecodingdad.moonlightlauncher.data.emulation.EmulatorLauncher.Result.Problem ->
-                _state.value = LaunchState.Failed(entry, LaunchError.ROM_NEEDS_PATH)
-            is io.github.thecodingdad.moonlightlauncher.data.emulation.EmulatorLauncher.Result.Ok -> {
-                val started = runCatching { activity.startActivity(result.intent) }
-                    .onFailure { io.github.thecodingdad.moonlightlauncher.util.Log.e("Emulator start failed (${choice.key})", it) }
-                // Android's usage data only sees the emulator, not the game: always measured here.
-                if (started.isSuccess) container.playtime.start(entry.item.id, target.id, null)
-                _state.value = if (started.isSuccess) LaunchState.Idle else LaunchState.Failed(entry, LaunchError.START_FAILED)
-            }
-        }
+    private fun finish(entry: LibraryEntry, error: LaunchError?) {
+        _state.value = if (error == null) LaunchState.Idle else LaunchState.Failed(entry, error)
     }
 
-    private suspend fun launchLocal(activity: Activity, entry: LibraryEntry, target: LaunchTargetEntity) {
-        val intent = target.packageName?.let(container.localApps::launchIntent)
-        if (intent == null) {
-            _state.value = LaunchState.Failed(entry, LaunchError.APP_NOT_INSTALLED)
-            return
-        }
-        // With usage access Android's statistics count the time (see UsageSync).
-        if (!container.usage.granted) container.playtime.start(entry.item.id, target.id, null)
-        activity.startActivity(intent)
-        _state.value = LaunchState.Idle
-    }
-
-    private fun host(uuid: String) = container.hosts.hosts.value[uuid]
+    private fun host(uuid: String) = hosts.hosts.value[uuid]
 
     private suspend fun launchRemote(
-        activity: Activity,
         entry: LibraryEntry,
         target: LaunchTargetEntity,
         override: StreamProfile?,
@@ -156,7 +155,7 @@ class LaunchCoordinator(private val container: AppContainer) {
             }
         }
         val host = host(hostUuid)
-        if (host == null || host.status != HostStatus.ONLINE || host.details.activeAddress == null) {
+        if (host == null || host.status != HostStatus.ONLINE || !platform.isReachable(host)) {
             _state.value = LaunchState.Failed(entry, LaunchError.HOST_OFFLINE)
             return
         }
@@ -174,7 +173,7 @@ class LaunchCoordinator(private val container: AppContainer) {
         // 4. Network check.
         if (!skipNetworkCheck && shouldCheckNetwork(host)) {
             _state.value = LaunchState.Working(entry, LaunchStep.CHECKING_NETWORK)
-            val result = NetworkCheck.measure(container.hosts, host)
+            val result = platform.measureNetwork(host)
             if (result != null && !result.isGood) {
                 _state.value = LaunchState.NetworkWarning(entry, target, result, override)
                 return
@@ -184,15 +183,14 @@ class LaunchCoordinator(private val container: AppContainer) {
         // 5. Another app is running.
         if (host.isStreaming && !resuming) {
             if (!quitRunning) {
-                val runningName = container.hosts.appLists.value[hostUuid]
+                val runningName = hosts.appLists.value[hostUuid]
                     ?.firstOrNull { it.app.appId == host.runningAppId }?.app?.appName ?: "?"
                 _state.value = LaunchState.ConfirmQuitRunning(entry, target, runningName, override)
                 return
             }
             _state.value = LaunchState.Working(entry, LaunchStep.QUITTING_RUNNING)
-            val quit = runCatching { withContext(Dispatchers.IO) { container.hosts.http(host).quitApp() } }
-                .onFailure { Log.w("Quit failed", it) }.getOrDefault(false)
-            if (!quit) {
+            if (!hostActions.quitApp(host)) {
+                Log.w("Quit failed")
                 _state.value = LaunchState.Failed(entry, LaunchError.QUIT_FAILED)
                 return
             }
@@ -200,21 +198,16 @@ class LaunchCoordinator(private val container: AppContainer) {
 
         _state.value = LaunchState.Working(entry, LaunchStep.STARTING)
         if (override != null) applyOneOffProfile(override.uuid)
-        container.autoSleep.cancel(hostUuid)
+        autoSleep().cancel(hostUuid)
 
         try {
-            val binder = container.hosts.awaitBinder()
-            val app = NvApp(target.name, target.appUuid, appId, target.hdrSupported)
-            val prefs = PreferenceConfiguration.readPreferences(activity)
-            val vDisplay = prefs.useVirtualDisplay && host.details.vDisplaySupported && host.details.vDisplayDriverReady
-            val intent = ServerHelper.createStartIntent(activity, app, host.details, binder, vDisplay)
-            val profileName = StreamProfiles.active("").name.ifEmpty { null }
-            container.playtime.start(entry.item.id, target.id, profileName)
+            val profileName = profiles.active("").name.ifEmpty { null }
+            playtime.start(entry.item.id, target.id, profileName)
             streamingEntry = entry
-            activity.startActivity(intent)
+            platform.startStream(entry, target, host)
             _state.value = LaunchState.Idle
-            container.scope.launch {
-                container.ha.fireLauncherEvent(
+            scope.launch {
+                ha().fireLauncherEvent(
                     "stream_started",
                     mapOf("game" to entry.item.title, "host" to host.name, "profile" to profileName, "app_id" to appId.toString()),
                 )
@@ -228,37 +221,34 @@ class LaunchCoordinator(private val container: AppContainer) {
 
     /** Sends the configured wake actions and waits until the host answers. */
     private suspend fun wakeAndWait(hostUuid: String): Boolean {
-        if (!container.hostPower.wake(hostUuid)) return false
+        if (!hostPower().wake(hostUuid)) return false
         return waitOnline(hostUuid, 120_000)
     }
 
     private suspend fun waitOnline(hostUuid: String, timeoutMs: Long): Boolean {
-        container.hosts.invalidate(hostUuid)
+        hosts.invalidate(hostUuid)
         return withTimeoutOrNull(timeoutMs) {
-            container.hosts.hosts.first { it[hostUuid]?.status == HostStatus.ONLINE }
+            hosts.hosts.first { it[hostUuid]?.status == HostStatus.ONLINE }
         } != null
     }
 
-    private suspend fun shouldCheckNetwork(host: HostState): Boolean = when (container.settings.current().networkCheck) {
+    private suspend fun shouldCheckNetwork(host: HostState): Boolean = when (settings.current().networkCheck) {
         NetworkCheckMode.OFF -> false
         NetworkCheckMode.ALWAYS -> true
-        // Using the host's remote address means we are not in the same network.
-        NetworkCheckMode.OUTSIDE_HOME -> host.details.activeAddress != null &&
-            host.details.activeAddress == host.details.remoteAddress &&
-            host.details.remoteAddress != host.details.localAddress
+        NetworkCheckMode.OUTSIDE_HOME -> platform.isRemoteConnection(host)
     }
 
     private fun applyOneOffProfile(profile: UUID?) {
-        val current = com.limelight.profiles.ProfilesManager.getInstance().active?.uuid
+        val current = profiles.active("").uuid
         if (profile == current) return
         if (!profileToRestore.first) profileToRestore = true to current
-        StreamProfiles.setActive(profile)
+        profiles.setActive(profile)
     }
 
     /** Called when the launcher is visible again after a stream. */
     fun restoreProfile() {
         if (!profileToRestore.first) return
-        StreamProfiles.setActive(profileToRestore.second)
+        profiles.setActive(profileToRestore.second)
         profileToRestore = false to null
     }
 }

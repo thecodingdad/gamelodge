@@ -29,6 +29,8 @@ import io.github.thecodingdad.moonlightlauncher.ui.LauncherApp
 import io.github.thecodingdad.moonlightlauncher.ui.LauncherViewModel
 import io.github.thecodingdad.moonlightlauncher.ui.feedback.UiFeedback
 import io.github.thecodingdad.moonlightlauncher.ui.input.InputDispatcher
+import io.github.thecodingdad.moonlightlauncher.ui.input.dispatch
+import io.github.thecodingdad.moonlightlauncher.ui.input.dispatchMotion
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -64,7 +66,7 @@ class MainActivity : ComponentActivity() {
                 vm.settings.map { it.tvModeId }.distinctUntilChanged().collect { checkTv() }
             }
         }
-        feedback = UiFeedback(this).also { it.load() }
+        feedback = UiFeedback(cacheDir, io.github.thecodingdad.moonlightlauncher.ui.feedback.AndroidFeedbackOutput(this)).also { it.load() }
         handleQuickMenuExtra(intent)
         setContent { LauncherApp(vm, dispatcher, feedback) }
     }
@@ -191,7 +193,7 @@ class MainActivity : ComponentActivity() {
             if (consumed) return true
         }
         val e = if (vm.settings.value.buttonLayout == ButtonLayout.NINTENDO) {
-            val swapped = InputDispatcher.swapForNintendo(event.keyCode)
+            val swapped = io.github.thecodingdad.moonlightlauncher.ui.input.AndroidPad.swapForNintendo(event.keyCode)
             if (swapped != event.keyCode) {
                 KeyEvent(
                     event.downTime, event.eventTime, event.action, swapped, event.repeatCount,

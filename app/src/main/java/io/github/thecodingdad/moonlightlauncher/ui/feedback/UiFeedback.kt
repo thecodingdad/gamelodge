@@ -1,12 +1,5 @@
 package io.github.thecodingdad.moonlightlauncher.ui.feedback
 
-import android.content.Context
-import android.media.AudioAttributes
-import android.media.SoundPool
-import android.os.Build
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.os.VibratorManager
 import androidx.compose.runtime.staticCompositionLocalOf
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -36,8 +29,18 @@ data class FeedbackConfig(
     val hapticOnFocus: Boolean = true,
 )
 
+/** Plays the synthesised sounds and drives the vibration motor of the platform. */
+interface FeedbackOutput {
+    /** Loads a WAV file; returns a handle for [play]. */
+    fun load(file: File): Int
+    fun unload(id: Int)
+    fun play(id: Int, volume: Float)
+    /** Short pulse for [sound] (no-op without a motor). */
+    fun haptic(sound: UiSound, strength: HapticStrength)
+}
+
 /** UI sounds and haptics. Sounds are synthesised once into cache files, no assets needed. */
-class UiFeedback(private val context: Context) {
+class UiFeedback(private val cacheDir: File, private val output: FeedbackOutput) {
     var config = FeedbackConfig()
         private set
 
@@ -48,33 +51,16 @@ class UiFeedback(private val context: Context) {
         if (resynth && ids.isNotEmpty()) load()
     }
 
-    private val pool = SoundPool.Builder()
-        .setMaxStreams(4)
-        .setAudioAttributes(
-            AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
-                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                .build(),
-        )
-        .build()
     private val ids = HashMap<UiSound, Int>()
     private var lastFocusAt = 0L
 
-    private val vibrator: Vibrator? =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            context.getSystemService(VibratorManager::class.java)?.defaultVibrator
-        } else {
-            @Suppress("DEPRECATION")
-            context.getSystemService(Vibrator::class.java)
-        }
-
     fun load() {
-        val dir = File(context.cacheDir, "ui_sounds").apply { mkdirs() }
+        val dir = File(cacheDir, "ui_sounds").apply { mkdirs() }
         val variant = "${config.style.name.lowercase()}_${config.pitch}"
         UiSound.entries.forEach { sound ->
             val file = File(dir, "${sound.name.lowercase()}_${variant}_v2.wav")
             if (!file.exists()) file.writeBytes(wav(synth(sound)))
-            ids.put(sound, pool.load(file.absolutePath, 1))?.let { pool.unload(it) }
+            ids.put(sound, output.load(file))?.let { output.unload(it) }
         }
     }
 
@@ -86,49 +72,14 @@ class UiFeedback(private val context: Context) {
             lastFocusAt = now
         }
         val c = config
-        if (c.soundsEnabled && sound !in c.mutedSounds) ids[sound]?.let { pool.play(it, c.volume, c.volume, 0, 0, 1f) }
-        if (c.hapticsEnabled && (sound != UiSound.FOCUS || c.hapticOnFocus)) haptic(sound)
+        if (c.soundsEnabled && sound !in c.mutedSounds) ids[sound]?.let { output.play(it, c.volume) }
+        if (c.hapticsEnabled && (sound != UiSound.FOCUS || c.hapticOnFocus)) output.haptic(sound, c.hapticStrength)
     }
 
     /** Plays a sound regardless of its mute setting (preview in the settings). */
     fun preview(sound: UiSound) {
-        ids[sound]?.let { pool.play(it, config.volume, config.volume, 0, 0, 1f) }
-        if (config.hapticsEnabled) haptic(sound)
-    }
-
-    private fun haptic(sound: UiSound) {
-        val v = vibrator ?: return
-        // Durations per event; strength scales amplitude where the motor supports it.
-        val millis = when (sound) {
-            UiSound.FOCUS -> 8L
-            UiSound.CONFIRM, UiSound.TOGGLE -> 16L
-            UiSound.BACK -> 10L
-            UiSound.LAUNCH -> 40L
-            UiSound.ERROR -> 60L
-        }
-        val effect = if (v.hasAmplitudeControl()) {
-            val amplitude = when (config.hapticStrength) {
-                HapticStrength.LIGHT -> 60
-                HapticStrength.MEDIUM -> 140
-                HapticStrength.STRONG -> 255
-            }
-            if (sound == UiSound.ERROR) {
-                VibrationEffect.createWaveform(longArrayOf(0, 30, 50, 30), intArrayOf(0, amplitude, 0, amplitude), -1)
-            } else {
-                VibrationEffect.createOneShot(millis, amplitude)
-            }
-        } else {
-            val strong = config.hapticStrength == HapticStrength.STRONG
-            VibrationEffect.createPredefined(
-                when (sound) {
-                    UiSound.FOCUS -> VibrationEffect.EFFECT_TICK
-                    UiSound.ERROR -> VibrationEffect.EFFECT_DOUBLE_CLICK
-                    UiSound.LAUNCH -> VibrationEffect.EFFECT_HEAVY_CLICK
-                    else -> if (strong) VibrationEffect.EFFECT_HEAVY_CLICK else VibrationEffect.EFFECT_CLICK
-                },
-            )
-        }
-        runCatching { v.vibrate(effect) }
+        ids[sound]?.let { output.play(it, config.volume) }
+        if (config.hapticsEnabled) output.haptic(sound, config.hapticStrength)
     }
 
     private fun synth(sound: UiSound): ShortArray {

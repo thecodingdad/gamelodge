@@ -10,20 +10,15 @@ import io.github.thecodingdad.moonlightlauncher.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-enum class PairResult { PAIRED, WRONG_PIN, FAILED, IN_GAME, ALREADY_IN_PROGRESS, OFFLINE }
-
-enum class AddHostResult { ADDED, INVALID_ADDRESS, UNREACHABLE }
-
-/** Host management operations (pairing, adding, waking, removing) without any UI. */
-class HostActions(
-    private val hosts: HostRepository,
+/** Host management through Artemis (pairing, adding, waking, removing). */
+class ArtemisHostActions(
+    private val hosts: ArtemisHostRepository,
     private val library: LibraryRepository,
-) {
-    fun generatePin(): String = PairingManager.generatePinString()
+) : HostActions {
+    override fun generatePin(): String = PairingManager.generatePinString()
 
-    /** Blocks until the user entered [pin] on the host (or pairing failed). */
-    suspend fun pair(host: HostState, pin: String): PairResult = withContext(Dispatchers.IO) {
-        if (host.status != HostStatus.ONLINE || host.details.activeAddress == null) return@withContext PairResult.OFFLINE
+    override suspend fun pair(host: HostState, pin: String): PairResult = withContext(Dispatchers.IO) {
+        if (host.status != HostStatus.ONLINE || hosts.details(host.uuid)?.activeAddress == null) return@withContext PairResult.OFFLINE
         val binder = hosts.awaitBinder()
         // Polling while pairing makes concurrent requests the host rejects.
         binder.stopPolling()
@@ -49,8 +44,7 @@ class HostActions(
         }
     }
 
-    /** Adds a host by IP/hostname, optionally with ":port". */
-    suspend fun addHost(rawAddress: String): AddHostResult = withContext(Dispatchers.IO) {
+    override suspend fun addHost(rawAddress: String): AddHostResult = withContext(Dispatchers.IO) {
         val input = rawAddress.trim()
         if (input.isEmpty()) return@withContext AddHostResult.INVALID_ADDRESS
         // IPv6 literals need brackets for URI parsing.
@@ -63,19 +57,23 @@ class HostActions(
         if (added) AddHostResult.ADDED else AddHostResult.UNREACHABLE
     }
 
-    suspend fun wakeOnLan(host: HostState): Boolean = withContext(Dispatchers.IO) {
-        runCatching { WakeOnLanSender.sendWolPacket(host.details); true }
+    override suspend fun wakeOnLan(host: HostState): Boolean = withContext(Dispatchers.IO) {
+        runCatching { WakeOnLanSender.sendWolPacket(hosts.details(host.uuid) ?: error("unknown host")); true }
             .onFailure { Log.w("WoL for ${host.name} failed", it) }
             .getOrDefault(false)
     }
 
-    suspend fun unpair(host: HostState) = withContext(Dispatchers.IO) {
+    override suspend fun unpair(host: HostState) = withContext(Dispatchers.IO) {
         runCatching { hosts.http(host).unpair() }
         hosts.invalidate(host.uuid)
     }
 
-    suspend fun remove(host: HostState) {
+    override suspend fun remove(host: HostState) {
         hosts.removeHost(host)
         library.removeHost(host.uuid)
+    }
+
+    override suspend fun quitApp(host: HostState): Boolean = withContext(Dispatchers.IO) {
+        runCatching { hosts.http(host).quitApp() }.getOrDefault(false)
     }
 }

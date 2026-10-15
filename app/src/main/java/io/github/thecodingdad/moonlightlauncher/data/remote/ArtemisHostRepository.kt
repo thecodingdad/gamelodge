@@ -22,49 +22,31 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
 import java.io.StringReader
-
-enum class HostStatus { ONLINE, OFFLINE, UNKNOWN }
-
-/** Immutable snapshot of a host for the UI; [details] is Artemis' live object for API calls. */
-data class HostState(
-    val uuid: String,
-    val name: String,
-    val status: HostStatus,
-    val paired: Boolean,
-    val runningAppId: Int,
-    val address: String?,
-    val macAddress: String?,
-    val virtualDisplaySupported: Boolean,
-    val serverCommands: List<String>,
-    /** Apollo/Vibepollo permission bits for this client; -1 when unknown (Sunshine). */
-    val permission: Int,
-    val details: ComputerDetails,
-) {
-    val missingPermissions: List<HostPermission> get() = HostPermission.missingEssential(permission)
-    val isStreaming: Boolean get() = runningAppId != 0
-}
-
-data class RemoteApp(
-    val hostUuid: String,
-    val hostName: String,
-    val app: NvApp,
-)
 
 /**
  * Single owner of Artemis' [ComputerManagerService]: it keeps the binder, receives all
  * host updates (the service supports exactly one listener) and exposes them as flows.
  */
-class HostRepository(
+class ArtemisHostRepository(
     private val context: Context,
     private val scope: CoroutineScope,
-) {
+) : HostRepository {
     private val _hosts = MutableStateFlow<Map<String, HostState>>(emptyMap())
-    val hosts: StateFlow<Map<String, HostState>> = _hosts.asStateFlow()
+    override val hosts: StateFlow<Map<String, HostState>> = _hosts.asStateFlow()
 
-    /** Latest app list per host uuid (only hosts that delivered a list). */
     private val _appLists = MutableStateFlow<Map<String, List<RemoteApp>>>(emptyMap())
-    val appLists: StateFlow<Map<String, List<RemoteApp>>> = _appLists.asStateFlow()
+    override val appLists: StateFlow<Map<String, List<RemoteApp>>> = _appLists.asStateFlow()
+
+    /** Artemis' live objects behind [hosts] and [appLists], for API calls and stream starts. */
+    private val details = java.util.concurrent.ConcurrentHashMap<String, ComputerDetails>()
+    private val nvApps = java.util.concurrent.ConcurrentHashMap<String, Map<Int, NvApp>>()
+    private val boxArtCache = BoxArtCache(context)
+
+    fun details(uuid: String): ComputerDetails? = details[uuid]
+
+    fun nvApp(hostUuid: String, appId: Int): NvApp? = nvApps[hostUuid]?.get(appId)
 
     private var binder: ComputerManagerService.ComputerManagerBinder? = null
     private val binderReady = CompletableDeferred<ComputerManagerService.ComputerManagerBinder>()
@@ -92,7 +74,7 @@ class HostRepository(
 
     private val listener = ComputerManagerListener { details -> onComputerUpdated(details) }
 
-    fun bind() {
+    override fun bind() {
         context.bindService(
             Intent(context, ComputerManagerService::class.java),
             connection,
@@ -103,12 +85,12 @@ class HostRepository(
     suspend fun awaitBinder(): ComputerManagerService.ComputerManagerBinder = binderReady.await()
 
     /** Call when the launcher becomes visible; polling costs battery, so it stops in background. */
-    fun startPolling() {
+    override fun startPolling() {
         polling = true
         binder?.let { startPollingInternal(it) }
     }
 
-    fun stopPolling() {
+    override fun stopPolling() {
         polling = false
         synchronized(appListPollers) {
             appListPollers.values.forEach { it.stop() }
@@ -122,18 +104,16 @@ class HostRepository(
         b.startPolling(listener)
     }
 
-    /** Looks for new hosts in the network (mDNS) while [active]; known hosts are polled anyway. */
-    fun setDiscovery(active: Boolean) {
+    override fun setDiscovery(active: Boolean) {
         discovery = active
         if (polling) binder?.setDiscoveryActive(active)
     }
 
-    /** Forces an immediate app list refresh for every reachable host. */
-    fun refreshAppLists() {
+    override fun refreshAppLists() {
         synchronized(appListPollers) { appListPollers.values.forEach { it.pollNow() } }
     }
 
-    fun invalidate(uuid: String) {
+    override fun invalidate(uuid: String) {
         binder?.invalidateStateForComputer(uuid)
     }
 
@@ -157,8 +137,8 @@ class HostRepository(
             virtualDisplaySupported = details.vDisplaySupported,
             serverCommands = details.serverCommands?.toList().orEmpty(),
             permission = details.permission,
-            details = details,
         )
+        this.details[uuid] = details
         _hosts.update { it + (uuid to state) }
 
         if (state.status == HostStatus.ONLINE && paired) ensureAppListPoller(details)
@@ -184,13 +164,14 @@ class HostRepository(
         val apps = runCatching { NvHTTP.getAppListByReader(StringReader(raw)) }
             .onFailure { Log.w("Unparseable app list from $hostName", it) }
             .getOrNull() ?: return
-        _appLists.update { it + (uuid to apps.map { app -> RemoteApp(uuid, hostName, app) }) }
+        nvApps[uuid] = apps.associateBy { it.appId }
+        _appLists.update { it + (uuid to apps.map { app -> RemoteApp(uuid, hostName, HostApp(app.appId, app.appName, app.appUUID, app.isHdrSupported)) }) }
     }
 
     /** Opens an authenticated connection to the host (blocking work, call off the main thread). */
     suspend fun http(host: HostState): NvHTTP = withContext(Dispatchers.IO) {
         val b = awaitBinder()
-        val details = host.details
+        val details = details[host.uuid] ?: error("Host ${host.name} unknown")
         NvHTTP(
             details.activeAddress ?: error("Host ${host.name} has no reachable address"),
             details.httpsPort,
@@ -200,9 +181,20 @@ class HostRepository(
         )
     }
 
-    fun removeHost(host: HostState) {
-        binder?.removeComputer(host.details)
+    override fun removeHost(host: HostState) {
+        details[host.uuid]?.let { binder?.removeComputer(it) }
+        details.remove(host.uuid)
+        nvApps.remove(host.uuid)
         _hosts.update { it - host.uuid }
         _appLists.update { it - host.uuid }
     }
+
+    override suspend fun boxArt(host: HostState, app: HostApp): File? {
+        boxArtCache.file(host.uuid, app.appId).takeIf { it.length() > 0 }?.let { return it }
+        val nv = nvApp(host.uuid, app.appId) ?: return null
+        val http = runCatching { http(host) }.getOrNull() ?: return null
+        return withContext(Dispatchers.IO) { boxArtCache.fetch(http, host.uuid, nv) }
+    }
+
+    override fun forgetBoxArt(hostUuid: String) = boxArtCache.deleteForHost(hostUuid)
 }

@@ -11,8 +11,7 @@ import io.github.thecodingdad.moonlightlauncher.data.db.LauncherDatabase
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry
 import io.github.thecodingdad.moonlightlauncher.data.db.PlatformSource
 import io.github.thecodingdad.moonlightlauncher.data.db.TargetType
-import io.github.thecodingdad.moonlightlauncher.data.local.LocalAppScanner
-import io.github.thecodingdad.moonlightlauncher.data.remote.BoxArtCache
+import io.github.thecodingdad.moonlightlauncher.data.local.LocalAppSource
 import io.github.thecodingdad.moonlightlauncher.data.remote.HostRepository
 import io.github.thecodingdad.moonlightlauncher.data.remote.HostStatus
 import io.github.thecodingdad.moonlightlauncher.data.remote.RemoteApp
@@ -36,9 +35,8 @@ private val ARTWORK_HOSTS = listOf("steamgriddb.com", "images.igdb.com", "steams
 class LibraryRepository(
     private val db: LauncherDatabase,
     private val sync: LibrarySync,
-    private val localApps: LocalAppScanner,
+    private val localApps: LocalAppSource,
     private val hosts: HostRepository,
-    private val boxArt: BoxArtCache,
     private val scope: CoroutineScope,
     private val companion: io.github.thecodingdad.moonlightlauncher.data.companion.CompanionFeed? = null,
 ) {
@@ -92,7 +90,7 @@ class LibraryRepository(
      * Games found in the ROM folders. The folder decides the platform (trusted like the companion
      * data), so a ROM merges only with entries of the same platform.
      */
-    suspend fun syncRoms(roms: List<io.github.thecodingdad.moonlightlauncher.data.emulation.RomFile>, keepUnder: List<String> = emptyList()) {
+    suspend fun syncRoms(roms: List<RomGame>, keepUnder: List<String> = emptyList()) {
         val entries = roms.map { rom ->
             SourceEntry(
                 targetId = SourceEntry.romId(rom.uri),
@@ -100,8 +98,8 @@ class LibraryRepository(
                 name = rom.name,
                 romUri = rom.uri,
                 romPath = rom.path,
-                romPlatform = rom.platform.id,
-                platform = rom.platform.displayName,
+                romPlatform = rom.platformId,
+                platform = rom.platformName,
                 boxArt = rom.image,
             )
         }
@@ -276,12 +274,11 @@ class LibraryRepository(
 
     private suspend fun fetchBoxArt(hostUuid: String, apps: List<RemoteApp>) {
         val host = hosts.hosts.value[hostUuid]?.takeIf { it.status == HostStatus.ONLINE } ?: return
-        val http = runCatching { hosts.http(host) }.getOrNull() ?: return
         val targets = dao.getAllTargets().filter { it.hostUuid == hostUuid }.associateBy { it.id }
         val updated = apps.mapNotNull { remote ->
             val target = targets[SourceEntry.remoteId(hostUuid, remote.app.appId)] ?: return@mapNotNull null
             if (target.boxArtPath != null && java.io.File(target.boxArtPath).exists()) return@mapNotNull null
-            val file = boxArt.fetch(http, hostUuid, remote.app) ?: return@mapNotNull null
+            val file = runCatching { hosts.boxArt(host, remote.app) }.getOrNull() ?: return@mapNotNull null
             target.copy(boxArtPath = file.absolutePath)
         }
         if (updated.isNotEmpty()) dao.upsertTargets(updated)
@@ -289,7 +286,7 @@ class LibraryRepository(
 
     suspend fun removeHost(hostUuid: String) {
         sync.removeHost(hostUuid)
-        boxArt.deleteForHost(hostUuid)
+        hosts.forgetBoxArt(hostUuid)
     }
 
     suspend fun setFavorite(id: String, favorite: Boolean) = dao.setFavorite(id, favorite)

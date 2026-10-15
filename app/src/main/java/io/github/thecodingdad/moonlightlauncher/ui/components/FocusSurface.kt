@@ -66,10 +66,10 @@ object TouchFocus {
         pendingOverlay = null
         val top = OverlayHost.top()
         if (top !== overlay) return
-        if (runCatching { requester.requestFocus() }.getOrDefault(false)) restoredAt = android.os.SystemClock.uptimeMillis()
+        if (runCatching { requester.requestFocus() }.getOrDefault(false)) restoredAt = System.nanoTime() / 1_000_000
     }
 
-    fun justRestored() = android.os.SystemClock.uptimeMillis() - restoredAt < 500
+    fun justRestored() = System.nanoTime() / 1_000_000 - restoredAt < 500
 }
 
 /** False when the hint bar is turned off or no controller is connected. */

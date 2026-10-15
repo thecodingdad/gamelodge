@@ -1,8 +1,5 @@
 package io.github.thecodingdad.moonlightlauncher.ui.input
 
-import android.view.InputDevice
-import android.view.KeyEvent
-import android.view.MotionEvent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -11,6 +8,7 @@ import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.staticCompositionLocalOf
+import kotlinx.coroutines.launch
 
 enum class PadButton {
     A, B, X, Y, L1, R1, L2, R2, START, SELECT, SELECT_HOLD,
@@ -23,7 +21,9 @@ enum class PadButton {
  * registered enabled handler for a button wins, so an open overlay shadows the screen below.
  *
  * A (confirm) and B (back) are not routed here: A is handled by the focus system and B by
- * Android's fallback to BACK, so touch, keyboard and gamepad share one code path.
+ * the platform's back handling, so touch, keyboard and gamepad share one code path.
+ *
+ * Platform-neutral: the platform translates its key and axis events ([dispatchButton], [dispatchAxes]).
  */
 class InputDispatcher {
     private class Handler(val button: PadButton, val action: () -> Unit)
@@ -33,15 +33,9 @@ class InputDispatcher {
     private val triggerPressed = HashMap<PadButton, Boolean>()
     private val triggerFiredAt = HashMap<PadButton, Long>()
     // Right stick as repeating direction buttons.
-    private val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private val mainScope = kotlinx.coroutines.MainScope()
     private var stickDirection: PadButton? = null
-    private val stickRepeat = object : Runnable {
-        override fun run() {
-            val dir = stickDirection ?: return
-            fire(dir)
-            mainHandler.postDelayed(this, STICK_REPEAT_MS)
-        }
-    }
+    private var stickRepeat: kotlinx.coroutines.Job? = null
     private var selectDownAt = 0L
     private var selectHoldFired = false
 
@@ -80,42 +74,36 @@ class InputDispatcher {
         return true
     }
 
-    /** Returns true if the event was consumed. Call for every key event of the activity. */
-    fun dispatch(event: KeyEvent): Boolean {
-        val button = buttonFor(event.keyCode) ?: return false
-        if (button == PadButton.SELECT) return dispatchSelect(event)
-        if ((button == PadButton.L2 || button == PadButton.R2) && event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
-            return fireTrigger(button, event.eventTime) || handlers.any { it.button == button }
+    /** Phase of a key event. */
+    enum class KeyPhase { DOWN, UP, OTHER }
+
+    /** Returns true if the event was consumed. Call for every gamepad key event of the window. */
+    fun dispatchButton(button: PadButton, phase: KeyPhase, repeatCount: Int, eventTime: Long): Boolean {
+        if (button == PadButton.SELECT) return dispatchSelect(phase, repeatCount, eventTime)
+        if ((button == PadButton.L2 || button == PadButton.R2) && phase == KeyPhase.DOWN && repeatCount == 0) {
+            return fireTrigger(button, eventTime) || handlers.any { it.button == button }
         }
         // Start is always consumed: unhandled, Android would fall back to DPAD_CENTER and
         // "click" the focused element (open/start a game by accident).
         val alwaysConsume = button == PadButton.START
-        return when (event.action) {
-            KeyEvent.ACTION_DOWN -> (if (event.repeatCount == 0) fire(button) else handlers.any { it.button == button }) || alwaysConsume
-            KeyEvent.ACTION_UP -> handlers.any { it.button == button } || alwaysConsume
-            else -> alwaysConsume
+        return when (phase) {
+            KeyPhase.DOWN -> (if (repeatCount == 0) fire(button) else handlers.any { it.button == button }) || alwaysConsume
+            KeyPhase.UP -> handlers.any { it.button == button } || alwaysConsume
+            KeyPhase.OTHER -> alwaysConsume
         }
     }
 
     /**
-     * Analog triggers as buttons for controllers that don't send L2/R2 key events.
-     * Never consumes the event (the stream and other handlers still see it).
+     * Analog triggers (0..1) as buttons for controllers that don't send L2/R2 key events, and the
+     * right stick (-1..1) as direction buttons and scroll speed. Never consumes anything.
      */
-    fun dispatchMotion(event: MotionEvent) {
-        if (event.source and InputDevice.SOURCE_JOYSTICK != InputDevice.SOURCE_JOYSTICK) return
-        val left = maxOf(event.getAxisValue(MotionEvent.AXIS_LTRIGGER), event.getAxisValue(MotionEvent.AXIS_BRAKE))
-        val right = maxOf(event.getAxisValue(MotionEvent.AXIS_RTRIGGER), event.getAxisValue(MotionEvent.AXIS_GAS))
-        trigger(PadButton.L2, left, event.eventTime)
-        trigger(PadButton.R2, right, event.eventTime)
-        rightStick(event)
+    fun dispatchAxes(leftTrigger: Float, rightTrigger: Float, stickX: Float, stickY: Float, eventTime: Long) {
+        trigger(PadButton.L2, leftTrigger, eventTime)
+        trigger(PadButton.R2, rightTrigger, eventTime)
+        rightStick(stickX, stickY)
     }
 
-    private fun rightStick(event: MotionEvent) {
-        // Most pads report the right stick as Z/RZ, some as RX/RY.
-        val device = event.device
-        val useZ = device == null || device.getMotionRange(MotionEvent.AXIS_Z, event.source) != null
-        val x = event.getAxisValue(if (useZ) MotionEvent.AXIS_Z else MotionEvent.AXIS_RX)
-        val y = event.getAxisValue(if (useZ) MotionEvent.AXIS_RZ else MotionEvent.AXIS_RY)
+    private fun rightStick(x: Float, y: Float) {
         scrollVelocity = if (kotlin.math.abs(y) > SCROLL_DEAD_ZONE && kotlin.math.abs(y) > kotlin.math.abs(x)) y else 0f
         val direction = when {
             maxOf(kotlin.math.abs(x), kotlin.math.abs(y)) < STICK_RELEASE -> null
@@ -125,11 +113,17 @@ class InputDispatcher {
             else -> null
         }
         if (direction == stickDirection) return
-        mainHandler.removeCallbacks(stickRepeat)
+        stickRepeat?.cancel()
         stickDirection = direction
         if (direction != null) {
             fire(direction)
-            mainHandler.postDelayed(stickRepeat, STICK_FIRST_REPEAT_MS)
+            stickRepeat = mainScope.launch {
+                kotlinx.coroutines.delay(STICK_FIRST_REPEAT_MS)
+                while (true) {
+                    fire(direction)
+                    kotlinx.coroutines.delay(STICK_REPEAT_MS)
+                }
+            }
         }
     }
 
@@ -153,22 +147,23 @@ class InputDispatcher {
     }
 
     /** Select: short press and hold are separate actions (hold opens the quick menu). */
-    private fun dispatchSelect(event: KeyEvent): Boolean {
-        when (event.action) {
-            KeyEvent.ACTION_DOWN -> {
-                if (event.repeatCount == 0) {
-                    selectDownAt = event.eventTime
+    private fun dispatchSelect(phase: KeyPhase, repeatCount: Int, eventTime: Long): Boolean {
+        when (phase) {
+            KeyPhase.DOWN -> {
+                if (repeatCount == 0) {
+                    selectDownAt = eventTime
                     selectHoldFired = false
-                } else if (!selectHoldFired && event.eventTime - selectDownAt >= HOLD_MS) {
+                } else if (!selectHoldFired && eventTime - selectDownAt >= HOLD_MS) {
                     selectHoldFired = fire(PadButton.SELECT_HOLD)
                 }
             }
-            KeyEvent.ACTION_UP -> {
-                val held = event.eventTime - selectDownAt
+            KeyPhase.UP -> {
+                val held = eventTime - selectDownAt
                 if (!selectHoldFired) {
                     if (held >= HOLD_MS) fire(PadButton.SELECT_HOLD) else fire(PadButton.SELECT)
                 }
             }
+            KeyPhase.OTHER -> Unit
         }
         return true
     }
@@ -181,35 +176,6 @@ class InputDispatcher {
         const val STICK_RELEASE = 0.3f
         const val STICK_FIRST_REPEAT_MS = 350L
         const val STICK_REPEAT_MS = 120L
-
-        fun buttonFor(keyCode: Int): PadButton? = when (keyCode) {
-            KeyEvent.KEYCODE_BUTTON_X -> PadButton.X
-            KeyEvent.KEYCODE_BUTTON_Y -> PadButton.Y
-            KeyEvent.KEYCODE_BUTTON_L1 -> PadButton.L1
-            KeyEvent.KEYCODE_BUTTON_R1 -> PadButton.R1
-            KeyEvent.KEYCODE_BUTTON_L2 -> PadButton.L2
-            KeyEvent.KEYCODE_BUTTON_R2 -> PadButton.R2
-            KeyEvent.KEYCODE_BUTTON_START, KeyEvent.KEYCODE_MENU -> PadButton.START
-            KeyEvent.KEYCODE_BUTTON_SELECT -> PadButton.SELECT
-            // Keyboard equivalents, handy on the emulator and with BT keyboards
-            KeyEvent.KEYCODE_PAGE_UP -> PadButton.L1
-            KeyEvent.KEYCODE_PAGE_DOWN -> PadButton.R1
-            KeyEvent.KEYCODE_F1 -> PadButton.Y
-            KeyEvent.KEYCODE_F2 -> PadButton.X
-            else -> null
-        }
-
-        /**
-         * Nintendo layout: the confirm button sits where Xbox has B. Swapping key codes before
-         * dispatch makes the rest of the app layout-agnostic.
-         */
-        fun swapForNintendo(keyCode: Int): Int = when (keyCode) {
-            KeyEvent.KEYCODE_BUTTON_A -> KeyEvent.KEYCODE_BUTTON_B
-            KeyEvent.KEYCODE_BUTTON_B -> KeyEvent.KEYCODE_BUTTON_A
-            KeyEvent.KEYCODE_BUTTON_X -> KeyEvent.KEYCODE_BUTTON_Y
-            KeyEvent.KEYCODE_BUTTON_Y -> KeyEvent.KEYCODE_BUTTON_X
-            else -> keyCode
-        }
     }
 }
 

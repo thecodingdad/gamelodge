@@ -60,7 +60,7 @@ class EmulationRepository(
         _scanning.value = true
         try {
             val result = withContext(Dispatchers.IO) { scanner.scan(config.value) }
-            library.syncRoms(result.roms, keepUnder = result.unreadable.map { it.uri })
+            library.syncRoms(result.roms.map { io.github.thecodingdad.moonlightlauncher.data.library.RomGame(it.name, it.platform.id, it.platform.displayName, it.uri, it.path, it.image) }, keepUnder = result.unreadable.map { it.uri })
             _found.value = result.roms.size
             _unreadable.value = result.unreadable
             lastScan = System.currentTimeMillis()

@@ -412,7 +412,7 @@ private fun RunningSessionActions(
         stringResource(Res.string.qm_quit_game),
         onConfirmed = {
             scope.launch {
-                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { runCatching { c.hosts.http(session.host).quitApp() } }
+                c.hostActions.quitApp(session.host)
                 c.hosts.invalidate(session.host.uuid)
                 onDone()
             }

@@ -55,7 +55,7 @@ fun ProfilesList(
     var focusedIndex by remember { mutableIntStateOf(0) }
     val newTitle = stringResource(Res.string.profile_new_name)
 
-    PadAction(PadButton.X) { profiles.getOrNull(focusedIndex)?.let { StreamProfiles.setActive(it.uuid) } }
+    PadAction(PadButton.X) { profiles.getOrNull(focusedIndex)?.let { io.github.thecodingdad.moonlightlauncher.stream.ArtemisStreamProfiles.setActive(it.uuid) } }
     ScreenHints(
         listOf(
             ButtonHint(PadButton.A, stringResource(Res.string.profile_edit)),
@@ -102,7 +102,7 @@ fun ProfileEditor(uuid: UUID?, name: String, onDeleted: () -> Unit) {
     SettingsPage(name) {
         if (uuid != null) {
             io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 12.dp) {
-                LauncherButton(stringResource(Res.string.profile_set_active), icon = Icons.Filled.CheckCircle, onClick = { StreamProfiles.setActive(uuid) })
+                LauncherButton(stringResource(Res.string.profile_set_active), icon = Icons.Filled.CheckCircle, onClick = { io.github.thecodingdad.moonlightlauncher.stream.ArtemisStreamProfiles.setActive(uuid) })
                 LauncherButton(stringResource(Res.string.profile_rename), icon = Icons.Filled.Edit, onClick = {
                     keyboard.open(renameTitle, name) { n -> if (n.isNotBlank()) ProfileStore.rename(uuid, n.trim()) }
                 })

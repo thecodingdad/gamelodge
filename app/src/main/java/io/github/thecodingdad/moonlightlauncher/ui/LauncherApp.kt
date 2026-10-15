@@ -165,7 +165,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
     val entryActions = remember(nav) {
         EntryActions(
             openDetail = { entry -> nav.navigate(Routes.detail(entry.item.id)) },
-            launchDirect = { entry, target -> vm.launch(activity, entry, target) },
+            launchDirect = { entry, target -> vm.launch(entry, target) },
         )
     }
     entryActions.directStart = settings.gamesDirectStart
@@ -407,7 +407,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                     onDismiss = { entryActions.pick = null },
                     onLaunch = { entry, target, profile, emulatorKey ->
                         entryActions.pick = null
-                        vm.launch(activity, entry, target, profile, emulatorKey = emulatorKey)
+                        vm.launch(entry, target, profile, emulatorKey = emulatorKey)
                     },
                 )
                 val runningForMenu by vm.runningSessions.collectAsState()
@@ -420,7 +420,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                     onResume = { session ->
                         val entry = session.entry
                         val target = entry?.remoteTargets?.firstOrNull { it.hostUuid == session.host.uuid && it.appId == session.host.runningAppId }
-                        if (entry != null && target != null) vm.launch(activity, entry, target)
+                        if (entry != null && target != null) vm.launch(entry, target)
                     },
                     onDismiss = entryActions::closeContext,
                     onPlay = entryActions::play,
@@ -499,9 +499,9 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                     state = launchState,
                     onDismiss = vm::dismissLaunch,
                     onRetry = { entry -> vm.dismissLaunch(); entryActions.play(entry) },
-                    onConfirmQuit = { c -> vm.launch(activity, c.entry, c.target, c.override, quitRunning = true) },
+                    onConfirmQuit = { c -> vm.launch(c.entry, c.target, c.override, quitRunning = true) },
                     profiles = profiles,
-                    onContinueDespiteNetwork = { w, profile -> vm.launch(activity, w.entry, w.target, profile, skipNetworkCheck = true) },
+                    onContinueDespiteNetwork = { w, profile -> vm.launch(w.entry, w.target, profile, skipNetworkCheck = true) },
                     onCancel = vm::cancelLaunch,
                 )
                 // Y opens the quick menu everywhere (holding Select does too): system controls,
@@ -673,7 +673,7 @@ private fun MainShell(
                             onResume = { session ->
                                 val entry = session.entry
                                 val target = entry?.remoteTargets?.firstOrNull { it.hostUuid == session.host.uuid && it.appId == session.host.runningAppId }
-                                if (entry != null && target != null) vm.launch(activity, entry, target)
+                                if (entry != null && target != null) vm.launch(entry, target)
                             },
                             onRunningMenu = entryActions::contextForSession,
                             lastFocusedKey = vm.focusKeys[MainTab.HOME.name],

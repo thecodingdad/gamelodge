@@ -7,9 +7,8 @@ import io.github.thecodingdad.moonlightlauncher.data.library.LibraryRepository
 import io.github.thecodingdad.moonlightlauncher.data.library.LibrarySync
 import io.github.thecodingdad.moonlightlauncher.data.library.PlaytimeTracker
 import io.github.thecodingdad.moonlightlauncher.data.local.LocalAppScanner
-import io.github.thecodingdad.moonlightlauncher.data.remote.BoxArtCache
-import io.github.thecodingdad.moonlightlauncher.data.remote.HostActions
-import io.github.thecodingdad.moonlightlauncher.data.remote.HostRepository
+import io.github.thecodingdad.moonlightlauncher.data.remote.ArtemisHostActions
+import io.github.thecodingdad.moonlightlauncher.data.remote.ArtemisHostRepository
 import io.github.thecodingdad.moonlightlauncher.data.settings.SecretStore
 import io.github.thecodingdad.moonlightlauncher.data.settings.SettingsRepository
 import io.github.thecodingdad.moonlightlauncher.stream.AutoSleep
@@ -37,8 +36,7 @@ class AppContainer(context: Context) {
     val secrets: SecretStore by lazy { io.github.thecodingdad.moonlightlauncher.platform.AndroidStores.secrets(appContext) }
 
     val localApps: LocalAppScanner by lazy { LocalAppScanner(appContext) }
-    val hosts: HostRepository by lazy { HostRepository(appContext, scope) }
-    val boxArt: BoxArtCache by lazy { BoxArtCache(appContext) }
+    val hosts: ArtemisHostRepository by lazy { ArtemisHostRepository(appContext, scope) }
 
     val companionFeed: io.github.thecodingdad.moonlightlauncher.data.companion.CompanionFeed by lazy {
         io.github.thecodingdad.moonlightlauncher.data.companion.CompanionFeed(appContext.filesDir, servers) {
@@ -46,7 +44,7 @@ class AppContainer(context: Context) {
         }
     }
     val library: LibraryRepository by lazy {
-        LibraryRepository(database, LibrarySync(database, emulatorPackages = ::emulatorPackages), localApps, hosts, boxArt, scope, companionFeed)
+        LibraryRepository(database, LibrarySync(database, emulatorPackages = ::emulatorPackages), localApps, hosts, scope, companionFeed)
     }
     val playtime: PlaytimeTracker by lazy { PlaytimeTracker(database) }
     /** Packages of every known emulator (catalog and own ones); some real games share a package prefix (miHoYo). */
@@ -67,8 +65,14 @@ class AppContainer(context: Context) {
         io.github.thecodingdad.moonlightlauncher.stream.ControllerOverrideStore(appContext)
     }
     val vpn: VpnManager by lazy { VpnManager(appContext, secrets, settings, scope) }
-    val launcher: LaunchCoordinator by lazy { LaunchCoordinator(this).also { it.vpn = vpn } }
-    val hostActions: HostActions by lazy { HostActions(hosts, library) }
+    val profiles: io.github.thecodingdad.moonlightlauncher.stream.StreamProfiles = io.github.thecodingdad.moonlightlauncher.stream.ArtemisStreamProfiles
+    val launcher: LaunchCoordinator by lazy {
+        LaunchCoordinator(
+            hosts, hostActions, { hostPower }, { autoSleep }, profiles, playtime, settings, { ha }, scope,
+            io.github.thecodingdad.moonlightlauncher.stream.AndroidLaunchPlatform(this),
+        ).also { it.vpn = vpn }
+    }
+    val hostActions: ArtemisHostActions by lazy { ArtemisHostActions(hosts, library) }
 
     val artwork: io.github.thecodingdad.moonlightlauncher.data.artwork.ArtworkStore by lazy {
         io.github.thecodingdad.moonlightlauncher.data.artwork.ArtworkStore(io.github.thecodingdad.moonlightlauncher.platform.AndroidNetworkStatus(appContext), http, database.libraryDao(), settings, scope)
@@ -97,6 +101,6 @@ class AppContainer(context: Context) {
         HaRepository(HaClient(wsHttp, haAuth, { haAuth.baseUrl }, scope), haAuth, database)
     }
     val hostPower: HostPower by lazy { HostPower(database.hostConfigDao(), hosts, hostActions, ha) }
-    val autoSleep: AutoSleep by lazy { AutoSleep(appContext, database.hostConfigDao()) }
+    val autoSleep: AutoSleep by lazy { io.github.thecodingdad.moonlightlauncher.stream.WorkManagerAutoSleep(appContext, database.hostConfigDao()) }
     val backup: BackupManager by lazy { BackupManager(appContext, database, settings, secrets) }
 }

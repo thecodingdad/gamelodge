@@ -21,7 +21,6 @@ import io.github.thecodingdad.moonlightlauncher.data.remote.HostState
 import io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings
 import io.github.thecodingdad.moonlightlauncher.stream.LaunchState
 import io.github.thecodingdad.moonlightlauncher.stream.StreamProfile
-import io.github.thecodingdad.moonlightlauncher.stream.StreamProfiles
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -57,12 +56,12 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         io.github.thecodingdad.moonlightlauncher.system.ExternalDisplay.observe(application)
             .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    val activeProfile: StateFlow<StreamProfile> = StreamProfiles.changes()
-        .map { StreamProfiles.active(defaultProfileName) }
+    val activeProfile: StateFlow<StreamProfile> = c.profiles.changes()
+        .map { c.profiles.active(defaultProfileName) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, StreamProfile(null, defaultProfileName))
 
-    val profiles: StateFlow<List<StreamProfile>> = StreamProfiles.changes()
-        .map { StreamProfiles.all(defaultProfileName) }
+    val profiles: StateFlow<List<StreamProfile>> = c.profiles.changes()
+        .map { c.profiles.all(defaultProfileName) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val launchState: StateFlow<LaunchState> = c.launcher.state
@@ -208,7 +207,6 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     val quickMenuTouch = kotlinx.coroutines.flow.MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
     fun launch(
-        activity: Activity,
         entry: LibraryEntry,
         target: LaunchTargetEntity,
         override: StreamProfile? = null,
@@ -216,14 +214,14 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         skipNetworkCheck: Boolean = false,
         emulatorKey: String? = null,
     ) {
-        viewModelScope.launch { c.launcher.launch(activity, entry, target, override, quitRunning, skipNetworkCheck, emulatorKey) }
+        viewModelScope.launch { c.launcher.launch(entry, target, override, quitRunning, skipNetworkCheck, emulatorKey) }
     }
 
     fun dismissLaunch() = c.launcher.dismiss()
 
     fun cancelLaunch() = c.launcher.cancel()
 
-    fun setActiveProfile(profile: StreamProfile) = StreamProfiles.setActive(profile.uuid)
+    fun setActiveProfile(profile: StreamProfile) = c.profiles.setActive(profile.uuid)
 
     fun setFavorite(entry: LibraryEntry, favorite: Boolean) {
         viewModelScope.launch { c.library.setFavorite(entry.item.id, favorite) }

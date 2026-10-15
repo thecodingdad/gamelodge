@@ -42,6 +42,8 @@ import io.github.thecodingdad.moonlightlauncher.ui.feedback.LocalUiFeedback
 import io.github.thecodingdad.moonlightlauncher.ui.feedback.UiFeedback
 import io.github.thecodingdad.moonlightlauncher.ui.feedbackConfig
 import io.github.thecodingdad.moonlightlauncher.ui.input.InputDispatcher
+import io.github.thecodingdad.moonlightlauncher.ui.input.dispatch
+import io.github.thecodingdad.moonlightlauncher.ui.input.dispatchMotion
 import io.github.thecodingdad.moonlightlauncher.ui.input.LocalInputDispatcher
 import io.github.thecodingdad.moonlightlauncher.ui.input.PadAction
 import io.github.thecodingdad.moonlightlauncher.ui.input.PadButton
@@ -77,7 +79,7 @@ class QuickMenuActivity : ComponentActivity() {
             hide(WindowInsetsCompat.Type.systemBars())
             systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
-        feedback = UiFeedback(this).also { it.load() }
+        feedback = UiFeedback(cacheDir, io.github.thecodingdad.moonlightlauncher.ui.feedback.AndroidFeedbackOutput(this)).also { it.load() }
         setContent { Content() }
     }
 
@@ -209,7 +211,7 @@ class QuickMenuActivity : ComponentActivity() {
     @SuppressLint("RestrictedApi")
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         val e = if (vm.settings.value.buttonLayout == ButtonLayout.NINTENDO) {
-            val swapped = InputDispatcher.swapForNintendo(event.keyCode)
+            val swapped = io.github.thecodingdad.moonlightlauncher.ui.input.AndroidPad.swapForNintendo(event.keyCode)
             if (swapped != event.keyCode) {
                 KeyEvent(
                     event.downTime, event.eventTime, event.action, swapped, event.repeatCount,

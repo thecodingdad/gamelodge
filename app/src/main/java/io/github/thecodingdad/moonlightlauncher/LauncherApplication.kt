@@ -22,6 +22,7 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
 
     override fun onCreate() {
         super.onCreate()
+        registerActivityLifecycleCallbacks(CurrentActivity)
         container = AppContainer(this)
         container.hosts.bind()
         container.library.start()
@@ -64,6 +65,7 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
         container.servers.start()
         container.metadata.start()
         io.github.thecodingdad.moonlightlauncher.data.artwork.ArtworkFiles.init(filesDir)
+        io.github.thecodingdad.moonlightlauncher.ui.components.ArtworkPlatform.current = io.github.thecodingdad.moonlightlauncher.ui.components.AndroidArtwork(this)
         container.artwork.start()
         io.github.thecodingdad.moonlightlauncher.system.OdinMapping(this)
             .watch(container.scope, container.settings.settings.map { it.odinKeepControllers })
