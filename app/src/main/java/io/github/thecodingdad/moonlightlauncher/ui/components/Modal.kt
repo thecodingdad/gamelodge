@@ -152,10 +152,11 @@ private fun ModalScaffold(
         modifier = Modifier
             .fillMaxSize()
             .background(scrim)
-            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onDismiss),
+            // Taps beside the popup do nothing (and don't reach the screen behind): it closes with
+            // its back arrow / cancel button, B or the system back.
+            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {},
         contentAlignment = alignment,
     ) {
-        // Inner clicks must not dismiss.
         Box(Modifier.clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {}) {
             content()
         }

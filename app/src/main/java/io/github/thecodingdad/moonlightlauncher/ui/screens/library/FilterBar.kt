@@ -135,7 +135,7 @@ fun FilterBar(
                 Icon(Icons.Filled.MoreVert, stringResource(R.string.hint_options))
             })
             io.github.thecodingdad.moonlightlauncher.ui.components.Modal(
-                visible = menu, onDismiss = { menu = false }, maxWidth = 420.dp,
+                visible = menu, onDismiss = { menu = false }, maxWidth = 420.dp, title = stringResource(R.string.hint_options),
             ) {
                 androidx.compose.foundation.layout.Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     val item: @Composable (androidx.compose.ui.graphics.vector.ImageVector, String, () -> Unit) -> Unit = { icon, label, action ->

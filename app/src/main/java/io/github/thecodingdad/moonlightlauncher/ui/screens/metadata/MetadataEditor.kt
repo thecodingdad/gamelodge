@@ -73,7 +73,20 @@ fun MetadataEditorDialog(
     val service = LocalContext.current.container.metadata
     val scope = rememberCoroutineScope()
     var editing by remember { mutableStateOf<EditRow?>(null) }
-    Modal(visible = entry != null, onDismiss = onDismiss, title = stringResource(R.string.meta_edit_title), maxWidth = 820.dp, modifier = Modifier.fillMaxHeight(), closeButton = false) {
+    // Everything changed here (fields, match, artwork, platform) is a draft: "Save" keeps it,
+    // "Cancel" (also B / back) restores the game as it was when the editor opened.
+    val appScope = LocalContext.current.container.scope
+    val itemId = entry?.item?.id
+    androidx.compose.runtime.LaunchedEffect(itemId) { if (itemId != null) service.beginEdit(itemId) }
+    val cancel: () -> Unit = {
+        appScope.launch { service.cancelEdit() }
+        onDismiss()
+    }
+    val save: () -> Unit = {
+        appScope.launch { service.commitEdit() }
+        onDismiss()
+    }
+    Modal(visible = entry != null, onDismiss = cancel, title = stringResource(R.string.meta_edit_title), maxWidth = 820.dp, modifier = Modifier.fillMaxHeight(), closeButton = false) {
         val e = entry ?: return@Modal
         val item = e.item
         val manual = item.manual
@@ -113,7 +126,8 @@ fun MetadataEditorDialog(
             Row(EditRow.LAST_PLAYED, R.string.filter_field_last_played, item.lastPlayedAt?.let { dateFormat().format(Date(it)) })
         }
         ButtonRow(spacing = 12.dp, modifier = Modifier.padding(top = 16.dp)) {
-            LauncherButton(stringResource(R.string.action_done), onClick = onDismiss, primary = true)
+            LauncherButton(stringResource(R.string.action_save), onClick = save, primary = true)
+            LauncherButton(stringResource(R.string.action_cancel), onClick = cancel)
         }
     }
 

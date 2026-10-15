@@ -36,6 +36,7 @@ import coil3.request.SuccessResult
 import coil3.request.allowHardware
 import coil3.toBitmap
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry
+import io.github.thecodingdad.moonlightlauncher.data.db.MetaField
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LocalAccentHolder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -45,7 +46,8 @@ import kotlin.math.absoluteValue
 /** Best available portrait cover for an entry: metadata cover (stored file when there), then host box art. */
 fun LibraryEntry.coverModel(): Any? =
     ArtworkFiles.model(item.coverUrl)
-        ?: boxArtPath?.let(::boxArtModel)
+        // Removed by hand: no stand-in (the title placeholder shows), not the host's box art.
+        ?: boxArtPath?.takeIf { item.coverUrl == null && MetaField.COVER !in item.manual }?.let(::boxArtModel)
 
 /** The animated cover, when there is one and it may be shown now (stored, or the network allows it). */
 fun LibraryEntry.animatedCoverModel(): Any? = ArtworkFiles.animatedModel(item.animatedCoverUrl)
@@ -56,10 +58,13 @@ fun LibraryEntry.animatedHeroModel(): Any? = ArtworkFiles.animatedModel(item.ani
 private fun boxArtModel(value: String): Any = if (value.startsWith("content://")) android.net.Uri.parse(value) else File(value)
 
 /** Best available wide background image. */
-fun LibraryEntry.heroModel(): Any? =
-    ArtworkFiles.model(item.heroUrl)
+fun LibraryEntry.heroModel(): Any? {
+    // Background removed by hand: none (the generated gradient shows), no cover as stand-in.
+    if (item.heroUrl == null && MetaField.HERO in item.manual) return null
+    return ArtworkFiles.model(item.heroUrl)
         ?: ArtworkFiles.model(item.coverUrl)
-        ?: boxArtPath?.let(::boxArtModel)
+        ?: boxArtPath?.takeIf { MetaField.COVER !in item.manual }?.let(::boxArtModel)
+}
 
 /**
  * The still image, with the animated one laid over it once that is ready: the still one stays

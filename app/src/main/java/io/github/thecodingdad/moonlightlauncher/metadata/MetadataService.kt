@@ -94,8 +94,52 @@ class MetadataService(
     var companionGame: (suspend (itemId: String) -> io.github.thecodingdad.moonlightlauncher.data.companion.HostGame?)? = null
 
     private suspend fun corrected(itemId: String, reset: List<String> = emptyList()) {
+        // While the metadata editor is open the changes are a draft: sent with "Save".
+        if (editing?.id == itemId) return
         runCatching { onCorrected?.invoke(itemId, reset) }.onFailure { Log.w("Correction not passed on", it) }
     }
+
+    /** The item as it was when the metadata editor opened (its changes are a draft until saved). */
+    @Volatile private var editing: LibraryItemEntity? = null
+
+    /** The metadata editor opens: everything changed from here on can be cancelled. */
+    suspend fun beginEdit(itemId: String) = withContext(Dispatchers.IO) {
+        editing = dao.getItem(itemId)
+    }
+
+    /** "Save": the changes stay and go to the companion; replaced own images are deleted. */
+    suspend fun commitEdit() = withContext(Dispatchers.IO) {
+        val before = editing ?: return@withContext
+        editing = null
+        val now = dao.getItem(before.id) ?: return@withContext
+        ownFiles(before).minus(ownFiles(now)).forEach { java.io.File(it).delete() }
+        if (now == before) return@withContext
+        // Hand-picked before, automatic now: the companion follows its own choice again.
+        val reset = (before.manual - now.manual).mapNotNull { field ->
+            ArtworkKind.entries.firstOrNull { it.field == field }?.correction ?: when (field) {
+                MetaField.TITLE -> "name"
+                MetaField.DESCRIPTION -> "summary"
+                MetaField.GENRES -> "genres"
+                MetaField.DEVELOPER -> "developers"
+                MetaField.PUBLISHER -> "publishers"
+                MetaField.RELEASE -> "release"
+                else -> null
+            }
+        }
+        corrected(now.id, reset)
+    }
+
+    /** "Cancel": the item goes back to how it was when the editor opened; new own images are deleted. */
+    suspend fun cancelEdit() = withContext(Dispatchers.IO) {
+        val before = editing ?: return@withContext
+        editing = null
+        val now = dao.getItem(before.id)
+        if (now != null) ownFiles(now).minus(ownFiles(before)).forEach { java.io.File(it).delete() }
+        if (now != before) dao.upsertItem(before)
+    }
+
+    private fun ownFiles(i: LibraryItemEntity) =
+        listOfNotNull(i.coverUrl, i.animatedCoverUrl, i.heroUrl, i.animatedHeroUrl, i.logoUrl, i.iconUrl).filter { it.contains("/own-artwork/") }.toSet()
 
     private val dao = db.libraryDao()
     private val mutex = Mutex()
@@ -550,7 +594,8 @@ class MetadataService(
             ArtworkKind.LOGO -> item.logoUrl
             ArtworkKind.ICON -> item.iconUrl
         } ?: return
-        if (old != keep && old.contains("/own-artwork/")) java.io.File(old).delete()
+        // In the editor the old file may still come back with "Cancel" (cleaned up on save).
+        if (old != keep && old.contains("/own-artwork/") && editing?.id != item.id) java.io.File(old).delete()
     }
 
     /** No image of [kind] by hand (an animated one: the still one shows instead); automatic lookups leave it empty. */
