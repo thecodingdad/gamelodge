@@ -87,6 +87,14 @@ user tests on Windows. Android stays releasable from `desktop` at all times.
   (mTLS everywhere but pairing, pairing window, lockout, constant-time compares, limits,
   no secrets in logs, Argon2id admin password, CSRF, secure cookies, optional TOTP).
 
+## Status
+
+- 2026-10-15 – phase 0 done: `shared` holds data, metadata, settings, HA, launch flow, view
+  model and the complete UI (strings as Compose resources). Platform seams: `LauncherContainer`,
+  `PlatformUi`, `ArtworkPlatform`, `FeedbackOutput`, `HostRepository`/`HostActions`,
+  `LaunchPlatform`, `StreamProfiles`, `LocalAppSource`, `Emulators`, `Vpn`, `SecretBackend`,
+  `PlatformInfo`. Android implements them in `app`; platform-free tests run on the desktop JVM.
+
 ## Open points (decide when reached)
 
 - Windows packaging from Linux: portable zip (jlinked Windows JRE + launcher exe) vs. MSI built
