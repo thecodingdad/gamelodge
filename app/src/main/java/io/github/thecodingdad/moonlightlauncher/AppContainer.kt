@@ -31,16 +31,17 @@ class AppContainer(context: Context) {
     val appContext: Context = context.applicationContext
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
-    val database: LauncherDatabase by lazy { LauncherDatabase.create(appContext) }
-    val settings: SettingsRepository by lazy { SettingsRepository(appContext) }
-    val secrets: SecretStore by lazy { SecretStore(appContext) }
+    val platform = io.github.thecodingdad.moonlightlauncher.platform.AndroidPlatformInfo(appContext)
+    val database: LauncherDatabase by lazy { io.github.thecodingdad.moonlightlauncher.data.db.AndroidDatabase.create(appContext) }
+    val settings: SettingsRepository by lazy { io.github.thecodingdad.moonlightlauncher.platform.AndroidStores.settings(appContext) }
+    val secrets: SecretStore by lazy { io.github.thecodingdad.moonlightlauncher.platform.AndroidStores.secrets(appContext) }
 
     val localApps: LocalAppScanner by lazy { LocalAppScanner(appContext) }
     val hosts: HostRepository by lazy { HostRepository(appContext, scope) }
     val boxArt: BoxArtCache by lazy { BoxArtCache(appContext) }
 
     val companionFeed: io.github.thecodingdad.moonlightlauncher.data.companion.CompanionFeed by lazy {
-        io.github.thecodingdad.moonlightlauncher.data.companion.CompanionFeed(appContext, servers) {
+        io.github.thecodingdad.moonlightlauncher.data.companion.CompanionFeed(appContext.filesDir, servers) {
             metadata.isEnabled(io.github.thecodingdad.moonlightlauncher.metadata.MetadataSources.idOf(it))
         }
     }
@@ -70,7 +71,7 @@ class AppContainer(context: Context) {
     val hostActions: HostActions by lazy { HostActions(hosts, library) }
 
     val artwork: io.github.thecodingdad.moonlightlauncher.data.artwork.ArtworkStore by lazy {
-        io.github.thecodingdad.moonlightlauncher.data.artwork.ArtworkStore(appContext, http, database.libraryDao(), settings, scope)
+        io.github.thecodingdad.moonlightlauncher.data.artwork.ArtworkStore(io.github.thecodingdad.moonlightlauncher.platform.AndroidNetworkStatus(appContext), http, database.libraryDao(), settings, scope)
     }
 
     val http: OkHttpClient by lazy {
@@ -80,7 +81,7 @@ class AppContainer(context: Context) {
             .build()
     }
     val servers: io.github.thecodingdad.moonlightlauncher.data.companion.ServerRepository by lazy {
-        io.github.thecodingdad.moonlightlauncher.data.companion.ServerRepository(appContext, http, scope)
+        io.github.thecodingdad.moonlightlauncher.data.companion.ServerRepository(platform, http, scope) { io.github.thecodingdad.moonlightlauncher.data.companion.KeystoreClientIdentity() }
     }
     val metadata: MetadataService by lazy {
         MetadataService(database, secrets, settings, http, scope, servers).also {
@@ -90,7 +91,7 @@ class AppContainer(context: Context) {
         }
     }
 
-    val haAuth: HaAuth by lazy { HaAuth(appContext, http, secrets) }
+    val haAuth: HaAuth by lazy { HaAuth(io.github.thecodingdad.moonlightlauncher.platform.CustomTabOpener(appContext), http, secrets) }
     val ha: HaRepository by lazy {
         val wsHttp = http.newBuilder().pingInterval(30, TimeUnit.SECONDS).build()
         HaRepository(HaClient(wsHttp, haAuth, { haAuth.baseUrl }, scope), haAuth, database)

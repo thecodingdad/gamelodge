@@ -120,7 +120,8 @@ internal fun SourcesSection(stored: List<String>) {
         is SourceDialog.Pair -> PairDialog(d.target, onDismiss = { dialog = null })
         is SourceDialog.Server -> {
             val entry = entries.firstOrNull { it.id == d.id }
-            if (entry?.server != null) ServerSourceDialog(entry, online[entry.server.id], onDismiss = { dialog = null })
+            val server = entry?.server
+            if (server != null) ServerSourceDialog(entry, online[server.id], onDismiss = { dialog = null })
             else LaunchedEffect(d) { dialog = null } // removed meanwhile
         }
         null -> Unit

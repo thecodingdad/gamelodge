@@ -3,7 +3,6 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.ksp)
 }
 
 android {
@@ -45,7 +44,7 @@ android {
     }
 
     // Exported Room schemas for the migration tests (Robolectric reads debug assets).
-    sourceSets.getByName("debug").assets.srcDir("$projectDir/schemas")
+    sourceSets.getByName("debug").assets.srcDir("${rootProject.projectDir}/shared/schemas")
 
     packaging {
         resources {
@@ -60,12 +59,9 @@ kotlin {
     }
 }
 
-ksp {
-    arg("room.schemaLocation", "$projectDir/schemas")
-}
-
 dependencies {
     implementation(project(":moonlight-core"))
+    implementation(project(":shared"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
@@ -83,7 +79,6 @@ dependencies {
 
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
-    ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.browser)

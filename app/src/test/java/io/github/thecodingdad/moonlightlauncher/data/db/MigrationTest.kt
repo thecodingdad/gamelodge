@@ -25,7 +25,7 @@ class MigrationTest {
             execSQL("INSERT INTO collections (id, name, sortOrder) VALUES ('c1', 'Couch', 0)")
             close()
         }
-        val db = helper.runMigrationsAndValidate("m.db", 2, true, LauncherDatabase.MIGRATION_1_2)
+        val db = helper.runMigrationsAndValidate("m.db", 2, true, AndroidDatabase.MIGRATION_1_2)
         db.query("SELECT title, platform FROM library_items").use {
             it.moveToFirst()
             assertEquals("Hades", it.getString(0))
@@ -44,14 +44,14 @@ class MigrationTest {
     @Test
     fun `v5 to v6 adds the member position`() {
         helper.createDatabase("m6.db", 5).close()
-        val db = helper.runMigrationsAndValidate("m6.db", 6, true, LauncherDatabase.MIGRATION_5_6)
+        val db = helper.runMigrationsAndValidate("m6.db", 6, true, AndroidDatabase.MIGRATION_5_6)
         db.query("SELECT position FROM item_collections").close()
     }
 
     @Test
     fun `v6 to v7 adds the ROM columns`() {
         helper.createDatabase("m7.db", 6).close()
-        val db = helper.runMigrationsAndValidate("m7.db", 7, true, LauncherDatabase.MIGRATION_6_7)
+        val db = helper.runMigrationsAndValidate("m7.db", 7, true, AndroidDatabase.MIGRATION_6_7)
         db.query("SELECT romUri, romPath, romPlatform, emulatorKey FROM launch_targets").close()
     }
 
@@ -60,7 +60,7 @@ class MigrationTest {
         helper.createDatabase("m8.db", 7).use { db ->
             db.execSQL("INSERT INTO host_config (hostUuid, wakeMethod, haWakeEntity, autoSleepMinutes, vibepolloUrl, apiType, apiUser) VALUES ('h1', 'WOL', 'script.wake', 15, 'https://x:47990', 'VIBEPOLLO', 'u')")
         }
-        val db = helper.runMigrationsAndValidate("m8.db", 8, true, LauncherDatabase.MIGRATION_7_8)
+        val db = helper.runMigrationsAndValidate("m8.db", 8, true, AndroidDatabase.MIGRATION_7_8)
         db.query("SELECT hostUuid, haWakeEntity, autoSleepMinutes FROM host_config").use { c ->
             org.junit.Assert.assertTrue(c.moveToFirst())
             org.junit.Assert.assertEquals("h1", c.getString(0))

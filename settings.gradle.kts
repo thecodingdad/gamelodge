@@ -18,4 +18,5 @@ dependencyResolutionManagement {
 rootProject.name = "moonlight-launcher"
 
 include(":app")
+include(":shared")
 include(":moonlight-core")
