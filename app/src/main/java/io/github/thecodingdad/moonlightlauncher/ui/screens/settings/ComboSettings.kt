@@ -122,7 +122,7 @@ fun ComboDialog(
         else -> stringResource(R.string.combo_home)
     }
     val perController = descriptor != null
-    Modal(visible = action != null, onDismiss = { if (!recording) onDismiss() }, title = title, maxWidth = 640.dp) {
+    Modal(visible = action != null, onDismiss = { if (!recording) onDismiss() }, title = title, maxWidth = 640.dp, closeButton = false) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(
                 when {

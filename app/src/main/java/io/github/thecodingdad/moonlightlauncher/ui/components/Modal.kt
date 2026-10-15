@@ -1,6 +1,8 @@
 package io.github.thecodingdad.moonlightlauncher.ui.components
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.animation.AnimatedVisibility
@@ -59,6 +61,8 @@ fun Modal(
     maxWidth: Dp = 620.dp,
     /** Element that gets focus when the modal opens; defaults to the first focusable child. */
     initialFocus: FocusRequester? = null,
+    /** Back arrow left of the title (touch / mouse); off for dialogs with their own cancel / done button. */
+    closeButton: Boolean = true,
     content: @Composable ColumnScope.() -> Unit,
 ) = Overlay(visible, onDismiss) {
     AnimatedVisibility(visible, enter = fadeIn(), exit = fadeOut()) {
@@ -72,12 +76,34 @@ fun Modal(
                     .trapFocus(initialFocus),
             ) {
                 if (title != null) {
-                    Text(title, style = MaterialTheme.typography.headlineSmall, color = LauncherTheme.colors.onSurface)
+                    androidx.compose.foundation.layout.Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (closeButton) CloseArrow(onDismiss)
+                        Text(title, style = MaterialTheme.typography.headlineSmall, color = LauncherTheme.colors.onSurface)
+                    }
                     androidx.compose.foundation.layout.Spacer(Modifier.padding(top = 18.dp))
                 }
                 content()
             }
         }
+    }
+}
+
+/** Round back arrow that closes a popup; touch and mouse only (controllers close with B). */
+@Composable
+private fun CloseArrow(onClick: () -> Unit) {
+    FocusSurface(
+        onClick = onClick,
+        shape = androidx.compose.foundation.shape.CircleShape,
+        color = LauncherTheme.colors.surfaceRaised,
+        dpadFocusable = false,
+        clickSound = io.github.thecodingdad.moonlightlauncher.ui.feedback.UiSound.BACK,
+        modifier = Modifier.padding(end = 14.dp).size(40.dp),
+    ) {
+        androidx.compose.material3.Icon(
+            androidx.compose.material.icons.Icons.AutoMirrored.Filled.ArrowBack,
+            androidx.compose.ui.res.stringResource(io.github.thecodingdad.moonlightlauncher.R.string.hint_back),
+            tint = LauncherTheme.colors.onSurface, modifier = Modifier.align(Alignment.Center).size(22.dp),
+        )
     }
 }
 

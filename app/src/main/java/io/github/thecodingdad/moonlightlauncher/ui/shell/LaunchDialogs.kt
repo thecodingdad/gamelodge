@@ -198,7 +198,7 @@ fun LaunchOverlay(
     }
 
     val failed = state as? LaunchState.Failed
-    Modal(visible = failed != null, onDismiss = onDismiss, title = stringResource(R.string.launch_failed_title)) {
+    Modal(visible = failed != null, onDismiss = onDismiss, title = stringResource(R.string.launch_failed_title), closeButton = false) {
         if (failed == null) return@Modal
         Text(errorText(failed.reason), style = MaterialTheme.typography.bodyLarge, color = LauncherTheme.colors.onSurface)
         Spacer(Modifier.height(24.dp))
@@ -231,7 +231,7 @@ fun LaunchOverlay(
     }
 
     val confirm = state as? LaunchState.ConfirmQuitRunning
-    Modal(visible = confirm != null, onDismiss = onDismiss, title = stringResource(R.string.launch_running_title)) {
+    Modal(visible = confirm != null, onDismiss = onDismiss, title = stringResource(R.string.launch_running_title), closeButton = false) {
         if (confirm == null) return@Modal
         Text(
             stringResource(R.string.launch_running_message, confirm.runningName, confirm.entry.item.title),

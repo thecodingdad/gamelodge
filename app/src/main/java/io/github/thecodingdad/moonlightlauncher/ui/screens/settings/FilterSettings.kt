@@ -172,7 +172,7 @@ fun FilterSettings(vm: LauncherViewModel, initialScope: FilterScope) {
         }
     }
 
-    Modal(visible = resetting, onDismiss = { resetting = false }, title = stringResource(R.string.filters_restore), maxWidth = 680.dp) {
+    Modal(visible = resetting, onDismiss = { resetting = false }, title = stringResource(R.string.filters_restore), maxWidth = 680.dp, closeButton = false) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(stringResource(R.string.filters_reset_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
             LauncherButton(
@@ -539,7 +539,7 @@ private fun ConditionDialog(
     onDismiss: () -> Unit,
 ) {
     val keyboard = LocalKeyboardController.current
-    Modal(visible = condition != null, onDismiss = onDismiss, title = condition?.let { fieldLabel(it.field) }, maxWidth = 760.dp) {
+    Modal(visible = condition != null, onDismiss = onDismiss, title = condition?.let { fieldLabel(it.field) }, maxWidth = 760.dp, closeButton = false) {
         val c = condition ?: return@Modal
         val field = c.field
         Column(

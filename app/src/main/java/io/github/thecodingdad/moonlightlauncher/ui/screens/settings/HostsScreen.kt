@@ -163,7 +163,7 @@ fun HostsSettings(hosts: List<HostState>, openHostConfig: (HostState) -> Unit) {
     }
 
     val ui = pairUi
-    Modal(visible = ui != null, onDismiss = { pairUi = null }, title = stringResource(R.string.pair_title)) {
+    Modal(visible = ui != null, onDismiss = { pairUi = null }, title = stringResource(R.string.pair_title), closeButton = false) {
         when (ui) {
             is PairUi.Waiting -> {
                 Text(stringResource(R.string.pair_instructions, ui.host.name), style = MaterialTheme.typography.bodyLarge, color = LauncherTheme.colors.onSurface)

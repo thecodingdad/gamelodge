@@ -72,7 +72,7 @@ fun MetadataEditorDialog(
     val service = LocalContext.current.container.metadata
     val scope = rememberCoroutineScope()
     var editing by remember { mutableStateOf<EditRow?>(null) }
-    Modal(visible = entry != null, onDismiss = onDismiss, title = stringResource(R.string.meta_edit_title), maxWidth = 820.dp) {
+    Modal(visible = entry != null, onDismiss = onDismiss, title = stringResource(R.string.meta_edit_title), maxWidth = 820.dp, closeButton = false) {
         val e = entry ?: return@Modal
         val item = e.item
         val manual = item.manual
@@ -138,7 +138,7 @@ private fun FieldDialog(
     onDismiss: () -> Unit,
 ) {
     val keyboard = LocalKeyboardController.current
-    Modal(visible = row != null && item != null, onDismiss = onDismiss, title = row?.let { rowTitle(it) }, maxWidth = 760.dp) {
+    Modal(visible = row != null && item != null, onDismiss = onDismiss, title = row?.let { rowTitle(it) }, maxWidth = 760.dp, closeButton = false) {
         val r = row ?: return@Modal
         val it0 = item ?: return@Modal
         val title = rowTitle(r)
