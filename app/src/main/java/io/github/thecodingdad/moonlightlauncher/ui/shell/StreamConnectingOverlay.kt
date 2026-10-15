@@ -8,13 +8,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import com.limelight.Game
 import com.limelight.utils.SpinnerDialog
 import io.github.thecodingdad.moonlightlauncher.AppContainer
-import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
+import io.github.thecodingdad.moonlightlauncher.resources.*
 
 /**
  * Replaces Artemis' small "connecting" progress dialog in the stream activity with the
@@ -47,7 +47,7 @@ object StreamConnectingOverlay {
                     LauncherTheme(settings) {
                         StreamProgressContent(
                             entry = entry,
-                            step = stringResource(R.string.step_connecting_stream),
+                            step = stringResource(Res.string.step_connecting_stream),
                             detail = detail.value.takeIf { it.isNotBlank() },
                             timerKey = Unit,
                             showTimer = true,

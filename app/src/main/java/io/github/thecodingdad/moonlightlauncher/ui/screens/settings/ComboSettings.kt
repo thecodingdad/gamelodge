@@ -22,10 +22,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
-import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings
 import io.github.thecodingdad.moonlightlauncher.input.ButtonCombos
 import io.github.thecodingdad.moonlightlauncher.input.ComboAccessibilityService
@@ -35,6 +34,7 @@ import io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton
 import io.github.thecodingdad.moonlightlauncher.ui.components.Modal
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 import kotlinx.coroutines.delay
+import io.github.thecodingdad.moonlightlauncher.resources.*
 
 /** Rows for the Home / quick menu button combinations plus the optional system-wide service. */
 @Composable
@@ -44,25 +44,25 @@ fun ButtonComboRows(settings: LauncherSettings, update: ((LauncherSettings) -> L
     var tick by remember { mutableIntStateOf(0) }
     LifecycleResumeEffect(Unit) { tick++; onPauseOrDispose { } }
     val serviceOn = remember(tick) { ComboAccessibilityService.isEnabled(context) }
-    val off = stringResource(R.string.off)
+    val off = stringResource(Res.string.off)
 
-    SectionHeader(stringResource(R.string.combo_section))
+    SectionHeader(stringResource(Res.string.combo_section))
     NavRow(
-        stringResource(R.string.combo_home), { editing = ComboAction.HOME },
-        subtitle = stringResource(R.string.combo_home_sub),
+        stringResource(Res.string.combo_home), { editing = ComboAction.HOME },
+        subtitle = stringResource(Res.string.combo_home_sub),
         trailing = settings.comboHome.takeIf { it.isNotEmpty() }?.let(ButtonCombos::describe) ?: off,
     )
     NavRow(
-        stringResource(R.string.combo_quick_menu), { editing = ComboAction.QUICK_MENU },
-        subtitle = stringResource(R.string.combo_quick_menu_sub),
+        stringResource(Res.string.combo_quick_menu), { editing = ComboAction.QUICK_MENU },
+        subtitle = stringResource(Res.string.combo_quick_menu_sub),
         trailing = settings.comboQuickMenu.takeIf { it.isNotEmpty() }?.let(ButtonCombos::describe) ?: off,
     )
     NavRow(
-        stringResource(R.string.combo_service), {
+        stringResource(Res.string.combo_service), {
             runCatching { context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
         },
-        subtitle = stringResource(R.string.combo_service_sub),
-        trailing = stringResource(if (serviceOn) R.string.combo_service_on else R.string.off),
+        subtitle = stringResource(Res.string.combo_service_sub),
+        trailing = stringResource(if (serviceOn) Res.string.combo_service_on else Res.string.off),
     )
 
     val action = editing
@@ -106,7 +106,7 @@ fun ComboDialog(
     global: Set<Int> = emptySet(),
 ) {
     var recording by remember { mutableStateOf(false) }
-    var error by remember { mutableStateOf<Int?>(null) }
+    var error by remember { mutableStateOf<org.jetbrains.compose.resources.StringResource?>(null) }
     val preview by ButtonCombos.recordingPreview.collectAsState()
     // While recording every controller button is captured, so B can't cancel: time out instead.
     LaunchedEffect(recording) {
@@ -118,15 +118,15 @@ fun ComboDialog(
     }
     DisposableEffect(action) { onDispose { ButtonCombos.cancelRecording(); recording = false; error = null } }
     val title = when (action) {
-        ComboAction.QUICK_MENU -> stringResource(R.string.combo_quick_menu)
-        else -> stringResource(R.string.combo_home)
+        ComboAction.QUICK_MENU -> stringResource(Res.string.combo_quick_menu)
+        else -> stringResource(Res.string.combo_home)
     }
     val perController = descriptor != null
     Modal(visible = action != null, onDismiss = { if (!recording) onDismiss() }, title = title, maxWidth = 640.dp, closeButton = false) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(
                 when {
-                    recording -> if (preview.isEmpty()) stringResource(R.string.combo_recording_hint) else ButtonCombos.describe(preview)
+                    recording -> if (preview.isEmpty()) stringResource(Res.string.combo_recording_hint) else ButtonCombos.describe(preview)
                     current == null -> comboLabel(global, global = true)
                     else -> comboLabel(current)
                 },
@@ -136,9 +136,9 @@ fun ComboDialog(
             Text(
                 stringResource(
                     when {
-                        recording && perController -> R.string.combo_recording_help_controller
-                        recording -> R.string.combo_recording_help
-                        else -> R.string.combo_help
+                        recording && perController -> Res.string.combo_recording_help_controller
+                        recording -> Res.string.combo_recording_help
+                        else -> Res.string.combo_help
                     },
                 ),
                 style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted,
@@ -146,29 +146,29 @@ fun ComboDialog(
             error?.let { Text(stringResource(it), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error) }
             if (!recording) {
                 ButtonRow(spacing = 12.dp, modifier = Modifier.padding(top = 8.dp)) {
-                    LauncherButton(stringResource(R.string.combo_record), onClick = {
+                    LauncherButton(stringResource(Res.string.combo_record), onClick = {
                         error = null
                         recording = true
                         ButtonCombos.startRecording(descriptor) { keys ->
                             recording = false
                             error = when {
-                                ButtonCombos.isBlocked(keys) -> R.string.combo_error_blocked
-                                keys == other -> R.string.combo_error_duplicate
+                                ButtonCombos.isBlocked(keys) -> Res.string.combo_error_blocked
+                                keys == other -> Res.string.combo_error_duplicate
                                 else -> null
                             }
                             if (error == null) onSave(keys)
                         }
                     }, primary = true, icon = Icons.Filled.FiberManualRecord)
                     if (perController && current != null) {
-                        LauncherButton(stringResource(R.string.combo_use_global), onClick = { onSave(null) }, icon = Icons.Filled.Public)
+                        LauncherButton(stringResource(Res.string.combo_use_global), onClick = { onSave(null) }, icon = Icons.Filled.Public)
                     }
                     if (current == null || current.isNotEmpty()) {
                         LauncherButton(
-                            stringResource(if (perController) R.string.combo_off else R.string.combo_clear),
+                            stringResource(if (perController) Res.string.combo_off else Res.string.combo_clear),
                             onClick = { onSave(emptySet()) }, icon = Icons.Filled.Delete,
                         )
                     }
-                    LauncherButton(stringResource(R.string.action_done), onClick = onDismiss)
+                    LauncherButton(stringResource(Res.string.action_done), onClick = onDismiss)
                 }
             }
         }
@@ -178,6 +178,6 @@ fun ComboDialog(
 /** "LB + RB", "Off", or for a controller following the global one "Global (LB + RB)". */
 @Composable
 fun comboLabel(keys: Set<Int>?, global: Boolean = false): String {
-    val text = if (keys.isNullOrEmpty()) stringResource(R.string.off) else ButtonCombos.describe(keys)
-    return if (global) stringResource(R.string.combo_global_value, text) else text
+    val text = if (keys.isNullOrEmpty()) stringResource(Res.string.off) else ButtonCombos.describe(keys)
+    return if (global) stringResource(Res.string.combo_global_value, text) else text
 }

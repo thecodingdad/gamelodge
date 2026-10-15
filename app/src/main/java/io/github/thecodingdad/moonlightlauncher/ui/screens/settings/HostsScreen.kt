@@ -35,12 +35,11 @@ import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.container
 import io.github.thecodingdad.moonlightlauncher.data.remote.AddHostResult
 import io.github.thecodingdad.moonlightlauncher.data.remote.HostState
@@ -56,6 +55,7 @@ import io.github.thecodingdad.moonlightlauncher.ui.components.restoreFocusIf
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import io.github.thecodingdad.moonlightlauncher.resources.*
 
 private sealed interface PairUi {
     data class Waiting(val host: HostState, val pin: String) : PairUi
@@ -91,18 +91,18 @@ fun HostsSettings(hosts: List<HostState>, openHostConfig: (HostState) -> Unit) {
     val notes = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateMapOf<String, String>() }
     val hostConfigList by androidx.compose.runtime.remember { c.database.hostConfigDao().observeAll() }.collectAsState(emptyList())
     val hostConfigs = hostConfigList.associateBy { it.hostUuid }
-    val wakeSentMsg = stringResource(R.string.host_wake_sending)
-    val wakeFailedMsg = stringResource(R.string.host_wake_failed)
-    val wakeOnlineMsg = stringResource(R.string.host_wake_online)
-    val wakeTimeoutMsg = stringResource(R.string.host_wake_timeout)
-    val addTitle = stringResource(R.string.host_add_title)
-    val addedMsg = stringResource(R.string.host_added)
-    val invalidMsg = stringResource(R.string.host_invalid_address)
-    val unreachableMsg = stringResource(R.string.host_unreachable)
+    val wakeSentMsg = stringResource(Res.string.host_wake_sending)
+    val wakeFailedMsg = stringResource(Res.string.host_wake_failed)
+    val wakeOnlineMsg = stringResource(Res.string.host_wake_online)
+    val wakeTimeoutMsg = stringResource(Res.string.host_wake_timeout)
+    val addTitle = stringResource(Res.string.host_add_title)
+    val addedMsg = stringResource(Res.string.host_added)
+    val invalidMsg = stringResource(Res.string.host_invalid_address)
+    val unreachableMsg = stringResource(Res.string.host_unreachable)
 
-    SettingsPage(stringResource(R.string.settings_hosts)) {
+    SettingsPage(stringResource(Res.string.settings_hosts)) {
         if (hosts.isEmpty()) {
-            Text(stringResource(R.string.hosts_empty), style = MaterialTheme.typography.bodyLarge, color = LauncherTheme.colors.onSurfaceMuted)
+            Text(stringResource(Res.string.hosts_empty), style = MaterialTheme.typography.bodyLarge, color = LauncherTheme.colors.onSurfaceMuted)
         }
         hosts.sortedBy { it.name }.forEachIndexed { index, host ->
             HostCard(
@@ -140,7 +140,7 @@ fun HostsSettings(hosts: List<HostState>, openHostConfig: (HostState) -> Unit) {
         }
         io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 12.dp) {
             LauncherButton(
-                stringResource(R.string.host_add), icon = Icons.Filled.Add, primary = hosts.isEmpty(),
+                stringResource(Res.string.host_add), icon = Icons.Filled.Add, primary = hosts.isEmpty(),
                 onClick = {
                     keyboard.open(addTitle, "", TextKind.URL) { address ->
                         adding = true
@@ -155,18 +155,18 @@ fun HostsSettings(hosts: List<HostState>, openHostConfig: (HostState) -> Unit) {
                     }
                 },
             )
-            LauncherButton(stringResource(R.string.hosts_refresh), icon = Icons.Filled.Refresh, onClick = { context.container.hosts.refreshAppLists() })
+            LauncherButton(stringResource(Res.string.hosts_refresh), icon = Icons.Filled.Refresh, onClick = { context.container.hosts.refreshAppLists() })
         }
         if (adding) CircularProgressIndicator(color = LauncherTheme.colors.accent)
         message?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted) }
-        Text(stringResource(R.string.hosts_discovery_hint), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+        Text(stringResource(Res.string.hosts_discovery_hint), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
     }
 
     val ui = pairUi
-    Modal(visible = ui != null, onDismiss = { pairUi = null }, title = stringResource(R.string.pair_title), closeButton = false) {
+    Modal(visible = ui != null, onDismiss = { pairUi = null }, title = stringResource(Res.string.pair_title), closeButton = false) {
         when (ui) {
             is PairUi.Waiting -> {
-                Text(stringResource(R.string.pair_instructions, ui.host.name), style = MaterialTheme.typography.bodyLarge, color = LauncherTheme.colors.onSurface)
+                Text(stringResource(Res.string.pair_instructions, ui.host.name), style = MaterialTheme.typography.bodyLarge, color = LauncherTheme.colors.onSurface)
                 Spacer(Modifier.height(20.dp))
                 Text(
                     ui.pin,
@@ -178,27 +178,27 @@ fun HostsSettings(hosts: List<HostState>, openHostConfig: (HostState) -> Unit) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     CircularProgressIndicator(color = LauncherTheme.colors.accent, modifier = Modifier.width(24.dp).height(24.dp))
                     Spacer(Modifier.width(12.dp))
-                    Text(stringResource(R.string.pair_waiting), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+                    Text(stringResource(Res.string.pair_waiting), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
                 }
                 Spacer(Modifier.height(16.dp))
-                LauncherButton(stringResource(R.string.action_cancel), onClick = { pairUi = null })
+                LauncherButton(stringResource(Res.string.action_cancel), onClick = { pairUi = null })
             }
             is PairUi.Done -> {
                 Text(
                     stringResource(
                         when (ui.result) {
-                            PairResult.PAIRED -> R.string.pair_success
-                            PairResult.WRONG_PIN -> R.string.pair_wrong_pin
-                            PairResult.IN_GAME -> R.string.pair_in_game
-                            PairResult.ALREADY_IN_PROGRESS -> R.string.pair_in_progress
-                            PairResult.OFFLINE -> R.string.error_host_offline
-                            PairResult.FAILED -> R.string.pair_failed
+                            PairResult.PAIRED -> Res.string.pair_success
+                            PairResult.WRONG_PIN -> Res.string.pair_wrong_pin
+                            PairResult.IN_GAME -> Res.string.pair_in_game
+                            PairResult.ALREADY_IN_PROGRESS -> Res.string.pair_in_progress
+                            PairResult.OFFLINE -> Res.string.error_host_offline
+                            PairResult.FAILED -> Res.string.pair_failed
                         },
                     ),
                     style = MaterialTheme.typography.bodyLarge, color = LauncherTheme.colors.onSurface,
                 )
                 Spacer(Modifier.height(20.dp))
-                LauncherButton(stringResource(R.string.action_close), primary = true, onClick = { pairUi = null })
+                LauncherButton(stringResource(Res.string.action_close), primary = true, onClick = { pairUi = null })
             }
             null -> Unit
         }
@@ -240,14 +240,14 @@ private fun HostCard(
                     listOfNotNull(
                         stringResource(
                             when {
-                                host.isStreaming -> R.string.host_status_streaming
-                                host.status == HostStatus.ONLINE -> R.string.host_status_online
-                                host.status == HostStatus.OFFLINE -> R.string.host_status_offline
-                                else -> R.string.host_status_unknown
+                                host.isStreaming -> Res.string.host_status_streaming
+                                host.status == HostStatus.ONLINE -> Res.string.host_status_online
+                                host.status == HostStatus.OFFLINE -> Res.string.host_status_offline
+                                else -> Res.string.host_status_unknown
                             },
                         ),
                         // Pairing is only known while the host answers.
-                        if (host.status == HostStatus.ONLINE) stringResource(if (host.paired) R.string.host_paired else R.string.host_not_paired) else null,
+                        if (host.status == HostStatus.ONLINE) stringResource(if (host.paired) Res.string.host_paired else Res.string.host_not_paired) else null,
                         host.address,
                     ).joinToString("  ·  "),
                     style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceMuted,
@@ -259,28 +259,28 @@ private fun HostCard(
         io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 10.dp) {
             if (online && !host.paired) {
                 LauncherButton(
-                    stringResource(R.string.host_pair), icon = Icons.Filled.Link, primary = true, onClick = onPair,
+                    stringResource(Res.string.host_pair), icon = Icons.Filled.Link, primary = true, onClick = onPair,
                     modifier = Modifier.restoreFocusIf(initialFocus),
                 )
             }
             LauncherButton(
-                stringResource(R.string.host_settings), icon = Icons.Filled.Settings, onClick = onConfig,
+                stringResource(Res.string.host_settings), icon = Icons.Filled.Settings, onClick = onConfig,
                 modifier = if (online && !host.paired) Modifier else Modifier.restoreFocusIf(initialFocus),
             )
             if (!online) {
                 LauncherButton(
-                    stringResource(if (waking) R.string.host_waking else R.string.host_wake), icon = Icons.Filled.Power,
+                    stringResource(if (waking) Res.string.host_waking else Res.string.host_wake), icon = Icons.Filled.Power,
                     onClick = onWake, enabled = !waking, primary = waking,
                 )
             }
             // Power actions (Home Assistant), only for a paired host that is on, when configured.
             if (online && host.paired && power != null) {
-                if (power.haSleepEntity != null) HoldToConfirmButton(stringResource(R.string.power_sleep), { onPower(io.github.thecodingdad.moonlightlauncher.stream.PowerAction.SLEEP) }, icon = Icons.Filled.Bedtime)
-                if (power.haRestartEntity != null) HoldToConfirmButton(stringResource(R.string.power_restart), { onPower(io.github.thecodingdad.moonlightlauncher.stream.PowerAction.RESTART) }, icon = Icons.Filled.RestartAlt)
-                if (power.haShutdownEntity != null) HoldToConfirmButton(stringResource(R.string.power_shutdown), { onPower(io.github.thecodingdad.moonlightlauncher.stream.PowerAction.SHUTDOWN) }, icon = Icons.Filled.PowerSettingsNew)
+                if (power.haSleepEntity != null) HoldToConfirmButton(stringResource(Res.string.power_sleep), { onPower(io.github.thecodingdad.moonlightlauncher.stream.PowerAction.SLEEP) }, icon = Icons.Filled.Bedtime)
+                if (power.haRestartEntity != null) HoldToConfirmButton(stringResource(Res.string.power_restart), { onPower(io.github.thecodingdad.moonlightlauncher.stream.PowerAction.RESTART) }, icon = Icons.Filled.RestartAlt)
+                if (power.haShutdownEntity != null) HoldToConfirmButton(stringResource(Res.string.power_shutdown), { onPower(io.github.thecodingdad.moonlightlauncher.stream.PowerAction.SHUTDOWN) }, icon = Icons.Filled.PowerSettingsNew)
             }
-            if (online && host.paired) LauncherButton(stringResource(R.string.host_unpair), icon = Icons.Filled.LinkOff, onClick = onUnpair)
-            if (host.paired) HoldToConfirmButton(stringResource(R.string.host_remove), onConfirmed = onRemove, icon = Icons.Filled.Delete)
+            if (online && host.paired) LauncherButton(stringResource(Res.string.host_unpair), icon = Icons.Filled.LinkOff, onClick = onUnpair)
+            if (host.paired) HoldToConfirmButton(stringResource(Res.string.host_remove), onConfirmed = onRemove, icon = Icons.Filled.Delete)
         }
         note?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = if (waking) colors.accent else colors.onSurfaceMuted) }
     }

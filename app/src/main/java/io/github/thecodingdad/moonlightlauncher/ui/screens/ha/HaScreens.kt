@@ -36,10 +36,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.thecodingdad.moonlightlauncher.MainActivity
-import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.container
 import io.github.thecodingdad.moonlightlauncher.data.db.HaTileEntity
 import io.github.thecodingdad.moonlightlauncher.data.library.TitleNormalizer
@@ -64,15 +63,16 @@ import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.SettingsPage
 import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.SwitchRow
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 import kotlinx.coroutines.launch
+import io.github.thecodingdad.moonlightlauncher.resources.*
 
 @Composable
 fun connectionLabel(state: HaConnection) = stringResource(
     when (state) {
-        HaConnection.NOT_CONFIGURED -> R.string.ha_not_configured
-        HaConnection.DISCONNECTED -> R.string.ha_disconnected
-        HaConnection.CONNECTING -> R.string.ha_connecting
-        HaConnection.CONNECTED -> R.string.ha_connected
-        HaConnection.AUTH_FAILED -> R.string.ha_auth_failed
+        HaConnection.NOT_CONFIGURED -> Res.string.ha_not_configured
+        HaConnection.DISCONNECTED -> Res.string.ha_disconnected
+        HaConnection.CONNECTING -> Res.string.ha_connecting
+        HaConnection.CONNECTED -> Res.string.ha_connected
+        HaConnection.AUTH_FAILED -> Res.string.ha_auth_failed
     },
 )
 
@@ -89,14 +89,14 @@ fun HaPanel(visible: Boolean, onDismiss: () -> Unit, openSettings: () -> Unit) {
     SidePanel(visible = visible, onDismiss = onDismiss, width = 470.dp) {
         androidx.compose.foundation.layout.Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
             io.github.thecodingdad.moonlightlauncher.ui.components.CloseArrow(onDismiss)
-            Text(stringResource(R.string.settings_home_assistant), style = MaterialTheme.typography.headlineSmall, color = LauncherTheme.colors.onSurface)
+            Text(stringResource(Res.string.settings_home_assistant), style = MaterialTheme.typography.headlineSmall, color = LauncherTheme.colors.onSurface)
         }
         Text(connectionLabel(connection), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
         Spacer(Modifier.height(16.dp))
         if (connection == HaConnection.NOT_CONFIGURED || tiles.isEmpty()) {
-            Text(stringResource(R.string.ha_panel_empty), style = MaterialTheme.typography.bodyLarge, color = LauncherTheme.colors.onSurface)
+            Text(stringResource(Res.string.ha_panel_empty), style = MaterialTheme.typography.bodyLarge, color = LauncherTheme.colors.onSurface)
             Spacer(Modifier.height(16.dp))
-            LauncherButton(stringResource(R.string.ha_setup), onClick = { onDismiss(); openSettings() }, primary = true)
+            LauncherButton(stringResource(Res.string.ha_setup), onClick = { onDismiss(); openSettings() }, primary = true)
         } else {
             FlowRow(
                 Modifier.controllerScroll().weight(1f),
@@ -110,8 +110,8 @@ fun HaPanel(visible: Boolean, onDismiss: () -> Unit, openSettings: () -> Unit) {
         }
         ButtonHintBar(
             listOf(
-                ButtonHint(PadButton.A, stringResource(R.string.ha_hint_toggle)),
-                ButtonHint(PadButton.B, stringResource(R.string.action_close), onClick = onDismiss),
+                ButtonHint(PadButton.A, stringResource(Res.string.ha_hint_toggle)),
+                ButtonHint(PadButton.B, stringResource(Res.string.action_close), onClick = onDismiss),
             ),
             inPopup = true,
         )
@@ -132,16 +132,16 @@ fun HaSettings(settings: LauncherSettings, update: ((LauncherSettings) -> Launch
     var picking by remember { mutableStateOf(false) }
     androidx.compose.runtime.LaunchedEffect(Unit) { ha.client.start() }
 
-    SettingsPage(stringResource(R.string.settings_home_assistant)) {
-        InfoRow(stringResource(R.string.ha_status), connectionLabel(connection))
+    SettingsPage(stringResource(Res.string.settings_home_assistant)) {
+        InfoRow(stringResource(Res.string.ha_status), connectionLabel(connection))
         LauncherTextField(
-            stringResource(R.string.ha_url), url, { url = it; update { s -> s.copy(haUrl = it) } },
+            stringResource(Res.string.ha_url), url, { url = it; update { s -> s.copy(haUrl = it) } },
             kind = TextKind.URL, placeholder = "http://homeassistant.local:8123",
             modifier = Modifier.restoreFocusIf(true),
         )
         io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 12.dp) {
             LauncherButton(
-                stringResource(if (ha.auth.isLoggedIn) R.string.ha_relogin else R.string.ha_login),
+                stringResource(if (ha.auth.isLoggedIn) Res.string.ha_relogin else Res.string.ha_login),
                 icon = Icons.Filled.Login, primary = !ha.auth.isLoggedIn, enabled = url.isNotBlank() && !busy,
                 onClick = {
                     busy = true
@@ -157,21 +157,21 @@ fun HaSettings(settings: LauncherSettings, update: ((LauncherSettings) -> Launch
                 },
             )
             if (ha.auth.isLoggedIn) {
-                HoldToConfirmButton(stringResource(R.string.ha_logout), onConfirmed = { ha.client.stop(); ha.auth.logout() }, icon = Icons.AutoMirrored.Filled.Logout)
+                HoldToConfirmButton(stringResource(Res.string.ha_logout), onConfirmed = { ha.client.stop(); ha.auth.logout() }, icon = Icons.AutoMirrored.Filled.Logout)
             }
         }
         if (busy) {
-            Row { CircularProgressIndicator(color = LauncherTheme.colors.accent); Text("  " + stringResource(R.string.ha_login_waiting), color = LauncherTheme.colors.onSurfaceMuted) }
+            Row { CircularProgressIndicator(color = LauncherTheme.colors.accent); Text("  " + stringResource(Res.string.ha_login_waiting), color = LauncherTheme.colors.onSurfaceMuted) }
         }
         error?.let { Text(it, color = LauncherTheme.colors.danger) }
 
-        SectionHeader(stringResource(R.string.ha_tiles))
-        SwitchRow(stringResource(R.string.ha_show_home_row), settings.showHaRowOnHome, { v -> update { it.copy(showHaRowOnHome = v) } }, icon = Icons.Filled.Home)
+        SectionHeader(stringResource(Res.string.ha_tiles))
+        SwitchRow(stringResource(Res.string.ha_show_home_row), settings.showHaRowOnHome, { v -> update { it.copy(showHaRowOnHome = v) } }, icon = Icons.Filled.Home)
         tiles.forEachIndexed { index, tile ->
             TileRow(tile, entities[tile.entityId], ha, isFirst = index == 0, isLast = index == tiles.lastIndex)
         }
         LauncherButton(
-            stringResource(R.string.ha_add_tile), icon = Icons.Filled.Add,
+            stringResource(Res.string.ha_add_tile), icon = Icons.Filled.Add,
             enabled = ha.auth.isLoggedIn,
             onClick = {
                 ha.client.start()
@@ -179,9 +179,9 @@ fun HaSettings(settings: LauncherSettings, update: ((LauncherSettings) -> Launch
             },
         )
         if (!ha.auth.isLoggedIn) {
-            Text(stringResource(R.string.ha_login_first), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+            Text(stringResource(Res.string.ha_login_first), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
         }
-        Text(stringResource(R.string.ha_events_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+        Text(stringResource(Res.string.ha_events_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
     }
 
     EntityPicker(
@@ -199,7 +199,7 @@ private fun TileRow(tile: HaTileEntity, entity: HaEntity?, ha: HaRepository, isF
         Text(entity?.name ?: tile.entityId, style = MaterialTheme.typography.titleMedium, color = LauncherTheme.colors.onSurface)
         io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 10.dp) {
             LauncherButton(
-                stringResource(if (tile.showOnHome) R.string.ha_on_home else R.string.ha_not_on_home),
+                stringResource(if (tile.showOnHome) Res.string.ha_on_home else Res.string.ha_not_on_home),
                 icon = Icons.Filled.Home,
                 onClick = { scope.launch { ha.setShowOnHome(tile, !tile.showOnHome) } },
             )
@@ -214,13 +214,13 @@ private fun TileRow(tile: HaTileEntity, entity: HaEntity?, ha: HaRepository, isF
 @Composable
 private fun EntityPicker(visible: Boolean, entities: List<HaEntity>, onPick: (HaEntity) -> Unit, onDismiss: () -> Unit) {
     var query by remember { mutableStateOf("") }
-    Modal(visible = visible, onDismiss = onDismiss, title = stringResource(R.string.ha_add_tile), maxWidth = 760.dp) {
-        LauncherTextField(stringResource(R.string.hint_search), query, { query = it })
+    Modal(visible = visible, onDismiss = onDismiss, title = stringResource(Res.string.ha_add_tile), maxWidth = 760.dp) {
+        LauncherTextField(stringResource(Res.string.hint_search), query, { query = it })
         Spacer(Modifier.height(12.dp))
         if (entities.isEmpty()) {
             Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                 CircularProgressIndicator(color = LauncherTheme.colors.accent)
-                Text("  " + stringResource(R.string.ha_connecting), color = LauncherTheme.colors.onSurfaceMuted)
+                Text("  " + stringResource(Res.string.ha_connecting), color = LauncherTheme.colors.onSurfaceMuted)
             }
             return@Modal
         }
@@ -256,7 +256,7 @@ fun HaHomeRow() {
     if (shown.isEmpty()) return
     Column {
         Text(
-            stringResource(R.string.settings_home_assistant),
+            stringResource(Res.string.settings_home_assistant),
             style = MaterialTheme.typography.titleLarge,
             color = LauncherTheme.colors.onSurface,
             modifier = Modifier.padding(start = 40.dp, top = 6.dp),

@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry
+import io.github.thecodingdad.moonlightlauncher.resources.*
 
 /** Pending "choose target / profile" request. */
 data class LaunchPick(val entry: LibraryEntry, val chooseProfile: Boolean)
@@ -71,12 +72,12 @@ class EntryActions(
         DetailBrowse(siblings.filter { it.item.kind != io.github.thecodingdad.moonlightlauncher.data.db.ItemKind.APP }.map { it.item.id }, onShown)
 
     /** Hint label for A on [entry], matching what [open] does. */
-    fun openLabel(entry: LibraryEntry?): Int = when {
-        entry == null -> io.github.thecodingdad.moonlightlauncher.R.string.hint_open
-        entry.item.kind == io.github.thecodingdad.moonlightlauncher.data.db.ItemKind.APP -> io.github.thecodingdad.moonlightlauncher.R.string.hint_start
-        !directStart -> io.github.thecodingdad.moonlightlauncher.R.string.action_details
-        entry.notInstalled -> io.github.thecodingdad.moonlightlauncher.R.string.action_install
-        else -> io.github.thecodingdad.moonlightlauncher.R.string.action_play
+    fun openLabel(entry: LibraryEntry?): org.jetbrains.compose.resources.StringResource = when {
+        entry == null -> Res.string.hint_open
+        entry.item.kind == io.github.thecodingdad.moonlightlauncher.data.db.ItemKind.APP -> Res.string.hint_start
+        !directStart -> Res.string.action_details
+        entry.notInstalled -> Res.string.action_install
+        else -> Res.string.action_play
     }
 
     /** "Details" in the context menu. */

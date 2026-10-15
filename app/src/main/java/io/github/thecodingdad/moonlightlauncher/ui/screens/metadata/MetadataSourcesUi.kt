@@ -27,13 +27,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.container
 import io.github.thecodingdad.moonlightlauncher.data.companion.Fingerprint
 import io.github.thecodingdad.moonlightlauncher.data.companion.PairedServer
@@ -54,6 +53,7 @@ import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.SwitchRow
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import io.github.thecodingdad.moonlightlauncher.resources.*
 
 /** What the pairing dialog is for: a metadata server or the companion of a host. */
 internal data class PairTarget(val kind: String, val address: String, val hostName: String? = null)
@@ -82,21 +82,21 @@ internal fun SourcesSection(stored: List<String>) {
     val entries = remember(stored, servers, revision) { resolve(container, stored) }
     var dialog by remember { mutableStateOf<SourceDialog?>(null) }
 
-    SectionHeader(stringResource(R.string.metadata_sources))
-    Text(stringResource(R.string.metadata_sources_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+    SectionHeader(stringResource(Res.string.metadata_sources))
+    Text(stringResource(Res.string.metadata_sources_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
     if (entries.isEmpty()) {
-        Text(stringResource(R.string.metadata_sources_empty), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurface)
+        Text(stringResource(Res.string.metadata_sources_empty), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurface)
     }
     entries.forEach { entry ->
         val server = entry.server
         NavRow(
             sourceTitle(entry, hosts),
             { dialog = if (server != null) SourceDialog.Server(entry.id) else SourceDialog.Keys(entry.id) },
-            subtitle = if (!entry.enabled) stringResource(R.string.metadata_source_off) else if (server != null) serverStatus(server, online[server.id]) else null,
+            subtitle = if (!entry.enabled) stringResource(Res.string.metadata_source_off) else if (server != null) serverStatus(server, online[server.id]) else null,
             icon = sourceIcon(entry.id, server),
         )
     }
-    LauncherButton(stringResource(R.string.metadata_source_add), icon = Icons.Filled.Add, onClick = { dialog = SourceDialog.Add })
+    LauncherButton(stringResource(Res.string.metadata_source_add), icon = Icons.Filled.Add, onClick = { dialog = SourceDialog.Add })
 
     val changed: () -> Unit = { revision++ }
     when (val d = dialog) {
@@ -141,14 +141,14 @@ internal fun HostCompanionRow(host: HostState) {
     val entry = remember(settings, servers) { companion?.let { c -> resolve(container, settings?.metadataSources.orEmpty()).firstOrNull { it.server?.id == c.id } } }
     var open by remember { mutableStateOf(false) }
     NavRow(
-        companion?.name ?: stringResource(R.string.servers_not_paired), { open = true },
+        companion?.name ?: stringResource(Res.string.servers_not_paired), { open = true },
         subtitle = when {
-            companion == null -> stringResource(R.string.host_companion_hint)
-            entry?.enabled == false -> stringResource(R.string.metadata_source_off)
+            companion == null -> stringResource(Res.string.host_companion_hint)
+            entry?.enabled == false -> stringResource(Res.string.metadata_source_off)
             else -> serverStatus(companion, online[companion.id])
         },
         icon = Icons.Filled.Computer,
-        trailing = if (companion == null) stringResource(R.string.servers_pair) else null,
+        trailing = if (companion == null) stringResource(Res.string.servers_pair) else null,
     )
     if (!open) return
     if (entry != null) ServerSourceDialog(entry, online[entry.server!!.id], onDismiss = { open = false })
@@ -185,7 +185,7 @@ private fun sourceTitle(entry: MetadataSources.Entry, hosts: Map<String, HostSta
         entry.id == MetadataSources.SGDB -> "SteamGridDB"
         entry.id == MetadataSources.IGDB -> "IGDB (Twitch)"
         server != null && server.isCompanion -> stringResource(
-            R.string.metadata_source_companion_of,
+            Res.string.metadata_source_companion_of,
             hosts.values.firstOrNull { it.uuid.equals(server.hostId, ignoreCase = true) }?.name ?: server.name,
         )
         else -> server?.name.orEmpty()
@@ -202,11 +202,11 @@ private fun sourceIcon(id: String, server: PairedServer?): ImageVector = when {
 @Composable
 private fun serverStatus(server: PairedServer, online: Boolean?): String {
     val state = when (online) {
-        true -> stringResource(R.string.servers_online)
-        false -> stringResource(R.string.servers_offline)
-        null -> stringResource(R.string.servers_checking)
+        true -> stringResource(Res.string.servers_online)
+        false -> stringResource(Res.string.servers_offline)
+        null -> stringResource(Res.string.servers_checking)
     }
-    val kind = if (server.isCompanion) null else stringResource(R.string.metadata_source_server)
+    val kind = if (server.isCompanion) null else stringResource(Res.string.metadata_source_server)
     return listOfNotNull(kind, state, server.baseUrl.removePrefix("https://"), offers(server)).joinToString(" · ")
 }
 
@@ -214,21 +214,21 @@ private fun serverStatus(server: PairedServer, online: Boolean?): String {
 @Composable
 private fun offers(server: PairedServer): String? =
     listOfNotNull("SteamGridDB".takeIf { server.steamGridDb }, "IGDB".takeIf { server.igdb }).takeIf { it.isNotEmpty() }?.joinToString(" · ")
-        ?: if (server.isCompanion) stringResource(R.string.metadata_source_host_games_only) else null
+        ?: if (server.isCompanion) stringResource(Res.string.metadata_source_host_games_only) else null
 
 /** The kinds of source to add; own keys only once. */
 @Composable
 private fun AddSourceDialog(entries: List<MetadataSources.Entry>, onPick: (String) -> Unit, onDismiss: () -> Unit) {
-    Modal(visible = true, onDismiss = onDismiss, title = stringResource(R.string.metadata_source_add), maxWidth = 600.dp) {
+    Modal(visible = true, onDismiss = onDismiss, title = stringResource(Res.string.metadata_source_add), maxWidth = 600.dp) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             if (entries.none { it.id == MetadataSources.SGDB }) {
-                NavRow("SteamGridDB", { onPick(MetadataSources.SGDB) }, stringResource(R.string.metadata_source_sgdb_sub), Icons.Filled.Image, initialFocus = true)
+                NavRow("SteamGridDB", { onPick(MetadataSources.SGDB) }, stringResource(Res.string.metadata_source_sgdb_sub), Icons.Filled.Image, initialFocus = true)
             }
             if (entries.none { it.id == MetadataSources.IGDB }) {
-                NavRow("IGDB (Twitch)", { onPick(MetadataSources.IGDB) }, stringResource(R.string.metadata_source_igdb_sub), Icons.Filled.Info)
+                NavRow("IGDB (Twitch)", { onPick(MetadataSources.IGDB) }, stringResource(Res.string.metadata_source_igdb_sub), Icons.Filled.Info)
             }
-            NavRow(stringResource(R.string.metadata_source_companion), { onPick(PairedServer.KIND_COMPANION) }, stringResource(R.string.metadata_source_companion_sub), Icons.Filled.Computer)
-            NavRow(stringResource(R.string.metadata_source_server), { onPick(PairedServer.KIND_METADATA) }, stringResource(R.string.metadata_source_server_sub), Icons.Filled.Cloud)
+            NavRow(stringResource(Res.string.metadata_source_companion), { onPick(PairedServer.KIND_COMPANION) }, stringResource(Res.string.metadata_source_companion_sub), Icons.Filled.Computer)
+            NavRow(stringResource(Res.string.metadata_source_server), { onPick(PairedServer.KIND_METADATA) }, stringResource(Res.string.metadata_source_server_sub), Icons.Filled.Cloud)
         }
     }
 }
@@ -236,12 +236,12 @@ private fun AddSourceDialog(entries: List<MetadataSources.Entry>, onPick: (Strin
 /** Companion: for which host (prefills its address), or an address typed in. */
 @Composable
 private fun PickHostDialog(hosts: Collection<HostState>, onPick: (HostState?) -> Unit, onDismiss: () -> Unit) {
-    Modal(visible = true, onDismiss = onDismiss, title = stringResource(R.string.metadata_source_pick_host), maxWidth = 600.dp) {
+    Modal(visible = true, onDismiss = onDismiss, title = stringResource(Res.string.metadata_source_pick_host), maxWidth = 600.dp) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             hosts.sortedBy { it.name.lowercase() }.forEachIndexed { i, host ->
                 NavRow(host.name, { onPick(host) }, host.address, Icons.Filled.Computer, initialFocus = i == 0)
             }
-            NavRow(stringResource(R.string.servers_pair_companion_manual), { onPick(null) }, icon = Icons.Filled.Keyboard, initialFocus = hosts.isEmpty())
+            NavRow(stringResource(Res.string.servers_pair_companion_manual), { onPick(null) }, icon = Icons.Filled.Keyboard, initialFocus = hosts.isEmpty())
         }
     }
 }
@@ -262,14 +262,14 @@ private fun KeySourceDialog(id: String, entry: MetadataSources.Entry?, onChanged
 
     Modal(visible = true, onDismiss = onDismiss, title = name, maxWidth = 640.dp) {
         Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(stringResource(if (sgdb) R.string.metadata_sgdb_help else R.string.metadata_igdb_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+            Text(stringResource(if (sgdb) Res.string.metadata_sgdb_help else Res.string.metadata_igdb_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
             if (sgdb) {
-                LauncherTextField(stringResource(R.string.metadata_api_key), first, { first = it }, kind = TextKind.PASSWORD)
+                LauncherTextField(stringResource(Res.string.metadata_api_key), first, { first = it }, kind = TextKind.PASSWORD)
             } else {
-                LauncherTextField(stringResource(R.string.metadata_client_id), first, { first = it })
-                LauncherTextField(stringResource(R.string.metadata_client_secret), second, { second = it }, kind = TextKind.PASSWORD)
+                LauncherTextField(stringResource(Res.string.metadata_client_id), first, { first = it })
+                LauncherTextField(stringResource(Res.string.metadata_client_secret), second, { second = it }, kind = TextKind.PASSWORD)
             }
-            LauncherButton(stringResource(R.string.action_save), modifier = Modifier.fillMaxWidth(), primary = true, onClick = {
+            LauncherButton(stringResource(Res.string.action_save), modifier = Modifier.fillMaxWidth(), primary = true, onClick = {
                 if (!complete) return@LauncherButton
                 if (sgdb) {
                     secrets.put(SecretStore.Keys.SGDB_API_KEY, first.trim())
@@ -284,8 +284,8 @@ private fun KeySourceDialog(id: String, entry: MetadataSources.Entry?, onChanged
             })
             if (saved > 0) ConnectionStatus(name, saved) { if (sgdb) metadata.testSgdb() else metadata.testIgdb() }
             if (entry != null) {
-                SwitchRow(stringResource(R.string.metadata_source_active), entry.enabled, { storeSource(container, id, it) })
-                HoldToConfirmButton(stringResource(R.string.servers_remove), {
+                SwitchRow(stringResource(Res.string.metadata_source_active), entry.enabled, { storeSource(container, id, it) })
+                HoldToConfirmButton(stringResource(Res.string.servers_remove), {
                     if (sgdb) {
                         secrets.put(SecretStore.Keys.SGDB_API_KEY, null)
                     } else {
@@ -305,7 +305,7 @@ private sealed interface PairState {
     data object Connecting : PairState
     data class ShowPin(val pin: String) : PairState
     data class Done(val server: PairedServer) : PairState
-    data class Failed(val message: Int) : PairState
+    data class Failed(val message: org.jetbrains.compose.resources.StringResource) : PairState
 }
 
 @Composable
@@ -322,62 +322,62 @@ internal fun PairDialog(target: PairTarget, onDismiss: () -> Unit) {
     }
     val companion = target.kind == PairedServer.KIND_COMPANION
     val title = when {
-        target.hostName != null -> stringResource(R.string.servers_pair_title_host, target.hostName)
-        companion -> stringResource(R.string.servers_pair_companion_manual)
-        else -> stringResource(R.string.servers_pair_metadata)
+        target.hostName != null -> stringResource(Res.string.servers_pair_title_host, target.hostName)
+        companion -> stringResource(Res.string.servers_pair_companion_manual)
+        else -> stringResource(Res.string.servers_pair_metadata)
     }
     Modal(visible = true, onDismiss = ::close, title = title, maxWidth = 560.dp) {
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
             when (val s = state) {
                 PairState.Address -> {
-                    Text(stringResource(R.string.servers_pair_step1), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
-                    LauncherTextField(stringResource(R.string.servers_address), address, { address = it }, placeholder = if (companion) "192.168.1.10:47910" else "192.168.1.20:47900")
+                    Text(stringResource(Res.string.servers_pair_step1), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+                    LauncherTextField(stringResource(Res.string.servers_address), address, { address = it }, placeholder = if (companion) "192.168.1.10:47910" else "192.168.1.20:47900")
                     val port = if (companion) PairedServer.COMPANION_PORT else PairedServer.METADATA_PORT
-                    LauncherButton(stringResource(R.string.servers_pair), modifier = Modifier.fillMaxWidth(), primary = true, onClick = {
+                    LauncherButton(stringResource(Res.string.servers_pair), modifier = Modifier.fillMaxWidth(), primary = true, onClick = {
                         val url = PairedServer.normalizeAddress(address, port)
                         if (url == null) {
-                            state = PairState.Failed(R.string.servers_error_address)
+                            state = PairState.Failed(Res.string.servers_error_address)
                             return@LauncherButton
                         }
                         state = PairState.Connecting
                         job = scope.launch {
                             state = try {
                                 val server = repo.pair(url) { pin -> state = PairState.ShowPin(pin) }
-                                if (server.kind != target.kind) PairState.Failed(R.string.servers_error_kind).also { repo.remove(server.id) }
+                                if (server.kind != target.kind) PairState.Failed(Res.string.servers_error_kind).also { repo.remove(server.id) }
                                 else {
                                     // The host's games get the companion's data right away.
                                     server.hostId?.let { hostId -> launch { container.library.resyncHost(hostId.uppercase()) } }
                                     PairState.Done(server)
                                 }
                             } catch (e: ServerException) {
-                                PairState.Failed(if (e.code == "pairing_closed") R.string.servers_error_closed else R.string.servers_error_failed)
+                                PairState.Failed(if (e.code == "pairing_closed") Res.string.servers_error_closed else Res.string.servers_error_failed)
                             } catch (e: PairingFailed) {
-                                PairState.Failed(if (e.message == "timeout") R.string.servers_error_timeout else R.string.servers_error_failed)
+                                PairState.Failed(if (e.message == "timeout") Res.string.servers_error_timeout else Res.string.servers_error_failed)
                             } catch (e: kotlinx.coroutines.CancellationException) {
                                 throw e
                             } catch (e: Exception) {
-                                PairState.Failed(R.string.servers_error_unreachable)
+                                PairState.Failed(Res.string.servers_error_unreachable)
                             }
                         }
                     })
                 }
-                PairState.Connecting -> Text(stringResource(R.string.servers_connecting), style = MaterialTheme.typography.bodyLarge, color = LauncherTheme.colors.onSurface)
+                PairState.Connecting -> Text(stringResource(Res.string.servers_connecting), style = MaterialTheme.typography.bodyLarge, color = LauncherTheme.colors.onSurface)
                 is PairState.ShowPin -> {
-                    Text(stringResource(R.string.servers_pin_intro), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+                    Text(stringResource(Res.string.servers_pin_intro), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
                     Text(
                         s.pin.chunked(3).joinToString(" "), modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center,
                         fontSize = 52.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, color = LauncherTheme.colors.onSurface,
                     )
-                    Text(stringResource(R.string.servers_pin_wait), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
-                    LauncherButton(stringResource(R.string.action_cancel), modifier = Modifier.fillMaxWidth(), onClick = ::close)
+                    Text(stringResource(Res.string.servers_pin_wait), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+                    LauncherButton(stringResource(Res.string.action_cancel), modifier = Modifier.fillMaxWidth(), onClick = ::close)
                 }
                 is PairState.Done -> {
-                    Text(stringResource(R.string.servers_paired, s.server.name), style = MaterialTheme.typography.bodyLarge, color = LauncherTheme.colors.success)
-                    LauncherButton(stringResource(R.string.action_done), modifier = Modifier.fillMaxWidth(), primary = true, onClick = ::close)
+                    Text(stringResource(Res.string.servers_paired, s.server.name), style = MaterialTheme.typography.bodyLarge, color = LauncherTheme.colors.success)
+                    LauncherButton(stringResource(Res.string.action_done), modifier = Modifier.fillMaxWidth(), primary = true, onClick = ::close)
                 }
                 is PairState.Failed -> {
                     Text(stringResource(s.message), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.danger)
-                    LauncherButton(stringResource(R.string.action_retry), modifier = Modifier.fillMaxWidth(), primary = true, onClick = { state = PairState.Address })
+                    LauncherButton(stringResource(Res.string.action_retry), modifier = Modifier.fillMaxWidth(), primary = true, onClick = { state = PairState.Address })
                 }
             }
         }
@@ -393,37 +393,37 @@ private fun ServerSourceDialog(entry: MetadataSources.Entry, online: Boolean?, o
     val s = entry.server ?: return
     Modal(visible = true, onDismiss = onDismiss, title = s.name, maxWidth = 600.dp) {
         Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp), horizontalAlignment = Alignment.Start) {
-            InfoRow(stringResource(R.string.servers_address), s.baseUrl.removePrefix("https://"))
-            InfoRow(stringResource(R.string.servers_state), when (online) {
-                true -> stringResource(R.string.servers_online)
-                false -> stringResource(R.string.servers_offline)
-                null -> stringResource(R.string.servers_checking)
+            InfoRow(stringResource(Res.string.servers_address), s.baseUrl.removePrefix("https://"))
+            InfoRow(stringResource(Res.string.servers_state), when (online) {
+                true -> stringResource(Res.string.servers_online)
+                false -> stringResource(Res.string.servers_offline)
+                null -> stringResource(Res.string.servers_checking)
             })
-            InfoRow(stringResource(R.string.metadata_source_offers), offers(s) ?: "–")
-            Text(stringResource(R.string.servers_fingerprint) + "\n" + Fingerprint.pretty(s.fingerprint), style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = LauncherTheme.colors.onSurfaceMuted)
+            InfoRow(stringResource(Res.string.metadata_source_offers), offers(s) ?: "–")
+            Text(stringResource(Res.string.servers_fingerprint) + "\n" + Fingerprint.pretty(s.fingerprint), style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = LauncherTheme.colors.onSurfaceMuted)
             SwitchRow(
-                stringResource(R.string.metadata_source_active), entry.enabled, { on ->
+                stringResource(Res.string.metadata_source_active), entry.enabled, { on ->
                     storeSource(container, entry.id, on)
                     // A companion switched on or off: its host games change source.
                     s.hostId?.let { scope.launch { container.library.resyncHost(it.uppercase()) } }
                 },
-                subtitle = if (s.isCompanion) stringResource(R.string.metadata_source_companion_off_hint) else null,
+                subtitle = if (s.isCompanion) stringResource(Res.string.metadata_source_companion_off_hint) else null,
                 initialFocus = true,
             )
-            LauncherButton(stringResource(R.string.servers_check), modifier = Modifier.fillMaxWidth(), onClick = {
+            LauncherButton(stringResource(Res.string.servers_check), modifier = Modifier.fillMaxWidth(), onClick = {
                 scope.launch {
                     repo.refresh(s)
                     // A companion: its host games are read again.
                     s.hostId?.let { container.library.resyncHost(it.uppercase()) }
                 }
             })
-            HoldToConfirmButton(stringResource(R.string.servers_remove), {
+            HoldToConfirmButton(stringResource(Res.string.servers_remove), {
                 repo.remove(s.id)
                 container.companionFeed.forget(s.id)
                 storeSource(container, entry.id, null)
                 onDismiss()
             }, Modifier.fillMaxWidth())
-            Text(stringResource(R.string.servers_remove_hint), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+            Text(stringResource(Res.string.servers_remove_hint), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
         }
     }
 }
@@ -436,10 +436,10 @@ private fun ConnectionStatus(provider: String, revision: Int, test: suspend () -
     LaunchedEffect(revision) { checked = false; status = test(); checked = true }
     Text(
         when {
-            !checked -> stringResource(R.string.metadata_status_checking, provider)
-            status == true -> stringResource(R.string.metadata_status_ok, provider)
-            status == false -> stringResource(R.string.metadata_status_rejected, provider)
-            else -> stringResource(R.string.metadata_status_unknown, provider)
+            !checked -> stringResource(Res.string.metadata_status_checking, provider)
+            status == true -> stringResource(Res.string.metadata_status_ok, provider)
+            status == false -> stringResource(Res.string.metadata_status_rejected, provider)
+            else -> stringResource(Res.string.metadata_status_unknown, provider)
         },
         style = MaterialTheme.typography.bodyMedium,
         color = when {

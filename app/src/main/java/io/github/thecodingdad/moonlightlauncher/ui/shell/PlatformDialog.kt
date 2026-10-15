@@ -16,15 +16,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
-import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry
 import io.github.thecodingdad.moonlightlauncher.data.db.PlatformSource
 import io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton
 import io.github.thecodingdad.moonlightlauncher.ui.components.LocalKeyboardController
 import io.github.thecodingdad.moonlightlauncher.ui.components.Modal
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
+import io.github.thecodingdad.moonlightlauncher.resources.*
 
 private val commonPlatforms = listOf(
     "PC", "Android", "Nintendo Switch", "PlayStation 5", "PlayStation 4", "Xbox Series X|S", "Xbox One",
@@ -40,18 +40,18 @@ fun PlatformDialog(
     onDismiss: () -> Unit,
 ) {
     val keyboard = LocalKeyboardController.current
-    val customTitle = stringResource(R.string.platform_custom)
-    Modal(visible = entry != null, onDismiss = onDismiss, title = stringResource(R.string.platform_title), maxWidth = 560.dp) {
+    val customTitle = stringResource(Res.string.platform_custom)
+    Modal(visible = entry != null, onDismiss = onDismiss, title = stringResource(Res.string.platform_title), maxWidth = 560.dp) {
         val e = entry ?: return@Modal
         val source = when (e.item.platformSource) {
-            PlatformSource.MANUAL -> R.string.platform_source_manual
-            PlatformSource.PLAYNITE -> R.string.platform_source_playnite
-            PlatformSource.COMPANION -> R.string.platform_source_companion
-            PlatformSource.IGDB -> R.string.platform_source_igdb
-            PlatformSource.SUGGESTED, null -> R.string.platform_source_suggested
+            PlatformSource.MANUAL -> Res.string.platform_source_manual
+            PlatformSource.PLAYNITE -> Res.string.platform_source_playnite
+            PlatformSource.COMPANION -> Res.string.platform_source_companion
+            PlatformSource.IGDB -> Res.string.platform_source_igdb
+            PlatformSource.SUGGESTED, null -> Res.string.platform_source_suggested
         }
         Text(
-            stringResource(R.string.platform_current, e.item.platform ?: "–", stringResource(source)),
+            stringResource(Res.string.platform_current, e.item.platform ?: "–", stringResource(source)),
             style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted,
         )
         Column(
@@ -59,7 +59,7 @@ fun PlatformDialog(
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             LauncherButton(
-                stringResource(R.string.platform_auto), { onSelect(e, null); onDismiss() }, Modifier.fillMaxWidth(), Icons.Filled.AutoMode,
+                stringResource(Res.string.platform_auto), { onSelect(e, null); onDismiss() }, Modifier.fillMaxWidth(), Icons.Filled.AutoMode,
                 primary = e.item.platformSource == PlatformSource.MANUAL,
             )
             (knownPlatforms + commonPlatforms).distinct().forEach { p ->

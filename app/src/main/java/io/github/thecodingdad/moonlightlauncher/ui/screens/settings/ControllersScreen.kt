@@ -26,10 +26,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import io.github.thecodingdad.moonlightlauncher.R
+import org.jetbrains.compose.resources.stringResource
 import kotlinx.coroutines.launch
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
+import io.github.thecodingdad.moonlightlauncher.resources.*
 
 data class ControllerInfo(
     val id: Int,
@@ -122,18 +122,18 @@ fun ControllersScreen() {
     }
     var revision by remember { mutableIntStateOf(0) }
 
-    SettingsPage(stringResource(R.string.settings_controllers)) {
-        Text(stringResource(R.string.controllers_intro), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
-        SectionHeader(stringResource(R.string.controllers_connected))
-        if (controllers.isEmpty()) Text(stringResource(R.string.controllers_none), color = LauncherTheme.colors.onSurface)
+    SettingsPage(stringResource(Res.string.settings_controllers)) {
+        Text(stringResource(Res.string.controllers_intro), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+        SectionHeader(stringResource(Res.string.controllers_connected))
+        if (controllers.isEmpty()) Text(stringResource(Res.string.controllers_none), color = LauncherTheme.colors.onSurface)
         controllers.forEachIndexed { index, c ->
             NavRow(
                 title = c.name,
                 onClick = { selected = c },
                 subtitle = listOfNotNull(
-                    stringResource(if (c.external) R.string.controller_external else R.string.controller_builtin),
-                    if (c.odinCopy) stringResource(R.string.controller_odin_copy) else null,
-                    c.batteryPercent?.let { stringResource(R.string.controller_battery, it) },
+                    stringResource(if (c.external) Res.string.controller_external else Res.string.controller_builtin),
+                    if (c.odinCopy) stringResource(Res.string.controller_odin_copy) else null,
+                    c.batteryPercent?.let { stringResource(Res.string.controller_battery, it) },
                 ).joinToString("  ·  "),
                 icon = Icons.Filled.SportsEsports,
                 initialFocus = index == 0,
@@ -141,8 +141,8 @@ fun ControllersScreen() {
         }
         OdinMappingSection()
         if (gamepadOptions.isNotEmpty()) {
-            SectionHeader(stringResource(R.string.controllers_stream_settings))
-            Text(stringResource(R.string.controllers_stream_settings_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+            SectionHeader(stringResource(Res.string.controllers_stream_settings))
+            Text(stringResource(Res.string.controllers_stream_settings_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
             gamepadOptions.forEachIndexed { i, option ->
                 io.github.thecodingdad.moonlightlauncher.ui.screens.profiles.OptionRow(
                     option, store, revision, initialFocus = controllers.isEmpty() && i == 0,
@@ -167,25 +167,25 @@ fun ControllerDetailDialog(controller: ControllerInfo?, onDismiss: () -> Unit) {
         ) {
             ControllerOverrideRows(c)
             Text(
-                stringResource(R.string.controller_info_player_order),
+                stringResource(Res.string.controller_info_player_order),
                 style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted,
                 modifier = androidx.compose.ui.Modifier.padding(top = 6.dp),
             )
             if (c.external) OdinMappingRow(c)
-            SectionHeader(stringResource(R.string.controller_device_info))
+            SectionHeader(stringResource(Res.string.controller_device_info))
             InfoRow(
-                stringResource(R.string.controller_info_type),
+                stringResource(Res.string.controller_info_type),
                 listOfNotNull(
-                    stringResource(if (c.external) R.string.controller_external else R.string.controller_builtin),
-                    if (c.odinCopy) stringResource(R.string.controller_odin_copy) else null,
+                    stringResource(if (c.external) Res.string.controller_external else Res.string.controller_builtin),
+                    if (c.odinCopy) stringResource(Res.string.controller_odin_copy) else null,
                 ).joinToString(" · "),
             )
-            c.batteryPercent?.let { InfoRow(stringResource(R.string.controller_info_battery), "$it %") }
-            InfoRow(stringResource(R.string.controller_info_ids), "%04x:%04x".format(c.vendorId, c.productId))
-            InfoRow(stringResource(R.string.controller_info_vibration), stringResource(if (c.canVibrate) R.string.yes else R.string.no))
+            c.batteryPercent?.let { InfoRow(stringResource(Res.string.controller_info_battery), "$it %") }
+            InfoRow(stringResource(Res.string.controller_info_ids), "%04x:%04x".format(c.vendorId, c.productId))
+            InfoRow(stringResource(Res.string.controller_info_vibration), stringResource(if (c.canVibrate) Res.string.yes else Res.string.no))
             if (c.canVibrate) {
                 io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton(
-                    stringResource(R.string.controller_vibrate_test), onClick = { vibrateController(c.id) },
+                    stringResource(Res.string.controller_vibrate_test), onClick = { vibrateController(c.id) },
                     icon = androidx.compose.material.icons.Icons.Filled.Vibration, primary = true,
                     modifier = androidx.compose.ui.Modifier.fillMaxWidth().padding(top = 8.dp),
                 )
@@ -203,35 +203,35 @@ private fun ControllerOverrideRows(c: ControllerInfo) {
     val s = all[c.descriptor] ?: io.github.thecodingdad.moonlightlauncher.stream.ControllerSettings()
     fun save(t: (io.github.thecodingdad.moonlightlauncher.stream.ControllerSettings) -> io.github.thecodingdad.moonlightlauncher.stream.ControllerSettings) =
         store.set(c.descriptor, t(s))
-    val global = stringResource(R.string.controller_override_global)
-    val on = stringResource(R.string.ha_on)
-    val off = stringResource(R.string.ha_off)
+    val global = stringResource(Res.string.controller_override_global)
+    val on = stringResource(Res.string.ha_on)
+    val off = stringResource(Res.string.ha_off)
     val tri = listOf<Boolean?>(null, true, false)
     val triLabel: @Composable (Boolean?) -> String = { v -> when (v) { null -> global; true -> on; false -> off } }
 
-    SectionHeader(stringResource(R.string.controller_overrides))
-    Text(stringResource(R.string.controller_overrides_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+    SectionHeader(stringResource(Res.string.controller_overrides))
+    Text(stringResource(Res.string.controller_overrides_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
     ChoiceRow(
-        stringResource(R.string.controller_player), listOf<Int?>(null, 0, 1, 2, 3), s.playerSlot,
-        label = { v -> v?.let { stringResource(R.string.controller_player_n, it + 1) } ?: stringResource(R.string.controller_player_auto) },
+        stringResource(Res.string.controller_player), listOf<Int?>(null, 0, 1, 2, 3), s.playerSlot,
+        label = { v -> v?.let { stringResource(Res.string.controller_player_n, it + 1) } ?: stringResource(Res.string.controller_player_auto) },
         onSelect = { v -> save { it.copy(playerSlot = v) } },
     )
-    ChoiceRow(stringResource(R.string.controller_flip), tri, s.flipFaceButtons, label = triLabel, onSelect = { v -> save { it.copy(flipFaceButtons = v) } })
+    ChoiceRow(stringResource(Res.string.controller_flip), tri, s.flipFaceButtons, label = triLabel, onSelect = { v -> save { it.copy(flipFaceButtons = v) } })
     ChoiceRow(
-        stringResource(R.string.controller_deadzone), listOf<Int?>(null, 0, 3, 5, 8, 10, 15, 20), s.deadzonePercent,
+        stringResource(Res.string.controller_deadzone), listOf<Int?>(null, 0, 3, 5, 8, 10, 15, 20), s.deadzonePercent,
         label = { v -> v?.let { "$it %" } ?: global },
         onSelect = { v -> save { it.copy(deadzonePercent = v) } },
     )
     if (c.canVibrate) {
         ChoiceRow(
-            stringResource(R.string.controller_rumble), listOf<Int?>(null, 0, 25, 50, 75, 100), s.rumblePercent,
+            stringResource(Res.string.controller_rumble), listOf<Int?>(null, 0, 25, 50, 75, 100), s.rumblePercent,
             label = { v -> when (v) { null -> global; 0 -> off; else -> "$v %" } },
             onSelect = { v -> save { it.copy(rumblePercent = v) } },
         )
     }
-    ChoiceRow(stringResource(R.string.controller_motion), tri, s.motionSensors, label = triLabel, onSelect = { v -> save { it.copy(motionSensors = v) } })
+    ChoiceRow(stringResource(Res.string.controller_motion), tri, s.motionSensors, label = triLabel, onSelect = { v -> save { it.copy(motionSensors = v) } })
     if (c.hasTouchpad) {
-        ChoiceRow(stringResource(R.string.controller_touchpad_mouse), tri, s.touchpadAsMouse, label = triLabel, onSelect = { v -> save { it.copy(touchpadAsMouse = v) } })
+        ChoiceRow(stringResource(Res.string.controller_touchpad_mouse), tri, s.touchpadAsMouse, label = triLabel, onSelect = { v -> save { it.copy(touchpadAsMouse = v) } })
     }
 
     // Button combinations of this controller (e.g. Guide on an Xbox pad, Select + Start elsewhere).
@@ -242,11 +242,11 @@ private fun ControllerOverrideRows(c: ControllerInfo) {
     val home = s.comboHome?.toSet()
     val menu = s.comboQuickMenu?.toSet()
     NavRow(
-        stringResource(R.string.combo_home), { editing = io.github.thecodingdad.moonlightlauncher.input.ComboAction.HOME },
+        stringResource(Res.string.combo_home), { editing = io.github.thecodingdad.moonlightlauncher.input.ComboAction.HOME },
         trailing = if (home == null) comboLabel(globalHome, global = true) else comboLabel(home),
     )
     NavRow(
-        stringResource(R.string.combo_quick_menu), { editing = io.github.thecodingdad.moonlightlauncher.input.ComboAction.QUICK_MENU },
+        stringResource(Res.string.combo_quick_menu), { editing = io.github.thecodingdad.moonlightlauncher.input.ComboAction.QUICK_MENU },
         trailing = if (menu == null) comboLabel(globalMenu, global = true) else comboLabel(menu),
     )
     val action = editing
@@ -278,9 +278,9 @@ private fun OdinMappingRow(c: ControllerInfo) {
     androidx.compose.runtime.LaunchedEffect(Unit) { blacklist = odin.blacklist() }
     val list = blacklist ?: return
     val scope = androidx.compose.runtime.rememberCoroutineScope()
-    SectionHeader(stringResource(R.string.odin_mapping_section))
+    SectionHeader(stringResource(Res.string.odin_mapping_section))
     SwitchRow(
-        stringResource(R.string.odin_mapping_keep),
+        stringResource(Res.string.odin_mapping_keep),
         c.name in list,
         { on ->
             scope.launch {
@@ -288,7 +288,7 @@ private fun OdinMappingRow(c: ControllerInfo) {
                 blacklist = odin.blacklist()
             }
         },
-        subtitle = stringResource(R.string.odin_mapping_keep_sub, c.name),
+        subtitle = stringResource(Res.string.odin_mapping_keep_sub, c.name),
     )
 }
 
@@ -309,11 +309,11 @@ private fun OdinMappingSection() {
         blacklist = odin.blacklist()
     }
     val s = settings ?: return
-    SectionHeader(stringResource(R.string.odin_mapping_section))
+    SectionHeader(stringResource(Res.string.odin_mapping_section))
     SwitchRow(
-        stringResource(R.string.odin_mapping_all), s.odinKeepControllers,
+        stringResource(Res.string.odin_mapping_all), s.odinKeepControllers,
         { on -> scope.launch { repo.update { it.copy(odinKeepControllers = on) } } },
-        subtitle = stringResource(R.string.odin_mapping_all_sub),
+        subtitle = stringResource(Res.string.odin_mapping_all_sub),
     )
     blacklist?.forEach { name ->
         NavRow(
@@ -323,7 +323,7 @@ private fun OdinMappingSection() {
                     blacklist = odin.blacklist()
                 }
             },
-            subtitle = stringResource(if (s.odinKeepControllers) R.string.odin_mapping_remove_auto else R.string.odin_mapping_remove),
+            subtitle = stringResource(if (s.odinKeepControllers) Res.string.odin_mapping_remove_auto else Res.string.odin_mapping_remove),
             icon = androidx.compose.material.icons.Icons.Filled.Delete,
         )
     }

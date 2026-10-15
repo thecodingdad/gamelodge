@@ -36,9 +36,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.focus.focusRestorer
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
-import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry
 import io.github.thecodingdad.moonlightlauncher.data.library.TitleNormalizer
 import io.github.thecodingdad.moonlightlauncher.ui.components.AppTile
@@ -49,6 +48,7 @@ import io.github.thecodingdad.moonlightlauncher.ui.input.PadButton
 import io.github.thecodingdad.moonlightlauncher.ui.shell.LocalEntryActions
 import io.github.thecodingdad.moonlightlauncher.ui.shell.ScreenHints
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
+import io.github.thecodingdad.moonlightlauncher.resources.*
 
 /** Regular apps, separate from the game library: device apps first, then each host's apps. */
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
@@ -84,7 +84,7 @@ fun AppsScreen(
         if (manualSort) sort = LibrarySort.MANUAL else if (sort == LibrarySort.MANUAL) sort = LibrarySort.TITLE
     }
     val keyboard = io.github.thecodingdad.moonlightlauncher.ui.components.LocalKeyboardController.current
-    val searchTitle = stringResource(R.string.hint_search)
+    val searchTitle = stringResource(Res.string.hint_search)
     fun openSearch() = keyboard.open(title = searchTitle, initial = search) { search = it }
     val feedback = io.github.thecodingdad.moonlightlauncher.ui.feedback.LocalUiFeedback.current
     fun stepFilter(delta: Int) {
@@ -104,11 +104,11 @@ fun AppsScreen(
     ScreenHints(
         listOf(
             // On the filter chips A selects a filter; only on an app it starts it.
-            ButtonHint(PadButton.A, stringResource(if (gridFocused) R.string.hint_start else R.string.hint_select)),
-            ButtonHint(PadButton.X, stringResource(R.string.hint_options), onClick = { focused?.let(actions::context) }),
-            ButtonHint(PadButton.L2, stringResource(R.string.hint_filters), onClick = { stepFilter(1) }, secondButton = PadButton.R2),
+            ButtonHint(PadButton.A, stringResource(if (gridFocused) Res.string.hint_start else Res.string.hint_select)),
+            ButtonHint(PadButton.X, stringResource(Res.string.hint_options), onClick = { focused?.let(actions::context) }),
+            ButtonHint(PadButton.L2, stringResource(Res.string.hint_filters), onClick = { stepFilter(1) }, secondButton = PadButton.R2),
             ButtonHint(PadButton.SELECT, sortLabel(sort), onClick = { sort = sort.next(manualSort) }),
-            ButtonHint(PadButton.START, stringResource(R.string.hint_search), onClick = ::openSearch),
+            ButtonHint(PadButton.START, stringResource(Res.string.hint_search), onClick = ::openSearch),
         ),
     )
 
@@ -136,7 +136,7 @@ fun AppsScreen(
     )
     if (sorted.isEmpty()) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(stringResource(if (apps.isEmpty()) R.string.apps_empty else R.string.library_empty_filter), color = LauncherTheme.colors.onSurfaceMuted, style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(if (apps.isEmpty()) Res.string.apps_empty else Res.string.library_empty_filter), color = LauncherTheme.colors.onSurfaceMuted, style = MaterialTheme.typography.titleMedium)
         }
         return@Column
     }
@@ -146,9 +146,9 @@ fun AppsScreen(
     val lastId = lastFocusedKey?.takeIf { it.startsWith("apps:") }?.removePrefix("apps:")
     val targetId = listOfNotNull(focusByFilter[filterKey], lastId).firstOrNull { id -> sorted.any { it.item.id == id } }
         ?: first?.item?.id
-    val deviceTitle = stringResource(R.string.apps_on_device)
+    val deviceTitle = stringResource(Res.string.apps_on_device)
     val selectedTitle = selected?.let { filterLabel(it) }.orEmpty()
-    val hostTitles = byHost.keys.associateWith { stringResource(R.string.apps_on_host, it) }
+    val hostTitles = byHost.keys.associateWith { stringResource(Res.string.apps_on_host, it) }
     gridStates.SaveableStateProvider(filterKey) {
     val gridState = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
     io.github.thecodingdad.moonlightlauncher.ui.input.RegisterStickScroll(gridState)

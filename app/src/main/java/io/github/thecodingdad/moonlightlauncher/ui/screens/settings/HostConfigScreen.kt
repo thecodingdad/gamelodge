@@ -27,9 +27,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
-import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.container
 import io.github.thecodingdad.moonlightlauncher.data.db.HostConfigEntity
 import io.github.thecodingdad.moonlightlauncher.data.db.WakeMethod
@@ -40,6 +39,7 @@ import io.github.thecodingdad.moonlightlauncher.ui.components.FocusSurface
 import io.github.thecodingdad.moonlightlauncher.ui.components.Modal
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 import kotlinx.coroutines.launch
+import io.github.thecodingdad.moonlightlauncher.resources.*
 
 /** HA domains that can act as a host power action. */
 private val actionDomains = setOf("script", "button", "input_button", "switch", "scene", "automation", "input_boolean")
@@ -47,10 +47,10 @@ private val actionDomains = setOf("script", "button", "input_button", "switch", 
 @Composable
 fun permissionLabel(p: HostPermission) = stringResource(
     when (p) {
-        HostPermission.LAUNCH_APPS -> R.string.perm_launch
-        HostPermission.CONTROLLER_INPUT -> R.string.perm_controller
-        HostPermission.LIST_APPS -> R.string.perm_list
-        else -> R.string.perm_other
+        HostPermission.LAUNCH_APPS -> Res.string.perm_launch
+        HostPermission.CONTROLLER_INPUT -> Res.string.perm_controller
+        HostPermission.LIST_APPS -> Res.string.perm_list
+        else -> Res.string.perm_other
     },
 )
 
@@ -61,7 +61,7 @@ fun MissingPermissionsNote(host: HostState) {
     Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         Icon(Icons.Filled.Warning, null, tint = LauncherTheme.colors.warning)
         Text(
-            stringResource(R.string.perm_missing, missing.map { permissionLabel(it) }.joinToString(", ")),
+            stringResource(Res.string.perm_missing, missing.map { permissionLabel(it) }.joinToString(", ")),
             style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.warning,
         )
     }
@@ -85,41 +85,41 @@ fun HostConfigScreen(host: HostState) {
 
     SettingsPage(host.name) {
         MissingPermissionsNote(host)
-        SectionHeader(stringResource(R.string.host_wake_section))
+        SectionHeader(stringResource(Res.string.host_wake_section))
         ChoiceRow(
-            stringResource(R.string.host_wake_method), WakeMethod.entries, cfg.wakeMethod,
+            stringResource(Res.string.host_wake_method), WakeMethod.entries, cfg.wakeMethod,
             label = {
                 stringResource(
                     when (it) {
-                        WakeMethod.NONE -> R.string.wake_none
-                        WakeMethod.WOL -> R.string.wake_wol
-                        WakeMethod.HOME_ASSISTANT -> R.string.wake_ha
-                        WakeMethod.BOTH -> R.string.wake_both
+                        WakeMethod.NONE -> Res.string.wake_none
+                        WakeMethod.WOL -> Res.string.wake_wol
+                        WakeMethod.HOME_ASSISTANT -> Res.string.wake_ha
+                        WakeMethod.BOTH -> Res.string.wake_both
                     },
                 )
             },
             onSelect = { save(cfg.copy(wakeMethod = it)) },
-            subtitle = stringResource(R.string.host_wake_method_sub),
+            subtitle = stringResource(Res.string.host_wake_method_sub),
             initialFocus = true,
         )
         val haDisabled = !c.ha.auth.isLoggedIn
-        NavRow(stringResource(R.string.host_ha_wake), { if (!haDisabled) picking = { id -> save(cfg.copy(haWakeEntity = id)) } }, entityLabel(cfg.haWakeEntity) ?: stringResource(R.string.not_set))
-        SectionHeader(stringResource(R.string.host_power_section))
-        NavRow(stringResource(R.string.host_ha_sleep), { if (!haDisabled) picking = { id -> save(cfg.copy(haSleepEntity = id)) } }, entityLabel(cfg.haSleepEntity) ?: stringResource(R.string.not_set))
-        NavRow(stringResource(R.string.host_ha_shutdown), { if (!haDisabled) picking = { id -> save(cfg.copy(haShutdownEntity = id)) } }, entityLabel(cfg.haShutdownEntity) ?: stringResource(R.string.not_set))
-        NavRow(stringResource(R.string.host_ha_restart), { if (!haDisabled) picking = { id -> save(cfg.copy(haRestartEntity = id)) } }, entityLabel(cfg.haRestartEntity) ?: stringResource(R.string.not_set))
-        if (haDisabled) Text(stringResource(R.string.ha_login_first), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+        NavRow(stringResource(Res.string.host_ha_wake), { if (!haDisabled) picking = { id -> save(cfg.copy(haWakeEntity = id)) } }, entityLabel(cfg.haWakeEntity) ?: stringResource(Res.string.not_set))
+        SectionHeader(stringResource(Res.string.host_power_section))
+        NavRow(stringResource(Res.string.host_ha_sleep), { if (!haDisabled) picking = { id -> save(cfg.copy(haSleepEntity = id)) } }, entityLabel(cfg.haSleepEntity) ?: stringResource(Res.string.not_set))
+        NavRow(stringResource(Res.string.host_ha_shutdown), { if (!haDisabled) picking = { id -> save(cfg.copy(haShutdownEntity = id)) } }, entityLabel(cfg.haShutdownEntity) ?: stringResource(Res.string.not_set))
+        NavRow(stringResource(Res.string.host_ha_restart), { if (!haDisabled) picking = { id -> save(cfg.copy(haRestartEntity = id)) } }, entityLabel(cfg.haRestartEntity) ?: stringResource(Res.string.not_set))
+        if (haDisabled) Text(stringResource(Res.string.ha_login_first), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
         ChoiceRow(
-            stringResource(R.string.host_auto_sleep), listOf<Int?>(null, 5, 10, 15, 30, 60), cfg.autoSleepMinutes,
-            label = { it?.let { m -> stringResource(R.string.minutes_short, m) } ?: stringResource(R.string.off) },
+            stringResource(Res.string.host_auto_sleep), listOf<Int?>(null, 5, 10, 15, 30, 60), cfg.autoSleepMinutes,
+            label = { it?.let { m -> stringResource(Res.string.minutes_short, m) } ?: stringResource(Res.string.off) },
             onSelect = { save(cfg.copy(autoSleepMinutes = it)) },
-            subtitle = stringResource(R.string.host_auto_sleep_sub),
+            subtitle = stringResource(Res.string.host_auto_sleep_sub),
         )
         CompanionSection(host)
     }
 
     val onPick = picking
-    Modal(visible = onPick != null, onDismiss = { picking = null }, title = stringResource(R.string.host_pick_action), maxWidth = 760.dp) {
+    Modal(visible = onPick != null, onDismiss = { picking = null }, title = stringResource(Res.string.host_pick_action), maxWidth = 760.dp) {
         val candidates = entities.values.filter { it.domain in actionDomains }.sortedWith(compareBy({ it.domain }, { it.name }))
         LazyColumn(state = io.github.thecodingdad.moonlightlauncher.ui.input.rememberStickLazyListState(), modifier = Modifier.heightIn(max = 400.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             item {
@@ -136,7 +136,7 @@ fun HostConfigScreen(host: HostState) {
 private fun EntityRow(entity: HaEntity?, onClick: () -> Unit) {
     FocusSurface(onClick = onClick, modifier = Modifier.fillMaxWidth(), color = LauncherTheme.colors.surfaceRaised, focusScale = 1.02f) {
         Column(Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
-            Text(entity?.name ?: stringResource(R.string.not_set), style = MaterialTheme.typography.titleSmall, color = LauncherTheme.colors.onSurface)
+            Text(entity?.name ?: stringResource(Res.string.not_set), style = MaterialTheme.typography.titleSmall, color = LauncherTheme.colors.onSurface)
             if (entity != null) Text(entity.id, style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
         }
     }
@@ -145,6 +145,6 @@ private fun EntityRow(entity: HaEntity?, onClick: () -> Unit) {
 /** The companion on this host (paired or not): opens its settings or pairs one. */
 @Composable
 private fun CompanionSection(host: HostState) {
-    SectionHeader(stringResource(R.string.host_companion_section))
+    SectionHeader(stringResource(Res.string.host_companion_section))
     io.github.thecodingdad.moonlightlauncher.ui.screens.metadata.HostCompanionRow(host)
 }

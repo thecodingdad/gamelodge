@@ -7,13 +7,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
-import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry
 import io.github.thecodingdad.moonlightlauncher.ui.RunningSession
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
+import io.github.thecodingdad.moonlightlauncher.resources.*
 
 /** Space taken by the shell's top and hint bars; full-bleed home layouts pad their content by it. */
 val LocalShellInsets = androidx.compose.runtime.compositionLocalOf { androidx.compose.foundation.layout.PaddingValues() }
@@ -49,12 +49,12 @@ fun MetaLine(entry: LibraryEntry, modifier: Modifier = Modifier) {
         // Apps are used, not played.
         val app = entry.item.kind == io.github.thecodingdad.moonlightlauncher.data.db.ItemKind.APP
         when {
-            hours > 0 -> add(pluralStringResource(if (app) R.plurals.usage_hours else R.plurals.playtime_hours, hours.toInt(), hours))
-            minutes > 0 -> add(pluralStringResource(if (app) R.plurals.usage_minutes else R.plurals.playtime_minutes, minutes.toInt(), minutes))
-            entry.item.lastPlayedAt == null -> add(stringResource(if (app) R.string.never_used else R.string.never_played))
+            hours > 0 -> add(pluralStringResource(if (app) Res.plurals.usage_hours else Res.plurals.playtime_hours, hours.toInt(), hours))
+            minutes > 0 -> add(pluralStringResource(if (app) Res.plurals.usage_minutes else Res.plurals.playtime_minutes, minutes.toInt(), minutes))
+            entry.item.lastPlayedAt == null -> add(stringResource(if (app) Res.string.never_used else Res.string.never_played))
         }
         entry.remoteTargets.firstOrNull()?.hostName?.let { add(it) }
-        if (entry.notInstalled) add(stringResource(R.string.not_installed))
+        if (entry.notInstalled) add(stringResource(Res.string.not_installed))
     }
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(

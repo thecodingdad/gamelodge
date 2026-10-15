@@ -4,7 +4,6 @@ import android.app.Activity
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.container
 import io.github.thecodingdad.moonlightlauncher.data.db.CollectionEntity
 import io.github.thecodingdad.moonlightlauncher.data.db.FilterEntity
@@ -29,13 +28,14 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import io.github.thecodingdad.moonlightlauncher.resources.*
 
 /** A game running on a host right now (drives the resume card). */
 data class RunningSession(val host: HostState, val entry: LibraryEntry?, val appName: String)
 
 class LauncherViewModel(application: Application) : AndroidViewModel(application) {
     private val c = application.container
-    private val defaultProfileName = application.getString(R.string.profile_default)
+    private val defaultProfileName = kotlinx.coroutines.runBlocking { org.jetbrains.compose.resources.getString(Res.string.profile_default) }
 
     val settings: StateFlow<LauncherSettings> =
         c.settings.settings.stateIn(viewModelScope, SharingStarted.Eagerly, LauncherSettings())
@@ -114,8 +114,8 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     /** Host UUID → name, from live hosts and (for offline/removed ones) the stored targets. */
     private val hostNames = combine(hosts, allEntries) { live, list ->
         val stored = list.flatMap { it.remoteTargets }.mapNotNull { t -> t.hostUuid?.let { it to (t.hostName ?: it) } }.toMap()
-        stored + live.mapValues { it.value.name } + (FilterRules.SOURCE_LOCAL to application.getString(R.string.filter_local)) +
-            (FilterRules.SOURCE_EMULATOR to application.getString(R.string.filter_emulation))
+        stored + live.mapValues { it.value.name } + (FilterRules.SOURCE_LOCAL to org.jetbrains.compose.resources.getString(Res.string.filter_local)) +
+            (FilterRules.SOURCE_EMULATOR to org.jetbrains.compose.resources.getString(Res.string.filter_emulation))
     }
 
     private fun resolved(place: FilterPlace): StateFlow<List<ResolvedFilter>> =

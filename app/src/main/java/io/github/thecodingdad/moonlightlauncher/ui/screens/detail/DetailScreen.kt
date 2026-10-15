@@ -41,10 +41,9 @@ import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry
 import io.github.thecodingdad.moonlightlauncher.data.db.PlaySessionEntity
 import io.github.thecodingdad.moonlightlauncher.ui.components.ArtworkImage
@@ -64,6 +63,7 @@ import io.github.thecodingdad.moonlightlauncher.ui.shell.targetLabel
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 import java.text.DateFormat
 import java.util.Date
+import io.github.thecodingdad.moonlightlauncher.resources.*
 
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 /** Height of the bar drawn above the detail page (status icons, back button). */
@@ -111,13 +111,13 @@ fun DetailScreen(
     }
     if (active) ScreenHints(
         buildList {
-            add(ButtonHint(PadButton.A, stringResource(R.string.hint_select)))
-            if (hasTargetChoice) add(ButtonHint(PadButton.X, stringResource(R.string.action_play_with), onClick = { actions.playWith(entry) }))
-            if (onBrowse != null) add(ButtonHint(PadButton.RS_RIGHT, stringResource(R.string.hint_prev_next), onClick = { onBrowse(1) }))
+            add(ButtonHint(PadButton.A, stringResource(Res.string.hint_select)))
+            if (hasTargetChoice) add(ButtonHint(PadButton.X, stringResource(Res.string.action_play_with), onClick = { actions.playWith(entry) }))
+            if (onBrowse != null) add(ButtonHint(PadButton.RS_RIGHT, stringResource(Res.string.hint_prev_next), onClick = { onBrowse(1) }))
             if (hasRemote && profiles.size > 1) {
-                add(ButtonHint(PadButton.L1, stringResource(R.string.profile_picker_title), onClick = { stepProfile(1) }, secondButton = PadButton.R1))
+                add(ButtonHint(PadButton.L1, stringResource(Res.string.profile_picker_title), onClick = { stepProfile(1) }, secondButton = PadButton.R1))
             }
-            add(ButtonHint(PadButton.B, stringResource(R.string.hint_back)))
+            add(ButtonHint(PadButton.B, stringResource(Res.string.hint_back)))
         },
     )
 
@@ -135,7 +135,7 @@ fun DetailScreen(
         val chips: @Composable () -> Unit = {
                     // Platform as a chip: shows the current value, opens the platform picker.
                     io.github.thecodingdad.moonlightlauncher.ui.screens.library.Chip(
-                        label = entry.item.platform ?: stringResource(R.string.platform_title),
+                        label = entry.item.platform ?: stringResource(Res.string.platform_title),
                         selected = false,
                         onClick = onPlatform,
                         icon = {
@@ -161,12 +161,12 @@ fun DetailScreen(
                 }
         val buttons: @Composable () -> Unit = {
                     LauncherButton(
-                        stringResource(if (entry.notInstalled) R.string.action_install else R.string.action_play),
+                        stringResource(if (entry.notInstalled) Res.string.action_install else Res.string.action_play),
                         onClick = { actions.play(entry) },
                         icon = if (entry.notInstalled) Icons.Filled.Download else Icons.Filled.PlayArrow, primary = true,
                         modifier = Modifier.focusWhenActive(active),
                     )
-                    if (hasTargetChoice) LauncherButton(stringResource(R.string.action_play_with), onClick = { actions.playWith(entry) }, icon = Icons.Filled.Tune)
+                    if (hasTargetChoice) LauncherButton(stringResource(Res.string.action_play_with), onClick = { actions.playWith(entry) }, icon = Icons.Filled.Tune)
                     LauncherButton(
                         "", onClick = { onFavorite(!entry.item.favorite) },
                         icon = if (entry.item.favorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
@@ -262,16 +262,16 @@ fun DetailScreen(
 private fun InfoBlock(entry: LibraryEntry, sessions: List<PlaySessionEntity>) {
     val colors = LauncherTheme.colors
     val rows = buildList {
-        entry.item.developer?.let { add(stringResource(R.string.detail_developer) to it) }
-        entry.item.publisher?.takeIf { it != entry.item.developer }?.let { add(stringResource(R.string.filter_field_publisher) to it) }
-        entry.item.series?.let { add(stringResource(R.string.filter_field_series) to it) }
-        entry.item.genres?.let { add(stringResource(R.string.detail_genres) to it) }
-        entry.item.features?.let { add(stringResource(R.string.filter_field_feature) to it) }
-        io.github.thecodingdad.moonlightlauncher.metadata.AgeRatings.display(entry.item.ageRatings)?.let { add(stringResource(R.string.filter_field_age_rating) to it) }
-        entry.item.rating?.let { add(stringResource(R.string.detail_rating) to "%.0f / 100".format(it)) }
-        add(stringResource(R.string.detail_available) to entry.targets.map { targetLabelText(it) }.joinToString(", "))
-        entry.item.lastPlayedAt?.let { add(stringResource(R.string.detail_last_played) to DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(it))) }
-        if (sessions.isNotEmpty()) add(stringResource(R.string.detail_sessions) to sessions.size.toString())
+        entry.item.developer?.let { add(stringResource(Res.string.detail_developer) to it) }
+        entry.item.publisher?.takeIf { it != entry.item.developer }?.let { add(stringResource(Res.string.filter_field_publisher) to it) }
+        entry.item.series?.let { add(stringResource(Res.string.filter_field_series) to it) }
+        entry.item.genres?.let { add(stringResource(Res.string.detail_genres) to it) }
+        entry.item.features?.let { add(stringResource(Res.string.filter_field_feature) to it) }
+        io.github.thecodingdad.moonlightlauncher.metadata.AgeRatings.display(entry.item.ageRatings)?.let { add(stringResource(Res.string.filter_field_age_rating) to it) }
+        entry.item.rating?.let { add(stringResource(Res.string.detail_rating) to "%.0f / 100".format(it)) }
+        add(stringResource(Res.string.detail_available) to entry.targets.map { targetLabelText(it) }.joinToString(", "))
+        entry.item.lastPlayedAt?.let { add(stringResource(Res.string.detail_last_played) to DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(it))) }
+        if (sessions.isNotEmpty()) add(stringResource(Res.string.detail_sessions) to sessions.size.toString())
     }
     Column(
         Modifier.background(colors.surface.copy(alpha = 0.7f), RoundedCornerShape(14.dp)).padding(18.dp),

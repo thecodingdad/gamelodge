@@ -55,11 +55,10 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.container
 import io.github.thecodingdad.moonlightlauncher.data.remote.HostStatus
 import io.github.thecodingdad.moonlightlauncher.ui.components.AppIcon
@@ -69,6 +68,7 @@ import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 import io.github.thecodingdad.moonlightlauncher.vpn.VpnStatus
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import io.github.thecodingdad.moonlightlauncher.resources.*
 
 /** Tiles available in the quick menu; app shortcuts are stored as "app:<package>". */
 object QuickTile {
@@ -92,11 +92,11 @@ object QuickTile {
 
     /** Groups for the "add tile" picker. */
     val groups = listOf(
-        R.string.qt_group_launcher to listOf(CONTROLLERS, HOSTS, VPN),
-        R.string.qt_group_network to listOf(WIFI, BLUETOOTH, HOTSPOT, AIRPLANE, MOBILE_DATA),
-        R.string.qt_group_device to listOf(FLASHLIGHT, ROTATION, BATTERY_SAVER),
-        R.string.qt_group_sound to listOf(SOUND_MODE, DND),
-        R.string.qt_group_other to listOf(ANDROID),
+        Res.string.qt_group_launcher to listOf(CONTROLLERS, HOSTS, VPN),
+        Res.string.qt_group_network to listOf(WIFI, BLUETOOTH, HOTSPOT, AIRPLANE, MOBILE_DATA),
+        Res.string.qt_group_device to listOf(FLASHLIGHT, ROTATION, BATTERY_SAVER),
+        Res.string.qt_group_sound to listOf(SOUND_MODE, DND),
+        Res.string.qt_group_other to listOf(ANDROID),
     )
 
     fun appId(packageName: String) = APP_PREFIX + packageName
@@ -139,20 +139,20 @@ fun quickTileName(id: String): String = when {
     id.startsWith(QuickTile.APP_PREFIX) -> appLabel(LocalContext.current, id.removePrefix(QuickTile.APP_PREFIX))
     else -> stringResource(
         when (id) {
-            QuickTile.CONTROLLERS -> R.string.settings_controllers
-            QuickTile.HOSTS -> R.string.settings_hosts
-            QuickTile.VPN -> R.string.settings_vpn
-            QuickTile.WIFI -> R.string.qm_wifi
-            QuickTile.BLUETOOTH -> R.string.qm_bluetooth
-            QuickTile.HOTSPOT -> R.string.qt_hotspot
-            QuickTile.AIRPLANE -> R.string.qt_airplane
-            QuickTile.MOBILE_DATA -> R.string.qt_mobile_data
-            QuickTile.FLASHLIGHT -> R.string.qt_flashlight
-            QuickTile.ROTATION -> R.string.qt_rotation
-            QuickTile.BATTERY_SAVER -> R.string.qt_battery_saver
-            QuickTile.SOUND_MODE -> R.string.qt_sound_mode
-            QuickTile.DND -> R.string.qt_dnd
-            else -> R.string.qm_android
+            QuickTile.CONTROLLERS -> Res.string.settings_controllers
+            QuickTile.HOSTS -> Res.string.settings_hosts
+            QuickTile.VPN -> Res.string.settings_vpn
+            QuickTile.WIFI -> Res.string.qm_wifi
+            QuickTile.BLUETOOTH -> Res.string.qm_bluetooth
+            QuickTile.HOTSPOT -> Res.string.qt_hotspot
+            QuickTile.AIRPLANE -> Res.string.qt_airplane
+            QuickTile.MOBILE_DATA -> Res.string.qt_mobile_data
+            QuickTile.FLASHLIGHT -> Res.string.qt_flashlight
+            QuickTile.ROTATION -> Res.string.qt_rotation
+            QuickTile.BATTERY_SAVER -> Res.string.qt_battery_saver
+            QuickTile.SOUND_MODE -> Res.string.qt_sound_mode
+            QuickTile.DND -> Res.string.qt_dnd
+            else -> Res.string.qm_android
         },
     )
 }
@@ -223,26 +223,26 @@ fun rememberQuickTiles(ids: List<String>, onHost: (String) -> Unit, onController
 
     val on = colors.success
     val off = colors.onSurfaceMuted
-    val labelControllersNone = stringResource(R.string.qm_no_controller)
-    val labelVpnOn = stringResource(R.string.qm_vpn_on)
-    val labelVpnOff = stringResource(R.string.qm_vpn_off)
-    val labelLan = stringResource(R.string.qm_lan)
-    val labelHosts = stringResource(R.string.qt_hosts_count)
-    val labelWifi = stringResource(R.string.qm_wifi)
-    val labelConnected = stringResource(R.string.qm_connected)
-    val labelBtOff = stringResource(R.string.qm_bluetooth_off)
-    val labelBt = stringResource(R.string.qm_bluetooth)
-    val btDevices = bluetooth.connectedDevices?.takeIf { it > 0 }?.let { pluralStringResource(R.plurals.qm_bluetooth_devices, it, it) }
+    val labelControllersNone = stringResource(Res.string.qm_no_controller)
+    val labelVpnOn = stringResource(Res.string.qm_vpn_on)
+    val labelVpnOff = stringResource(Res.string.qm_vpn_off)
+    val labelLan = stringResource(Res.string.qm_lan)
+    val labelHosts = stringResource(Res.string.qt_hosts_count)
+    val labelWifi = stringResource(Res.string.qm_wifi)
+    val labelConnected = stringResource(Res.string.qm_connected)
+    val labelBtOff = stringResource(Res.string.qm_bluetooth_off)
+    val labelBt = stringResource(Res.string.qm_bluetooth)
+    val btDevices = bluetooth.connectedDevices?.takeIf { it > 0 }?.let { pluralStringResource(Res.plurals.qm_bluetooth_devices, it, it) }
     val ringer = remember(tick) { context.getSystemService(AudioManager::class.java).ringerMode }
     val ringerLabel = stringResource(
         when (ringer) {
-            AudioManager.RINGER_MODE_SILENT -> R.string.qt_sound_silent
-            AudioManager.RINGER_MODE_VIBRATE -> R.string.qt_sound_vibrate
-            else -> R.string.qt_sound_normal
+            AudioManager.RINGER_MODE_SILENT -> Res.string.qt_sound_silent
+            AudioManager.RINGER_MODE_VIBRATE -> Res.string.qt_sound_vibrate
+            else -> Res.string.qt_sound_normal
         },
     )
     val names = ids.associateWith { quickTileName(it) }
-    val controllersLabel = if (controllers.isEmpty()) labelControllersNone else stringResource(R.string.qm_controllers, controllers.size)
+    val controllersLabel = if (controllers.isEmpty()) labelControllersNone else stringResource(Res.string.qm_controllers, controllers.size)
 
     // Tiles without hardware on this device (e.g. from a backup of another device) stay hidden.
     val usable = remember(ids) { ids.filter { QuickTile.isAvailable(context, it) } }

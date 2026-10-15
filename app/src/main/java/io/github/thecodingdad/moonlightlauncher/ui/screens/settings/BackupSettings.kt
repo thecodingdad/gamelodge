@@ -21,9 +21,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
-import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.container
 import io.github.thecodingdad.moonlightlauncher.data.backup.BackupFile
 import io.github.thecodingdad.moonlightlauncher.data.backup.BackupWorker
@@ -38,6 +37,7 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import io.github.thecodingdad.moonlightlauncher.resources.*
 
 @Composable
 fun BackupSettings(settings: LauncherSettings, update: ((LauncherSettings) -> LauncherSettings) -> Unit) {
@@ -48,10 +48,10 @@ fun BackupSettings(settings: LauncherSettings, update: ((LauncherSettings) -> La
     var message by remember { mutableStateOf<String?>(null) }
     var password by remember { mutableStateOf<String?>(null) }
     var pendingRestore by remember { mutableStateOf<BackupFile?>(null) }
-    val okMsg = stringResource(R.string.backup_done)
-    val restoredMsg = stringResource(R.string.backup_restored)
-    val wrongPwMsg = stringResource(R.string.backup_wrong_password)
-    val pwTitle = stringResource(R.string.backup_password)
+    val okMsg = stringResource(Res.string.backup_done)
+    val restoredMsg = stringResource(Res.string.backup_restored)
+    val wrongPwMsg = stringResource(Res.string.backup_wrong_password)
+    val pwTitle = stringResource(Res.string.backup_password)
 
     val pickFolder = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri: Uri? ->
         uri ?: return@rememberLauncherForActivityResult
@@ -93,31 +93,31 @@ fun BackupSettings(settings: LauncherSettings, update: ((LauncherSettings) -> La
         }
     }
 
-    SettingsPage(stringResource(R.string.settings_backup)) {
-        Text(stringResource(R.string.backup_intro), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+    SettingsPage(stringResource(Res.string.settings_backup)) {
+        Text(stringResource(Res.string.backup_intro), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
         NavRow(
-            stringResource(R.string.backup_folder), { pickFolder.launch(null) },
-            settings.backupFolderUri.takeIf { it.isNotEmpty() }?.let { Uri.decode(it).substringAfterLast(':') } ?: stringResource(R.string.not_set),
+            stringResource(Res.string.backup_folder), { pickFolder.launch(null) },
+            settings.backupFolderUri.takeIf { it.isNotEmpty() }?.let { Uri.decode(it).substringAfterLast(':') } ?: stringResource(Res.string.not_set),
             Icons.Filled.Folder, initialFocus = true,
         )
         SwitchRow(
-            stringResource(R.string.backup_auto), settings.autoBackup,
+            stringResource(Res.string.backup_auto), settings.autoBackup,
             { on -> update { it.copy(autoBackup = on) }; BackupWorker.schedule(context, on) },
-            subtitle = stringResource(R.string.backup_auto_sub), icon = Icons.Filled.Schedule,
+            subtitle = stringResource(Res.string.backup_auto_sub), icon = Icons.Filled.Schedule,
         )
         ChoiceRow(
-            stringResource(R.string.backup_keep), listOf(3, 7, 14, 30), settings.backupKeepCount,
+            stringResource(Res.string.backup_keep), listOf(3, 7, 14, 30), settings.backupKeepCount,
             label = { "$it" }, onSelect = { v -> update { it.copy(backupKeepCount = v) } },
         )
         SwitchRow(
-            stringResource(R.string.backup_with_credentials), password != null,
+            stringResource(Res.string.backup_with_credentials), password != null,
             { on -> if (on) keyboard.open(pwTitle, "", TextKind.PASSWORD) { pw -> password = pw.ifEmpty { null } } else password = null },
-            subtitle = stringResource(R.string.backup_with_credentials_sub), icon = Icons.Filled.Key,
+            subtitle = stringResource(Res.string.backup_with_credentials_sub), icon = Icons.Filled.Key,
         )
-        Text(stringResource(R.string.backup_restore_hint), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.accent)
+        Text(stringResource(Res.string.backup_restore_hint), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.accent)
         io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 12.dp) {
-            LauncherButton(stringResource(R.string.backup_now), icon = Icons.Filled.Save, primary = true, onClick = ::backupNow)
-            HoldToConfirmButton(stringResource(R.string.backup_restore), { openFile.launch(arrayOf("application/json", "*/*")) }, icon = Icons.Filled.Restore)
+            LauncherButton(stringResource(Res.string.backup_now), icon = Icons.Filled.Save, primary = true, onClick = ::backupNow)
+            HoldToConfirmButton(stringResource(Res.string.backup_restore), { openFile.launch(arrayOf("application/json", "*/*")) }, icon = Icons.Filled.Restore)
         }
         message?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurface) }
     }

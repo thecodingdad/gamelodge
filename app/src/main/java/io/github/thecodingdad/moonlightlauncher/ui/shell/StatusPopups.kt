@@ -22,10 +22,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
 import com.limelight.preferences.PreferenceConfiguration
-import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.stream.ProfileStore
 import io.github.thecodingdad.moonlightlauncher.stream.StreamProfile
 import io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton
@@ -34,6 +33,7 @@ import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.ControllerIn
 import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.vibrateController
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 import java.util.UUID
+import io.github.thecodingdad.moonlightlauncher.resources.*
 
 /** "1080p · 60 fps · 20 Mbit": the key values of a stream profile (unset values come from the base). */
 fun profileSummary(context: Context, uuid: UUID?): String {
@@ -61,8 +61,8 @@ fun ProfilePickerPopup(
     onDismiss: () -> Unit,
 ) {
     val context = LocalContext.current
-    Modal(visible = visible, onDismiss = onDismiss, title = stringResource(R.string.profile_picker_title), maxWidth = 560.dp) {
-        Text(stringResource(R.string.profile_picker_sub), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+    Modal(visible = visible, onDismiss = onDismiss, title = stringResource(Res.string.profile_picker_title), maxWidth = 560.dp) {
+        Text(stringResource(Res.string.profile_picker_sub), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
         androidx.compose.foundation.layout.Spacer(Modifier.heightIn(min = 14.dp))
         Column(Modifier.heightIn(max = 420.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             profiles.forEach { p ->
@@ -75,7 +75,7 @@ fun ProfilePickerPopup(
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
-            LauncherButton(stringResource(R.string.profile_picker_edit), onClick = { onDismiss(); onEdit() }, icon = Icons.Filled.Edit, modifier = Modifier.fillMaxWidth())
+            LauncherButton(stringResource(Res.string.profile_picker_edit), onClick = { onDismiss(); onEdit() }, icon = Icons.Filled.Edit, modifier = Modifier.fillMaxWidth())
         }
     }
 }
@@ -91,16 +91,16 @@ fun ControllerPopup(
     // Selecting a controller opens its settings (on top of this popup).
     var selected by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<ControllerInfo?>(null) }
     io.github.thecodingdad.moonlightlauncher.ui.screens.settings.ControllerDetailDialog(selected, onDismiss = { selected = null })
-    Modal(visible = visible, onDismiss = onDismiss, title = stringResource(R.string.settings_controllers), maxWidth = 600.dp) {
+    Modal(visible = visible, onDismiss = onDismiss, title = stringResource(Res.string.settings_controllers), maxWidth = 600.dp) {
         val colors = LauncherTheme.colors
-        Text(stringResource(R.string.controller_popup_sub), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceMuted)
+        Text(stringResource(Res.string.controller_popup_sub), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceMuted)
         androidx.compose.foundation.layout.Spacer(Modifier.heightIn(min = 14.dp))
         Column(Modifier.heightIn(max = 420.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            if (controllers.isEmpty()) Text(stringResource(R.string.controllers_none), color = colors.onSurface)
+            if (controllers.isEmpty()) Text(stringResource(Res.string.controllers_none), color = colors.onSurface)
             controllers.forEach { c ->
                 val details = listOfNotNull(
-                    stringResource(if (c.external) R.string.controller_external else R.string.controller_builtin),
-                    c.batteryPercent?.let { stringResource(R.string.controller_battery, it) },
+                    stringResource(if (c.external) Res.string.controller_external else Res.string.controller_builtin),
+                    c.batteryPercent?.let { stringResource(Res.string.controller_battery, it) },
                 ).joinToString("  ·  ")
                 LauncherButton(
                     "${c.name}  ·  $details",
@@ -109,7 +109,7 @@ fun ControllerPopup(
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
-            LauncherButton(stringResource(R.string.controller_popup_settings), onClick = { onDismiss(); onOpenSettings() }, icon = Icons.Filled.Settings, modifier = Modifier.fillMaxWidth())
+            LauncherButton(stringResource(Res.string.controller_popup_settings), onClick = { onDismiss(); onOpenSettings() }, icon = Icons.Filled.Settings, modifier = Modifier.fillMaxWidth())
         }
     }
 }

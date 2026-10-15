@@ -24,9 +24,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
-import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.container
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryItemEntity
@@ -49,6 +48,7 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
+import io.github.thecodingdad.moonlightlauncher.resources.*
 
 /** What the editor rows edit; [field] = protected against automatic updates when edited. */
 private enum class EditRow(val field: MetaField?) {
@@ -86,49 +86,49 @@ fun MetadataEditorDialog(
         appScope.launch { service.commitEdit() }
         onDismiss()
     }
-    Modal(visible = entry != null, onDismiss = cancel, title = stringResource(R.string.meta_edit_title), maxWidth = 820.dp, modifier = Modifier.fillMaxHeight(), closeButton = false) {
+    Modal(visible = entry != null, onDismiss = cancel, title = stringResource(Res.string.meta_edit_title), maxWidth = 820.dp, modifier = Modifier.fillMaxHeight(), closeButton = false) {
         val e = entry ?: return@Modal
         val item = e.item
         val manual = item.manual
         fun edited(row: EditRow) = row.field != null && row.field in manual
-        val editedLabel = stringResource(R.string.meta_edited)
-        val none = stringResource(R.string.meta_none)
+        val editedLabel = stringResource(Res.string.meta_edited)
+        val none = stringResource(Res.string.meta_none)
         // The rows scroll; "Done" stays at the bottom, always in view.
         Column(Modifier.weight(1f).controllerScroll(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(stringResource(R.string.meta_edit_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+            Text(stringResource(Res.string.meta_edit_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
             // New IGDB match and other artwork (formerly buttons on the detail page).
             ButtonRow(spacing = 10.dp) {
                 // Only with a source for IGDB / SteamGridDB; artwork stays (own and local images).
-                if (service.isConfigured) LauncherButton(stringResource(R.string.metadata_fix_title), onClick = { onFix(e) }, icon = Icons.Filled.Search)
-                LauncherButton(stringResource(R.string.artwork_title), onClick = { onArtwork(e) }, icon = Icons.Filled.Image)
+                if (service.isConfigured) LauncherButton(stringResource(Res.string.metadata_fix_title), onClick = { onFix(e) }, icon = Icons.Filled.Search)
+                LauncherButton(stringResource(Res.string.artwork_title), onClick = { onArtwork(e) }, icon = Icons.Filled.Image)
             }
             @Composable
-            fun Row(row: EditRow, label: Int, value: String?, first: Boolean = false) = NavRow(
+            fun Row(row: EditRow, label: org.jetbrains.compose.resources.StringResource, value: String?, first: Boolean = false) = NavRow(
                 stringResource(label), { editing = row },
                 subtitle = value?.takeIf { it.isNotBlank() } ?: none,
                 trailing = if (edited(row)) editedLabel else null,
                 initialFocus = first,
             )
-            SectionHeader(stringResource(R.string.filter_section_game))
-            Row(EditRow.TITLE, R.string.meta_name, item.title)
-            NavRow(stringResource(R.string.filter_field_platform), { onPlatform(e) }, subtitle = item.platform ?: none)
-            Row(EditRow.DESCRIPTION, R.string.meta_description, item.description?.take(120))
-            SectionHeader(stringResource(R.string.filter_section_metadata))
-            Row(EditRow.GENRES, R.string.filter_field_genre, item.genres)
-            Row(EditRow.DEVELOPER, R.string.filter_field_developer, item.developer)
-            Row(EditRow.PUBLISHER, R.string.filter_field_publisher, item.publisher)
-            Row(EditRow.SERIES, R.string.filter_field_series, item.series)
-            Row(EditRow.FEATURES, R.string.filter_field_feature, item.features)
-            Row(EditRow.RELEASE, R.string.meta_release, releaseText(item))
-            Row(EditRow.RATING, R.string.filter_field_rating, item.rating?.let { "%.0f".format(it) })
-            Row(EditRow.AGE_RATING, R.string.filter_field_age_rating, AgeRatings.display(item.ageRatings))
-            SectionHeader(stringResource(R.string.filter_section_activity))
-            Row(EditRow.PLAYTIME, R.string.filter_field_playtime, stringResource(R.string.meta_hours, "%.1f".format(item.playtimeSeconds / 3600.0)))
-            Row(EditRow.LAST_PLAYED, R.string.filter_field_last_played, item.lastPlayedAt?.let { dateFormat().format(Date(it)) })
+            SectionHeader(stringResource(Res.string.filter_section_game))
+            Row(EditRow.TITLE, Res.string.meta_name, item.title)
+            NavRow(stringResource(Res.string.filter_field_platform), { onPlatform(e) }, subtitle = item.platform ?: none)
+            Row(EditRow.DESCRIPTION, Res.string.meta_description, item.description?.take(120))
+            SectionHeader(stringResource(Res.string.filter_section_metadata))
+            Row(EditRow.GENRES, Res.string.filter_field_genre, item.genres)
+            Row(EditRow.DEVELOPER, Res.string.filter_field_developer, item.developer)
+            Row(EditRow.PUBLISHER, Res.string.filter_field_publisher, item.publisher)
+            Row(EditRow.SERIES, Res.string.filter_field_series, item.series)
+            Row(EditRow.FEATURES, Res.string.filter_field_feature, item.features)
+            Row(EditRow.RELEASE, Res.string.meta_release, releaseText(item))
+            Row(EditRow.RATING, Res.string.filter_field_rating, item.rating?.let { "%.0f".format(it) })
+            Row(EditRow.AGE_RATING, Res.string.filter_field_age_rating, AgeRatings.display(item.ageRatings))
+            SectionHeader(stringResource(Res.string.filter_section_activity))
+            Row(EditRow.PLAYTIME, Res.string.filter_field_playtime, stringResource(Res.string.meta_hours, "%.1f".format(item.playtimeSeconds / 3600.0)))
+            Row(EditRow.LAST_PLAYED, Res.string.filter_field_last_played, item.lastPlayedAt?.let { dateFormat().format(Date(it)) })
         }
         ButtonRow(spacing = 12.dp, modifier = Modifier.padding(top = 16.dp)) {
-            LauncherButton(stringResource(R.string.action_save), onClick = save, primary = true)
-            LauncherButton(stringResource(R.string.action_cancel), onClick = cancel)
+            LauncherButton(stringResource(Res.string.action_save), onClick = save, primary = true)
+            LauncherButton(stringResource(Res.string.action_cancel), onClick = cancel)
         }
     }
 
@@ -159,7 +159,7 @@ private fun FieldDialog(
         val r = row ?: return@Modal
         val it0 = item ?: return@Modal
         val title = rowTitle(r)
-        val invalid = stringResource(R.string.meta_invalid)
+        val invalid = stringResource(Res.string.meta_invalid)
         var error by remember(r) { mutableStateOf<String?>(null) }
         Column(Modifier.heightIn(max = 600.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             when (r) {
@@ -183,7 +183,7 @@ private fun FieldDialog(
                     val all = AgeRatings.decode(it0.ageRatings)
                     ChoiceRow(
                         system, listOf<String?>(null) + AgeRatings.VALUES.getValue(system), all[system],
-                        label = { v -> v?.let { "$system $it" } ?: stringResource(R.string.meta_none) },
+                        label = { v -> v?.let { "$system $it" } ?: stringResource(Res.string.meta_none) },
                         onSelect = { v ->
                             val updated = if (v == null) all - system else all + (system to v)
                             onSave(r) { it.copy(ageRatings = AgeRatings.encode(updated)) }
@@ -201,11 +201,11 @@ private fun FieldDialog(
                         EditRow.LAST_PLAYED -> it0.lastPlayedAt?.let { dateFormat().format(Date(it)) }.orEmpty()
                         else -> ""
                     }
-                    Text(current.ifBlank { stringResource(R.string.meta_none) }, style = MaterialTheme.typography.bodyLarge, color = LauncherTheme.colors.onSurface)
+                    Text(current.ifBlank { stringResource(Res.string.meta_none) }, style = MaterialTheme.typography.bodyLarge, color = LauncherTheme.colors.onSurface)
                     rowHint(r)?.let { Text(stringResource(it), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted) }
                     error?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error) }
                     val numeric = r == EditRow.RATING || r == EditRow.PLAYTIME
-                    LauncherButton(stringResource(R.string.meta_change), icon = Icons.Filled.Edit, primary = true, onClick = {
+                    LauncherButton(stringResource(Res.string.meta_change), icon = Icons.Filled.Edit, primary = true, onClick = {
                         keyboard.open(title, current, if (numeric) TextKind.NUMBER else TextKind.TEXT) { text ->
                             val t = text.trim()
                             val transform: ((LibraryItemEntity) -> LibraryItemEntity)? = when (r) {
@@ -227,10 +227,10 @@ private fun FieldDialog(
                 }
             }
             ButtonRow(spacing = 12.dp, modifier = Modifier.padding(top = 8.dp)) {
-                LauncherButton(stringResource(R.string.action_done), onClick = onDismiss)
+                LauncherButton(stringResource(Res.string.action_done), onClick = onDismiss)
                 if (r.field != null && r.field in it0.manual) {
                     LauncherButton(
-                        stringResource(if (r == EditRow.TITLE) R.string.meta_reset_title else R.string.meta_reset),
+                        stringResource(if (r == EditRow.TITLE) Res.string.meta_reset_title else Res.string.meta_reset),
                         icon = Icons.Filled.Restore, onClick = { onReset(r) },
                     )
                 }
@@ -246,10 +246,10 @@ private fun ChipEditor(current: List<String>, suggestions: List<String>, multi: 
     val keyboard = LocalKeyboardController.current
     val options = (current + suggestions.distinct().sortedBy { it.lowercase() }).distinct()
     Text(
-        stringResource(if (multi) R.string.meta_chips_multi else R.string.meta_chips_single),
+        stringResource(if (multi) Res.string.meta_chips_multi else Res.string.meta_chips_single),
         style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted,
     )
-    LauncherButton(stringResource(R.string.meta_new_value), icon = Icons.Filled.Add, onClick = {
+    LauncherButton(stringResource(Res.string.meta_new_value), icon = Icons.Filled.Add, onClick = {
         keyboard.open(title, "") { text ->
             val v = text.trim()
             if (v.isNotEmpty()) onChange(if (multi) (current + v).distinct() else listOf(v))
@@ -274,25 +274,25 @@ private fun ChipEditor(current: List<String>, suggestions: List<String>, multi: 
 @Composable
 private fun rowTitle(row: EditRow): String = stringResource(
     when (row) {
-        EditRow.TITLE -> R.string.meta_name
-        EditRow.DESCRIPTION -> R.string.meta_description
-        EditRow.GENRES -> R.string.filter_field_genre
-        EditRow.DEVELOPER -> R.string.filter_field_developer
-        EditRow.PUBLISHER -> R.string.filter_field_publisher
-        EditRow.SERIES -> R.string.filter_field_series
-        EditRow.FEATURES -> R.string.filter_field_feature
-        EditRow.RELEASE -> R.string.meta_release
-        EditRow.RATING -> R.string.filter_field_rating
-        EditRow.AGE_RATING -> R.string.filter_field_age_rating
-        EditRow.PLAYTIME -> R.string.filter_field_playtime
-        EditRow.LAST_PLAYED -> R.string.filter_field_last_played
+        EditRow.TITLE -> Res.string.meta_name
+        EditRow.DESCRIPTION -> Res.string.meta_description
+        EditRow.GENRES -> Res.string.filter_field_genre
+        EditRow.DEVELOPER -> Res.string.filter_field_developer
+        EditRow.PUBLISHER -> Res.string.filter_field_publisher
+        EditRow.SERIES -> Res.string.filter_field_series
+        EditRow.FEATURES -> Res.string.filter_field_feature
+        EditRow.RELEASE -> Res.string.meta_release
+        EditRow.RATING -> Res.string.filter_field_rating
+        EditRow.AGE_RATING -> Res.string.filter_field_age_rating
+        EditRow.PLAYTIME -> Res.string.filter_field_playtime
+        EditRow.LAST_PLAYED -> Res.string.filter_field_last_played
     },
 )
 
-private fun rowHint(row: EditRow): Int? = when (row) {
-    EditRow.RELEASE, EditRow.LAST_PLAYED -> R.string.meta_date_hint
-    EditRow.RATING -> R.string.meta_rating_hint
-    EditRow.PLAYTIME -> R.string.meta_playtime_hint
+private fun rowHint(row: EditRow): org.jetbrains.compose.resources.StringResource? = when (row) {
+    EditRow.RELEASE, EditRow.LAST_PLAYED -> Res.string.meta_date_hint
+    EditRow.RATING -> Res.string.meta_rating_hint
+    EditRow.PLAYTIME -> Res.string.meta_playtime_hint
     else -> null
 }
 

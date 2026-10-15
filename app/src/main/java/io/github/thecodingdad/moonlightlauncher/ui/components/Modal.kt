@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import io.github.thecodingdad.moonlightlauncher.ui.input.PadBlocker
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 import kotlinx.coroutines.delay
+import io.github.thecodingdad.moonlightlauncher.resources.*
 
 /**
  * In-window modal: scrim, focus trap, gamepad shortcut blocking and B/back to close.
@@ -101,7 +102,7 @@ fun CloseArrow(onClick: () -> Unit, modifier: Modifier = Modifier) {
     ) {
         androidx.compose.material3.Icon(
             androidx.compose.material.icons.Icons.AutoMirrored.Filled.ArrowBack,
-            androidx.compose.ui.res.stringResource(io.github.thecodingdad.moonlightlauncher.R.string.hint_back),
+            org.jetbrains.compose.resources.stringResource(Res.string.hint_back),
             tint = LauncherTheme.colors.onSurface, modifier = Modifier.align(Alignment.Center).size(22.dp),
         )
     }

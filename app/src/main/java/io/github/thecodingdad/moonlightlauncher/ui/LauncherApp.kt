@@ -43,14 +43,13 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.container
 import io.github.thecodingdad.moonlightlauncher.data.db.MetadataState
 import io.github.thecodingdad.moonlightlauncher.ui.screens.metadata.ArtworkPickerDialog
@@ -108,6 +107,7 @@ import io.github.thecodingdad.moonlightlauncher.ui.shell.LocalHintHolder
 import io.github.thecodingdad.moonlightlauncher.ui.shell.StatusCluster
 import io.github.thecodingdad.moonlightlauncher.ui.shell.TargetPickerDialog
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
+import io.github.thecodingdad.moonlightlauncher.resources.*
 
 /** Maps the stored settings to the feedback engine's configuration. */
 fun io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings.feedbackConfig() =
@@ -141,11 +141,11 @@ private object Routes {
     fun settings(page: SettingsPageId) = "settings/${page.name}"
 }
 
-enum class MainTab(val title: Int, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
-    HOME(R.string.tab_home, androidx.compose.material.icons.Icons.Filled.Home),
-    LIBRARY(R.string.tab_library, androidx.compose.material.icons.Icons.Filled.VideoLibrary),
-    APPS(R.string.tab_apps, androidx.compose.material.icons.Icons.Filled.Apps),
-    SETTINGS(R.string.tab_settings, androidx.compose.material.icons.Icons.Filled.Settings),
+enum class MainTab(val title: org.jetbrains.compose.resources.StringResource, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
+    HOME(Res.string.tab_home, androidx.compose.material.icons.Icons.Filled.Home),
+    LIBRARY(Res.string.tab_library, androidx.compose.material.icons.Icons.Filled.VideoLibrary),
+    APPS(Res.string.tab_apps, androidx.compose.material.icons.Icons.Filled.Apps),
+    SETTINGS(Res.string.tab_settings, androidx.compose.material.icons.Icons.Filled.Settings),
 }
 
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
@@ -340,7 +340,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                         val page = SettingsPageId.valueOf(backStack.arguments?.getString("page") ?: SettingsPageId.ABOUT.name)
                         val crumbs = listOfNotNull(
                             tabCrumb(vm, nav, MainTab.SETTINGS),
-                            if (page == SettingsPageId.LICENSES) backCrumb(nav, R.string.settings_about) else null,
+                            if (page == SettingsPageId.LICENSES) backCrumb(nav, Res.string.settings_about) else null,
                         )
                         SubpageFrame(vm, nav, hints, MainTab.SETTINGS, crumbs, { hostInfoFor = it }, { controllerPopup = true }) {
                             SettingsPageContent(
@@ -358,7 +358,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                         val hosts by vm.hosts.collectAsState()
                         SubpageFrame(
                             vm, nav, hints, MainTab.SETTINGS,
-                            listOf(tabCrumb(vm, nav, MainTab.SETTINGS), backCrumb(nav, R.string.settings_hosts)),
+                            listOf(tabCrumb(vm, nav, MainTab.SETTINGS), backCrumb(nav, Res.string.settings_hosts)),
                             { hostInfoFor = it }, { controllerPopup = true },
                         ) { hosts[uuid]?.let { HostConfigScreen(it) } }
                     }
@@ -378,10 +378,10 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                         val raw = backStack.arguments?.getString("uuid")
                         val uuid = raw?.takeIf { it != "base" }?.let(java.util.UUID::fromString)
                         val profiles by vm.profiles.collectAsState()
-                        val name = profiles.firstOrNull { it.uuid == uuid }?.name ?: stringResource(R.string.profile_default)
+                        val name = profiles.firstOrNull { it.uuid == uuid }?.name ?: stringResource(Res.string.profile_default)
                         SubpageFrame(
                             vm, nav, hints, MainTab.SETTINGS,
-                            listOf(tabCrumb(vm, nav, MainTab.SETTINGS), backCrumb(nav, R.string.settings_profiles)),
+                            listOf(tabCrumb(vm, nav, MainTab.SETTINGS), backCrumb(nav, Res.string.settings_profiles)),
                             { hostInfoFor = it }, { controllerPopup = true },
                         ) { ProfileEditor(uuid, name, onDeleted = { nav.popBackStack() }) }
                     }
@@ -390,7 +390,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                         val review = remember(all) { all.filter { it.item.metadataState == MetadataState.REVIEW } }
                         SubpageFrame(
                             vm, nav, hints, MainTab.SETTINGS,
-                            listOf(tabCrumb(vm, nav, MainTab.SETTINGS), backCrumb(nav, R.string.settings_metadata)),
+                            listOf(tabCrumb(vm, nav, MainTab.SETTINGS), backCrumb(nav, Res.string.settings_metadata)),
                             { hostInfoFor = it }, { controllerPopup = true },
                         ) { ReviewScreen(review) }
                     }
@@ -586,9 +586,9 @@ private fun ShellFrame(hints: HintHolder, content: @Composable () -> Unit) {
         ButtonHintBar(
             hints.hints.ifEmpty {
                     listOf(
-                        ButtonHint(PadButton.A, stringResource(R.string.hint_select)),
-                        ButtonHint(PadButton.B, stringResource(R.string.hint_back)),
-                        ButtonHint(PadButton.L1, stringResource(R.string.hint_tabs), secondButton = PadButton.R1),
+                        ButtonHint(PadButton.A, stringResource(Res.string.hint_select)),
+                        ButtonHint(PadButton.B, stringResource(Res.string.hint_back)),
+                        ButtonHint(PadButton.L1, stringResource(Res.string.hint_tabs), secondButton = PadButton.R1),
                     )
                 },
             hideWhenCompact = true,
@@ -685,9 +685,9 @@ private fun MainShell(
                         io.github.thecodingdad.moonlightlauncher.ui.shell.ScreenHints(
                             listOf(
                                 ButtonHint(PadButton.A, stringResource(entryActions.openLabel(homeFocused))),
-                                ButtonHint(PadButton.X, stringResource(R.string.hint_options)),
-                                ButtonHint(PadButton.Y, stringResource(R.string.quick_menu)),
-                                ButtonHint(PadButton.L1, stringResource(R.string.hint_tabs), secondButton = PadButton.R1),
+                                ButtonHint(PadButton.X, stringResource(Res.string.hint_options)),
+                                ButtonHint(PadButton.Y, stringResource(Res.string.quick_menu)),
+                                ButtonHint(PadButton.L1, stringResource(Res.string.hint_tabs), secondButton = PadButton.R1),
                             ),
                         )
                         val empty: @Composable () -> Unit = { EmptyHome { tab = MainTab.SETTINGS.ordinal } }
@@ -708,7 +708,7 @@ private fun MainShell(
                     ) { vm.focusKeys[MainTab.APPS.name] = it }
                     MainTab.SETTINGS -> {
                         io.github.thecodingdad.moonlightlauncher.ui.shell.ScreenHints(
-                            listOf(ButtonHint(PadButton.A, stringResource(R.string.hint_select)), ButtonHint(PadButton.L1, stringResource(R.string.hint_tabs), secondButton = PadButton.R1)),
+                            listOf(ButtonHint(PadButton.A, stringResource(Res.string.hint_select)), ButtonHint(PadButton.L1, stringResource(Res.string.hint_tabs), secondButton = PadButton.R1)),
                         )
                         SettingsHome(open = { nav.navigate(Routes.settings(it)) }, isFirstVisit = true, openControllers = { nav.navigate(Routes.CONTROLLERS) })
                     }
@@ -841,7 +841,7 @@ private fun BackButton(onClick: () -> Unit) {
             .padding(end = 12.dp).size(44.dp),
     ) {
         androidx.compose.material3.Icon(
-            androidx.compose.material.icons.Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.hint_back),
+            androidx.compose.material.icons.Icons.AutoMirrored.Filled.ArrowBack, stringResource(Res.string.hint_back),
             tint = LauncherTheme.colors.onSurface, modifier = Modifier.align(Alignment.Center).size(24.dp),
         )
     }
@@ -860,7 +860,7 @@ private fun tabCrumb(vm: LauncherViewModel, nav: NavHostController, tab: MainTab
 
 /** Path step back to the page this one was opened from. */
 @Composable
-private fun backCrumb(nav: NavHostController, label: Int) =
+private fun backCrumb(nav: NavHostController, label: org.jetbrains.compose.resources.StringResource) =
     io.github.thecodingdad.moonlightlauncher.ui.screens.settings.Crumb(stringResource(label)) { nav.popBackStack() }
 
 /**
@@ -904,9 +904,9 @@ private fun SubpageFrame(
             ButtonHintBar(
                 hints.hints.ifEmpty {
                     listOf(
-                        ButtonHint(PadButton.A, stringResource(R.string.hint_select)),
-                        ButtonHint(PadButton.B, stringResource(R.string.hint_back)),
-                        ButtonHint(PadButton.L1, stringResource(R.string.hint_tabs), secondButton = PadButton.R1),
+                        ButtonHint(PadButton.A, stringResource(Res.string.hint_select)),
+                        ButtonHint(PadButton.B, stringResource(Res.string.hint_back)),
+                        ButtonHint(PadButton.L1, stringResource(Res.string.hint_tabs), secondButton = PadButton.R1),
                     )
                 },
                 hideWhenCompact = true,
@@ -983,15 +983,15 @@ private fun EmptyHome(openSettings: () -> Unit) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(stringResource(R.string.home_empty_title), style = MaterialTheme.typography.headlineMedium, color = LauncherTheme.colors.onSurface)
+        Text(stringResource(Res.string.home_empty_title), style = MaterialTheme.typography.headlineMedium, color = LauncherTheme.colors.onSurface)
         Text(
-            stringResource(R.string.home_empty_message),
+            stringResource(Res.string.home_empty_message),
             style = MaterialTheme.typography.bodyLarge,
             color = LauncherTheme.colors.onSurfaceMuted,
             modifier = Modifier.padding(top = 8.dp, bottom = 24.dp),
         )
         io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton(
-            stringResource(R.string.settings_hosts), onClick = openSettings, primary = true,
+            stringResource(Res.string.settings_hosts), onClick = openSettings, primary = true,
             modifier = Modifier.restoreFocusIf(true),
         )
     }
@@ -1043,6 +1043,6 @@ private fun SettingsPageContent(
         SettingsPageId.HOME_ASSISTANT -> HaSettings(settings, vm::updateSettings)
         SettingsPageId.BACKUP -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.BackupSettings(settings, vm::updateSettings)
         SettingsPageId.VPN -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.VpnSettings(settings, vm::updateSettings)
-        else -> SettingsPage(stringResource(R.string.coming_soon)) {}
+        else -> SettingsPage(stringResource(Res.string.coming_soon)) {}
     }
 }

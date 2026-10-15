@@ -45,11 +45,10 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.container
 import io.github.thecodingdad.moonlightlauncher.data.db.HaTileEntity
 import io.github.thecodingdad.moonlightlauncher.data.db.HaTileType
@@ -59,6 +58,7 @@ import io.github.thecodingdad.moonlightlauncher.ui.feedback.LocalUiFeedback
 import io.github.thecodingdad.moonlightlauncher.ui.feedback.UiSound
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 import kotlinx.coroutines.launch
+import io.github.thecodingdad.moonlightlauncher.resources.*
 
 fun HaTileType.icon(): ImageVector = when (this) {
     HaTileType.LIGHT -> Icons.Filled.Lightbulb
@@ -181,17 +181,17 @@ fun HaTile(tile: HaTileEntity, entity: HaEntity?, modifier: Modifier = Modifier,
 
 @Composable
 private fun stateText(tile: HaTileEntity, entity: HaEntity?): String {
-    if (entity == null || entity.isUnavailable) return stringResource(R.string.ha_unavailable)
+    if (entity == null || entity.isUnavailable) return stringResource(Res.string.ha_unavailable)
     return when (tile.type) {
-        HaTileType.LIGHT -> entity.brightnessPercent?.takeIf { entity.isOn }?.let { "$it %" } ?: stringResource(if (entity.isOn) R.string.ha_on else R.string.ha_off)
+        HaTileType.LIGHT -> entity.brightnessPercent?.takeIf { entity.isOn }?.let { "$it %" } ?: stringResource(if (entity.isOn) Res.string.ha_on else Res.string.ha_off)
         HaTileType.SWITCH -> when (entity.state) {
-            "on" -> stringResource(R.string.ha_on)
-            "off" -> stringResource(R.string.ha_off)
-            "locked" -> stringResource(R.string.ha_locked)
-            "unlocked" -> stringResource(R.string.ha_unlocked)
+            "on" -> stringResource(Res.string.ha_on)
+            "off" -> stringResource(Res.string.ha_off)
+            "locked" -> stringResource(Res.string.ha_locked)
+            "unlocked" -> stringResource(Res.string.ha_unlocked)
             else -> entity.state
         }
-        HaTileType.BUTTON -> stringResource(R.string.ha_run)
+        HaTileType.BUTTON -> stringResource(Res.string.ha_run)
         HaTileType.COVER -> entity.coverPosition?.let { "$it %" } ?: entity.state
         HaTileType.CLIMATE -> listOfNotNull(entity.currentTemperature?.let { "$it°" }, entity.targetTemperature?.let { "→ $it°" }).joinToString(" ").ifEmpty { entity.state }
         HaTileType.SENSOR -> listOfNotNull(entity.state, entity.unit).joinToString(" ")

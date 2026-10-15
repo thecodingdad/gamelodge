@@ -44,10 +44,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.filled.Computer
 import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.res.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
+import org.jetbrains.compose.resources.pluralStringResource
 import androidx.compose.ui.unit.dp
-import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.container
 import io.github.thecodingdad.moonlightlauncher.stream.PowerAction
 import io.github.thecodingdad.moonlightlauncher.stream.StreamProfile
@@ -64,6 +63,7 @@ import io.github.thecodingdad.moonlightlauncher.vpn.VpnStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import io.github.thecodingdad.moonlightlauncher.resources.*
 
 /** Select (hold) anywhere in the launcher: system and streaming shortcuts. */
 @Composable
@@ -103,8 +103,8 @@ fun QuickMenu(
             io.github.thecodingdad.moonlightlauncher.ui.components.CloseArrow(onDismiss)
             Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally), verticalAlignment = Alignment.CenterVertically) {
                 if (padConnected) io.github.thecodingdad.moonlightlauncher.ui.components.PadGlyph(io.github.thecodingdad.moonlightlauncher.ui.input.PadButton.L1)
-                PanelTab(stringResource(R.string.qm_tab_quick), selected = tab == 0, onClick = { tab = 0 })
-                PanelTab(stringResource(R.string.settings_home_assistant), selected = tab == 1, onClick = { tab = 1 })
+                PanelTab(stringResource(Res.string.qm_tab_quick), selected = tab == 0, onClick = { tab = 0 })
+                PanelTab(stringResource(Res.string.settings_home_assistant), selected = tab == 1, onClick = { tab = 1 })
                 if (padConnected) io.github.thecodingdad.moonlightlauncher.ui.components.PadGlyph(io.github.thecodingdad.moonlightlauncher.ui.input.PadButton.R1)
             }
         }
@@ -124,20 +124,20 @@ fun QuickMenu(
             val tileIds by c.settings.settings.collectAsState(io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings())
             QuickTileGrid(rememberQuickTiles(tileIds.quickTiles, onHost = onHost, onControllers = onControllers))
             if (!canWriteSettings) {
-                LauncherButton(stringResource(R.string.qm_brightness_permission), icon = Icons.Filled.BrightnessMedium, onClick = {
+                LauncherButton(stringResource(Res.string.qm_brightness_permission), icon = Icons.Filled.BrightnessMedium, onClick = {
                     context.startActivity(Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:${context.packageName}")))
                 })
             }
 
-            SectionHeader(stringResource(R.string.qm_system))
+            SectionHeader(stringResource(Res.string.qm_system))
             SliderRow(
-                stringResource(R.string.qm_volume), volume, 0..maxVolume, 1,
+                stringResource(Res.string.qm_volume), volume, 0..maxVolume, 1,
                 onChange = { v -> volume = v; audio.setStreamVolume(AudioManager.STREAM_MUSIC, v, 0) },
                 valueLabel = { "${it * 100 / maxVolume.coerceAtLeast(1)} %" }, icon = Icons.Filled.VolumeUp,
             )
             if (canWriteSettings) {
                 SliderRow(
-                    stringResource(R.string.qm_brightness), brightness, 1..255, 8,
+                    stringResource(Res.string.qm_brightness), brightness, 1..255, 8,
                     onChange = { v ->
                         brightness = v
                         Settings.System.putInt(context.contentResolver, Settings.System.SCREEN_BRIGHTNESS_MODE, Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL)
@@ -161,8 +161,8 @@ private fun HomeAssistantSection(openSettings: () -> Unit) {
     val connection by ha.client.connection.collectAsState()
     LaunchedEffect(Unit) { ha.client.start() }
     if (connection == io.github.thecodingdad.moonlightlauncher.ha.HaConnection.NOT_CONFIGURED || tiles.isEmpty()) {
-        Text(stringResource(R.string.ha_panel_empty), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
-        LauncherButton(stringResource(R.string.ha_setup), icon = Icons.Filled.Settings, onClick = openSettings, modifier = Modifier.restoreFocusIf(true))
+        Text(stringResource(Res.string.ha_panel_empty), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+        LauncherButton(stringResource(Res.string.ha_setup), icon = Icons.Filled.Settings, onClick = openSettings, modifier = Modifier.restoreFocusIf(true))
     } else {
         androidx.compose.foundation.layout.FlowRow(
             horizontalArrangement = Arrangement.spacedBy(10.dp),

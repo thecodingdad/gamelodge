@@ -46,9 +46,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
-import io.github.thecodingdad.moonlightlauncher.R
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.Spacer
@@ -88,6 +87,7 @@ import io.github.thecodingdad.moonlightlauncher.ui.components.Modal
 import io.github.thecodingdad.moonlightlauncher.ui.screens.library.Chip
 import io.github.thecodingdad.moonlightlauncher.ui.screens.library.builtinLabel
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
+import io.github.thecodingdad.moonlightlauncher.resources.*
 
 /**
  * Manage filters: default filters, smart filters and manual groups, and where each appears. Game
@@ -108,16 +108,16 @@ fun FilterSettings(vm: LauncherViewModel, initialScope: FilterScope) {
     // A new group opens straight into picking its members.
     var pickMembers by remember { mutableStateOf(false) }
     var resetting by remember { mutableStateOf(false) }
-    val smartTitle = stringResource(R.string.filter_new_smart)
-    val groupTitle = stringResource(R.string.filter_new_group)
+    val smartTitle = stringResource(Res.string.filter_new_smart)
+    val groupTitle = stringResource(Res.string.filter_new_group)
 
-    SettingsPage(stringResource(R.string.settings_filters)) {
+    SettingsPage(stringResource(Res.string.settings_filters)) {
         // Games / apps (LB/RB already switch the main tabs here).
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Chip(stringResource(R.string.filters_scope_games), selected = !apps, onClick = { scope = FilterScope.GAMES; editing = null })
-            Chip(stringResource(R.string.filters_scope_apps), selected = apps, onClick = { scope = FilterScope.APPS; editing = null })
+            Chip(stringResource(Res.string.filters_scope_games), selected = !apps, onClick = { scope = FilterScope.GAMES; editing = null })
+            Chip(stringResource(Res.string.filters_scope_apps), selected = apps, onClick = { scope = FilterScope.APPS; editing = null })
         }
-        Text(stringResource(if (apps) R.string.app_filters_help else R.string.filters_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+        Text(stringResource(if (apps) Res.string.app_filters_help else Res.string.filters_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
         io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 12.dp, modifier = Modifier.padding(vertical = 6.dp)) {
             LauncherButton(
                 smartTitle, icon = Icons.Filled.FilterAlt,
@@ -127,7 +127,7 @@ fun FilterSettings(vm: LauncherViewModel, initialScope: FilterScope) {
                 groupTitle, icon = Icons.AutoMirrored.Filled.PlaylistAdd,
                 onClick = { keyboard.open(groupTitle, "") { name -> if (name.isNotBlank()) vm.createGroup(name.trim(), scope) { editing = it.id; pickMembers = true } } },
             )
-            LauncherButton(stringResource(R.string.filters_restore), icon = Icons.Filled.Restore, onClick = { resetting = true })
+            LauncherButton(stringResource(Res.string.filters_restore), icon = Icons.Filled.Restore, onClick = { resetting = true })
         }
         val members = collections.associate { (c, ids) -> c.id to ids.size }
         ReorderableList(
@@ -135,14 +135,14 @@ fun FilterSettings(vm: LauncherViewModel, initialScope: FilterScope) {
             onReorder = vm::reorderFilters,
         ) { index, f ->
             val places = buildList {
-                if (!apps && f.showInLibrary) add(stringResource(R.string.filter_place_library))
-                if (apps && f.showInApps) add(stringResource(R.string.filter_place_apps))
-                if (f.showOnHome) add(stringResource(R.string.filter_place_home))
-            }.ifEmpty { listOf(stringResource(R.string.filter_place_none)) }
+                if (!apps && f.showInLibrary) add(stringResource(Res.string.filter_place_library))
+                if (apps && f.showInApps) add(stringResource(Res.string.filter_place_apps))
+                if (f.showOnHome) add(stringResource(Res.string.filter_place_home))
+            }.ifEmpty { listOf(stringResource(Res.string.filter_place_none)) }
             val kind = when (f.kind) {
                 FilterKind.BUILTIN, FilterKind.SMART ->
-                    stringResource(if (f.builtin != null) R.string.filter_kind_builtin else R.string.filter_kind_smart)
-                FilterKind.GROUP -> stringResource(R.string.filter_kind_group, members[f.id] ?: 0)
+                    stringResource(if (f.builtin != null) Res.string.filter_kind_builtin else Res.string.filter_kind_smart)
+                FilterKind.GROUP -> stringResource(Res.string.filter_kind_group, members[f.id] ?: 0)
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.weight(1f)) {
@@ -163,7 +163,7 @@ fun FilterSettings(vm: LauncherViewModel, initialScope: FilterScope) {
                 ) {
                     androidx.compose.material3.Icon(
                         if (visible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
-                        stringResource(if (visible) R.string.filter_chip_visible else R.string.filter_chip_hidden),
+                        stringResource(if (visible) Res.string.filter_chip_visible else Res.string.filter_chip_hidden),
                         tint = if (visible) LauncherTheme.colors.onSurface else LauncherTheme.colors.onSurfaceMuted,
                         modifier = Modifier.align(Alignment.Center),
                     )
@@ -172,20 +172,20 @@ fun FilterSettings(vm: LauncherViewModel, initialScope: FilterScope) {
         }
     }
 
-    Modal(visible = resetting, onDismiss = { resetting = false }, title = stringResource(R.string.filters_restore), maxWidth = 680.dp, closeButton = false) {
+    Modal(visible = resetting, onDismiss = { resetting = false }, title = stringResource(Res.string.filters_restore), maxWidth = 680.dp, closeButton = false) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(stringResource(R.string.filters_reset_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+            Text(stringResource(Res.string.filters_reset_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
             LauncherButton(
-                stringResource(R.string.filters_reset_defaults), icon = Icons.Filled.Restore, primary = true,
+                stringResource(Res.string.filters_reset_defaults), icon = Icons.Filled.Restore, primary = true,
                 modifier = Modifier.fillMaxWidth(),
                 onClick = { vm.resetDefaultFilters(scope); resetting = false },
             )
             HoldToConfirmButton(
-                stringResource(R.string.filters_reset_all), icon = Icons.Filled.Delete,
+                stringResource(Res.string.filters_reset_all), icon = Icons.Filled.Delete,
                 modifier = Modifier.fillMaxWidth(),
                 onConfirmed = { vm.resetAllFilters(scope); resetting = false },
             )
-            LauncherButton(stringResource(R.string.action_cancel), modifier = Modifier.fillMaxWidth(), onClick = { resetting = false })
+            LauncherButton(stringResource(Res.string.action_cancel), modifier = Modifier.fillMaxWidth(), onClick = { resetting = false })
         }
     }
 
@@ -223,15 +223,15 @@ private fun FilterEditorDialog(
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             LauncherTextField(
-                stringResource(R.string.filter_name), f.name, { vm.renameFilter(f, it) },
+                stringResource(Res.string.filter_name), f.name, { vm.renameFilter(f, it) },
                 placeholder = f.builtin?.let { builtinLabel(it) },
             )
             if (f.scope == FilterScope.APPS) {
-                SwitchRow(stringResource(R.string.filter_show_apps), f.showInApps, { vm.saveFilter(f.copy(showInApps = it)) })
+                SwitchRow(stringResource(Res.string.filter_show_apps), f.showInApps, { vm.saveFilter(f.copy(showInApps = it)) })
             } else {
-                SwitchRow(stringResource(R.string.filter_show_library), f.showInLibrary, { vm.saveFilter(f.copy(showInLibrary = it)) })
+                SwitchRow(stringResource(Res.string.filter_show_library), f.showInLibrary, { vm.saveFilter(f.copy(showInLibrary = it)) })
             }
-            SwitchRow(stringResource(R.string.filter_show_home), f.showOnHome, { vm.saveFilter(f.copy(showOnHome = it)) })
+            SwitchRow(stringResource(Res.string.filter_show_home), f.showOnHome, { vm.saveFilter(f.copy(showOnHome = it)) })
 
             when (f.kind) {
                 // Default filters are free filters too (old BUILTIN rows become one on the first change).
@@ -240,8 +240,8 @@ private fun FilterEditorDialog(
                     fun saveRules(rules: FilterRules) =
                         vm.saveFilter(f.copy(kind = FilterKind.SMART, rules = FilterRules.encode(rules)))
                     fun saveConditions(list: List<FilterCondition>) = saveRules(current.copy(conditions = list))
-                    SectionHeader(stringResource(R.string.filter_conditions))
-                    Text(stringResource(R.string.filter_conditions_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+                    SectionHeader(stringResource(Res.string.filter_conditions))
+                    Text(stringResource(Res.string.filter_conditions_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
                     val labelFor = conditionValueLabel(entries, hostNames, vm)
                     // Playnite style: field name as title, the chosen values below.
                     current.conditions.forEachIndexed { index, condition ->
@@ -253,42 +253,42 @@ private fun FilterEditorDialog(
                         )
                     }
                     var pickingField by remember(f.id) { mutableStateOf(false) }
-                    LauncherButton(stringResource(R.string.filter_condition_add), icon = Icons.Filled.Add, onClick = { pickingField = true })
+                    LauncherButton(stringResource(Res.string.filter_condition_add), icon = Icons.Filled.Add, onClick = { pickingField = true })
                     FieldPickerDialog(pickingField, onDismiss = { pickingField = false }) { field ->
                         pickingField = false
                         saveConditions(current.conditions + FilterCondition(field, if (field.boolean) setOf("true") else emptySet()))
                         editingCondition = current.conditions.size
                     }
                     ChoiceRow(
-                        stringResource(R.string.filter_group_by), listOf<GroupBy?>(null) + GroupBy.entries, current.groupBy,
+                        stringResource(Res.string.filter_group_by), listOf<GroupBy?>(null) + GroupBy.entries, current.groupBy,
                         label = { groupByLabel(it) },
                         onSelect = { v -> saveRules(current.copy(groupBy = v)) },
-                        subtitle = stringResource(R.string.filter_group_by_sub),
+                        subtitle = stringResource(Res.string.filter_group_by_sub),
                     )
                     if (current.groupBy != null) {
                         SwitchRow(
-                            stringResource(R.string.filter_chip_show_name), current.chipShowName, { v -> saveRules(current.copy(chipShowName = v)) },
-                            subtitle = stringResource(R.string.filter_show_name_sub),
+                            stringResource(Res.string.filter_chip_show_name), current.chipShowName, { v -> saveRules(current.copy(chipShowName = v)) },
+                            subtitle = stringResource(Res.string.filter_show_name_sub),
                         )
                         SwitchRow(
-                            stringResource(R.string.filter_row_show_name), current.rowShowName, { v -> saveRules(current.copy(rowShowName = v)) },
-                            subtitle = stringResource(R.string.filter_show_name_sub),
+                            stringResource(Res.string.filter_row_show_name), current.rowShowName, { v -> saveRules(current.copy(rowShowName = v)) },
+                            subtitle = stringResource(Res.string.filter_show_name_sub),
                         )
                     }
                     ChoiceRow(
-                        stringResource(R.string.filter_sort), listOf<LibrarySort?>(null) + LibrarySort.entries.filter { it != LibrarySort.MANUAL }, current.sort,
+                        stringResource(Res.string.filter_sort), listOf<LibrarySort?>(null) + LibrarySort.entries.filter { it != LibrarySort.MANUAL }, current.sort,
                         label = { sortLabel(it) },
                         onSelect = { v -> saveRules(current.copy(sort = v)) },
                     )
                     ChoiceRow(
-                        stringResource(R.string.filter_limit), listOf<Int?>(null, 10, 20, 30, 50, 100), current.limit,
-                        label = { it?.toString() ?: stringResource(R.string.filter_limit_none) },
+                        stringResource(Res.string.filter_limit), listOf<Int?>(null, 10, 20, 30, 50, 100), current.limit,
+                        label = { it?.toString() ?: stringResource(Res.string.filter_limit_none) },
                         onSelect = { v -> saveRules(current.copy(limit = v)) },
                     )
                     val members by vm.collections.collectAsState()
                     val memberMap = members.associate { (c, ids) -> c.id to ids.toSet() }
                     val count = FilterEngine.apply(games, current, memberMap).size
-                    Text(stringResource(if (f.scope == FilterScope.APPS) R.string.filter_match_count_apps else R.string.filter_match_count, count), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+                    Text(stringResource(if (f.scope == FilterScope.APPS) Res.string.filter_match_count_apps else Res.string.filter_match_count, count), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
 
                     ConditionDialog(
                         condition = editingCondition?.let { current.conditions.getOrNull(it) },
@@ -301,15 +301,15 @@ private fun FilterEditorDialog(
                     )
                 }
                 FilterKind.GROUP -> {
-                    Text(stringResource(R.string.filter_group_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+                    Text(stringResource(Res.string.filter_group_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
                     val collections by vm.collections.collectAsState()
                     val memberIds = collections.firstOrNull { it.first.id == f.id }?.second.orEmpty().toSet()
                     var picking by remember(f.id) { mutableStateOf(pickMembers) }
                     val apps = f.scope == FilterScope.APPS
                     NavRow(
-                        title = stringResource(if (apps) R.string.group_pick_apps else R.string.group_pick_games),
+                        title = stringResource(if (apps) Res.string.group_pick_apps else Res.string.group_pick_games),
                         onClick = { picking = true },
-                        subtitle = stringResource(R.string.group_member_count, games.count { it.item.id in memberIds }),
+                        subtitle = stringResource(Res.string.group_member_count, games.count { it.item.id in memberIds }),
                         icon = Icons.Filled.Checklist,
                     )
                     var ordering by remember(f.id) { mutableStateOf(false) }
@@ -317,9 +317,9 @@ private fun FilterEditorDialog(
                     val ordered = memberIds.mapNotNull { byId[it] }
                     if (ordered.size > 1) {
                         NavRow(
-                            title = stringResource(R.string.group_order),
+                            title = stringResource(Res.string.group_order),
                             onClick = { ordering = true },
-                            subtitle = stringResource(R.string.group_order_sub),
+                            subtitle = stringResource(Res.string.group_order_sub),
                             icon = Icons.Filled.DragHandle,
                         )
                     }
@@ -356,7 +356,7 @@ private fun FilterEditorDialog(
             }
 
             HoldToConfirmButton(
-                stringResource(R.string.filter_delete), icon = Icons.Filled.Delete,
+                stringResource(Res.string.filter_delete), icon = Icons.Filled.Delete,
                 modifier = Modifier.padding(top = 8.dp),
                 onConfirmed = { vm.deleteFilter(f); onDismiss() },
             )
@@ -376,7 +376,7 @@ private fun GroupMembersDialog(
 ) {
     Modal(visible = visible, onDismiss = onDismiss, title = title, maxWidth = 720.dp) {
         var query by remember { mutableStateOf("") }
-        LauncherTextField(stringResource(R.string.hint_search), query, { query = it })
+        LauncherTextField(stringResource(Res.string.hint_search), query, { query = it })
         Spacer(Modifier.height(12.dp))
         val q = TitleNormalizer.normalize(query)
         val shown = remember(entries, q) {
@@ -447,60 +447,60 @@ private fun ValuePicker(title: String, values: List<String>, selected: Set<Strin
 @Composable
 private fun groupByLabel(g: GroupBy?): String = stringResource(
     when (g) {
-        null -> R.string.filter_group_none
-        GroupBy.PLATFORM -> R.string.filter_field_platform
-        GroupBy.GENRE -> R.string.filter_field_genre
-        GroupBy.CATEGORY -> R.string.filter_field_category
-        GroupBy.SOURCE -> R.string.filter_field_source
-        GroupBy.HOST -> R.string.filter_field_host
-        GroupBy.LIBRARY -> R.string.filter_field_library
-        GroupBy.DEVELOPER -> R.string.filter_field_developer
-        GroupBy.PUBLISHER -> R.string.filter_field_publisher
-        GroupBy.SERIES -> R.string.filter_field_series
-        GroupBy.FEATURE -> R.string.filter_field_feature
-        GroupBy.AGE_RATING -> R.string.filter_field_age_rating
-        GroupBy.RELEASE_YEAR -> R.string.filter_field_release_year
+        null -> Res.string.filter_group_none
+        GroupBy.PLATFORM -> Res.string.filter_field_platform
+        GroupBy.GENRE -> Res.string.filter_field_genre
+        GroupBy.CATEGORY -> Res.string.filter_field_category
+        GroupBy.SOURCE -> Res.string.filter_field_source
+        GroupBy.HOST -> Res.string.filter_field_host
+        GroupBy.LIBRARY -> Res.string.filter_field_library
+        GroupBy.DEVELOPER -> Res.string.filter_field_developer
+        GroupBy.PUBLISHER -> Res.string.filter_field_publisher
+        GroupBy.SERIES -> Res.string.filter_field_series
+        GroupBy.FEATURE -> Res.string.filter_field_feature
+        GroupBy.AGE_RATING -> Res.string.filter_field_age_rating
+        GroupBy.RELEASE_YEAR -> Res.string.filter_field_release_year
     },
 )
 
 @Composable
 private fun sortLabel(sort: LibrarySort?): String = stringResource(
     when (sort) {
-        null -> R.string.filter_sort_title
-        LibrarySort.TITLE -> R.string.filter_sort_title
-        LibrarySort.LAST_PLAYED -> R.string.filter_sort_last_played
-        LibrarySort.ADDED -> R.string.filter_sort_added
-        LibrarySort.PLAYTIME -> R.string.filter_sort_playtime
-        LibrarySort.MANUAL -> R.string.filter_sort_manual
+        null -> Res.string.filter_sort_title
+        LibrarySort.TITLE -> Res.string.filter_sort_title
+        LibrarySort.LAST_PLAYED -> Res.string.filter_sort_last_played
+        LibrarySort.ADDED -> Res.string.filter_sort_added
+        LibrarySort.PLAYTIME -> Res.string.filter_sort_playtime
+        LibrarySort.MANUAL -> Res.string.filter_sort_manual
     },
 )
 
 @Composable
 private fun fieldLabel(field: FilterField): String = stringResource(
     when (field) {
-        FilterField.NAME -> R.string.filter_field_name
-        FilterField.PLATFORM -> R.string.filter_field_platform
-        FilterField.SOURCE -> R.string.filter_field_source
-        FilterField.LIBRARY -> R.string.filter_field_library
-        FilterField.CATEGORY -> R.string.filter_field_category
-        FilterField.GROUP -> R.string.filter_field_group
-        FilterField.INSTALLED -> R.string.filter_field_installed
-        FilterField.NOT_INSTALLED -> R.string.not_installed
-        FilterField.GENRE -> R.string.filter_field_genre
-        FilterField.DEVELOPER -> R.string.filter_field_developer
-        FilterField.PUBLISHER -> R.string.filter_field_publisher
-        FilterField.SERIES -> R.string.filter_field_series
-        FilterField.FEATURE -> R.string.filter_field_feature
-        FilterField.AGE_RATING -> R.string.filter_field_age_rating
-        FilterField.RELEASE_YEAR -> R.string.filter_field_release_year
-        FilterField.RATING -> R.string.filter_field_rating
-        FilterField.PLAYED -> R.string.filter_field_played
-        FilterField.LAST_PLAYED -> R.string.filter_field_last_played
-        FilterField.PLAYTIME -> R.string.filter_field_playtime
-        FilterField.ADDED -> R.string.filter_field_added
-        FilterField.FAVORITE -> R.string.filter_field_favorite
-        FilterField.HIDDEN -> R.string.filter_field_hidden
-        FilterField.REVIEW -> R.string.filter_field_review
+        FilterField.NAME -> Res.string.filter_field_name
+        FilterField.PLATFORM -> Res.string.filter_field_platform
+        FilterField.SOURCE -> Res.string.filter_field_source
+        FilterField.LIBRARY -> Res.string.filter_field_library
+        FilterField.CATEGORY -> Res.string.filter_field_category
+        FilterField.GROUP -> Res.string.filter_field_group
+        FilterField.INSTALLED -> Res.string.filter_field_installed
+        FilterField.NOT_INSTALLED -> Res.string.not_installed
+        FilterField.GENRE -> Res.string.filter_field_genre
+        FilterField.DEVELOPER -> Res.string.filter_field_developer
+        FilterField.PUBLISHER -> Res.string.filter_field_publisher
+        FilterField.SERIES -> Res.string.filter_field_series
+        FilterField.FEATURE -> Res.string.filter_field_feature
+        FilterField.AGE_RATING -> Res.string.filter_field_age_rating
+        FilterField.RELEASE_YEAR -> Res.string.filter_field_release_year
+        FilterField.RATING -> Res.string.filter_field_rating
+        FilterField.PLAYED -> Res.string.filter_field_played
+        FilterField.LAST_PLAYED -> Res.string.filter_field_last_played
+        FilterField.PLAYTIME -> Res.string.filter_field_playtime
+        FilterField.ADDED -> Res.string.filter_field_added
+        FilterField.FAVORITE -> Res.string.filter_field_favorite
+        FilterField.HIDDEN -> Res.string.filter_field_hidden
+        FilterField.REVIEW -> Res.string.filter_field_review
     },
 )
 
@@ -511,8 +511,8 @@ private fun conditionValueLabel(
     hostNames: Map<String, String>,
     vm: LauncherViewModel,
 ): (FilterField, String) -> String {
-    val localLabel = stringResource(R.string.filter_local)
-    val emulatorLabel = stringResource(R.string.filter_emulation)
+    val localLabel = stringResource(Res.string.filter_local)
+    val emulatorLabel = stringResource(Res.string.filter_emulation)
     val collections by vm.collections.collectAsState()
     val groupNames = collections.associate { (c, _) -> c.id to c.name }
     val bucketLabels = FilterField.entries.flatMap { f -> f.buckets.map { (f to it) to bucketLabel(f, it) } }.toMap()
@@ -555,16 +555,16 @@ private fun ConditionDialog(
                 )
             } else {
                 ChoiceRow(
-                    stringResource(R.string.filter_mode), listOf(false, true), c.negate,
-                    label = { stringResource(if (it) R.string.filter_mode_exclude else R.string.filter_mode_include) },
+                    stringResource(Res.string.filter_mode), listOf(false, true), c.negate,
+                    label = { stringResource(if (it) Res.string.filter_mode_exclude else Res.string.filter_mode_include) },
                     onSelect = { onChange(c.copy(negate = it)) },
-                    subtitle = stringResource(if (c.negate) R.string.filter_mode_exclude_sub else R.string.filter_mode_include_sub),
+                    subtitle = stringResource(if (c.negate) Res.string.filter_mode_exclude_sub else Res.string.filter_mode_include_sub),
                     initialFocus = true,
                 )
                 if (field.multiValue || field.type == FieldType.TEXT) {
                     SwitchRow(
-                        stringResource(R.string.filter_match_all), c.matchAll, { onChange(c.copy(matchAll = it)) },
-                        subtitle = stringResource(R.string.filter_match_all_sub),
+                        stringResource(Res.string.filter_match_all), c.matchAll, { onChange(c.copy(matchAll = it)) },
+                        subtitle = stringResource(Res.string.filter_match_all_sub),
                     )
                 }
                 val options = when (field.type) {
@@ -576,15 +576,15 @@ private fun ConditionDialog(
                     }
                 }
                 if (field.type == FieldType.TEXT) {
-                    Text(stringResource(R.string.filter_name_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
-                    val title = stringResource(R.string.filter_name_add)
+                    Text(stringResource(Res.string.filter_name_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+                    val title = stringResource(Res.string.filter_name_add)
                     LauncherButton(title, icon = Icons.Filled.Add, onClick = {
                         keyboard.open(title, "") { text -> text.trim().takeIf { it.isNotEmpty() }?.let { onChange(c.copy(values = c.values + it)) } }
                     })
                 } else {
-                    Text(stringResource(R.string.filter_values_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+                    Text(stringResource(Res.string.filter_values_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
                     if (options.isEmpty()) {
-                        Text(stringResource(R.string.filter_values_none), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+                        Text(stringResource(Res.string.filter_values_none), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
                     }
                 }
                 FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -594,8 +594,8 @@ private fun ConditionDialog(
                 }
             }
             io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 12.dp, modifier = Modifier.padding(top = 8.dp)) {
-                LauncherButton(stringResource(R.string.action_done), onClick = onDismiss, primary = true)
-                LauncherButton(stringResource(R.string.filter_condition_delete), onClick = onDelete, icon = Icons.Filled.Delete)
+                LauncherButton(stringResource(Res.string.action_done), onClick = onDismiss, primary = true)
+                LauncherButton(stringResource(Res.string.filter_condition_delete), onClick = onDelete, icon = Icons.Filled.Delete)
             }
         }
     }
@@ -604,16 +604,16 @@ private fun ConditionDialog(
 /** Picks the field of a new condition, sorted into sections like Playnite's filter panel. */
 @Composable
 private fun FieldPickerDialog(visible: Boolean, onDismiss: () -> Unit, onPick: (FilterField) -> Unit) {
-    Modal(visible = visible, onDismiss = onDismiss, title = stringResource(R.string.filter_condition_add), maxWidth = 640.dp) {
+    Modal(visible = visible, onDismiss = onDismiss, title = stringResource(Res.string.filter_condition_add), maxWidth = 640.dp) {
         Column(Modifier.heightIn(max = 600.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             FieldSection.entries.forEachIndexed { s, section ->
                 SectionHeader(
                     stringResource(
                         when (section) {
-                            FieldSection.GAME -> R.string.filter_section_game
-                            FieldSection.METADATA -> R.string.filter_section_metadata
-                            FieldSection.ACTIVITY -> R.string.filter_section_activity
-                            FieldSection.STATUS -> R.string.filter_section_status
+                            FieldSection.GAME -> Res.string.filter_section_game
+                            FieldSection.METADATA -> Res.string.filter_section_metadata
+                            FieldSection.ACTIVITY -> Res.string.filter_section_activity
+                            FieldSection.STATUS -> Res.string.filter_section_status
                         },
                     ),
                 )
@@ -628,14 +628,14 @@ private fun FieldPickerDialog(visible: Boolean, onDismiss: () -> Unit, onPick: (
 /** "Plattform" or "Plattform (nicht)"; switches just show their name. */
 @Composable
 private fun conditionTitle(c: FilterCondition): String =
-    if (!c.field.boolean && c.negate) stringResource(R.string.filter_field_negated, fieldLabel(c.field)) else fieldLabel(c.field)
+    if (!c.field.boolean && c.negate) stringResource(Res.string.filter_field_negated, fieldLabel(c.field)) else fieldLabel(c.field)
 
 /** "PC, Nintendo Switch" (or "… und …" when all must match), "Ja" / "Nie" for switches. */
 @Composable
 private fun conditionValues(c: FilterCondition, labelFor: (FilterField, String) -> String): String {
     if (c.field.boolean) return booleanLabel(c.field, !c.negate)
-    if (c.values.isEmpty()) return stringResource(R.string.filter_condition_no_values)
-    val separator = if (c.matchAll) stringResource(R.string.filter_values_and) else ", "
+    if (c.values.isEmpty()) return stringResource(Res.string.filter_condition_no_values)
+    val separator = if (c.matchAll) stringResource(Res.string.filter_values_and) else ", "
     val texts = c.values.map { labelFor(c.field, it) }
     return if (c.field.type == FieldType.TEXT) texts.joinToString(separator) { "„$it“" } else texts.joinToString(separator)
 }
@@ -643,9 +643,9 @@ private fun conditionValues(c: FilterCondition, labelFor: (FilterField, String) 
 @Composable
 private fun booleanLabel(field: FilterField, yes: Boolean): String = stringResource(
     when {
-        yes -> R.string.yes
-        field == FilterField.PLAYED -> R.string.filter_never
-        else -> R.string.no
+        yes -> Res.string.yes
+        field == FilterField.PLAYED -> Res.string.filter_never
+        else -> Res.string.no
     },
 )
 
@@ -653,28 +653,28 @@ private fun booleanLabel(field: FilterField, yes: Boolean): String = stringResou
 private fun bucketLabel(field: FilterField, key: String): String = when (field) {
     FilterField.PLAYTIME -> stringResource(
         when (key) {
-            "none" -> R.string.filter_playtime_none
-            "lt1" -> R.string.filter_playtime_lt1
-            "1to10" -> R.string.filter_playtime_1to10
-            "10to100" -> R.string.filter_playtime_10to100
-            "100to500" -> R.string.filter_playtime_100to500
-            else -> R.string.filter_playtime_gt500
+            "none" -> Res.string.filter_playtime_none
+            "lt1" -> Res.string.filter_playtime_lt1
+            "1to10" -> Res.string.filter_playtime_1to10
+            "10to100" -> Res.string.filter_playtime_10to100
+            "100to500" -> Res.string.filter_playtime_100to500
+            else -> Res.string.filter_playtime_gt500
         },
     )
     FilterField.RATING -> when (key) {
-        "lt60" -> stringResource(R.string.filter_rating_lt60)
-        "none" -> stringResource(R.string.filter_rating_none)
-        else -> stringResource(R.string.filter_rating_from, key)
+        "lt60" -> stringResource(Res.string.filter_rating_lt60)
+        "none" -> stringResource(Res.string.filter_rating_none)
+        else -> stringResource(Res.string.filter_rating_from, key)
     }
     else -> stringResource(
         when (key) {
-            "today" -> R.string.filter_period_today
-            "yesterday" -> R.string.filter_period_yesterday
-            "week" -> R.string.filter_period_week
-            "month" -> R.string.filter_period_month
-            "year" -> R.string.filter_period_year
-            "older" -> R.string.filter_period_older
-            else -> R.string.filter_never
+            "today" -> Res.string.filter_period_today
+            "yesterday" -> Res.string.filter_period_yesterday
+            "week" -> Res.string.filter_period_week
+            "month" -> Res.string.filter_period_month
+            "year" -> Res.string.filter_period_year
+            "older" -> Res.string.filter_period_older
+            else -> Res.string.filter_never
         },
     )
 }
@@ -807,7 +807,7 @@ internal fun <T> ReorderableList(
                     ) {
                         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             androidx.compose.material3.Icon(
-                                Icons.Filled.DragHandle, stringResource(R.string.filter_drag),
+                                Icons.Filled.DragHandle, stringResource(Res.string.filter_drag),
                                 tint = if (active) LauncherTheme.colors.onAccent else LauncherTheme.colors.onSurfaceMuted,
                             )
                         }

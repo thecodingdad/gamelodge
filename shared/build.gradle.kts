@@ -28,6 +28,7 @@ kotlin {
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.ui)
+            api(compose.components.resources)
             api(libs.androidx.room.runtime.kmp)
             api(libs.androidx.datastore.preferences.core)
             api(libs.kotlinx.coroutines.core)
@@ -46,6 +47,11 @@ kotlin {
                 implementation(libs.androidx.sqlite.bundled)
             }
         }
+        val desktopTest by getting {
+            dependencies {
+                implementation(compose.desktop.currentOs)
+            }
+        }
     }
 }
 
@@ -57,6 +63,12 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+}
+
+compose.resources {
+    publicResClass = true
+    packageOfResClass = "io.github.thecodingdad.moonlightlauncher.resources"
+    generateResClass = always
 }
 
 room {

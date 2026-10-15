@@ -44,9 +44,8 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
-import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.container
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryItemEntity
 import io.github.thecodingdad.moonlightlauncher.metadata.ArtworkKind
@@ -67,13 +66,14 @@ import io.github.thecodingdad.moonlightlauncher.ui.input.PadAction
 import io.github.thecodingdad.moonlightlauncher.ui.input.PadButton
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 import kotlinx.coroutines.launch
+import io.github.thecodingdad.moonlightlauncher.resources.*
 
 /** Search IGDB/SteamGridDB and pick the right game; the choice is locked. */
 @Composable
 fun FixMetadataDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
     val metadata = LocalContext.current.container.metadata
     val scope = rememberCoroutineScope()
-    Modal(visible = item != null, onDismiss = onDismiss, title = stringResource(R.string.metadata_fix_title), maxWidth = 860.dp) {
+    Modal(visible = item != null, onDismiss = onDismiss, title = stringResource(Res.string.metadata_fix_title), maxWidth = 860.dp) {
         val target = item ?: return@Modal
         var query by remember(target.id) { mutableStateOf(target.metadataQuery ?: io.github.thecodingdad.moonlightlauncher.data.library.TitleNormalizer.searchTerm(target.title)) }
         var results by remember(target.id) { mutableStateOf<List<MetadataCandidate>?>(null) }
@@ -84,16 +84,16 @@ fun FixMetadataDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
         }
 
         if (!metadata.isConfigured) {
-            Text(stringResource(R.string.metadata_not_configured), style = MaterialTheme.typography.bodyLarge, color = LauncherTheme.colors.onSurface)
+            Text(stringResource(Res.string.metadata_not_configured), style = MaterialTheme.typography.bodyLarge, color = LauncherTheme.colors.onSurface)
             return@Modal
         }
-        LauncherTextField(stringResource(R.string.hint_search), query, onValueChange = { q -> query = q })
+        LauncherTextField(stringResource(Res.string.hint_search), query, onValueChange = { q -> query = q })
         Spacer(Modifier.height(14.dp))
         // Local copy: the list content is evaluated lazily and may run after a new search reset the state.
         val found = results
         when {
             applying || found == null -> CircularProgressIndicator(color = LauncherTheme.colors.accent, modifier = Modifier.align(Alignment.CenterHorizontally))
-            found.isEmpty() -> Text(stringResource(R.string.metadata_no_results), color = LauncherTheme.colors.onSurfaceMuted)
+            found.isEmpty() -> Text(stringResource(Res.string.metadata_no_results), color = LauncherTheme.colors.onSurfaceMuted)
             else -> LazyColumn(state = io.github.thecodingdad.moonlightlauncher.ui.input.rememberStickLazyListState(), modifier = Modifier.heightIn(max = 340.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(found, key = { c -> "${c.source}:${c.id}" }) { c ->
                     FocusSurface(
@@ -150,7 +150,7 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, targets: List<io.github.thecod
         }
     }
     // Constant height (the whole screen but a margin): switching tabs doesn't make it jump.
-    Modal(visible = item != null, onDismiss = onDismiss, title = stringResource(R.string.artwork_title), maxWidth = 1000.dp, modifier = Modifier.fillMaxHeight()) {
+    Modal(visible = item != null, onDismiss = onDismiss, title = stringResource(Res.string.artwork_title), maxWidth = 1000.dp, modifier = Modifier.fillMaxHeight()) {
         val target = item ?: return@Modal
         // Animated cover / background have their own tabs (while animated artwork is wanted).
         val animatedOn = LocalContext.current.container.settings.settings.collectAsState(null).value?.animatedArtwork ?: true
@@ -255,9 +255,9 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, targets: List<io.github.thecod
                             Text(
                                 stringResource(
                                     when {
-                                        manual && current == null -> if (kind.animated) R.string.artwork_none_chosen else R.string.artwork_removed
-                                        manual -> R.string.artwork_manual
-                                        else -> R.string.artwork_auto
+                                        manual && current == null -> if (kind.animated) Res.string.artwork_none_chosen else Res.string.artwork_removed
+                                        manual -> Res.string.artwork_manual
+                                        else -> Res.string.artwork_auto
                                     },
                                 ),
                                 style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted,
@@ -265,19 +265,19 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, targets: List<io.github.thecod
                             // Wraps on narrow (portrait) screens.
                             io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 10.dp) {
                                 io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton(
-                                    stringResource(R.string.artwork_own), icon = androidx.compose.material.icons.Icons.Filled.Image,
+                                    stringResource(Res.string.artwork_own), icon = androidx.compose.material.icons.Icons.Filled.Image,
                                     onClick = { pickOwn.launch(arrayOf("image/*")) },
                                 )
                                 // No image of this kind (animated: the still one shows instead).
                                 if (current != null) {
                                     io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton(
-                                        stringResource(R.string.artwork_none), icon = androidx.compose.material.icons.Icons.Filled.Delete,
+                                        stringResource(Res.string.artwork_none), icon = androidx.compose.material.icons.Icons.Filled.Delete,
                                         onClick = { scope.launch { metadata.clearArtwork(target.id, kind); onDismiss() } },
                                     )
                                 }
                                 if (manual) {
                                     io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton(
-                                        stringResource(R.string.artwork_reset_auto), icon = androidx.compose.material.icons.Icons.Filled.Restore,
+                                        stringResource(Res.string.artwork_reset_auto), icon = androidx.compose.material.icons.Icons.Filled.Restore,
                                         onClick = { scope.launch { metadata.resetArtwork(target.id, kind); onDismiss() } },
                                     )
                                 }
@@ -298,7 +298,7 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, targets: List<io.github.thecod
                 }
                 when {
                     !metadata.isConfigured && list.isNullOrEmpty() -> item(key = "status", span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
-                        Text(stringResource(R.string.metadata_not_configured), color = LauncherTheme.colors.onSurfaceMuted)
+                        Text(stringResource(Res.string.metadata_not_configured), color = LauncherTheme.colors.onSurfaceMuted)
                     }
                     list == null -> item(key = "status", span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
                         // A grid cell spans the full width: the spinner keeps its own size, centred.
@@ -307,7 +307,7 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, targets: List<io.github.thecod
                         }
                     }
                     list.isEmpty() -> item(key = "status", span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
-                        Text(stringResource(R.string.metadata_no_results), color = LauncherTheme.colors.onSurfaceMuted)
+                        Text(stringResource(Res.string.metadata_no_results), color = LauncherTheme.colors.onSurfaceMuted)
                     }
                     else -> items(list.size, key = { i -> list[i].url }) { i ->
                         val option = list[i]
@@ -333,7 +333,7 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, targets: List<io.github.thecod
                             Text(
                                 listOfNotNull(
                                     sourceLabel(option),
-                                    stringResource(R.string.artwork_animated).takeIf { option.animated },
+                                    stringResource(Res.string.artwork_animated).takeIf { option.animated },
                                     option.bytes?.let { android.text.format.Formatter.formatShortFileSize(LocalContext.current, it) },
                                 ).joinToString(" · "),
                                 style = MaterialTheme.typography.labelSmall, color = androidx.compose.ui.graphics.Color.White,
@@ -345,7 +345,7 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, targets: List<io.github.thecod
                 }
             }
             Spacer(Modifier.height(8.dp))
-            ButtonHintBar(listOf(ButtonHint(PadButton.A, stringResource(R.string.hint_select)), ButtonHint(PadButton.L1, stringResource(R.string.artwork_switch_kind), secondButton = PadButton.R1), ButtonHint(PadButton.B, stringResource(R.string.action_close), onClick = onDismiss)), inPopup = true)
+            ButtonHintBar(listOf(ButtonHint(PadButton.A, stringResource(Res.string.hint_select)), ButtonHint(PadButton.L1, stringResource(Res.string.artwork_switch_kind), secondButton = PadButton.R1), ButtonHint(PadButton.B, stringResource(Res.string.action_close), onClick = onDismiss)), inPopup = true)
         }
     }
 }
@@ -353,21 +353,21 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, targets: List<io.github.thecod
 @Composable
 private fun kindLabel(kind: ArtworkKind) = stringResource(
     when (kind) {
-        ArtworkKind.COVER -> R.string.artwork_cover
-        ArtworkKind.ANIMATED_COVER -> R.string.artwork_animated_cover
-        ArtworkKind.HERO -> R.string.artwork_hero
-        ArtworkKind.ANIMATED_HERO -> R.string.artwork_animated_hero
-        ArtworkKind.LOGO -> R.string.artwork_logo
-        ArtworkKind.ICON -> R.string.artwork_icon
+        ArtworkKind.COVER -> Res.string.artwork_cover
+        ArtworkKind.ANIMATED_COVER -> Res.string.artwork_animated_cover
+        ArtworkKind.HERO -> Res.string.artwork_hero
+        ArtworkKind.ANIMATED_HERO -> Res.string.artwork_animated_hero
+        ArtworkKind.LOGO -> Res.string.artwork_logo
+        ArtworkKind.ICON -> Res.string.artwork_icon
     },
 )
 
 @Composable
 private fun sourceLabel(option: ArtworkOption): String {
     val name = when (option.source) {
-        ArtworkSource.HOST -> stringResource(R.string.artwork_source_host)
-        ArtworkSource.ROM -> stringResource(R.string.artwork_source_rom)
-        ArtworkSource.COMPANION -> stringResource(R.string.metadata_source_companion)
+        ArtworkSource.HOST -> stringResource(Res.string.artwork_source_host)
+        ArtworkSource.ROM -> stringResource(Res.string.artwork_source_rom)
+        ArtworkSource.COMPANION -> stringResource(Res.string.metadata_source_companion)
         ArtworkSource.IGDB -> "IGDB"
         ArtworkSource.STEAMGRIDDB -> "SteamGridDB"
     }
@@ -394,7 +394,7 @@ private suspend fun copyOwn(context: android.content.Context, uri: android.net.U
 fun ReviewConfirmAction(entry: io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry, onConfirm: () -> Unit) {
     if (entry.item.metadataState != io.github.thecodingdad.moonlightlauncher.data.db.MetadataState.REVIEW) return
     io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton(
-        stringResource(R.string.metadata_confirm), onClick = onConfirm,
+        stringResource(Res.string.metadata_confirm), onClick = onConfirm,
         icon = androidx.compose.material.icons.Icons.Filled.Check,
     )
 }
@@ -421,20 +421,20 @@ fun AppTileDialog(entry: io.github.thecodingdad.moonlightlauncher.data.db.Librar
             onDismiss()
         }
     }
-    Modal(visible = target != null, onDismiss = onDismiss, title = stringResource(R.string.app_tile_title), maxWidth = 1000.dp) {
+    Modal(visible = target != null, onDismiss = onDismiss, title = stringResource(Res.string.app_tile_title), maxWidth = 1000.dp) {
         val e = target ?: return@Modal
         var options by remember(e.item.id) { mutableStateOf<List<SgdbAsset>?>(null) }
         LaunchedEffect(e.item.id) { options = metadata.tileOptions(e.item) }
-        Text(stringResource(R.string.app_tile_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+        Text(stringResource(Res.string.app_tile_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
         Spacer(Modifier.height(12.dp))
         io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 10.dp) {
             io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton(
-                stringResource(R.string.app_tile_own), onClick = { pickImage.launch(arrayOf("image/*")) },
+                stringResource(Res.string.app_tile_own), onClick = { pickImage.launch(arrayOf("image/*")) },
                 icon = androidx.compose.material.icons.Icons.Filled.Image,
             )
             if (e.item.tileUrl != null) {
                 io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton(
-                    stringResource(R.string.app_tile_reset), onClick = { scope.launch { metadata.setTile(e.item.id, null); onDismiss() } },
+                    stringResource(Res.string.app_tile_reset), onClick = { scope.launch { metadata.setTile(e.item.id, null); onDismiss() } },
                     icon = androidx.compose.material.icons.Icons.Filled.Restore,
                 )
             }
@@ -443,7 +443,7 @@ fun AppTileDialog(entry: io.github.thecodingdad.moonlightlauncher.data.db.Librar
         val list = options
         when {
             list == null -> CircularProgressIndicator(color = LauncherTheme.colors.accent)
-            list.isEmpty() -> Text(stringResource(R.string.app_tile_none), color = LauncherTheme.colors.onSurfaceMuted)
+            list.isEmpty() -> Text(stringResource(Res.string.app_tile_none), color = LauncherTheme.colors.onSurfaceMuted)
             else -> LazyVerticalGrid(
                 columns = GridCells.Adaptive(240.dp),
                 modifier = Modifier.heightIn(max = 380.dp),
@@ -463,6 +463,6 @@ fun AppTileDialog(entry: io.github.thecodingdad.moonlightlauncher.data.db.Librar
             }
         }
         Spacer(Modifier.height(8.dp))
-        ButtonHintBar(listOf(ButtonHint(PadButton.A, stringResource(R.string.hint_select)), ButtonHint(PadButton.B, stringResource(R.string.action_close), onClick = onDismiss)), inPopup = true)
+        ButtonHintBar(listOf(ButtonHint(PadButton.A, stringResource(Res.string.hint_select)), ButtonHint(PadButton.B, stringResource(Res.string.action_close), onClick = onDismiss)), inPopup = true)
     }
 }

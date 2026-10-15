@@ -14,12 +14,12 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.lifecycle.compose.LifecycleResumeEffect
-import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings
 import io.github.thecodingdad.moonlightlauncher.system.LauncherMode
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
+import io.github.thecodingdad.moonlightlauncher.resources.*
 
 @Composable
 fun LauncherModeSettings(settings: LauncherSettings, update: ((LauncherSettings) -> LauncherSettings) -> Unit) {
@@ -46,10 +46,10 @@ fun LauncherModeSettings(settings: LauncherSettings, update: ((LauncherSettings)
         if (mode.isAvailable != isDefault) mode.setAvailable(isDefault)
     }
 
-    SettingsPage(stringResource(R.string.settings_launcher)) {
-        Text(stringResource(R.string.launcher_intro), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+    SettingsPage(stringResource(Res.string.settings_launcher)) {
+        Text(stringResource(Res.string.launcher_intro), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
         SwitchRow(
-            stringResource(R.string.launcher_enable), isDefault,
+            stringResource(Res.string.launcher_enable), isDefault,
             onChange = { enabled ->
                 if (enabled) {
                     mode.setAvailable(true)
@@ -62,10 +62,10 @@ fun LauncherModeSettings(settings: LauncherSettings, update: ((LauncherSettings)
                     context.startActivity(mode.homeSettingsIntent())
                 }
             },
-            subtitle = stringResource(R.string.launcher_enable_sub),
+            subtitle = stringResource(Res.string.launcher_enable_sub),
             icon = Icons.Filled.Home,
             initialFocus = true,
         )
-        NavRow(stringResource(R.string.launcher_system_settings), { context.startActivity(mode.homeSettingsIntent()) }, icon = Icons.Filled.Settings)
+        NavRow(stringResource(Res.string.launcher_system_settings), { context.startActivity(mode.homeSettingsIntent()) }, icon = Icons.Filled.Settings)
     }
 }

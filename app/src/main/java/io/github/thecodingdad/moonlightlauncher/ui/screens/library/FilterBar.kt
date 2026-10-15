@@ -26,12 +26,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
-import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.data.library.BuiltinFilter
 import io.github.thecodingdad.moonlightlauncher.data.library.LibrarySort
 import io.github.thecodingdad.moonlightlauncher.data.library.ResolvedFilter
+import io.github.thecodingdad.moonlightlauncher.resources.*
 
 /**
  * Filter bar shared by library and Apps tab: filter chips on the left (scrolling when they
@@ -116,7 +116,7 @@ fun FilterBar(
                 item(key = "search") {
                     Chip(
                         "„$search“", selected = true, onClick = onClearSearch,
-                        icon = { Icon(Icons.Filled.Close, stringResource(R.string.search_clear), Modifier.padding(end = 6.dp)) },
+                        icon = { Icon(Icons.Filled.Close, stringResource(Res.string.search_clear), Modifier.padding(end = 6.dp)) },
                     )
                 }
             }
@@ -132,10 +132,10 @@ fun FilterBar(
             // Narrow screens: the tools sit behind one menu button, the chips get the width.
             var menu by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
             Chip("", selected = search.isNotEmpty() || sort != defaultSort, onClick = { menu = true }, icon = {
-                Icon(Icons.Filled.MoreVert, stringResource(R.string.hint_options))
+                Icon(Icons.Filled.MoreVert, stringResource(Res.string.hint_options))
             })
             io.github.thecodingdad.moonlightlauncher.ui.components.Modal(
-                visible = menu, onDismiss = { menu = false }, maxWidth = 420.dp, title = stringResource(R.string.hint_options),
+                visible = menu, onDismiss = { menu = false }, maxWidth = 420.dp, title = stringResource(Res.string.hint_options),
             ) {
                 androidx.compose.foundation.layout.Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     val item: @Composable (androidx.compose.ui.graphics.vector.ImageVector, String, () -> Unit) -> Unit = { icon, label, action ->
@@ -144,26 +144,26 @@ fun FilterBar(
                             modifier = Modifier.fillMaxWidth(),
                         )
                     }
-                    item(Icons.Filled.Search, stringResource(R.string.hint_search), onSearch)
+                    item(Icons.Filled.Search, stringResource(Res.string.hint_search), onSearch)
                     item(Icons.AutoMirrored.Filled.Sort, sortLabel(sort) + "  →  " + sortLabel(sort.next(manualSort)).substringAfter(": "), onSort)
-                    if (onStats != null) item(Icons.Filled.BarChart, stringResource(R.string.stats_title), onStats)
-                    item(Icons.Filled.Edit, stringResource(R.string.filters_edit), onEdit)
+                    if (onStats != null) item(Icons.Filled.BarChart, stringResource(Res.string.stats_title), onStats)
+                    item(Icons.Filled.Edit, stringResource(Res.string.filters_edit), onEdit)
                 }
             }
         } else {
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.focusRestorer()) {
             Chip(
                 "", selected = search.isNotEmpty(), onClick = onSearch,
-                icon = { Icon(Icons.Filled.Search, stringResource(R.string.hint_search)) },
+                icon = { Icon(Icons.Filled.Search, stringResource(Res.string.hint_search)) },
             )
             Chip(
                 "", selected = sort != defaultSort, onClick = onSort,
                 icon = { Icon(Icons.AutoMirrored.Filled.Sort, sortLabel(sort)) },
             )
             if (onStats != null) {
-                Chip("", selected = false, onClick = onStats, icon = { Icon(Icons.Filled.BarChart, stringResource(R.string.stats_title)) })
+                Chip("", selected = false, onClick = onStats, icon = { Icon(Icons.Filled.BarChart, stringResource(Res.string.stats_title)) })
             }
-            Chip("", selected = false, onClick = onEdit, icon = { Icon(Icons.Filled.Edit, stringResource(R.string.filters_edit)) })
+            Chip("", selected = false, onClick = onEdit, icon = { Icon(Icons.Filled.Edit, stringResource(Res.string.filters_edit)) })
         }
             }
     }
@@ -187,10 +187,10 @@ fun LibrarySort.next(manual: Boolean = false): LibrarySort {
 @Composable
 fun sortLabel(sort: LibrarySort): String = stringResource(
     when (sort) {
-        LibrarySort.TITLE -> R.string.sort_title
-        LibrarySort.LAST_PLAYED -> R.string.sort_last_played
-        LibrarySort.ADDED -> R.string.sort_added
-        LibrarySort.PLAYTIME -> R.string.sort_playtime
-        LibrarySort.MANUAL -> R.string.sort_manual
+        LibrarySort.TITLE -> Res.string.sort_title
+        LibrarySort.LAST_PLAYED -> Res.string.sort_last_played
+        LibrarySort.ADDED -> Res.string.sort_added
+        LibrarySort.PLAYTIME -> Res.string.sort_playtime
+        LibrarySort.MANUAL -> Res.string.sort_manual
     },
 )

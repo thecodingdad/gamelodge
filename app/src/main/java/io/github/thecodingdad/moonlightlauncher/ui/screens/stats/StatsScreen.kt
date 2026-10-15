@@ -21,10 +21,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry
 import io.github.thecodingdad.moonlightlauncher.data.db.PlaySessionEntity
 import androidx.compose.ui.focus.focusRequester
@@ -33,6 +32,7 @@ import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 import java.text.DateFormat
 import java.util.Calendar
 import java.util.Date
+import io.github.thecodingdad.moonlightlauncher.resources.*
 
 /** Pure aggregation, unit-testable. */
 data class PlayStats(
@@ -82,14 +82,14 @@ fun StatsScreen(entries: List<LibraryEntry>, sessions: List<PlaySessionEntity>) 
             .padding(horizontal = 48.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        io.github.thecodingdad.moonlightlauncher.ui.screens.settings.PageTitle(stringResource(R.string.stats_title))
+        io.github.thecodingdad.moonlightlauncher.ui.screens.settings.PageTitle(stringResource(Res.string.stats_title))
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            StatTile(stringResource(R.string.stats_total), formatDuration(stats.totalSeconds), Modifier.weight(1f))
-            StatTile(stringResource(R.string.stats_sessions), stats.sessions.toString(), Modifier.weight(1f))
-            StatTile(stringResource(R.string.stats_week), formatDuration(stats.perDay.sumOf { it.second }), Modifier.weight(1f))
+            StatTile(stringResource(Res.string.stats_total), formatDuration(stats.totalSeconds), Modifier.weight(1f))
+            StatTile(stringResource(Res.string.stats_sessions), stats.sessions.toString(), Modifier.weight(1f))
+            StatTile(stringResource(Res.string.stats_week), formatDuration(stats.perDay.sumOf { it.second }), Modifier.weight(1f))
         }
 
-        Text(stringResource(R.string.stats_last_days), style = MaterialTheme.typography.titleLarge, color = colors.onSurface)
+        Text(stringResource(Res.string.stats_last_days), style = MaterialTheme.typography.titleLarge, color = colors.onSurface)
         val maxDay = stats.perDay.maxOf { it.second }.coerceAtLeast(1)
         Row(Modifier.fillMaxWidth().height(160.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Bottom) {
             stats.perDay.forEach { (day, secs) ->
@@ -107,7 +107,7 @@ fun StatsScreen(entries: List<LibraryEntry>, sessions: List<PlaySessionEntity>) 
         }
 
         if (stats.topGames.isNotEmpty()) {
-            Text(stringResource(R.string.stats_most_played), style = MaterialTheme.typography.titleLarge, color = colors.onSurface)
+            Text(stringResource(Res.string.stats_most_played), style = MaterialTheme.typography.titleLarge, color = colors.onSurface)
             val maxGame = stats.topGames.first().second.coerceAtLeast(1)
             stats.topGames.forEach { (entry, secs) ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -121,7 +121,7 @@ fun StatsScreen(entries: List<LibraryEntry>, sessions: List<PlaySessionEntity>) 
         }
 
         if (sessions.isNotEmpty()) {
-            Text(stringResource(R.string.stats_recent_sessions), style = MaterialTheme.typography.titleLarge, color = colors.onSurface)
+            Text(stringResource(Res.string.stats_recent_sessions), style = MaterialTheme.typography.titleLarge, color = colors.onSurface)
             sessions.take(15).forEach { s ->
                 Row {
                     Text(byId[s.itemId]?.item?.title ?: "?", style = MaterialTheme.typography.bodyMedium, color = colors.onSurface, modifier = Modifier.weight(1f), maxLines = 1)

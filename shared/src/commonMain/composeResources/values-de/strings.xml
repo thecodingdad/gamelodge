@@ -1,0 +1,980 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tabs -->
+    <string name="tab_home">Start</string>
+    <string name="tab_library">Bibliothek</string>
+    <string name="tab_apps">Apps</string>
+    <string name="tab_settings">Einstellungen</string>
+
+    <!-- Common actions -->
+    <string name="action_cancel">Abbrechen</string>
+    <string name="action_close">Schließen</string>
+    <string name="action_retry">Erneut versuchen</string>
+    <string name="action_play">Spielen</string>
+    <string name="action_play_with">Starten mit …</string>
+    <string name="action_details">Details</string>
+    <string name="action_favorite">Zu Favoriten</string>
+    <string name="action_unfavorite">Aus Favoriten entfernen</string>
+    <string name="action_mark_app">Das ist eine App</string>
+    <string name="action_mark_game">Das ist ein Spiel</string>
+    <string name="action_hide">Ausblenden</string>
+    <string name="off">Aus</string>
+    <string name="minutes_short">%1$d Min.</string>
+    <string name="coming_soon">Kommt bald</string>
+
+    <!-- Button hints -->
+    <string name="hint_select">Auswählen</string>
+    <string name="hint_back">Zurück</string>
+    <string name="hint_open">Öffnen</string>
+    <string name="hint_start">Starten</string>
+    <string name="hint_options">Optionen</string>
+    <string name="hint_tabs">Tab wechseln</string>
+    <string name="hint_search">Suche</string>
+    <string name="hint_profile">Profil wechseln</string>
+    <string name="hint_hold_to_confirm">Gedrückt halten</string>
+
+    <!-- Home -->
+    <string name="home_running">Läuft gerade</string>
+    <string name="home_continue">Weiterspielen</string>
+    <string name="home_favorites">Favoriten</string>
+    <string name="home_recently_added">Zuletzt hinzugefügt</string>
+    <string name="home_empty_title">Deine Bibliothek ist leer</string>
+    <string name="home_empty_message">Füge einen Streaming-Host hinzu oder installiere Spiele auf diesem Gerät.</string>
+    <string name="running_on">Läuft auf %1$s</string>
+    <string name="never_played">Noch nie gespielt</string>
+    <string name="never_used">Noch nie genutzt</string>
+    <plurals name="usage_hours">
+        <item quantity="one">%1$d Stunde genutzt</item>
+        <item quantity="other">%1$d Stunden genutzt</item>
+    </plurals>
+    <plurals name="usage_minutes">
+        <item quantity="one">%1$d Minute genutzt</item>
+        <item quantity="other">%1$d Minuten genutzt</item>
+    </plurals>
+    <plurals name="playtime_hours">
+        <item quantity="one">%1$d Stunde gespielt</item>
+        <item quantity="other">%1$d Stunden gespielt</item>
+    </plurals>
+    <plurals name="playtime_minutes">
+        <item quantity="one">%1$d Minute gespielt</item>
+        <item quantity="other">%1$d Minuten gespielt</item>
+    </plurals>
+
+    <!-- Library -->
+    <string name="filter_all">Alle</string>
+    <string name="filter_local">Auf diesem Gerät</string>
+    <string name="filter_favorites">Favoriten</string>
+    <string name="filter_never_played">Nie gespielt</string>
+    <string name="filter_review">Bitte prüfen</string>
+    <string name="filter_hidden">Ausgeblendet</string>
+    <string name="sort_title">Sortierung: Name</string>
+    <string name="sort_last_played">Sortierung: Zuletzt gespielt</string>
+    <string name="sort_added">Sortierung: Hinzugefügt</string>
+    <string name="sort_playtime">Sortierung: Spielzeit</string>
+    <string name="library_empty_filter">Hier ist nichts.</string>
+
+    <!-- Apps -->
+    <string name="apps_empty">Keine Apps gefunden.</string>
+    <string name="apps_on_device">Auf diesem Gerät</string>
+    <string name="apps_on_host">Auf %1$s</string>
+
+    <!-- Detail -->
+    <string name="detail_developer">Entwickler</string>
+    <string name="detail_genres">Genres</string>
+    <string name="detail_rating">Bewertung</string>
+    <string name="detail_available">Verfügbar</string>
+    <string name="detail_last_played">Zuletzt gespielt</string>
+    <string name="detail_sessions">Sitzungen</string>
+
+    <!-- Launch flow -->
+    <string name="target_local">Auf diesem Gerät</string>
+    <string name="target_remote">Stream von %1$s</string>
+    <string name="launch_where">Wo möchtest du spielen?</string>
+    <string name="launch_profile">Stream-Profil</string>
+    <string name="launch_failed_title">Start nicht möglich</string>
+    <string name="launch_running_title">Ein anderes Spiel läuft</string>
+    <string name="launch_running_message">%1$s läuft noch auf dem Host. Beenden und %2$s starten?</string>
+    <string name="launch_quit_and_start">Beenden und starten</string>
+    <string name="step_waking_host">Host wird aufgeweckt …</string>
+    <string name="step_connecting_vpn">VPN wird verbunden …</string>
+    <string name="step_checking_network">Verbindung wird geprüft …</string>
+    <string name="step_quitting">Laufendes Spiel wird beendet …</string>
+    <string name="step_starting">Stream wird gestartet …</string>
+    <string name="error_host_offline">Der Host ist offline oder nicht erreichbar.</string>
+    <string name="error_not_paired">Dieses Gerät ist noch nicht mit dem Host gekoppelt. Koppeln unter Einstellungen → Hosts.</string>
+    <string name="error_app_missing">Die App ist nicht mehr installiert.</string>
+    <string name="error_start_failed">Der Stream konnte nicht gestartet werden.</string>
+    <string name="error_quit_failed">Das laufende Spiel konnte nicht beendet werden.</string>
+    <string name="profile_default">Standard</string>
+
+    <!-- On-screen keyboard -->
+    <string name="keyboard_done">Fertig</string>
+    <string name="keyboard_delete">Löschen</string>
+    <string name="keyboard_space">Leerzeichen</string>
+    <string name="keyboard_shift">Groß</string>
+    <string name="keyboard_symbols">Symbole</string>
+
+    <!-- Settings overview -->
+    <string name="settings_hosts">Hosts</string>
+    <string name="settings_hosts_sub">Streaming-PCs, Koppeln, Aufwecken</string>
+    <string name="settings_profiles">Stream-Profile</string>
+    <string name="settings_profiles_sub">Auflösung, Bildrate, Bitrate, HDR</string>
+    <string name="settings_home_screen">Startbildschirm</string>
+    <string name="settings_home_screen_sub">Start-Tab, Reihen</string>
+    <string name="home_rows_section">Reihen im Start-Tab</string>
+    <string name="home_rows_help">Welche Filter als Reihen im Start-Tab erscheinen und in welcher Reihenfolge (unabhängig von der Bibliothek). Reihe am Griff verschieben: ziehen oder auswählen und mit hoch/runter bewegen.</string>
+    <string name="home_row_ha">Smart-Home-Favoriten</string>
+    <string name="settings_theme">Theme &amp; Farben</string>
+    <string name="settings_theme_sub">Dunkel, Schwarz, Hell, Akzentfarbe</string>
+    <string name="settings_display">Anzeige</string>
+    <string name="settings_display_sub">Kartengröße, Skalierung, Animationen, Bildschirmschoner, TV</string>
+    <string name="settings_controls">Tasten &amp; Bedienung</string>
+    <string name="settings_controls_sub">Tastenbelegung, Hilfe-Leiste, Direktstart, Tastenkombinationen</string>
+    <string name="settings_controllers">Controller</string>
+    <string name="settings_controllers_sub">Verbundene Controller und Spielerreihenfolge</string>
+    <string name="settings_metadata">Metadaten &amp; Artwork</string>
+    <string name="settings_metadata_sub">SteamGridDB, IGDB, Companion, Metadaten-Server, Prüfliste</string>
+    <string name="settings_home_assistant">Home Assistant</string>
+    <string name="settings_home_assistant_sub">Verbindung und Smart-Home-Kacheln</string>
+    <string name="settings_vpn">VPN</string>
+    <string name="settings_vpn_sub">WireGuard-Tunnel und Auto-Verbinden</string>
+    <string name="settings_launcher">Launcher-Modus</string>
+    <string name="settings_launcher_sub">Als Startbildschirm verwenden</string>
+    <string name="settings_backup">Backup</string>
+    <string name="settings_backup_sub">Einrichtung exportieren und wiederherstellen</string>
+    <string name="settings_language">Sprache</string>
+    <string name="settings_about">Info</string>
+
+    <!-- Appearance -->
+    <string name="setting_theme">Theme</string>
+    <string name="theme_dark">Dunkel</string>
+    <string name="theme_black">Schwarz (OLED)</string>
+    <string name="theme_light">Hell</string>
+    <string name="setting_accent">Akzentfarbe</string>
+    <string name="accent_cover">Aus Cover</string>
+    <string name="accent_fixed">Fest</string>
+    <string name="setting_accent_color">Feste Akzentfarbe</string>
+    <string name="color_blue">Blau</string>
+    <string name="color_green">Grün</string>
+    <string name="color_orange">Orange</string>
+    <string name="color_pink">Pink</string>
+    <string name="color_purple">Lila</string>
+    <string name="color_yellow">Gelb</string>
+    <string name="color_teal">Türkis</string>
+    <string name="setting_card_size">Kartengröße</string>
+    <string name="size_small">Klein</string>
+    <string name="size_medium">Mittel</string>
+    <string name="size_large">Groß</string>
+    <string name="setting_animated_artwork">Animiertes Artwork</string>
+    <string name="setting_reduce_motion">Animationen reduzieren</string>
+    <string name="setting_screensaver">Bildschirmschoner nach</string>
+
+    <!-- Controls -->
+    <string name="setting_button_layout">Tastenbelegung</string>
+    <string name="setting_button_layout_sub">Nintendo tauscht Bestätigen/Zurück (A/B) und X/Y</string>
+    <string name="button_layout_xbox">Xbox</string>
+    <string name="button_layout_nintendo">Nintendo</string>
+    <string name="setting_ui_sounds">Oberflächen-Sounds</string>
+    <string name="setting_ui_volume">Sound-Lautstärke</string>
+    <string name="setting_haptics">Vibration</string>
+
+    <!-- Language -->
+    <string name="language_system">Systemsprache</string>
+
+    <!-- About -->
+    <string name="about_license">Lizenz</string>
+    <string name="about_source">Quellcode</string>
+
+    <!-- Hosts -->
+    <string name="hosts_empty">Noch keine Hosts. Hosts im Netzwerk erscheinen automatisch.</string>
+    <string name="hosts_refresh">Aktualisieren</string>
+    <string name="hosts_discovery_hint">Hosts mit Sunshine, Apollo oder Vibepollo im selben Netzwerk werden automatisch gefunden, solange diese Seite geöffnet ist. Für Hosts in anderen Netzwerken „Host hinzufügen“ verwenden.</string>
+    <string name="host_add">Host hinzufügen</string>
+    <string name="host_add_title">Host-Adresse (IP oder Name)</string>
+    <string name="host_added">Host hinzugefügt.</string>
+    <string name="host_invalid_address">Das sieht nicht nach einer gültigen Adresse aus.</string>
+    <string name="host_unreachable">Der Host ist nicht erreichbar.</string>
+    <string name="host_pair">Koppeln</string>
+    <string name="host_unpair">Entkoppeln</string>
+    <string name="host_wake">Aufwecken</string>
+    <string name="host_remove">Entfernen</string>
+    <string name="host_settings">Host-Einstellungen</string>
+    <string name="host_paired">Gekoppelt</string>
+    <string name="host_not_paired">Nicht gekoppelt</string>
+    <string name="host_status_online">Online</string>
+    <string name="host_status_offline">Offline</string>
+    <string name="host_status_streaming">Streamt</string>
+    <string name="host_status_unknown">Wird geprüft …</string>
+    <string name="pair_title">Host koppeln</string>
+    <string name="pair_instructions">Öffne die Weboberfläche von %1$s (Sunshine / Apollo / Vibepollo) und gib diese PIN ein:</string>
+    <string name="pair_waiting">Warte auf die PIN-Eingabe am Host …</string>
+    <string name="pair_success">Erfolgreich gekoppelt. Deine Spiele erscheinen gleich in der Bibliothek.</string>
+    <string name="pair_wrong_pin">Die am Host eingegebene PIN war falsch. Bitte erneut versuchen.</string>
+    <string name="pair_in_game">Auf dem Host läuft ein Spiel. Beende es und versuche es erneut.</string>
+    <string name="pair_in_progress">Ein anderes Gerät koppelt gerade mit diesem Host.</string>
+    <string name="pair_failed">Koppeln fehlgeschlagen.</string>
+
+    <!-- Metadata -->
+    <string name="metadata_fix_title">Metadaten suchen</string>
+    <string name="metadata_not_configured">Hinterlege zuerst einen SteamGridDB-API-Key oder IGDB-Zugangsdaten unter Einstellungen → Metadaten &amp; Artwork.</string>
+    <string name="metadata_no_results">Keine Treffer.</string>
+    <string name="artwork_title">Artwork ändern</string>
+    <string name="artwork_cover">Cover</string>
+    <string name="artwork_hero">Hintergrund</string>
+    <string name="artwork_logo">Logo</string>
+    <string name="artwork_switch_kind">Typ wechseln</string>
+    <string name="artwork_icon">Icon</string>
+    <string name="artwork_animated_cover">Animiertes Cover</string>
+    <string name="artwork_animated_hero">Animierter Hintergrund</string>
+    <string name="artwork_manual">von Hand gewählt</string>
+    <string name="artwork_auto">automatisch (in der Reihenfolge der Quellen)</string>
+    <string name="artwork_reset_auto">Automatisch</string>
+    <string name="artwork_animated">animiert</string>
+    <string name="artwork_none">Löschen</string>
+    <string name="artwork_own">Eigenes Bild …</string>
+    <string name="artwork_source_host">Host</string>
+    <string name="artwork_source_rom">ROM-Ordner</string>
+    <string name="artwork_none_chosen">keins, von Hand gewählt (das normale Bild wird gezeigt)</string>
+    <string name="artwork_removed">von Hand gelöscht</string>
+    <string name="setting_animated_tiles">Animierte Kacheln</string>
+    <string name="setting_animated_tiles_focus">Beim Fokussieren</string>
+    <string name="setting_animated_tiles_always">Immer</string>
+    <string name="setting_animated_mobile">Animierte Bilder über mobile Daten laden</string>
+    <string name="setting_animated_mobile_sub">Sie sind groß (oft 10–30 MB pro Bild); sonst nur über WLAN.</string>
+    <string name="metadata_artwork_storage">Auf dem Gerät gespeicherte Bilder: %1$s</string>
+    <string name="metadata_auto">Metadaten automatisch abrufen</string>
+    <string name="metadata_review_list">Bitte prüfen</string>
+    <string name="metadata_review_count">%1$d Spiele mit unsicherem Treffer</string>
+    <string name="metadata_progress">Metadaten werden abgerufen: %1$d von %2$d</string>
+    <string name="metadata_auth_error">Zugangsdaten abgelehnt: %1$s</string>
+    <string name="metadata_fetch_now">Jetzt abrufen</string>
+    <string name="metadata_refetch_all">Alles neu abrufen</string>
+    <string name="metadata_sgdb_help">Key erstellen unter steamgriddb.com → Preferences → API.</string>
+    <string name="metadata_igdb_help">App unter dev.twitch.tv/console registrieren (Kategorie: Application Integration, OAuth-Redirect-URL: http://localhost, Client-Typ: Vertraulich), ein Secret erzeugen und Client-ID und Secret kopieren.</string>
+    <string name="metadata_api_key">API-Key</string>
+    <string name="metadata_client_id">Client-ID</string>
+    <string name="metadata_client_secret">Client-Secret</string>
+    <string name="metadata_choose_game">Spiel wählen</string>
+    <string name="metadata_confirm">Treffer stimmt</string>
+    <string name="metadata_review_help">Diese Treffer waren unsicher. Bestätige sie oder wähle das richtige Spiel.</string>
+    <string name="metadata_review_done">Alle Treffer geprüft.</string>
+    <string name="metadata_matched_as">Zugeordnet als „%1$s“ (%2$d %%)</string>
+
+    <!-- Phase 4: profiles, launcher mode, collections, stats -->
+    <string name="profile_new_name">Profilname</string>
+    <string name="profile_edit">Bearbeiten</string>
+    <string name="profile_set_active">Aktiv setzen</string>
+    <string name="profiles_intro">Das aktive Profil gilt für jeden Stream. Mit „Starten mit …“ (X) wählst du für einen einzelnen Start ein anderes.</string>
+    <string name="profile_base_sub">Basis-Einstellungen, neue Profile starten von hier</string>
+    <string name="profile_active">Aktiv</string>
+    <string name="profile_new">Neues Profil</string>
+    <string name="profile_rename">Umbenennen</string>
+    <string name="profile_delete">Löschen</string>
+    <string name="profile_essentials">Wichtigste Einstellungen</string>
+    <string name="launcher_intro">Moonlight Launcher als Startbildschirm verwenden. Du kannst jederzeit zurückwechseln, die App funktioniert auch weiter als normale App.</string>
+    <string name="launcher_enable">Als Startbildschirm verwenden</string>
+    <string name="launcher_enable_sub">Zeigt an, ob der Launcher der Standard-Startbildschirm ist; Einschalten öffnet Androids Auswahl</string>
+    <string name="launcher_system_settings">Android-Startbildschirm-Einstellungen</string>
+    <string name="yes">Ja</string>
+    <string name="no">Nein</string>
+    <string name="action_collections">Gruppen …</string>
+    <string name="collections_title">Gruppen</string>
+    <string name="collection_new">Neue Gruppe</string>
+    <string name="collection_new_name">Name der Gruppe</string>
+    <string name="stats_title">Statistik</string>
+    <string name="stats_total">Gesamte Spielzeit</string>
+    <string name="stats_sessions">Sitzungen</string>
+    <string name="stats_week">Letzte 7 Tage</string>
+    <string name="stats_last_days">Spielzeit pro Tag</string>
+    <string name="stats_most_played">Meistgespielt</string>
+    <string name="stats_recent_sessions">Letzte Sitzungen</string>
+
+    <!-- Home Assistant -->
+    <string name="ha_unavailable">Nicht verfügbar</string>
+    <string name="ha_on">An</string>
+    <string name="ha_off">Aus</string>
+    <string name="ha_locked">Verriegelt</string>
+    <string name="ha_unlocked">Entriegelt</string>
+    <string name="ha_run">Ausführen</string>
+    <string name="ha_not_configured">Nicht eingerichtet</string>
+    <string name="ha_disconnected">Getrennt</string>
+    <string name="ha_connecting">Verbinde …</string>
+    <string name="ha_connected">Verbunden</string>
+    <string name="ha_auth_failed">Anmeldung abgelaufen – bitte neu anmelden</string>
+    <string name="ha_panel_empty">Füge Home-Assistant-Entitäten als Kacheln hinzu, um sie überall mit Y zu steuern.</string>
+    <string name="ha_setup">Einrichten</string>
+    <string name="ha_hint_toggle">Schalten · ◀▶ einstellen</string>
+    <string name="ha_status">Status</string>
+    <string name="ha_url">Home-Assistant-URL</string>
+    <string name="ha_login">Anmelden</string>
+    <string name="ha_relogin">Neu anmelden</string>
+    <string name="ha_logout">Abmelden</string>
+    <string name="ha_login_waiting">Anmeldung im Browser abschließen …</string>
+    <string name="ha_tiles">Kacheln</string>
+    <string name="ha_show_home_row">Favoriten-Kacheln auf dem Startbildschirm zeigen</string>
+    <string name="ha_add_tile">Kachel hinzufügen</string>
+    <string name="ha_on_home">Auf Startbildschirm</string>
+    <string name="ha_not_on_home">Nicht auf Startbildschirm</string>
+    <string name="ha_events_help">Für Automationen sendet der Launcher die Events moonlight_launcher_stream_started und moonlight_launcher_stream_stopped (mit Spiel, Host und Profil).</string>
+
+    <!-- Phase 6: host features -->
+    <string name="error_wake_failed">Der Host ist nicht aufgewacht. Prüfe die Aufweck-Einstellungen des Hosts (Wake-on-LAN / Home Assistant).</string>
+    <string name="error_no_launch_permission">Dieses Gerät darf auf dem Host keine Apps starten. Erlaube in der Weboberfläche des Hosts (Apollo/Vibepollo → Clients) für diesen Client „Apps starten“ (und „Controller-Eingabe“).</string>
+    <string name="network_warning_title">Schwache Verbindung</string>
+    <string name="network_warning_message">Latenz %1$d ms, Jitter %2$d ms. Der Stream könnte ruckeln, ein leichteres Profil hilft.</string>
+    <string name="network_continue">Trotzdem starten</string>
+    <string name="network_start_with">Mit „%1$s“ starten</string>
+
+    <!-- HA additions -->
+    <string name="ha_login_first">Melde dich zuerst bei Home Assistant an.</string>
+
+    <!-- Host config, controllers -->
+    <string name="perm_launch">Apps starten</string>
+    <string name="perm_controller">Controller-Eingabe</string>
+    <string name="perm_list">Apps auflisten</string>
+    <string name="perm_other">Sonstiges</string>
+    <string name="perm_missing">Der Host erlaubt nicht: %1$s. Gib es in der Weboberfläche des Hosts für diesen Client frei (Apollo/Vibepollo → Clients).</string>
+    <string name="host_wake_section">Aufwecken</string>
+    <string name="host_wake_method">Aufweck-Methode</string>
+    <string name="host_wake_method_sub">Wird automatisch genutzt, wenn du ein Spiel auf einem ausgeschalteten Host startest</string>
+    <string name="wake_none">Keine</string>
+    <string name="wake_wol">Wake-on-LAN</string>
+    <string name="wake_ha">Home Assistant</string>
+    <string name="wake_both">Beides</string>
+    <string name="host_ha_wake">Home-Assistant-Aktion zum Aufwecken</string>
+    <string name="host_power_section">Energie</string>
+    <string name="host_ha_sleep">Aktion für Schlafen</string>
+    <string name="host_ha_shutdown">Aktion für Herunterfahren</string>
+    <string name="host_ha_restart">Aktion für Neustart</string>
+    <string name="host_auto_sleep">Host nach dem Streamen schlafen legen</string>
+    <string name="host_auto_sleep_sub">Nach dem Ende des letzten Streams (nutzt die Schlaf- oder Herunterfahren-Aktion)</string>
+    <string name="host_pick_action">Home-Assistant-Entität wählen</string>
+    <string name="not_set">Nicht festgelegt</string>
+    <string name="power_sleep">Schlafen</string>
+    <string name="power_restart">Neu starten</string>
+    <string name="power_shutdown">Herunterfahren</string>
+    <string name="controllers_intro">Im Stream wird jeder Controller als eigenes Gamepad an den Host gereicht. Wähle einen Controller, um ihm eigene Einstellungen oder eine feste Spielernummer zu geben.</string>
+    <string name="controllers_none">Keine Controller verbunden.</string>
+    <string name="controller_external">Extern</string>
+    <string name="controller_builtin">Intern</string>
+    <string name="controller_battery">Akku %1$d %%</string>
+    <string name="controller_vibrate_test">Vibration testen</string>
+
+    <!-- VPN -->
+    <string name="vpn_down">Getrennt</string>
+    <string name="vpn_connecting">Verbinde …</string>
+    <string name="vpn_up">Verbunden</string>
+    <string name="vpn_error">Fehler</string>
+    <string name="vpn_tunnels">Tunnel</string>
+    <string name="vpn_default_tunnel">Standard-Tunnel</string>
+    <string name="vpn_import_file">Datei importieren</string>
+    <string name="vpn_import_clipboard">Aus Zwischenablage</string>
+    <string name="vpn_delete">%1$s löschen</string>
+    <string name="vpn_imported">Tunnel importiert.</string>
+    <string name="vpn_import_help">Exportiere die WireGuard-Konfiguration (.conf) aus deinem Router, z. B. FRITZ!Box → Internet → Freigaben → VPN (WireGuard).</string>
+    <string name="vpn_auto">Automatisch verbinden</string>
+    <string name="vpn_auto_unreachable">Wenn der Host nicht erreichbar ist</string>
+    <string name="vpn_auto_unreachable_sub">Vor einem Stream: verbinden und erneut versuchen</string>
+    <string name="vpn_auto_outside">Außerhalb des Heim-WLANs</string>
+    <string name="vpn_auto_outside_sub">Braucht Standortzugriff, um den WLAN-Namen zu lesen</string>
+    <string name="vpn_disconnect_home">Im Heim-WLAN trennen</string>
+    <string name="vpn_home_remove">Heim-WLAN · A entfernt es</string>
+    <string name="vpn_add_home">„%1$s“ als Heim-WLAN hinzufügen</string>
+    <string name="vpn_ssid_unknown">Aktueller WLAN-Name nicht verfügbar (Standort aus oder kein WLAN).</string>
+
+    <!-- Quick menu -->
+    <string name="quick_menu_hold">Schnellmenü (halten)</string>
+    <string name="quick_menu">Schnellmenü</string>
+    <string name="qm_volume">Lautstärke</string>
+    <string name="qm_brightness">Helligkeit</string>
+    <string name="qm_brightness_permission">Helligkeitssteuerung erlauben</string>
+    <string name="qm_wifi">WLAN</string>
+    <string name="qm_bluetooth">Bluetooth</string>
+    <string name="qm_android_settings">Android-Einstellungen</string>
+    <string name="qm_running_on">%1$s auf %2$s</string>
+    <string name="qm_resume">Fortsetzen</string>
+    <string name="qm_quit_game">Spiel beenden</string>
+
+    <!-- Backup -->
+    <string name="backup_intro">Sichert Einstellungen, Stream-Profile, Host-Einstellungen, Favoriten, Filter und Gruppen, korrigierte Metadaten und Smart-Home-Kacheln. Die Kopplung mit Hosts ist nicht enthalten, auf einem neuen Gerät die Hosts erst neu koppeln.</string>
+    <string name="backup_restore_hint">Vor dem Wiederherstellen alle Hosts unter Einstellungen → Hosts koppeln und warten, bis ihre Spiele erscheinen. Favoriten, Spielzeiten und Metadaten werden nur Spielen zugeordnet, die schon in der Bibliothek sind.</string>
+    <string name="backup_folder">Backup-Ordner</string>
+    <string name="backup_auto">Tägliches automatisches Backup</string>
+    <string name="backup_auto_sub">In den Backup-Ordner, ohne Zugangsdaten</string>
+    <string name="backup_keep">Aufbewahrte Backups</string>
+    <string name="backup_with_credentials">Zugangsdaten einschließen</string>
+    <string name="backup_with_credentials_sub">API-Keys, Home-Assistant-Anmeldung und VPN-Schlüssel, mit Passwort verschlüsselt</string>
+    <string name="backup_password">Backup-Passwort</string>
+    <string name="backup_now">Jetzt sichern</string>
+    <string name="backup_restore">Wiederherstellen</string>
+    <string name="backup_done">Backup gespeichert.</string>
+    <string name="backup_restored">Backup wiederhergestellt.</string>
+    <string name="backup_wrong_password">Falsches Passwort – Zugangsdaten wurden nicht wiederhergestellt.</string>
+
+    <!-- Vibepollo -->
+
+    <!-- Vibepollo Playnite -->
+
+    <!-- Filters, platforms, sounds -->
+    <string name="filter_hosts">Hosts</string>
+    <string name="filter_platforms">Plattformen</string>
+    <string name="filters_edit">Filter bearbeiten</string>
+    <string name="settings_filters">Filter &amp; Gruppen</string>
+    <string name="settings_filters_sub">Eigene Filter, Gruppen und Chip-Reihenfolge für Spiele und Apps</string>
+    <string name="filters_help">Spiele-Filter und -Gruppen erscheinen als Chips in der Bibliothek und optional als Reihe auf der Startseite. Das Auge blendet einen Chip ein oder aus, am Griff ziehst du die Reihenfolge. Standardfilter sind normale Filter: bearbeiten, ausblenden oder löschen wie eigene.</string>
+    <string name="filter_new_smart">Neuer Filter</string>
+    <string name="filter_new_group">Neue Gruppe</string>
+    <string name="filters_restore">Standards wiederherstellen</string>
+    <string name="filter_place_library">Bibliothek</string>
+    <string name="filter_place_home">Start</string>
+    <string name="filter_place_apps">Apps</string>
+    <string name="filter_place_none">Nicht angezeigt</string>
+    <string name="filter_kind_builtin">Standardfilter</string>
+    <string name="filter_kind_smart">Eigener Filter</string>
+    <string name="filter_kind_group">Gruppe (%1$d)</string>
+    <string name="filter_name">Name</string>
+    <string name="filter_show_library">In der Bibliothek anzeigen</string>
+    <string name="filter_show_home">Als Reihe auf der Startseite</string>
+    <string name="filter_show_apps">Im Apps-Tab anzeigen</string>
+    <string name="filter_rules">Regeln</string>
+    <string name="filter_group_by">Aufteilen nach</string>
+    <string name="filter_group_by_sub">Ein Chip bzw. eine Reihe pro Wert, z. B. pro Plattform</string>
+    <string name="filter_group_none">Nicht aufteilen</string>
+    <string name="filter_played">Gespielt</string>
+    <string name="filter_genres">Genres</string>
+    <string name="filter_categories">Playnite-Kategorien</string>
+    <string name="filter_sources">Quellen</string>
+    <string name="filter_any">Egal</string>
+    <string name="filter_match_count">%1$d Spiele passen</string>
+    <string name="filter_group_help">Wähle Einträge hier aus oder füge sie über X → Gruppen hinzu.</string>
+    <string name="filter_delete">Halten zum Löschen</string>
+    <string name="platform_title">Plattform</string>
+    <string name="platform_current">Aktuell: %1$s (%2$s)</string>
+    <string name="platform_source_manual">manuell gesetzt</string>
+    <string name="platform_source_playnite">aus Playnite</string>
+    <string name="platform_source_igdb">aus IGDB</string>
+    <string name="platform_source_suggested">Vorschlag</string>
+    <string name="platform_auto">Automatisch</string>
+    <string name="platform_custom">Andere Plattform …</string>
+    <string name="settings_sounds">Sounds &amp; Vibration</string>
+    <string name="settings_sounds_sub">Lautstärke, Klang, Ereignisse, Vibrationsstärke</string>
+    <string name="sounds_section">UI-Sounds</string>
+    <string name="setting_sound_style">Klang</string>
+    <string name="sound_style_soft">Sanft</string>
+    <string name="sound_style_click">Klick</string>
+    <string name="sound_style_retro">Retro</string>
+    <string name="sound_style_glass">Glas</string>
+    <string name="setting_sound_pitch">Tonhöhe</string>
+    <string name="sounds_events">Sounds bei</string>
+    <string name="sound_focus">Navigieren</string>
+    <string name="sound_confirm">Bestätigen</string>
+    <string name="sound_toggle">Umschalten</string>
+    <string name="sound_back">Zurück</string>
+    <string name="sound_launch">Spielstart</string>
+    <string name="sound_error">Fehler</string>
+    <string name="sounds_preview">Vorhören</string>
+    <string name="haptics_section">Vibration</string>
+    <string name="setting_haptic_strength">Stärke</string>
+    <string name="haptic_light">Leicht</string>
+    <string name="haptic_medium">Mittel</string>
+    <string name="haptic_strong">Stark</string>
+    <string name="setting_haptic_focus">Beim Navigieren vibrieren</string>
+
+    <!-- App filters -->
+    <string name="app_filters_help">App-Filter und -Gruppen erscheinen als Chips im Apps-Tab und optional als Reihe auf der Startseite. Das Auge blendet einen Chip ein oder aus, am Griff ziehst du die Reihenfolge. Standardfilter sind normale Filter: bearbeiten, ausblenden oder löschen wie eigene.</string>
+    <string name="filter_match_count_apps">%1$d Apps passen</string>
+
+    <!-- Filter bar -->
+    <string name="search_clear">Suche löschen</string>
+
+    <!-- LT/RT -->
+    <string name="hint_filters">Filter</string>
+
+    <!-- Nav bar -->
+    <string name="setting_hide_nav_bar">Navigationsleiste ausblenden</string>
+    <string name="setting_hide_nav_bar_sub">Blendet den Gesten-Balken im Launcher aus (am TV immer ausgeblendet); vom unteren Rand wischen zeigt ihn kurz an</string>
+
+    <!-- TV -->
+    <string name="tv_section">TV / externer Bildschirm</string>
+    <string name="tv_detected">Externer Bildschirm</string>
+    <string name="tv_none">nicht verbunden</string>
+    <string name="setting_tv_scale_auto">Auf dem TV verkleinern</string>
+    <string name="setting_tv_scale_auto_sub">Erkennt einen per USB-C/HDMI angeschlossenen TV oder Monitor und verkleinert den Launcher</string>
+    <string name="setting_tv_scale">Oberflächengröße am TV</string>
+    <string name="system_section">System</string>
+
+    <!-- Launch screen -->
+    <string name="launch_on_host">auf %1$s</string>
+
+    <!-- UI scale -->
+    <string name="setting_ui_scale">Oberflächengröße (Gerätedisplay)</string>
+
+    <!-- Host popup -->
+    <string name="host_wake_sent">Wecksignal gesendet – der Host sollte gleich online sein</string>
+    <string name="host_state_streaming">Streamt: %1$s</string>
+    <string name="host_state_online">Online</string>
+    <string name="host_state_offline">Offline</string>
+    <string name="host_state_unknown">Wird geprüft …</string>
+    <string name="host_info_address">Adresse</string>
+    <string name="host_info_paired">Gekoppelt</string>
+    <string name="host_info_permissions">Berechtigungen</string>
+    <string name="host_info_permissions_missing">Teilweise fehlend – siehe Host-Einstellungen</string>
+    <string name="host_info_auto_sleep">Schlafen nach Stream</string>
+
+    <!-- Host wake feedback -->
+    <string name="host_waking">Wird aufgeweckt …</string>
+    <string name="host_wake_sending">Wecksignal gesendet – warte auf Antwort des Hosts …</string>
+    <string name="host_wake_failed">Wecksignal konnte nicht gesendet werden – Aufweck-Methode in den Host-Einstellungen prüfen</string>
+    <string name="host_wake_online">Der Host ist online</string>
+    <string name="host_wake_timeout">Keine Antwort vom Host nach 3 Minuten</string>
+
+    <!-- Status popups -->
+    <string name="profile_picker_title">Stream-Profil</string>
+    <string name="profile_picker_sub">Wird für die nächsten Streams verwendet (Auflösung, Bildrate, Bitrate). „Starten mit …“ (X) wählt eins nur für ein Spiel.</string>
+    <string name="profile_picker_edit">Profile bearbeiten</string>
+    <string name="controller_popup_sub">Jeder Controller wird als eigenes Gamepad an den Host weitergereicht. Auswählen öffnet seine Einstellungen.</string>
+    <string name="controller_popup_settings">Controller-Einstellungen</string>
+
+    <!-- Controller settings -->
+    <string name="controllers_connected">Verbundene Controller</string>
+    <string name="controllers_stream_settings">Controller-Einstellungen im Stream</string>
+    <string name="controllers_stream_settings_sub">Gelten für alle Controller und für jedes Stream-Profil, das sie nicht selbst festlegt</string>
+    <string name="controller_info_type">Typ</string>
+    <string name="controller_info_battery">Akku</string>
+    <string name="controller_info_ids">Hersteller:Produkt</string>
+    <string name="controller_info_vibration">Vibration</string>
+    <string name="controller_info_player_order">Ohne feste Zuordnung entscheidet die Reihenfolge des ersten Tastendrucks im Stream. Feste Spieler brauchen eine aktive „Automatische Controller Erkennung“.</string>
+
+    <!-- Quick menu -->
+    <string name="qm_system">System</string>
+    <string name="qm_tab_quick">Schnelleinstellungen</string>
+    <string name="qm_no_controller">Kein Controller</string>
+    <string name="qm_controllers">%1$d Controller</string>
+    <string name="qm_vpn_on">VPN an</string>
+    <string name="qm_vpn_off">VPN aus</string>
+
+    <!-- qm -->
+    <string name="qm_android">Android</string>
+
+    <!-- Controller overrides -->
+    <string name="controller_override_global">Global</string>
+    <string name="controller_overrides">Einstellungen für diesen Controller</string>
+    <string name="controller_overrides_sub">Gelten ab dem nächsten Stream. „Global“ übernimmt die Controller-Einstellungen im Stream.</string>
+    <string name="controller_player">Spieler am Host</string>
+    <string name="controller_player_auto">Automatisch</string>
+    <string name="controller_player_n">Spieler %1$d</string>
+    <string name="controller_flip">A/B und X/Y tauschen</string>
+    <string name="controller_deadzone">Stick-Deadzone</string>
+    <string name="controller_rumble">Vibration</string>
+    <string name="controller_motion">Bewegungssensoren (Gyro)</string>
+    <string name="controller_touchpad_mouse">Touchpad als Maus</string>
+    <string name="qm_connected">Verbunden</string>
+    <string name="qm_bluetooth_off">Bluetooth aus</string>
+    <plurals name="qm_bluetooth_devices">
+        <item quantity="one">%1$d Gerät</item>
+        <item quantity="other">%1$d Geräte</item>
+    </plurals>
+    <string name="qm_lan">LAN</string>
+    <string name="step_connecting_stream">Verbindung zum Stream wird hergestellt …</string>
+
+    <!-- Hint bar -->
+    <string name="setting_hint_bar">Tastenhinweise anzeigen</string>
+    <string name="setting_hint_bar_sub">Leiste unten mit den Controller-Tasten; erscheint nur, wenn ein Controller verbunden ist</string>
+
+    <!-- Settings groups -->
+    <string name="settings_group_streaming">Streaming &amp; Verbindungen</string>
+    <string name="settings_group_library">Bibliothek</string>
+    <string name="settings_group_controls">Bedienung</string>
+    <string name="settings_group_display">Darstellung</string>
+    <string name="settings_group_system">System</string>
+    <string name="settings_android">Android-Einstellungen</string>
+    <string name="settings_android_sub">Systemeinstellungen des Geräts</string>
+
+    <!-- Free filters -->
+    <string name="filter_conditions">Bedingungen</string>
+    <string name="filter_conditions_help">Ein Eintrag wird angezeigt, wenn alle Bedingungen zutreffen.</string>
+    <string name="filter_condition">Bedingung</string>
+    <string name="filter_condition_add">Bedingung hinzufügen</string>
+    <string name="filter_condition_delete">Bedingung entfernen</string>
+    <string name="filter_condition_no_values">noch kein Wert gewählt</string>
+    <string name="filter_field">Eigenschaft</string>
+    <string name="filter_operator">Vergleich</string>
+    <string name="filter_is">ist</string>
+    <string name="filter_is_not">ist nicht</string>
+    <string name="filter_values_help">Werte auswählen; ohne Auswahl schränkt die Bedingung nichts ein.</string>
+    <string name="filter_values_none">Noch keine Werte in der Bibliothek.</string>
+    <string name="filter_field_platform">Plattform</string>
+    <string name="filter_field_genre">Genre</string>
+    <string name="filter_field_category">Kategorie</string>
+    <string name="filter_field_source">Quelle</string>
+    <string name="filter_field_group">Gruppe</string>
+    <string name="filter_field_favorite">Favorit</string>
+    <string name="filter_field_played">Gespielt</string>
+    <string name="filter_field_review">Bitte prüfen</string>
+    <string name="action_done">Fertig</string>
+
+    <!-- Quick tiles -->
+    <string name="qt_group_launcher">Launcher</string>
+    <string name="qt_group_network">Netzwerk</string>
+    <string name="qt_group_device">Gerät</string>
+    <string name="qt_group_sound">Ton &amp; Störungen</string>
+    <string name="qt_group_other">Sonstiges</string>
+    <string name="qt_group_apps">App-Verknüpfungen</string>
+    <string name="qt_hotspot">Hotspot</string>
+    <string name="qt_airplane">Flugmodus</string>
+    <string name="qt_mobile_data">Mobile Daten</string>
+    <string name="qt_flashlight">Taschenlampe</string>
+    <string name="qt_rotation">Drehung sperren</string>
+    <string name="qt_battery_saver">Energiesparen</string>
+    <string name="qt_sound_mode">Tonmodus</string>
+    <string name="qt_sound_normal">Ton an</string>
+    <string name="qt_sound_vibrate">Vibration</string>
+    <string name="qt_sound_silent">Lautlos</string>
+    <string name="qt_dnd">Nicht stören</string>
+    <string name="settings_quick_menu">Schnellmenü</string>
+    <string name="settings_quick_menu_sub">Kacheln, Reihenfolge, App-Verknüpfungen</string>
+    <string name="qt_settings_help">Die Kacheln erscheinen in dieser Reihenfolge im Schnellmenü (Y) unter „Schnelleinstellungen“. Am Griff ziehen zum Verschieben.</string>
+    <string name="qt_add">Kachel hinzufügen</string>
+    <string name="qt_remove">Entfernen</string>
+    <string name="qt_reset">Standard wiederherstellen</string>
+    <string name="qt_info_toggle">Schaltet direkt</string>
+    <string name="qt_info_opens">Öffnet die Android-Einstellung</string>
+
+    <!-- Button combos -->
+    <string name="combo_section">Tastenkombinationen</string>
+    <string name="combo_home">Android-Home</string>
+    <string name="combo_home_sub">Wirkt wie die Home-Taste</string>
+    <string name="combo_quick_menu">Schnellmenü öffnen</string>
+    <string name="combo_quick_menu_sub">Öffnet das Schnellmenü</string>
+    <string name="combo_service">Systemweit (Bedienungshilfe)</string>
+    <string name="combo_service_sub">„Moonlight Launcher Tastenkombinationen“ in den Bedienungshilfen aktivieren, damit die Kombinationen auch in anderen Apps und im Stream funktionieren</string>
+    <string name="combo_service_on">An</string>
+    <string name="combo_service_label">Moonlight Launcher Tastenkombinationen</string>
+    <string name="combo_service_description">Erkennt deine eingestellten Controller-Tastenkombinationen in jeder App und im Stream (Android-Home, Schnellmenü). Gelesen werden nur Controller-Tasten, nichts vom Bildschirminhalt.</string>
+    <string name="combo_none">Nicht belegt</string>
+    <string name="combo_help">Nimm eine einzelne Taste (z. B. Guide) oder eine Kombination (z. B. Select + Start) auf. Im Stream wird nur die zuletzt gedrückte Taste einer Kombination vom Host ferngehalten.</string>
+    <string name="combo_recording_hint">Tasten drücken…</string>
+    <string name="combo_recording_help">Tasten gemeinsam gedrückt halten, dann loslassen. Bricht nach 10 Sekunden ab.</string>
+    <string name="combo_record">Aufnehmen</string>
+    <string name="combo_clear">Entfernen</string>
+    <string name="combo_error_blocked">A, B oder eine Steuerkreuz-Richtung allein werden zur Bedienung gebraucht.</string>
+    <string name="combo_error_duplicate">Diese Kombination ist schon für die andere Aktion belegt.</string>
+
+    <!-- Quick tiles -->
+    <string name="qt_unavailable">Auf diesem Gerät nicht verfügbar (ausgeblendet)</string>
+
+    <!-- Button combos -->
+    <string name="combo_use_global">Global verwenden</string>
+    <string name="combo_off">Aus</string>
+    <string name="combo_global_value">Global (%1$s)</string>
+    <string name="combo_recording_help_controller">Tasten an diesem Controller gemeinsam gedrückt halten, dann loslassen. Bricht nach 10 Sekunden ab.</string>
+
+    <!-- Odin -->
+    <string name="odin_mapping_section">Odin Mapping</string>
+    <string name="odin_mapping_keep">Nicht von Odin Mapping übernehmen</string>
+    <string name="odin_mapping_keep_sub">Odin ersetzt sonst den ersten externen Controller durch eine Kopie ohne Akku und Vibration. Gilt für alle Geräte namens „%1$s“ (eventuell auch die interne Steuerung) und erst nach erneutem Verbinden.</string>
+
+    <!-- Odin -->
+    <string name="odin_mapping_all">Externe Controller nicht von Odin Mapping übernehmen</string>
+    <string name="odin_mapping_all_sub">Odin ersetzt sonst den ersten externen Controller durch eine Kopie ohne Akku und Vibration. Neue Controller werden beim Verbinden unten eingetragen und bleiben ab dem nächsten Verbinden unberührt.</string>
+    <string name="odin_mapping_remove">Von Odin Mapping ausgenommen · auswählen zum Entfernen</string>
+    <string name="odin_mapping_remove_auto">Von Odin Mapping ausgenommen · auswählen zum Entfernen (wird beim nächsten Verbinden wieder eingetragen, solange der Schalter an ist)</string>
+
+    <!-- Odin -->
+    <string name="controller_odin_copy">von Odin Mapping übernommen</string>
+
+    <!-- Filters -->
+    <string name="filter_chip_show_name">Filtername im Chip</string>
+    <string name="filter_row_show_name">Filtername in der Reihenüberschrift (Start)</string>
+    <string name="filter_show_name_sub">An: „Name: Gruppe“, aus: nur die Gruppe</string>
+    <string name="filter_sort">Sortierung</string>
+    <string name="filter_limit">Maximale Anzahl</string>
+    <string name="filter_limit_none">Alle</string>
+    <string name="filter_sort_title">Name</string>
+    <string name="filter_sort_last_played">Zuletzt gespielt</string>
+    <string name="filter_sort_added">Zuletzt hinzugefügt</string>
+    <string name="filter_sort_playtime">Spielzeit</string>
+    <string name="filter_field_hidden">Ausgeblendet</string>
+
+    <!-- Filters -->
+    <string name="filters_reset_help">Standardfilter auf ihre ursprünglichen Einstellungen zurücksetzen oder komplett neu anfangen: Das löscht auch deine eigenen Filter und Gruppen (samt Zuordnungen) und stellt die ursprüngliche Reihenfolge wieder her.</string>
+    <string name="filters_reset_defaults">Standardfilter zurücksetzen</string>
+    <string name="filters_reset_all">Alle Filter und die Reihenfolge zurücksetzen (halten)</string>
+
+    <!-- Filters -->
+    <string name="filter_field_name">Name</string>
+    <string name="filter_field_host">Host</string>
+    <string name="filter_field_library">Bibliothek</string>
+    <string name="filter_field_installed">Auf dem Gerät installiert</string>
+    <string name="filter_field_developer">Entwickler</string>
+    <string name="filter_field_publisher">Publisher</string>
+    <string name="filter_field_series">Serie</string>
+    <string name="filter_field_feature">Features</string>
+    <string name="filter_field_age_rating">Altersfreigabe</string>
+    <string name="filter_field_release_year">Erscheinungsjahr</string>
+    <string name="filter_field_rating">Bewertung</string>
+    <string name="filter_field_last_played">Zuletzt gespielt</string>
+    <string name="filter_field_playtime">Spielzeit</string>
+    <string name="filter_field_added">Hinzugefügt</string>
+    <string name="filter_field_negated">%1$s (nicht)</string>
+    <string name="filter_mode">Modus</string>
+    <string name="filter_mode_include">Einschließen</string>
+    <string name="filter_mode_exclude">Ausschließen</string>
+    <string name="filter_mode_include_sub">Einträge mit einem der gewählten Werte</string>
+    <string name="filter_mode_exclude_sub">Einträge ohne die gewählten Werte</string>
+    <string name="filter_match_all">Alle gewählten Werte</string>
+    <string name="filter_match_all_sub">Jeder gewählte Wert muss zutreffen statt nur einer</string>
+    <string name="filter_name_help">Einträge, deren Name den Text enthält</string>
+    <string name="filter_name_add">Text hinzufügen</string>
+    <string name="filter_values_and">" und "</string>
+    <string name="filter_never">Nie</string>
+    <string name="filter_playtime_none">Nicht gespielt</string>
+    <string name="filter_playtime_lt1">Unter 1 Stunde</string>
+    <string name="filter_playtime_1to10">1–10 Stunden</string>
+    <string name="filter_playtime_10to100">10–100 Stunden</string>
+    <string name="filter_playtime_100to500">100–500 Stunden</string>
+    <string name="filter_playtime_gt500">Über 500 Stunden</string>
+    <string name="filter_rating_from">Ab %1$s</string>
+    <string name="filter_rating_lt60">Unter 60</string>
+    <string name="filter_rating_none">Ohne Bewertung</string>
+    <string name="filter_period_today">Heute</string>
+    <string name="filter_period_yesterday">Gestern</string>
+    <string name="filter_period_week">Letzte 7 Tage</string>
+    <string name="filter_period_month">Letzte 30 Tage</string>
+    <string name="filter_period_year">Letztes Jahr</string>
+    <string name="filter_period_older">Vor über einem Jahr</string>
+    <string name="filter_section_game">Spiel</string>
+    <string name="filter_section_metadata">Metadaten</string>
+    <string name="filter_section_activity">Aktivität</string>
+    <string name="filter_section_status">Status</string>
+
+    <!-- Metadata editor -->
+    <string name="meta_edit_title">Metadaten bearbeiten</string>
+    <string name="meta_edit_help">Bearbeitete Felder sind markiert und behalten ihren Wert, wenn die Metadaten neu abgeglichen werden.</string>
+    <string name="meta_edited">Bearbeitet</string>
+    <string name="meta_none">–</string>
+    <string name="meta_name">Name</string>
+    <string name="meta_description">Beschreibung</string>
+    <string name="meta_release">Erscheinungsdatum</string>
+    <string name="meta_hours">%1$s Std.</string>
+    <string name="meta_change">Ändern</string>
+    <string name="meta_reset">Auf IGDB-Wert zurücksetzen</string>
+    <string name="meta_reset_title">Auf den Namen der Quelle zurücksetzen</string>
+    <string name="meta_invalid">Ungültige Eingabe</string>
+    <string name="meta_date_hint">z. B. 2017, 03.03.2017 oder 2017-03-03; leer = keins</string>
+    <string name="meta_rating_hint">0–100; leer = keine</string>
+    <string name="meta_playtime_hint">Stunden, z. B. 12,5</string>
+    <string name="meta_chips_multi">Werte auswählen oder einen neuen hinzufügen</string>
+    <string name="meta_chips_single">Wert auswählen oder neu hinzufügen; erneut auswählen zum Leeren</string>
+    <string name="meta_new_value">Neuer Wert</string>
+
+    <!-- Filters -->
+    <string name="filter_drag">Verschieben (ziehen oder A, dann hoch/runter)</string>
+
+    <!-- Controllers -->
+    <string name="controller_device_info">Geräte-Informationen</string>
+
+    <!-- Metadata -->
+
+    <!-- Metadata -->
+    <string name="metadata_status_checking">%1$s wird geprüft…</string>
+    <string name="metadata_status_ok">%1$s verbunden</string>
+    <string name="metadata_status_rejected">%1$s hat den Schlüssel abgelehnt</string>
+    <string name="metadata_status_unknown">%1$s gerade nicht erreichbar</string>
+
+    <!-- Detail -->
+    <string name="hint_prev_next">Voriges/Nächstes</string>
+
+    <!-- Appearance -->
+    <string name="setting_start_tab">Startbildschirm</string>
+    <string name="setting_start_tab_sub">Wird nach dem Start und bei Home im Launcher angezeigt</string>
+
+    <!-- Host API -->
+    <string name="platform_source_companion">vom Companion</string>
+    <string name="action_install">Installieren</string>
+    <string name="not_installed">Nicht installiert</string>
+
+    <!-- Apps -->
+    <string name="action_start">Starten</string>
+    <string name="action_app_artwork">Kachel ändern</string>
+    <string name="app_tile_title">Kachel im Start-Tab</string>
+    <string name="app_tile_own">Eigenes Bild …</string>
+    <string name="app_tile_reset">Zurück zur Standard-Kachel</string>
+    <string name="app_tile_help">Wird gezeigt, wenn die App in einer Reihe des Start-Tabs steht. Ohne Auswahl: das TV-Banner der App oder eine Kachel aus ihrem Icon.</string>
+    <string name="app_tile_none">SteamGridDB hat für diese App keine Querformat-Bilder (oder es ist kein Key eingetragen).</string>
+
+    <!-- Filters -->
+    <string name="group_pick_games">Spiele auswählen</string>
+    <string name="group_pick_apps">Apps auswählen</string>
+
+    <!-- Filters -->
+    <string name="group_member_count">%1$d ausgewählt</string>
+
+    <!-- Sounds -->
+    <string name="sound_style_muffled">Gedämpft</string>
+    <string name="sound_style_wood">Holz</string>
+    <string name="sound_style_deep">Tief</string>
+
+    <!-- Filters -->
+    <string name="sort_manual">Sortierung: Eigene Reihenfolge</string>
+    <string name="filter_sort_manual">Eigene Reihenfolge</string>
+    <string name="group_order">Reihenfolge ändern</string>
+    <string name="group_order_sub">Einträge in die gewünschte Reihenfolge ziehen</string>
+
+    <!-- Controls -->
+    <string name="setting_games_direct_start">Spiele direkt starten</string>
+    <string name="setting_games_direct_start_sub">A bzw. Tippen startet (oder installiert) ein Spiel sofort; Details über X bzw. lange drücken</string>
+
+    <!-- Launcher -->
+    <string name="usage_access">Nutzungsdaten von Android</string>
+    <string name="usage_access_on">Erlaubt: Spielzeit lokaler Apps und Spiele kommt von Android, auch bei Starts außerhalb des Launchers</string>
+    <string name="usage_access_off">Nicht erlaubt: Der Launcher misst nur Starts aus sich selbst. Auswählen zum Erlauben</string>
+
+    <!-- Quick menu -->
+    <string name="qm_touch_section">Per Touch in anderen Apps öffnen</string>
+    <string name="qm_edge_handle">Griff am rechten Rand</string>
+    <string name="qm_edge_handle_sub">Schmaler Balken am rechten Bildschirmrand über allen Apps; antippen öffnet das Schnellmenü</string>
+    <string name="qm_edge_handle_permission">Braucht die Berechtigung „Über anderen Apps anzeigen“; auswählen zum Erlauben</string>
+    <string name="qm_tile_add">Kachel zu Androids Schnelleinstellungen hinzufügen</string>
+    <string name="qm_tile_sub">Die Kachel „Schnellmenü“ in Androids Schnelleinstellungen (von oben wischen) öffnet das Menü über jeder App</string>
+
+    <!-- TV -->
+    <string name="setting_tv_launcher">Launcher auf dem TV anzeigen</string>
+    <string name="setting_tv_launcher_sub">Läuft direkt auf dem TV in dessen Auflösung, das Handy zeigt dabei einen schwarzen Bildschirm. Erlaubt das Gerät das nicht, wird gespiegelt</string>
+    <string name="setting_tv_resolution">Auflösung am TV</string>
+    <string name="setting_tv_resolution_auto">Automatisch (nativ)</string>
+    <string name="setting_tv_resolution_sub">Modi, die der angeschlossene TV anbietet</string>
+    <string name="setting_tv_resolution_none">TV anschließen, um seine Modi zu sehen</string>
+
+    <!-- Filters -->
+    <string name="filter_chip_visible">Chip sichtbar, auswählen zum Ausblenden</string>
+    <string name="filter_chip_hidden">Chip ausgeblendet, auswählen zum Einblenden</string>
+
+    <!-- Settings -->
+    <string name="settings_usage">Spielzeit &amp; Statistik</string>
+    <string name="settings_usage_sub">Nutzungsdaten von Android, Statistik</string>
+    <string name="usage_intro">Woher die Spielzeit lokaler Apps und Spiele kommt, und die Statistik daraus.</string>
+    <string name="usage_stats_sub">Spielzeit, Sitzungen und Favoriten im Verlauf</string>
+    <string name="filters_scope_games">Spiele</string>
+    <string name="filters_scope_apps">Apps</string>
+
+    <!-- Settings -->
+    <string name="settings_search">Einstellungen durchsuchen</string>
+    <string name="settings_search_none">Keine passende Einstellung</string>
+
+    <!-- Emulation -->
+    <string name="target_rom">%1$s (Emulator)</string>
+    <string name="emulator_none">kein Emulator</string>
+    <string name="error_no_emulator">Für dieses Spiel ist kein passender Emulator installiert. Installiere einen für seine Plattform (Einstellungen → Emulatoren).</string>
+    <string name="error_rom_needs_path">Dieser Emulator braucht den echten Dateipfad, der für diesen Ordner nicht bekannt ist. Schalte unter Einstellungen → Emulatoren „Zugriff auf alle Dateien“ ein oder wähle einen anderen Emulator.</string>
+
+    <!-- Emulation -->
+    <string name="filter_emulation">Emulation</string>
+
+    <!-- Emulation -->
+    <string name="action_save">Speichern</string>
+    <string name="settings_emulators">Emulatoren</string>
+    <string name="settings_emulators_sub">ROM-Ordner, Emulator pro Plattform</string>
+    <string name="emu_intro">Spiele aus deinen ROM-Ordnern erscheinen in der Bibliothek und starten mit einem installierten Android-Emulator. Die Startbefehle stammen von ES-DE; nicht bestätigte Emulatoren sind als experimentell markiert.</string>
+    <string name="emu_folders">ROM-Ordner</string>
+    <string name="emu_folder_add">Ordner hinzufügen</string>
+    <string name="emu_folder_auto">Ein Unterordner pro System</string>
+    <string name="emu_folder_no_access">Kein Zugriff mehr – entfernen und neu wählen</string>
+    <string name="emu_folder_platform">Plattform</string>
+    <string name="emu_folder_platform_sub">„Ein Unterordner pro System“ erkennt Ordner wie snes, psx oder switch</string>
+    <string name="emu_folder_remove">Halten zum Entfernen</string>
+    <string name="emu_scan">Jetzt scannen</string>
+    <string name="emu_scanning">Scanne…</string>
+    <plurals name="emu_found">
+        <item quantity="one">%1$d Spiel gefunden</item>
+        <item quantity="other">%1$d Spiele gefunden</item>
+    </plurals>
+    <string name="emu_all_files">Zugriff auf alle Dateien</string>
+    <string name="emu_all_files_sub">Optional: liest die ROM-Ordner direkt (schneller) und findet ES-DE-Cover. Die Ordner wählst du trotzdem oben aus.</string>
+    <string name="emu_emulators">Emulator pro Plattform</string>
+    <string name="emu_no_platforms">Kein Emulator installiert. Installiere einen Android-Emulator oder füge einen ROM-Ordner hinzu.</string>
+    <string name="emu_none_installed">Kein Emulator installiert</string>
+    <string name="emu_experimental">experimentell</string>
+    <string name="emu_bios_hint">braucht BIOS/Firmware im Emulator</string>
+    <string name="emu_custom">Eigene Emulatoren</string>
+    <string name="emu_custom_help">Für Emulatoren, die die Liste nicht kennt. Immer als experimentell markiert.</string>
+    <string name="emu_custom_add">Emulator hinzufügen</string>
+    <string name="emu_custom_title">Eigener Emulator</string>
+    <string name="emu_custom_name">Name</string>
+    <string name="emu_custom_package">Paketname</string>
+    <string name="emu_custom_activity">Activity (optional)</string>
+    <string name="emu_custom_action">Intent-Aktion (optional)</string>
+    <string name="emu_custom_data">Daten-URI (optional)</string>
+    <string name="emu_custom_extras">Extras (optional)</string>
+    <string name="emu_custom_placeholders">Platzhalter: %ROMSAF% (Datei als URI), %ROM% (Dateipfad), %BASENAME% (Dateiname ohne Endung). Extras mit „;“ getrennt als Name=Wert, andere Typen mit bool:, int: oder long: davor.</string>
+    <string name="emu_custom_platforms">Plattformen</string>
+    <string name="emu_custom_remove">Halten zum Entfernen</string>
+
+    <!-- Emulation -->
+    <string name="action_emulator">Emulator wählen</string>
+    <string name="emu_use_default">Standard der Plattform (%1$s)</string>
+
+    <!-- Emulators -->
+    <string name="emu_esde_notice">Startbefehle und Pakete der Emulatoren stammen von ES-DE (https://es-de.org), MIT-Lizenz. Details unter Einstellungen → Info → Open-Source-Lizenzen.</string>
+
+    <!-- About -->
+    <string name="about_open_source">Open-Source-Lizenzen</string>
+    <string name="about_open_source_sub">Komponenten, auf denen die App aufbaut</string>
+    <string name="about_open_source_intro">Moonlight Launcher nutzt diese Open-Source-Komponenten. Wähle eine aus, um ihre Lizenz zu lesen.</string>
+    <string name="about_data_sources">Datenquellen</string>
+    <string name="about_source_sgdb">Cover, Hintergründe, Logos und Icons</string>
+    <string name="about_source_igdb">Beschreibungen, Genres, Entwickler und Erscheinungsdaten</string>
+    <string name="about_source_esde">Startbefehle der Emulatoren (MIT-Lizenz)</string>
+
+    <!-- Quick tiles -->
+    <string name="qt_hosts_count">%1$d Hosts</string>
+
+    <!-- Companion & metadata server -->
+    <string name="servers_not_paired">Nicht gekoppelt</string>
+    <string name="servers_pair">Koppeln</string>
+    <string name="servers_pair_companion_manual">Companion per Adresse koppeln</string>
+    <string name="servers_pair_metadata">Metadaten-Server koppeln</string>
+    <string name="servers_online">online</string>
+    <string name="servers_offline">nicht erreichbar</string>
+    <string name="servers_checking">wird geprüft …</string>
+    <string name="servers_pair_title_host">Companion von %1$s koppeln</string>
+    <string name="servers_pair_step1">1. Am Server „Gerät koppeln“ starten. 2. Hier seine Adresse eingeben.</string>
+    <string name="servers_address">Adresse</string>
+    <string name="servers_error_address">Diese Adresse ist ungültig. Beispiel: 192.168.1.20 oder nas.local:47900</string>
+    <string name="servers_error_kind">Dieser Server ist von anderer Art (Companion statt Metadaten-Server oder umgekehrt).</string>
+    <string name="servers_error_closed">Am Server ist Koppeln nicht gestartet. Starte dort zuerst „Gerät koppeln“ und versuche es erneut.</string>
+    <string name="servers_error_failed">Koppeln fehlgeschlagen. Wurde die PIN richtig eingegeben?</string>
+    <string name="servers_error_timeout">Am Server wurde nicht rechtzeitig eine PIN eingegeben.</string>
+    <string name="servers_error_unreachable">Der Server ist unter dieser Adresse nicht erreichbar.</string>
+    <string name="servers_connecting">Verbinde …</string>
+    <string name="servers_pin_intro">Gib diese PIN am Server bei diesem Gerät ein:</string>
+    <string name="servers_pin_wait">Warte auf den Server … Die PIN gilt nur für diesen Versuch.</string>
+    <string name="servers_paired">Mit %1$s gekoppelt.</string>
+    <string name="servers_state">Status</string>
+    <string name="servers_fingerprint">Fingerabdruck des Server-Zertifikats</string>
+    <string name="servers_check">Verbindung prüfen</string>
+    <string name="servers_remove">Gedrückt halten zum Entfernen</string>
+    <string name="servers_remove_hint">Entferne das Gerät auch am Server, damit der Zugriff dort endet.</string>
+    <string name="metadata_sources">Quellen</string>
+    <string name="metadata_intro">Cover, Hintergründe und Logos kommen von SteamGridDB; Beschreibung, Genres, Entwickler, Publisher, Serie, Features, Altersfreigaben und Erscheinungsdatum von IGDB. Füge sie unten als Quellen hinzu: mit eigenen Schlüsseln, über einen Metadaten-Server oder über die Companion.</string>
+    <string name="metadata_sources_help">Zuerst werden die eigenen Schlüssel genutzt (kürzester Weg), dann Metadaten-Server, dann Companions; ist einer nicht erreichbar oder kann nicht antworten, kommt der nächste dran. Host-Spiele übernehmen immer die Daten ihrer Companion.</string>
+    <string name="metadata_sources_empty">Noch keine Quelle hinzugefügt.</string>
+    <string name="metadata_source_add">Quelle hinzufügen</string>
+    <string name="metadata_source_sgdb_sub">Cover, Hintergründe, Logos und Icons mit eigenem API-Key</string>
+    <string name="metadata_source_igdb_sub">Beschreibungen, Genres und Erscheinungsdaten mit eigener Twitch-App</string>
+    <string name="metadata_source_companion_sub">Liefert die Host-Spiele eines Spiele-PCs mit ihren Metadaten, dazu SteamGridDB/IGDB, falls angeboten</string>
+    <string name="metadata_source_server_sub">Docker-Server, der SteamGridDB und IGDB mit seinen Schlüsseln für alle deine Geräte beantwortet</string>
+    <string name="metadata_source_companion_of">Companion · %1$s</string>
+    <string name="metadata_source_offers">Bietet an</string>
+    <string name="metadata_source_host_games_only">nur Host-Spiele</string>
+    <string name="metadata_source_pick_host">Companion für welchen Host?</string>
+    <string name="metadata_source_active">Aktiv</string>
+    <string name="metadata_source_off">Deaktiviert</string>
+    <string name="metadata_source_companion_off_hint">Aus: Weder Host-Spiele noch SteamGridDB/IGDB kommen von dieser Companion.</string>
+    <string name="metadata_source_server">Metadaten-Server</string>
+    <string name="metadata_source_companion">Companion</string>
+
+    <!-- Companion & metadata server -->
+    <string name="host_companion_section">Companion</string>
+    <string name="host_companion_hint">Kopple die Companion dieses PCs: sie liefert die Host-Spiele mit ihren Metadaten.</string>
+</resources>

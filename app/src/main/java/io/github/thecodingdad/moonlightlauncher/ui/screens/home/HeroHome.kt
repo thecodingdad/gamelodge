@@ -40,10 +40,9 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry
 import io.github.thecodingdad.moonlightlauncher.data.library.ResolvedFilter
 import io.github.thecodingdad.moonlightlauncher.ui.screens.library.filterLabel
@@ -61,6 +60,7 @@ import io.github.thecodingdad.moonlightlauncher.ui.shell.LocalEntryActions
 import io.github.thecodingdad.moonlightlauncher.ui.shell.focusAfterBrowse
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 import kotlinx.coroutines.delay
+import io.github.thecodingdad.moonlightlauncher.resources.*
 
 /** Callbacks shared by all home layouts. */
 class HomeCallbacks(
@@ -251,7 +251,7 @@ fun HeroHome(
                 }
                 if (rows.running.isNotEmpty()) {
                     item(key = "running") { pinned("running") {
-                        RowTitle(stringResource(R.string.home_running))
+                        RowTitle(stringResource(Res.string.home_running))
                         LazyRow(
                             contentPadding = PaddingValues(horizontal = 40.dp, vertical = 12.dp),
                             horizontalArrangement = Arrangement.spacedBy(18.dp),
@@ -261,7 +261,7 @@ fun HeroHome(
                                 val key = "running:${session.host.uuid}"
                                 WideCard(
                                     title = session.appName,
-                                    subtitle = stringResource(R.string.running_on, session.host.name),
+                                    subtitle = stringResource(Res.string.running_on, session.host.name),
                                     image = session.entry?.heroModel(),
                                     onClick = { callbacks.onResume(session) },
                                     onLongClick = { callbacks.onRunningMenu(session) },
@@ -277,7 +277,7 @@ fun HeroHome(
                 filterRows.forEachIndexed { index, row ->
                     if (index == haIndex && haRow != null) item(key = "ha") { pinned("ha") { haRow() } }
                     homeRow(
-                        "row:${row.key}", 0, row.entries, callbacks, pinned,
+                        "row:${row.key}", null, row.entries, callbacks, pinned,
                         firstRow = rows.running.isEmpty() && index == firstFilled,
                         onFocus = { entry, list -> focused = entry; focusedSession = null; focusedList = list; focusedListKey = "row:${row.key}" },
                         actions = actions,
@@ -293,7 +293,8 @@ fun HeroHome(
 
 private fun androidx.compose.foundation.lazy.LazyListScope.homeRow(
     key: String,
-    title: Int,
+    /** Null when [titleText] names the row. */
+    title: org.jetbrains.compose.resources.StringResource?,
     entries: List<LibraryEntry>,
     callbacks: HomeCallbacks,
     pinned: @Composable (String, @Composable () -> Unit) -> Unit,
@@ -304,7 +305,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.homeRow(
 ) {
     if (entries.isEmpty()) return
     item(key = key) { pinned(key) {
-        RowTitle(titleText?.invoke() ?: stringResource(title))
+        RowTitle(titleText?.invoke() ?: stringResource(requireNotNull(title)))
         val rowState = androidx.compose.foundation.lazy.rememberLazyListState()
         val rowBringIntoView = androidx.compose.runtime.remember { androidx.compose.foundation.relocation.BringIntoViewRequester() }
         // Back from paging through details: bring the last game viewed into the row's view.

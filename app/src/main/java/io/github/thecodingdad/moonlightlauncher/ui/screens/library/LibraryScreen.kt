@@ -33,9 +33,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.focus.focusRestorer
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
-import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.data.db.ItemKind
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry
 import io.github.thecodingdad.moonlightlauncher.data.library.BuiltinFilter
@@ -55,6 +54,7 @@ import io.github.thecodingdad.moonlightlauncher.ui.shell.LocalEntryActions
 import io.github.thecodingdad.moonlightlauncher.ui.shell.focusAfterBrowse
 import io.github.thecodingdad.moonlightlauncher.ui.shell.ScreenHints
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
+import io.github.thecodingdad.moonlightlauncher.resources.*
 
 /**
  * Chip ([row] = false) or home row title of a resolved filter: its name (custom or localized
@@ -70,18 +70,18 @@ fun filterLabel(filter: ResolvedFilter, row: Boolean = false): String {
 
 @Composable
 fun builtinLabel(key: String): String = when (key) {
-    BuiltinFilter.ALL -> stringResource(R.string.filter_all)
-    BuiltinFilter.CONTINUE -> stringResource(R.string.home_continue)
-    BuiltinFilter.RECENT -> stringResource(R.string.home_recently_added)
-    BuiltinFilter.LOCAL -> stringResource(R.string.filter_local)
-    BuiltinFilter.EMULATION -> stringResource(R.string.filter_emulation)
-    BuiltinFilter.HOSTS -> stringResource(R.string.filter_hosts)
-    BuiltinFilter.PLATFORMS -> stringResource(R.string.filter_platforms)
-    BuiltinFilter.FAVORITES -> stringResource(R.string.filter_favorites)
-    BuiltinFilter.NEVER_PLAYED -> stringResource(R.string.filter_never_played)
-    BuiltinFilter.NOT_INSTALLED -> stringResource(R.string.not_installed)
-    BuiltinFilter.REVIEW -> stringResource(R.string.filter_review)
-    BuiltinFilter.HIDDEN -> stringResource(R.string.filter_hidden)
+    BuiltinFilter.ALL -> stringResource(Res.string.filter_all)
+    BuiltinFilter.CONTINUE -> stringResource(Res.string.home_continue)
+    BuiltinFilter.RECENT -> stringResource(Res.string.home_recently_added)
+    BuiltinFilter.LOCAL -> stringResource(Res.string.filter_local)
+    BuiltinFilter.EMULATION -> stringResource(Res.string.filter_emulation)
+    BuiltinFilter.HOSTS -> stringResource(Res.string.filter_hosts)
+    BuiltinFilter.PLATFORMS -> stringResource(Res.string.filter_platforms)
+    BuiltinFilter.FAVORITES -> stringResource(Res.string.filter_favorites)
+    BuiltinFilter.NEVER_PLAYED -> stringResource(Res.string.filter_never_played)
+    BuiltinFilter.NOT_INSTALLED -> stringResource(Res.string.not_installed)
+    BuiltinFilter.REVIEW -> stringResource(Res.string.filter_review)
+    BuiltinFilter.HIDDEN -> stringResource(Res.string.filter_hidden)
     else -> key
 }
 
@@ -129,7 +129,7 @@ fun LibraryScreen(
     // Context menu of a card: its "Details" pages through this list like A does.
     fun openContext(entry: LibraryEntry) = actions.context(entry, shown) { id -> focusByFilter[filterKey] = id; onFocusKey("library:$id") }
 
-    val searchTitle = stringResource(R.string.hint_search)
+    val searchTitle = stringResource(Res.string.hint_search)
     fun openSearch() = keyboard.open(title = searchTitle, initial = search) { search = it }
     // LT/RT switch filters (LB/RB stay with the tabs).
     val feedback = io.github.thecodingdad.moonlightlauncher.ui.feedback.LocalUiFeedback.current
@@ -151,11 +151,11 @@ fun LibraryScreen(
     ScreenHints(
         listOf(
             // On the filter chips A selects a filter; only on a card it opens/starts.
-            ButtonHint(PadButton.A, stringResource(if (gridFocused) actions.openLabel(focused) else R.string.hint_select)),
-            ButtonHint(PadButton.X, stringResource(R.string.hint_options), onClick = { focused?.let { openContext(it) } }),
-            ButtonHint(PadButton.L2, stringResource(R.string.hint_filters), onClick = { stepFilter(1) }, secondButton = PadButton.R2),
+            ButtonHint(PadButton.A, stringResource(if (gridFocused) actions.openLabel(focused) else Res.string.hint_select)),
+            ButtonHint(PadButton.X, stringResource(Res.string.hint_options), onClick = { focused?.let { openContext(it) } }),
+            ButtonHint(PadButton.L2, stringResource(Res.string.hint_filters), onClick = { stepFilter(1) }, secondButton = PadButton.R2),
             ButtonHint(PadButton.SELECT, sortLabel(sort), onClick = { sort = sort.next(manualSort) }),
-            ButtonHint(PadButton.START, stringResource(R.string.hint_search), onClick = ::openSearch),
+            ButtonHint(PadButton.START, stringResource(Res.string.hint_search), onClick = ::openSearch),
         ),
     )
     // Scroll position and focused game are kept per filter.
@@ -178,7 +178,7 @@ fun LibraryScreen(
         )
         if (shown.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(stringResource(R.string.library_empty_filter), style = MaterialTheme.typography.titleMedium, color = LauncherTheme.colors.onSurfaceMuted)
+                Text(stringResource(Res.string.library_empty_filter), style = MaterialTheme.typography.titleMedium, color = LauncherTheme.colors.onSurfaceMuted)
             }
             return@Column
         }

@@ -19,10 +19,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
 import com.limelight.preferences.PreferenceConfiguration
-import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.stream.ProfileStore
 import io.github.thecodingdad.moonlightlauncher.stream.StreamOption
 import io.github.thecodingdad.moonlightlauncher.stream.StreamProfile
@@ -43,6 +42,7 @@ import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.SwitchRow
 import io.github.thecodingdad.moonlightlauncher.ui.shell.ScreenHints
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 import java.util.UUID
+import io.github.thecodingdad.moonlightlauncher.resources.*
 
 @Composable
 fun ProfilesList(
@@ -53,34 +53,34 @@ fun ProfilesList(
     val context = LocalContext.current
     val keyboard = LocalKeyboardController.current
     var focusedIndex by remember { mutableIntStateOf(0) }
-    val newTitle = stringResource(R.string.profile_new_name)
+    val newTitle = stringResource(Res.string.profile_new_name)
 
     PadAction(PadButton.X) { profiles.getOrNull(focusedIndex)?.let { StreamProfiles.setActive(it.uuid) } }
     ScreenHints(
         listOf(
-            ButtonHint(PadButton.A, stringResource(R.string.profile_edit)),
-            ButtonHint(PadButton.X, stringResource(R.string.profile_set_active)),
-            ButtonHint(PadButton.B, stringResource(R.string.hint_back)),
+            ButtonHint(PadButton.A, stringResource(Res.string.profile_edit)),
+            ButtonHint(PadButton.X, stringResource(Res.string.profile_set_active)),
+            ButtonHint(PadButton.B, stringResource(Res.string.hint_back)),
         ),
     )
 
-    SettingsPage(stringResource(R.string.settings_profiles)) {
-        Text(stringResource(R.string.profiles_intro), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+    SettingsPage(stringResource(Res.string.settings_profiles)) {
+        Text(stringResource(Res.string.profiles_intro), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
         profiles.forEachIndexed { index, profile ->
             val isActive = profile.uuid == active.uuid
             Box(Modifier.onFocusEvent { if (it.hasFocus) focusedIndex = index }) {
                 NavRow(
                     title = profile.name,
                     onClick = { openProfile(profile.uuid) },
-                    subtitle = if (profile.uuid == null) stringResource(R.string.profile_base_sub) else null,
+                    subtitle = if (profile.uuid == null) stringResource(Res.string.profile_base_sub) else null,
                     icon = if (isActive) Icons.Filled.CheckCircle else Icons.Filled.Tune,
                     initialFocus = index == 0,
-                    trailing = if (isActive) stringResource(R.string.profile_active) else null,
+                    trailing = if (isActive) stringResource(Res.string.profile_active) else null,
                 )
             }
         }
         LauncherButton(
-            stringResource(R.string.profile_new), icon = Icons.Filled.Add,
+            stringResource(Res.string.profile_new), icon = Icons.Filled.Add,
             onClick = { keyboard.open(newTitle, "") { name -> if (name.isNotBlank()) openProfile(ProfileStore.create(context, name.trim())) } },
         )
     }
@@ -94,7 +94,7 @@ fun ProfileEditor(uuid: UUID?, name: String, onDeleted: () -> Unit) {
     val keyboard = LocalKeyboardController.current
     // Bumped after every write so rows re-read the store.
     var revision by remember { mutableIntStateOf(0) }
-    val renameTitle = stringResource(R.string.profile_rename)
+    val renameTitle = stringResource(Res.string.profile_rename)
 
     val byKey = remember(schema) { schema.flatMap { it.options }.associateBy { it.key } }
     val essentials = StreamSettingsSchema.essentialKeys.mapNotNull { byKey[it] }
@@ -102,14 +102,14 @@ fun ProfileEditor(uuid: UUID?, name: String, onDeleted: () -> Unit) {
     SettingsPage(name) {
         if (uuid != null) {
             io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 12.dp) {
-                LauncherButton(stringResource(R.string.profile_set_active), icon = Icons.Filled.CheckCircle, onClick = { StreamProfiles.setActive(uuid) })
-                LauncherButton(stringResource(R.string.profile_rename), icon = Icons.Filled.Edit, onClick = {
+                LauncherButton(stringResource(Res.string.profile_set_active), icon = Icons.Filled.CheckCircle, onClick = { StreamProfiles.setActive(uuid) })
+                LauncherButton(stringResource(Res.string.profile_rename), icon = Icons.Filled.Edit, onClick = {
                     keyboard.open(renameTitle, name) { n -> if (n.isNotBlank()) ProfileStore.rename(uuid, n.trim()) }
                 })
-                HoldToConfirmButton(stringResource(R.string.profile_delete), onConfirmed = { ProfileStore.delete(uuid); onDeleted() }, icon = Icons.Filled.Delete)
+                HoldToConfirmButton(stringResource(Res.string.profile_delete), onConfirmed = { ProfileStore.delete(uuid); onDeleted() }, icon = Icons.Filled.Delete)
             }
         }
-        SectionHeader(stringResource(R.string.profile_essentials))
+        SectionHeader(stringResource(Res.string.profile_essentials))
         essentials.forEachIndexed { i, option -> OptionRow(option, store, revision, i == 0 && uuid == null) { revision++ } }
         schema.forEach { category ->
             val rest = category.options.filter { it.key !in StreamSettingsSchema.essentialKeys }

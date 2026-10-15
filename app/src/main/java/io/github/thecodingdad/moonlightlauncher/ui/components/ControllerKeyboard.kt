@@ -42,15 +42,15 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.key.utf16CodePoint
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.ui.input.PadAction
 import io.github.thecodingdad.moonlightlauncher.ui.input.PadButton
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
+import io.github.thecodingdad.moonlightlauncher.resources.*
 
 enum class TextKind { TEXT, URL, NUMBER, PASSWORD }
 
@@ -257,7 +257,7 @@ fun ControllerKeyboardHost(controller: KeyboardController) {
                 KeyCap("", icon = Icons.Filled.SpaceBar, onClick = { insert(" ") }, minWidth = 300.dp)
                 if (request.kind == TextKind.URL || request.kind == TextKind.TEXT) KeyCap("@", onClick = { insert("@") }, minWidth = 64.dp)
                 KeyCap("", icon = Icons.AutoMirrored.Filled.Backspace, onClick = { backspace() }, minWidth = 88.dp)
-                KeyCap(stringResource(R.string.keyboard_done), icon = Icons.Filled.Check, onClick = { done() }, minWidth = 140.dp, highlighted = true)
+                KeyCap(stringResource(Res.string.keyboard_done), icon = Icons.Filled.Check, onClick = { done() }, minWidth = 140.dp, highlighted = true)
             }
         }
         }
@@ -265,12 +265,12 @@ fun ControllerKeyboardHost(controller: KeyboardController) {
         Spacer(Modifier.height(12.dp))
         ButtonHintBar(
             listOf(
-                ButtonHint(PadButton.X, stringResource(R.string.keyboard_delete)),
-                ButtonHint(PadButton.Y, stringResource(R.string.keyboard_space)),
-                ButtonHint(PadButton.L2, stringResource(R.string.keyboard_shift)),
-                ButtonHint(PadButton.R2, stringResource(R.string.keyboard_symbols)),
-                ButtonHint(PadButton.START, stringResource(R.string.keyboard_done)),
-                ButtonHint(PadButton.B, stringResource(R.string.action_cancel), onClick = controller::close),
+                ButtonHint(PadButton.X, stringResource(Res.string.keyboard_delete)),
+                ButtonHint(PadButton.Y, stringResource(Res.string.keyboard_space)),
+                ButtonHint(PadButton.L2, stringResource(Res.string.keyboard_shift)),
+                ButtonHint(PadButton.R2, stringResource(Res.string.keyboard_symbols)),
+                ButtonHint(PadButton.START, stringResource(Res.string.keyboard_done)),
+                ButtonHint(PadButton.B, stringResource(Res.string.action_cancel), onClick = controller::close),
             ),
             inPopup = true,
         )
@@ -352,8 +352,8 @@ private fun TouchTextDialog(request: KeyboardRequest, controller: KeyboardContro
         )
         Spacer(Modifier.height(16.dp))
         ButtonRow(spacing = 12.dp) {
-            LauncherButton(stringResource(R.string.action_cancel), onClick = controller::close)
-            LauncherButton(stringResource(R.string.keyboard_done), icon = Icons.Filled.Check, primary = true, onClick = { done() })
+            LauncherButton(stringResource(Res.string.action_cancel), onClick = controller::close)
+            LauncherButton(stringResource(Res.string.keyboard_done), icon = Icons.Filled.Check, primary = true, onClick = { done() })
         }
     }
     androidx.compose.runtime.LaunchedEffect(request) {

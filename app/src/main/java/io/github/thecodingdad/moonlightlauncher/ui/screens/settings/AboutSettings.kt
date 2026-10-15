@@ -23,17 +23,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import io.github.thecodingdad.moonlightlauncher.BuildConfig
-import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.ui.components.Modal
 import io.github.thecodingdad.moonlightlauncher.ui.components.dpadScroll
 import io.github.thecodingdad.moonlightlauncher.ui.input.RegisterStickScroll
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import io.github.thecodingdad.moonlightlauncher.resources.*
 
 private const val SOURCE_URL = "https://github.com/thecodingdad/moonlight-launcher"
 
@@ -55,25 +55,25 @@ private data class LicenseText(val title: String, val file: String)
 fun AboutSettings(openLicenses: () -> Unit) {
     val context = LocalContext.current
     var showing by remember { mutableStateOf<LicenseText?>(null) }
-    SettingsPage(stringResource(R.string.settings_about)) {
-        InfoRow(stringResource(R.string.launcher_name), BuildConfig.VERSION_NAME)
+    SettingsPage(stringResource(Res.string.settings_about)) {
+        InfoRow(stringResource(Res.string.launcher_name), BuildConfig.VERSION_NAME)
         NavRow(
-            stringResource(R.string.about_license), { showing = LicenseText("GNU General Public License v3.0", "gpl-3.0") },
+            stringResource(Res.string.about_license), { showing = LicenseText("GNU General Public License v3.0", "gpl-3.0") },
             icon = Icons.Filled.Gavel, trailing = "GPLv3",
         )
         NavRow(
-            stringResource(R.string.about_source), { openUrl(context, SOURCE_URL) },
+            stringResource(Res.string.about_source), { openUrl(context, SOURCE_URL) },
             subtitle = SOURCE_URL.removePrefix("https://"), icon = Icons.AutoMirrored.Filled.OpenInNew,
         )
         NavRow(
-            stringResource(R.string.about_open_source), openLicenses,
-            subtitle = stringResource(R.string.about_open_source_sub), icon = Icons.Filled.Description,
+            stringResource(Res.string.about_open_source), openLicenses,
+            subtitle = stringResource(Res.string.about_open_source_sub), icon = Icons.Filled.Description,
         )
 
-        SectionHeader(stringResource(R.string.about_data_sources))
-        NavRow("SteamGridDB", { openUrl(context, "https://www.steamgriddb.com") }, stringResource(R.string.about_source_sgdb), Icons.AutoMirrored.Filled.OpenInNew)
-        NavRow("IGDB.com", { openUrl(context, "https://www.igdb.com") }, stringResource(R.string.about_source_igdb), Icons.AutoMirrored.Filled.OpenInNew)
-        NavRow("ES-DE", { openUrl(context, "https://es-de.org") }, stringResource(R.string.about_source_esde), Icons.AutoMirrored.Filled.OpenInNew)
+        SectionHeader(stringResource(Res.string.about_data_sources))
+        NavRow("SteamGridDB", { openUrl(context, "https://www.steamgriddb.com") }, stringResource(Res.string.about_source_sgdb), Icons.AutoMirrored.Filled.OpenInNew)
+        NavRow("IGDB.com", { openUrl(context, "https://www.igdb.com") }, stringResource(Res.string.about_source_igdb), Icons.AutoMirrored.Filled.OpenInNew)
+        NavRow("ES-DE", { openUrl(context, "https://es-de.org") }, stringResource(Res.string.about_source_esde), Icons.AutoMirrored.Filled.OpenInNew)
     }
     LicenseTextModal(showing) { showing = null }
 }
@@ -88,8 +88,8 @@ fun OpenSourceLicenses() {
         }.getOrDefault(emptyList())
     }
     var showing by remember { mutableStateOf<LicenseText?>(null) }
-    SettingsPage(stringResource(R.string.about_open_source)) {
-        Text(stringResource(R.string.about_open_source_intro), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+    SettingsPage(stringResource(Res.string.about_open_source)) {
+        Text(stringResource(Res.string.about_open_source_intro), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
         entries.forEach { e ->
             NavRow(e.name, { showing = LicenseText(e.name, e.text) }, subtitle = "© ${e.copyright}", trailing = e.license)
         }

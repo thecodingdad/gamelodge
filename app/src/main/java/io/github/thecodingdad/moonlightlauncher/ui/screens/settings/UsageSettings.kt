@@ -11,11 +11,11 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.lifecycle.compose.LifecycleResumeEffect
-import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.container
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
+import io.github.thecodingdad.moonlightlauncher.resources.*
 
 /** Play time source (Android usage data) and the way to the statistics. */
 @Composable
@@ -26,20 +26,20 @@ fun UsageSettings(openStats: () -> Unit) {
     var tick by remember { mutableIntStateOf(0) }
     LifecycleResumeEffect(Unit) { tick++; onPauseOrDispose { } }
     val granted = remember(tick) { usage.granted }
-    SettingsPage(stringResource(R.string.settings_usage)) {
-        Text(stringResource(R.string.usage_intro), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+    SettingsPage(stringResource(Res.string.settings_usage)) {
+        Text(stringResource(Res.string.usage_intro), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
         NavRow(
-            stringResource(R.string.usage_access),
+            stringResource(Res.string.usage_access),
             {
                 val intent = android.content.Intent(android.provider.Settings.ACTION_USAGE_ACCESS_SETTINGS)
                     .setData(android.net.Uri.parse("package:${context.packageName}"))
                 runCatching { context.startActivity(intent) }
                     .onFailure { context.startActivity(android.content.Intent(android.provider.Settings.ACTION_USAGE_ACCESS_SETTINGS)) }
             },
-            subtitle = stringResource(if (granted) R.string.usage_access_on else R.string.usage_access_off),
+            subtitle = stringResource(if (granted) Res.string.usage_access_on else Res.string.usage_access_off),
             icon = Icons.Filled.QueryStats,
             initialFocus = true,
         )
-        NavRow(stringResource(R.string.stats_title), openStats, stringResource(R.string.usage_stats_sub), Icons.Filled.BarChart)
+        NavRow(stringResource(Res.string.stats_title), openStats, stringResource(Res.string.usage_stats_sub), Icons.Filled.BarChart)
     }
 }

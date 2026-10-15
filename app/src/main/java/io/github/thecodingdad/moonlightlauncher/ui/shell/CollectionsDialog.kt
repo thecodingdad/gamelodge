@@ -13,14 +13,14 @@ import androidx.compose.material.icons.filled.CheckBox
 import androidx.compose.material.icons.filled.CheckBoxOutlineBlank
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
-import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.data.db.CollectionEntity
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry
 import io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton
 import io.github.thecodingdad.moonlightlauncher.ui.components.LocalKeyboardController
 import io.github.thecodingdad.moonlightlauncher.ui.components.Modal
+import io.github.thecodingdad.moonlightlauncher.resources.*
 
 /** Toggle an entry's membership in collections, or create a new one. */
 @Composable
@@ -32,8 +32,8 @@ fun CollectionsDialog(
     onDismiss: () -> Unit,
 ) {
     val keyboard = LocalKeyboardController.current
-    val newTitle = stringResource(R.string.collection_new_name)
-    Modal(visible = entry != null, onDismiss = onDismiss, title = stringResource(R.string.collections_title), maxWidth = 520.dp) {
+    val newTitle = stringResource(Res.string.collection_new_name)
+    Modal(visible = entry != null, onDismiss = onDismiss, title = stringResource(Res.string.collections_title), maxWidth = 520.dp) {
         val e = entry ?: return@Modal
         Column(
             Modifier.heightIn(max = 380.dp).controllerScroll(),
@@ -49,7 +49,7 @@ fun CollectionsDialog(
                 )
             }
             LauncherButton(
-                stringResource(R.string.collection_new), icon = Icons.Filled.Add, primary = collections.isEmpty(),
+                stringResource(Res.string.collection_new), icon = Icons.Filled.Add, primary = collections.isEmpty(),
                 onClick = { keyboard.open(newTitle, "") { name -> if (name.isNotBlank()) onCreate(name.trim()) } },
                 modifier = Modifier.fillMaxWidth(),
             )

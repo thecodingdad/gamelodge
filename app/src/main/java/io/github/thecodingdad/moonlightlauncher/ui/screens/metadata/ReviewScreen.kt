@@ -25,9 +25,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
-import io.github.thecodingdad.moonlightlauncher.R
 import io.github.thecodingdad.moonlightlauncher.container
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryItemEntity
@@ -39,6 +38,7 @@ import io.github.thecodingdad.moonlightlauncher.ui.input.PadButton
 import io.github.thecodingdad.moonlightlauncher.ui.shell.ScreenHints
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 import kotlinx.coroutines.launch
+import io.github.thecodingdad.moonlightlauncher.resources.*
 
 /** Uncertain matches: A = choose the right game, X = the match is correct. */
 @Composable
@@ -51,17 +51,17 @@ fun ReviewScreen(items: List<LibraryEntry>) {
     PadAction(PadButton.X) { focused?.let { e -> scope.launch { metadata.confirm(e.item.id) } } }
     ScreenHints(
         listOf(
-            ButtonHint(PadButton.A, stringResource(R.string.metadata_choose_game)),
-            ButtonHint(PadButton.X, stringResource(R.string.metadata_confirm), onClick = { focused?.let { e -> scope.launch { metadata.confirm(e.item.id) } } }),
-            ButtonHint(PadButton.B, stringResource(R.string.hint_back)),
+            ButtonHint(PadButton.A, stringResource(Res.string.metadata_choose_game)),
+            ButtonHint(PadButton.X, stringResource(Res.string.metadata_confirm), onClick = { focused?.let { e -> scope.launch { metadata.confirm(e.item.id) } } }),
+            ButtonHint(PadButton.B, stringResource(Res.string.hint_back)),
         ),
     )
 
     Column(Modifier.fillMaxSize().padding(horizontal = 48.dp, vertical = 16.dp)) {
-        io.github.thecodingdad.moonlightlauncher.ui.screens.settings.PageTitle(stringResource(R.string.metadata_review_list))
-        Text(stringResource(R.string.metadata_review_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted, modifier = Modifier.padding(vertical = 8.dp))
+        io.github.thecodingdad.moonlightlauncher.ui.screens.settings.PageTitle(stringResource(Res.string.metadata_review_list))
+        Text(stringResource(Res.string.metadata_review_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted, modifier = Modifier.padding(vertical = 8.dp))
         if (items.isEmpty()) {
-            Text(stringResource(R.string.metadata_review_done), style = MaterialTheme.typography.titleMedium, color = LauncherTheme.colors.success)
+            Text(stringResource(Res.string.metadata_review_done), style = MaterialTheme.typography.titleMedium, color = LauncherTheme.colors.success)
             return@Column
         }
         LazyColumn(
@@ -83,7 +83,7 @@ fun ReviewScreen(items: List<LibraryEntry>) {
                         Column(Modifier.padding(start = 16.dp).weight(1f)) {
                             Text(entry.item.title, style = MaterialTheme.typography.titleMedium, color = LauncherTheme.colors.onSurface)
                             Text(
-                                stringResource(R.string.metadata_matched_as, entry.item.metadataQuery ?: entry.item.title, (entry.item.matchConfidence * 100).toInt()),
+                                stringResource(Res.string.metadata_matched_as, entry.item.metadataQuery ?: entry.item.title, (entry.item.matchConfidence * 100).toInt()),
                                 style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted,
                             )
                         }
