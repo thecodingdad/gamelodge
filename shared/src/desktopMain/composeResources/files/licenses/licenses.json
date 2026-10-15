@@ -1,0 +1,99 @@
+[
+  {
+    "name": "Compose Multiplatform, Skiko",
+    "copyright": "JetBrains s.r.o. and contributors, The Android Open Source Project",
+    "license": "Apache-2.0",
+    "text": "apache-2.0",
+    "url": "https://github.com/JetBrains/compose-multiplatform"
+  },
+  {
+    "name": "Skia",
+    "copyright": "Google Inc.",
+    "license": "BSD-3-Clause",
+    "text": "skia",
+    "url": "https://skia.org"
+  },
+  {
+    "name": "AndroidX Room, DataStore, SQLite, Lifecycle, Navigation",
+    "copyright": "The Android Open Source Project",
+    "license": "Apache-2.0",
+    "text": "apache-2.0",
+    "url": "https://developer.android.com/jetpack/androidx"
+  },
+  {
+    "name": "SQLite",
+    "copyright": "public domain",
+    "license": "Public domain",
+    "text": "sqlite",
+    "url": "https://sqlite.org"
+  },
+  {
+    "name": "Material Components, Material Icons",
+    "copyright": "Google LLC",
+    "license": "Apache-2.0",
+    "text": "apache-2.0"
+  },
+  {
+    "name": "Kotlin, kotlinx.coroutines, kotlinx.serialization",
+    "copyright": "JetBrains s.r.o. and contributors",
+    "license": "Apache-2.0",
+    "text": "apache-2.0",
+    "url": "https://kotlinlang.org"
+  },
+  {
+    "name": "OkHttp, Okio",
+    "copyright": "Square, Inc.",
+    "license": "Apache-2.0",
+    "text": "apache-2.0",
+    "url": "https://square.github.io/okhttp/"
+  },
+  {
+    "name": "Coil",
+    "copyright": "Coil Contributors",
+    "license": "Apache-2.0",
+    "text": "apache-2.0",
+    "url": "https://coil-kt.github.io/coil/"
+  },
+  {
+    "name": "Bouncy Castle",
+    "copyright": "The Legion of the Bouncy Castle Inc.",
+    "license": "MIT",
+    "text": "bouncycastle",
+    "url": "https://www.bouncycastle.org"
+  },
+  {
+    "name": "Jamepad",
+    "copyright": "William Hartman and contributors",
+    "license": "Apache-2.0",
+    "text": "apache-2.0",
+    "url": "https://github.com/libgdx/Jamepad"
+  },
+  {
+    "name": "SDL",
+    "copyright": "Sam Lantinga",
+    "license": "Zlib",
+    "text": "sdl",
+    "url": "https://libsdl.org"
+  },
+  {
+    "name": "JNA",
+    "copyright": "JNA contributors",
+    "license": "Apache-2.0",
+    "text": "apache-2.0",
+    "url": "https://github.com/java-native-access/jna"
+  },
+  {
+    "name": "Roboto",
+    "copyright": "The Roboto Project Authors",
+    "license": "OFL-1.1",
+    "text": "ofl-1.1",
+    "url": "https://github.com/googlefonts/roboto-3-classic"
+  },
+  {
+    "name": "Eclipse Temurin (OpenJDK runtime)",
+    "copyright": "Oracle and/or its affiliates, Eclipse Adoptium",
+    "license": "GPL-2.0 with Classpath Exception",
+    "text": "openjdk",
+    "url": "https://adoptium.net"
+  }
+]

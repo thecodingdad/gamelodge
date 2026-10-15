@@ -88,6 +88,18 @@ private fun palette(mode: ThemeMode, accent: Color): LauncherColors = when (mode
 
 private fun onColor(c: Color) = if (c.luminance() > 0.5f) Color(0xFF101114) else Color.White
 
+/** Every text style in [family]. */
+private fun Typography.withFamily(family: androidx.compose.ui.text.font.FontFamily) = Typography(
+    displayLarge = displayLarge.copy(fontFamily = family), displayMedium = displayMedium.copy(fontFamily = family),
+    displaySmall = displaySmall.copy(fontFamily = family), headlineLarge = headlineLarge.copy(fontFamily = family),
+    headlineMedium = headlineMedium.copy(fontFamily = family), headlineSmall = headlineSmall.copy(fontFamily = family),
+    titleLarge = titleLarge.copy(fontFamily = family), titleMedium = titleMedium.copy(fontFamily = family),
+    titleSmall = titleSmall.copy(fontFamily = family), bodyLarge = bodyLarge.copy(fontFamily = family),
+    bodyMedium = bodyMedium.copy(fontFamily = family), bodySmall = bodySmall.copy(fontFamily = family),
+    labelLarge = labelLarge.copy(fontFamily = family), labelMedium = labelMedium.copy(fontFamily = family),
+    labelSmall = labelSmall.copy(fontFamily = family),
+)
+
 private val LauncherTypography = Typography(
     displaySmall = TextStyle(fontSize = 40.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.5).sp),
     headlineMedium = TextStyle(fontSize = 30.sp, fontWeight = FontWeight.Bold),
@@ -152,7 +164,9 @@ fun LauncherTheme(settings: LauncherSettings, content: @Composable () -> Unit) {
         LocalReduceMotion provides settings.reduceMotion,
         LocalAccentHolder provides accentHolder,
     ) {
-        MaterialTheme(colorScheme = scheme, typography = LauncherTypography) {
+        val family = launcherFontFamily()
+        val typography = androidx.compose.runtime.remember(family) { LauncherTypography.withFamily(family) }
+        MaterialTheme(colorScheme = scheme, typography = typography) {
             // Material 3 leaves the default content colour black; icons without an explicit
             // tint would be nearly invisible on the dark surfaces.
             CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides colors.onSurface, content = content)
