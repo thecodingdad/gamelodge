@@ -150,7 +150,10 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
         }
 
         // Tabs and hints stay; current image and choices scroll together.
-        Column(Modifier.weight(1f, fill = false)) {
+        // The scroll area gets the screen height minus title, tabs and hints.
+        val windowHeight = with(androidx.compose.ui.platform.LocalDensity.current) { androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.height.toDp() }
+        val gridMax = (windowHeight - 290.dp).coerceAtLeast(160.dp)
+        Column {
             io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 10.dp) {
                 kinds.forEachIndexed { index, k ->
                     io.github.thecodingdad.moonlightlauncher.ui.screens.library.Chip(kindLabel(k), selected = index == kindIndex, onClick = { kindIndex = index })
@@ -168,16 +171,15 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
             }
             val manual = kind.field in target.manual
             val list = options
-            val full = androidx.compose.foundation.lazy.grid.GridItemSpan(Int.MAX_VALUE)
             // One scroll area: the current image first, then the choices (tabs and hints stay).
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(if (wide) 260.dp else if (square) 150.dp else 120.dp),
-                modifier = Modifier.weight(1f, fill = false),
+                modifier = Modifier.heightIn(max = gridMax),
                 contentPadding = PaddingValues(4.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                item(key = "current", span = { full }) {
+                item(key = "current", span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                         current?.let { url ->
                             ArtworkImage(
@@ -201,11 +203,11 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
                     }
                 }
                 when {
-                    !metadata.isConfigured && list.isNullOrEmpty() -> item(key = "status", span = { full }) {
+                    !metadata.isConfigured && list.isNullOrEmpty() -> item(key = "status", span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
                         Text(stringResource(R.string.metadata_not_configured), color = LauncherTheme.colors.onSurfaceMuted)
                     }
-                    list == null -> item(key = "status", span = { full }) { CircularProgressIndicator(color = LauncherTheme.colors.accent) }
-                    list.isEmpty() -> item(key = "status", span = { full }) {
+                    list == null -> item(key = "status", span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) { CircularProgressIndicator(color = LauncherTheme.colors.accent) }
+                    list.isEmpty() -> item(key = "status", span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
                         Text(stringResource(R.string.metadata_no_results), color = LauncherTheme.colors.onSurfaceMuted)
                     }
                     else -> items(list, key = { o -> o.url }) { option ->
