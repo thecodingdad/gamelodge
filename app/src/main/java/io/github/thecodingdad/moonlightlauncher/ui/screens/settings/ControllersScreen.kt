@@ -31,20 +31,6 @@ import kotlinx.coroutines.launch
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 import io.github.thecodingdad.moonlightlauncher.resources.*
 
-data class ControllerInfo(
-    val id: Int,
-    val name: String,
-    val external: Boolean,
-    val batteryPercent: Int?,
-    val canVibrate: Boolean,
-    val vendorId: Int = 0,
-    val productId: Int = 0,
-    val descriptor: String = "",
-    val hasTouchpad: Boolean = false,
-    /** Odin Mapping's copy of an external controller (no battery, no rumble). */
-    val odinCopy: Boolean = false,
-)
-
 /** All connected gamepads (built-in, Bluetooth, USB). */
 fun connectedControllers(): List<ControllerInfo> = InputDevice.getDeviceIds().toList()
     .mapNotNull { InputDevice.getDevice(it) }
@@ -69,7 +55,7 @@ fun connectedControllers(): List<ControllerInfo> = InputDevice.getDeviceIds().to
         )
     }
 
-fun vibrateController(id: Int) {
+fun vibrateAndroidController(id: Int) {
     val device = InputDevice.getDevice(id) ?: return
     val effect = VibrationEffect.createOneShot(250, VibrationEffect.DEFAULT_AMPLITUDE)
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -85,7 +71,7 @@ fun vibrateController(id: Int) {
  */
 /** Connected controllers, updated when one connects, disconnects or changes (battery). */
 @Composable
-fun rememberControllers(): List<ControllerInfo> {
+fun rememberAndroidControllers(): List<ControllerInfo> {
     val context = LocalContext.current
     var revision by remember { mutableIntStateOf(0) }
     DisposableEffect(Unit) {
@@ -110,7 +96,7 @@ fun rememberControllers(): List<ControllerInfo> {
 
 @Composable
 fun ControllersScreen() {
-    val controllers = rememberControllers()
+    val controllers = rememberAndroidControllers()
     val context = LocalContext.current
     var selected by remember { mutableStateOf<ControllerInfo?>(null) }
     // Artemis' gamepad options (dead zone, rumble, motion sensors …) of the base stream settings;
@@ -151,11 +137,11 @@ fun ControllersScreen() {
         }
     }
 
-    ControllerDetailDialog(selected, onDismiss = { selected = null })
+    AndroidControllerDetailDialog(selected, onDismiss = { selected = null })
 }
 
 @Composable
-fun ControllerDetailDialog(controller: ControllerInfo?, onDismiss: () -> Unit) {
+fun AndroidControllerDetailDialog(controller: ControllerInfo?, onDismiss: () -> Unit) {
     io.github.thecodingdad.moonlightlauncher.ui.components.Modal(
         visible = controller != null, onDismiss = onDismiss, title = controller?.name,
         maxWidth = 680.dp,
@@ -303,7 +289,7 @@ private fun OdinMappingSection() {
     val scope = androidx.compose.runtime.rememberCoroutineScope()
     var blacklist by remember { mutableStateOf<List<String>?>(null) }
     // Re-read when controllers change: the watcher may just have added a name.
-    val controllers = rememberControllers()
+    val controllers = rememberAndroidControllers()
     androidx.compose.runtime.LaunchedEffect(controllers, settings?.odinKeepControllers) {
         kotlinx.coroutines.delay(500)
         blacklist = odin.blacklist()

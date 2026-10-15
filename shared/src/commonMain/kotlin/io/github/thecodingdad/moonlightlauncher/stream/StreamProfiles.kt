@@ -16,4 +16,7 @@ interface StreamProfiles {
 
     /** Emits on every profile change (added, renamed, activated). */
     fun changes(): Flow<Unit>
+
+    /** "1080p · 60 fps · 20 Mbit": the key values of a profile (unset values come from the base). */
+    fun summary(uuid: UUID?): String
 }

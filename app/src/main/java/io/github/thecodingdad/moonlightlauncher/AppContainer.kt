@@ -65,7 +65,7 @@ class AppContainer(context: Context) : LauncherContainer {
         io.github.thecodingdad.moonlightlauncher.stream.ControllerOverrideStore(appContext)
     }
     override val vpn: VpnManager by lazy { VpnManager(appContext, secrets, settings, scope) }
-    override val profiles: io.github.thecodingdad.moonlightlauncher.stream.StreamProfiles = io.github.thecodingdad.moonlightlauncher.stream.ArtemisStreamProfiles
+    override val profiles: io.github.thecodingdad.moonlightlauncher.stream.StreamProfiles = io.github.thecodingdad.moonlightlauncher.stream.ArtemisStreamProfiles(appContext)
     override val launcher: LaunchCoordinator by lazy {
         LaunchCoordinator(
             hosts, hostActions, { hostPower }, { autoSleep }, profiles, playtime, settings, { ha }, scope,

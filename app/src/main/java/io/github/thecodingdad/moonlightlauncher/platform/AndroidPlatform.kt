@@ -33,6 +33,8 @@ class AndroidPlatformInfo(private val context: Context) : PlatformInfo {
     override val deviceName: String
         get() = Settings.Global.getString(context.contentResolver, Settings.Global.DEVICE_NAME)?.takeIf { it.isNotBlank() }
             ?: "${Build.MANUFACTURER} ${Build.MODEL}".trim()
+
+    override val versionName: String get() = io.github.thecodingdad.moonlightlauncher.BuildConfig.VERSION_NAME
 }
 
 private val Context.launcherSettings: DataStore<Preferences> by preferencesDataStore("launcher_settings")

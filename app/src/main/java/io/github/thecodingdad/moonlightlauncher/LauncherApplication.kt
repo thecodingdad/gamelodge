@@ -66,6 +66,7 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
         container.metadata.start()
         io.github.thecodingdad.moonlightlauncher.data.artwork.ArtworkFiles.init(filesDir)
         io.github.thecodingdad.moonlightlauncher.ui.components.ArtworkPlatform.current = io.github.thecodingdad.moonlightlauncher.ui.components.AndroidArtwork(this)
+        io.github.thecodingdad.moonlightlauncher.ui.PlatformUi.current = io.github.thecodingdad.moonlightlauncher.ui.AndroidPlatformUi(this)
         container.artwork.start()
         io.github.thecodingdad.moonlightlauncher.system.OdinMapping(this)
             .watch(container.scope, container.settings.settings.map { it.odinKeepControllers })

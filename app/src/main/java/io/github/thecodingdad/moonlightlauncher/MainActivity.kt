@@ -16,6 +16,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.lifecycle.viewmodel.initializer
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -34,7 +35,9 @@ import io.github.thecodingdad.moonlightlauncher.ui.input.dispatchMotion
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
-    private val vm: LauncherViewModel by viewModels()
+    private val vm: LauncherViewModel by viewModels {
+        androidx.lifecycle.viewmodel.viewModelFactory { initializer { LauncherViewModel(container) } }
+    }
     private val dispatcher = InputDispatcher()
     private lateinit var feedback: UiFeedback
 

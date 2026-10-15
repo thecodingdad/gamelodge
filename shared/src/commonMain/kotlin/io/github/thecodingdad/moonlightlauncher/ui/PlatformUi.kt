@@ -1,0 +1,110 @@
+package io.github.thecodingdad.moonlightlauncher.ui
+
+import androidx.compose.runtime.Composable
+import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.ControllerInfo
+import io.github.thecodingdad.moonlightlauncher.ui.shell.SystemStatus
+import io.github.thecodingdad.moonlightlauncher.ui.shell.TileModel
+import io.github.thecodingdad.moonlightlauncher.ui.shell.TopCutout
+
+/**
+ * The parts of the UI that only the platform can provide: device state, controllers, system
+ * tiles and screens of platform features. Set once at start.
+ */
+interface PlatformUi {
+    /** Battery and network state of the device, updated on changes. */
+    @Composable
+    fun rememberSystemStatus(): SystemStatus
+
+    /** Camera notch/hole on the top edge of the window. */
+    @Composable
+    fun rememberTopCutout(): TopCutout
+
+    /** Time of day in the user's format (12/24 h). */
+    fun formatTime(millis: Long): String
+
+    /** Connected game controllers, updated when one connects, disconnects or changes. */
+    @Composable
+    fun rememberControllers(): List<ControllerInfo>
+
+    /** Short rumble on a controller (test in the controller list). */
+    fun vibrateController(id: Int)
+
+    /** Settings of one controller (hidden while [controller] is null). */
+    @Composable
+    fun ControllerDetailDialog(controller: ControllerInfo?, onDismiss: () -> Unit)
+
+    /** Opens a web page in the browser. */
+    fun openUrl(url: String)
+
+    /** Brings the launcher window to the front (e.g. after a login in the browser). */
+    fun bringToFront()
+
+    /** The device's own quick tiles (Wi-Fi, Bluetooth …) for [ids]; [revision] changes to refresh them. */
+    @Composable
+    fun rememberSystemTiles(ids: List<String>, revision: Int): Map<String, List<TileModel>>
+
+    /** Whether the device has what a quick tile needs (e.g. a flashlight). */
+    fun quickTileAvailable(id: String): Boolean
+
+    /** Volume, brightness and similar device controls in the quick menu. */
+    @Composable
+    fun SystemControls(visible: Boolean)
+
+    /** Lets the user pick an image file; [onPicked] gets its address (null: cancelled). Returns what opens the picker. */
+    @Composable
+    fun rememberImagePicker(onPicked: (String?) -> Unit): () -> Unit
+
+    /** Copies an image (picked address, file path …) to [dir]/[baseName].<ext>; null when that fails. */
+    suspend fun copyImage(address: String, dir: java.io.File, baseName: String): java.io.File?
+
+    /** Name of an installed app ([packageName]: the platform's id for it). */
+    fun appLabel(packageName: String): String
+
+    /** The window runs on a TV (Odin: launcher moved to the TV), laid out for a big screen. */
+    @Composable
+    fun rememberOnTv(): Boolean
+
+    /** Keeps the display awake while true (screensaver instead of the system's screen timeout). */
+    @Composable
+    fun rememberScreenKeeper(): (Boolean) -> Unit
+
+    /** The system's information page of an installed app. */
+    fun openAppInfo(packageName: String)
+
+    /** Settings pages only some platforms have (VPN, backup, emulators …). */
+    fun hasPage(id: io.github.thecodingdad.moonlightlauncher.ui.screens.settings.SettingsPageId): Boolean
+
+    @Composable
+    fun PlatformSettingsPage(
+        id: io.github.thecodingdad.moonlightlauncher.ui.screens.settings.SettingsPageId,
+        vm: LauncherViewModel,
+        openProfile: (java.util.UUID?) -> Unit,
+        openStats: () -> Unit,
+    )
+
+    /** Controller list and settings (Settings → Controllers). */
+    @Composable
+    fun ControllersScreen()
+
+    /** Editor of one stream profile. */
+    @Composable
+    fun ProfileEditor(uuid: java.util.UUID?, name: String, onDeleted: () -> Unit)
+
+    /** Extra rows of Settings → Buttons & controls (button combinations on Android). */
+    @Composable
+    fun ControlsExtras(
+        settings: io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings,
+        update: ((io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings) -> io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings) -> Unit,
+    )
+
+    /** Row on the settings overview that opens the device's own settings; nothing where there are none. */
+    @Composable
+    fun SystemSettingsRow()
+
+    /** Switches the UI language ("system", "en", "de"). */
+    fun applyLanguage(tag: String)
+
+    companion object {
+        lateinit var current: PlatformUi
+    }
+}

@@ -56,7 +56,7 @@ fun QuickMenuSettings(vm: LauncherViewModel, settings: LauncherSettings, update:
     SettingsPage(stringResource(Res.string.settings_quick_menu)) {
         Text(stringResource(Res.string.qt_settings_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
         val tileContext = androidx.compose.ui.platform.LocalContext.current
-        val unavailable = remember(tiles) { tiles.filterNot { QuickTile.isAvailable(tileContext, it) }.toSet() }
+        val unavailable = remember(tiles) { tiles.filterNot { QuickTile.isAvailable(it) }.toSet() }
         // Order by dragging the handle (controller: A on the handle, then up/down), like the filters.
         ReorderableList(tiles, id = { it }, onReorder = ::save) { index, id ->
             TileRow(id, unavailable = id in unavailable, initialFocus = index == 0, onRemove = { save(tiles - id) })
@@ -102,7 +102,7 @@ fun QuickMenuSettings(vm: LauncherViewModel, settings: LauncherSettings, update:
     }
     val context = androidx.compose.ui.platform.LocalContext.current
     // Only tiles the device has the hardware for.
-    val available = remember { QuickTile.groups.flatMap { it.second }.filter { QuickTile.isAvailable(context, it) }.toSet() }
+    val available = remember { QuickTile.groups.flatMap { it.second }.filter { QuickTile.isAvailable(it) }.toSet() }
     Modal(visible = adding, onDismiss = { adding = false }, title = stringResource(Res.string.qt_add), maxWidth = 760.dp) {
         Column(Modifier.heightIn(max = 600.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             fun add(id: String) { save(tiles + id); adding = false }

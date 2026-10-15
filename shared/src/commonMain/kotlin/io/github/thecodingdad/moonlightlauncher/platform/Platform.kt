@@ -9,6 +9,9 @@ interface PlatformInfo {
     val filesDir: File
     /** Name shown to paired servers (e.g. "Odin 2 Portal", the PC name). */
     val deviceName: String
+
+    /** Version of the launcher ("0.1.0"). */
+    val versionName: String
 }
 
 /** Encrypted storage for credentials; the platform keeps the key (Android Keystore, Windows DPAPI). */

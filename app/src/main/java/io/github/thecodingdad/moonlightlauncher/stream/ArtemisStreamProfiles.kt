@@ -10,7 +10,7 @@ import java.util.UUID
  * Thin wrapper around Artemis' [ProfilesManager]. The active profile overlays the base
  * stream settings, so "active profile" and "start with…" need no changes in Artemis.
  */
-object ArtemisStreamProfiles : StreamProfiles {
+class ArtemisStreamProfiles(private val context: android.content.Context) : StreamProfiles {
     private val manager get() = ProfilesManager.getInstance()
 
     override fun all(defaultName: String): List<StreamProfile> =
@@ -26,5 +26,19 @@ object ArtemisStreamProfiles : StreamProfiles {
         manager.addListener(listener)
         trySend(Unit)
         awaitClose { manager.removeListener(listener) }
+    }
+
+    override fun summary(uuid: UUID?): String {
+        val base = ProfileStore(context, null)
+        val profile = ProfileStore(context, uuid)
+        fun value(key: String, default: String) = profile.getString(key, null) ?: base.getString(key, default) ?: default
+        val resolution = value("list_resolution", "1280x720")
+        val fps = value("list_fps", "60")
+        val height = resolution.substringAfter('x', "").takeIf { it.isNotEmpty() }?.let { "${it}p" } ?: resolution
+        val defaultBitrate = com.limelight.preferences.PreferenceConfiguration.getDefaultBitrate(resolution, fps)
+        val kbps = profile.getString("seekbar_bitrate_kbps", null)?.toIntOrNull()
+            ?: base.getInt("seekbar_bitrate_kbps", defaultBitrate)
+        val mbit = if (kbps % 1000 == 0) "${kbps / 1000}" else "%.1f".format(kbps / 1000f)
+        return "$height · $fps fps · $mbit Mbit"
     }
 }

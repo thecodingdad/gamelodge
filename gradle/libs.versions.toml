@@ -73,6 +73,7 @@ jb-lifecycle-viewmodel-compose = { group = "org.jetbrains.androidx.lifecycle", n
 jb-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "jbLifecycle" }
 jb-navigation-compose = { group = "org.jetbrains.androidx.navigation", name = "navigation-compose", version.ref = "jbNavigation" }
 jb-material3 = { group = "org.jetbrains.compose.material3", name = "material3", version.ref = "jbMaterial3" }
+jb-ui-backhandler = { group = "org.jetbrains.compose.ui", name = "ui-backhandler", version.ref = "composeMultiplatform" }
 jb-material-icons = { group = "org.jetbrains.compose.material", name = "material-icons-extended", version.ref = "jbMaterialIcons" }
 androidx-sqlite-bundled = { group = "androidx.sqlite", name = "sqlite-bundled", version.ref = "sqlite" }
 bouncycastle-prov = { group = "org.bouncycastle", name = "bcprov-jdk18on", version.ref = "bouncycastle" }

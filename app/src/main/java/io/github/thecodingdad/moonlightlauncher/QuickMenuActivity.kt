@@ -10,6 +10,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.lifecycle.viewmodel.initializer
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.CompositionLocalProvider
@@ -61,7 +62,9 @@ import kotlinx.coroutines.delay
  * so the app behind stays visible (it is only paused, the stream keeps running).
  */
 class QuickMenuActivity : ComponentActivity() {
-    private val vm: LauncherViewModel by viewModels()
+    private val vm: LauncherViewModel by viewModels {
+        androidx.lifecycle.viewmodel.viewModelFactory { initializer { LauncherViewModel(container) } }
+    }
     private val dispatcher = InputDispatcher()
     private lateinit var feedback: UiFeedback
     private var menuOpen by mutableStateOf(true)
