@@ -223,7 +223,13 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
                         }
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text(
-                                stringResource(if (manual) R.string.artwork_manual else R.string.artwork_auto),
+                                stringResource(
+                                    when {
+                                        manual && current == null -> R.string.artwork_none_chosen
+                                        manual -> R.string.artwork_manual
+                                        else -> R.string.artwork_auto
+                                    },
+                                ),
                                 style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted,
                             )
                             if (manual) {
@@ -232,6 +238,22 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
                                     onClick = { scope.launch { metadata.resetArtwork(target.id, kind); onDismiss() } },
                                 )
                             }
+                        }
+                    }
+                }
+                // Animated tabs: "none" keeps the still image (also when the sources offer one).
+                if (kind.animated) {
+                    item(key = "none") {
+                        FocusSurface(
+                            onClick = { scope.launch { metadata.clearArtwork(target.id, kind); onDismiss() } },
+                            modifier = Modifier.fillMaxWidth().aspectRatio(ratio),
+                            color = LauncherTheme.colors.surfaceRaised,
+                        ) {
+                            Text(
+                                stringResource(R.string.artwork_none), style = MaterialTheme.typography.titleMedium,
+                                color = LauncherTheme.colors.onSurface, textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                modifier = Modifier.align(Alignment.Center).padding(12.dp),
+                            )
                         }
                     }
                 }

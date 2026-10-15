@@ -238,6 +238,11 @@ class LibraryRepository(
             releaseDate = item.releaseDate?.div(1000).takeIf { MetaField.RELEASE in m },
             kind = if (item.kindSource == KindSource.MANUAL) (if (item.kind == ItemKind.APP) "app" else "game") else null,
             reset = reset.ifEmpty { null },
+            // Picked by hand as "none": no animated image at all.
+            clear = listOfNotNull(
+                "animatedCover".takeIf { MetaField.ANIMATED_COVER in m && item.animatedCoverUrl == null },
+                "animatedHero".takeIf { MetaField.ANIMATED_HERO in m && item.animatedHeroUrl == null },
+            ).ifEmpty { null },
         )
         targets.forEach { feed.correct(it.hostUuid!!, it.appUuid!!, correction) }
     }

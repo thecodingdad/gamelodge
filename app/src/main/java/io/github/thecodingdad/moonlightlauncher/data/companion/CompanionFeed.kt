@@ -88,6 +88,8 @@ data class HostGameCorrection(
     val kind: String? = null,
     /** "name", "cover", "hero", "logo", "icon", "animatedCover", "animatedHero", "summary", "genres", "developers", "publishers", "release". */
     val reset: List<String>? = null,
+    /** Fields chosen by hand to stay empty ("animatedCover", "animatedHero"). */
+    val clear: List<String>? = null,
 )
 
 /**

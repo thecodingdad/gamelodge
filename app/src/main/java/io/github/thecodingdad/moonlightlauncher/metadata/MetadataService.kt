@@ -536,6 +536,13 @@ class MetadataService(
         corrected(itemId)
     }
 
+    /** No animated image by hand (the still one shows instead); automatic lookups leave it empty. */
+    suspend fun clearArtwork(itemId: String, kind: ArtworkKind) = withContext(Dispatchers.IO) {
+        val item = dao.getItem(itemId) ?: return@withContext
+        dao.upsertItem(item.withArtwork(kind, null).let { it.withManual(it.manual + kind.field) })
+        corrected(itemId)
+    }
+
     /** Hands one image back to automatic: looked up again in the fixed order. */
     suspend fun resetArtwork(itemId: String, kind: ArtworkKind) = withContext(Dispatchers.IO) {
         val item = dao.getItem(itemId) ?: return@withContext

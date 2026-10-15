@@ -87,7 +87,10 @@ fun HaPanel(visible: Boolean, onDismiss: () -> Unit, openSettings: () -> Unit) {
 
     androidx.compose.runtime.LaunchedEffect(visible) { if (visible) ha.client.start() }
     SidePanel(visible = visible, onDismiss = onDismiss, width = 470.dp) {
-        Text(stringResource(R.string.settings_home_assistant), style = MaterialTheme.typography.headlineSmall, color = LauncherTheme.colors.onSurface)
+        androidx.compose.foundation.layout.Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+            io.github.thecodingdad.moonlightlauncher.ui.components.CloseArrow(onDismiss)
+            Text(stringResource(R.string.settings_home_assistant), style = MaterialTheme.typography.headlineSmall, color = LauncherTheme.colors.onSurface)
+        }
         Text(connectionLabel(connection), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
         Spacer(Modifier.height(16.dp))
         if (connection == HaConnection.NOT_CONFIGURED || tiles.isEmpty()) {

@@ -232,6 +232,8 @@
     <string name="artwork_auto">automatic (in the order of the sources)</string>
     <string name="artwork_reset_auto">Back to automatic</string>
     <string name="artwork_animated">animated</string>
+    <string name="artwork_none">None</string>
+    <string name="artwork_none_chosen">none, picked by hand (the still image shows)</string>
     <string name="setting_animated_tiles">Animated tiles</string>
     <string name="setting_animated_tiles_focus">When focused</string>
     <string name="setting_animated_tiles_always">Always</string>

@@ -84,7 +84,7 @@ fun QuickMenu(
     val vpnState by c.vpn.state.collectAsState()
     val tunnels by c.vpn.tunnels.collectAsState()
 
-    SidePanel(visible = visible, onDismiss = onDismiss, width = 520.dp) {
+    SidePanel(visible = visible, onDismiss = onDismiss, width = 580.dp) {
         val maxVolume = remember { audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC) }
         var volume by remember(visible) { mutableIntStateOf(audio.getStreamVolume(AudioManager.STREAM_MUSIC)) }
         val canWriteSettings = remember(visible) { Settings.System.canWrite(context) }
@@ -98,11 +98,15 @@ fun QuickMenu(
         io.github.thecodingdad.moonlightlauncher.ui.input.PadAction(io.github.thecodingdad.moonlightlauncher.ui.input.PadButton.R1) { tab = 1 }
         // LB/RB glyphs only with a controller connected (touch only: just the tabs).
         val padConnected = io.github.thecodingdad.moonlightlauncher.ui.screens.settings.rememberControllers().isNotEmpty()
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-            if (padConnected) io.github.thecodingdad.moonlightlauncher.ui.components.PadGlyph(io.github.thecodingdad.moonlightlauncher.ui.input.PadButton.L1)
-            PanelTab(stringResource(R.string.qm_tab_quick), selected = tab == 0, onClick = { tab = 0 })
-            PanelTab(stringResource(R.string.settings_home_assistant), selected = tab == 1, onClick = { tab = 1 })
-            if (padConnected) io.github.thecodingdad.moonlightlauncher.ui.components.PadGlyph(io.github.thecodingdad.moonlightlauncher.ui.input.PadButton.R1)
+        // Back arrow on the left (touch / mouse), the tabs centred.
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            io.github.thecodingdad.moonlightlauncher.ui.components.CloseArrow(onDismiss)
+            Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally), verticalAlignment = Alignment.CenterVertically) {
+                if (padConnected) io.github.thecodingdad.moonlightlauncher.ui.components.PadGlyph(io.github.thecodingdad.moonlightlauncher.ui.input.PadButton.L1)
+                PanelTab(stringResource(R.string.qm_tab_quick), selected = tab == 0, onClick = { tab = 0 })
+                PanelTab(stringResource(R.string.settings_home_assistant), selected = tab == 1, onClick = { tab = 1 })
+                if (padConnected) io.github.thecodingdad.moonlightlauncher.ui.components.PadGlyph(io.github.thecodingdad.moonlightlauncher.ui.input.PadButton.R1)
+            }
         }
         androidx.compose.foundation.layout.Spacer(Modifier.heightIn(min = 4.dp))
         if (tab == 1) {

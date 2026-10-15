@@ -230,6 +230,8 @@
     <string name="artwork_auto">automatisch (in der Reihenfolge der Quellen)</string>
     <string name="artwork_reset_auto">Wieder automatisch</string>
     <string name="artwork_animated">animiert</string>
+    <string name="artwork_none">Keins</string>
+    <string name="artwork_none_chosen">keins, von Hand gewählt (das normale Bild wird gezeigt)</string>
     <string name="setting_animated_tiles">Animierte Kacheln</string>
     <string name="setting_animated_tiles_focus">Beim Fokussieren</string>
     <string name="setting_animated_tiles_always">Immer</string>

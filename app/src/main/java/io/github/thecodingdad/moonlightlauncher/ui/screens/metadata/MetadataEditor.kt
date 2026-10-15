@@ -2,6 +2,7 @@ package io.github.thecodingdad.moonlightlauncher.ui.screens.metadata
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -72,14 +73,15 @@ fun MetadataEditorDialog(
     val service = LocalContext.current.container.metadata
     val scope = rememberCoroutineScope()
     var editing by remember { mutableStateOf<EditRow?>(null) }
-    Modal(visible = entry != null, onDismiss = onDismiss, title = stringResource(R.string.meta_edit_title), maxWidth = 820.dp, closeButton = false) {
+    Modal(visible = entry != null, onDismiss = onDismiss, title = stringResource(R.string.meta_edit_title), maxWidth = 820.dp, modifier = Modifier.fillMaxHeight(), closeButton = false) {
         val e = entry ?: return@Modal
         val item = e.item
         val manual = item.manual
         fun edited(row: EditRow) = row.field != null && row.field in manual
         val editedLabel = stringResource(R.string.meta_edited)
         val none = stringResource(R.string.meta_none)
-        Column(Modifier.heightIn(max = 600.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        // The rows scroll; "Done" stays at the bottom, always in view.
+        Column(Modifier.weight(1f).controllerScroll(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(stringResource(R.string.meta_edit_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
             // New IGDB match and other artwork (formerly buttons on the detail page).
             ButtonRow(spacing = 10.dp) {
@@ -109,9 +111,9 @@ fun MetadataEditorDialog(
             SectionHeader(stringResource(R.string.filter_section_activity))
             Row(EditRow.PLAYTIME, R.string.filter_field_playtime, stringResource(R.string.meta_hours, "%.1f".format(item.playtimeSeconds / 3600.0)))
             Row(EditRow.LAST_PLAYED, R.string.filter_field_last_played, item.lastPlayedAt?.let { dateFormat().format(Date(it)) })
-            ButtonRow(spacing = 12.dp, modifier = Modifier.padding(top = 8.dp)) {
-                LauncherButton(stringResource(R.string.action_done), onClick = onDismiss, primary = true)
-            }
+        }
+        ButtonRow(spacing = 12.dp, modifier = Modifier.padding(top = 16.dp)) {
+            LauncherButton(stringResource(R.string.action_done), onClick = onDismiss, primary = true)
         }
     }
 

@@ -88,16 +88,16 @@ fun Modal(
     }
 }
 
-/** Round back arrow that closes a popup; touch and mouse only (controllers close with B). */
+/** Round back arrow that closes a popup or panel; touch and mouse only (controllers close with B). */
 @Composable
-private fun CloseArrow(onClick: () -> Unit) {
+fun CloseArrow(onClick: () -> Unit, modifier: Modifier = Modifier) {
     FocusSurface(
         onClick = onClick,
         shape = androidx.compose.foundation.shape.CircleShape,
         color = LauncherTheme.colors.surfaceRaised,
         dpadFocusable = false,
         clickSound = io.github.thecodingdad.moonlightlauncher.ui.feedback.UiSound.BACK,
-        modifier = Modifier.padding(end = 14.dp).size(40.dp),
+        modifier = modifier.padding(end = 14.dp).size(40.dp),
     ) {
         androidx.compose.material3.Icon(
             androidx.compose.material.icons.Icons.AutoMirrored.Filled.ArrowBack,
