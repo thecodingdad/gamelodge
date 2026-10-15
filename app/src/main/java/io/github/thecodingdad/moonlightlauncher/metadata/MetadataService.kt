@@ -530,15 +530,33 @@ class MetadataService(
     }
 
     /** A hand-picked image: protected against automatic changes and sent to the companion. */
-    suspend fun setArtwork(itemId: String, kind: ArtworkKind, option: ArtworkOption) = withContext(Dispatchers.IO) {
+    suspend fun setArtwork(itemId: String, kind: ArtworkKind, option: ArtworkOption) = setOwnArtwork(itemId, kind, option.url)
+
+    /** An image by hand: an address or an own file (own-artwork; only addresses reach the companion). */
+    suspend fun setOwnArtwork(itemId: String, kind: ArtworkKind, url: String) = withContext(Dispatchers.IO) {
         val item = dao.getItem(itemId) ?: return@withContext
-        dao.upsertItem(item.withArtwork(kind, option.url).let { it.withManual(it.manual + kind.field) })
+        dropOwnFile(item, kind, keep = url)
+        dao.upsertItem(item.withArtwork(kind, url).let { it.withManual(it.manual + kind.field) })
         corrected(itemId)
+    }
+
+    /** An own image file that is replaced is not needed any more. */
+    private fun dropOwnFile(item: LibraryItemEntity, kind: ArtworkKind, keep: String? = null) {
+        val old = when (kind) {
+            ArtworkKind.COVER -> item.coverUrl
+            ArtworkKind.ANIMATED_COVER -> item.animatedCoverUrl
+            ArtworkKind.HERO -> item.heroUrl
+            ArtworkKind.ANIMATED_HERO -> item.animatedHeroUrl
+            ArtworkKind.LOGO -> item.logoUrl
+            ArtworkKind.ICON -> item.iconUrl
+        } ?: return
+        if (old != keep && old.contains("/own-artwork/")) java.io.File(old).delete()
     }
 
     /** No animated image by hand (the still one shows instead); automatic lookups leave it empty. */
     suspend fun clearArtwork(itemId: String, kind: ArtworkKind) = withContext(Dispatchers.IO) {
         val item = dao.getItem(itemId) ?: return@withContext
+        dropOwnFile(item, kind)
         dao.upsertItem(item.withArtwork(kind, null).let { it.withManual(it.manual + kind.field) })
         corrected(itemId)
     }
@@ -546,6 +564,7 @@ class MetadataService(
     /** Hands one image back to automatic: looked up again in the fixed order. */
     suspend fun resetArtwork(itemId: String, kind: ArtworkKind) = withContext(Dispatchers.IO) {
         val item = dao.getItem(itemId) ?: return@withContext
+        dropOwnFile(item, kind)
         var auto = item.withManual(item.manual - kind.field).withArtwork(kind, null)
         runCatching {
             // In the order of the sources: IGDB's cover, SteamGridDB, then IGDB's background.

@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Restore
@@ -133,6 +134,28 @@ fun FixMetadataDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
 fun ArtworkPickerDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
     val metadata = LocalContext.current.container.metadata
     val scope = rememberCoroutineScope()
+    // An own image from the device's storage, copied into the launcher (the document may not stay readable).
+    val context = LocalContext.current
+    var ownKind by remember { mutableStateOf<ArtworkKind?>(null) }
+    val pickOwn = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        val target = item
+        val kind = ownKind
+        if (uri == null || target == null || kind == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            val file = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                runCatching {
+                    val dir = java.io.File(context.filesDir, "own-artwork").apply { mkdirs() }
+                    val ext = android.webkit.MimeTypeMap.getSingleton().getExtensionFromMimeType(context.contentResolver.getType(uri)) ?: "img"
+                    val out = java.io.File(dir, "${target.id.hashCode().toUInt()}-${kind.name.lowercase()}-${System.currentTimeMillis()}.$ext")
+                    context.contentResolver.openInputStream(uri)?.use { input -> out.outputStream().use { input.copyTo(it) } }?.let { out }
+                }.getOrNull()
+            }
+            if (file != null) metadata.setOwnArtwork(target.id, kind, file.absolutePath)
+            onDismiss()
+        }
+    }
     // Constant height (the whole screen but a margin): switching tabs doesn't make it jump.
     Modal(visible = item != null, onDismiss = onDismiss, title = stringResource(R.string.artwork_title), maxWidth = 1000.dp, modifier = Modifier.fillMaxHeight()) {
         val target = item ?: return@Modal
@@ -141,6 +164,7 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
         val kinds = ArtworkKind.entries.filter { animatedOn || !it.animated }
         var kindIndex by remember(target.id) { mutableStateOf(0) }
         val kind = kinds[kindIndex.coerceIn(kinds.indices)]
+        androidx.compose.runtime.SideEffect { ownKind = kind }
         var options by remember(target.id, kind) { mutableStateOf<List<ArtworkOption>?>(null) }
         LaunchedEffect(target.id, kind) { options = runCatching { metadata.artworkOptions(target, kind) }.getOrDefault(emptyList()) }
         // LB/RB like the library's filters: focus stays in the list (first image of the new tab)
@@ -232,28 +256,26 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
                                 ),
                                 style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted,
                             )
-                            if (manual) {
+                            // Wraps on narrow (portrait) screens.
+                            io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 10.dp) {
                                 io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton(
-                                    stringResource(R.string.artwork_reset_auto), icon = androidx.compose.material.icons.Icons.Filled.Restore,
-                                    onClick = { scope.launch { metadata.resetArtwork(target.id, kind); onDismiss() } },
+                                    stringResource(R.string.artwork_own), icon = androidx.compose.material.icons.Icons.Filled.Image,
+                                    onClick = { pickOwn.launch(arrayOf("image/*")) },
                                 )
+                                // Animated: none at all, the still image shows.
+                                if (kind.animated && current != null) {
+                                    io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton(
+                                        stringResource(R.string.artwork_none), icon = androidx.compose.material.icons.Icons.Filled.Delete,
+                                        onClick = { scope.launch { metadata.clearArtwork(target.id, kind); onDismiss() } },
+                                    )
+                                }
+                                if (manual) {
+                                    io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton(
+                                        stringResource(R.string.artwork_reset_auto), icon = androidx.compose.material.icons.Icons.Filled.Restore,
+                                        onClick = { scope.launch { metadata.resetArtwork(target.id, kind); onDismiss() } },
+                                    )
+                                }
                             }
-                        }
-                    }
-                }
-                // Animated tabs: "none" keeps the still image (also when the sources offer one).
-                if (kind.animated) {
-                    item(key = "none") {
-                        FocusSurface(
-                            onClick = { scope.launch { metadata.clearArtwork(target.id, kind); onDismiss() } },
-                            modifier = Modifier.fillMaxWidth().aspectRatio(ratio),
-                            color = LauncherTheme.colors.surfaceRaised,
-                        ) {
-                            Text(
-                                stringResource(R.string.artwork_none), style = MaterialTheme.typography.titleMedium,
-                                color = LauncherTheme.colors.onSurface, textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                                modifier = Modifier.align(Alignment.Center).padding(12.dp),
-                            )
                         }
                     }
                 }
