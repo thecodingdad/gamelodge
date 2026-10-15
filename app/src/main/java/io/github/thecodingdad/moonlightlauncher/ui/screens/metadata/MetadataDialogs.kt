@@ -239,7 +239,9 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, targets: List<io.github.thecod
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 item(key = "current", span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                    // Text and buttons beside the image; on narrow screens (portrait) below it.
+                    androidx.compose.foundation.layout.BoxWithConstraints {
+                        val image: @Composable () -> Unit = {
                         current?.let { url ->
                             ArtworkImage(
                                 io.github.thecodingdad.moonlightlauncher.data.artwork.ArtworkFiles.model(url), target.title,
@@ -247,7 +249,8 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, targets: List<io.github.thecod
                                 contentScale = if (square) ContentScale.Fit else ContentScale.Crop, showTitleOnPlaceholder = false,
                             )
                         }
-                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        }
+                        val controls: @Composable () -> Unit = {
                             Text(
                                 stringResource(
                                     when {
@@ -277,6 +280,17 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, targets: List<io.github.thecod
                                         onClick = { scope.launch { metadata.resetArtwork(target.id, kind); onDismiss() } },
                                     )
                                 }
+                            }
+                        }
+                        if (maxWidth >= 640.dp) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                                image()
+                                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) { controls() }
+                            }
+                        } else {
+                            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                image()
+                                controls()
                             }
                         }
                     }

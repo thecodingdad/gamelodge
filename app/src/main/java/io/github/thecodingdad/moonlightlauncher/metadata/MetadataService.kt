@@ -472,7 +472,7 @@ class MetadataService(
                 MetadataCandidate(MetadataSource.STEAMGRIDDB, it.id, it.name, null, null, MatchScorer.score(query, it.name))
             }
         } else emptyList()
-    }
+    }.sortedByDescending { it.score } // best match first
 
     /** Applies a user-chosen candidate and locks the item against automatic changes. */
     suspend fun applyCandidate(itemId: String, candidate: MetadataCandidate) = withContext(Dispatchers.IO) {
