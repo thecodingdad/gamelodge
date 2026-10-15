@@ -553,7 +553,7 @@ class MetadataService(
         if (old != keep && old.contains("/own-artwork/")) java.io.File(old).delete()
     }
 
-    /** No animated image by hand (the still one shows instead); automatic lookups leave it empty. */
+    /** No image of [kind] by hand (an animated one: the still one shows instead); automatic lookups leave it empty. */
     suspend fun clearArtwork(itemId: String, kind: ArtworkKind) = withContext(Dispatchers.IO) {
         val item = dao.getItem(itemId) ?: return@withContext
         dropOwnFile(item, kind)

@@ -235,6 +235,7 @@
     <string name="artwork_none">Remove</string>
     <string name="artwork_own">Own image …</string>
     <string name="artwork_none_chosen">none, picked by hand (the still image shows)</string>
+    <string name="artwork_removed">removed by hand</string>
     <string name="setting_animated_tiles">Animated tiles</string>
     <string name="setting_animated_tiles_focus">When focused</string>
     <string name="setting_animated_tiles_always">Always</string>

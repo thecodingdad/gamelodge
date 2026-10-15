@@ -249,7 +249,7 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
                             Text(
                                 stringResource(
                                     when {
-                                        manual && current == null -> R.string.artwork_none_chosen
+                                        manual && current == null -> if (kind.animated) R.string.artwork_none_chosen else R.string.artwork_removed
                                         manual -> R.string.artwork_manual
                                         else -> R.string.artwork_auto
                                     },
@@ -262,8 +262,8 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
                                     stringResource(R.string.artwork_own), icon = androidx.compose.material.icons.Icons.Filled.Image,
                                     onClick = { pickOwn.launch(arrayOf("image/*")) },
                                 )
-                                // Animated: none at all, the still image shows.
-                                if (kind.animated && current != null) {
+                                // No image of this kind (animated: the still one shows instead).
+                                if (current != null) {
                                     io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton(
                                         stringResource(R.string.artwork_none), icon = androidx.compose.material.icons.Icons.Filled.Delete,
                                         onClick = { scope.launch { metadata.clearArtwork(target.id, kind); onDismiss() } },
