@@ -1,6 +1,5 @@
 package io.github.thecodingdad.moonlightlauncher.ui.screens.settings
 
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Backup
@@ -31,7 +30,6 @@ import androidx.compose.material3.Text
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
-import androidx.core.os.LocaleListCompat
 import io.github.thecodingdad.moonlightlauncher.BuildConfig
 import io.github.thecodingdad.moonlightlauncher.R
 import kotlin.math.roundToInt
@@ -296,6 +294,7 @@ fun ControlsSettings(settings: LauncherSettings, update: ((LauncherSettings) -> 
 
 @Composable
 fun LanguageSettings(settings: LauncherSettings, update: ((LauncherSettings) -> LauncherSettings) -> Unit) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     SettingsPage(stringResource(R.string.settings_language)) {
         ChoiceRow(
             stringResource(R.string.settings_language), listOf("system", "en", "de"), settings.language,
@@ -308,9 +307,9 @@ fun LanguageSettings(settings: LauncherSettings, update: ((LauncherSettings) -> 
             },
             onSelect = { v ->
                 update { it.copy(language = v) }
-                AppCompatDelegate.setApplicationLocales(
-                    if (v == "system") LocaleListCompat.getEmptyLocaleList() else LocaleListCompat.forLanguageTags(v),
-                )
+                io.github.thecodingdad.moonlightlauncher.util.AppLanguage.apply(context, v)
+                // Before Android 13 the activity takes the language when it starts again.
+                if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.TIRAMISU) (context as? android.app.Activity)?.recreate()
             },
             initialFocus = true,
         )

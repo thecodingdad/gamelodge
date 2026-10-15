@@ -36,6 +36,12 @@ class MainActivity : ComponentActivity() {
     private val dispatcher = InputDispatcher()
     private lateinit var feedback: UiFeedback
 
+    // Android < 13: the launcher's own language on this activity's resources.
+    override fun attachBaseContext(newBase: android.content.Context) {
+        val tag = newBase.getSharedPreferences(io.github.thecodingdad.moonlightlauncher.util.AppLanguage.PREFS, android.content.Context.MODE_PRIVATE).getString(io.github.thecodingdad.moonlightlauncher.util.AppLanguage.KEY, "system") ?: "system"
+        super.attachBaseContext(io.github.thecodingdad.moonlightlauncher.util.AppLanguage.wrap(newBase, tag))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
