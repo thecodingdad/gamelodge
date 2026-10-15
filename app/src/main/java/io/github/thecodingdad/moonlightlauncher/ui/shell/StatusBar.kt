@@ -14,7 +14,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -254,32 +253,3 @@ private fun StatusIcon(icon: ImageVector) {
     Icon(icon, null, tint = LauncherTheme.colors.onSurfaceMuted, modifier = Modifier.size(20.dp))
 }
 
-/** Where a camera notch/hole sits on the top edge, and how far it reaches in from the right. */
-data class TopCutout(val position: Position, val rightInset: androidx.compose.ui.unit.Dp) {
-    enum class Position { NONE, LEFT, CENTER, RIGHT }
-}
-
-/**
- * The cutout on the window's top edge (the status bar is hidden, so the launcher draws there and
- * has to keep its icons out of the camera hole).
- */
-@Composable
-fun rememberTopCutout(): TopCutout {
-    val view = androidx.compose.ui.platform.LocalView.current
-    val density = androidx.compose.ui.platform.LocalDensity.current
-    // Read so the result updates once the insets arrive or change (rotation).
-    val cutoutTop = androidx.compose.foundation.layout.WindowInsets.displayCutout.getTop(density)
-    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
-    return remember(cutoutTop, configuration, density) {
-        val rect = view.rootWindowInsets?.displayCutout?.boundingRectTop
-        val width = view.rootView.width
-        if (rect == null || rect.isEmpty || width <= 0) return@remember TopCutout(TopCutout.Position.NONE, 0.dp)
-        val center = rect.exactCenterX() / width
-        val position = when {
-            center < 0.35f -> TopCutout.Position.LEFT
-            center > 0.65f -> TopCutout.Position.RIGHT
-            else -> TopCutout.Position.CENTER
-        }
-        TopCutout(position, with(density) { (width - rect.left).toDp() })
-    }
-}

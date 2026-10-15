@@ -15,9 +15,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -331,6 +334,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
                             onBack = { nav.popBackStack() },
                             modifier = Modifier.align(Alignment.TopCenter)
                                 .background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(detailBg.copy(alpha = 0.85f), androidx.compose.ui.graphics.Color.Transparent)))
+                                .then(shellInsets())
                                 .onSizeChanged { detailBarHeight = with(detailDensity) { it.height.toDp() } },
                         )
                         }
@@ -581,7 +585,7 @@ fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: Ui
 /** Route frame with the shared hint bar (detail and settings pages). */
 @Composable
 private fun ShellFrame(hints: HintHolder, content: @Composable () -> Unit) {
-    Column(Modifier.fillMaxSize().statusBarsPadding()) {
+    Column(Modifier.fillMaxSize().then(shellInsets())) {
         Box(Modifier.fillMaxWidth().weight(1f)) { content() }
         ButtonHintBar(
             hints.hints.ifEmpty {
@@ -649,7 +653,7 @@ private fun MainShell(
     LaunchedEffect(showHints, compactShell) { if (!showHints && !compactShell) hintBarHeight = 0.dp }
     val fullBleed = tabs[tab] == MainTab.HOME
     val bg = LauncherTheme.colors.background
-    Box(Modifier.fillMaxSize().statusBarsPadding()) {
+    Box(Modifier.fillMaxSize().then(shellInsets())) {
         Box(Modifier.fillMaxSize()) {
           CompositionLocalProvider(
               io.github.thecodingdad.moonlightlauncher.ui.screens.home.LocalShellInsets provides
@@ -772,15 +776,10 @@ private fun ShellTopBar(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         val compact = io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current
-        // Camera hole: in the middle the status splits around it, on the right it moves left.
-        val cutout = io.github.thecodingdad.moonlightlauncher.ui.shell.rememberTopCutout()
-        val endShift = if (cutout.position == io.github.thecodingdad.moonlightlauncher.ui.shell.TopCutout.Position.RIGHT) {
-            (cutout.rightInset + 8.dp - 28.dp).coerceAtLeast(0.dp)
-        } else 0.dp
+        // A camera notch / hole is kept clear by the insets around the bar (shellInsets).
         val status: @Composable (Boolean, Boolean) -> Unit = { split, batteryOnly ->
             StatusCluster(
                 hosts,
-                modifier = Modifier.padding(end = endShift),
                 onHostClick = { onHostInfo(it.uuid) },
                 onHostsClick = { onHostInfo(io.github.thecodingdad.moonlightlauncher.ui.shell.ALL_HOSTS) },
                 controllerCount = controllerCount,
@@ -790,7 +789,6 @@ private fun ShellTopBar(
                 batteryAndClockOnly = batteryOnly,
             )
         }
-        val centreHole = cutout.position == io.github.thecodingdad.moonlightlauncher.ui.shell.TopCutout.Position.CENTER
         if (onBack != null) {
             // Landscape: the tabs set the bar's height on the main screens; an invisible stand-in
             // (height only, no width, not placed) keeps it identical here.
@@ -803,11 +801,10 @@ private fun ShellTopBar(
                 ) { TabChip(stringResource(MainTab.HOME.title), selected = false, onClick = {}) }
             }
             BackButton(onBack)
-            // The back button takes the left half: with a centre hole only battery and clock fit.
-            Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) { status(false, centreHole) }
+            Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) { status(false, false) }
         } else if (compact) {
             // Narrow screen: only the status at the top; the tabs move to the bottom navigation bar.
-            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) { status(centreHole, false) }
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) { status(false, false) }
         } else {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -885,7 +882,7 @@ private fun SubpageFrame(
     fun openTab(index: Int) = openMainTab(vm, nav, MainTab.entries[index])
     PadAction(PadButton.L1) { openTab((tab.ordinal - 1).mod(MainTab.entries.size)) }
     PadAction(PadButton.R1) { openTab((tab.ordinal + 1).mod(MainTab.entries.size)) }
-    Column(Modifier.fillMaxSize().statusBarsPadding()) {
+    Column(Modifier.fillMaxSize().then(shellInsets())) {
         ShellTopBar(
             selected = tab.ordinal, onSelect = ::openTab, hosts = hostsMap.values.sortedBy { it.name },
             controllerCount = controllers.size, onHostInfo = onHostInfo, onControllers = onControllers,
@@ -1046,3 +1043,12 @@ private fun SettingsPageContent(
         else -> SettingsPage(stringResource(R.string.coming_soon)) {}
     }
 }
+
+/**
+ * Space for the hidden status bar and a camera notch / hole: on top in portrait, at the side in
+ * landscape (the launcher draws into the cutout area otherwise).
+ */
+@Composable
+internal fun shellInsets(): Modifier = Modifier.windowInsetsPadding(
+    androidx.compose.foundation.layout.WindowInsets.statusBars.union(androidx.compose.foundation.layout.WindowInsets.displayCutout),
+)
