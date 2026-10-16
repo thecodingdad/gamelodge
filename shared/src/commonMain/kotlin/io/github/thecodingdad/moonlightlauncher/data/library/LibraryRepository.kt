@@ -1,5 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher.data.library
 
+import io.github.thecodingdad.moonlightlauncher.resources.*
 import io.github.thecodingdad.moonlightlauncher.data.db.withTransaction
 import io.github.thecodingdad.moonlightlauncher.data.db.ItemCollectionCrossRef
 import io.github.thecodingdad.moonlightlauncher.data.db.ItemKind
@@ -88,6 +89,17 @@ class LibraryRepository(
                 lists.filter { (uuid, apps) -> previous[uuid] !== apps }
                     .forEach { (uuid, apps) -> syncHost(uuid, apps) }
                 previous = lists
+            }
+        }
+        // Paired hosts that are online but haven't sent their app list yet: a running task each.
+        scope.launch {
+            var shown = emptySet<String>()
+            kotlinx.coroutines.flow.combine(hosts.hosts, hosts.appLists) { all, lists ->
+                all.values.filter { it.paired && it.status == HostStatus.ONLINE && lists[it.uuid] == null }
+            }.collect { loading ->
+                loading.forEach { h -> io.github.thecodingdad.moonlightlauncher.data.tasks.BackgroundTasks.set(io.github.thecodingdad.moonlightlauncher.data.tasks.BackgroundTask("applist-${h.uuid}", Res.string.task_app_list, listOf(h.name))) }
+                (shown - loading.map { it.uuid }.toSet()).forEach { io.github.thecodingdad.moonlightlauncher.data.tasks.BackgroundTasks.remove("applist-$it") }
+                shown = loading.map { it.uuid }.toSet()
             }
         }
     }
@@ -323,6 +335,9 @@ class LibraryRepository(
         // parallel downloads make it slow for everything else (pairing, state, streams).
         if (missing.isEmpty()) return
         var done = 0
+        val taskId = "boxart-$hostUuid"
+        fun report() = io.github.thecodingdad.moonlightlauncher.data.tasks.BackgroundTasks.set(io.github.thecodingdad.moonlightlauncher.data.tasks.BackgroundTask(taskId, Res.string.task_box_art, listOf(host.name), done, missing.size))
+        report()
         _boxArtProgress.value = _boxArtProgress.value + (hostUuid to (0 to missing.size))
         try { missing.chunked(BOX_ART_PARALLEL).forEach { batch ->
             val updated = kotlinx.coroutines.coroutineScope {
@@ -335,8 +350,10 @@ class LibraryRepository(
             }
             if (updated.isNotEmpty()) dao.upsertTargets(updated)
             done += batch.size
+            report()
             _boxArtProgress.value = _boxArtProgress.value + (hostUuid to (done to missing.size))
         } } finally {
+            io.github.thecodingdad.moonlightlauncher.data.tasks.BackgroundTasks.remove(taskId)
             _boxArtProgress.value = _boxArtProgress.value - hostUuid
         }
     }

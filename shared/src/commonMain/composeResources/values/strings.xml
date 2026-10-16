@@ -442,6 +442,14 @@
     <string name="backup_choose">Choose a backup</string>
     <string name="backup_none">No backups in the folder yet.</string>
     <string name="backup_other_file">Other file…</string>
+    <string name="tasks_title">Running tasks</string>
+    <string name="task_count">%1$d of %2$d</string>
+    <string name="task_app_list">Loading the game list of %1$s</string>
+    <string name="task_box_art">Loading covers from %1$s</string>
+    <string name="task_metadata">Looking up metadata</string>
+    <string name="task_artwork">Downloading artwork</string>
+    <string name="task_pc_scan">Looking for PC games</string>
+    <string name="task_host_sync">Updating games on the streaming host</string>
 
     <!-- Vibepollo -->
 

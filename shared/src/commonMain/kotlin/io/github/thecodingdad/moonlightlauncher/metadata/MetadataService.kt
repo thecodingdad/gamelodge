@@ -1,5 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher.metadata
 
+import io.github.thecodingdad.moonlightlauncher.resources.*
 import io.github.thecodingdad.moonlightlauncher.data.db.ItemKind
 import io.github.thecodingdad.moonlightlauncher.data.db.LauncherDatabase
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryItemEntity
@@ -150,6 +151,13 @@ class MetadataService(
 
     private val _progress = MutableStateFlow<MetadataProgress?>(null)
     val progress: StateFlow<MetadataProgress?> = _progress.asStateFlow()
+
+    private fun setProgress(p: MetadataProgress?) {
+        _progress.value = p
+        val t = io.github.thecodingdad.moonlightlauncher.data.tasks.BackgroundTasks
+        if (p == null) t.remove(TASK_ID)
+        else t.set(io.github.thecodingdad.moonlightlauncher.data.tasks.BackgroundTask(TASK_ID, io.github.thecodingdad.moonlightlauncher.resources.Res.string.task_metadata, done = p.done, total = p.total))
+    }
 
     private val _lastError = MutableStateFlow<String?>(null)
     val lastError: StateFlow<String?> = _lastError.asStateFlow()
@@ -311,7 +319,7 @@ class MetadataService(
                 } else emptyList()
                 val total = pending.size + withoutIgdb.size
                 pending.forEachIndexed { index, item ->
-                    _progress.value = MetadataProgress(index, total)
+                    setProgress(MetadataProgress(index, total))
                     try {
                         lookupAndApply(item)
                     } catch (e: MetadataAuthException) {
@@ -323,7 +331,7 @@ class MetadataService(
                     delay(250) // stay well below IGDB's 4 requests/s
                 }
                 withoutIgdb.forEachIndexed { index, item ->
-                    _progress.value = MetadataProgress(pending.size + index, total)
+                    setProgress(MetadataProgress(pending.size + index, total))
                     try {
                         addIgdb(item)
                     } catch (e: MetadataAuthException) {
@@ -335,7 +343,7 @@ class MetadataService(
                     delay(250)
                 }
             } finally {
-                _progress.value = null
+                setProgress(null)
                 mutex.unlock()
             }
         }
@@ -886,3 +894,6 @@ private const val PLATFORM_RULE = 1
 
 /** Library re-evaluated after mods / ROM hacks rank lower (shares the platform rule counter). */
 private const val REMATCH_RULE = 2
+
+/** Background task id of the metadata lookups. */
+private const val TASK_ID = "metadata"

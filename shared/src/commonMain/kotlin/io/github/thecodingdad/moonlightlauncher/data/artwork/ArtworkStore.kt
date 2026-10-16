@@ -1,5 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher.data.artwork
 
+import io.github.thecodingdad.moonlightlauncher.resources.*
 import androidx.compose.runtime.mutableIntStateOf
 import io.github.thecodingdad.moonlightlauncher.data.db.LibraryDao
 import io.github.thecodingdad.moonlightlauncher.data.settings.SettingsRepository
@@ -144,12 +145,21 @@ class ArtworkStore(
             ArtworkFiles.fileOf(name).delete()
             ArtworkFiles.removed(name)
         }
-        val todo = w.still + (if (animated && !holdBack) w.animated else emptySet())
-        for (url in todo) {
-            ensureActive()
-            val name = ArtworkFiles.nameOf(url)
-            if (ArtworkFiles.has(name)) continue
-            download(url, name)
+        val todo = (w.still + (if (animated && !holdBack) w.animated else emptySet())).filterNot { ArtworkFiles.has(ArtworkFiles.nameOf(it)) }
+        if (todo.isEmpty()) return@withContext
+        val tasks = io.github.thecodingdad.moonlightlauncher.data.tasks.BackgroundTasks
+        fun report(done: Int) = tasks.set(
+            io.github.thecodingdad.moonlightlauncher.data.tasks.BackgroundTask(TASK_ID, io.github.thecodingdad.moonlightlauncher.resources.Res.string.task_artwork, done = done, total = todo.size),
+        )
+        try {
+            todo.forEachIndexed { index, url ->
+                ensureActive()
+                report(index)
+                val name = ArtworkFiles.nameOf(url)
+                if (!ArtworkFiles.has(name)) download(url, name)
+            }
+        } finally {
+            tasks.remove(TASK_ID)
         }
     }
 
@@ -172,5 +182,6 @@ class ArtworkStore(
 
     private companion object {
         const val MAX_BYTES = 64L * 1024 * 1024
+        const val TASK_ID = "artwork"
     }
 }

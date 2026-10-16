@@ -520,6 +520,7 @@ fun LauncherApp(
             onOpenSettings = { nav.navigate(Routes.CONTROLLERS) },
             onDismiss = { controllerPopup = false },
         )
+        io.github.thecodingdad.moonlightlauncher.ui.shell.TasksPopup()
         io.github.thecodingdad.moonlightlauncher.ui.shell.HostListPopup(
             visible = hostInfoFor == io.github.thecodingdad.moonlightlauncher.ui.shell.ALL_HOSTS,
             hosts = hostsGlobal.values,

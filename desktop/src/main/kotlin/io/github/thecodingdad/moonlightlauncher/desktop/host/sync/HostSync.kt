@@ -1,5 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher.desktop.host.sync
 
+import io.github.thecodingdad.moonlightlauncher.resources.*
 import io.github.thecodingdad.moonlightlauncher.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -46,12 +47,16 @@ class HostSync(
     private val _last = MutableStateFlow<SyncResult?>(null)
     val running: StateFlow<Boolean> = _running.asStateFlow()
     val last: StateFlow<SyncResult?> = _last.asStateFlow()
+    /** Changes sent to the host so far (done, total) while a sync writes; null otherwise. */
+    private val _progress = MutableStateFlow<Pair<Int, Int>?>(null)
+    val progress: StateFlow<Pair<Int, Int>?> = _progress.asStateFlow()
 
     private val coverDir = File(dataDir, "covers")
     private val backupDir = File(dataDir, "backups")
 
     suspend fun run(): SyncResult = mutex.withLock {
         _running.value = true
+        report(0, 0)
         try {
             withContext(Dispatchers.IO) { runLocked() }.also { _last.value = it }
         } catch (e: Exception) {
@@ -59,7 +64,14 @@ class HostSync(
             SyncResult(0, 0, 0, 0, "unreachable").also { _last.value = it }
         } finally {
             _running.value = false
+            _progress.value = null
+            io.github.thecodingdad.moonlightlauncher.data.tasks.BackgroundTasks.remove(TASK_ID)
         }
+    }
+
+    private fun report(done: Int, total: Int) {
+        _progress.value = done to total
+        io.github.thecodingdad.moonlightlauncher.data.tasks.BackgroundTasks.set(io.github.thecodingdad.moonlightlauncher.data.tasks.BackgroundTask(TASK_ID, io.github.thecodingdad.moonlightlauncher.resources.Res.string.task_host_sync, done = done, total = total))
     }
 
     private suspend fun runLocked(): SyncResult {
@@ -81,7 +93,10 @@ class HostSync(
         if (incomplete.isNotEmpty()) Log.w("Sync: no removals for incomplete sources: ${incomplete.joinToString()}")
         Log.i("Sync plan: ${plan.adds.size} new, ${plan.updates.size} changed, ${plan.removes.size} removed")
         var failed = 0
+        val total = plan.adds.size + plan.updates.size + plan.removes.size
+        var done = 0
         for (change in plan.adds + plan.updates) {
+            report(done++, total)
             val r = host.saveApp(change.app)
             if (!r.ok) {
                 failed++
@@ -89,6 +104,7 @@ class HostSync(
             }
         }
         for ((uuid, name) in plan.removes) {
+            report(done++, total)
             val r = host.deleteApp(uuid)
             if (!r.ok) {
                 failed++
@@ -145,6 +161,7 @@ class HostSync(
     }
 
     companion object {
+        private const val TASK_ID = "host-sync"
         /** File name of a game's box art (letters, digits, - and . stay). */
         fun fileName(id: String) = id.map { if (it.isLetterOrDigit() && it.code < 128 || it == '-' || it == '.') it else '_' }.joinToString("")
 

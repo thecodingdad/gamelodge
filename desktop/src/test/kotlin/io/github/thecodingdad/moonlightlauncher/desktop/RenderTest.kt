@@ -4,6 +4,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.ImageComposeScene
 import androidx.compose.ui.unit.Density
 import io.github.thecodingdad.moonlightlauncher.LocalContainer
+import io.github.thecodingdad.moonlightlauncher.resources.*
 import io.github.thecodingdad.moonlightlauncher.data.artwork.ArtworkFiles
 import io.github.thecodingdad.moonlightlauncher.ui.LauncherApp
 import io.github.thecodingdad.moonlightlauncher.ui.LauncherViewModel
@@ -58,6 +59,44 @@ class RenderTest {
         val pixels = org.jetbrains.skia.Bitmap.makeFromImage(image)
         val distinct = (0 until 1600 step 40).flatMap { x -> (0 until 900 step 40).map { y -> pixels.getColor(x, y) } }.toSet()
         assertTrue("UI drew something", distinct.size > 3)
+    }
+
+    @Test
+    fun runningTasksShowInTheStatusBarAndPopup() {
+        val dir = Files.createTempDirectory("launcher-tasks").toFile()
+        val container = DesktopContainer(dir)
+        ArtworkFiles.init(dir)
+        ArtworkPlatform.current = DesktopArtwork
+        val dispatcher = InputDispatcher()
+        PlatformUi.current = DesktopPlatformUi(Gamepads(dispatcher), { null }, { null })
+        val feedback = UiFeedback(File(dir, "cache"), DesktopFeedbackOutput { null })
+        val tasks = io.github.thecodingdad.moonlightlauncher.data.tasks.BackgroundTasks
+        tasks.set(io.github.thecodingdad.moonlightlauncher.data.tasks.BackgroundTask("a", Res.string.task_box_art, listOf("Gaming-PC"), 12, 40))
+        tasks.set(io.github.thecodingdad.moonlightlauncher.data.tasks.BackgroundTask("b", Res.string.task_pc_scan, done = 5, total = 8, detail = "Steam, Epic Games"))
+        tasks.set(io.github.thecodingdad.moonlightlauncher.data.tasks.BackgroundTask("c", Res.string.task_host_sync))
+        tasks.popupOpen = true
+        fun <T> ui(block: () -> T): T {
+            var result: Result<T>? = null
+            javax.swing.SwingUtilities.invokeAndWait { result = runCatching(block) }
+            return result!!.getOrThrow()
+        }
+        try {
+            val vm = ui { LauncherViewModel(container) }
+            val scene = ui {
+                ImageComposeScene(1600, 900, Density(1.5f)) {
+                    CompositionLocalProvider(LocalContainer provides container) { LauncherApp(vm, dispatcher, feedback) }
+                }
+            }
+            ui { scene.render(0) }
+            Thread.sleep(1500)
+            ui { scene.render(500_000_000L) }
+            Thread.sleep(300)
+            val image = ui { scene.render(2_000_000_000L).also { scene.close() } }
+            File("build/render").apply { mkdirs() }.resolve("tasks.png").writeBytes(image.encodeToData(EncodedImageFormat.PNG)!!.bytes)
+        } finally {
+            listOf("a", "b", "c").forEach(tasks::remove)
+            tasks.popupOpen = false
+        }
     }
 
     @Test

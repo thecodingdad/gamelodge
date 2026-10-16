@@ -108,6 +108,8 @@ fun StatusCluster(
         horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically,
     ) {
         if (!batteryAndClockOnly) {
+        // Background work (sync, downloads, scans): spinner, tap for the list.
+        TaskSpinner()
         // Controllers: red when none is connected, green otherwise; tapping opens the overview.
         Row(
             verticalAlignment = Alignment.CenterVertically,

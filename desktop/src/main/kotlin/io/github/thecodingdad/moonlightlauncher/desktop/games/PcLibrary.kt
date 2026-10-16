@@ -1,5 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher.desktop.games
 
+import io.github.thecodingdad.moonlightlauncher.resources.*
 import io.github.thecodingdad.moonlightlauncher.data.local.LocalApp
 import io.github.thecodingdad.moonlightlauncher.data.local.LocalAppSource
 import io.github.thecodingdad.moonlightlauncher.util.Log
@@ -12,6 +13,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import java.util.concurrent.ConcurrentHashMap
@@ -54,18 +56,51 @@ class PcLibrary(
         rescans.tryEmit(Unit)
     }
 
+    /** Stores still being scanned (null: no scan running), for the game sources page and the task list. */
+    private val _scanning = kotlinx.coroutines.flow.MutableStateFlow<ScanProgress?>(null)
+    val scanning: kotlinx.coroutines.flow.StateFlow<ScanProgress?> = _scanning
+
+    data class ScanProgress(val pending: List<String>, val done: Int, val total: Int)
+
     override suspend fun scan(): List<LocalApp> = withContext(Dispatchers.IO) {
         val off = disabled()
         val failed = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
-        val found = coroutineScope {
-            scanners.filter { it.source !in off }.map { scanner ->
-                async {
-                    runCatching { scanner.scan() }
-                        .onFailure { Log.w("${scanner.source}: scan failed", it); failed += scanner.source }
-                        .getOrDefault(emptyList())
-                        .also { if (it.isNotEmpty()) Log.i("${scanner.source}: ${it.size} games (${it.count { g -> g.installed }} installed)") }
-                }
-            }.awaitAll().flatten()
+        val active = scanners.filter { it.source !in off }
+        val pending = java.util.Collections.synchronizedSet(LinkedHashSet(active.map { it.source }))
+        fun report() {
+            val left = synchronized(pending) { pending.toList() }
+            _scanning.value = ScanProgress(left, active.size - left.size, active.size)
+        }
+        report()
+        // Shown as a task only when it takes a moment (the regular rescans are usually instant).
+        val task = launch {
+            kotlinx.coroutines.delay(TASK_DELAY_MS)
+            _scanning.collect { p ->
+                if (p == null) return@collect
+                io.github.thecodingdad.moonlightlauncher.data.tasks.BackgroundTasks.set(
+                    io.github.thecodingdad.moonlightlauncher.data.tasks.BackgroundTask(
+                        TASK_ID, io.github.thecodingdad.moonlightlauncher.resources.Res.string.task_pc_scan, done = p.done, total = p.total,
+                        detail = p.pending.joinToString { io.github.thecodingdad.moonlightlauncher.desktop.storeNames[it] ?: it },
+                    ),
+                )
+            }
+        }
+        val found = try {
+            coroutineScope {
+                active.map { scanner ->
+                    async {
+                        runCatching { scanner.scan() }
+                            .onFailure { Log.w("${scanner.source}: scan failed", it); failed += scanner.source }
+                            .getOrDefault(emptyList())
+                            .also { if (it.isNotEmpty()) Log.i("${scanner.source}: ${it.size} games (${it.count { g -> g.installed }} installed)") }
+                            .also { pending -= scanner.source; report() }
+                    }
+                }.awaitAll().flatten()
+            }
+        } finally {
+            task.cancel()
+            _scanning.value = null
+            io.github.thecodingdad.moonlightlauncher.data.tasks.BackgroundTasks.remove(TASK_ID)
         }
         incompleteSources = failed.toSet()
         _counts.value = found.groupBy { it.source }.mapValues { (_, games) -> games.size to games.count { it.installed } }
@@ -92,6 +127,8 @@ class PcLibrary(
 
     companion object {
         private const val RESCAN_MS = 5 * 60_000L
+        private const val TASK_DELAY_MS = 1_000L
+        private const val TASK_ID = "pc-scan"
 
         /** Whether the store reports [entry] as installed now (local data only; also used by the runner). */
         suspend fun installedNow(entry: GameEntry, http: OkHttpClient): Boolean {

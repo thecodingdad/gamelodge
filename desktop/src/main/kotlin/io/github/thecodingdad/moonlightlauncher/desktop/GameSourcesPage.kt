@@ -46,7 +46,7 @@ import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.stringResource
 
 /** Store names as the stores write them. */
-private val storeNames = mapOf(
+internal val storeNames = mapOf(
     "steam" to "Steam", "epic" to "Epic Games", "gog" to "GOG", "xbox" to "Xbox / Microsoft Store", "ea" to "EA app",
     "ubisoft" to "Ubisoft Connect", "battlenet" to "Battle.net", "amazon" to "Amazon Games",
 )
@@ -63,6 +63,18 @@ fun GameSourcesPage(library: PcLibrary, settings: LauncherSettings, update: ((La
     }
     SettingsPage(stringResource(Res.string.settings_game_sources)) {
         Text(stringResource(Res.string.game_sources_intro), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+        // A scan running: which stores are still being looked at.
+        val scanning by library.scanning.collectAsState()
+        scanning?.let { p ->
+            Text(
+                stringResource(Res.string.task_pc_scan) + " · " + p.pending.joinToString { storeNames[it] ?: it },
+                style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted,
+            )
+            androidx.compose.material3.LinearProgressIndicator(
+                progress = { p.done.toFloat() / p.total.coerceAtLeast(1) },
+                modifier = androidx.compose.ui.Modifier.fillMaxWidth(), color = LauncherTheme.colors.accent,
+            )
+        }
         library.sources.forEachIndexed { index, source ->
             val present = installed[source] != false
             val on = source !in settings.disabledGameSources

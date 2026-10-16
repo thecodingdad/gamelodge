@@ -200,6 +200,15 @@ private fun HostSyncSection(role: HostRole, sync: HostSync, secrets: SecretStore
         else -> stringResource(Res.string.host_sync_result, last!!.added, last!!.updated, last!!.removed)
     }
     SwitchRow(stringResource(Res.string.host_sync_enable), settings.syncEnabled, { on -> role.update { it.copy(syncEnabled = on) } }, subtitle = status)
+    val progress by sync.progress.collectAsState()
+    progress?.let { (done, total) ->
+        if (total > 0) {
+            Text(stringResource(Res.string.task_count, done, total), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+            androidx.compose.material3.LinearProgressIndicator(progress = { done.toFloat() / total }, modifier = androidx.compose.ui.Modifier.fillMaxWidth(), color = LauncherTheme.colors.accent)
+        } else {
+            androidx.compose.material3.LinearProgressIndicator(modifier = androidx.compose.ui.Modifier.fillMaxWidth(), color = LauncherTheme.colors.accent)
+        }
+    }
     ChoiceRow(
         stringResource(Res.string.host_sync_type), HostType.entries, settings.hostType,
         label = { when (it) { HostType.VIBEPOLLO -> "Vibepollo"; HostType.APOLLO -> "Apollo"; HostType.SUNSHINE -> "Sunshine" } },

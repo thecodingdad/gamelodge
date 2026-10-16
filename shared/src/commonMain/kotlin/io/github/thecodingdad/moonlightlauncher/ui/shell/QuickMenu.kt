@@ -108,6 +108,8 @@ fun QuickMenu(
             // Status and shortcuts as tiles: controllers, hosts, VPN, Wi-Fi, Bluetooth, Android settings.
             // Configurable tiles (Settings -> Quick menu), at most two rows, scrolling sideways.
             val tileIds by c.settings.settings.collectAsState(io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings())
+            // Running background work (the status bar spinner is touch only).
+            TasksRow()
             QuickTileGrid(rememberQuickTiles(tileIds.quickTiles, onHost = onHost, onControllers = onControllers))
             // Volume, brightness … of the device.
             io.github.thecodingdad.moonlightlauncher.ui.PlatformUi.current.SystemControls(visible)
