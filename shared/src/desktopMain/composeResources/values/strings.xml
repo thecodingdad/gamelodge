@@ -115,5 +115,4 @@
     <string name="dprofile_software">Software</string>
     <string name="dprofile_never">Never</string>
     <string name="dprofile_always">Always</string>
-    <string name="stream_client_missing">The streaming client (Moonlight-Qt) is missing in this copy of the launcher.</string>
 </resources>
