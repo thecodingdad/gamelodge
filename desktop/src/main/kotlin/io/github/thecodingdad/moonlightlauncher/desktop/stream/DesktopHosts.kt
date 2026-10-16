@@ -243,7 +243,17 @@ class DesktopHosts(
 
     private suspend fun poll(s: StoredHost) {
         val c = client(s)
-        val result = runCatching { c.serverInfo() }
+        var result = runCatching { c.serverInfo() }
+        // A host busy with HTTPS (Vibepollo right after pairing, many box art requests) can take
+        // a minute: it is online when plain HTTP answers, and keeps its pairing state meanwhile.
+        var keepPaired = false
+        if (result.isFailure && s.serverCert != null && result.exceptionOrNull() is java.io.IOException) {
+            val plain = runCatching { NvHttp(s.address, s.port, identity(), null, http, deviceName()).serverInfo() }
+            if (plain.isSuccess) {
+                result = plain
+                keepPaired = _hosts.value[s.uuid]?.paired ?: true
+            }
+        }
         val info = result.getOrNull()
         if (info == null || info.uuid != s.uuid) {
             if (_hosts.value[s.uuid]?.status != HostStatus.OFFLINE) {
@@ -252,11 +262,11 @@ class DesktopHosts(
             _hosts.update { it + (s.uuid to offline(s)) }
             return
         }
+        val paired = (info.paired || keepPaired) && s.serverCert != null
         val before = _hosts.value[s.uuid]
-        if (before?.status != HostStatus.ONLINE || before.paired != (info.paired && s.serverCert != null)) {
-            Log.i("Host ${info.name} online, paired: ${info.paired} (certificate ${if (s.serverCert != null) "pinned" else "none"})")
+        if (before?.status != HostStatus.ONLINE || before.paired != paired) {
+            Log.i("Host ${info.name} online, paired: $paired (certificate ${if (s.serverCert != null) "pinned" else "none"})")
         }
-        val paired = info.paired && s.serverCert != null
         val localIp = info.localIp?.takeIf { it.isNotBlank() && it != s.address }
         if (stored(s.uuid) != null && (info.name != s.name || info.httpsPort != s.httpsPort || (info.mac != null && info.mac != s.mac) || localIp != s.localIp)) {
             save(stored.value.map { if (it.uuid == s.uuid) it.copy(name = info.name, httpsPort = info.httpsPort, mac = info.mac ?: it.mac, localIp = localIp) else it })

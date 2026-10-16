@@ -26,6 +26,8 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 
 /** Image hosts the companion accepts in corrections (Companion.Protocol ApiServer.ArtworkHosts). */
@@ -288,13 +290,23 @@ class LibraryRepository(
     private suspend fun fetchBoxArt(hostUuid: String, apps: List<RemoteApp>) {
         val host = hosts.hosts.value[hostUuid]?.takeIf { it.status == HostStatus.ONLINE } ?: return
         val targets = dao.getAllTargets().filter { it.hostUuid == hostUuid }.associateBy { it.id }
-        val updated = apps.mapNotNull { remote ->
+        val missing = apps.mapNotNull { remote ->
             val target = targets[SourceEntry.remoteId(hostUuid, remote.app.appId)] ?: return@mapNotNull null
-            if (target.boxArtPath != null && java.io.File(target.boxArtPath).exists()) return@mapNotNull null
-            val file = runCatching { hosts.boxArt(host, remote.app) }.getOrNull() ?: return@mapNotNull null
-            target.copy(boxArtPath = file.absolutePath)
+            if (target.boxArtPath != null && java.io.File(target.boxArtPath).exists()) null else target to remote
         }
-        if (updated.isNotEmpty()) dao.upsertTargets(updated)
+        // One after the other, each shown right away: a host with many apps takes a while, and
+        // parallel downloads make it slow for everything else (pairing, state, streams).
+        missing.chunked(BOX_ART_PARALLEL).forEach { batch ->
+            val updated = kotlinx.coroutines.coroutineScope {
+                batch.map { (target, remote) ->
+                    async {
+                        val file = runCatching { hosts.boxArt(host, remote.app) }.getOrNull()
+                        file?.let { target.copy(boxArtPath = it.absolutePath) }
+                    }
+                }.awaitAll().filterNotNull()
+            }
+            if (updated.isNotEmpty()) dao.upsertTargets(updated)
+        }
     }
 
     suspend fun removeHost(hostUuid: String) {
@@ -330,3 +342,6 @@ class LibraryRepository(
         pushCorrection(id)
     }
 }
+
+/** Box art downloads running at the same time. */
+private const val BOX_ART_PARALLEL = 1

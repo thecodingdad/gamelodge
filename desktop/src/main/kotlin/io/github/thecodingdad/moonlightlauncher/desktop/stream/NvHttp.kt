@@ -180,7 +180,9 @@ class NvHttp(
     fun serverInfo(): ServerInfo {
         if (serverCert != null) {
             try {
-                return parseServerInfo(get(httpsBase, "serverinfo")).also { httpsPort = it.httpsPort }
+                // Short: the state is polled; a slow host answers over HTTP meanwhile.
+                val xml = String(request(secure.newBuilder().readTimeout(10, TimeUnit.SECONDS).build(), httpsBase, "serverinfo", null))
+                return parseServerInfo(xml).also { httpsPort = it.httpsPort }
             } catch (e: NvHttpException) {
                 // Unpaired by the host: it refuses our certificate (HTTP 401 or status_code 401); HTTP tells the rest.
                 if (e.status != 401) throw e
