@@ -26,7 +26,7 @@ data class LauncherSettings(
     // Appearance
     val startTab: StartTab = StartTab.HOME,
     val themeMode: ThemeMode = ThemeMode.DARK,
-    val accentMode: AccentMode = AccentMode.COVER,
+    val accentMode: AccentMode = AccentMode.FIXED,
     val accentColor: Int = 0xFF7C9CFF.toInt(),
     val cardSize: CardSize = CardSize.MEDIUM,
     val reduceMotion: Boolean = false,

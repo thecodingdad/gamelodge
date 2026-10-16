@@ -55,6 +55,7 @@ import io.github.thecodingdad.moonlightlauncher.ui.components.WideCard
 import io.github.thecodingdad.moonlightlauncher.ui.components.coverModel
 import io.github.thecodingdad.moonlightlauncher.ui.components.heroModel
 import io.github.thecodingdad.moonlightlauncher.ui.components.restoreFocusIf
+import io.github.thecodingdad.moonlightlauncher.ui.components.hoverChanges
 import io.github.thecodingdad.moonlightlauncher.ui.input.PadAction
 import io.github.thecodingdad.moonlightlauncher.ui.input.PadButton
 import io.github.thecodingdad.moonlightlauncher.ui.shell.LocalEntryActions
@@ -95,6 +96,8 @@ fun HeroHome(
     var focusedList by remember { mutableStateOf<List<LibraryEntry>?>(null) }
     var focusedListKey by remember { mutableStateOf<String?>(null) }
     var shown by remember { mutableStateOf<LibraryEntry?>(null) }
+    // Mouse over a card: its artwork shows like for the focused one (the focus itself stays).
+    var hovered by remember { mutableStateOf<LibraryEntry?>(null) }
     // Back on the tab (e.g. from a detail page): the game focused, tapped or browsed to last.
     // By controller the card regains focus anyway; by touch nothing has focus, so the hero
     // starts with that game instead of the first one.
@@ -103,9 +106,9 @@ fun HeroHome(
     // Avoid reloading artwork for every item while the user scrolls fast.
     val fallback = remembered ?: rows.running.firstOrNull()?.entry ?: filterRows.firstOrNull()?.entries?.firstOrNull()
         ?: rows.continuePlaying.firstOrNull() ?: rows.recentlyAdded.firstOrNull()
-    LaunchedEffect(focused, fallback) {
-        if (focused != null) delay(140)
-        shown = focused ?: fallback
+    LaunchedEffect(focused, hovered, fallback) {
+        if (focused != null || hovered != null) delay(140)
+        shown = hovered ?: focused ?: fallback
     }
     PublishAccentFrom(shown?.coverModel())
     LaunchedEffect(focused) { callbacks.onFocusedEntry(focused) }
@@ -283,6 +286,7 @@ fun HeroHome(
                         "row:${row.key}", null, row.entries, callbacks, pinned,
                         firstRow = rows.running.isEmpty() && index == firstFilled,
                         onFocus = { entry, list -> focused = entry; focusedSession = null; focusedList = list; focusedListKey = "row:${row.key}" },
+                        onHover = { entry, on -> if (on) hovered = entry else if (hovered === entry) hovered = null },
                         actions = actions,
                         titleText = { filterLabel(row, row = true) },
                     )
@@ -303,6 +307,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.homeRow(
     pinned: @Composable (String, @Composable () -> Unit) -> Unit,
     firstRow: Boolean,
     onFocus: (LibraryEntry, List<LibraryEntry>) -> Unit,
+    onHover: (LibraryEntry, Boolean) -> Unit,
     actions: io.github.thecodingdad.moonlightlauncher.ui.shell.EntryActions,
     titleText: (@Composable () -> String)? = null,
 ) {
@@ -334,6 +339,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.homeRow(
                 val focusKey = "$key:${entry.item.id}"
                 val isDefault = callbacks.lastFocusedKey == null && firstRow && entry === entries.first()
                 val cardModifier = Modifier.restoreFocusIf(isDefault || callbacks.lastFocusedKey == focusKey).focusAfterBrowse(entry.item.id)
+                    .hoverChanges { onHover(entry, it) }
                 if (entry.item.kind == io.github.thecodingdad.moonlightlauncher.data.db.ItemKind.APP) {
                     // Apps on the start tab: landscape tiles.
                     io.github.thecodingdad.moonlightlauncher.ui.components.AppTileCard(

@@ -190,11 +190,14 @@ fun NavRow(
     icon: ImageVector? = null,
     initialFocus: Boolean = false,
     trailing: String? = null,
+    /** Shown before the arrow, e.g. a colour preview. */
+    trailingContent: (@Composable () -> Unit)? = null,
 ) {
     RowShell(onClick, Modifier, initialFocus) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Texts(title, subtitle, icon, Modifier.weight(1f))
             if (trailing != null) Text(trailing, style = MaterialTheme.typography.labelLarge, color = LauncherTheme.colors.onSurfaceMuted)
+            trailingContent?.let { Box(Modifier.padding(end = 8.dp)) { it() } }
             Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = LauncherTheme.colors.onSurfaceMuted)
         }
     }

@@ -68,3 +68,16 @@ fun Modifier.mouseDragScroll(state: ScrollableState, orientation: Orientation = 
         }
     }
 }
+
+/** Mouse pointer entering (true) and leaving (false) the element; touch doesn't hover. */
+fun Modifier.hoverChanges(onChange: (Boolean) -> Unit): Modifier = pointerInput(Unit) {
+    awaitPointerEventScope {
+        while (true) {
+            val event = awaitPointerEvent()
+            when (event.type) {
+                androidx.compose.ui.input.pointer.PointerEventType.Enter -> if (event.changes.any { it.type == androidx.compose.ui.input.pointer.PointerType.Mouse }) onChange(true)
+                androidx.compose.ui.input.pointer.PointerEventType.Exit -> onChange(false)
+            }
+        }
+    }
+}

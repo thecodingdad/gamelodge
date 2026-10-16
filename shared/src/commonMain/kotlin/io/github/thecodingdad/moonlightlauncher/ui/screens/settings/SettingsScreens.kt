@@ -177,11 +177,12 @@ fun ThemeSettings(
             label = { stringResource(if (it == AccentMode.COVER) Res.string.accent_cover else Res.string.accent_fixed) },
             onSelect = { v -> update { it.copy(accentMode = v) } },
         )
-        ChoiceRow(
-            stringResource(Res.string.setting_accent_color), accentPresets, accentPresets.firstOrNull { it == settings.accentColor } ?: accentPresets.first(),
-            label = { c -> stringResource(accentNames[accentPresets.indexOf(c)]) },
-            onSelect = { v -> update { it.copy(accentColor = v) } },
+        var picker by androidx.compose.runtime.remember { mutableStateOf(false) }
+        NavRow(
+            stringResource(Res.string.setting_accent_color), { picker = true },
+            trailingContent = { ColorDot(settings.accentColor) },
         )
+        if (picker) AccentColorPicker(settings.accentColor, { c -> update { it.copy(accentColor = c) } }) { picker = false }
     }
 }
 
@@ -267,8 +268,6 @@ fun DisplaySettings(
     }
 }
 
-private val accentPresets = listOf(0xFF7C9CFF, 0xFF4CD787, 0xFFFF7A59, 0xFFFF5C8A, 0xFFB58CFF, 0xFFFFC14D, 0xFF3DD6D0).map { it.toInt() }
-private val accentNames = listOf(Res.string.color_blue, Res.string.color_green, Res.string.color_orange, Res.string.color_pink, Res.string.color_purple, Res.string.color_yellow, Res.string.color_teal)
 
 @Composable
 fun ControlsSettings(settings: LauncherSettings, update: ((LauncherSettings) -> LauncherSettings) -> Unit) {
