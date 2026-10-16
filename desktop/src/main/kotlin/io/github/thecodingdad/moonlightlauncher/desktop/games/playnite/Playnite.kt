@@ -48,7 +48,7 @@ data class PlayniteLibrary(val games: List<PlayniteGame>, val platforms: Map<UUI
             val name = d.str("Name") ?: return null
             val id = d["_id"] as? UUID ?: return null
             val actions = d.docs("GameActions").map { a ->
-                PlayniteAction((a["Type"] as? Number)?.toInt() ?: 0, a.str("Path"), a.str("Arguments"), a.str("WorkingDir"), a.guid("EmulatorId"), a.str("EmulatorProfileId"), a.bool("IsPlayAction"))
+                PlayniteAction(actionType(a["Type"]), a.str("Path"), a.str("Arguments"), a.str("WorkingDir"), a.guid("EmulatorId"), a.str("EmulatorProfileId"), a.bool("IsPlayAction"))
             }
             return PlayniteGame(
                 id, name, d.str("GameId"), d.guid("PluginId"), d.bool("IsInstalled"), d.bool("Hidden"), d.str("InstallDirectory"),
@@ -66,6 +66,13 @@ data class PlayniteLibrary(val games: List<PlayniteGame>, val platforms: Map<UUI
         }
 
         private val EMPTY = UUID(0, 0)
+
+        /** GameActionType: LiteDB stores enums by name ("Emulator"), older data as numbers. */
+        private fun actionType(v: Any?): Int = when (v) {
+            is Number -> v.toInt()
+            is String -> when (v.lowercase()) { "file" -> 0; "url" -> 1; "emulator" -> 2; "script" -> 3; else -> -1 }
+            else -> 0
+        }
     }
 }
 
@@ -125,7 +132,8 @@ class PlayniteImporter(
 
         val emu = g.actions.firstOrNull { it.type == 2 && it.isPlayAction } ?: g.actions.firstOrNull { it.type == 2 }
         if (emu != null && g.roms.isNotEmpty()) {
-            val rom = g.roms.first()
+            // ROM paths may be relative to the game's folder ("{InstallDir}\game.nsp").
+            val rom = expand(g.roms.first(), g.installDir, null, null)
             val resolved = resolveEmulator(emu.emulatorId, emu.emulatorProfileId, rom)
             if (resolved == null) { Log.w("Playnite: ${g.name}: emulator profile not resolvable"); return null }
             val platform = platformOf(g) ?: "Unknown"
