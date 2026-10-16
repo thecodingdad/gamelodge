@@ -182,11 +182,12 @@ fun main(args: Array<String>) {
             state = state,
             onPreviewKeyEvent = { e ->
                 vm.touch()
+                val isDirection = e.key == Key.DirectionUp || e.key == Key.DirectionDown || e.key == Key.DirectionLeft || e.key == Key.DirectionRight
                 if (e.type == KeyEventType.KeyDown) {
-                    controllerInput()
+                    // Controller buttons and navigation keys show the focus; typing (letters, Shift …) doesn't.
+                    if (gamepads.dispatching || isDirection || e.key == Key.Tab) controllerInput()
                     if (!gamepads.dispatching) gamepads.otherInput()
                 }
-                val isDirection = e.key == Key.DirectionUp || e.key == Key.DirectionDown || e.key == Key.DirectionLeft || e.key == Key.DirectionRight
                 if (isDirection && e.type == KeyEventType.KeyDown && !contentHasFocus) {
                     windowFocusManager?.moveFocus(androidx.compose.ui.focus.FocusDirection.Next)
                     return@Window true

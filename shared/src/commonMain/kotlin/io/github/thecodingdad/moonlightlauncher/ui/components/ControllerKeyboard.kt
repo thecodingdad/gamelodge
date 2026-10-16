@@ -111,7 +111,11 @@ fun LauncherTextField(
                     TextKind.TEXT -> KeyboardType.Text
                 },
             ),
-            modifier = modifier.fillMaxWidth().onFocusChanged { editing = it.isFocused },
+            modifier = modifier.fillMaxWidth().onFocusChanged {
+                editing = it.isFocused
+                // Continue from the field when a controller or arrow key comes next.
+                if (it.isFocused) TouchFocus.clear()
+            },
         )
         return
     }

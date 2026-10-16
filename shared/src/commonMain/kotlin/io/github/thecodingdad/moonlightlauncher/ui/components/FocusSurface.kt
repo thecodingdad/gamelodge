@@ -72,6 +72,12 @@ object TouchFocus {
     }
 
     fun justRestored() = System.nanoTime() / 1_000_000 - restoredAt < 500
+
+    /** Something else took the focus on purpose (a text field): nothing to restore. */
+    fun clear() {
+        pending = null
+        pendingOverlay = null
+    }
 }
 
 /** False when the hint bar is turned off or no controller is connected. */

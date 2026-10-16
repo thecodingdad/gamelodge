@@ -236,7 +236,9 @@ class Gamepads(private val dispatcher: InputDispatcher) {
             val focusOwner = target.mostRecentFocusOwner ?: target
             dispatching = true
             try {
-                focusOwner.dispatchEvent(KeyEvent(focusOwner, type, System.currentTimeMillis(), 0, code, KeyEvent.CHAR_UNDEFINED))
+                // Char 0 (a control character): text fields must not take controller buttons as typed text
+                // (CHAR_UNDEFINED is U+FFFF, which they would insert).
+                focusOwner.dispatchEvent(KeyEvent(focusOwner, type, System.currentTimeMillis(), 0, code, NO_CHAR))
             } finally {
                 dispatching = false
             }
@@ -254,6 +256,7 @@ class Gamepads(private val dispatcher: InputDispatcher) {
     private companion object {
         const val STICK = 0.6f
         const val FIRST_REPEAT_MS = 350L
+        const val NO_CHAR = '\u0000'
         const val REPEAT_MS = 90L
         val DIRECTIONS = mapOf("up" to KeyEvent.VK_UP, "down" to KeyEvent.VK_DOWN, "left" to KeyEvent.VK_LEFT, "right" to KeyEvent.VK_RIGHT)
     }
