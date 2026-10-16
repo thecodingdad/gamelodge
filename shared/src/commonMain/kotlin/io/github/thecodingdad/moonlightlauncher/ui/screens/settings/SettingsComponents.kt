@@ -30,6 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.Alignment
@@ -37,6 +38,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.focusRestorer
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -139,25 +142,81 @@ fun SettingsPage(title: String, content: @Composable ColumnScope.() -> Unit) {
 
 @Composable
 fun SectionHeader(text: String) {
+    val highlight = rememberSearchHighlight(text, focus = false)
     Text(
         text,
         style = MaterialTheme.typography.titleSmall,
         color = LauncherTheme.colors.accentText,
-        modifier = Modifier.padding(top = 14.dp, bottom = 2.dp),
+        modifier = Modifier.padding(top = 14.dp, bottom = 2.dp).then(highlight.modifier)
+            .clip(RoundedCornerShape(6.dp))
+            .background(LauncherTheme.colors.accent.copy(alpha = highlight.amount * 0.35f))
+            .padding(horizontal = 4.dp),
     )
 }
+
+/** Where a settings search hit leads: the title of the setting to show once its page opens. */
+object SearchHighlight {
+    internal var title by androidx.compose.runtime.mutableStateOf<String?>(null)
+    internal var at = 0L
+
+    fun request(title: String?) {
+        this.title = title
+        at = System.currentTimeMillis()
+    }
+}
+
+internal class HighlightState(val modifier: Modifier, private val anim: androidx.compose.animation.core.Animatable<Float, *>) {
+    val amount: Float get() = anim.value
+}
+
+/**
+ * The row whose [title] a search hit asked for scrolls into view, takes the focus ([focus]) and
+ * lights up briefly in the accent colour.
+ */
+@Composable
+internal fun rememberSearchHighlight(title: String?, focus: Boolean = true): HighlightState {
+    val anim = remember { androidx.compose.animation.core.Animatable(0f) }
+    val requester = remember { androidx.compose.foundation.relocation.BringIntoViewRequester() }
+    val focusRequester = remember { androidx.compose.ui.focus.FocusRequester() }
+    val wanted = title != null && SearchHighlight.title == title
+    androidx.compose.runtime.LaunchedEffect(wanted) {
+        if (!wanted) return@LaunchedEffect
+        SearchHighlight.title = null
+        // A stale request (the page had no such row) is dropped.
+        if (System.currentTimeMillis() - SearchHighlight.at > HIGHLIGHT_REQUEST_MS) return@LaunchedEffect
+        // Let the page come in and place its initial focus first.
+        kotlinx.coroutines.delay(HIGHLIGHT_DELAY_MS)
+        requester.bringIntoView()
+        if (focus) runCatching { focusRequester.requestFocus() }
+        repeat(2) {
+            anim.animateTo(1f, androidx.compose.animation.core.tween(220))
+            anim.animateTo(0.25f, androidx.compose.animation.core.tween(380))
+        }
+        anim.animateTo(1f, androidx.compose.animation.core.tween(220))
+        kotlinx.coroutines.delay(600)
+        anim.animateTo(0f, androidx.compose.animation.core.tween(900))
+    }
+    val modifier = Modifier.bringIntoViewRequester(requester).let { if (focus) it.focusRequester(focusRequester) else it }
+    return HighlightState(modifier, anim)
+}
+
+private const val HIGHLIGHT_DELAY_MS = 350L
+private const val HIGHLIGHT_REQUEST_MS = 10_000L
 
 @Composable
 private fun RowShell(
     onClick: () -> Unit,
     modifier: Modifier,
     initialFocus: Boolean,
+    /** Title of the row: a search hit with this title scrolls here and lights the row up. */
+    title: String? = null,
     content: @Composable () -> Unit,
 ) {
+    val highlight = rememberSearchHighlight(title)
     FocusSurface(
         onClick = onClick,
-        modifier = modifier.fillMaxWidth().heightIn(min = 68.dp).restoreFocusIf(initialFocus),
-        color = LauncherTheme.colors.surface,
+        modifier = modifier.fillMaxWidth().heightIn(min = 68.dp).restoreFocusIf(initialFocus).then(highlight.modifier),
+        color = androidx.compose.ui.graphics.lerp(LauncherTheme.colors.surface, LauncherTheme.colors.accent, highlight.amount * 0.35f),
         focusScale = 1.02f,
     ) {
         // Vertically centred: rows have a minimum height, short content must not stick to the top.
@@ -192,8 +251,10 @@ fun NavRow(
     trailing: String? = null,
     /** Shown before the arrow, e.g. a colour preview. */
     trailingContent: (@Composable () -> Unit)? = null,
+    /** Off for rows that only lead to a setting (search hits), so they don't take its highlight. */
+    highlightable: Boolean = true,
 ) {
-    RowShell(onClick, Modifier, initialFocus) {
+    RowShell(onClick, Modifier, initialFocus, title.takeIf { highlightable }) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Texts(title, subtitle, icon, Modifier.weight(1f))
             // Kept short so the title keeps its room.
@@ -218,7 +279,7 @@ fun SwitchRow(
     /** Off: shown dimmed and not switchable (e.g. a store that isn't installed). */
     enabled: Boolean = true,
 ) {
-    RowShell({ if (enabled) onChange(!checked) }, if (enabled) Modifier else Modifier.alpha(0.45f), initialFocus) {
+    RowShell({ if (enabled) onChange(!checked) }, if (enabled) Modifier else Modifier.alpha(0.45f), initialFocus, title) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Texts(title, subtitle, icon, Modifier.weight(1f))
             Switch(
@@ -252,6 +313,7 @@ fun <T> ChoiceRow(
     }
     RowShell(
         onClick = { step(1) },
+        title = title,
         modifier = Modifier.onPreviewKeyEvent { e ->
             if (e.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
             when (e.key) {
@@ -324,6 +386,7 @@ fun SliderRow(
 ) {
     RowShell(
         onClick = {},
+        title = title,
         modifier = Modifier.onPreviewKeyEvent { e ->
             if (e.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
             // Holding the key repeats; repeats accelerate after the first few steps.

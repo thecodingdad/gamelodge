@@ -110,7 +110,7 @@ private val settingsIndex: List<SearchEntry> = buildList {
  * ignored). Pages come first, then their settings, in index order.
  */
 @Composable
-fun SettingsSearchResults(query: String, onOpen: (SettingsTarget) -> Unit) {
+fun SettingsSearchResults(query: String, onOpen: (SettingsTarget, String?) -> Unit) {
     // Every title resolved once in the current language; the search itself runs on plain text.
     val texts = (settingsIndex.flatMap { listOfNotNull(it.title, it.section) } + pageTitles.map { it.second }).distinct()
         .associateWith { stringResource(it) }
@@ -131,8 +131,9 @@ fun SettingsSearchResults(query: String, onOpen: (SettingsTarget) -> Unit) {
         val path = if (isPage) null else listOfNotNull(pageTitle(e.target), e.section?.takeIf { it != e.title })
             .joinToString("  ›  ") { texts.getValue(it) }
         NavRow(
-            texts.getValue(e.title), { onOpen(e.target) },
+            texts.getValue(e.title), { onOpen(e.target, if (isPage) null else texts.getValue(e.title)) },
             subtitle = path, icon = if (isPage) null else Icons.Filled.Search,
+            highlightable = false,
         )
     }
 }

@@ -56,7 +56,8 @@ fun SettingsHome(open: (SettingsPageId) -> Unit, isFirstVisit: Boolean, openCont
     SettingsPage(stringResource(Res.string.tab_settings)) {
         io.github.thecodingdad.moonlightlauncher.ui.components.LauncherTextField(searchTitle, query, { query = it })
         if (query.isNotBlank()) {
-            SettingsSearchResults(query) { target ->
+            SettingsSearchResults(query) { target, title ->
+                SearchHighlight.request(title)
                 when (target) {
                     is SettingsTarget.Page -> open(target.id)
                     SettingsTarget.Controllers -> openControllers()
