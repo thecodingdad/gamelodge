@@ -31,6 +31,8 @@ private val pageTitles: List<Pair<SettingsTarget, StringResource>> = listOf(
     SettingsTarget.Page(SettingsPageId.METADATA) to Res.string.settings_metadata,
     SettingsTarget.Page(SettingsPageId.USAGE) to Res.string.settings_usage,
     SettingsTarget.Page(SettingsPageId.EMULATORS) to Res.string.settings_emulators,
+    SettingsTarget.Page(SettingsPageId.GAME_SOURCES) to Res.string.settings_game_sources,
+    SettingsTarget.Page(SettingsPageId.HOST_ROLE) to Res.string.settings_host_role,
     SettingsTarget.Page(SettingsPageId.HOSTS) to Res.string.settings_hosts,
     SettingsTarget.Page(SettingsPageId.PROFILES) to Res.string.settings_profiles,
     SettingsTarget.Page(SettingsPageId.VPN) to Res.string.settings_vpn,
@@ -44,6 +46,12 @@ private val pageTitles: List<Pair<SettingsTarget, StringResource>> = listOf(
     SettingsTarget.Page(SettingsPageId.BACKUP) to Res.string.settings_backup,
     SettingsTarget.Page(SettingsPageId.ABOUT) to Res.string.settings_about,
     SettingsTarget.Page(SettingsPageId.LICENSES) to Res.string.about_open_source,
+)
+
+/** Pages only some platforms have (shown in the search only where they exist). */
+private val platformPages = setOf(
+    SettingsPageId.USAGE, SettingsPageId.EMULATORS, SettingsPageId.PROFILES, SettingsPageId.VPN, SettingsPageId.QUICK_MENU,
+    SettingsPageId.LAUNCHER, SettingsPageId.BACKUP, SettingsPageId.GAME_SOURCES, SettingsPageId.HOST_ROLE,
 )
 
 /** Every visible setting by page (dialog-internal and per-item settings are left out). */
@@ -103,7 +111,9 @@ fun SettingsSearchResults(query: String, onOpen: (SettingsTarget) -> Unit) {
         .associateWith { stringResource(it) }
     val q = TitleNormalizer.normalize(query)
     fun pageTitle(target: SettingsTarget) = pageTitles.first { it.first == target }.second
+    val platform = io.github.thecodingdad.moonlightlauncher.ui.PlatformUi.current
     val hits = settingsIndex.filter { e ->
+        if (e.target is SettingsTarget.Page && e.target.id in platformPages && !platform.hasPage(e.target.id)) return@filter false
         val haystack = listOfNotNull(e.title, pageTitle(e.target), e.section).joinToString(" ") { texts.getValue(it) }
         TitleNormalizer.normalize(haystack).contains(q)
     }.distinctBy { it.title to it.target }

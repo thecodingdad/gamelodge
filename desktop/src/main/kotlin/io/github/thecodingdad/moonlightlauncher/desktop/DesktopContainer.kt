@@ -83,6 +83,11 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
         }
     }
 
+    /** The PC as host for other launchers: their API, pairing, paired devices, web UI. */
+    val hostRole: io.github.thecodingdad.moonlightlauncher.desktop.host.HostRole by lazy {
+        io.github.thecodingdad.moonlightlauncher.desktop.host.HostRole(dataDir, secrets) { platform.deviceName }
+    }
+
     /** Kept current from the settings (the scan runs off the UI). */
     @Volatile var disabledSources: Set<String> = emptySet()
 

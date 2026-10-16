@@ -979,4 +979,6 @@
     <string name="host_companion_hint">Kopple die Companion dieses PCs: sie liefert die Host-Spiele mit ihren Metadaten.</string>
     <string name="settings_game_sources">Spielquellen</string>
     <string name="settings_game_sources_sub">Steam, Epic, GOG, Xbox und andere Stores auf diesem PC</string>
+    <string name="settings_host_role">Geräte &amp; Pairing</string>
+    <string name="settings_host_role_sub">Andere Launcher nutzen Spiele und Metadaten dieses PCs</string>
 </resources>

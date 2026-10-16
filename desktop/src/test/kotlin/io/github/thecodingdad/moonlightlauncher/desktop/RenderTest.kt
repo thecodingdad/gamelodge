@@ -29,7 +29,7 @@ class RenderTest {
         ArtworkPlatform.current = DesktopArtwork
         val dispatcher = InputDispatcher()
         val gamepads = Gamepads(dispatcher)
-        PlatformUi.current = DesktopPlatformUi(gamepads, { null }) { null }
+        PlatformUi.current = DesktopPlatformUi(gamepads, { null }, { null })
         val feedback = UiFeedback(File(dir, "cache"), DesktopFeedbackOutput { null })
 
         // Compose and the view model live on the UI thread (Swing's event thread on the desktop).
@@ -64,7 +64,7 @@ class RenderTest {
         val dir = Files.createTempDirectory("launcher-sources").toFile()
         val container = DesktopContainer(dir)
         val gamepads = Gamepads(InputDispatcher())
-        PlatformUi.current = DesktopPlatformUi(gamepads, { null }) { container.pcLibrary }
+        PlatformUi.current = DesktopPlatformUi(gamepads, { null }, { container.pcLibrary })
         fun <T> ui(block: () -> T): T {
             var result: Result<T>? = null
             javax.swing.SwingUtilities.invokeAndWait { result = runCatching(block) }
@@ -85,5 +85,40 @@ class RenderTest {
         Thread.sleep(800)
         val image = ui { scene.render(1_000_000_000L).also { scene.close() } }
         File("build/render").apply { mkdirs() }.resolve("game-sources.png").writeBytes(image.encodeToData(EncodedImageFormat.PNG)!!.bytes)
+    }
+
+    @Test
+    fun hostRolePageRenders() {
+        val dir = Files.createTempDirectory("launcher-host").toFile()
+        val container = DesktopContainer(dir)
+        val role = container.hostRole
+        role.update { it.copy(serverEnabled = true, webEnabled = true) }
+        role.pairing.open()
+        role.devices.add("Odin 2 Portal", "AB".repeat(32), io.github.thecodingdad.moonlightlauncher.desktop.host.Permissions.all, "192.168.1.20")
+        PlatformUi.current = DesktopPlatformUi(Gamepads(InputDispatcher()), { null }, { null }) { role }
+        fun <T> ui(block: () -> T): T {
+            var result: Result<T>? = null
+            javax.swing.SwingUtilities.invokeAndWait { result = runCatching(block) }
+            return result!!.getOrThrow()
+        }
+        val scene = ui {
+            ImageComposeScene(1600, 1400, Density(1.5f)) {
+                CompositionLocalProvider(LocalContainer provides container) {
+                    io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme(io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings()) {
+                        androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.fillMaxSize().background(io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme.colors.background)) {
+                            HostRolePage(role)
+                        }
+                    }
+                }
+            }
+        }
+        try {
+            ui { scene.render(0) }
+            Thread.sleep(800)
+            val image = ui { scene.render(1_000_000_000L).also { scene.close() } }
+            File("build/render").apply { mkdirs() }.resolve("host-role.png").writeBytes(image.encodeToData(EncodedImageFormat.PNG)!!.bytes)
+        } finally {
+            role.stop()
+        }
     }
 }

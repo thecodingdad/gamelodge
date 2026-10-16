@@ -53,6 +53,7 @@ class DesktopPlatformUi(
     private val gamepads: Gamepads,
     private val window: () -> Frame?,
     private val pcLibrary: () -> io.github.thecodingdad.moonlightlauncher.desktop.games.PcLibrary?,
+    private val hostRole: () -> io.github.thecodingdad.moonlightlauncher.desktop.host.HostRole? = { null },
 ) : PlatformUi {
     override val localIcon = Icons.Filled.DesktopWindows
 
@@ -159,13 +160,16 @@ class DesktopPlatformUi(
 
     override fun openAppInfo(packageName: String) = Unit
 
-    override fun hasPage(id: SettingsPageId) = id == SettingsPageId.GAME_SOURCES
+    override fun hasPage(id: SettingsPageId) = id == SettingsPageId.GAME_SOURCES || (id == SettingsPageId.HOST_ROLE && hostRole() != null)
 
     @Composable
     override fun PlatformSettingsPage(id: SettingsPageId, vm: LauncherViewModel, openProfile: (UUID?) -> Unit, openStats: () -> Unit) {
         val settings by vm.settings.collectAsState()
-        val library = pcLibrary() ?: return
-        if (id == SettingsPageId.GAME_SOURCES) GameSourcesPage(library, settings, vm::updateSettings)
+        when (id) {
+            SettingsPageId.GAME_SOURCES -> pcLibrary()?.let { GameSourcesPage(it, settings, vm::updateSettings) }
+            SettingsPageId.HOST_ROLE -> hostRole()?.let { HostRolePage(it) }
+            else -> Unit
+        }
     }
 
     @Composable

@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Backup
 import androidx.compose.material.icons.filled.Computer
+import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.filled.Home
@@ -39,7 +40,7 @@ import io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings
 import io.github.thecodingdad.moonlightlauncher.data.settings.ThemeMode
 import io.github.thecodingdad.moonlightlauncher.resources.*
 
-enum class SettingsPageId { GAME_SOURCES, HOSTS, PROFILES, HOME_SCREEN, THEME, DISPLAY, FILTERS, APP_FILTERS, QUICK_MENU, CONTROLS, SOUNDS, METADATA, USAGE, EMULATORS, HOME_ASSISTANT, VPN, LAUNCHER, BACKUP, LANGUAGE, ABOUT, LICENSES }
+enum class SettingsPageId { GAME_SOURCES, HOST_ROLE, HOSTS, PROFILES, HOME_SCREEN, THEME, DISPLAY, FILTERS, APP_FILTERS, QUICK_MENU, CONTROLS, SOUNDS, METADATA, USAGE, EMULATORS, HOME_ASSISTANT, VPN, LAUNCHER, BACKUP, LANGUAGE, ABOUT, LICENSES }
 
 @Composable
 fun SettingsHome(open: (SettingsPageId) -> Unit, isFirstVisit: Boolean, openControllers: () -> Unit = {}) {
@@ -78,6 +79,7 @@ fun SettingsHome(open: (SettingsPageId) -> Unit, isFirstVisit: Boolean, openCont
         NavRow(stringResource(Res.string.settings_hosts), { open(SettingsPageId.HOSTS) }, stringResource(Res.string.settings_hosts_sub), Icons.Filled.Computer)
         if (platform.hasPage(SettingsPageId.PROFILES)) NavRow(stringResource(Res.string.settings_profiles), { open(SettingsPageId.PROFILES) }, stringResource(Res.string.settings_profiles_sub), Icons.Filled.Tune)
         if (platform.hasPage(SettingsPageId.VPN)) NavRow(stringResource(Res.string.settings_vpn), { open(SettingsPageId.VPN) }, stringResource(Res.string.settings_vpn_sub), Icons.Filled.VpnLock)
+        if (platform.hasPage(SettingsPageId.HOST_ROLE)) NavRow(stringResource(Res.string.settings_host_role), { open(SettingsPageId.HOST_ROLE) }, stringResource(Res.string.settings_host_role_sub), Icons.Filled.Devices)
         NavRow(stringResource(Res.string.settings_home_assistant), { open(SettingsPageId.HOME_ASSISTANT) }, stringResource(Res.string.settings_home_assistant_sub), vectorResource(Res.drawable.ic_home_assistant))
 
         SectionHeader(stringResource(Res.string.settings_group_controls))

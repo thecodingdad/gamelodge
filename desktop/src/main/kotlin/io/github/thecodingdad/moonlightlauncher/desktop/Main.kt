@@ -55,7 +55,7 @@ fun main() {
     val dispatcher = InputDispatcher()
     val gamepads = Gamepads(dispatcher)
     var mainWindow: java.awt.Frame? = null
-    val platformUi = DesktopPlatformUi(gamepads, { mainWindow }) { container.pcLibrary }
+    val platformUi = DesktopPlatformUi(gamepads, { mainWindow }, { container.pcLibrary }) { container.hostRole }
     PlatformUi.current = platformUi
     val feedback = UiFeedback(File(dataDir, "cache"), DesktopFeedbackOutput { gamepads }).also { it.load() }
 
@@ -65,6 +65,8 @@ fun main() {
     container.servers.start()
     container.metadata.start()
     container.artwork.start()
+    // Servers for other launchers (only what the user switched on); the key is created on first use.
+    container.scope.launch(kotlinx.coroutines.Dispatchers.IO) { container.hostRole.start() }
     container.scope.launch {
         container.settings.settings.collect {
             gamepads.nintendoLayout = it.buttonLayout == ButtonLayout.NINTENDO
