@@ -4,36 +4,6 @@ import android.content.Context
 import android.content.res.XmlResourceParser
 import org.xmlpull.v1.XmlPullParser
 
-/** One stream option, read from Artemis' preference definition. */
-sealed interface StreamOption {
-    val key: String
-    val title: String
-    val summary: String?
-
-    data class Toggle(override val key: String, override val title: String, override val summary: String?, val default: Boolean) : StreamOption
-    data class Choice(
-        override val key: String,
-        override val title: String,
-        override val summary: String?,
-        val labels: List<String>,
-        val values: List<String>,
-        val default: String?,
-    ) : StreamOption
-    data class Slider(
-        override val key: String,
-        override val title: String,
-        override val summary: String?,
-        val min: Int,
-        val max: Int,
-        val step: Int,
-        val divisor: Int,
-        val suffix: String?,
-        val default: Int?,
-    ) : StreamOption
-}
-
-data class StreamOptionCategory(val key: String?, val title: String, val options: List<StreamOption>)
-
 /**
  * Parses Artemis' `res/xml/preferences.xml` at runtime, so every stream option can be shown
  * in the launcher's own UI (and new upstream options appear without code changes).

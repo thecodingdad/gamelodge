@@ -115,6 +115,8 @@ class AndroidPlatformUi(private val context: Context) : PlatformUi {
         }
     }
 
+    private val profileEditing by lazy { io.github.thecodingdad.moonlightlauncher.stream.AndroidProfileEditing(context) }
+
     override fun hasPage(id: SettingsPageId): Boolean = id in PAGES
 
     @Composable
@@ -127,7 +129,7 @@ class AndroidPlatformUi(private val context: Context) : PlatformUi {
             SettingsPageId.PROFILES -> {
                 val profiles by vm.profiles.collectAsState()
                 val active by vm.activeProfile.collectAsState()
-                io.github.thecodingdad.moonlightlauncher.ui.screens.profiles.ProfilesList(profiles, active, openProfile)
+                io.github.thecodingdad.moonlightlauncher.ui.screens.profiles.ProfilesList(profileEditing, profiles, active, openProfile)
             }
             SettingsPageId.LAUNCHER -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.LauncherModeSettings(settings, vm::updateSettings)
             SettingsPageId.BACKUP -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.BackupSettings(settings, vm::updateSettings)
@@ -141,7 +143,7 @@ class AndroidPlatformUi(private val context: Context) : PlatformUi {
 
     @Composable
     override fun ProfileEditor(uuid: UUID?, name: String, onDeleted: () -> Unit) =
-        io.github.thecodingdad.moonlightlauncher.ui.screens.profiles.ProfileEditor(uuid, name, onDeleted)
+        io.github.thecodingdad.moonlightlauncher.ui.screens.profiles.ProfileEditor(profileEditing, uuid, name, onDeleted)
 
     @Composable
     override fun ControlsExtras(settings: LauncherSettings, update: ((LauncherSettings) -> LauncherSettings) -> Unit) =

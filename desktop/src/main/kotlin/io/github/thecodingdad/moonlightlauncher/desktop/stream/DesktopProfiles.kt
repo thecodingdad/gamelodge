@@ -1,6 +1,12 @@
 package io.github.thecodingdad.moonlightlauncher.desktop.stream
 
+import androidx.compose.runtime.Composable
 import io.github.thecodingdad.moonlightlauncher.desktop.restrictToOwner
+import io.github.thecodingdad.moonlightlauncher.resources.*
+import io.github.thecodingdad.moonlightlauncher.stream.ProfileEditing
+import io.github.thecodingdad.moonlightlauncher.stream.ProfileValues
+import io.github.thecodingdad.moonlightlauncher.stream.StreamOption
+import io.github.thecodingdad.moonlightlauncher.stream.StreamOptionCategory
 import io.github.thecodingdad.moonlightlauncher.stream.StreamProfile
 import io.github.thecodingdad.moonlightlauncher.stream.StreamProfiles
 import kotlinx.coroutines.flow.Flow
@@ -8,61 +14,38 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import org.jetbrains.compose.resources.stringResource
 import java.io.File
 import java.util.UUID
-
-/** One setting of a profile: a Moonlight-Qt command line option; no value = Moonlight-Qt's own setting. */
-data class ProfileOption(val key: String, val values: List<String>, val toggle: Boolean = false)
-
-/** The profile settings, in the editor's order. Values are Moonlight-Qt's own option values. */
-object ProfileOptions {
-    val RESOLUTION = ProfileOption("resolution", listOf("1280x720", "1920x1080", "2560x1440", "3840x2160"))
-    val FPS = ProfileOption("fps", listOf("30", "60", "90", "120", "144"))
-    val BITRATE = ProfileOption("bitrate", listOf("5000", "10000", "20000", "30000", "50000", "80000", "100000", "150000"))
-    val DISPLAY_MODE = ProfileOption("display-mode", listOf("fullscreen", "borderless", "windowed"))
-    val VSYNC = ProfileOption("vsync", emptyList(), toggle = true)
-    val FRAME_PACING = ProfileOption("frame-pacing", emptyList(), toggle = true)
-    val HDR = ProfileOption("hdr", emptyList(), toggle = true)
-    val YUV444 = ProfileOption("yuv444", emptyList(), toggle = true)
-    val CODEC = ProfileOption("video-codec", listOf("auto", "H.264", "HEVC", "AV1"))
-    val DECODER = ProfileOption("video-decoder", listOf("auto", "hardware", "software"))
-    val AUDIO = ProfileOption("audio-config", listOf("stereo", "5.1-surround", "7.1-surround"))
-    val AUDIO_ON_HOST = ProfileOption("audio-on-host", emptyList(), toggle = true)
-    val MULTI_CONTROLLER = ProfileOption("multi-controller", emptyList(), toggle = true)
-    val GAME_OPTIMIZATION = ProfileOption("game-optimization", emptyList(), toggle = true)
-    val QUIT_AFTER = ProfileOption("quit-after", emptyList(), toggle = true)
-    val OVERLAY = ProfileOption("performance-overlay", emptyList(), toggle = true)
-    val SYSTEM_KEYS = ProfileOption("capture-system-keys", listOf("never", "fullscreen", "always"))
-
-    val all = listOf(
-        RESOLUTION, FPS, BITRATE, DISPLAY_MODE, VSYNC, FRAME_PACING, HDR, YUV444, CODEC, DECODER,
-        AUDIO, AUDIO_ON_HOST, MULTI_CONTROLLER, GAME_OPTIMIZATION, QUIT_AFTER, OVERLAY, SYSTEM_KEYS,
-    )
-}
+import kotlin.math.roundToInt
+import kotlin.math.sqrt
 
 @Serializable
 data class DesktopProfile(val uuid: String, val name: String, val values: Map<String, String> = emptyMap())
 
 @Serializable
-private data class ProfilesFile(val profiles: List<DesktopProfile> = emptyList(), val active: String? = null)
+private data class ProfilesFile(
+    val base: Map<String, String> = emptyMap(),
+    val profiles: List<DesktopProfile> = emptyList(),
+    val active: String? = null,
+)
 
 /**
- * Stream profiles of the desktop: named sets of Moonlight-Qt command line options over the base
- * (Moonlight-Qt's own settings). The active one is passed with every stream.
+ * Stream profiles of the desktop, laid out like Android's (Artemis' option keys, texts and
+ * defaults), limited to what Moonlight-Qt can do. Every stream gets the active profile's values
+ * as Moonlight-Qt command line options. New profiles start as a copy of the base settings.
  */
-class DesktopProfiles(dataDir: File) : StreamProfiles {
+class DesktopProfiles(dataDir: File) : StreamProfiles, ProfileEditing {
     private val json = Json { ignoreUnknownKeys = true; prettyPrint = true }
     private val file = File(dataDir, "profiles.json")
     private val state = MutableStateFlow(load())
 
-    val profiles get() = state.value.profiles
-
-    fun profile(uuid: UUID?): DesktopProfile? = uuid?.let { u -> state.value.profiles.firstOrNull { it.uuid == u.toString() } }
+    // ---- StreamProfiles ----
 
     override fun all(defaultName: String) = listOf(StreamProfile(null, defaultName)) + state.value.profiles.map { StreamProfile(UUID.fromString(it.uuid), it.name) }
 
     override fun active(defaultName: String): StreamProfile {
-        val p = state.value.active?.let { a -> state.value.profiles.firstOrNull { it.uuid == a } }
+        val p = activeProfile()
         return if (p == null) StreamProfile(null, defaultName) else StreamProfile(UUID.fromString(p.uuid), p.name)
     }
 
@@ -71,36 +54,156 @@ class DesktopProfiles(dataDir: File) : StreamProfiles {
     override fun changes(): Flow<Unit> = state.map { }
 
     override fun summary(uuid: UUID?): String {
-        val v = profile(uuid)?.values ?: return ""
-        return listOfNotNull(
-            v[ProfileOptions.RESOLUTION.key]?.substringAfter('x')?.let { "${it}p" },
-            v[ProfileOptions.FPS.key]?.let { "$it fps" },
-            v[ProfileOptions.BITRATE.key]?.toIntOrNull()?.let { "${it / 1000} Mbit" },
-        ).joinToString(" · ")
+        val v = valuesOf(uuid)
+        val res = v.getString(RESOLUTION, DEFAULT_RESOLUTION)!!
+        val fps = v.getString(FPS, DEFAULT_FPS)!!
+        val bitrate = v.getInt(BITRATE, defaultBitrate(res, fps))
+        return "${res.substringAfter('x')}p · $fps fps · ${"%.1f".format(bitrate / 1000f).removeSuffix(".0")} Mbit"
     }
 
-    fun create(name: String): UUID {
+    /** Moonlight-Qt options of the active profile. */
+    fun activeOptions(): List<String> = options(valuesOf(activeProfile()?.uuid?.let(UUID::fromString)))
+
+    // ---- ProfileEditing ----
+
+    @Composable
+    override fun rememberSchema(): List<StreamOptionCategory> {
+        fun toggle(key: String, title: String, summary: String?) = StreamOption.Toggle(key, title, summary, toggleDefaults.getValue(key))
+        return listOf(
+            StreamOptionCategory(
+                "category_video_settings", stringResource(Res.string.sopt_category_video_settings),
+                listOf(
+                    StreamOption.Choice(
+                        RESOLUTION, stringResource(Res.string.sopt_title_resolution_list), stringResource(Res.string.sopt_summary_resolution_list),
+                        listOf(
+                            stringResource(Res.string.sopt_resolution_360p), stringResource(Res.string.sopt_resolution_480p), stringResource(Res.string.sopt_resolution_720p),
+                            stringResource(Res.string.sopt_resolution_1080p), stringResource(Res.string.sopt_resolution_1440p), stringResource(Res.string.sopt_resolution_4k),
+                        ),
+                        listOf("640x360", "854x480", "1280x720", "1920x1080", "2560x1440", "3840x2160"), DEFAULT_RESOLUTION,
+                    ),
+                    StreamOption.Choice(
+                        FPS, stringResource(Res.string.sopt_title_fps_list), stringResource(Res.string.sopt_summary_fps_list),
+                        listOf(stringResource(Res.string.sopt_fps_30), stringResource(Res.string.sopt_fps_60), stringResource(Res.string.sopt_fps_90), stringResource(Res.string.sopt_fps_120)),
+                        listOf("30", "60", "90", "120"), DEFAULT_FPS,
+                    ),
+                    StreamOption.Slider(
+                        BITRATE, stringResource(Res.string.sopt_title_seekbar_bitrate), stringResource(Res.string.sopt_summary_seekbar_bitrate),
+                        min = 500, max = 300_000, step = 500, divisor = 1000, suffix = stringResource(Res.string.sopt_suffix_seekbar_bitrate_mbps), default = null,
+                    ),
+                    StreamOption.Choice(
+                        FRAME_PACING, stringResource(Res.string.sopt_title_frame_pacing), stringResource(Res.string.sopt_summary_frame_pacing),
+                        listOf(stringResource(Res.string.sopt_pacing_latency), stringResource(Res.string.sopt_pacing_balanced), stringResource(Res.string.sopt_pacing_smoothness)),
+                        listOf("latency", "balanced", "smoothness"), "latency",
+                    ),
+                    toggle(HDR, stringResource(Res.string.sopt_title_enable_hdr), stringResource(Res.string.sopt_summary_enable_hdr)),
+                    StreamOption.Choice(
+                        DISPLAY_MODE, stringResource(Res.string.dprofile_display_mode), stringResource(Res.string.dprofile_display_mode_sub),
+                        listOf(stringResource(Res.string.dprofile_fullscreen), stringResource(Res.string.dprofile_borderless), stringResource(Res.string.dprofile_windowed)),
+                        listOf("fullscreen", "borderless", "windowed"), "fullscreen",
+                    ),
+                ),
+            ),
+            StreamOptionCategory(
+                "category_audio_settings", stringResource(Res.string.sopt_category_audio_settings),
+                listOf(
+                    StreamOption.Choice(
+                        AUDIO, stringResource(Res.string.sopt_title_audio_config_list), stringResource(Res.string.sopt_summary_audio_config_list),
+                        listOf(stringResource(Res.string.sopt_audioconf_stereo), stringResource(Res.string.sopt_audioconf_51surround), stringResource(Res.string.sopt_audioconf_71surround)),
+                        listOf("2", "51", "71"), "2",
+                    ),
+                ),
+            ),
+            StreamOptionCategory(
+                "category_gamepad_settings", stringResource(Res.string.sopt_category_gamepad_settings),
+                listOf(
+                    toggle(MULTI_CONTROLLER, stringResource(Res.string.sopt_title_checkbox_multi_controller), stringResource(Res.string.sopt_summary_checkbox_multi_controller)),
+                    toggle(FLIP_FACE_BUTTONS, stringResource(Res.string.sopt_title_checkbox_flip_face_buttons), stringResource(Res.string.sopt_summary_checkbox_flip_face_buttons)),
+                ),
+            ),
+            StreamOptionCategory(
+                "category_input_settings", stringResource(Res.string.sopt_category_input_settings),
+                listOf(
+                    toggle(ABSOLUTE_MOUSE, stringResource(Res.string.sopt_title_checkbox_absolute_mouse_mode), stringResource(Res.string.sopt_summary_checkbox_absolute_mouse_mode)),
+                    StreamOption.Choice(
+                        SYSTEM_KEYS, stringResource(Res.string.dprofile_system_keys), stringResource(Res.string.dprofile_system_keys_sub),
+                        listOf(stringResource(Res.string.dprofile_never), stringResource(Res.string.dprofile_fullscreen), stringResource(Res.string.dprofile_always)),
+                        listOf("never", "fullscreen", "always"), "fullscreen",
+                    ),
+                ),
+            ),
+            StreamOptionCategory(
+                "category_host_settings", stringResource(Res.string.sopt_category_host_settings),
+                listOf(
+                    toggle(GAME_OPTIMIZATION, stringResource(Res.string.sopt_title_checkbox_enable_sops), stringResource(Res.string.sopt_summary_checkbox_enable_sops)),
+                    toggle(HOST_AUDIO, stringResource(Res.string.sopt_title_checkbox_host_audio), stringResource(Res.string.sopt_summary_checkbox_host_audio)),
+                    toggle(QUIT_AFTER, stringResource(Res.string.dprofile_quit_after), stringResource(Res.string.dprofile_quit_after_sub)),
+                ),
+            ),
+            StreamOptionCategory(
+                "category_perf_monitor_settings", stringResource(Res.string.sopt_category_perf_monitor_settings),
+                listOf(toggle(PERF_OVERLAY, stringResource(Res.string.sopt_title_enable_perf_overlay), stringResource(Res.string.sopt_summary_enable_perf_overlay))),
+            ),
+            StreamOptionCategory(
+                "category_advanced_settings", stringResource(Res.string.sopt_category_advanced_settings),
+                listOf(
+                    StreamOption.Choice(
+                        VIDEO_FORMAT, stringResource(Res.string.sopt_title_video_format), stringResource(Res.string.sopt_summary_video_format),
+                        listOf(
+                            stringResource(Res.string.sopt_videoformat_auto), stringResource(Res.string.sopt_videoformat_av1always),
+                            stringResource(Res.string.sopt_videoformat_hevcalways), stringResource(Res.string.sopt_videoformat_h264always),
+                        ),
+                        listOf("auto", "forceav1", "forceh265", "neverh265"), "auto",
+                    ),
+                    StreamOption.Choice(
+                        DECODER, stringResource(Res.string.dprofile_decoder), stringResource(Res.string.dprofile_decoder_sub),
+                        listOf(stringResource(Res.string.dprofile_auto), stringResource(Res.string.dprofile_hardware), stringResource(Res.string.dprofile_software)),
+                        listOf("auto", "hardware", "software"), "auto",
+                    ),
+                    toggle(YUV444, stringResource(Res.string.dprofile_yuv444), stringResource(Res.string.dprofile_yuv444_sub)),
+                ),
+            ),
+        )
+    }
+
+    override val essentialKeys = listOf(RESOLUTION, FPS, BITRATE, VIDEO_FORMAT, HDR, FRAME_PACING, AUDIO, MULTI_CONTROLLER, PERF_OVERLAY)
+
+    override fun values(uuid: UUID?): ProfileValues = valuesOf(uuid)
+
+    override fun create(name: String): UUID {
         val uuid = UUID.randomUUID()
-        save(state.value.copy(profiles = state.value.profiles + DesktopProfile(uuid.toString(), name)))
+        // Like Artemis: a new profile starts from the base settings.
+        save(state.value.copy(profiles = state.value.profiles + DesktopProfile(uuid.toString(), name, state.value.base)))
         return uuid
     }
 
-    fun rename(uuid: UUID, name: String) = change(uuid) { it.copy(name = name) }
+    override fun rename(uuid: UUID, name: String) = change(uuid) { it.copy(name = name) }
 
-    fun delete(uuid: UUID) = save(
+    override fun delete(uuid: UUID) = save(
         state.value.copy(
             profiles = state.value.profiles.filter { it.uuid != uuid.toString() },
             active = state.value.active.takeIf { it != uuid.toString() },
         ),
     )
 
-    /** [value] null: back to Moonlight-Qt's own setting. */
-    fun set(uuid: UUID, key: String, value: String?) = change(uuid) { p ->
-        p.copy(values = if (value == null) p.values - key else p.values + (key to value))
-    }
+    override fun dynamicDefault(key: String, values: ProfileValues): Int? =
+        if (key == BITRATE) defaultBitrate(values.getString(RESOLUTION, DEFAULT_RESOLUTION)!!, values.getString(FPS, DEFAULT_FPS)!!) else null
 
-    /** Command line options of the active profile. */
-    fun activeOptions(): List<String> = options(state.value.active?.let { a -> state.value.profiles.firstOrNull { it.uuid == a } }?.values.orEmpty())
+    // ---- storage ----
+
+    private fun activeProfile() = state.value.active?.let { a -> state.value.profiles.firstOrNull { it.uuid == a } }
+
+    private fun valuesOf(uuid: UUID?): ProfileValues = object : ProfileValues {
+        private fun raw(key: String): String? =
+            if (uuid == null) state.value.base[key] else state.value.profiles.firstOrNull { it.uuid == uuid.toString() }?.values?.get(key)
+
+        override fun getBoolean(key: String, default: Boolean) = raw(key)?.toBooleanStrictOrNull() ?: default
+        override fun getString(key: String, default: String?) = raw(key) ?: default
+        override fun getInt(key: String, default: Int) = raw(key)?.toIntOrNull() ?: default
+        override fun set(key: String, value: Any) {
+            if (uuid == null) save(state.value.copy(base = state.value.base + (key to value.toString())))
+            else change(uuid) { it.copy(values = it.values + (key to value.toString())) }
+        }
+    }
 
     private fun change(uuid: UUID, block: (DesktopProfile) -> DesktopProfile) =
         save(state.value.copy(profiles = state.value.profiles.map { if (it.uuid == uuid.toString()) block(it) else it }))
@@ -117,13 +220,79 @@ class DesktopProfiles(dataDir: File) : StreamProfiles {
     }
 
     companion object {
-        /** Moonlight-Qt options for [values] (toggles: "--x" / "--no-x"); unknown or invalid values are dropped. */
-        fun options(values: Map<String, String>): List<String> = ProfileOptions.all.flatMap { o ->
-            val v = values[o.key] ?: return@flatMap emptyList()
-            when {
-                o.toggle -> listOf(if (v == "true") "--${o.key}" else "--no-${o.key}")
-                v in o.values -> listOf("--${o.key}", v)
-                else -> emptyList()
+        const val RESOLUTION = "list_resolution"
+        const val FPS = "list_fps"
+        const val BITRATE = "seekbar_bitrate_kbps"
+        const val FRAME_PACING = "frame_pacing"
+        const val HDR = "checkbox_enable_hdr"
+        const val DISPLAY_MODE = "desktop_display_mode"
+        const val AUDIO = "list_audio_config"
+        const val MULTI_CONTROLLER = "checkbox_multi_controller"
+        const val FLIP_FACE_BUTTONS = "checkbox_flip_face_buttons"
+        const val ABSOLUTE_MOUSE = "checkbox_absolute_mouse_mode"
+        const val SYSTEM_KEYS = "desktop_capture_system_keys"
+        const val GAME_OPTIMIZATION = "checkbox_enable_sops"
+        const val HOST_AUDIO = "checkbox_host_audio"
+        const val QUIT_AFTER = "desktop_quit_after"
+        const val PERF_OVERLAY = "checkbox_enable_perf_overlay"
+        const val VIDEO_FORMAT = "video_format"
+        const val DECODER = "desktop_video_decoder"
+        const val YUV444 = "desktop_yuv444"
+        const val DEFAULT_RESOLUTION = "1280x720"
+        const val DEFAULT_FPS = "60"
+
+        /** Artemis' defaults (and Moonlight-Qt's for the PC-only options). */
+        private val toggleDefaults = mapOf(
+            HDR to false, MULTI_CONTROLLER to true, FLIP_FACE_BUTTONS to false, ABSOLUTE_MOUSE to false,
+            GAME_OPTIMIZATION to true, HOST_AUDIO to false, QUIT_AFTER to false, PERF_OVERLAY to false, YUV444 to false,
+        )
+
+        /** Moonlight-Qt's (and Artemis') default bitrate in kbps for a resolution and frame rate. */
+        fun defaultBitrate(resolution: String, fps: String): Int {
+            val w = resolution.substringBefore('x').toIntOrNull() ?: 1280
+            val h = resolution.substringAfter('x').toIntOrNull() ?: 720
+            val f = fps.toFloatOrNull()?.roundToInt() ?: 60
+            val frameRateFactor = (if (f <= 60) f.toDouble() else sqrt(f / 60.0) * 60.0) / 30.0
+            val pixels = intArrayOf(640 * 360, 854 * 480, 1280 * 720, 1920 * 1080, 2560 * 1440, 3840 * 2160)
+            val factors = intArrayOf(1, 2, 5, 10, 20, 40)
+            val p = w * h
+            val i = pixels.indexOfFirst { p <= it }
+            val resolutionFactor = when {
+                i == 0 -> factors[0].toFloat()
+                i < 0 -> factors.last().toFloat()
+                p == pixels[i] -> factors[i].toFloat()
+                else -> (p - pixels[i - 1]).toFloat() / (pixels[i] - pixels[i - 1]) * (factors[i] - factors[i - 1]) + factors[i - 1]
+            }
+            return (resolutionFactor * frameRateFactor).roundToInt() * 1000
+        }
+
+        /** Moonlight-Qt command line options for a profile's values (defaults where unset). */
+        fun options(v: ProfileValues): List<String> {
+            fun flag(name: String, key: String) = if (v.getBoolean(key, toggleDefaults.getValue(key))) "--$name" else "--no-$name"
+            val resolution = v.getString(RESOLUTION, DEFAULT_RESOLUTION)!!
+            val fps = v.getString(FPS, DEFAULT_FPS)!!
+            val pacing = v.getString(FRAME_PACING, "latency")
+            return buildList {
+                add("--resolution"); add(resolution)
+                add("--fps"); add(fps)
+                add("--bitrate"); add(v.getInt(BITRATE, defaultBitrate(resolution, fps)).toString())
+                // Lowest latency: neither V-Sync nor frame pacing; balanced: V-Sync; smoothest: both.
+                add(if (pacing == "latency") "--no-vsync" else "--vsync")
+                add(if (pacing == "smoothness") "--frame-pacing" else "--no-frame-pacing")
+                add(flag("hdr", HDR))
+                add("--display-mode"); add(v.getString(DISPLAY_MODE, "fullscreen")!!)
+                add("--audio-config"); add(when (v.getString(AUDIO, "2")) { "51" -> "5.1-surround"; "71" -> "7.1-surround"; else -> "stereo" })
+                add(flag("multi-controller", MULTI_CONTROLLER))
+                add(flag("swap-gamepad-buttons", FLIP_FACE_BUTTONS))
+                add(flag("absolute-mouse", ABSOLUTE_MOUSE))
+                add("--capture-system-keys"); add(v.getString(SYSTEM_KEYS, "fullscreen")!!)
+                add(flag("game-optimization", GAME_OPTIMIZATION))
+                add(flag("audio-on-host", HOST_AUDIO))
+                add(flag("quit-after", QUIT_AFTER))
+                add(flag("performance-overlay", PERF_OVERLAY))
+                add("--video-codec"); add(when (v.getString(VIDEO_FORMAT, "auto")) { "forceav1" -> "AV1"; "forceh265" -> "HEVC"; "neverh265" -> "H.264"; else -> "auto" })
+                add("--video-decoder"); add(v.getString(DECODER, "auto")!!)
+                add(flag("yuv444", YUV444))
             }
         }
     }

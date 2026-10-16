@@ -10,18 +10,18 @@ import java.util.UUID
  * Reads and writes stream options of one profile. `uuid == null` edits the base settings
  * (Artemis' default shared preferences); otherwise the profile's option map.
  */
-class ProfileStore(private val context: Context, val uuid: UUID?) {
+class ProfileStore(private val context: Context, val uuid: UUID?) : ProfileValues {
     private val manager get() = ProfilesManager.getInstance()
     private val base get() = PreferenceManager.getDefaultSharedPreferences(context)
     private val profile: SettingsProfile? get() = uuid?.let { id -> manager.profiles.firstOrNull { it.uuid == id } }
 
     private fun raw(key: String): Any? = if (uuid == null) base.all[key] else profile?.options?.get(key)
 
-    fun getBoolean(key: String, default: Boolean): Boolean = raw(key) as? Boolean ?: default
-    fun getString(key: String, default: String?): String? = raw(key)?.toString() ?: default
-    fun getInt(key: String, default: Int): Int = (raw(key) as? Number)?.toInt() ?: (raw(key) as? String)?.toIntOrNull() ?: default
+    override fun getBoolean(key: String, default: Boolean): Boolean = raw(key) as? Boolean ?: default
+    override fun getString(key: String, default: String?): String? = raw(key)?.toString() ?: default
+    override fun getInt(key: String, default: Int): Int = (raw(key) as? Number)?.toInt() ?: (raw(key) as? String)?.toIntOrNull() ?: default
 
-    fun set(key: String, value: Any) {
+    override fun set(key: String, value: Any) {
         if (uuid == null) {
             base.edit().apply {
                 when (value) {
@@ -65,4 +65,28 @@ class ProfileStore(private val context: Context, val uuid: UUID?) {
             manager.delete(uuid)
         }
     }
+}
+
+/** Artemis' profiles for the shared profile screens. */
+class AndroidProfileEditing(private val context: Context) : ProfileEditing {
+    @androidx.compose.runtime.Composable
+    override fun rememberSchema(): List<StreamOptionCategory> = androidx.compose.runtime.remember { StreamSettingsSchema.load(context) }
+
+    override val essentialKeys get() = StreamSettingsSchema.essentialKeys
+
+    override fun values(uuid: UUID?): ProfileValues = ProfileStore(context, uuid)
+
+    override fun create(name: String) = ProfileStore.create(context, name)
+
+    override fun rename(uuid: UUID, name: String) = ProfileStore.rename(uuid, name)
+
+    override fun delete(uuid: UUID) = ProfileStore.delete(uuid)
+
+    // Bitrate has no static default: Artemis derives it from the profile's resolution and FPS.
+    override fun dynamicDefault(key: String, values: ProfileValues): Int? = if (key == "seekbar_bitrate_kbps") {
+        com.limelight.preferences.PreferenceConfiguration.getDefaultBitrate(
+            values.getString("list_resolution", "1280x720") ?: "1280x720",
+            values.getString("list_fps", "60") ?: "60",
+        )
+    } else null
 }

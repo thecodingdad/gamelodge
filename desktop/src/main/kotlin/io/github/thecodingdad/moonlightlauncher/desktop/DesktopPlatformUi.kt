@@ -5,6 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DesktopWindows
 import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material.icons.filled.Vibration
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -56,7 +57,6 @@ class DesktopPlatformUi(
     private val host: () -> HostServices? = { null },
     private val startup: Startup? = null,
     private val profiles: io.github.thecodingdad.moonlightlauncher.desktop.stream.DesktopProfiles? = null,
-    private val openMoonlightSettings: () -> Unit = {},
 ) : PlatformUi {
     override val localIcon = Icons.Filled.DesktopWindows
 
@@ -177,7 +177,7 @@ class DesktopPlatformUi(
             SettingsPageId.PROFILES -> profiles?.let { store ->
                 val all by vm.profiles.collectAsState()
                 val active by vm.activeProfile.collectAsState()
-                DesktopProfilesList(store, all, active, openProfile)
+                io.github.thecodingdad.moonlightlauncher.ui.screens.profiles.ProfilesList(store, all, active, openProfile)
             }
             else -> Unit
         }
@@ -187,6 +187,11 @@ class DesktopPlatformUi(
     override fun ControllersScreen() {
         val controllers = rememberControllers()
         var selected by remember { mutableStateOf<ControllerInfo?>(null) }
+        // As on Android: the stream's gamepad options of the base settings.
+        val editing = profiles
+        val gamepadOptions = editing?.rememberSchema()?.firstOrNull { it.key == "category_gamepad_settings" }?.options.orEmpty()
+        val base = remember(editing) { editing?.values(null) }
+        var revision by remember { mutableIntStateOf(0) }
         SettingsPage(stringResource(Res.string.settings_controllers)) {
             SectionHeader(stringResource(Res.string.controllers_connected))
             if (controllers.isEmpty()) Text(stringResource(Res.string.controllers_none), color = LauncherTheme.colors.onSurface)
@@ -197,13 +202,22 @@ class DesktopPlatformUi(
                     icon = Icons.Filled.SportsEsports, initialFocus = index == 0,
                 )
             }
+            if (editing != null && base != null && gamepadOptions.isNotEmpty()) {
+                SectionHeader(stringResource(Res.string.controllers_stream_settings))
+                Text(stringResource(Res.string.controllers_stream_settings_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+                gamepadOptions.forEachIndexed { i, option ->
+                    io.github.thecodingdad.moonlightlauncher.ui.screens.profiles.OptionRow(
+                        option, base, revision, initialFocus = controllers.isEmpty() && i == 0, editing = editing,
+                    ) { revision++ }
+                }
+            }
         }
         ControllerDetailDialog(selected) { selected = null }
     }
 
     @Composable
     override fun ProfileEditor(uuid: UUID?, name: String, onDeleted: () -> Unit) {
-        profiles?.let { DesktopProfileEditor(it, uuid, name, openMoonlightSettings, onDeleted) }
+        profiles?.let { io.github.thecodingdad.moonlightlauncher.ui.screens.profiles.ProfileEditor(it, uuid, name, onDeleted) }
     }
 
     @Composable

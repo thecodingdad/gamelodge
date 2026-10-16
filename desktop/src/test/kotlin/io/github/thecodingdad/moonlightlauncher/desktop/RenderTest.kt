@@ -14,6 +14,7 @@ import io.github.thecodingdad.moonlightlauncher.ui.input.InputDispatcher
 import org.jetbrains.skia.EncodedImageFormat
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import io.github.thecodingdad.moonlightlauncher.desktop.stream.DesktopProfiles
 import java.io.File
 import java.nio.file.Files
 import androidx.compose.foundation.background
@@ -121,5 +122,35 @@ class RenderTest {
         } finally {
             role.stop()
         }
+    }
+
+    @Test
+    fun profileEditorRenders() {
+        val dir = Files.createTempDirectory("launcher-profiles").toFile()
+        val container = DesktopContainer(dir)
+        val uuid = container.profiles.create("Handheld")
+        container.profiles.values(uuid).set("list_resolution", "1920x1080")
+        PlatformUi.current = DesktopPlatformUi(Gamepads(InputDispatcher()), { null }, { null }, profiles = container.profiles)
+        fun <T> ui(block: () -> T): T {
+            var result: Result<T>? = null
+            javax.swing.SwingUtilities.invokeAndWait { result = runCatching(block) }
+            return result!!.getOrThrow()
+        }
+        val scene = ui {
+            ImageComposeScene(1600, 3000, Density(1.5f)) {
+                CompositionLocalProvider(LocalContainer provides container) {
+                    io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme(io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings()) {
+                        androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.fillMaxSize().background(io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme.colors.background)) {
+                            io.github.thecodingdad.moonlightlauncher.ui.screens.profiles.ProfileEditor(container.profiles, uuid, "Handheld") {}
+                        }
+                    }
+                }
+            }
+        }
+        ui { scene.render(0) }
+        Thread.sleep(800)
+        val image = ui { scene.render(1_000_000_000L).also { scene.close() } }
+        File("build/render").apply { mkdirs() }.resolve("profile-editor.png").writeBytes(image.encodeToData(EncodedImageFormat.PNG)!!.bytes)
+        org.junit.Assert.assertTrue(DesktopProfiles.options(container.profiles.values(uuid)).containsAll(listOf("--resolution", "1920x1080")))
     }
 }

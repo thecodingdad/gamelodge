@@ -18,15 +18,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusEvent
-import androidx.compose.ui.platform.LocalContext
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
-import com.limelight.preferences.PreferenceConfiguration
-import io.github.thecodingdad.moonlightlauncher.stream.ProfileStore
+import io.github.thecodingdad.moonlightlauncher.stream.ProfileEditing
+import io.github.thecodingdad.moonlightlauncher.stream.ProfileValues
 import io.github.thecodingdad.moonlightlauncher.stream.StreamOption
 import io.github.thecodingdad.moonlightlauncher.stream.StreamProfile
 import io.github.thecodingdad.moonlightlauncher.stream.StreamProfiles
-import io.github.thecodingdad.moonlightlauncher.stream.StreamSettingsSchema
 import io.github.thecodingdad.moonlightlauncher.ui.components.ButtonHint
 import io.github.thecodingdad.moonlightlauncher.ui.components.HoldToConfirmButton
 import io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton
@@ -46,11 +44,11 @@ import io.github.thecodingdad.moonlightlauncher.resources.*
 
 @Composable
 fun ProfilesList(
+    editing: ProfileEditing,
     profiles: List<StreamProfile>,
     active: StreamProfile,
     openProfile: (UUID?) -> Unit,
 ) {
-    val context = LocalContext.current
     val keyboard = LocalKeyboardController.current
     var focusedIndex by remember { mutableIntStateOf(0) }
     val newTitle = stringResource(Res.string.profile_new_name)
@@ -82,16 +80,15 @@ fun ProfilesList(
         }
         LauncherButton(
             stringResource(Res.string.profile_new), icon = Icons.Filled.Add,
-            onClick = { keyboard.open(newTitle, "") { name -> if (name.isNotBlank()) openProfile(ProfileStore.create(context, name.trim())) } },
+            onClick = { keyboard.open(newTitle, "") { name -> if (name.isNotBlank()) openProfile(editing.create(name.trim())) } },
         )
     }
 }
 
 @Composable
-fun ProfileEditor(uuid: UUID?, name: String, onDeleted: () -> Unit) {
-    val context = LocalContext.current
-    val store = remember(uuid) { ProfileStore(context, uuid) }
-    val schema = remember { StreamSettingsSchema.load(context) }
+fun ProfileEditor(editing: ProfileEditing, uuid: UUID?, name: String, onDeleted: () -> Unit) {
+    val store = remember(uuid) { editing.values(uuid) }
+    val schema = editing.rememberSchema()
     val keyboard = LocalKeyboardController.current
     // Bumped after every write so rows re-read the store.
     var revision by remember { mutableIntStateOf(0) }
@@ -99,31 +96,31 @@ fun ProfileEditor(uuid: UUID?, name: String, onDeleted: () -> Unit) {
     val profileStore = io.github.thecodingdad.moonlightlauncher.LocalContainer.current.profiles
 
     val byKey = remember(schema) { schema.flatMap { it.options }.associateBy { it.key } }
-    val essentials = StreamSettingsSchema.essentialKeys.mapNotNull { byKey[it] }
+    val essentials = editing.essentialKeys.mapNotNull { byKey[it] }
 
     SettingsPage(name) {
         if (uuid != null) {
             io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 12.dp) {
                 LauncherButton(stringResource(Res.string.profile_set_active), icon = Icons.Filled.CheckCircle, onClick = { profileStore.setActive(uuid) })
                 LauncherButton(stringResource(Res.string.profile_rename), icon = Icons.Filled.Edit, onClick = {
-                    keyboard.open(renameTitle, name) { n -> if (n.isNotBlank()) ProfileStore.rename(uuid, n.trim()) }
+                    keyboard.open(renameTitle, name) { n -> if (n.isNotBlank()) editing.rename(uuid, n.trim()) }
                 })
-                HoldToConfirmButton(stringResource(Res.string.profile_delete), onConfirmed = { ProfileStore.delete(uuid); onDeleted() }, icon = Icons.Filled.Delete)
+                HoldToConfirmButton(stringResource(Res.string.profile_delete), onConfirmed = { editing.delete(uuid); onDeleted() }, icon = Icons.Filled.Delete)
             }
         }
         SectionHeader(stringResource(Res.string.profile_essentials))
-        essentials.forEachIndexed { i, option -> OptionRow(option, store, revision, i == 0 && uuid == null) { revision++ } }
+        essentials.forEachIndexed { i, option -> OptionRow(option, store, revision, i == 0 && uuid == null, editing) { revision++ } }
         schema.forEach { category ->
-            val rest = category.options.filter { it.key !in StreamSettingsSchema.essentialKeys }
+            val rest = category.options.filter { it.key !in editing.essentialKeys }
             if (rest.isEmpty()) return@forEach
             SectionHeader(category.title)
-            rest.forEach { option -> OptionRow(option, store, revision, false) { revision++ } }
+            rest.forEach { option -> OptionRow(option, store, revision, false, editing) { revision++ } }
         }
     }
 }
 
 @Composable
-fun OptionRow(option: StreamOption, store: ProfileStore, revision: Int, initialFocus: Boolean, changed: () -> Unit) {
+fun OptionRow(option: StreamOption, store: ProfileValues, revision: Int, initialFocus: Boolean, editing: ProfileEditing, changed: () -> Unit) {
     // `revision` is read so the row recomposes after writes.
     if (revision < 0) return
     when (option) {
@@ -143,12 +140,7 @@ fun OptionRow(option: StreamOption, store: ProfileStore, revision: Int, initialF
         }
         is StreamOption.Slider -> {
             // Bitrate has no static default: Artemis derives it from this profile's resolution and FPS.
-            val dynamicDefault = if (option.key == "seekbar_bitrate_kbps") {
-                PreferenceConfiguration.getDefaultBitrate(
-                    store.getString("list_resolution", "1280x720") ?: "1280x720",
-                    store.getString("list_fps", "60") ?: "60",
-                )
-            } else null
+            val dynamicDefault = editing.dynamicDefault(option.key, store)
             val value = store.getInt(option.key, option.default ?: dynamicDefault ?: option.min)
             SliderRow(
                 option.title, value.coerceIn(option.min, option.max), option.min..option.max, option.step.coerceAtLeast(1),

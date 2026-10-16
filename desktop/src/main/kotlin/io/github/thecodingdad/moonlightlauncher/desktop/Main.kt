@@ -74,7 +74,7 @@ fun main(args: Array<String>) {
     val gamepads = Gamepads(dispatcher)
     var mainWindow: java.awt.Frame? = null
     val hostServices by lazy { HostServices(container.hostRole, container.hostSync, container.secrets) }
-    val platformUi = DesktopPlatformUi(gamepads, { mainWindow }, { container.pcLibrary }, { hostServices }, startup, container.profiles, container::openMoonlightSettings)
+    val platformUi = DesktopPlatformUi(gamepads, { mainWindow }, { container.pcLibrary }, { hostServices }, startup, container.profiles)
     bringToFront = { platformUi.bringToFront() }
     PlatformUi.current = platformUi
     val feedback = UiFeedback(File(dataDir, "cache"), DesktopFeedbackOutput { gamepads }).also { it.load() }

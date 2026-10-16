@@ -84,13 +84,6 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
         io.github.thecodingdad.moonlightlauncher.desktop.stream.DesktopProfiles(dataDir)
     }
 
-    /** Opens Moonlight-Qt itself (its settings are the base profile). */
-    fun openMoonlightSettings() {
-        val client = io.github.thecodingdad.moonlightlauncher.desktop.stream.MoonlightQt.locate()
-        if (!client.available) return
-        client.prepare(streamIdentity, desktopHosts.storedHosts.value)
-        runCatching { ProcessBuilder(client.exe.path).directory(client.exe.parentFile).start() }
-    }
     override val emulators = NoEmulators
     override val vpn = NoVpn
 

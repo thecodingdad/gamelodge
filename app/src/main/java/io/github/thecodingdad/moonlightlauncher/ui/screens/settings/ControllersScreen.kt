@@ -132,6 +132,7 @@ fun ControllersScreen() {
             gamepadOptions.forEachIndexed { i, option ->
                 io.github.thecodingdad.moonlightlauncher.ui.screens.profiles.OptionRow(
                     option, store, revision, initialFocus = controllers.isEmpty() && i == 0,
+                    editing = remember { io.github.thecodingdad.moonlightlauncher.stream.AndroidProfileEditing(context) },
                 ) { revision++ }
             }
         }
