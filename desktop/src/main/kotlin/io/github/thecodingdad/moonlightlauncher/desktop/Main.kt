@@ -128,24 +128,24 @@ fun main(args: Array<String>) {
         }
         gamepads.onInput = { vm.touch(); java.awt.EventQueue.invokeLater { controllerInput() } }
         val state = rememberWindowState(
-            placement = if (startup.settings.value.startFullscreen) WindowPlacement.Fullscreen else WindowPlacement.Maximized,
+            placement = if (startup.settings.value.startFullscreen && !isWindows) WindowPlacement.Fullscreen else WindowPlacement.Maximized,
             width = 1600.dp, height = 900.dp,
         )
         LaunchedEffect(state) {
             windowControls.toggleFullscreen = {
-                if (state.placement == WindowPlacement.Fullscreen) {
-                    state.placement = WindowPlacement.Maximized
+                val frame = mainWindow
+                if (isWindows && frame != null) {
+                    // Windows: borderless over the whole monitor (Compose keeps the title bar).
+                    if (BorderlessFullscreen.active) BorderlessFullscreen.exit(frame) else BorderlessFullscreen.enter(frame)
+                    windowControls.fullscreen.value = BorderlessFullscreen.active
                 } else {
-                    // Straight from maximized Windows keeps the maximized frame: leave it first.
-                    state.placement = WindowPlacement.Floating
-                    container.scope.launch(kotlinx.coroutines.Dispatchers.Main) {
-                        kotlinx.coroutines.delay(50)
-                        state.placement = WindowPlacement.Fullscreen
-                    }
+                    state.placement = if (state.placement == WindowPlacement.Fullscreen) WindowPlacement.Maximized else WindowPlacement.Fullscreen
                 }
             }
             windowControls.exit = ::exitApplication
-            androidx.compose.runtime.snapshotFlow { state.placement }.collect { windowControls.fullscreen.value = it == WindowPlacement.Fullscreen }
+            if (!isWindows) {
+                androidx.compose.runtime.snapshotFlow { state.placement }.collect { windowControls.fullscreen.value = it == WindowPlacement.Fullscreen }
+            }
         }
         val startupSettings by startup.settings.collectAsState()
         val visible by windowVisible.collectAsState()
@@ -195,6 +195,10 @@ fun main(args: Array<String>) {
             LaunchedEffect(window) {
                 mainWindow = window
                 gamepads.start(window)
+                if (isWindows && startup.settings.value.startFullscreen) {
+                    BorderlessFullscreen.enter(window)
+                    windowControls.fullscreen.value = true
+                }
             }
             // A language change rebuilds the content (the texts are read once); the navigation
             // lives outside, so the settings page stays open.
