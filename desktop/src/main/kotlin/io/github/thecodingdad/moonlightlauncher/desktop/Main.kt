@@ -11,6 +11,8 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.window.Tray
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.graphics.painter.BitmapPainter
@@ -115,8 +117,15 @@ fun main(args: Array<String>) {
 
     application {
         val vm = remember { LauncherViewModel(container) }
-        gamepads.onInput = { vm.touch() }
         gamepads.onBack = { feedback.play(UiSound.BACK) }
+        // Like Android: touch or a mouse click hides the focus ring, the next key or controller
+        // input shows it again (and continues from the touched element).
+        var inputModeManager: androidx.compose.ui.input.InputModeManager? = null
+        fun controllerInput() {
+            val m = inputModeManager ?: return
+            if (m.inputMode != androidx.compose.ui.input.InputMode.Keyboard) m.requestInputMode(androidx.compose.ui.input.InputMode.Keyboard)
+        }
+        gamepads.onInput = { vm.touch(); java.awt.EventQueue.invokeLater { controllerInput() } }
         val state = rememberWindowState(
             placement = if (startup.settings.value.startFullscreen) WindowPlacement.Fullscreen else WindowPlacement.Maximized,
             width = 1600.dp, height = 900.dp,
@@ -155,6 +164,7 @@ fun main(args: Array<String>) {
             state = state,
             onPreviewKeyEvent = { e ->
                 vm.touch()
+                if (e.type == KeyEventType.KeyDown) controllerInput()
                 when {
                     // F11: full screen like a console.
                     e.key == Key.F11 && e.type == KeyEventType.KeyDown -> {
@@ -180,11 +190,26 @@ fun main(args: Array<String>) {
             // lives outside, so the settings page stays open.
             val nav = androidx.navigation.compose.rememberNavController()
             val revision by platformUi.languageRevision
-            key(revision) {
-                CompositionLocalProvider(LocalContainer provides container) {
-                    val settings by vm.settings.collectAsState()
-                    ApplyStoredLanguage(settings.language, platformUi)
-                    LauncherApp(vm, dispatcher, feedback, nav)
+            val modeManager = androidx.compose.ui.platform.LocalInputModeManager.current
+            androidx.compose.runtime.SideEffect { inputModeManager = modeManager }
+            androidx.compose.foundation.layout.Box(
+                androidx.compose.ui.Modifier.fillMaxSize().pointerInput(Unit) {
+                    awaitPointerEventScope {
+                        while (true) {
+                            val event = awaitPointerEvent(androidx.compose.ui.input.pointer.PointerEventPass.Initial)
+                            if (event.type == androidx.compose.ui.input.pointer.PointerEventType.Press &&
+                                modeManager.inputMode != androidx.compose.ui.input.InputMode.Touch
+                            ) modeManager.requestInputMode(androidx.compose.ui.input.InputMode.Touch)
+                        }
+                    }
+                },
+            ) {
+                key(revision) {
+                    CompositionLocalProvider(LocalContainer provides container) {
+                        val settings by vm.settings.collectAsState()
+                        ApplyStoredLanguage(settings.language, platformUi)
+                        LauncherApp(vm, dispatcher, feedback, nav)
+                    }
                 }
             }
         }
