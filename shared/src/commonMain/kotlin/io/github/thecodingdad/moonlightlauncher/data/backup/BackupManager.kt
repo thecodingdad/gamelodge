@@ -1,12 +1,5 @@
 package io.github.thecodingdad.moonlightlauncher.data.backup
 
-import android.content.Context
-import android.net.Uri
-import android.util.Base64
-import androidx.documentfile.provider.DocumentFile
-import androidx.preference.PreferenceManager
-import com.limelight.profiles.ProfilesManager
-import com.limelight.profiles.SettingsProfile
 import io.github.thecodingdad.moonlightlauncher.data.db.CollectionEntity
 import io.github.thecodingdad.moonlightlauncher.data.db.FilterEntity
 import io.github.thecodingdad.moonlightlauncher.data.db.FilterKind
@@ -39,6 +32,7 @@ import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.longOrNull
 import java.security.SecureRandom
 import java.text.SimpleDateFormat
+import java.util.Base64
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
@@ -132,12 +126,23 @@ data class BackupFile(
 
 class WrongPasswordException : Exception("Wrong backup password")
 
+/** Stream settings live with the platform's streaming code (Artemis on Android, Moonlight-Qt on the PC). */
+interface StreamSettingsBackup {
+    /** Base settings (option key → value) every profile starts from. */
+    fun baseSettings(): Map<String, JsonElement>
+
+    fun profiles(): List<ProfileBackup>
+
+    /** Applies [base] and adds the [profiles] not there yet (by name). */
+    fun restore(base: Map<String, JsonElement>, profiles: List<ProfileBackup>)
+}
+
 /** Export/import of the launcher setup as JSON, optionally with password-encrypted credentials. */
 class BackupManager(
-    private val context: Context,
     private val db: LauncherDatabase,
     private val settings: SettingsRepository,
     private val secrets: SecretStore,
+    private val stream: StreamSettingsBackup,
 ) {
     private val json = Json { ignoreUnknownKeys = true; prettyPrint = true; encodeDefaults = true }
 
@@ -146,7 +151,6 @@ class BackupManager(
         val byId = items.associateBy { it.id }
         val collections = db.collectionDao().observeCollections().first()
         val refs = db.collectionDao().observeMemberships().first()
-        val manager = ProfilesManager.getInstance()
         BackupFile(
             createdAt = System.currentTimeMillis(),
             settings = settings.current(),
@@ -178,8 +182,8 @@ class BackupManager(
             hostConfigs = db.hostConfigDao().observeAll().first().map {
                 HostConfigBackup(it.hostUuid, it.wakeMethod, it.haWakeEntity, it.haShutdownEntity, it.haRestartEntity, it.haSleepEntity, it.autoSleepMinutes)
             },
-            baseStreamSettings = PreferenceManager.getDefaultSharedPreferences(context).all.toJsonMap(),
-            profiles = manager.profiles.map { ProfileBackup(it.name, it.options.orEmpty().toJsonMap(), manager.active?.uuid == it.uuid) },
+            baseStreamSettings = stream.baseSettings(),
+            profiles = stream.profiles(),
             secrets = password?.takeIf { it.isNotEmpty() }?.let { encryptSecrets(it) },
         )
     }
@@ -216,8 +220,13 @@ class BackupManager(
 
     suspend fun restore(backup: BackupFile, password: String?) = withContext(Dispatchers.IO) {
         if (backup.secrets != null && !password.isNullOrEmpty()) decryptSecrets(backup.secrets, password)
-        // Whether this launcher is the home app depends on the device, not on the backup.
-        settings.update { backup.settings.copy(launcherMode = it.launcherMode) }
+        // Home app and backup folder belong to the device, not to the backup.
+        settings.update {
+            backup.settings.copy(
+                launcherMode = it.launcherMode, backupFolderUri = it.backupFolderUri, autoBackup = it.autoBackup,
+                backupKeepCount = it.backupKeepCount,
+            )
+        }
 
         val dao = db.libraryDao()
         val items = dao.getAllItems()
@@ -259,38 +268,7 @@ class BackupManager(
             )
         }
 
-        PreferenceManager.getDefaultSharedPreferences(context).edit().apply {
-            backup.baseStreamSettings.forEach { (k, v) -> putJson(k, v) }
-        }.apply()
-        val manager = ProfilesManager.getInstance()
-        val existingNames = manager.profiles.map { it.name }.toSet()
-        backup.profiles.filter { it.name !in existingNames }.forEach { p ->
-            val now = System.currentTimeMillis()
-            val profile = SettingsProfile(UUID.randomUUID(), p.name, now, now, HashMap(p.options.mapNotNull { (k, v) -> v.toAny()?.let { k to it } }.toMap()))
-            manager.add(profile)
-            if (p.active) manager.setActive(profile.uuid)
-        }
-    }
-
-    /** Writes a timestamped backup into a folder picked with the system file picker; keeps the newest [keep]. */
-    suspend fun writeToFolder(treeUri: Uri, keep: Int, password: String? = null) = withContext(Dispatchers.IO) {
-        val folder = DocumentFile.fromTreeUri(context, treeUri) ?: error("Backup folder not accessible")
-        val name = "moonlight-launcher-" + SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date()) + ".json"
-        val file = folder.createFile("application/json", name) ?: error("Cannot create backup file")
-        context.contentResolver.openOutputStream(file.uri)?.use { it.write(encode(create(password)).toByteArray()) }
-        folder.listFiles()
-            .filter { it.name?.startsWith("moonlight-launcher-") == true && it.name?.endsWith(".json") == true }
-            .sortedByDescending { it.name }
-            .drop(keep.coerceAtLeast(1))
-            .forEach { it.delete() }
-    }
-
-    suspend fun writeToUri(uri: Uri, password: String?) = withContext(Dispatchers.IO) {
-        context.contentResolver.openOutputStream(uri, "wt")?.use { it.write(encode(create(password)).toByteArray()) }
-    }
-
-    suspend fun readFromUri(uri: Uri): BackupFile = withContext(Dispatchers.IO) {
-        decode(context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() } ?: error("Cannot read file"))
+        stream.restore(backup.baseStreamSettings, backup.profiles)
     }
 
     // --- credentials, encrypted with a key derived from the user's password ---
@@ -301,7 +279,8 @@ class BackupManager(
     }
 
     private fun encryptSecrets(password: String): EncryptedSecrets {
-        val values = secrets.keys().associateWith { secrets.get(it) }.filterValues { it != null }
+        // The device's own identity (pairing keys) stays with the device.
+        val values = secrets.keys().filterNot { it.contains("_identity") }.associateWith { secrets.get(it) }.filterValues { it != null }
         val plain = json.encodeToString(stringMap, values.mapValues { it.value!! })
         val salt = ByteArray(16).also { SecureRandom().nextBytes(it) }
         val iv = ByteArray(12).also { SecureRandom().nextBytes(it) }
@@ -319,32 +298,36 @@ class BackupManager(
 
     private val stringMap = MapSerializer(String.serializer(), String.serializer())
 
-    private fun b64(bytes: ByteArray) = Base64.encodeToString(bytes, Base64.NO_WRAP)
-    private fun unb64(s: String) = Base64.decode(s, Base64.NO_WRAP)
+    private fun b64(bytes: ByteArray) = Base64.getEncoder().encodeToString(bytes)
+    private fun unb64(s: String) = Base64.getDecoder().decode(s)
 
-    private fun Map<String, *>.toJsonMap(): Map<String, JsonElement> = mapNotNull { (k, v) ->
-        when (v) {
-            is Boolean -> k to JsonPrimitive(v)
-            is Number -> k to JsonPrimitive(v)
-            is String -> k to JsonPrimitive(v)
-            null -> k to JsonNull
-            else -> null // string sets etc. are not used by stream settings
-        }
-    }.toMap()
+    companion object {
+        const val FILE_PREFIX = "moonlight-launcher-"
 
-    private fun JsonElement.toAny(): Any? {
-        val p = this as? JsonPrimitive ?: return null
-        if (p is JsonNull) return null
-        return if (p.isString) p.content else p.booleanOrNull ?: p.longOrNull?.let { if (it in Int.MIN_VALUE..Int.MAX_VALUE) it.toInt() else it } ?: p.doubleOrNull
+        /** "moonlight-launcher-20261016-143000.json": sorts by time. */
+        fun fileName(now: Date = Date()): String = FILE_PREFIX + SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(now) + ".json"
+
+        fun isBackupName(name: String) = name.startsWith(FILE_PREFIX) && name.endsWith(".json")
+
+        /** When a backup named by [fileName] was made (null: other name). */
+        fun createdAt(name: String): Long? =
+            runCatching { SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).parse(name.removePrefix(FILE_PREFIX).removeSuffix(".json"))?.time }.getOrNull()
     }
+}
 
-    private fun android.content.SharedPreferences.Editor.putJson(key: String, value: JsonElement) {
-        when (val v = value.toAny()) {
-            is Boolean -> putBoolean(key, v)
-            is Int -> putInt(key, v)
-            is Long -> putLong(key, v)
-            is Double -> putFloat(key, v.toFloat())
-            is String -> putString(key, v)
-        }
+/** Plain values (settings stores) as JSON, for the stream settings in backups. */
+fun Map<String, *>.toJsonMap(): Map<String, JsonElement> = mapNotNull { (k, v) ->
+    when (v) {
+        is Boolean -> k to JsonPrimitive(v)
+        is Number -> k to JsonPrimitive(v)
+        is String -> k to JsonPrimitive(v)
+        null -> k to JsonNull
+        else -> null // string sets etc. are not used by stream settings
     }
+}.toMap()
+
+fun JsonElement.toAny(): Any? {
+    val p = this as? JsonPrimitive ?: return null
+    if (p is JsonNull) return null
+    return if (p.isString) p.content else p.booleanOrNull ?: p.longOrNull?.let { if (it in Int.MIN_VALUE..Int.MAX_VALUE) it.toInt() else it } ?: p.doubleOrNull
 }

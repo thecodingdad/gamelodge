@@ -56,6 +56,7 @@ fun main(args: Array<String>) {
     var bringToFront: () -> Unit = {}
     if (!SingleInstance.claim { windowVisible.value = true; bringToFront() }) return
     val dataDir = dataDirectory()
+    DataReset.runIfRequested(dataDir)
     Log.init(File(dataDir, "logs/launcher.log"))
     Log.i("Moonlight Launcher ${DesktopPlatformInfo(dataDir).versionName} starting, data in $dataDir")
 
@@ -92,6 +93,8 @@ fun main(args: Array<String>) {
     container.servers.start()
     container.metadata.start()
     container.artwork.start()
+    container.backupStorage.window = { mainWindow }
+    container.scope.launch { container.backupStorage.scheduleAuto(container.settings.current().autoBackup) }
     // Servers for other launchers (only what the user switched on); the key is created on first use.
     container.scope.launch(kotlinx.coroutines.Dispatchers.IO) {
         container.hostRole.hostGames = container.hostGames

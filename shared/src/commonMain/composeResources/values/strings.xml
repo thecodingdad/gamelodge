@@ -405,6 +405,43 @@
     <string name="backup_done">Backup saved.</string>
     <string name="backup_restored">Backup restored.</string>
     <string name="backup_wrong_password">Wrong password – credentials were not restored.</string>
+    <string name="settings_data">Data</string>
+    <string name="settings_data_sub">Storage, clean-up and backups</string>
+    <string name="data_storage">Storage</string>
+    <string name="data_measuring">Measuring…</string>
+    <string name="data_total">In total</string>
+    <string name="storage_database">Library database</string>
+    <string name="storage_settings">Settings, hosts and profiles</string>
+    <string name="storage_artwork">Downloaded artwork</string>
+    <string name="storage_own_images">Own images and tiles</string>
+    <string name="storage_host_art">Host covers</string>
+    <string name="storage_cache">Cache</string>
+    <string name="storage_logs">Logs</string>
+    <string name="storage_streaming">Streaming client (Moonlight-Qt)</string>
+    <string name="storage_host_role">Streaming host (covers, backups)</string>
+    <string name="data_library">Library</string>
+    <string name="data_games">Games</string>
+    <string name="data_apps">Apps</string>
+    <string name="data_with_metadata">With metadata</string>
+    <string name="data_cleanup">Clean up</string>
+    <string name="data_clear_cache">Clear cache</string>
+    <string name="data_clear_cache_sub">Image cache and stored server responses; filled again when needed.</string>
+    <string name="data_cache_cleared">Cache cleared (%1$s freed).</string>
+    <string name="data_orphans">Delete unused data</string>
+    <string name="data_orphans_sub">%1$d games kept from removed hosts, %2$d images nothing uses (%3$s).</string>
+    <string name="data_orphans_none">Nothing unused found.</string>
+    <string name="data_orphans_done">Unused data deleted.</string>
+    <string name="data_redownload">Download artwork again</string>
+    <string name="data_redownload_sub">Deletes the stored artwork; it is downloaded again in the background.</string>
+    <string name="data_redownload_done">Artwork is being downloaded again.</string>
+    <string name="data_reset">Delete all data</string>
+    <string name="data_reset_sub">Resets the launcher: library, settings, pairings and credentials are deleted.</string>
+    <string name="data_reset_title">Delete all data?</string>
+    <string name="data_reset_text">Everything the launcher stores is deleted: library, play times, metadata, settings, stream profiles, paired hosts and credentials. Back up first if you want to keep anything. The launcher closes afterwards.</string>
+    <string name="data_reset_confirm">Hold to delete everything</string>
+    <string name="backup_choose">Choose a backup</string>
+    <string name="backup_none">No backups in the folder yet.</string>
+    <string name="backup_other_file">Other file…</string>
 
     <!-- Vibepollo -->
 

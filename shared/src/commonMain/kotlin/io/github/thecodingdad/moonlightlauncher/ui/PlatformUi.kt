@@ -111,6 +111,12 @@ interface PlatformUi {
     @Composable
     fun SystemSettingsRow()
 
+    /**
+     * Deletes all data and settings of the launcher (pairings and credentials too) and ends or
+     * restarts it. Asked for by the user in Settings › Data.
+     */
+    fun resetAllData()
+
     /** Switches the UI language ("system", "en", "de"). */
     fun applyLanguage(tag: String)
 

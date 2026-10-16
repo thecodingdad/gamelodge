@@ -132,7 +132,6 @@ class AndroidPlatformUi(private val context: Context) : PlatformUi {
                 io.github.thecodingdad.moonlightlauncher.ui.screens.profiles.ProfilesList(profileEditing, profiles, active, openProfile)
             }
             SettingsPageId.LAUNCHER -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.LauncherModeSettings(settings, vm::updateSettings)
-            SettingsPageId.BACKUP -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.BackupSettings(settings, vm::updateSettings)
             SettingsPageId.VPN -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.VpnSettings(settings, vm::updateSettings)
             else -> Unit
         }
@@ -159,6 +158,11 @@ class AndroidPlatformUi(private val context: Context) : PlatformUi {
         )
     }
 
+    /** Android deletes the app's data (databases, settings, keys) and ends the process. */
+    override fun resetAllData() {
+        (context.getSystemService(android.content.Context.ACTIVITY_SERVICE) as android.app.ActivityManager).clearApplicationUserData()
+    }
+
     override fun applyLanguage(tag: String) {
         AppLanguage.apply(context, tag)
         // Before Android 13 the activity takes the language when it starts again.
@@ -168,7 +172,7 @@ class AndroidPlatformUi(private val context: Context) : PlatformUi {
     private companion object {
         val PAGES = setOf(
             SettingsPageId.USAGE, SettingsPageId.EMULATORS, SettingsPageId.QUICK_MENU, SettingsPageId.PROFILES,
-            SettingsPageId.LAUNCHER, SettingsPageId.BACKUP, SettingsPageId.VPN,
+            SettingsPageId.LAUNCHER, SettingsPageId.VPN,
         )
     }
 }

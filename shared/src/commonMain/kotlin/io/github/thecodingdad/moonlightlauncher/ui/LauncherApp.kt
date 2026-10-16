@@ -1038,6 +1038,7 @@ private fun SettingsPageContent(
         SettingsPageId.ABOUT -> AboutSettings(openLicenses = { openPage(SettingsPageId.LICENSES) })
         SettingsPageId.LICENSES -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.OpenSourceLicenses()
         SettingsPageId.HOME_ASSISTANT -> HaSettings(settings, vm::updateSettings)
+        SettingsPageId.DATA -> io.github.thecodingdad.moonlightlauncher.ui.screens.settings.DataSettings(settings, vm::updateSettings, vm)
         // Pages of platform features (VPN, backup, emulators …).
         else -> if (io.github.thecodingdad.moonlightlauncher.ui.PlatformUi.current.hasPage(page)) io.github.thecodingdad.moonlightlauncher.ui.PlatformUi.current.PlatformSettingsPage(page, vm, openProfile = openProfile, openStats = openStats)
         else SettingsPage(stringResource(Res.string.coming_soon)) {}

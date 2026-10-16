@@ -89,6 +89,41 @@ class RenderTest {
     }
 
     @Test
+    fun dataPageRenders() {
+        val dir = Files.createTempDirectory("launcher-data").toFile()
+        val container = DesktopContainer(dir)
+        ArtworkFiles.init(dir)
+        File(dir, "artwork/a.png").writeBytes(ByteArray(3_000_000))
+        File(dir, "own-artwork").apply { mkdirs() }.resolve("old.png").apply { writeBytes(ByteArray(200_000)); setLastModified(0) }
+        File(dir, "logs").apply { mkdirs() }.resolve("launcher.log").writeBytes(ByteArray(400_000))
+        PlatformUi.current = DesktopPlatformUi(Gamepads(InputDispatcher()), { null }, { null })
+        fun <T> ui(block: () -> T): T {
+            var result: Result<T>? = null
+            javax.swing.SwingUtilities.invokeAndWait { result = runCatching(block) }
+            return result!!.getOrThrow()
+        }
+        val vm = ui { LauncherViewModel(container) }
+        val settings = io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings()
+        val scene = ui {
+            ImageComposeScene(1600, 3400, Density(1.5f)) {
+                CompositionLocalProvider(LocalContainer provides container) {
+                    io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme(settings) {
+                        androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.fillMaxSize().background(io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme.colors.background)) {
+                            io.github.thecodingdad.moonlightlauncher.ui.screens.settings.DataSettings(settings, {}, vm)
+                        }
+                    }
+                }
+            }
+        }
+        ui { scene.render(0) }
+        Thread.sleep(1500)
+        ui { scene.render(500_000_000L) }
+        Thread.sleep(300)
+        val image = ui { scene.render(1_000_000_000L).also { scene.close() } }
+        File("build/render").apply { mkdirs() }.resolve("data.png").writeBytes(image.encodeToData(EncodedImageFormat.PNG)!!.bytes)
+    }
+
+    @Test
     fun hostRolePageRenders() {
         val dir = Files.createTempDirectory("launcher-host").toFile()
         val container = DesktopContainer(dir)

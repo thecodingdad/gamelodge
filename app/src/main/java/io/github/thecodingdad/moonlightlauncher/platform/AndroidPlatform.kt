@@ -21,6 +21,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import java.io.File
+import io.github.thecodingdad.moonlightlauncher.data.storage.StorageArea
+import io.github.thecodingdad.moonlightlauncher.data.storage.StorageKind
 import java.security.KeyStore
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
@@ -35,6 +37,16 @@ class AndroidPlatformInfo(private val context: Context) : PlatformInfo {
             ?: "${Build.MANUFACTURER} ${Build.MODEL}".trim()
 
     override val versionName: String get() = io.github.thecodingdad.moonlightlauncher.BuildConfig.VERSION_NAME
+
+    override fun storageAreas(): List<StorageArea> {
+        val db = context.getDatabasePath("launcher.db")
+        val dataDir = context.filesDir.parentFile ?: context.filesDir
+        return listOf(
+            StorageArea(StorageKind.DATABASE, listOf(db, File(db.path + "-wal"), File(db.path + "-shm"))),
+            StorageArea(StorageKind.SETTINGS, listOf(File(context.filesDir, "datastore"), File(dataDir, "shared_prefs"))),
+            // Image loader cache: measured and cleared through the loader itself.
+        )
+    }
 }
 
 private val Context.launcherSettings: DataStore<Preferences> by preferencesDataStore("launcher_settings")

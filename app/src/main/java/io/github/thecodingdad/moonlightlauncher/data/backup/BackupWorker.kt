@@ -1,7 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher.data.backup
 
 import android.content.Context
-import android.net.Uri
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
@@ -17,7 +16,7 @@ class BackupWorker(context: Context, params: WorkerParameters) : CoroutineWorker
         val c = applicationContext.container
         val s = c.settings.current()
         if (!s.autoBackup || s.backupFolderUri.isEmpty()) return Result.success()
-        return runCatching { c.backup.writeToFolder(Uri.parse(s.backupFolderUri), s.backupKeepCount) }
+        return runCatching { c.backupStorage.writeToFolder(s.backupFolderUri, c.backup.encode(c.backup.create(null)), s.backupKeepCount) }
             .onFailure { Log.w("Auto backup failed", it) }
             .fold({ Result.success() }, { Result.retry() })
     }

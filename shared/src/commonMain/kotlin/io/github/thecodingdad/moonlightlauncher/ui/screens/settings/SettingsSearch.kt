@@ -44,7 +44,7 @@ private val pageTitles: List<Pair<SettingsTarget, StringResource>> = listOf(
     SettingsTarget.Page(SettingsPageId.SOUNDS) to Res.string.settings_sounds,
     SettingsTarget.Page(SettingsPageId.LAUNCHER) to Res.string.settings_launcher,
     SettingsTarget.Page(SettingsPageId.LANGUAGE) to Res.string.settings_language,
-    SettingsTarget.Page(SettingsPageId.BACKUP) to Res.string.settings_backup,
+    SettingsTarget.Page(SettingsPageId.DATA) to Res.string.settings_data,
     SettingsTarget.Page(SettingsPageId.ABOUT) to Res.string.settings_about,
     SettingsTarget.Page(SettingsPageId.LICENSES) to Res.string.about_open_source,
 )
@@ -52,7 +52,7 @@ private val pageTitles: List<Pair<SettingsTarget, StringResource>> = listOf(
 /** Pages only some platforms have (shown in the search only where they exist). */
 private val platformPages = setOf(
     SettingsPageId.USAGE, SettingsPageId.EMULATORS, SettingsPageId.PROFILES, SettingsPageId.VPN, SettingsPageId.QUICK_MENU,
-    SettingsPageId.LAUNCHER, SettingsPageId.BACKUP, SettingsPageId.GAME_SOURCES, SettingsPageId.HOST_ROLE, SettingsPageId.STARTUP,
+    SettingsPageId.LAUNCHER, SettingsPageId.GAME_SOURCES, SettingsPageId.HOST_ROLE, SettingsPageId.STARTUP,
 )
 
 /** Every visible setting by page (dialog-internal and per-item settings are left out). */
@@ -98,7 +98,11 @@ private val settingsIndex: List<SearchEntry> = buildList {
     ))
     addAll(page(SettingsPageId.LAUNCHER, Res.string.launcher_enable, Res.string.launcher_system_settings))
     addAll(page(SettingsPageId.ABOUT, Res.string.about_license, Res.string.about_source, Res.string.about_data_sources))
-    addAll(page(SettingsPageId.BACKUP, Res.string.backup_folder, Res.string.backup_auto, Res.string.backup_keep, Res.string.backup_with_credentials))
+    addAll(page(
+        SettingsPageId.DATA, Res.string.data_storage, Res.string.data_clear_cache, Res.string.data_orphans, Res.string.data_redownload,
+        Res.string.settings_backup, Res.string.backup_folder, Res.string.backup_auto, Res.string.backup_keep, Res.string.backup_with_credentials,
+        Res.string.backup_now, Res.string.backup_restore, Res.string.data_reset,
+    ))
 }
 
 /**

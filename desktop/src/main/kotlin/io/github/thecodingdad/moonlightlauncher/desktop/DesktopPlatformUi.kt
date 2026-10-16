@@ -252,6 +252,12 @@ class DesktopPlatformUi(
     @Composable
     override fun SystemSettingsRow() = Unit
 
+    /** Noted for the next start (files are in use now); the launcher quits. */
+    override fun resetAllData() {
+        DataReset.request(dataDirectory())
+        windowControls?.exit?.invoke() ?: kotlin.system.exitProcess(0)
+    }
+
     override fun applyLanguage(tag: String) {
         applyLocale(tag)
         languageRevision.intValue++

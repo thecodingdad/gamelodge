@@ -403,6 +403,43 @@
     <string name="backup_done">Backup gespeichert.</string>
     <string name="backup_restored">Backup wiederhergestellt.</string>
     <string name="backup_wrong_password">Falsches Passwort – Zugangsdaten wurden nicht wiederhergestellt.</string>
+    <string name="settings_data">Daten</string>
+    <string name="settings_data_sub">Speicher, Aufräumen und Backups</string>
+    <string name="data_storage">Speicherbelegung</string>
+    <string name="data_measuring">Wird gemessen…</string>
+    <string name="data_total">Insgesamt</string>
+    <string name="storage_database">Bibliotheks-Datenbank</string>
+    <string name="storage_settings">Einstellungen, Hosts und Profile</string>
+    <string name="storage_artwork">Heruntergeladene Bilder</string>
+    <string name="storage_own_images">Eigene Bilder und Kacheln</string>
+    <string name="storage_host_art">Host-Cover</string>
+    <string name="storage_cache">Cache</string>
+    <string name="storage_logs">Protokolle</string>
+    <string name="storage_streaming">Streaming-Client (Moonlight-Qt)</string>
+    <string name="storage_host_role">Streaming-Host (Cover, Backups)</string>
+    <string name="data_library">Bibliothek</string>
+    <string name="data_games">Spiele</string>
+    <string name="data_apps">Apps</string>
+    <string name="data_with_metadata">Mit Metadaten</string>
+    <string name="data_cleanup">Aufräumen</string>
+    <string name="data_clear_cache">Cache leeren</string>
+    <string name="data_clear_cache_sub">Bild-Cache und gespeicherte Server-Antworten, wird bei Bedarf neu gefüllt.</string>
+    <string name="data_cache_cleared">Cache geleert (%1$s frei).</string>
+    <string name="data_orphans">Ungenutzte Daten löschen</string>
+    <string name="data_orphans_sub">%1$d behaltene Spiele entfernter Hosts, %2$d ungenutzte Bilder (%3$s).</string>
+    <string name="data_orphans_none">Nichts Ungenutztes gefunden.</string>
+    <string name="data_orphans_done">Ungenutzte Daten gelöscht.</string>
+    <string name="data_redownload">Bilder neu herunterladen</string>
+    <string name="data_redownload_sub">Löscht die gespeicherten Bilder, sie werden im Hintergrund neu geladen.</string>
+    <string name="data_redownload_done">Bilder werden neu geladen.</string>
+    <string name="data_reset">Alle Daten löschen</string>
+    <string name="data_reset_sub">Setzt den Launcher zurück: Bibliothek, Einstellungen, Kopplungen und Zugangsdaten werden gelöscht.</string>
+    <string name="data_reset_title">Alle Daten löschen?</string>
+    <string name="data_reset_text">Alles, was der Launcher speichert, wird gelöscht: Bibliothek, Spielzeiten, Metadaten, Einstellungen, Stream-Profile, gekoppelte Hosts und Zugangsdaten. Vorher ein Backup erstellen, wenn etwas erhalten bleiben soll. Der Launcher wird danach beendet.</string>
+    <string name="data_reset_confirm">Gedrückt halten, um alles zu löschen</string>
+    <string name="backup_choose">Backup auswählen</string>
+    <string name="backup_none">Noch keine Backups im Ordner.</string>
+    <string name="backup_other_file">Andere Datei…</string>
 
     <!-- Vibepollo -->
 

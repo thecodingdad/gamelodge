@@ -1,5 +1,7 @@
 package io.github.thecodingdad.moonlightlauncher.desktop
 
+import io.github.thecodingdad.moonlightlauncher.data.storage.StorageArea
+import io.github.thecodingdad.moonlightlauncher.data.storage.StorageKind
 import io.github.thecodingdad.moonlightlauncher.platform.NetworkStatus
 import io.github.thecodingdad.moonlightlauncher.platform.PlatformInfo
 import io.github.thecodingdad.moonlightlauncher.platform.SecretBackend
@@ -40,6 +42,20 @@ class DesktopPlatformInfo(override val filesDir: File) : PlatformInfo {
 
     override val versionName: String
         get() = DesktopPlatformInfo::class.java.`package`?.implementationVersion ?: "dev"
+
+    override fun storageAreas(): List<StorageArea> {
+        val db = File(filesDir, "launcher.db")
+        val dbFiles = listOf(db, File(db.path + "-wal"), File(db.path + "-shm"))
+        return listOf(
+            StorageArea(StorageKind.DATABASE, dbFiles),
+            // Settings, hosts, profiles, credentials: the files at the top of the data folder.
+            StorageArea(StorageKind.SETTINGS, filesDir.listFiles { f -> f.isFile && f !in dbFiles }.orEmpty().toList()),
+            StorageArea(StorageKind.CACHE, listOf(File(filesDir, "cache/proxy"))),
+            StorageArea(StorageKind.LOGS, listOf(File(filesDir, "logs"))),
+            StorageArea(StorageKind.STREAMING, listOf(io.github.thecodingdad.moonlightlauncher.desktop.stream.MoonlightQt.locate().dir)),
+            StorageArea(StorageKind.HOST_ROLE, listOf(File(filesDir, "covers"), File(filesDir, "backups"))),
+        )
+    }
 }
 
 /** Web pages in the default browser. */

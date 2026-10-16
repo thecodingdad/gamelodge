@@ -12,6 +12,9 @@ interface PlatformInfo {
 
     /** Version of the launcher ("0.1.0"). */
     val versionName: String
+
+    /** Data folders only this platform has (database, settings, logs …), for Settings › Data. */
+    fun storageAreas(): List<io.github.thecodingdad.moonlightlauncher.data.storage.StorageArea> = emptyList()
 }
 
 /** Encrypted storage for credentials; the platform keeps the key (Android Keystore, Windows DPAPI). */

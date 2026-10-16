@@ -49,6 +49,9 @@ interface LauncherContainer {
     val emulators: Emulators
     /** [io.github.thecodingdad.moonlightlauncher.vpn.NoVpn] where the launcher brings no VPN of its own. */
     val vpn: Vpn
+    val backup: io.github.thecodingdad.moonlightlauncher.data.backup.BackupManager
+    val backupStorage: io.github.thecodingdad.moonlightlauncher.data.backup.BackupStorage
+    val data: io.github.thecodingdad.moonlightlauncher.data.storage.DataMaintenance
 
     /** TV/monitor attached to a handheld (or null), and again whenever that changes. */
     fun externalDisplay(): Flow<ExternalDisplayInfo?>

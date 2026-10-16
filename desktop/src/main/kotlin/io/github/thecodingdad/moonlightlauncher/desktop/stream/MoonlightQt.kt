@@ -10,7 +10,7 @@ import java.io.File
  * streaming client. Before each start its settings get the launcher's identity and the paired
  * hosts with their pinned certificates, so it trusts the same pairing; its other settings stay.
  */
-class MoonlightQt(private val dir: File) {
+class MoonlightQt(val dir: File) {
     val exe: File get() = File(dir, "Moonlight.exe")
     val available: Boolean get() = exe.isFile
 

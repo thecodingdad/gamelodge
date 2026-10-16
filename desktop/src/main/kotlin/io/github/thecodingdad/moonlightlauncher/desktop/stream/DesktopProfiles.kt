@@ -1,7 +1,12 @@
 package io.github.thecodingdad.moonlightlauncher.desktop.stream
 
 import androidx.compose.runtime.Composable
+import io.github.thecodingdad.moonlightlauncher.data.backup.ProfileBackup
+import io.github.thecodingdad.moonlightlauncher.data.backup.StreamSettingsBackup
+import io.github.thecodingdad.moonlightlauncher.data.backup.toAny
 import io.github.thecodingdad.moonlightlauncher.desktop.restrictToOwner
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
 import io.github.thecodingdad.moonlightlauncher.resources.*
 import io.github.thecodingdad.moonlightlauncher.stream.ProfileEditing
 import io.github.thecodingdad.moonlightlauncher.stream.ProfileValues
@@ -36,7 +41,7 @@ private data class ProfilesFile(
  * defaults), limited to what Moonlight-Qt can do. Every stream gets the active profile's values
  * as Moonlight-Qt command line options. New profiles start as a copy of the base settings.
  */
-class DesktopProfiles(dataDir: File) : StreamProfiles, ProfileEditing {
+class DesktopProfiles(dataDir: File) : StreamProfiles, ProfileEditing, StreamSettingsBackup {
     private val json = Json { ignoreUnknownKeys = true; prettyPrint = true }
     private val file = File(dataDir, "profiles.json")
     private val state = MutableStateFlow(load())
@@ -194,6 +199,23 @@ class DesktopProfiles(dataDir: File) : StreamProfiles, ProfileEditing {
 
     override fun dynamicDefault(key: String, values: ProfileValues): Int? =
         if (key == BITRATE) defaultBitrate(values.getString(RESOLUTION, DEFAULT_RESOLUTION)!!, values.getString(FPS, DEFAULT_FPS)!!) else null
+
+    // ---- StreamSettingsBackup ----
+
+    override fun baseSettings(): Map<String, JsonElement> = state.value.base.mapValues { JsonPrimitive(it.value) }
+
+    override fun profiles(): List<ProfileBackup> =
+        state.value.profiles.map { p -> ProfileBackup(p.name, p.values.mapValues { JsonPrimitive(it.value) }, p.uuid == state.value.active) }
+
+    /** Values are kept as text, like the editor stores them (backups from Android carry typed values). */
+    override fun restore(base: Map<String, JsonElement>, profiles: List<ProfileBackup>) {
+        fun Map<String, JsonElement>.texts() = mapNotNull { (k, v) -> v.toAny()?.let { k to it.toString() } }.toMap()
+        val current = state.value
+        val names = current.profiles.map { it.name }.toSet()
+        val added = profiles.filter { it.name !in names }.map { DesktopProfile(UUID.randomUUID().toString(), it.name, it.options.texts()) }
+        val active = profiles.firstOrNull { it.active }?.let { a -> added.firstOrNull { it.name == a.name }?.uuid } ?: current.active
+        save(current.copy(base = current.base + base.texts(), profiles = current.profiles + added, active = active))
+    }
 
     // ---- storage ----
 

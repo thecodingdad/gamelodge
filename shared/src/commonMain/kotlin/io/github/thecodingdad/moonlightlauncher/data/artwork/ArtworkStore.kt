@@ -89,6 +89,18 @@ object ArtworkFiles {
         }
     }
 
+    /** Bumped by [clear]: the store downloads everything again. */
+    internal val generation = kotlinx.coroutines.flow.MutableStateFlow(0)
+
+    /** Deletes every stored image (Settings › Data); they are downloaded again in the background. */
+    fun clear() {
+        if (!::dir.isInitialized) return
+        dir.listFiles()?.forEach { it.delete() }
+        have.clear()
+        version.intValue++
+        generation.value++
+    }
+
     /** Space the stored images take. */
     fun sizeBytes(): Long = if (::dir.isInitialized) dir.listFiles()?.sumOf { it.length() } ?: 0 else 0
 }
@@ -113,7 +125,7 @@ class ArtworkStore(
         }.distinctUntilChanged()
         val prefs = settings.settings.map { it.animatedArtwork to it.animatedOnMobileData }.distinctUntilChanged()
         scope.launch(Dispatchers.IO) {
-            combine(wanted, prefs, network.metered()) { w, (animated, mobile), metered -> Triple(w, animated, metered && !mobile) }
+            combine(wanted, prefs, network.metered(), ArtworkFiles.generation) { w, (animated, mobile), metered, _ -> Triple(w, animated, metered && !mobile) }
                 .debounce(3_000)
                 .collectLatest { (w, animated, holdBack) ->
                     ArtworkFiles.animatedOnline = animated && !holdBack

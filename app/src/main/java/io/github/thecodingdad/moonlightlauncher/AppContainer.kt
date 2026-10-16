@@ -102,7 +102,15 @@ class AppContainer(context: Context) : LauncherContainer {
     }
     override val hostPower: HostPower by lazy { HostPower(database.hostConfigDao(), hosts, hostActions, ha) }
     val autoSleep: AutoSleep by lazy { io.github.thecodingdad.moonlightlauncher.stream.WorkManagerAutoSleep(appContext, database.hostConfigDao()) }
-    val backup: BackupManager by lazy { BackupManager(appContext, database, settings, secrets) }
+    override val backup: BackupManager by lazy {
+        BackupManager(database, settings, secrets, io.github.thecodingdad.moonlightlauncher.data.backup.ArtemisStreamBackup(appContext))
+    }
+    override val backupStorage: io.github.thecodingdad.moonlightlauncher.data.backup.BackupStorage by lazy {
+        io.github.thecodingdad.moonlightlauncher.data.backup.SafBackupStorage(appContext)
+    }
+    override val data: io.github.thecodingdad.moonlightlauncher.data.storage.DataMaintenance by lazy {
+        io.github.thecodingdad.moonlightlauncher.data.storage.DataMaintenance(platform.filesDir, database.libraryDao(), library, platform::storageAreas)
+    }
 
     override val emulators get() = emulation.options
 

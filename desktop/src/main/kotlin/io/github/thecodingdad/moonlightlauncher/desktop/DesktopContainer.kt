@@ -176,6 +176,14 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
     }
 
     /** A PC drives its monitors itself; there is no handheld screen to mirror. */
+    override val backup: io.github.thecodingdad.moonlightlauncher.data.backup.BackupManager by lazy {
+        io.github.thecodingdad.moonlightlauncher.data.backup.BackupManager(database, settings, secrets, profiles)
+    }
+    override val backupStorage: DesktopBackupStorage by lazy { DesktopBackupStorage(scope, settings) { backup } }
+    override val data: io.github.thecodingdad.moonlightlauncher.data.storage.DataMaintenance by lazy {
+        io.github.thecodingdad.moonlightlauncher.data.storage.DataMaintenance(platform.filesDir, database.libraryDao(), library, platform::storageAreas)
+    }
+
     override fun externalDisplay(): Flow<ExternalDisplayInfo?> = flowOf(null)
 }
 
