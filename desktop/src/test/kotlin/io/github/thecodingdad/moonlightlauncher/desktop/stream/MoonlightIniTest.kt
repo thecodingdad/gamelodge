@@ -51,3 +51,14 @@ class ServerInfoTest {
         assertEquals(401, (e as NvHttpException).status)
     }
 }
+
+class MoonlightIniAddressTest {
+    @Test
+    fun lanIpBeforeHostName() {
+        val id = StreamIdentity.create()
+        val host = StoredHost("U", "PC", "Win11VM", serverCert = id.certificatePem, localIp = "192.168.168.68")
+        val out = MoonlightIni.update("", id, listOf(host))
+        assertTrue(out.contains("1\\localaddress=\"192.168.168.68\""))
+        assertTrue(out.contains("1\\manualaddress=\"Win11VM\""))
+    }
+}

@@ -97,7 +97,8 @@ object MoonlightIni {
             h["${p}hostname"] = quote(host.name)
             h["${p}uuid"] = host.uuid
             h["${p}customname"] = "false"
-            h["${p}localaddress"] = quote(host.address)
+            // The LAN IP first: a host name may resolve to an IPv6 address the host doesn't stream on.
+            h["${p}localaddress"] = quote(host.localIp ?: host.address)
             h["${p}localport"] = host.port.toString()
             h["${p}manualaddress"] = quote(host.address)
             h["${p}manualport"] = host.port.toString()

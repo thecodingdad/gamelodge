@@ -13,6 +13,7 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.window.Tray
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.graphics.painter.BitmapPainter
@@ -132,7 +133,16 @@ fun main(args: Array<String>) {
         )
         LaunchedEffect(state) {
             windowControls.toggleFullscreen = {
-                state.placement = if (state.placement == WindowPlacement.Fullscreen) WindowPlacement.Maximized else WindowPlacement.Fullscreen
+                if (state.placement == WindowPlacement.Fullscreen) {
+                    state.placement = WindowPlacement.Maximized
+                } else {
+                    // Straight from maximized Windows keeps the maximized frame: leave it first.
+                    state.placement = WindowPlacement.Floating
+                    container.scope.launch(kotlinx.coroutines.Dispatchers.Main) {
+                        kotlinx.coroutines.delay(50)
+                        state.placement = WindowPlacement.Fullscreen
+                    }
+                }
             }
             windowControls.exit = ::exitApplication
             androidx.compose.runtime.snapshotFlow { state.placement }.collect { windowControls.fullscreen.value = it == WindowPlacement.Fullscreen }
@@ -192,8 +202,13 @@ fun main(args: Array<String>) {
             val revision by platformUi.languageRevision
             val modeManager = androidx.compose.ui.platform.LocalInputModeManager.current
             androidx.compose.runtime.SideEffect { inputModeManager = modeManager }
+            val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
             androidx.compose.foundation.layout.Box(
-                androidx.compose.ui.Modifier.fillMaxSize().pointerInput(Unit) {
+                androidx.compose.ui.Modifier.fillMaxSize()
+                    // Arrow keys (and the pad's D-pad / left stick, sent as arrows) move the focus like
+                    // the D-pad on Android; Compose on the desktop only moves it with Tab.
+                    .onKeyEvent { e -> arrowFocus(e, focusManager) }
+                    .pointerInput(Unit) {
                     awaitPointerEventScope {
                         while (true) {
                             val event = awaitPointerEvent(androidx.compose.ui.input.pointer.PointerEventPass.Initial)
@@ -214,6 +229,19 @@ fun main(args: Array<String>) {
             }
         }
     }
+}
+
+/** Unhandled arrow keys move the focus in their direction. */
+internal fun arrowFocus(e: androidx.compose.ui.input.key.KeyEvent, focusManager: androidx.compose.ui.focus.FocusManager): Boolean {
+    if (e.type != KeyEventType.KeyDown) return false
+    val direction = when (e.key) {
+        Key.DirectionUp -> androidx.compose.ui.focus.FocusDirection.Up
+        Key.DirectionDown -> androidx.compose.ui.focus.FocusDirection.Down
+        Key.DirectionLeft -> androidx.compose.ui.focus.FocusDirection.Left
+        Key.DirectionRight -> androidx.compose.ui.focus.FocusDirection.Right
+        else -> return false
+    }
+    return focusManager.moveFocus(direction)
 }
 
 /** Keyboard equivalents of the pad buttons, as on Android (handy without a controller). */

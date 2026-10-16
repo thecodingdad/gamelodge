@@ -45,6 +45,8 @@ data class StoredHost(
     val mac: String? = null,
     /** PEM; null while not paired. */
     val serverCert: String? = null,
+    /** The host's own LAN IPv4 address (serverinfo LocalIP), when [address] is a name. */
+    val localIp: String? = null,
 )
 
 /**
@@ -255,8 +257,9 @@ class DesktopHosts(
             Log.i("Host ${info.name} online, paired: ${info.paired} (certificate ${if (s.serverCert != null) "pinned" else "none"})")
         }
         val paired = info.paired && s.serverCert != null
-        if (stored(s.uuid) != null && (info.name != s.name || info.httpsPort != s.httpsPort || (info.mac != null && info.mac != s.mac))) {
-            save(stored.value.map { if (it.uuid == s.uuid) it.copy(name = info.name, httpsPort = info.httpsPort, mac = info.mac ?: it.mac) else it })
+        val localIp = info.localIp?.takeIf { it.isNotBlank() && it != s.address }
+        if (stored(s.uuid) != null && (info.name != s.name || info.httpsPort != s.httpsPort || (info.mac != null && info.mac != s.mac) || localIp != s.localIp)) {
+            save(stored.value.map { if (it.uuid == s.uuid) it.copy(name = info.name, httpsPort = info.httpsPort, mac = info.mac ?: it.mac, localIp = localIp) else it })
         }
         _hosts.update {
             it + (s.uuid to HostState(
