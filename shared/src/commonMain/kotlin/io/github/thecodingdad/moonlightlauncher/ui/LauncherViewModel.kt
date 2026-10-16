@@ -193,7 +193,20 @@ class LauncherViewModel(private val c: LauncherContainer) : ViewModel() {
     var startTabApplied = false
     var tab: Int
         get() = tabState.intValue
-        set(value) { tabState.intValue = value }
+        set(value) {
+            tabState.intValue = value
+            // Choosing a tab (also the settings tab again) starts the settings without a search.
+            settingsQuery.value = ""
+        }
+
+    /** [tab] as a delegate for the UI (`var tab by vm.tabProperty`). */
+    val tabProperty = object : kotlin.properties.ReadWriteProperty<Any?, Int> {
+        override fun getValue(thisRef: Any?, property: kotlin.reflect.KProperty<*>) = tab
+        override fun setValue(thisRef: Any?, property: kotlin.reflect.KProperty<*>, value: Int) { tab = value }
+    }
+
+    /** Text of the settings search; kept while a hit's page is open, so back shows the hits again. */
+    val settingsQuery = androidx.compose.runtime.mutableStateOf("")
 
     /** Emits when the Home button is pressed while the launcher is the home app. */
     val homePressed = kotlinx.coroutines.flow.MutableSharedFlow<Unit>(extraBufferCapacity = 1)

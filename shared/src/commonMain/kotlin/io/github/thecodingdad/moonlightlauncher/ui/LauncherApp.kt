@@ -609,7 +609,7 @@ private fun MainShell(
     val profiles by vm.profiles.collectAsState()
     val hints = LocalHintHolder.current
     val entryActions = LocalEntryActions.current
-    var tab by vm.tabState
+    var tab by vm.tabProperty
     val tabs = MainTab.entries
     val hosts = hostsMap.values.sortedBy { it.name }
     val libraryFilters by vm.libraryFilters.collectAsState()
@@ -708,7 +708,7 @@ private fun MainShell(
                         io.github.thecodingdad.moonlightlauncher.ui.shell.ScreenHints(
                             listOf(ButtonHint(PadButton.A, stringResource(Res.string.hint_select)), ButtonHint(PadButton.L1, stringResource(Res.string.hint_tabs), secondButton = PadButton.R1)),
                         )
-                        SettingsHome(open = { nav.navigate(Routes.settings(it)) }, isFirstVisit = true, openControllers = { nav.navigate(Routes.CONTROLLERS) })
+                        SettingsHome(open = { nav.navigate(Routes.settings(it)) }, isFirstVisit = true, openControllers = { nav.navigate(Routes.CONTROLLERS) }, query = vm.settingsQuery.value, onQueryChange = { vm.settingsQuery.value = it })
                     }
                 }
                 }
@@ -857,7 +857,7 @@ private fun BackButton(onClick: () -> Unit) {
 
 /** Leaves any sub page for a main tab. */
 private fun openMainTab(vm: LauncherViewModel, nav: NavHostController, tab: MainTab) {
-    vm.tabState.intValue = tab.ordinal
+    vm.tab = tab.ordinal
     nav.popBackStack(Routes.MAIN, inclusive = false)
 }
 

@@ -44,17 +44,24 @@ import io.github.thecodingdad.moonlightlauncher.resources.*
 enum class SettingsPageId { GAME_SOURCES, HOST_ROLE, STARTUP, HOSTS, PROFILES, HOME_SCREEN, THEME, DISPLAY, FILTERS, APP_FILTERS, QUICK_MENU, CONTROLS, SOUNDS, METADATA, USAGE, EMULATORS, HOME_ASSISTANT, VPN, LAUNCHER, DATA, LANGUAGE, ABOUT, LICENSES }
 
 @Composable
-fun SettingsHome(open: (SettingsPageId) -> Unit, isFirstVisit: Boolean, openControllers: () -> Unit = {}) {
+fun SettingsHome(
+    open: (SettingsPageId) -> Unit,
+    isFirstVisit: Boolean,
+    openControllers: () -> Unit = {},
+    query: String = "",
+    onQueryChange: (String) -> Unit = {},
+) {
     val platform = io.github.thecodingdad.moonlightlauncher.ui.PlatformUi.current
-    var query by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("") }
+    // Back (gesture, B, Esc) ends a search and shows all settings again.
+    io.github.thecodingdad.moonlightlauncher.ui.components.BackHandler(enabled = query.isNotEmpty()) { onQueryChange("") }
     val keyboard = io.github.thecodingdad.moonlightlauncher.ui.components.LocalKeyboardController.current
     val searchTitle = stringResource(Res.string.settings_search)
     // START: search with the controller keyboard (the field itself works by touch and A too).
     io.github.thecodingdad.moonlightlauncher.ui.input.PadAction(io.github.thecodingdad.moonlightlauncher.ui.input.PadButton.START) {
-        keyboard.open(searchTitle, query) { query = it }
+        keyboard.open(searchTitle, query, onDone = onQueryChange)
     }
     SettingsPage(stringResource(Res.string.tab_settings)) {
-        io.github.thecodingdad.moonlightlauncher.ui.components.LauncherTextField(searchTitle, query, { query = it })
+        io.github.thecodingdad.moonlightlauncher.ui.components.LauncherTextField(searchTitle, query, onQueryChange)
         if (query.isNotBlank()) {
             SettingsSearchResults(query) { target, title ->
                 SearchHighlight.request(title)
