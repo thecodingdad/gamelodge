@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.window.Tray
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.graphics.painter.BitmapPainter
@@ -122,6 +123,10 @@ fun main(args: Array<String>) {
         // Like Android: touch or a mouse click hides the focus ring, the next key or controller
         // input shows it again (and continues from the touched element).
         var inputModeManager: androidx.compose.ui.input.InputModeManager? = null
+        // Nothing focused (e.g. after touch on an empty spot or a closed popup): the next direction
+        // key focuses the first element, so the controller always finds something to select.
+        var windowFocusManager: androidx.compose.ui.focus.FocusManager? = null
+        var contentHasFocus = false
         fun controllerInput() {
             val m = inputModeManager ?: return
             if (m.inputMode != androidx.compose.ui.input.InputMode.Keyboard) m.requestInputMode(androidx.compose.ui.input.InputMode.Keyboard)
@@ -178,6 +183,11 @@ fun main(args: Array<String>) {
                     controllerInput()
                     if (!gamepads.dispatching) gamepads.otherInput()
                 }
+                val isDirection = e.key == Key.DirectionUp || e.key == Key.DirectionDown || e.key == Key.DirectionLeft || e.key == Key.DirectionRight
+                if (isDirection && e.type == KeyEventType.KeyDown && !contentHasFocus) {
+                    windowFocusManager?.moveFocus(androidx.compose.ui.focus.FocusDirection.Next)
+                    return@Window true
+                }
                 when {
                     // F11: full screen like a console.
                     e.key == Key.F11 && e.type == KeyEventType.KeyDown -> {
@@ -210,8 +220,10 @@ fun main(args: Array<String>) {
             val modeManager = androidx.compose.ui.platform.LocalInputModeManager.current
             androidx.compose.runtime.SideEffect { inputModeManager = modeManager }
             val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
+            androidx.compose.runtime.SideEffect { windowFocusManager = focusManager }
             androidx.compose.foundation.layout.Box(
                 androidx.compose.ui.Modifier.fillMaxSize()
+                    .onFocusChanged { contentHasFocus = it.hasFocus }
                     // Arrow keys (and the pad's D-pad / left stick, sent as arrows) move the focus like
                     // the D-pad on Android; Compose on the desktop only moves it with Tab.
                     .onKeyEvent { e -> arrowFocus(e, focusManager) }
