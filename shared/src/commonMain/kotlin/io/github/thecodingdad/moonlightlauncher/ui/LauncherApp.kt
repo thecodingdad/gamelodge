@@ -31,6 +31,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Apps
@@ -638,13 +639,17 @@ private fun MainShell(
     val showHints = io.github.thecodingdad.moonlightlauncher.ui.components.LocalShowHintBar.current
     // A hidden hint bar takes no space; its last measured height must not linger.
     LaunchedEffect(showHints, compactShell) { if (!showHints && !compactShell) hintBarHeight = 0.dp }
+    // The start tab keeps the hint bar's room even while the hints are hidden (the bar is
+    // transparent there): its rows stay where they are with and without a controller.
+    var hiddenHintSpace by remember { mutableStateOf(0.dp) }
+    val homeBottomInset = if (!showHints && !compactShell) hiddenHintSpace else hintBarHeight
     val fullBleed = tabs[tab] == MainTab.HOME
     val bg = LauncherTheme.colors.background
     Box(Modifier.fillMaxSize().statusBarsPadding()) {
         Box(Modifier.fillMaxSize()) {
           CompositionLocalProvider(
               io.github.thecodingdad.moonlightlauncher.ui.screens.home.LocalShellInsets provides
-                  androidx.compose.foundation.layout.PaddingValues(top = topBarHeight, bottom = hintBarHeight),
+                  androidx.compose.foundation.layout.PaddingValues(top = topBarHeight, bottom = homeBottomInset),
           ) {
             AnimatedContent(tabs[tab], transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "tab") { current ->
               // The tab fading out no longer provides the hints.
@@ -720,6 +725,16 @@ private fun MainShell(
                 )
                 .onSizeChanged { topBarHeight = with(density) { it.height.toDp() } },
         )
+        if (!showHints && !compactShell) {
+            // Invisible stand-in, only measured (no clickable hints).
+            CompositionLocalProvider(io.github.thecodingdad.moonlightlauncher.ui.components.LocalShowHintBar provides true) {
+                ButtonHintBar(
+                    hints.hints.map { it.copy(onClick = null) },
+                    modifier = Modifier.align(Alignment.BottomCenter).alpha(0f)
+                        .onSizeChanged { hiddenHintSpace = with(density) { it.height.toDp() } },
+                )
+            }
+        }
         ButtonHintBar(
             hints.hints,
             hideWhenCompact = true,
