@@ -28,6 +28,8 @@ data class LauncherSettings(
     val themeMode: ThemeMode = ThemeMode.DARK,
     val accentMode: AccentMode = AccentMode.FIXED,
     val accentColor: Int = 0xFF7C9CFF.toInt(),
+    /** Colour of accented texts (group headers); null: derived from the accent, readable on the background. */
+    val accentTextColor: Int? = null,
     val cardSize: CardSize = CardSize.MEDIUM,
     val reduceMotion: Boolean = false,
     val animatedArtwork: Boolean = true,
@@ -123,6 +125,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val themeMode = stringPreferencesKey("theme_mode")
         val accentMode = stringPreferencesKey("accent_mode")
         val accentColor = intPreferencesKey("accent_color")
+        val accentTextColor = intPreferencesKey("accent_text_color")
         val cardSize = stringPreferencesKey("card_size")
         val reduceMotion = booleanPreferencesKey("reduce_motion")
         val animatedArtwork = booleanPreferencesKey("animated_artwork")
@@ -193,6 +196,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             themeMode = enumOr(this[K.themeMode], d.themeMode),
             accentMode = enumOr(this[K.accentMode], d.accentMode),
             accentColor = this[K.accentColor] ?: d.accentColor,
+            accentTextColor = this[K.accentTextColor],
             cardSize = enumOr(this[K.cardSize], d.cardSize),
             reduceMotion = this[K.reduceMotion] ?: d.reduceMotion,
             animatedArtwork = this[K.animatedArtwork] ?: d.animatedArtwork,
@@ -256,6 +260,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         this[K.themeMode] = s.themeMode.name
         this[K.accentMode] = s.accentMode.name
         this[K.accentColor] = s.accentColor
+        s.accentTextColor?.let { this[K.accentTextColor] = it } ?: remove(K.accentTextColor)
         this[K.cardSize] = s.cardSize.name
         this[K.reduceMotion] = s.reduceMotion
         this[K.animatedArtwork] = s.animatedArtwork

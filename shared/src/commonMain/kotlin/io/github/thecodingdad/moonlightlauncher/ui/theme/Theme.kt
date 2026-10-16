@@ -46,8 +46,23 @@ class LauncherColors(
     val danger: Color,
     val isDark: Boolean,
 ) {
+    /** Own colour for accented texts (group headers); null: derived from the accent. */
+    internal var textAccentOverride: Color? = null
     val accent: Color get() = accentState.value
     val onAccent: Color get() = onColor(accentState.value)
+    /** Accented texts: the chosen colour, or the accent made readable on the background. */
+    val accentText: Color get() = textAccentOverride ?: readable(accentState.value, background, isDark)
+}
+
+/** [c] lightened (dark themes) or darkened (light theme) until it reads well on [background]. */
+internal fun readable(c: Color, background: Color, dark: Boolean): Color {
+    var color = c
+    repeat(10) {
+        val contrast = (maxOf(color.luminance(), background.luminance()) + 0.05f) / (minOf(color.luminance(), background.luminance()) + 0.05f)
+        if (contrast >= 4.5f) return color
+        color = if (dark) androidx.compose.ui.graphics.lerp(color, Color.White, 0.2f) else androidx.compose.ui.graphics.lerp(color, Color.Black, 0.2f)
+    }
+    return color
 }
 
 @Immutable
@@ -151,7 +166,9 @@ fun LauncherTheme(settings: LauncherSettings, content: @Composable () -> Unit) {
     val accent = animateColorAsState(targetAccent, tween(if (settings.reduceMotion) 0 else 600), label = "accent")
 
     // One colours object per theme: the animated accent is read through its state.
-    val colors = remember(settings.themeMode, accent) { palette(settings.themeMode, accent) }
+    val colors = remember(settings.themeMode, accent, settings.accentTextColor) {
+        palette(settings.themeMode, accent).apply { textAccentOverride = settings.accentTextColor?.let { Color(it) } }
+    }
     val dimens = dimensFor(settings.cardSize)
     // Material's scheme keeps the fixed accent: the cover accent would re-theme everything per frame.
     val scheme = remember(colors, fixedAccent) { if (colors.isDark) {

@@ -142,7 +142,7 @@ fun SectionHeader(text: String) {
     Text(
         text,
         style = MaterialTheme.typography.titleSmall,
-        color = LauncherTheme.colors.accent,
+        color = LauncherTheme.colors.accentText,
         modifier = Modifier.padding(top = 14.dp, bottom = 2.dp),
     )
 }

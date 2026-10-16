@@ -54,10 +54,25 @@ fun ColorDot(color: Int, size: Int = 28) {
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun AccentColorPicker(color: Int, onChange: (Int) -> Unit, onDismiss: () -> Unit) {
+fun AccentColorPicker(
+    color: Int,
+    onChange: (Int) -> Unit,
+    onDismiss: () -> Unit,
+    title: String = stringResource(Res.string.setting_accent_color),
+    /** Set: an "automatic" choice on top (selected when [automatic]). */
+    onAutomatic: (() -> Unit)? = null,
+    automatic: Boolean = false,
+) {
     // The sliders keep their own values (a grey loses its hue when converted back and forth).
     var hsv by remember { mutableStateOf(toHsv(color)) }
-    Modal(visible = true, onDismiss = onDismiss, title = stringResource(Res.string.setting_accent_color), maxWidth = 760.dp) {
+    Modal(visible = true, onDismiss = onDismiss, title = title, maxWidth = 760.dp) {
+        if (onAutomatic != null) {
+            SwitchRow(
+                stringResource(Res.string.accent_text_auto), automatic,
+                { on -> if (on) onAutomatic() else onChange(color) },
+                subtitle = stringResource(Res.string.accent_text_auto_sub), initialFocus = automatic,
+            )
+        }
         SectionHeader(stringResource(Res.string.accent_picker_presets))
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -65,14 +80,14 @@ fun AccentColorPicker(color: Int, onChange: (Int) -> Unit, onDismiss: () -> Unit
             modifier = Modifier.fillMaxWidth(),
         ) {
             swatches.forEachIndexed { i, c ->
-                val selected = c == color
+                val selected = !automatic && c == color
                 FocusSurface(
                     onClick = { hsv = toHsv(c); onChange(c) },
                     shape = CircleShape,
                     color = Color(c),
                     focusScale = 1.15f,
                     modifier = Modifier.size(48.dp)
-                        .restoreFocusIf(selected || (i == 0 && swatches.none { it == color })),
+                        .restoreFocusIf(!automatic && (selected || (i == 0 && swatches.none { it == color }))),
                 ) {
                     if (selected) {
                         Icon(

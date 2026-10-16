@@ -182,7 +182,24 @@ fun ThemeSettings(
             stringResource(Res.string.setting_accent_color), { picker = true },
             trailingContent = { ColorDot(settings.accentColor) },
         )
-        if (picker) AccentColorPicker(settings.accentColor, { c -> update { it.copy(accentColor = c) } }) { picker = false }
+        if (picker) AccentColorPicker(settings.accentColor, { c -> update { it.copy(accentColor = c) } }, { picker = false })
+        // Accented texts (group headers): derived from the accent unless chosen.
+        var textPicker by androidx.compose.runtime.remember { mutableStateOf(false) }
+        val textArgb = LauncherTheme.colors.accentText.let { c ->
+            ((c.alpha * 255).toInt() shl 24) or ((c.red * 255).toInt() shl 16) or ((c.green * 255).toInt() shl 8) or (c.blue * 255).toInt()
+        }
+        NavRow(
+            stringResource(Res.string.setting_accent_text_color), { textPicker = true },
+            subtitle = if (settings.accentTextColor == null) stringResource(Res.string.accent_text_auto) else null,
+            trailingContent = { ColorDot(textArgb) },
+        )
+        if (textPicker) {
+            AccentColorPicker(
+                settings.accentTextColor ?: textArgb, { c -> update { it.copy(accentTextColor = c) } }, { textPicker = false },
+                title = stringResource(Res.string.setting_accent_text_color),
+                onAutomatic = { update { it.copy(accentTextColor = null) } }, automatic = settings.accentTextColor == null,
+            )
+        }
     }
 }
 

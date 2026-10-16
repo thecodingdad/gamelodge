@@ -981,4 +981,7 @@
     <string name="accent_hue">Farbton</string>
     <string name="accent_saturation">Sättigung</string>
     <string name="accent_brightness">Helligkeit</string>
+    <string name="setting_accent_text_color">Text-Akzentfarbe</string>
+    <string name="accent_text_auto">Automatisch</string>
+    <string name="accent_text_auto_sub">Aus der Akzentfarbe, gut lesbar auf dem Hintergrund</string>
 </resources>

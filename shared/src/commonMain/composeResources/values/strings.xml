@@ -983,4 +983,7 @@
     <string name="accent_hue">Hue</string>
     <string name="accent_saturation">Saturation</string>
     <string name="accent_brightness">Brightness</string>
+    <string name="setting_accent_text_color">Text accent color</string>
+    <string name="accent_text_auto">Automatic</string>
+    <string name="accent_text_auto_sub">From the accent color, readable on the background</string>
 </resources>
