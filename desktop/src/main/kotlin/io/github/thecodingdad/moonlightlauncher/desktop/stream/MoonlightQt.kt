@@ -27,7 +27,8 @@ class MoonlightQt(private val dir: File) {
     /** portable.dat and the identity / hosts part of Moonlight.ini. */
     fun prepare(identity: StreamIdentity, hosts: List<StoredHost>) {
         File(dir, "portable.dat").takeIf { !it.exists() }?.writeText("")
-        val ini = File(dir, "Moonlight.ini")
+        // Portable mode keeps QSettings in <dir>/<organization>/<application>.ini.
+        val ini = File(dir, "Moonlight Game Streaming Project/Moonlight.ini").apply { parentFile.mkdirs() }
         val text = runCatching { ini.readText() }.getOrDefault("")
         ini.writeText(MoonlightIni.update(text, identity, hosts.filter { it.serverCert != null }))
     }
