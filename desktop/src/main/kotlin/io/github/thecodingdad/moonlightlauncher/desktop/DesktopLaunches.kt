@@ -64,16 +64,19 @@ class DesktopLaunches(
         check(client.available) { "Moonlight-Qt is missing (${client.exe})" }
         val stored = hosts.stored(host.uuid) ?: error("Unknown host")
         val appId = target.appId ?: error("No app id")
-        val result = CompletableDeferred<Int>()
+        val start = CompletableDeferred<io.github.thecodingdad.moonlightlauncher.desktop.stream.MoonlightQt.Start>()
         scope.launch {
-            val code = runCatching { client.stream(identity(), hosts.storedHosts.value, stored, appId, streamOptions()) }.getOrDefault(-1)
-            result.complete(code)
+            runCatching {
+                client.stream(identity(), hosts.storedHosts.value, stored, appId, streamOptions()) { start.complete(it) }
+            }.onFailure { start.complete(io.github.thecodingdad.moonlightlauncher.desktop.stream.MoonlightQt.Start.Failed(it.message)) }
             hosts.invalidate(host.uuid)
             onStreamEnded()
             onGameEnded()
         }
-        // A start that fails right away (host refused, app gone) is reported instead of a silent return.
-        val early = kotlinx.coroutines.withTimeoutOrNull(4_000) { result.await() }
-        if (early != null && early != 0) error("Moonlight-Qt ended with $early")
+        // The launcher's start overlay stays until the stream runs; Moonlight-Qt's errors show there.
+        val result = start.await()
+        if (result is io.github.thecodingdad.moonlightlauncher.desktop.stream.MoonlightQt.Start.Failed) {
+            error(result.message ?: "Moonlight-Qt")
+        }
     }
 }

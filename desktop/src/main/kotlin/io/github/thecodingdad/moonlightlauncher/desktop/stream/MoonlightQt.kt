@@ -14,14 +14,49 @@ class MoonlightQt(private val dir: File) {
     val exe: File get() = File(dir, "Moonlight.exe")
     val available: Boolean get() = exe.isFile
 
-    /** Streams [appId] of [host]; returns the exit code once the stream has ended. */
-    suspend fun stream(identity: StreamIdentity, hosts: List<StoredHost>, host: StoredHost, appId: Int, options: List<String>): Int = withContext(Dispatchers.IO) {
+    /** How a stream start went: the stream runs, or Moonlight-Qt ended with an error. */
+    sealed interface Start {
+        data object Streaming : Start
+        data class Failed(val message: String?, val appRunning: Boolean = false) : Start
+    }
+
+    /**
+     * Starts the stream of [appId] on [host] without Moonlight-Qt's own window and dialogs
+     * (launcher mode): [started] learns once the stream runs or failed; returns the exit code
+     * once the stream has ended.
+     */
+    suspend fun stream(
+        identity: StreamIdentity, hosts: List<StoredHost>, host: StoredHost, appId: Int, options: List<String>,
+        started: (Start) -> Unit,
+    ): Int = withContext(Dispatchers.IO) {
         prepare(identity, hosts)
         val command = listOf(exe.path, "stream", host.uuid, "appid:$appId") + options
         Log.i("Streaming app $appId of ${host.name}")
-        val process = ProcessBuilder(command).directory(dir).redirectErrorStream(true)
-            .redirectOutput(File(dir, "stream.log")).start()
-        process.waitFor().also { Log.i("Stream ended ($it)") }
+        val builder = ProcessBuilder(command).directory(dir).redirectErrorStream(true)
+        builder.environment()["MOONLIGHT_LAUNCHER_MODE"] = "1"
+        val process = builder.start()
+        var reported = false
+        var error: String? = null
+        var appRunning = false
+        File(dir, "stream.log").printWriter().use { log ->
+            process.inputStream.bufferedReader().forEachLine { line ->
+                log.println(line)
+                log.flush()
+                val marker = line.substringAfter("LAUNCHER-", "")
+                when {
+                    marker == "STREAMING" && !reported -> {
+                        reported = true
+                        started(Start.Streaming)
+                    }
+                    marker.startsWith("ERROR: ") -> error = marker.removePrefix("ERROR: ").trim()
+                    marker.startsWith("APP-RUNNING: ") -> appRunning = true
+                }
+            }
+        }
+        val code = process.waitFor()
+        Log.i("Stream ended ($code)${error?.let { ": $it" } ?: ""}")
+        if (!reported) started(Start.Failed(error, appRunning))
+        code
     }
 
     /** portable.dat and the identity / hosts part of Moonlight.ini. */
