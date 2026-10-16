@@ -2,3 +2,7 @@
 	path = artemis
 	url = https://github.com/thecodingdad/moonlight-android.git
 	branch = launcher
+[submodule "moonlight-qt"]
+	path = moonlight-qt
+	url = https://github.com/thecodingdad/moonlight-qt.git
+	branch = launcher
