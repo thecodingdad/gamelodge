@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.callbackFlow
 class LocalAppScanner(private val context: Context) : LocalAppSource {
 
     @Suppress("DEPRECATION") // ResolveInfoFlags needs API 33, minSdk is 29
-    override fun scan(): List<LocalApp> {
+    override suspend fun scan(): List<LocalApp> {
         val pm = context.packageManager
         val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
         val ownPackage = context.packageName

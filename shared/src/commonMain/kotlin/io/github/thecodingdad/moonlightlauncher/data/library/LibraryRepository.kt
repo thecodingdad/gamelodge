@@ -79,9 +79,22 @@ class LibraryRepository(
                     name = it.label,
                     packageName = it.packageName,
                     androidGameFlag = it.isGame,
+                    companionGame = it.knownGame,
+                    installed = it.installed,
+                    platform = it.platform,
+                    boxArt = it.cover,
                 )
             },
         )
+        // The source's platform (PC store games) like the companion's: trusted over guesses.
+        val platforms = apps.filter { it.platform != null }.associate { SourceEntry.localId(it.packageName) to it.platform!! }
+        if (platforms.isNotEmpty()) {
+            for (target in dao.getAllTargets().filter { it.type == TargetType.LOCAL && it.id in platforms }) {
+                val platform = platforms.getValue(target.id)
+                val item = dao.getItem(target.itemId) ?: continue
+                if (PlatformResolver.mayReplace(item, PlatformSource.COMPANION, platform)) dao.setPlatform(item.id, platform, PlatformSource.COMPANION)
+            }
+        }
         Log.d("Local sync: ${apps.size} apps")
         suggestPlatforms()
     }

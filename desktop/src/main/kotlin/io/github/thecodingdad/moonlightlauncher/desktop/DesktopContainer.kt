@@ -76,12 +76,18 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
     override val emulators = NoEmulators
     override val vpn = NoVpn
 
+    /** The PC's own games from the installed stores. */
+    val pcLibrary: io.github.thecodingdad.moonlightlauncher.desktop.games.PcLibrary by lazy { io.github.thecodingdad.moonlightlauncher.desktop.games.PcLibrary(http) }
+
+    /** Called when a game started from the launcher has ended (the window comes back to the front). */
+    @Volatile var onGameEnded: () -> Unit = {}
+
     override val servers: ServerRepository by lazy { ServerRepository(platform, http, scope) { StoredClientIdentity(secrets) } }
     override val companionFeed: CompanionFeed by lazy {
         CompanionFeed(dataDir, servers) { metadata.isEnabled(MetadataSources.idOf(it)) }
     }
     override val library: LibraryRepository by lazy {
-        LibraryRepository(database, LibrarySync(database), NoLocalApps, hosts, scope, companionFeed)
+        LibraryRepository(database, LibrarySync(database), pcLibrary, hosts, scope, companionFeed)
     }
     override val filters: FilterRepository by lazy { FilterRepository(database, settings) }
     override val playtime: PlaytimeTracker by lazy { PlaytimeTracker(database) }
@@ -101,7 +107,7 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
     }
     override val hostPower: HostPower by lazy { HostPower(database.hostConfigDao(), hosts, hostActions, ha) }
     override val launcher: LaunchCoordinator by lazy {
-        LaunchCoordinator(hosts, hostActions, { hostPower }, { NoAutoSleep }, profiles, playtime, settings, { ha }, scope, NoLaunches)
+        LaunchCoordinator(hosts, hostActions, { hostPower }, { NoAutoSleep }, profiles, playtime, settings, { ha }, scope, DesktopLaunches(pcLibrary, playtime, scope) { onGameEnded() })
     }
 
     /** A PC drives its monitors itself; there is no handheld screen to mirror. */

@@ -71,6 +71,9 @@ class DesktopFeedbackOutput(private val gamepads: () -> Gamepads?) : FeedbackOut
 
 /** Cover colours from the image itself; generated tiles for PC games come with phase 2. */
 object DesktopArtwork : ArtworkPlatform {
+    /** Store covers are web addresses, host box art and own images files. */
+    override fun imageModel(value: String): Any = if (value.startsWith("http://") || value.startsWith("https://")) value else File(value)
+
     override suspend fun accentColor(model: Any): Color? {
         val context = PlatformContext.INSTANCE
         val request = ImageRequest.Builder(context).data(model).size(96).build()

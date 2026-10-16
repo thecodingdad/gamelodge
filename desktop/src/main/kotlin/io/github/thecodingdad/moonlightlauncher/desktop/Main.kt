@@ -57,6 +57,7 @@ fun main() {
     PlatformUi.current = platformUi
     val feedback = UiFeedback(File(dataDir, "cache"), DesktopFeedbackOutput { gamepads }).also { it.load() }
 
+    container.onGameEnded = { platformUi.bringToFront() }
     container.library.start()
     container.scope.launch { container.filters.ensureDefaults() }
     container.servers.start()
