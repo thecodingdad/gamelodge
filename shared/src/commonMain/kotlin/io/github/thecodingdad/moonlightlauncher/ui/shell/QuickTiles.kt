@@ -162,8 +162,10 @@ fun rememberQuickTiles(ids: List<String>, onHost: (String) -> Unit, onController
     val vpnState by c.vpn.state.collectAsState()
     val tunnels by c.vpn.tunnels.collectAsState()
     val controllers = io.github.thecodingdad.moonlightlauncher.ui.screens.settings.rememberControllers()
-    // Tiles of the device itself (Wi-Fi, Bluetooth …), from the platform.
-    val system = io.github.thecodingdad.moonlightlauncher.ui.PlatformUi.current.rememberSystemTiles(ids, tick)
+    // Tiles of the device itself (Wi-Fi, Bluetooth …), from the platform; its fixed ones come last.
+    val fixed = io.github.thecodingdad.moonlightlauncher.ui.PlatformUi.current.fixedQuickTiles
+    val all = remember(ids, fixed) { ids.filter { it !in fixed } + fixed }
+    val system = io.github.thecodingdad.moonlightlauncher.ui.PlatformUi.current.rememberSystemTiles(all, tick)
 
     val on = colors.success
     val off = colors.onSurfaceMuted
@@ -174,7 +176,7 @@ fun rememberQuickTiles(ids: List<String>, onHost: (String) -> Unit, onController
     val controllersLabel = if (controllers.isEmpty()) labelControllersNone else stringResource(Res.string.qm_controllers, controllers.size)
 
     // Tiles without hardware on this device (e.g. from a backup of another device) stay hidden.
-    val usable = remember(ids) { ids.filter { QuickTile.isAvailable(it) } }
+    val usable = remember(all) { all.filter { it in fixed || QuickTile.isAvailable(it) } }
     return remember(usable, tick, hosts, vpnState, tunnels, controllers, system) {
         usable.flatMap { id ->
             when (id) {

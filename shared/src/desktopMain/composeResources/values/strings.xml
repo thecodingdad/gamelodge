@@ -158,4 +158,11 @@
     <string name="dprofile_yuv444_sub">Sharper text and colors, if the host and this PC support it. Needs more bandwidth.</string>
     <string name="sopt_resolution_prefix_native">Native</string>
     <string name="sopt_fps_suffix_fps">FPS</string>
+    <string name="qt_to_window">Window</string>
+    <string name="qt_to_fullscreen">Full screen</string>
+    <string name="qt_quit">Quit launcher</string>
+    <string name="startup_window">Window</string>
+    <string name="startup_start">Start</string>
+    <string name="startup_fullscreen">Start in full screen</string>
+    <string name="startup_fullscreen_sub">Like a console. F11 switches between full screen and window.</string>
 </resources>

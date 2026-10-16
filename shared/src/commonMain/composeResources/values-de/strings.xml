@@ -981,6 +981,6 @@
     <string name="settings_game_sources_sub">Steam, Epic, GOG, Xbox und andere Stores auf diesem PC</string>
     <string name="settings_host_role">Geräte &amp; Pairing</string>
     <string name="settings_host_role_sub">Andere Launcher nutzen Spiele und Metadaten dieses PCs</string>
-    <string name="settings_startup">Start &amp; Tray</string>
-    <string name="settings_startup_sub">Mit Windows starten, im Tray weiterlaufen</string>
+    <string name="settings_startup">Fenster &amp; Start</string>
+    <string name="settings_startup_sub">Vollbild, mit Windows starten, Tray</string>
 </resources>

@@ -3,6 +3,9 @@ package io.github.thecodingdad.moonlightlauncher.desktop
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DesktopWindows
+import androidx.compose.material.icons.filled.Fullscreen
+import androidx.compose.material.icons.filled.FullscreenExit
+import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material3.MaterialTheme
@@ -57,6 +60,7 @@ class DesktopPlatformUi(
     private val host: () -> HostServices? = { null },
     private val startup: Startup? = null,
     private val profiles: io.github.thecodingdad.moonlightlauncher.desktop.stream.DesktopProfiles? = null,
+    private val windowControls: WindowControls? = null,
 ) : PlatformUi {
     override val localIcon = Icons.Filled.DesktopWindows
 
@@ -126,7 +130,25 @@ class DesktopPlatformUi(
 
     // A PC has no Wi-Fi/Bluetooth/flashlight tiles of its own here; the launcher's tiles remain.
     @Composable
-    override fun rememberSystemTiles(ids: List<String>, revision: Int): Map<String, List<TileModel>> = emptyMap()
+    override fun rememberSystemTiles(ids: List<String>, revision: Int): Map<String, List<TileModel>> {
+        val controls = windowControls ?: return emptyMap()
+        val fullscreen by controls.fullscreen.collectAsState()
+        val colors = LauncherTheme.colors
+        val toWindow = stringResource(Res.string.qt_to_window)
+        val toFullscreen = stringResource(Res.string.qt_to_fullscreen)
+        val quit = stringResource(Res.string.qt_quit)
+        return mapOf(
+            TILE_WINDOW to listOf(
+                TileModel(
+                    TILE_WINDOW, if (fullscreen) Icons.Filled.FullscreenExit else Icons.Filled.Fullscreen,
+                    if (fullscreen) toWindow else toFullscreen, colors.accent, controls.toggleFullscreen,
+                ),
+            ),
+            TILE_EXIT to listOf(TileModel(TILE_EXIT, Icons.Filled.PowerSettingsNew, quit, colors.danger, controls.exit)),
+        )
+    }
+
+    override val fixedQuickTiles get() = if (windowControls != null) listOf(TILE_WINDOW, TILE_EXIT) else emptyList()
 
     override fun quickTileAvailable(id: String) = id in LAUNCHER_TILES
 
@@ -173,7 +195,7 @@ class DesktopPlatformUi(
         when (id) {
             SettingsPageId.GAME_SOURCES -> pcLibrary()?.let { GameSourcesPage(it, settings, vm::updateSettings) }
             SettingsPageId.HOST_ROLE -> host()?.let { HostRolePage(it) }
-            SettingsPageId.STARTUP -> startup?.let { StartupPage(it) }
+            SettingsPageId.STARTUP -> startup?.let { StartupPage(it, windowControls) }
             SettingsPageId.PROFILES -> profiles?.let { store ->
                 val all by vm.profiles.collectAsState()
                 val active by vm.activeProfile.collectAsState()
@@ -232,6 +254,8 @@ class DesktopPlatformUi(
     }
 
     companion object {
+        const val TILE_WINDOW = "window_mode"
+        const val TILE_EXIT = "exit"
         private val LAUNCHER_TILES = setOf(QuickTile.CONTROLLERS, QuickTile.HOSTS, QuickTile.VPN)
         private val IMAGE_TYPES = setOf("png", "jpg", "jpeg", "webp", "gif", "bmp")
         private val systemLocale: Locale = Locale.getDefault()

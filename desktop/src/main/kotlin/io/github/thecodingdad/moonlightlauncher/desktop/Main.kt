@@ -73,8 +73,9 @@ fun main(args: Array<String>) {
     val dispatcher = InputDispatcher()
     val gamepads = Gamepads(dispatcher)
     var mainWindow: java.awt.Frame? = null
+    val windowControls = WindowControls()
     val hostServices by lazy { HostServices(container.hostRole, container.hostSync, container.secrets) }
-    val platformUi = DesktopPlatformUi(gamepads, { mainWindow }, { container.pcLibrary }, { hostServices }, startup, container.profiles)
+    val platformUi = DesktopPlatformUi(gamepads, { mainWindow }, { container.pcLibrary }, { hostServices }, startup, container.profiles, windowControls)
     bringToFront = { platformUi.bringToFront() }
     PlatformUi.current = platformUi
     val feedback = UiFeedback(File(dataDir, "cache"), DesktopFeedbackOutput { gamepads }).also { it.load() }
@@ -116,7 +117,17 @@ fun main(args: Array<String>) {
         val vm = remember { LauncherViewModel(container) }
         gamepads.onInput = { vm.touch() }
         gamepads.onBack = { feedback.play(UiSound.BACK) }
-        val state = rememberWindowState(placement = WindowPlacement.Maximized, width = 1600.dp, height = 900.dp)
+        val state = rememberWindowState(
+            placement = if (startup.settings.value.startFullscreen) WindowPlacement.Fullscreen else WindowPlacement.Maximized,
+            width = 1600.dp, height = 900.dp,
+        )
+        LaunchedEffect(state) {
+            windowControls.toggleFullscreen = {
+                state.placement = if (state.placement == WindowPlacement.Fullscreen) WindowPlacement.Maximized else WindowPlacement.Fullscreen
+            }
+            windowControls.exit = ::exitApplication
+            androidx.compose.runtime.snapshotFlow { state.placement }.collect { windowControls.fullscreen.value = it == WindowPlacement.Fullscreen }
+        }
         val startupSettings by startup.settings.collectAsState()
         val visible by windowVisible.collectAsState()
         val hostStatus by container.hostRole.status.collectAsState()
@@ -147,7 +158,7 @@ fun main(args: Array<String>) {
                 when {
                     // F11: full screen like a console.
                     e.key == Key.F11 && e.type == KeyEventType.KeyDown -> {
-                        state.placement = if (state.placement == WindowPlacement.Fullscreen) WindowPlacement.Maximized else WindowPlacement.Fullscreen
+                        windowControls.toggleFullscreen()
                         true
                     }
                     e.key == Key.Escape && e.type == KeyEventType.KeyDown -> {

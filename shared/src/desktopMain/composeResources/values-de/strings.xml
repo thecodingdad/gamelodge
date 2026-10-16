@@ -158,4 +158,11 @@
     <string name="sopt_category_perf_monitor_settings">Leistungsanzeige</string>
     <string name="sopt_resolution_prefix_native">Nativ</string>
     <string name="sopt_fps_suffix_fps">FPS</string>
+    <string name="qt_to_window">Fenster</string>
+    <string name="qt_to_fullscreen">Vollbild</string>
+    <string name="qt_quit">Launcher beenden</string>
+    <string name="startup_window">Fenster</string>
+    <string name="startup_start">Start</string>
+    <string name="startup_fullscreen">Im Vollbild starten</string>
+    <string name="startup_fullscreen_sub">Wie eine Konsole. F11 wechselt zwischen Vollbild und Fenster.</string>
 </resources>

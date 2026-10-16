@@ -153,4 +153,29 @@ class RenderTest {
         File("build/render").apply { mkdirs() }.resolve("profile-editor.png").writeBytes(image.encodeToData(EncodedImageFormat.PNG)!!.bytes)
         org.junit.Assert.assertTrue(DesktopProfiles.options(container.profiles.values(uuid)).containsAll(listOf("--resolution", "1920x1080")))
     }
+
+    @Test
+    fun quickTilesHaveWindowControls() {
+        val dir = Files.createTempDirectory("launcher-tiles").toFile()
+        val container = DesktopContainer(dir)
+        val controls = WindowControls()
+        PlatformUi.current = DesktopPlatformUi(Gamepads(InputDispatcher()), { null }, { null }, windowControls = controls)
+        var labels = emptyList<String>()
+        fun <T> ui(block: () -> T): T {
+            var result: Result<T>? = null
+            javax.swing.SwingUtilities.invokeAndWait { result = runCatching(block) }
+            return result!!.getOrThrow()
+        }
+        val scene = ui {
+            ImageComposeScene(800, 600, Density(1f)) {
+                CompositionLocalProvider(LocalContainer provides container) {
+                    io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme(io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings()) {
+                        labels = io.github.thecodingdad.moonlightlauncher.ui.shell.rememberQuickTiles(listOf("controllers", "wifi"), {}, {}).map { it.key }
+                    }
+                }
+            }
+        }
+        ui { scene.render(0); scene.close() }
+        org.junit.Assert.assertEquals(listOf("controllers", "window_mode", "exit"), labels)
+    }
 }

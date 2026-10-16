@@ -22,7 +22,16 @@ data class StartupSettings(
     val startWithWindows: Boolean = false,
     /** Closing the window keeps the launcher running in the tray (servers and sync go on). */
     val closeToTray: Boolean = false,
+    /** The window starts in full screen (like a console); F11 switches. */
+    val startFullscreen: Boolean = false,
 )
+
+/** Full screen ↔ window and quitting, for the quick menu and the settings (set up by main). */
+class WindowControls {
+    val fullscreen = MutableStateFlow(false)
+    var toggleFullscreen: () -> Unit = {}
+    var exit: () -> Unit = {}
+}
 
 /** Start with Windows (the user's Run key) and the tray behaviour. */
 class Startup(dataDir: File) {

@@ -49,6 +49,9 @@ interface PlatformUi {
     /** Whether the device has what a quick tile needs (e.g. a flashlight). */
     fun quickTileAvailable(id: String): Boolean
 
+    /** Tiles the platform always shows at the end of the quick menu (desktop: window mode, quit). */
+    val fixedQuickTiles: List<String> get() = emptyList()
+
     /** Volume, brightness and similar device controls in the quick menu. */
     @Composable
     fun SystemControls(visible: Boolean)
