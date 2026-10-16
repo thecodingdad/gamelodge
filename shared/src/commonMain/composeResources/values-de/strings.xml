@@ -988,4 +988,7 @@
     <string name="host_remove_text">Seine Spiele ausgeblendet behalten? Beim erneuten Koppeln des Hosts kommen sie mit Spielzeit, Metadaten und deinen Korrekturen zurück. Behaltene Spiele lassen sich später unter Einstellungen › Daten löschen.</string>
     <string name="host_remove_keep">Spiele behalten</string>
     <string name="host_remove_delete">Halten zum Löschen der Spiele</string>
+    <string name="host_progress_apps">Lade App-Liste…</string>
+    <string name="host_progress_box_art">Lade Cover: %1$d von %2$d</string>
+    <string name="host_progress_metadata">Suche Metadaten: %1$d von %2$d</string>
 </resources>

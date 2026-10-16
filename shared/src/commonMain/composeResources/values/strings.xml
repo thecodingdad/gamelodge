@@ -990,4 +990,7 @@
     <string name="host_remove_text">Keep its games hidden? They come back with play time, metadata and your corrections when you pair the host again. Kept games can be deleted later under Settings › Data.</string>
     <string name="host_remove_keep">Keep games</string>
     <string name="host_remove_delete">Hold to delete games</string>
+    <string name="host_progress_apps">Loading the app list…</string>
+    <string name="host_progress_box_art">Loading covers: %1$d of %2$d</string>
+    <string name="host_progress_metadata">Looking up metadata: %1$d of %2$d</string>
 </resources>

@@ -99,6 +99,10 @@ fun HostsSettings(hosts: List<HostState>, openHostConfig: (HostState) -> Unit) {
     val invalidMsg = stringResource(Res.string.host_invalid_address)
     val unreachableMsg = stringResource(Res.string.host_unreachable)
 
+    val appLists by launcherContainer.hosts.appLists.collectAsState()
+    val boxArt by launcherContainer.library.boxArtProgress.collectAsState()
+    val metadataProgress by launcherContainer.metadata.progress.collectAsState()
+
     SettingsPage(stringResource(Res.string.settings_hosts)) {
         if (hosts.isEmpty()) {
             Text(stringResource(Res.string.hosts_empty), style = MaterialTheme.typography.bodyLarge, color = LauncherTheme.colors.onSurfaceMuted)
@@ -135,6 +139,7 @@ fun HostsSettings(hosts: List<HostState>, openHostConfig: (HostState) -> Unit) {
                 onUnpair = { scope.launch { actions.unpair(host) } },
                 onRemove = { removing = host },
                 onConfig = { openHostConfig(host) },
+                progress = hostProgress(host, appLists, boxArt, metadataProgress),
             )
         }
         io.github.thecodingdad.moonlightlauncher.ui.components.ButtonRow(spacing = 12.dp) {
@@ -237,6 +242,8 @@ private fun HostCard(
     onUnpair: () -> Unit,
     onRemove: () -> Unit,
     onConfig: () -> Unit,
+    /** What is going on for this host right now (app list, box art, metadata), or null. */
+    progress: HostProgress? = null,
 ) {
     val colors = LauncherTheme.colors
     Column(
@@ -302,5 +309,45 @@ private fun HostCard(
             if (host.paired) HoldToConfirmButton(stringResource(Res.string.host_remove), onConfirmed = onRemove, icon = Icons.Filled.Delete)
         }
         note?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = if (waking) colors.accent else colors.onSurfaceMuted) }
+        progress?.let { p ->
+            Text(
+                when (p.step) {
+                    HostProgress.Step.APP_LIST -> stringResource(Res.string.host_progress_apps)
+                    HostProgress.Step.BOX_ART -> stringResource(Res.string.host_progress_box_art, p.done, p.total)
+                    HostProgress.Step.METADATA -> stringResource(Res.string.host_progress_metadata, p.done, p.total)
+                },
+                style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceMuted,
+            )
+            if (p.total > 0) {
+                androidx.compose.material3.LinearProgressIndicator(
+                    progress = { p.done.toFloat() / p.total }, color = colors.accent, trackColor = colors.surfaceRaised,
+                    modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
+                )
+            } else {
+                androidx.compose.material3.LinearProgressIndicator(color = colors.accent, trackColor = colors.surfaceRaised, modifier = Modifier.fillMaxWidth().padding(top = 6.dp))
+            }
+        }
     }
+}
+
+/** One step of what a host's games are going through (shown on its card). */
+data class HostProgress(val step: Step, val done: Int = 0, val total: Int = 0) {
+    enum class Step { APP_LIST, BOX_ART, METADATA }
+}
+
+/**
+ * Right after pairing the app list loads, then box art comes in; metadata lookups (for all new
+ * games, whichever host) run afterwards.
+ */
+private fun hostProgress(
+    host: HostState,
+    appLists: Map<String, List<io.github.thecodingdad.moonlightlauncher.data.remote.RemoteApp>>,
+    boxArt: Map<String, Pair<Int, Int>>,
+    metadata: io.github.thecodingdad.moonlightlauncher.metadata.MetadataProgress?,
+): HostProgress? = when {
+    !host.paired || host.status != HostStatus.ONLINE -> null
+    appLists[host.uuid] == null -> HostProgress(HostProgress.Step.APP_LIST)
+    boxArt[host.uuid] != null -> boxArt.getValue(host.uuid).let { (d, t) -> HostProgress(HostProgress.Step.BOX_ART, d, t) }
+    metadata != null && metadata.total > 0 -> HostProgress(HostProgress.Step.METADATA, metadata.done, metadata.total)
+    else -> null
 }

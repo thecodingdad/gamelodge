@@ -48,6 +48,10 @@ class LibraryRepository(
 ) {
     private val dao = db.libraryDao()
 
+    /** Box art downloads running per host: (done, total). */
+    private val _boxArtProgress = kotlinx.coroutines.flow.MutableStateFlow<Map<String, Pair<Int, Int>>>(emptyMap())
+    val boxArtProgress: StateFlow<Map<String, Pair<Int, Int>>> = _boxArtProgress
+
     /** Hosts removed with their games kept: those games stay out of sight until the host returns. */
     private val detached: Flow<Set<String>> =
         settings?.settings?.map { it.detachedHosts }?.distinctUntilChanged() ?: kotlinx.coroutines.flow.flowOf(emptySet())
@@ -317,7 +321,10 @@ class LibraryRepository(
         }
         // One after the other, each shown right away: a host with many apps takes a while, and
         // parallel downloads make it slow for everything else (pairing, state, streams).
-        missing.chunked(BOX_ART_PARALLEL).forEach { batch ->
+        if (missing.isEmpty()) return
+        var done = 0
+        _boxArtProgress.value = _boxArtProgress.value + (hostUuid to (0 to missing.size))
+        try { missing.chunked(BOX_ART_PARALLEL).forEach { batch ->
             val updated = kotlinx.coroutines.coroutineScope {
                 batch.map { (target, remote) ->
                     async {
@@ -327,6 +334,10 @@ class LibraryRepository(
                 }.awaitAll().filterNotNull()
             }
             if (updated.isNotEmpty()) dao.upsertTargets(updated)
+            done += batch.size
+            _boxArtProgress.value = _boxArtProgress.value + (hostUuid to (done to missing.size))
+        } } finally {
+            _boxArtProgress.value = _boxArtProgress.value - hostUuid
         }
     }
 
