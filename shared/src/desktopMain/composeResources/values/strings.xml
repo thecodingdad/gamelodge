@@ -74,4 +74,10 @@
     <string name="host_sync_error_unreachable">The host can't be reached. Is it running, and is the address right?</string>
     <string name="host_sync_error_status">The host refused the request (%1$s). Check the login.</string>
     <string name="host_sync_error_no_host">No host set up.</string>
+    <string name="startup_with_windows">Start with Windows</string>
+    <string name="startup_with_windows_sub">Starts when you sign in. With the tray switched on it starts there, without a window.</string>
+    <string name="startup_tray">Keep running in the tray</string>
+    <string name="startup_tray_sub">Closing the window keeps the launcher running, so paired devices, the web interface and the sync keep working. Quit from the tray icon.</string>
+    <string name="tray_open">Open</string>
+    <string name="tray_quit">Quit</string>
 </resources>

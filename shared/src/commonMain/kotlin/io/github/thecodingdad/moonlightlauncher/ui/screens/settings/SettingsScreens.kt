@@ -5,6 +5,7 @@ import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Backup
 import androidx.compose.material.icons.filled.Computer
 import androidx.compose.material.icons.filled.Devices
+import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.filled.Home
@@ -40,7 +41,7 @@ import io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings
 import io.github.thecodingdad.moonlightlauncher.data.settings.ThemeMode
 import io.github.thecodingdad.moonlightlauncher.resources.*
 
-enum class SettingsPageId { GAME_SOURCES, HOST_ROLE, HOSTS, PROFILES, HOME_SCREEN, THEME, DISPLAY, FILTERS, APP_FILTERS, QUICK_MENU, CONTROLS, SOUNDS, METADATA, USAGE, EMULATORS, HOME_ASSISTANT, VPN, LAUNCHER, BACKUP, LANGUAGE, ABOUT, LICENSES }
+enum class SettingsPageId { GAME_SOURCES, HOST_ROLE, STARTUP, HOSTS, PROFILES, HOME_SCREEN, THEME, DISPLAY, FILTERS, APP_FILTERS, QUICK_MENU, CONTROLS, SOUNDS, METADATA, USAGE, EMULATORS, HOME_ASSISTANT, VPN, LAUNCHER, BACKUP, LANGUAGE, ABOUT, LICENSES }
 
 @Composable
 fun SettingsHome(open: (SettingsPageId) -> Unit, isFirstVisit: Boolean, openControllers: () -> Unit = {}) {
@@ -90,6 +91,7 @@ fun SettingsHome(open: (SettingsPageId) -> Unit, isFirstVisit: Boolean, openCont
 
         SectionHeader(stringResource(Res.string.settings_group_system))
         if (platform.hasPage(SettingsPageId.LAUNCHER)) NavRow(stringResource(Res.string.settings_launcher), { open(SettingsPageId.LAUNCHER) }, stringResource(Res.string.settings_launcher_sub), Icons.Filled.Home)
+        if (platform.hasPage(SettingsPageId.STARTUP)) NavRow(stringResource(Res.string.settings_startup), { open(SettingsPageId.STARTUP) }, stringResource(Res.string.settings_startup_sub), Icons.Filled.PowerSettingsNew)
         NavRow(stringResource(Res.string.settings_language), { open(SettingsPageId.LANGUAGE) }, null, Icons.Filled.Language)
         if (platform.hasPage(SettingsPageId.BACKUP)) NavRow(stringResource(Res.string.settings_backup), { open(SettingsPageId.BACKUP) }, stringResource(Res.string.settings_backup_sub), Icons.Filled.Backup)
         // The device's own settings (Android settings app).

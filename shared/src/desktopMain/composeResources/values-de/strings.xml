@@ -74,4 +74,10 @@
     <string name="host_sync_error_unreachable">Der Host ist nicht erreichbar. Läuft er und stimmt die Adresse?</string>
     <string name="host_sync_error_status">Der Host hat die Anfrage abgelehnt (%1$s). Prüfe die Anmeldung.</string>
     <string name="host_sync_error_no_host">Kein Host eingerichtet.</string>
+    <string name="startup_with_windows">Mit Windows starten</string>
+    <string name="startup_with_windows_sub">Startet bei der Anmeldung. Mit eingeschaltetem Tray startet er dort, ohne Fenster.</string>
+    <string name="startup_tray">Im Tray weiterlaufen</string>
+    <string name="startup_tray_sub">Schließen des Fensters beendet den Launcher nicht: gekoppelte Geräte, Web-Oberfläche und Abgleich laufen weiter. Beenden über das Tray-Symbol.</string>
+    <string name="tray_open">Öffnen</string>
+    <string name="tray_quit">Beenden</string>
 </resources>

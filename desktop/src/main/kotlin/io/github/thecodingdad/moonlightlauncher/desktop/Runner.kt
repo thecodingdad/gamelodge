@@ -45,18 +45,19 @@ object Runner {
         }
     }
 
-    /**
-     * What the host runs for a game: this launcher's Java runtime (javaw: no console window)
-     * with its jars, followed by the encoded spec. Null when not running from an installed copy.
-     */
-    fun command(): String {
+    /** What the host runs for a game, followed by the encoded spec. */
+    fun command(): String = launcherCommand(ARG)
+
+    /** This launcher's Java runtime (javaw: no console window) with its jars and [arg]. */
+    fun launcherCommand(arg: String): String {
         val java = ProcessHandle.current().info().command().orElse(null)
             ?.let { File(it) }
             ?.let { exe -> if (exe.name.equals("java.exe", ignoreCase = true)) File(exe.parentFile, "javaw.exe") else exe }
             ?: File(System.getProperty("java.home"), if (isWindows) "bin/javaw.exe" else "bin/java")
         val jar = File(Runner::class.java.protectionDomain.codeSource.location.toURI())
         val classpath = if (jar.isFile) File(jar.parentFile, "*").path else jar.path
-        return "\"${java.path}\" -Xmx256m -cp \"$classpath\" ${MAIN_CLASS} $ARG"
+        val memory = if (arg == ARG) "-Xmx256m" else "-Xmx1g"
+        return "\"${java.path}\" $memory -cp \"$classpath\" $MAIN_CLASS $arg"
     }
 
     private const val MAIN_CLASS = "io.github.thecodingdad.moonlightlauncher.desktop.MainKt"

@@ -11,7 +11,14 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Tray
 import androidx.compose.ui.window.Window
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.res.loadImageBitmap
+import io.github.thecodingdad.moonlightlauncher.resources.Res
+import io.github.thecodingdad.moonlightlauncher.resources.tray_open
+import io.github.thecodingdad.moonlightlauncher.resources.tray_quit
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
@@ -39,6 +46,10 @@ import java.io.File
 fun main(args: Array<String>) {
     // The streaming host starts synced games through the launcher: no window then.
     if (args.firstOrNull() == Runner.ARG) kotlin.system.exitProcess(Runner.run(args.getOrNull(1)))
+    // Started again while running (e.g. from the tray): the running one shows its window.
+    val windowVisible = kotlinx.coroutines.flow.MutableStateFlow(true)
+    var bringToFront: () -> Unit = {}
+    if (!SingleInstance.claim { windowVisible.value = true; bringToFront() }) return
     val dataDir = dataDirectory()
     Log.init(File(dataDir, "logs/launcher.log"))
     Log.i("Moonlight Launcher ${DesktopPlatformInfo(dataDir).versionName} starting, data in $dataDir")
@@ -46,6 +57,9 @@ fun main(args: Array<String>) {
     // Games installed here are PC games (IGDB platform choice, suggestions).
     io.github.thecodingdad.moonlightlauncher.data.library.PlatformResolver.localPlatform = io.github.thecodingdad.moonlightlauncher.data.library.PlatformResolver.PC
     val container = DesktopContainer(dataDir)
+    val startup = Startup(dataDir).also { it.start() }
+    // Started with Windows and the tray on: no window until the user opens it.
+    if (Startup.AUTOSTART_ARG in args && startup.settings.value.closeToTray) windowVisible.value = false
     ArtworkFiles.init(dataDir)
     ArtworkPlatform.current = DesktopArtwork
     SingletonImageLoader.setSafe {
@@ -59,7 +73,8 @@ fun main(args: Array<String>) {
     val gamepads = Gamepads(dispatcher)
     var mainWindow: java.awt.Frame? = null
     val hostServices by lazy { HostServices(container.hostRole, container.hostSync, container.secrets) }
-    val platformUi = DesktopPlatformUi(gamepads, { mainWindow }, { container.pcLibrary }) { hostServices }
+    val platformUi = DesktopPlatformUi(gamepads, { mainWindow }, { container.pcLibrary }, { hostServices }, startup)
+    bringToFront = { platformUi.bringToFront() }
     PlatformUi.current = platformUi
     val feedback = UiFeedback(File(dataDir, "cache"), DesktopFeedbackOutput { gamepads }).also { it.load() }
 
@@ -99,8 +114,25 @@ fun main(args: Array<String>) {
         gamepads.onInput = { vm.touch() }
         gamepads.onBack = { feedback.play(UiSound.BACK) }
         val state = rememberWindowState(placement = WindowPlacement.Maximized, width = 1600.dp, height = 900.dp)
+        val startupSettings by startup.settings.collectAsState()
+        val visible by windowVisible.collectAsState()
+        val icon = remember { BitmapPainter(DesktopContainer::class.java.getResourceAsStream("/icon.png")!!.use { loadImageBitmap(it) }) }
+        // Tray icon while the launcher may run without its window.
+        if (startupSettings.closeToTray) {
+            Tray(
+                icon = icon,
+                tooltip = "Moonlight Launcher",
+                onAction = { windowVisible.value = true; platformUi.bringToFront() },
+                menu = {
+                    Item(stringResource(Res.string.tray_open), onClick = { windowVisible.value = true; platformUi.bringToFront() })
+                    Item(stringResource(Res.string.tray_quit), onClick = ::exitApplication)
+                },
+            )
+        }
         Window(
-            onCloseRequest = ::exitApplication,
+            onCloseRequest = { if (startup.settings.value.closeToTray) windowVisible.value = false else exitApplication() },
+            visible = visible,
+            icon = icon,
             title = "Moonlight Launcher",
             state = state,
             onPreviewKeyEvent = { e ->

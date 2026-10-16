@@ -33,6 +33,7 @@ private val pageTitles: List<Pair<SettingsTarget, StringResource>> = listOf(
     SettingsTarget.Page(SettingsPageId.EMULATORS) to Res.string.settings_emulators,
     SettingsTarget.Page(SettingsPageId.GAME_SOURCES) to Res.string.settings_game_sources,
     SettingsTarget.Page(SettingsPageId.HOST_ROLE) to Res.string.settings_host_role,
+    SettingsTarget.Page(SettingsPageId.STARTUP) to Res.string.settings_startup,
     SettingsTarget.Page(SettingsPageId.HOSTS) to Res.string.settings_hosts,
     SettingsTarget.Page(SettingsPageId.PROFILES) to Res.string.settings_profiles,
     SettingsTarget.Page(SettingsPageId.VPN) to Res.string.settings_vpn,
@@ -51,7 +52,7 @@ private val pageTitles: List<Pair<SettingsTarget, StringResource>> = listOf(
 /** Pages only some platforms have (shown in the search only where they exist). */
 private val platformPages = setOf(
     SettingsPageId.USAGE, SettingsPageId.EMULATORS, SettingsPageId.PROFILES, SettingsPageId.VPN, SettingsPageId.QUICK_MENU,
-    SettingsPageId.LAUNCHER, SettingsPageId.BACKUP, SettingsPageId.GAME_SOURCES, SettingsPageId.HOST_ROLE,
+    SettingsPageId.LAUNCHER, SettingsPageId.BACKUP, SettingsPageId.GAME_SOURCES, SettingsPageId.HOST_ROLE, SettingsPageId.STARTUP,
 )
 
 /** Every visible setting by page (dialog-internal and per-item settings are left out). */

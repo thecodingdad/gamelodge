@@ -983,4 +983,6 @@
     <string name="settings_game_sources_sub">Steam, Epic, GOG, Xbox and other stores on this PC</string>
     <string name="settings_host_role">Devices &amp; pairing</string>
     <string name="settings_host_role_sub">Other launchers use this PC's games and metadata</string>
+    <string name="settings_startup">Start &amp; tray</string>
+    <string name="settings_startup_sub">Start with Windows, keep running in the tray</string>
 </resources>
