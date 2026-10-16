@@ -69,12 +69,18 @@ class DesktopHosts(
     private val pairing = Mutex()
     private var polling: Job? = null
     private val appListAt = mutableMapOf<String, Long>()
+    /** Hosts found in the network, not added or paired yet (kept in memory only). */
+    private val discovered = java.util.concurrent.ConcurrentHashMap<String, StoredHost>()
+    private val discovery = HostDiscovery { address, port -> scope.launch(Dispatchers.IO) { found(address, port) } }
 
     override val hosts: StateFlow<Map<String, HostState>> = _hosts.asStateFlow()
     override val appLists: StateFlow<Map<String, List<RemoteApp>>> = _appLists.asStateFlow()
 
     /** The stored data of a host (for the streaming client: address, certificate). */
     fun stored(uuid: String): StoredHost? = stored.value.firstOrNull { it.uuid == uuid }
+
+    /** Stored or just discovered. */
+    private fun known(uuid: String): StoredHost? = stored(uuid) ?: discovered[uuid]
     val storedHosts: StateFlow<List<StoredHost>> get() = stored
 
     override fun startPolling() {
@@ -92,8 +98,21 @@ class DesktopHosts(
         polling = null
     }
 
-    // mDNS discovery isn't there yet on the desktop: hosts are added by address.
-    override fun setDiscovery(active: Boolean) = Unit
+    /** Looks for hosts (mDNS "_nvstream._tcp") while the hosts page is open. */
+    override fun setDiscovery(active: Boolean) {
+        if (active) discovery.start() else discovery.stop()
+    }
+
+    /** A host announced itself: shown (unpaired) until the user pairs or adds it. */
+    private suspend fun found(address: String, port: Int) {
+        if (stored.value.any { it.address == address && it.port == port } || discovered.values.any { it.address == address }) return
+        val info = runCatching { NvHttp(address, port, identity(), null, http, deviceName()).serverInfo() }.getOrNull() ?: return
+        if (stored(info.uuid) != null) return
+        Log.i("Host found in the network: ${info.name} ($address)")
+        val host = StoredHost(info.uuid, info.name, address, port, info.httpsPort, info.mac)
+        discovered[info.uuid] = host
+        poll(host)
+    }
 
     override fun refreshAppLists() {
         appListAt.clear()
@@ -102,7 +121,7 @@ class DesktopHosts(
 
     override fun invalidate(uuid: String) {
         appListAt.remove(uuid)
-        scope.launch(Dispatchers.IO) { stored(uuid)?.let { poll(it) } }
+        scope.launch(Dispatchers.IO) { known(uuid)?.let { poll(it) } }
     }
 
     override fun removeHost(host: HostState) {
@@ -130,8 +149,9 @@ class DesktopHosts(
     override suspend fun pair(host: HostState, pin: String): PairResult = withContext(Dispatchers.IO) {
         if (!pairing.tryLock()) return@withContext PairResult.ALREADY_IN_PROGRESS
         try {
-            val s = stored(host.uuid) ?: return@withContext PairResult.FAILED
-            val c = client(s).also { it.serverCert = null }
+            val s = known(host.uuid) ?: return@withContext PairResult.FAILED
+            // An own client: polling goes on undisturbed with the current state.
+            val c = NvHttp(s.address, s.port, identity(), null, http, deviceName()).also { it.httpsPort = s.httpsPort }
             val info = runCatching { c.serverInfo() }.getOrElse { return@withContext PairResult.OFFLINE }
             if (info.runningAppId != 0) return@withContext PairResult.IN_GAME
             val major = info.appVersion.substringBefore('.').toIntOrNull() ?: 7
@@ -141,13 +161,16 @@ class DesktopHosts(
             }
             when (result) {
                 NvPairing.Result.PAIRED -> {
-                    save(stored.value.map { if (it.uuid == s.uuid) it.copy(serverCert = StreamIdentity.pem("CERTIFICATE", cert!!.encoded)) else it })
+                    Log.i("Paired with ${s.name}")
+                    val paired = s.copy(httpsPort = c.httpsPort, serverCert = StreamIdentity.pem("CERTIFICATE", cert!!.encoded))
+                    discovered.remove(s.uuid)
+                    save(stored.value.filter { it.uuid != s.uuid } + paired)
                     clients.remove(s.uuid)
                     appListAt.remove(s.uuid)
                     poll(stored(s.uuid)!!)
                     PairResult.PAIRED
                 }
-                NvPairing.Result.PIN_WRONG -> PairResult.WRONG_PIN
+                NvPairing.Result.PIN_WRONG -> PairResult.WRONG_PIN.also { Log.i("Pairing with ${s.name}: wrong PIN") }
                 NvPairing.Result.ALREADY_IN_PROGRESS -> PairResult.ALREADY_IN_PROGRESS
                 NvPairing.Result.FAILED -> PairResult.FAILED
             }
@@ -164,6 +187,7 @@ class DesktopHosts(
         val host = existing?.copy(name = info.name, address = address, port = port, httpsPort = info.httpsPort, mac = info.mac ?: existing.mac)
             ?: StoredHost(info.uuid, info.name, address, port, info.httpsPort, info.mac)
         save(stored.value.filter { it.uuid != info.uuid } + host)
+        discovered.remove(info.uuid)
         clients.remove(info.uuid)
         poll(host)
         AddHostResult.ADDED
@@ -195,6 +219,7 @@ class DesktopHosts(
 
     override suspend fun remove(host: HostState) = withContext(Dispatchers.IO) {
         save(stored.value.filter { it.uuid != host.uuid })
+        discovered.remove(host.uuid)
         clients.remove(host.uuid)
         _hosts.update { it - host.uuid }
         _appLists.update { it - host.uuid }
@@ -211,18 +236,26 @@ class DesktopHosts(
     // ---- polling ----
 
     private suspend fun pollAll() = kotlinx.coroutines.coroutineScope {
-        stored.value.map { async { poll(it) } }.awaitAll()
+        (stored.value + discovered.values).map { async { poll(it) } }.awaitAll()
     }
 
     private suspend fun poll(s: StoredHost) {
         val c = client(s)
-        val info = runCatching { c.serverInfo() }.getOrNull()
+        val result = runCatching { c.serverInfo() }
+        val info = result.getOrNull()
         if (info == null || info.uuid != s.uuid) {
+            if (_hosts.value[s.uuid]?.status != HostStatus.OFFLINE) {
+                Log.i("Host ${s.name} offline: ${result.exceptionOrNull()?.let { "${it::class.simpleName}: ${it.message}" } ?: "other host at ${s.address}"}")
+            }
             _hosts.update { it + (s.uuid to offline(s)) }
             return
         }
+        val before = _hosts.value[s.uuid]
+        if (before?.status != HostStatus.ONLINE || before.paired != (info.paired && s.serverCert != null)) {
+            Log.i("Host ${info.name} online, paired: ${info.paired} (certificate ${if (s.serverCert != null) "pinned" else "none"})")
+        }
         val paired = info.paired && s.serverCert != null
-        if (info.name != s.name || info.httpsPort != s.httpsPort || (info.mac != null && info.mac != s.mac)) {
+        if (stored(s.uuid) != null && (info.name != s.name || info.httpsPort != s.httpsPort || (info.mac != null && info.mac != s.mac))) {
             save(stored.value.map { if (it.uuid == s.uuid) it.copy(name = info.name, httpsPort = info.httpsPort, mac = info.mac ?: it.mac) else it })
         }
         _hosts.update {
@@ -236,6 +269,7 @@ class DesktopHosts(
         if (paired && now - (appListAt[s.uuid] ?: 0) > APP_LIST_MS) {
             runCatching { c.appList() }.onSuccess { apps ->
                 appListAt[s.uuid] = now
+                if (_appLists.value[s.uuid]?.size != apps.size) Log.i("App list of ${info.name}: ${apps.size} apps")
                 val list = apps.map { RemoteApp(s.uuid, info.name, HostApp(it.id, it.name, it.uuid, it.hdr)) }
                 if (_appLists.value[s.uuid] != list) _appLists.update { m -> m + (s.uuid to list) }
             }.onFailure { Log.w("App list of ${s.name} failed: ${it.message}") }

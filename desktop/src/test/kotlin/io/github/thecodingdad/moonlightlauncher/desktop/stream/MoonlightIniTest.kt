@@ -31,3 +31,23 @@ class MoonlightIniTest {
         assertEquals(null, DesktopHosts.parseAddress("pc:99999"))
     }
 }
+
+class ServerInfoTest {
+    @Test
+    fun vibepolloServerInfo() {
+        // As Vibepollo answers (shortened).
+        val xml = """<?xml version="1.0" encoding="utf-8"?><root status_code="200"><hostname>Win11VM</hostname><appversion>7.1.431.-1</appversion><uniqueid>13C2351E</uniqueid><HttpsPort>47984</HttpsPort><VirtualDisplayCapable>true</VirtualDisplayCapable><mac>00:00:00:00:00:00</mac><Permission>0</Permission><PairStatus>0</PairStatus><currentgame>0</currentgame><state>SUNSHINE_SERVER_FREE</state></root>"""
+        val info = NvHttp.parseServerInfo(xml)
+        assertEquals("Win11VM", info.name)
+        assertEquals(true, info.virtualDisplay)
+        assertEquals(null, info.mac)
+        assertEquals(0, info.permission)
+    }
+
+    @Test
+    fun unknownCertificateIsStatus401() {
+        // HTTPS with a certificate the host doesn't know: HTTP 200, status 401 in the XML.
+        val e = runCatching { NvHttp.parseServerInfo("""<root status_code="401" status_message="The client is not authorized. Certificate verification failed."/>""") }.exceptionOrNull()
+        assertEquals(401, (e as NvHttpException).status)
+    }
+}

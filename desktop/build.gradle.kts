@@ -26,6 +26,7 @@ dependencies {
     implementation(libs.jna.platform)
     implementation(libs.javasteam)
     implementation(libs.qrcodegen)
+    implementation(libs.jmdns)
 
     testImplementation(libs.junit)
 }

@@ -32,6 +32,7 @@ jamepad = "2.30.0.0"
 jna = "5.18.1"
 javasteam = "1.8.0"
 qrcodegen = "1.8.0"
+jmdns = "3.6.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -89,6 +90,7 @@ jamepad = { group = "com.badlogicgames.jamepad", name = "jamepad", version.ref =
 jna-platform = { group = "net.java.dev.jna", name = "jna-platform", version.ref = "jna" }
 javasteam = { group = "in.dragonbra", name = "javasteam", version.ref = "javasteam" }
 qrcodegen = { group = "io.nayuki", name = "qrcodegen", version.ref = "qrcodegen" }
+jmdns = { group = "org.jmdns", name = "jmdns", version.ref = "jmdns" }
 kotlinx-coroutines-swing = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-swing", version.ref = "coroutines" }
 coil-network-okhttp-jvm = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
 

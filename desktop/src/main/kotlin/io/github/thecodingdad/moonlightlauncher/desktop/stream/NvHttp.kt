@@ -155,20 +155,22 @@ class NvHttp(
 
     /** Over HTTPS once paired (only then the pair state is right), else HTTP. */
     fun serverInfo(): ServerInfo {
-        val xml = if (serverCert != null) {
-            runCatching { get(httpsBase, "serverinfo") }.getOrElse { e ->
-                // Unpaired by the host: it refuses our certificate; HTTP tells the rest.
-                if (e is NvHttpException && e.status == 401) get(httpBase, "serverinfo") else throw e
+        if (serverCert != null) {
+            try {
+                return parseServerInfo(get(httpsBase, "serverinfo")).also { httpsPort = it.httpsPort }
+            } catch (e: NvHttpException) {
+                // Unpaired by the host: it refuses our certificate (HTTP 401 or status_code 401); HTTP tells the rest.
+                if (e.status != 401) throw e
+            } catch (e: javax.net.ssl.SSLException) {
+                // Some hosts refuse an unknown client certificate in the handshake already.
             }
-        } else {
-            get(httpBase, "serverinfo")
         }
-        return parseServerInfo(xml).also { httpsPort = it.httpsPort }
+        return parseServerInfo(get(httpBase, "serverinfo")).also { httpsPort = it.httpsPort }
     }
 
     fun appList(): List<NvApp> {
-        val doc = parse(get(httpsBase, "applist"))
-        val apps = doc.getElementsByTagName("App")
+        val root = parseRoot(get(httpsBase, "applist"))
+        val apps = root.getElementsByTagName("App")
         return (0 until apps.length).mapNotNull { i ->
             val e = apps.item(i) as Element
             val id = e.text("ID")?.toIntOrNull() ?: return@mapNotNull null
@@ -241,7 +243,7 @@ class NvHttp(
                 appVersion = r.text("appversion").orEmpty(),
                 localIp = r.text("LocalIP"),
                 permission = r.text("Permission")?.toIntOrNull() ?: -1,
-                virtualDisplay = r.text("VirtualDisplayCapable") == "1",
+                virtualDisplay = r.text("VirtualDisplayCapable").let { it == "1" || it == "true" },
                 serverCommands = commands,
             )
         }
