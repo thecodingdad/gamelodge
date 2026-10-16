@@ -89,6 +89,19 @@ val windowsApp by tasks.registering(Sync::class) {
             includeEmptyDirs = false
         }
     }
+    // The streaming client: Moonlight-Qt (submodule, built on Windows by tools/build-moonlight.sh).
+    val moonlightZip = rootProject.layout.projectDirectory.file("build/moonlight/MoonlightPortable-x64.zip").asFile
+    if (moonlightZip.exists()) {
+        into("moonlight") {
+            from(zipTree(moonlightZip)) {
+                // Built on Windows: the entries use backslashes.
+                eachFile { path = path.replace('\\', '/') }
+                includeEmptyDirs = false
+            }
+        }
+    } else {
+        logger.warn("build/moonlight/MoonlightPortable-x64.zip missing: package without streaming client (tools/build-moonlight.sh)")
+    }
     from(layout.projectDirectory.file("windows/Moonlight Launcher.cmd"))
 }
 

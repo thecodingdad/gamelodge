@@ -27,6 +27,7 @@ import io.github.thecodingdad.moonlightlauncher.vpn.NoVpn
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import okhttp3.OkHttpClient
@@ -70,9 +71,26 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
             .build()
     }
 
-    override val hosts = NoHosts
-    override val hostActions = NoHostActions
-    override val profiles = BaseProfileOnly
+    /** This launcher's GameStream identity (shared with the bundled Moonlight-Qt). */
+    val streamIdentity: io.github.thecodingdad.moonlightlauncher.desktop.stream.StreamIdentity by lazy {
+        io.github.thecodingdad.moonlightlauncher.desktop.stream.StreamIdentity.loadOrCreate(secrets)
+    }
+    val desktopHosts: io.github.thecodingdad.moonlightlauncher.desktop.stream.DesktopHosts by lazy {
+        io.github.thecodingdad.moonlightlauncher.desktop.stream.DesktopHosts(dataDir, { streamIdentity }, http, { platform.deviceName }, scope)
+    }
+    override val hosts: io.github.thecodingdad.moonlightlauncher.data.remote.HostRepository get() = desktopHosts
+    override val hostActions: io.github.thecodingdad.moonlightlauncher.data.remote.HostActions get() = desktopHosts
+    override val profiles: io.github.thecodingdad.moonlightlauncher.desktop.stream.DesktopProfiles by lazy {
+        io.github.thecodingdad.moonlightlauncher.desktop.stream.DesktopProfiles(dataDir)
+    }
+
+    /** Opens Moonlight-Qt itself (its settings are the base profile). */
+    fun openMoonlightSettings() {
+        val client = io.github.thecodingdad.moonlightlauncher.desktop.stream.MoonlightQt.locate()
+        if (!client.available) return
+        client.prepare(streamIdentity, desktopHosts.storedHosts.value)
+        runCatching { ProcessBuilder(client.exe.path).directory(client.exe.parentFile).start() }
+    }
     override val emulators = NoEmulators
     override val vpn = NoVpn
 
@@ -148,7 +166,15 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
     }
     override val hostPower: HostPower by lazy { HostPower(database.hostConfigDao(), hosts, hostActions, ha) }
     override val launcher: LaunchCoordinator by lazy {
-        LaunchCoordinator(hosts, hostActions, { hostPower }, { NoAutoSleep }, profiles, playtime, settings, { ha }, scope, DesktopLaunches(pcLibrary, playtime, scope) { onGameEnded() })
+        LaunchCoordinator(hosts, hostActions, { hostPower }, { NoAutoSleep }, profiles, playtime, settings, { ha }, scope, DesktopLaunches(
+            pcLibrary, playtime, scope, { onGameEnded() }, desktopHosts,
+            identity = { streamIdentity },
+            streamOptions = { profiles.activeOptions() },
+            onStreamEnded = {
+                launcher.restoreProfile()
+                scope.launch { playtime.finishOpenSession() }
+            },
+        ))
     }
 
     companion object {

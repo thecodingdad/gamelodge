@@ -55,6 +55,8 @@ class DesktopPlatformUi(
     private val pcLibrary: () -> io.github.thecodingdad.moonlightlauncher.desktop.games.PcLibrary?,
     private val host: () -> HostServices? = { null },
     private val startup: Startup? = null,
+    private val profiles: io.github.thecodingdad.moonlightlauncher.desktop.stream.DesktopProfiles? = null,
+    private val openMoonlightSettings: () -> Unit = {},
 ) : PlatformUi {
     override val localIcon = Icons.Filled.DesktopWindows
 
@@ -162,7 +164,8 @@ class DesktopPlatformUi(
     override fun openAppInfo(packageName: String) = Unit
 
     override fun hasPage(id: SettingsPageId) = id == SettingsPageId.GAME_SOURCES || (id == SettingsPageId.HOST_ROLE && host() != null) ||
-        (id == SettingsPageId.STARTUP && startup != null)
+        (id == SettingsPageId.STARTUP && startup != null) ||
+        (id == SettingsPageId.PROFILES && profiles != null)
 
     @Composable
     override fun PlatformSettingsPage(id: SettingsPageId, vm: LauncherViewModel, openProfile: (UUID?) -> Unit, openStats: () -> Unit) {
@@ -171,6 +174,11 @@ class DesktopPlatformUi(
             SettingsPageId.GAME_SOURCES -> pcLibrary()?.let { GameSourcesPage(it, settings, vm::updateSettings) }
             SettingsPageId.HOST_ROLE -> host()?.let { HostRolePage(it) }
             SettingsPageId.STARTUP -> startup?.let { StartupPage(it) }
+            SettingsPageId.PROFILES -> profiles?.let { store ->
+                val all by vm.profiles.collectAsState()
+                val active by vm.activeProfile.collectAsState()
+                DesktopProfilesList(store, all, active, openProfile)
+            }
             else -> Unit
         }
     }
@@ -194,7 +202,9 @@ class DesktopPlatformUi(
     }
 
     @Composable
-    override fun ProfileEditor(uuid: UUID?, name: String, onDeleted: () -> Unit) = Unit
+    override fun ProfileEditor(uuid: UUID?, name: String, onDeleted: () -> Unit) {
+        profiles?.let { DesktopProfileEditor(it, uuid, name, openMoonlightSettings, onDeleted) }
+    }
 
     @Composable
     override fun ControlsExtras(settings: LauncherSettings, update: ((LauncherSettings) -> LauncherSettings) -> Unit) = Unit

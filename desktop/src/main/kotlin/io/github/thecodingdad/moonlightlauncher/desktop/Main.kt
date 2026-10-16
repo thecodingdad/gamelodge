@@ -74,13 +74,15 @@ fun main(args: Array<String>) {
     val gamepads = Gamepads(dispatcher)
     var mainWindow: java.awt.Frame? = null
     val hostServices by lazy { HostServices(container.hostRole, container.hostSync, container.secrets) }
-    val platformUi = DesktopPlatformUi(gamepads, { mainWindow }, { container.pcLibrary }, { hostServices }, startup)
+    val platformUi = DesktopPlatformUi(gamepads, { mainWindow }, { container.pcLibrary }, { hostServices }, startup, container.profiles, container::openMoonlightSettings)
     bringToFront = { platformUi.bringToFront() }
     PlatformUi.current = platformUi
     val feedback = UiFeedback(File(dataDir, "cache"), DesktopFeedbackOutput { gamepads }).also { it.load() }
 
     container.onGameEnded = { platformUi.bringToFront() }
     container.library.start()
+    // Streaming hosts are polled while the window is shown.
+    container.scope.launch { windowVisible.collect { if (it) container.hosts.startPolling() else container.hosts.stopPolling() } }
     container.scope.launch { container.filters.ensureDefaults() }
     container.servers.start()
     container.metadata.start()

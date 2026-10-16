@@ -1,0 +1,107 @@
+package io.github.thecodingdad.moonlightlauncher.desktop.stream
+
+import io.github.thecodingdad.moonlightlauncher.util.Log
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.File
+
+/**
+ * The bundled Moonlight-Qt (portable mode, in "moonlight" next to the launcher's "lib") as the
+ * streaming client. Before each start its settings get the launcher's identity and the paired
+ * hosts with their pinned certificates, so it trusts the same pairing; its other settings stay.
+ */
+class MoonlightQt(private val dir: File) {
+    val exe: File get() = File(dir, "Moonlight.exe")
+    val available: Boolean get() = exe.isFile
+
+    /** Streams [appId] of [host]; returns the exit code once the stream has ended. */
+    suspend fun stream(identity: StreamIdentity, hosts: List<StoredHost>, host: StoredHost, appId: Int, options: List<String>): Int = withContext(Dispatchers.IO) {
+        prepare(identity, hosts)
+        val command = listOf(exe.path, "stream", host.uuid, "appid:$appId") + options
+        Log.i("Streaming app $appId of ${host.name}")
+        val process = ProcessBuilder(command).directory(dir).redirectErrorStream(true)
+            .redirectOutput(File(dir, "stream.log")).start()
+        process.waitFor().also { Log.i("Stream ended ($it)") }
+    }
+
+    /** portable.dat and the identity / hosts part of Moonlight.ini. */
+    fun prepare(identity: StreamIdentity, hosts: List<StoredHost>) {
+        File(dir, "portable.dat").takeIf { !it.exists() }?.writeText("")
+        val ini = File(dir, "Moonlight.ini")
+        val text = runCatching { ini.readText() }.getOrDefault("")
+        ini.writeText(MoonlightIni.update(text, identity, hosts.filter { it.serverCert != null }))
+    }
+
+    companion object {
+        /** Next to the running launcher (lib/ → moonlight/). */
+        fun locate(): MoonlightQt {
+            val jar = File(MoonlightQt::class.java.protectionDomain.codeSource.location.toURI())
+            val base = if (jar.isFile) jar.parentFile.parentFile else File(".")
+            return MoonlightQt(File(base, "moonlight"))
+        }
+    }
+}
+
+/**
+ * Moonlight-Qt's settings file (QSettings INI). Only the identity keys of [General] and the whole
+ * [hosts] section are written; everything else (its own preferences) stays as it is.
+ */
+object MoonlightIni {
+    fun update(existing: String, identity: StreamIdentity, hosts: List<StoredHost>): String {
+        val sections = parse(existing)
+        val general = sections.getOrPut("General") { linkedMapOf() }
+        general["certificate"] = byteArray(identity.certificatePem)
+        general["key"] = byteArray(identity.privateKeyPem)
+        general["uniqueid"] = identity.uniqueId
+        // Its own host list would be replaced on its next save anyway; a fresh one avoids stale entries.
+        sections.remove("hostsbackup")
+        val h = linkedMapOf<String, String>()
+        hosts.forEachIndexed { i, host ->
+            val p = "${i + 1}\\"
+            h["${p}hostname"] = quote(host.name)
+            h["${p}uuid"] = host.uuid
+            h["${p}customname"] = "false"
+            h["${p}localaddress"] = quote(host.address)
+            h["${p}localport"] = host.port.toString()
+            h["${p}manualaddress"] = quote(host.address)
+            h["${p}manualport"] = host.port.toString()
+            h["${p}srvcert"] = byteArray(host.serverCert!!)
+            h["${p}nvidiasw"] = "false"
+        }
+        h["size"] = hosts.size.toString()
+        sections["hosts"] = h
+        return sections.entries.joinToString("\n") { (name, keys) ->
+            "[$name]\n" + keys.entries.joinToString("") { "${it.key}=${it.value}\n" }
+        }
+    }
+
+    private fun parse(text: String): LinkedHashMap<String, LinkedHashMap<String, String>> {
+        val result = linkedMapOf<String, LinkedHashMap<String, String>>()
+        var current: LinkedHashMap<String, String>? = null
+        for (line in text.lines()) {
+            val t = line.trim()
+            if (t.startsWith("[") && t.endsWith("]")) {
+                current = result.getOrPut(t.substring(1, t.length - 1)) { linkedMapOf() }
+            } else if ('=' in t && current != null) {
+                current[t.substringBefore('=')] = t.substringAfter('=')
+            }
+        }
+        return result
+    }
+
+    /** A QByteArray value as QSettings writes it (quoted, \n escaped). */
+    fun byteArray(s: String) = quote("@ByteArray($s)")
+
+    fun quote(s: String): String {
+        val sb = StringBuilder("\"")
+        for (c in s) when (c) {
+            '\\' -> sb.append("\\\\")
+            '"' -> sb.append("\\\"")
+            '\n' -> sb.append("\\n")
+            '\r' -> sb.append("\\r")
+            '\t' -> sb.append("\\t")
+            else -> if (c.code < 0x20 || c.code > 0x7e) sb.append("\\x").append("%04x".format(c.code)) else sb.append(c)
+        }
+        return sb.append('"').toString()
+    }
+}
