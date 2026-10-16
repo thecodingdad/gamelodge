@@ -139,7 +139,7 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
         CompanionFeed(dataDir, servers) { metadata.isEnabled(MetadataSources.idOf(it)) }
     }
     override val library: LibraryRepository by lazy {
-        LibraryRepository(database, LibrarySync(database), pcLibrary, hosts, scope, companionFeed)
+        LibraryRepository(database, LibrarySync(database), pcLibrary, hosts, scope, companionFeed, settings)
     }
     override val filters: FilterRepository by lazy { FilterRepository(database, settings) }
     override val playtime: PlaytimeTracker by lazy { PlaytimeTracker(database) }

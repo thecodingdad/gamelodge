@@ -984,4 +984,8 @@
     <string name="setting_accent_text_color">Text-Akzentfarbe</string>
     <string name="accent_text_auto">Automatisch</string>
     <string name="accent_text_auto_sub">Aus der Akzentfarbe, gut lesbar auf dem Hintergrund</string>
+    <string name="host_remove_title">%1$s entfernen?</string>
+    <string name="host_remove_text">Seine Spiele ausgeblendet behalten? Beim erneuten Koppeln des Hosts kommen sie mit Spielzeit, Metadaten und deinen Korrekturen zurück. Behaltene Spiele lassen sich später unter Einstellungen › Daten löschen.</string>
+    <string name="host_remove_keep">Spiele behalten</string>
+    <string name="host_remove_delete">Halten zum Löschen der Spiele</string>
 </resources>

@@ -24,6 +24,9 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.async
@@ -41,15 +44,29 @@ class LibraryRepository(
     private val hosts: HostRepository,
     private val scope: CoroutineScope,
     private val companion: io.github.thecodingdad.moonlightlauncher.data.companion.CompanionFeed? = null,
+    private val settings: io.github.thecodingdad.moonlightlauncher.data.settings.SettingsRepository? = null,
 ) {
     private val dao = db.libraryDao()
 
+    /** Hosts removed with their games kept: those games stay out of sight until the host returns. */
+    private val detached: Flow<Set<String>> =
+        settings?.settings?.map { it.detachedHosts }?.distinctUntilChanged() ?: kotlinx.coroutines.flow.flowOf(emptySet())
+
     /** All visible entries (games and apps), sorted by title. */
     val entries: StateFlow<List<LibraryEntry>> =
-        dao.observeVisible().stateIn(scope, SharingStarted.Eagerly, emptyList())
+        combine(dao.observeVisible(), detached, ::withoutDetached).stateIn(scope, SharingStarted.Eagerly, emptyList())
 
     /** Including hidden items, for the "hidden" filter and settings. */
-    val allEntries: Flow<List<LibraryEntry>> = dao.observeAll()
+    val allEntries: Flow<List<LibraryEntry>> = combine(dao.observeAll(), detached, ::withoutDetached)
+
+    private fun withoutDetached(list: List<LibraryEntry>, hosts: Set<String>): List<LibraryEntry> {
+        if (hosts.isEmpty()) return list
+        return list.mapNotNull { e ->
+            if (e.targets.none { it.hostUuid in hosts }) return@mapNotNull e
+            val rest = e.targets.filterNot { it.type == TargetType.REMOTE && it.hostUuid in hosts }
+            if (rest.isEmpty()) null else e.copy(targets = rest)
+        }
+    }
 
     fun entry(id: String): Flow<LibraryEntry?> = dao.observeEntry(id)
 
@@ -139,6 +156,10 @@ class LibraryRepository(
     }
 
     private suspend fun syncHost(hostUuid: String, apps: List<RemoteApp>) {
+        // The host is back (paired again): its kept games return.
+        if (settings != null && hostUuid in settings.settings.first().detachedHosts) {
+            settings.update { it.copy(detachedHosts = it.detachedHosts - hostUuid) }
+        }
         // Optional: the host's paired companion knows what each entry is (game/app, platform,
         // store, groups, installed) and brings its metadata.
         val feed = companion?.games(hostUuid)
@@ -309,9 +330,31 @@ class LibraryRepository(
         }
     }
 
-    suspend fun removeHost(hostUuid: String) {
+    /**
+     * The host is gone: [keepGames] hides its games (with play time, metadata and corrections) until
+     * it is paired again; otherwise they are deleted with their box art.
+     */
+    suspend fun removeHost(hostUuid: String, keepGames: Boolean = false) {
+        if (keepGames && settings != null) {
+            settings.update { it.copy(detachedHosts = it.detachedHosts + hostUuid) }
+            return
+        }
+        settings?.update { it.copy(detachedHosts = it.detachedHosts - hostUuid) }
         sync.removeHost(hostUuid)
         hosts.forgetBoxArt(hostUuid)
+    }
+
+    /** Games of hosts removed with "keep": how many are hidden that way. */
+    suspend fun detachedGameCount(): Int {
+        val hosts = settings?.settings?.first()?.detachedHosts.orEmpty()
+        if (hosts.isEmpty()) return 0
+        return dao.getAllTargets().filter { it.type == TargetType.REMOTE && it.hostUuid in hosts }.map { it.itemId }.distinct().size
+    }
+
+    /** Deletes the kept games of removed hosts for good. */
+    suspend fun deleteDetached() {
+        val hosts = settings?.settings?.first()?.detachedHosts.orEmpty()
+        hosts.forEach { removeHost(it, keepGames = false) }
     }
 
     suspend fun setFavorite(id: String, favorite: Boolean) = dao.setFavorite(id, favorite)

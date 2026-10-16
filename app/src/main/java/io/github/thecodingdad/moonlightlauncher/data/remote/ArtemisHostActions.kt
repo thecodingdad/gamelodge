@@ -5,7 +5,6 @@ import com.limelight.nvstream.http.ComputerDetails
 import com.limelight.nvstream.http.NvHTTP
 import com.limelight.nvstream.http.PairingManager
 import com.limelight.nvstream.wol.WakeOnLanSender
-import io.github.thecodingdad.moonlightlauncher.data.library.LibraryRepository
 import io.github.thecodingdad.moonlightlauncher.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -13,7 +12,6 @@ import kotlinx.coroutines.withContext
 /** Host management through Artemis (pairing, adding, waking, removing). */
 class ArtemisHostActions(
     private val hosts: ArtemisHostRepository,
-    private val library: LibraryRepository,
 ) : HostActions {
     override fun generatePin(): String = PairingManager.generatePinString()
 
@@ -70,7 +68,6 @@ class ArtemisHostActions(
 
     override suspend fun remove(host: HostState) {
         hosts.removeHost(host)
-        library.removeHost(host.uuid)
     }
 
     override suspend fun quitApp(host: HostState): Boolean = withContext(Dispatchers.IO) {

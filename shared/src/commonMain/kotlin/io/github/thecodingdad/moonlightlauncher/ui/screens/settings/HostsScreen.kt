@@ -69,6 +69,7 @@ fun HostsSettings(hosts: List<HostState>, openHostConfig: (HostState) -> Unit) {
     var pairUi by remember { mutableStateOf<PairUi?>(null) }
     var message by remember { mutableStateOf<String?>(null) }
     var adding by remember { mutableStateOf(false) }
+    var removing by remember { mutableStateOf<HostState?>(null) }
     // New hosts are only searched for while this screen is open.
     DisposableEffect(Unit) {
         launcherContainer.hosts.setDiscovery(true)
@@ -132,7 +133,7 @@ fun HostsSettings(hosts: List<HostState>, openHostConfig: (HostState) -> Unit) {
                     }
                 },
                 onUnpair = { scope.launch { actions.unpair(host) } },
-                onRemove = { scope.launch { actions.remove(host) } },
+                onRemove = { removing = host },
                 onConfig = { openHostConfig(host) },
             )
         }
@@ -200,6 +201,26 @@ fun HostsSettings(hosts: List<HostState>, openHostConfig: (HostState) -> Unit) {
             }
             null -> Unit
         }
+    }
+
+    // Removing a host: keep its games (hidden, back with the next pairing) or delete them.
+    val toRemove = removing
+    Modal(visible = toRemove != null, onDismiss = { removing = null }, title = toRemove?.let { stringResource(Res.string.host_remove_title, it.name) }, closeButton = false) {
+        val host = toRemove ?: return@Modal
+        Text(stringResource(Res.string.host_remove_text), style = MaterialTheme.typography.bodyLarge, color = LauncherTheme.colors.onSurface)
+        Spacer(Modifier.height(16.dp))
+        fun remove(keep: Boolean) {
+            removing = null
+            scope.launch {
+                actions.remove(host)
+                launcherContainer.library.removeHost(host.uuid, keepGames = keep)
+            }
+        }
+        LauncherButton(stringResource(Res.string.host_remove_keep), primary = true, onClick = { remove(true) }, modifier = Modifier.fillMaxWidth())
+        Spacer(Modifier.height(8.dp))
+        HoldToConfirmButton(stringResource(Res.string.host_remove_delete), onConfirmed = { remove(false) }, icon = Icons.Filled.Delete, modifier = Modifier.fillMaxWidth())
+        Spacer(Modifier.height(8.dp))
+        LauncherButton(stringResource(Res.string.action_cancel), onClick = { removing = null }, modifier = Modifier.fillMaxWidth())
     }
 }
 

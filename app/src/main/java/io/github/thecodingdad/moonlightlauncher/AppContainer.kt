@@ -44,7 +44,7 @@ class AppContainer(context: Context) : LauncherContainer {
         }
     }
     override val library: LibraryRepository by lazy {
-        LibraryRepository(database, LibrarySync(database, emulatorPackages = ::emulatorPackages), localApps, hosts, scope, companionFeed)
+        LibraryRepository(database, LibrarySync(database, emulatorPackages = ::emulatorPackages), localApps, hosts, scope, companionFeed, settings)
     }
     override val playtime: PlaytimeTracker by lazy { PlaytimeTracker(database) }
     /** Packages of every known emulator (catalog and own ones); some real games share a package prefix (miHoYo). */
@@ -72,7 +72,7 @@ class AppContainer(context: Context) : LauncherContainer {
             io.github.thecodingdad.moonlightlauncher.stream.AndroidLaunchPlatform(this),
         ).also { it.vpn = vpn }
     }
-    override val hostActions: ArtemisHostActions by lazy { ArtemisHostActions(hosts, library) }
+    override val hostActions: ArtemisHostActions by lazy { ArtemisHostActions(hosts) }
 
     override val artwork: io.github.thecodingdad.moonlightlauncher.data.artwork.ArtworkStore by lazy {
         io.github.thecodingdad.moonlightlauncher.data.artwork.ArtworkStore(io.github.thecodingdad.moonlightlauncher.platform.AndroidNetworkStatus(appContext), http, database.libraryDao(), settings, scope)

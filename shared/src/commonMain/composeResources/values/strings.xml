@@ -986,4 +986,8 @@
     <string name="setting_accent_text_color">Text accent color</string>
     <string name="accent_text_auto">Automatic</string>
     <string name="accent_text_auto_sub">From the accent color, readable on the background</string>
+    <string name="host_remove_title">Remove %1$s?</string>
+    <string name="host_remove_text">Keep its games hidden? They come back with play time, metadata and your corrections when you pair the host again. Kept games can be deleted later under Settings › Data.</string>
+    <string name="host_remove_keep">Keep games</string>
+    <string name="host_remove_delete">Hold to delete games</string>
 </resources>

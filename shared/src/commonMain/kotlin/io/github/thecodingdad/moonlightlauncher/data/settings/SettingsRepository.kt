@@ -30,6 +30,8 @@ data class LauncherSettings(
     val accentColor: Int = 0xFF7C9CFF.toInt(),
     /** Colour of accented texts (group headers); null: derived from the accent, readable on the background. */
     val accentTextColor: Int? = null,
+    /** Hosts removed with their games kept (hidden; back with the next pairing of the host). */
+    val detachedHosts: Set<String> = emptySet(),
     val cardSize: CardSize = CardSize.MEDIUM,
     val reduceMotion: Boolean = false,
     val animatedArtwork: Boolean = true,
@@ -126,6 +128,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val accentMode = stringPreferencesKey("accent_mode")
         val accentColor = intPreferencesKey("accent_color")
         val accentTextColor = intPreferencesKey("accent_text_color")
+        val detachedHosts = stringSetPreferencesKey("detached_hosts")
         val cardSize = stringPreferencesKey("card_size")
         val reduceMotion = booleanPreferencesKey("reduce_motion")
         val animatedArtwork = booleanPreferencesKey("animated_artwork")
@@ -197,6 +200,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             accentMode = enumOr(this[K.accentMode], d.accentMode),
             accentColor = this[K.accentColor] ?: d.accentColor,
             accentTextColor = this[K.accentTextColor],
+            detachedHosts = this[K.detachedHosts] ?: d.detachedHosts,
             cardSize = enumOr(this[K.cardSize], d.cardSize),
             reduceMotion = this[K.reduceMotion] ?: d.reduceMotion,
             animatedArtwork = this[K.animatedArtwork] ?: d.animatedArtwork,
@@ -261,6 +265,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         this[K.accentMode] = s.accentMode.name
         this[K.accentColor] = s.accentColor
         s.accentTextColor?.let { this[K.accentTextColor] = it } ?: remove(K.accentTextColor)
+        this[K.detachedHosts] = s.detachedHosts
         this[K.cardSize] = s.cardSize.name
         this[K.reduceMotion] = s.reduceMotion
         this[K.animatedArtwork] = s.animatedArtwork
