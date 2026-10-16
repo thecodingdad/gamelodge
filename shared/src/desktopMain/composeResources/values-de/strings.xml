@@ -80,4 +80,7 @@
     <string name="startup_tray_sub">Schließen des Fensters beendet den Launcher nicht: gekoppelte Geräte, Web-Oberfläche und Abgleich laufen weiter. Beenden über das Tray-Symbol.</string>
     <string name="tray_open">Öffnen</string>
     <string name="tray_quit">Beenden</string>
+    <string name="host_web_open">Angemeldet öffnen</string>
+    <string name="host_web_open_sub">Öffnet die Web-Oberfläche im Browser dieses PCs, ohne Passwort.</string>
+    <string name="tray_web">Web-Oberfläche öffnen</string>
 </resources>

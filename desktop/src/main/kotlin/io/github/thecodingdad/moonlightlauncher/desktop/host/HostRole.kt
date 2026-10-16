@@ -72,6 +72,9 @@ class HostRole(private val dataDir: File, private val secrets: SecretStore, priv
 
     fun start() = apply()
 
+    /** One-time address that opens the web UI signed in (null while it is off). */
+    fun localLoginUrl(): String? = if (_status.value.webRunning) web.localLoginUrl() else null
+
     fun stop() = synchronized(this) {
         if (_status.value.serverRunning) api.stop()
         if (_status.value.webRunning) web.stop()

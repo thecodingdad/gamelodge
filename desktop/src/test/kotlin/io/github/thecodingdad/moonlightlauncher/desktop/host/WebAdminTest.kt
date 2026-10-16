@@ -108,6 +108,31 @@ class WebAdminTest {
     }
 
     @Test
+    fun pagesLetBrowsersSendTheirOrigin() {
+        // "no-referrer" makes browsers post with "Origin: null" (refused by the origin check).
+        val policy = get("/setup").use { it.header("Referrer-Policy") }
+        assertEquals("same-origin", policy)
+        auth.issueSetupCode()
+        assertEquals(403, post("/setup", mapOf("code" to "x"), origin = "null").use { it.code })
+    }
+
+    @Test
+    fun localLinkSignsInOnce() {
+        val url = web.localLoginUrl()!!
+        val path = url.substringAfter(web.port.toString())
+        val r = get(path)
+        assertEquals("/pairing", r.header("Location"))
+        val cookie = r.use { it.cookie() }
+        assertEquals(200, get("/pairing", cookie).use { it.code })
+        // Used up; forged or expired tokens don't work either.
+        assertEquals("/login", get(path).use { it.header("Location") })
+        assertEquals("/login", get("/auth/local?token=forged").use { it.header("Location") })
+        val late = web.localLoginUrl()!!.substringAfter(web.port.toString())
+        now += WebAdmin.LOCAL_LOGIN_MS + 1
+        assertEquals("/login", get(late).use { it.header("Location") })
+    }
+
+    @Test
     fun expiredSetupCodeIsRefused() {
         val code = auth.issueSetupCode()
         now += AdminAuth.SETUP_CODE_LIFETIME_MS + 1

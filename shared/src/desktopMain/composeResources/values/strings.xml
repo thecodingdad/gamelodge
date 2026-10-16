@@ -80,4 +80,7 @@
     <string name="startup_tray_sub">Closing the window keeps the launcher running, so paired devices, the web interface and the sync keep working. Quit from the tray icon.</string>
     <string name="tray_open">Open</string>
     <string name="tray_quit">Quit</string>
+    <string name="host_web_open">Open signed in</string>
+    <string name="host_web_open_sub">Opens the web interface in the browser on this PC, without a password.</string>
+    <string name="tray_web">Open web interface</string>
 </resources>

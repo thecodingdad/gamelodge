@@ -18,6 +18,7 @@ import androidx.compose.ui.res.loadImageBitmap
 import io.github.thecodingdad.moonlightlauncher.resources.Res
 import io.github.thecodingdad.moonlightlauncher.resources.tray_open
 import io.github.thecodingdad.moonlightlauncher.resources.tray_quit
+import io.github.thecodingdad.moonlightlauncher.resources.tray_web
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.application
@@ -116,6 +117,7 @@ fun main(args: Array<String>) {
         val state = rememberWindowState(placement = WindowPlacement.Maximized, width = 1600.dp, height = 900.dp)
         val startupSettings by startup.settings.collectAsState()
         val visible by windowVisible.collectAsState()
+        val hostStatus by container.hostRole.status.collectAsState()
         val icon = remember { BitmapPainter(DesktopContainer::class.java.getResourceAsStream("/icon.png")!!.use { loadImageBitmap(it) }) }
         // Tray icon while the launcher may run without its window.
         if (startupSettings.closeToTray) {
@@ -125,6 +127,9 @@ fun main(args: Array<String>) {
                 onAction = { windowVisible.value = true; platformUi.bringToFront() },
                 menu = {
                     Item(stringResource(Res.string.tray_open), onClick = { windowVisible.value = true; platformUi.bringToFront() })
+                    if (hostStatus.webRunning) {
+                        Item(stringResource(Res.string.tray_web), onClick = { container.hostRole.localLoginUrl()?.let(BrowserOpener::open) })
+                    }
                     Item(stringResource(Res.string.tray_quit), onClick = ::exitApplication)
                 },
             )

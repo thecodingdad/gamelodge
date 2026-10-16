@@ -57,6 +57,8 @@ class WebAdmin(
     }
 
     private val sessions = ConcurrentHashMap<String, Session>()
+    /** One-time sign-in links for this PC (token → valid until). */
+    private val localTokens = ConcurrentHashMap<String, Long>()
     private var server: HttpsServer? = null
     private val random = SecureRandom()
 
@@ -89,6 +91,19 @@ class WebAdmin(
         Log.i("Web UI listening on port $port")
     }
 
+    /**
+     * Address that opens the web UI signed in on this PC (tray, settings): valid once, for two
+     * minutes, only from this PC itself. Null while the web UI is off.
+     */
+    fun localLoginUrl(): String? {
+        val port = port ?: return null
+        val now = clock()
+        localTokens.entries.removeIf { it.value < now }
+        val token = token()
+        localTokens[token] = now + LOCAL_LOGIN_MS
+        return "https://127.0.0.1:$port/auth/local?token=$token"
+    }
+
     fun stop() {
         server?.stop(0)
         server = null
@@ -99,7 +114,8 @@ class WebAdmin(
         val h = ex.responseHeaders
         h["X-Frame-Options"] = listOf("DENY")
         h["X-Content-Type-Options"] = listOf("nosniff")
-        h["Referrer-Policy"] = listOf("no-referrer")
+        // Not "no-referrer": with it browsers send "Origin: null" on form posts and the origin check fails.
+        h["Referrer-Policy"] = listOf("same-origin")
         h["Cross-Origin-Opener-Policy"] = listOf("same-origin")
         h["Permissions-Policy"] = listOf("camera=(), microphone=(), geolocation=()")
         h["Content-Security-Policy"] = listOf(
@@ -132,6 +148,11 @@ class WebAdmin(
         when (path) {
             "/setup" -> return setup(r)
             "/login" -> return login(r)
+            "/auth/local" -> {
+                // One-time link from the launcher on this PC: signs in without a password.
+                val until = form["token"]?.let { localTokens.remove(it) }
+                return if (!post && remote.isLoopbackAddress && until != null && until >= clock()) signIn(ex) else redirect(ex, "/login")
+            }
         }
         if (session == null) return redirect(ex, if (auth.needsSetup) "/setup" else "/login")
         if (post && !constantEquals(form["csrf"], session.csrf)) return status(ex, 403)
@@ -586,6 +607,7 @@ class WebAdmin(
         private const val COOKIE = "__Host-session"
         const val IDLE_TIMEOUT_MS = 30 * 60_000L
         const val MAX_SESSION_MS = 12 * 3_600_000L
+        const val LOCAL_LOGIN_MS = 2 * 60_000L
         private const val MAX_BODY = 16 * 1024
         private val PERMISSION_ORDER = listOf(Permissions.METADATA, Permissions.HOST_GAMES, Permissions.HOST_GAMES_WRITE)
 

@@ -2,6 +2,7 @@ package io.github.thecodingdad.moonlightlauncher.desktop
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Link
@@ -151,9 +152,14 @@ fun HostRolePage(services: HostServices) {
         if (status.webRunning) {
             val address = remember { role.localAddresses().firstOrNull() ?: "localhost" }
             Text(stringResource(Res.string.host_web_address, "https://$address:${WebAdmin.DEFAULT_PORT}"), style = MaterialTheme.typography.bodyLarge, color = LauncherTheme.colors.onSurface)
+            LauncherButton(
+                stringResource(Res.string.host_web_open), onClick = { role.localLoginUrl()?.let(BrowserOpener::open) },
+                icon = Icons.AutoMirrored.Filled.OpenInNew, primary = true,
+            )
+            Text(stringResource(Res.string.host_web_open_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
             if (needsSetup) {
                 Text(stringResource(Res.string.host_web_no_password), color = LauncherTheme.colors.onSurfaceMuted)
-                LauncherButton(stringResource(Res.string.host_web_setup), onClick = { setupCode = role.auth.issueSetupCode() }, icon = Icons.Filled.Key, primary = true)
+                LauncherButton(stringResource(Res.string.host_web_setup), onClick = { setupCode = role.auth.issueSetupCode() }, icon = Icons.Filled.Key)
             } else {
                 Text(stringResource(Res.string.host_web_password_set), color = LauncherTheme.colors.onSurfaceMuted)
                 HoldToConfirmButton(stringResource(Res.string.host_web_reset), onConfirmed = { setupCode = role.auth.reset(); webRevision++ }, icon = Icons.Filled.Key)

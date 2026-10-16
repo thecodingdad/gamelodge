@@ -100,7 +100,7 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
 
     /** The PC's games for the streaming host and paired launchers. */
     val hostGames: io.github.thecodingdad.moonlightlauncher.desktop.host.LibraryHostGames by lazy {
-        io.github.thecodingdad.moonlightlauncher.desktop.host.LibraryHostGames(database, pcLibrary, { metadata }, { hostRole.settings.value }, { hostSync }, http)
+        io.github.thecodingdad.moonlightlauncher.desktop.host.LibraryHostGames(database, pcLibrary::entry, { metadata }, { hostRole.settings.value }, { hostSync }, http)
     }
 
     /** Puts the PC's games on the streaming host (Vibepollo …) with the launcher as runner. */

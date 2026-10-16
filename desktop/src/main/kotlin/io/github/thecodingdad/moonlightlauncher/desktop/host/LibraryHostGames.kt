@@ -10,7 +10,6 @@ import io.github.thecodingdad.moonlightlauncher.data.db.LibraryItemEntity
 import io.github.thecodingdad.moonlightlauncher.data.db.MetaField
 import io.github.thecodingdad.moonlightlauncher.data.db.TargetType
 import io.github.thecodingdad.moonlightlauncher.data.library.TitleNormalizer
-import io.github.thecodingdad.moonlightlauncher.desktop.games.PcLibrary
 import io.github.thecodingdad.moonlightlauncher.desktop.host.sync.AppBuilder
 import io.github.thecodingdad.moonlightlauncher.desktop.host.sync.HostSync
 import io.github.thecodingdad.moonlightlauncher.desktop.host.sync.SyncEntry
@@ -34,7 +33,8 @@ import java.util.concurrent.TimeUnit
  */
 class LibraryHostGames(
     private val db: LauncherDatabase,
-    private val pcLibrary: PcLibrary,
+    /** The scanned game behind a local target (this PC's stores only). */
+    private val localEntry: (String) -> io.github.thecodingdad.moonlightlauncher.desktop.games.GameEntry?,
     private val metadata: () -> MetadataService,
     private val settings: () -> HostSettings,
     private val sync: () -> HostSync?,
@@ -65,12 +65,16 @@ class LibraryHostGames(
         }
     }.getOrNull()
 
-    /** The library's PC games that belong on the host: not hidden, startable (or installable when wanted). */
+    /**
+     * The library's PC games that belong on the host: not hidden, startable (or installable when
+     * wanted). Only games of this PC: games of other streaming hosts never go to the host, that
+     * would stream a stream.
+     */
     suspend fun syncEntries(): List<Pair<SyncEntry, LibraryItemEntity>> {
         val includeOwned = settings().syncNotInstalled
         val items = dao.getAllItems().associateBy { it.id }
         return dao.getAllTargets().filter { it.type == TargetType.LOCAL }.mapNotNull { t ->
-            val entry = t.packageName?.let(pcLibrary::entry) ?: return@mapNotNull null
+            val entry = t.packageName?.let(localEntry) ?: return@mapNotNull null
             val item = items[t.itemId]?.takeIf { !it.hidden } ?: return@mapNotNull null
             val startable = if (entry.installed) !entry.launch.isNullOrBlank() else includeOwned && !entry.install.isNullOrBlank()
             if (!startable) return@mapNotNull null
