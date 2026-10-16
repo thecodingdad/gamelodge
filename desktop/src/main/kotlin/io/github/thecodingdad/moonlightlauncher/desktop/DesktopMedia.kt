@@ -62,6 +62,8 @@ class DesktopFeedbackOutput(private val gamepads: () -> Gamepads?) : FeedbackOut
 
     override fun haptic(sound: UiSound, strength: HapticStrength) {
         if (sound == UiSound.FOCUS) return // a rumble per focus step is too much on a pad
+        // Only the device in use gives feedback: no rumble for touch, mouse or keyboard input.
+        if (gamepads()?.padInUse != true) return
         val power = when (strength) {
             HapticStrength.LIGHT -> 0.25f
             HapticStrength.MEDIUM -> 0.45f

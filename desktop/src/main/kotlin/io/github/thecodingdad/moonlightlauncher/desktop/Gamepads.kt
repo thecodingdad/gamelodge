@@ -35,6 +35,19 @@ class Gamepads(private val dispatcher: InputDispatcher) {
     /** Called on every pad input (screensaver, sounds). */
     @Volatile var onInput: () -> Unit = {}
 
+    /** The pad was the last input device (touch, mouse or keyboard reset it): only then it rumbles. */
+    @Volatile var padInUse = false
+        private set
+
+    /** True while a key event made from pad input is being delivered (tells it from the keyboard). */
+    @Volatile var dispatching = false
+        private set
+
+    /** Touch, mouse or keyboard was used. */
+    fun otherInput() {
+        padInUse = false
+    }
+
     /** Called when B goes down (back sound, like the Android activity plays it). */
     @Volatile var onBack: () -> Unit = {}
 
@@ -120,6 +133,7 @@ class Gamepads(private val dispatcher: InputDispatcher) {
             if (p == null) continue
             if (changed(p, s)) {
                 lastUsed = i
+                padInUse = true
                 onInput()
             }
             handle(p, s, now)
@@ -220,7 +234,12 @@ class Gamepads(private val dispatcher: InputDispatcher) {
         val target = window ?: return
         EventQueue.invokeLater {
             val focusOwner = target.mostRecentFocusOwner ?: target
-            focusOwner.dispatchEvent(KeyEvent(focusOwner, type, System.currentTimeMillis(), 0, code, KeyEvent.CHAR_UNDEFINED))
+            dispatching = true
+            try {
+                focusOwner.dispatchEvent(KeyEvent(focusOwner, type, System.currentTimeMillis(), 0, code, KeyEvent.CHAR_UNDEFINED))
+            } finally {
+                dispatching = false
+            }
         }
     }
 

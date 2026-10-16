@@ -174,7 +174,10 @@ fun main(args: Array<String>) {
             state = state,
             onPreviewKeyEvent = { e ->
                 vm.touch()
-                if (e.type == KeyEventType.KeyDown) controllerInput()
+                if (e.type == KeyEventType.KeyDown) {
+                    controllerInput()
+                    if (!gamepads.dispatching) gamepads.otherInput()
+                }
                 when {
                     // F11: full screen like a console.
                     e.key == Key.F11 && e.type == KeyEventType.KeyDown -> {
@@ -216,6 +219,7 @@ fun main(args: Array<String>) {
                     awaitPointerEventScope {
                         while (true) {
                             val event = awaitPointerEvent(androidx.compose.ui.input.pointer.PointerEventPass.Initial)
+                            if (event.type == androidx.compose.ui.input.pointer.PointerEventType.Press) gamepads.otherInput()
                             if (event.type == androidx.compose.ui.input.pointer.PointerEventType.Press &&
                                 modeManager.inputMode != androidx.compose.ui.input.InputMode.Touch
                             ) modeManager.requestInputMode(androidx.compose.ui.input.InputMode.Touch)
