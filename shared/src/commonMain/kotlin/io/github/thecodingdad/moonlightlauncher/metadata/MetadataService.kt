@@ -261,7 +261,7 @@ class MetadataService(
     }
 
     private fun LibraryEntry.igdbPlatform(game: IgdbGame) = PlatformResolver.fromIgdb(
-        game.platforms.map { it.name }, playsOnAndroid = localTarget != null,
+        game.platforms.map { it.name }, playsLocally = localTarget != null,
     )
 
     /**

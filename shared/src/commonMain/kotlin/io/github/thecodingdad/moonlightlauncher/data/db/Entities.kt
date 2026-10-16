@@ -239,11 +239,14 @@ data class LibraryEntry(
     val romTargets: List<LaunchTargetEntity> get() = targets.filter { it.type == TargetType.ROM }
     val boxArtPath: String? get() = targets.firstNotNullOfOrNull { it.boxArtPath }
 
-    /** Only owned: no local app and every host entry would install the game first. */
-    val notInstalled: Boolean get() = targets.isNotEmpty() && localTarget == null && romTargets.isEmpty() && remoteTargets.none { it.installed }
+    /** Only owned: nothing installed here (PC stores list owned games too) and every host entry would install the game first. */
+    val notInstalled: Boolean get() = targets.isNotEmpty() && romTargets.isEmpty() && targets.none { it.installed && it.type != TargetType.ROM }
+
+    /** Installed on this device (an Android app always is; a PC store game may only be owned). */
+    val installedLocally: Boolean get() = targets.any { it.type == TargetType.LOCAL && it.installed }
 
     /** "Start with…" only makes sense when the game can start in more than one way (app, ROM, host). */
-    val hasTargetChoice: Boolean get() = targets.count { it.type != TargetType.REMOTE || it.installed } > 1
+    val hasTargetChoice: Boolean get() = targets.count { it.type == TargetType.ROM || it.installed } > 1
 }
 
 /** Item without its automatic metadata (fields the user edited stay), ready for a new lookup. */

@@ -45,6 +45,10 @@ class FiltersTest {
         // A local copy makes it playable.
         val alsoLocal = owned.copy(targets = owned.targets + LaunchTargetEntity("l:e", "e", TargetType.LOCAL, "e", packageName = "e", lastSeenAt = 0))
         assertFalse(alsoLocal.notInstalled)
+        // A PC store game that is only owned (local target not installed) counts as not installed.
+        val ownedOnPc = owned.copy(targets = listOf(LaunchTargetEntity("l:e", "e", TargetType.LOCAL, "e", packageName = "steam:1", lastSeenAt = 0, installed = false)))
+        assertTrue(ownedOnPc.notInstalled)
+        assertFalse(ownedOnPc.installedLocally)
     }
 
     @Test
@@ -128,11 +132,11 @@ class FiltersTest {
         assertTrue(PlatformResolver.mayReplace(item.copy(platform = "PC", platformSource = PlatformSource.PLAYNITE), PlatformSource.COMPANION, "PC"))
         assertFalse(PlatformResolver.mayReplace(item.copy(platformSource = PlatformSource.COMPANION), PlatformSource.IGDB, "Wii"))
         // Several platforms: nothing is set automatically; one platform (PC variants count once) is.
-        assertEquals(null, PlatformResolver.fromIgdb(listOf("Wii U", "Nintendo Switch", "Nintendo 3DS"), playsOnAndroid = false))
-        assertEquals(null, PlatformResolver.fromIgdb(listOf("Nintendo Switch", "PC (Microsoft Windows)"), playsOnAndroid = false))
-        assertEquals("Nintendo Switch", PlatformResolver.fromIgdb(listOf("Nintendo Switch"), playsOnAndroid = false))
-        assertEquals("PC", PlatformResolver.fromIgdb(listOf("PC (Microsoft Windows)", "Linux", "Mac"), playsOnAndroid = false))
-        assertEquals("Android", PlatformResolver.fromIgdb(listOf("iOS", "Android", "Nintendo Switch"), playsOnAndroid = true))
+        assertEquals(null, PlatformResolver.fromIgdb(listOf("Wii U", "Nintendo Switch", "Nintendo 3DS"), playsLocally = false))
+        assertEquals(null, PlatformResolver.fromIgdb(listOf("Nintendo Switch", "PC (Microsoft Windows)"), playsLocally = false))
+        assertEquals("Nintendo Switch", PlatformResolver.fromIgdb(listOf("Nintendo Switch"), playsLocally = false))
+        assertEquals("PC", PlatformResolver.fromIgdb(listOf("PC (Microsoft Windows)", "Linux", "Mac"), playsLocally = false))
+        assertEquals("Android", PlatformResolver.fromIgdb(listOf("iOS", "Android", "Nintendo Switch"), playsLocally = true))
     }
 
     private fun converted(key: String, order: Int) = FilterEntity(

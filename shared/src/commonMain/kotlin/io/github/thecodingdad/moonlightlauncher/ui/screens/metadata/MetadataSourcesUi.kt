@@ -1,5 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher.ui.screens.metadata
 
+import io.github.thecodingdad.moonlightlauncher.ui.components.mouseDragScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -259,7 +260,8 @@ private fun KeySourceDialog(id: String, entry: MetadataSources.Entry?, onChanged
     val complete = first.isNotBlank() && (sgdb || second.isNotBlank())
 
     Modal(visible = true, onDismiss = onDismiss, title = name, maxWidth = 640.dp) {
-        Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        val formScroll = rememberScrollState()
+        Column(Modifier.mouseDragScroll(formScroll).verticalScroll(formScroll), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(stringResource(if (sgdb) Res.string.metadata_sgdb_help else Res.string.metadata_igdb_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
             if (sgdb) {
                 LauncherTextField(stringResource(Res.string.metadata_api_key), first, { first = it }, kind = TextKind.PASSWORD)
@@ -390,7 +392,8 @@ private fun ServerSourceDialog(entry: MetadataSources.Entry, online: Boolean?, o
     val scope = rememberCoroutineScope()
     val s = entry.server ?: return
     Modal(visible = true, onDismiss = onDismiss, title = s.name, maxWidth = 600.dp) {
-        Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp), horizontalAlignment = Alignment.Start) {
+        val formScroll = rememberScrollState()
+        Column(Modifier.mouseDragScroll(formScroll).verticalScroll(formScroll), verticalArrangement = Arrangement.spacedBy(10.dp), horizontalAlignment = Alignment.Start) {
             InfoRow(stringResource(Res.string.servers_address), s.baseUrl.removePrefix("https://"))
             InfoRow(stringResource(Res.string.servers_state), when (online) {
                 true -> stringResource(Res.string.servers_online)

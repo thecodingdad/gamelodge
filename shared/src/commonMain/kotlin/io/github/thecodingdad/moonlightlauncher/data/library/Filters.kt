@@ -409,7 +409,7 @@ object FilterEngine {
         val item = entry.item
         val hit = when (field.type) {
             FieldType.BOOLEAN -> when (field) {
-                FilterField.INSTALLED -> entry.localTarget != null
+                FilterField.INSTALLED -> entry.installedLocally
                 FilterField.NOT_INSTALLED -> entry.notInstalled
                 FilterField.FAVORITE -> item.favorite
                 FilterField.PLAYED -> item.lastPlayedAt != null

@@ -1,5 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher.ui.screens.home
 
+import io.github.thecodingdad.moonlightlauncher.ui.components.mouseDragScroll
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import kotlinx.coroutines.flow.first
 import androidx.compose.animation.Crossfade
@@ -207,7 +208,7 @@ fun HeroHome(
             } else 0f
             LazyColumn(
                 state = listState,
-                modifier = Modifier.fillMaxWidth().weight(1f)
+                modifier = Modifier.fillMaxWidth().weight(1f).mouseDragScroll(listState)
                     // Extend 48dp upwards under the info block (room for the top fade).
                     .layout { measurable, constraints ->
                         val extra = 48.dp.roundToPx()
@@ -252,10 +253,12 @@ fun HeroHome(
                 if (rows.running.isNotEmpty()) {
                     item(key = "running") { pinned("running") {
                         RowTitle(stringResource(Res.string.home_running))
+                        val runningRow = androidx.compose.foundation.lazy.rememberLazyListState()
                         LazyRow(
+                            state = runningRow,
                             contentPadding = PaddingValues(horizontal = 40.dp, vertical = 12.dp),
                             horizontalArrangement = Arrangement.spacedBy(18.dp),
-                            modifier = Modifier.focusRestorer(),
+                            modifier = Modifier.focusRestorer().mouseDragScroll(runningRow, androidx.compose.foundation.gestures.Orientation.Horizontal),
                         ) {
                             items(rows.running, key = { it.host.uuid }) { session ->
                                 val key = "running:${session.host.uuid}"
@@ -325,7 +328,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.homeRow(
             state = rowState,
             contentPadding = PaddingValues(horizontal = 40.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.focusRestorer().bringIntoViewRequester(rowBringIntoView),
+            modifier = Modifier.focusRestorer().bringIntoViewRequester(rowBringIntoView).mouseDragScroll(rowState, androidx.compose.foundation.gestures.Orientation.Horizontal),
         ) {
             items(entries, key = { it.item.id }) { entry ->
                 val focusKey = "$key:${entry.item.id}"

@@ -1,5 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher.ui.screens.settings
 
+import io.github.thecodingdad.moonlightlauncher.ui.components.mouseDragScroll
 import io.github.thecodingdad.moonlightlauncher.ui.components.controllerScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -384,7 +385,8 @@ private fun GroupMembersDialog(
                 .filter { q.isEmpty() || TitleNormalizer.normalize(it.item.title).contains(q) }
                 .sortedBy { it.item.title.lowercase() }
         }
-        LazyColumn(state = io.github.thecodingdad.moonlightlauncher.ui.input.rememberStickLazyListState(), modifier = Modifier.heightIn(max = 460.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        val pickerList = io.github.thecodingdad.moonlightlauncher.ui.input.rememberStickLazyListState()
+        LazyColumn(state = pickerList, modifier = Modifier.heightIn(max = 460.dp).mouseDragScroll(pickerList), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             items(shown, key = { it.item.id }) { entry ->
                 val member = entry.item.id in members
                 FocusSurface(

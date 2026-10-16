@@ -10,6 +10,8 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.ui.input.pointer.isPrimaryPressed
+import androidx.compose.ui.input.pointer.isSecondaryPressed
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Box
@@ -103,6 +105,7 @@ fun FocusSurface(
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     content: @Composable BoxScope.(focused: Boolean) -> Unit,
 ) {
+    val currentLongClick = androidx.compose.runtime.rememberUpdatedState(onLongClick)
     val focused by interactionSource.collectIsFocusedAsState()
     val controllerMode = isControllerMode()
     val feedback = LocalUiFeedback.current
@@ -153,6 +156,21 @@ fun FocusSurface(
                     currentTouched()
                 }
             }
+            // Right click = long press (context menu), like the X button.
+            .then(
+                if (onLongClick == null || !enabled) Modifier else Modifier.pointerInput(Unit) {
+                    awaitEachGesture {
+                        val event = awaitPointerEvent(PointerEventPass.Initial)
+                        if (event.type == androidx.compose.ui.input.pointer.PointerEventType.Press &&
+                            event.buttons.isSecondaryPressed && !event.buttons.isPrimaryPressed
+                        ) {
+                            event.changes.forEach { it.consume() }
+                            feedback?.play(UiSound.TOGGLE)
+                            currentLongClick.value?.invoke()
+                        }
+                    }
+                },
+            )
             .combinedClickable(
                 interactionSource = interactionSource,
                 indication = ripple(),

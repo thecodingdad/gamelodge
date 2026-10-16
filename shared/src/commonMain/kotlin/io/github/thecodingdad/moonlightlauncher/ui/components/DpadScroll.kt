@@ -43,6 +43,7 @@ fun Modifier.controllerScroll(state: ScrollState = androidx.compose.foundation.r
     val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
     io.github.thecodingdad.moonlightlauncher.ui.input.RegisterStickScroll(state)
     return this
+        .mouseDragScroll(state)
         .onKeyEvent { e ->
             if (e.type != KeyEventType.KeyDown) return@onKeyEvent false
             val direction = when (e.key) {

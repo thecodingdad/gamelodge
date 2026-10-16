@@ -1,5 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher.ui.screens.stats
 
+import io.github.thecodingdad.moonlightlauncher.ui.components.mouseDragScroll
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
@@ -78,7 +79,7 @@ fun StatsScreen(entries: List<LibraryEntry>, sessions: List<PlaySessionEntity>) 
     val focus = remember { androidx.compose.ui.focus.FocusRequester() }
     androidx.compose.runtime.LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
     Column(
-        Modifier.fillMaxSize().focusRequester(focus).dpadScroll(scroll).focusable().verticalScroll(scroll)
+        Modifier.fillMaxSize().focusRequester(focus).dpadScroll(scroll).focusable().mouseDragScroll(scroll).verticalScroll(scroll)
             .padding(horizontal = 48.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {

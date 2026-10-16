@@ -1,5 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher.ui.screens.settings
 
+import io.github.thecodingdad.moonlightlauncher.ui.components.mouseDragScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -119,7 +120,8 @@ fun HostConfigScreen(host: HostState) {
     val onPick = picking
     Modal(visible = onPick != null, onDismiss = { picking = null }, title = stringResource(Res.string.host_pick_action), maxWidth = 760.dp) {
         val candidates = entities.values.filter { it.domain in actionDomains }.sortedWith(compareBy({ it.domain }, { it.name }))
-        LazyColumn(state = io.github.thecodingdad.moonlightlauncher.ui.input.rememberStickLazyListState(), modifier = Modifier.heightIn(max = 400.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        val pickerList = io.github.thecodingdad.moonlightlauncher.ui.input.rememberStickLazyListState()
+        LazyColumn(state = pickerList, modifier = Modifier.heightIn(max = 400.dp).mouseDragScroll(pickerList), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             item {
                 EntityRow(null) { onPick?.invoke(null); picking = null }
             }

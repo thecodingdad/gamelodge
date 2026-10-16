@@ -40,6 +40,8 @@ fun main() {
     Log.init(File(dataDir, "logs/launcher.log"))
     Log.i("Moonlight Launcher ${DesktopPlatformInfo(dataDir).versionName} starting, data in $dataDir")
 
+    // Games installed here are PC games (IGDB platform choice, suggestions).
+    io.github.thecodingdad.moonlightlauncher.data.library.PlatformResolver.localPlatform = io.github.thecodingdad.moonlightlauncher.data.library.PlatformResolver.PC
     val container = DesktopContainer(dataDir)
     ArtworkFiles.init(dataDir)
     ArtworkPlatform.current = DesktopArtwork

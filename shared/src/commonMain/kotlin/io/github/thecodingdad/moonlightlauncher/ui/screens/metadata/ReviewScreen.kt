@@ -1,5 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher.ui.screens.metadata
 
+import io.github.thecodingdad.moonlightlauncher.ui.components.mouseDragScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -62,11 +63,12 @@ fun ReviewScreen(items: List<LibraryEntry>) {
             Text(stringResource(Res.string.metadata_review_done), style = MaterialTheme.typography.titleMedium, color = LauncherTheme.colors.success)
             return@Column
         }
+        val listState = io.github.thecodingdad.moonlightlauncher.ui.input.rememberStickLazyListState()
         LazyColumn(
-            state = io.github.thecodingdad.moonlightlauncher.ui.input.rememberStickLazyListState(),
+            state = listState,
             contentPadding = PaddingValues(vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
-            modifier = Modifier.focusRestorer(),
+            modifier = Modifier.focusRestorer().mouseDragScroll(listState),
         ) {
             items(items, key = { it.item.id }) { entry ->
                 FocusSurface(

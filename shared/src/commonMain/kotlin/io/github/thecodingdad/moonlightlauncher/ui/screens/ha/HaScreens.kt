@@ -1,5 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher.ui.screens.ha
 
+import io.github.thecodingdad.moonlightlauncher.ui.components.mouseDragScroll
 import io.github.thecodingdad.moonlightlauncher.ui.components.controllerScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -223,7 +224,8 @@ private fun EntityPicker(visible: Boolean, entities: List<HaEntity>, onPick: (Ha
         val shown = entities
             .filter { q.isEmpty() || TitleNormalizer.normalize(it.name).contains(q) || it.id.contains(query.trim(), ignoreCase = true) }
             .sortedWith(compareBy({ it.domain }, { it.name }))
-        LazyColumn(state = io.github.thecodingdad.moonlightlauncher.ui.input.rememberStickLazyListState(), modifier = Modifier.heightIn(max = 380.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        val pickerList = io.github.thecodingdad.moonlightlauncher.ui.input.rememberStickLazyListState()
+        LazyColumn(state = pickerList, modifier = Modifier.heightIn(max = 380.dp).mouseDragScroll(pickerList), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(shown, key = { it.id }) { entity ->
                 FocusSurface(
                     onClick = { onPick(entity) },
@@ -256,9 +258,12 @@ fun HaHomeRow() {
             color = LauncherTheme.colors.onSurface,
             modifier = Modifier.padding(start = 40.dp, top = 6.dp),
         )
+        val tileRow = androidx.compose.foundation.lazy.rememberLazyListState()
         androidx.compose.foundation.lazy.LazyRow(
+            state = tileRow,
             contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 40.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(14.dp),
+            modifier = Modifier.mouseDragScroll(tileRow, androidx.compose.foundation.gestures.Orientation.Horizontal),
         ) {
             items(shown, key = { it.entityId }) { tile -> HaTile(tile, entities[tile.entityId]) }
         }

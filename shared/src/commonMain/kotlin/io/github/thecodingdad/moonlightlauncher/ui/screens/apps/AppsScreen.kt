@@ -1,5 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher.ui.screens.apps
 
+import io.github.thecodingdad.moonlightlauncher.ui.components.mouseDragScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material.icons.Icons
@@ -166,7 +167,7 @@ fun AppsScreen(
         contentPadding = PaddingValues(horizontal = if (io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current) 16.dp else 36.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp),
-        modifier = Modifier.fillMaxSize().focusRestorer().onFocusChanged { gridFocused = it.hasFocus },
+        modifier = Modifier.fillMaxSize().focusRestorer().onFocusChanged { gridFocused = it.hasFocus }.mouseDragScroll(gridState),
     ) {
         var gridIndex = 0
         fun section(title: String, list: List<LibraryEntry>) {

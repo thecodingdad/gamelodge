@@ -12,6 +12,9 @@ object PlatformResolver {
     const val PC = "PC"
     const val ANDROID = "Android"
 
+    /** Platform of games installed on this device: Android, or PC on the desktop (set at start). */
+    @Volatile var localPlatform: String = ANDROID
+
     /** Console names, newest first: used when IGDB lists several platforms and none is preferred. */
     private val consoleRank = listOf(
         "Nintendo Switch 2", "PlayStation 5", "Xbox Series X|S", "Nintendo Switch", "PlayStation 4", "Xbox One",
@@ -34,17 +37,17 @@ object PlatformResolver {
 
     /**
      * IGDB's platform only when it is unambiguous: the game exists on exactly one platform, or
-     * it is installed here and IGDB lists Android. A game on several platforms stays without one
+     * it is installed here and IGDB lists this device's platform. A game on several platforms stays without one
      * (a streamed game may as well run in an emulator) until the user or Playnite says otherwise.
      */
-    fun fromIgdb(platforms: List<String>, playsOnAndroid: Boolean): String? {
+    fun fromIgdb(platforms: List<String>, playsLocally: Boolean): String? {
         val normalized = platforms.map(::normalizeIgdb).distinct()
-        if (playsOnAndroid && ANDROID in normalized) return ANDROID
+        if (playsLocally && localPlatform in normalized) return localPlatform
         return normalized.singleOrNull()
     }
 
-    /** Fallback when nothing better is known: only an installed Android game is certain. */
-    fun suggest(entry: LibraryEntry): String? = if (entry.remoteTargets.isEmpty() && entry.localTarget != null) ANDROID else null
+    /** Fallback when nothing better is known: only a game installed on this device is certain. */
+    fun suggest(entry: LibraryEntry): String? = if (entry.remoteTargets.isEmpty() && entry.localTarget != null) localPlatform else null
 
     /** True when [candidate] from [source] may replace the item's current platform. */
     fun mayReplace(item: LibraryItemEntity, source: PlatformSource, candidate: String?): Boolean {

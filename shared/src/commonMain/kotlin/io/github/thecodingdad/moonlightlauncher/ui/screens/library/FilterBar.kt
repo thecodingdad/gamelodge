@@ -1,5 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher.ui.screens.library
 
+import io.github.thecodingdad.moonlightlauncher.ui.components.mouseDragScroll
 import androidx.compose.foundation.gestures.animateScrollBy
 import kotlinx.coroutines.flow.first
 import androidx.compose.foundation.layout.Arrangement
@@ -110,7 +111,7 @@ fun FilterBar(
             state = listState,
             contentPadding = PaddingValues(start = 36.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
-            modifier = Modifier.weight(1f).focusRestorer(),
+            modifier = Modifier.weight(1f).focusRestorer().mouseDragScroll(listState, androidx.compose.foundation.gestures.Orientation.Horizontal),
         ) {
             if (search.isNotEmpty()) {
                 item(key = "search") {

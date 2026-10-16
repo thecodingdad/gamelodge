@@ -1,5 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher.ui.screens.settings
 
+import io.github.thecodingdad.moonlightlauncher.ui.components.mouseDragScroll
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -112,6 +113,7 @@ private fun LicenseTextModal(license: LicenseText?, onDismiss: () -> Unit) {
                 .focusRequester(focus)
                 .dpadScroll(scroll)
                 .focusable()
+                .mouseDragScroll(scroll)
                 .verticalScroll(scroll),
         )
     }

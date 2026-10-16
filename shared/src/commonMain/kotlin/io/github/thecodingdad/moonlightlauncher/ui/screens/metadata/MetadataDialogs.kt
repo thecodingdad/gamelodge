@@ -1,5 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher.ui.screens.metadata
 
+import io.github.thecodingdad.moonlightlauncher.ui.components.mouseDragScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -89,10 +90,11 @@ fun FixMetadataDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
         Spacer(Modifier.height(14.dp))
         // Local copy: the list content is evaluated lazily and may run after a new search reset the state.
         val found = results
+        val foundState = io.github.thecodingdad.moonlightlauncher.ui.input.rememberStickLazyListState()
         when {
             applying || found == null -> CircularProgressIndicator(color = LauncherTheme.colors.accent, modifier = Modifier.align(Alignment.CenterHorizontally))
             found.isEmpty() -> Text(stringResource(Res.string.metadata_no_results), color = LauncherTheme.colors.onSurfaceMuted)
-            else -> LazyColumn(state = io.github.thecodingdad.moonlightlauncher.ui.input.rememberStickLazyListState(), modifier = Modifier.heightIn(max = 340.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            else -> LazyColumn(state = foundState, modifier = Modifier.heightIn(max = 340.dp).mouseDragScroll(foundState), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(found, key = { c -> "${c.source}:${c.id}" }) { c ->
                     FocusSurface(
                         onClick = {
@@ -230,7 +232,7 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, targets: List<io.github.thecod
                 columns = GridCells.Adaptive(if (wide) 260.dp else if (square) 150.dp else 120.dp),
                 state = gridState,
                 // Takes all the room between tabs and hints, which sit at the bottom.
-                modifier = Modifier.weight(1f).onFocusChanged { inGrid = it.hasFocus },
+                modifier = Modifier.weight(1f).onFocusChanged { inGrid = it.hasFocus }.mouseDragScroll(gridState),
                 contentPadding = PaddingValues(4.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -426,12 +428,14 @@ fun AppTileDialog(entry: io.github.thecodingdad.moonlightlauncher.data.db.Librar
         }
         Spacer(Modifier.height(14.dp))
         val list = options
+        val tileGrid = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
         when {
             list == null -> CircularProgressIndicator(color = LauncherTheme.colors.accent)
             list.isEmpty() -> Text(stringResource(Res.string.app_tile_none), color = LauncherTheme.colors.onSurfaceMuted)
             else -> LazyVerticalGrid(
                 columns = GridCells.Adaptive(240.dp),
-                modifier = Modifier.heightIn(max = 380.dp),
+                state = tileGrid,
+                modifier = Modifier.heightIn(max = 380.dp).mouseDragScroll(tileGrid),
                 contentPadding = PaddingValues(4.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
