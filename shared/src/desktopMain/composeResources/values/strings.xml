@@ -2,6 +2,8 @@
 <!-- Strings only the desktop app uses. -->
 <resources>
     <string name="game_sources_intro">Games of the stores installed on this PC. Switched-off stores are left out of the library.</string>
+    <string name="game_sources_scan_now">Search for games now</string>
+    <string name="game_sources_scan_now_sub">Stores and the app lists of connected hosts</string>
     <string name="game_source_not_installed">Not installed on this PC</string>
     <string name="game_source_count">%1$d games, %2$d of them installed</string>
     <string name="game_source_none">No games found</string>

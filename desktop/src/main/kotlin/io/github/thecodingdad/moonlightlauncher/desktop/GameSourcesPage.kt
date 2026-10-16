@@ -1,5 +1,6 @@
 package io.github.thecodingdad.moonlightlauncher.desktop
 
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -39,6 +40,7 @@ import io.github.thecodingdad.moonlightlauncher.ui.components.Modal
 import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.SectionHeader
 import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.SettingsPage
 import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.SwitchRow
+import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.NavRow
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -66,6 +68,13 @@ fun GameSourcesPage(library: PcLibrary, settings: LauncherSettings, update: ((La
         Text(stringResource(Res.string.game_sources_intro), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
         // A scan running: which stores are still being looked at.
         val scanning by library.scanning.collectAsState()
+        val hostRepository = io.github.thecodingdad.moonlightlauncher.LocalContainer.current.hosts
+        NavRow(
+            stringResource(Res.string.game_sources_scan_now),
+            { library.rescan(); hostRepository.refreshAppLists() },
+            subtitle = stringResource(Res.string.game_sources_scan_now_sub),
+            icon = androidx.compose.material.icons.Icons.Filled.Refresh,
+        )
         scanning?.let { p ->
             Text(
                 stringResource(Res.string.task_pc_scan) + " · " + p.pending.joinToString { storeNames[it] ?: it },

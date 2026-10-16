@@ -77,6 +77,9 @@ class DesktopHosts(
     private val discovered = java.util.concurrent.ConcurrentHashMap<String, StoredHost>()
     private val discovery = HostDiscovery { address, port -> scope.launch(Dispatchers.IO) { found(address, port) } }
 
+    /** Set while Moonlight-Qt streams: no polling meanwhile. */
+    @Volatile var streaming = false
+
     override val hosts: StateFlow<Map<String, HostState>> = _hosts.asStateFlow()
     override val appLists: StateFlow<Map<String, List<RemoteApp>>> = _appLists.asStateFlow()
 
@@ -91,7 +94,8 @@ class DesktopHosts(
         if (polling?.isActive == true) return
         polling = scope.launch(Dispatchers.IO) {
             while (isActive) {
-                pollAll()
+                // A stream runs: the host is busy with it, its state comes again afterwards.
+                if (!streaming) pollAll()
                 delay(POLL_MS)
             }
         }
@@ -276,6 +280,8 @@ class DesktopHosts(
         }
         val paired = (info.paired || keepPaired) && s.serverCert != null
         val before = _hosts.value[s.uuid]
+        // Just came online: its app list right away (otherwise every few minutes).
+        if (before?.status != HostStatus.ONLINE) appListAt.remove(s.uuid)
         if (before?.status != HostStatus.ONLINE || before.paired != paired) {
             Log.i("Host ${info.name} online, paired: $paired (certificate ${if (s.serverCert != null) "pinned" else "none"})")
         }
@@ -326,8 +332,8 @@ class DesktopHosts(
     private fun safe(s: String) = s.filter { it.isLetterOrDigit() || it == '-' }
 
     companion object {
-        private const val POLL_MS = 3_000L
-        private const val APP_LIST_MS = 30_000L
+        private const val POLL_MS = 5_000L
+        private const val APP_LIST_MS = 5 * 60_000L
         private const val BOX_ART_QUIET_MS = 5_000L
         private const val SLOW_MS = 3_000L
         private val WOL_PORTS = listOf(7, 9, 47998, 47999, 48000, 48002, 48010)

@@ -127,7 +127,7 @@ class PcLibrary(
     )
 
     companion object {
-        private const val RESCAN_MS = 5 * 60_000L
+        private const val RESCAN_MS = 30 * 60_000L
         private const val TASK_DELAY_MS = 1_000L
         private const val TASK_ID = "pc-scan"
 
