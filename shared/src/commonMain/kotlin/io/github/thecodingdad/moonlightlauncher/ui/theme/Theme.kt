@@ -7,6 +7,8 @@ import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
@@ -24,23 +26,29 @@ import io.github.thecodingdad.moonlightlauncher.data.settings.CardSize
 import io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings
 import io.github.thecodingdad.moonlightlauncher.data.settings.ThemeMode
 
-/** Colours beyond Material's scheme that the launcher design needs. */
-@Immutable
-data class LauncherColors(
+/**
+ * Colours beyond Material's scheme that the launcher design needs. The accent is read from a
+ * state: when it changes (accent from the focused cover, animated) only what shows it redraws,
+ * not the whole tree (a new colours object per animation frame made every focus move stutter).
+ */
+@Stable
+class LauncherColors(
     val background: Color,
     val surface: Color,
     val surfaceRaised: Color,
     val onSurface: Color,
     val onSurfaceMuted: Color,
-    val accent: Color,
-    val onAccent: Color,
+    private val accentState: State<Color>,
     val focusRing: Color,
     val scrim: Color,
     val success: Color,
     val warning: Color,
     val danger: Color,
     val isDark: Boolean,
-)
+) {
+    val accent: Color get() = accentState.value
+    val onAccent: Color get() = onColor(accentState.value)
+}
 
 @Immutable
 data class LauncherDimens(
@@ -65,23 +73,23 @@ object LauncherTheme {
     val dimens: LauncherDimens @Composable get() = LocalLauncherDimens.current
 }
 
-private fun palette(mode: ThemeMode, accent: Color): LauncherColors = when (mode) {
+private fun palette(mode: ThemeMode, accent: State<Color>): LauncherColors = when (mode) {
     ThemeMode.DARK -> LauncherColors(
         background = Color(0xFF0E1015), surface = Color(0xFF171A21), surfaceRaised = Color(0xFF222632),
         onSurface = Color(0xFFF2F3F7), onSurfaceMuted = Color(0xFFA3A8B8),
-        accent = accent, onAccent = onColor(accent), focusRing = Color.White, scrim = Color(0xCC000000),
+        accentState = accent, focusRing = Color.White, scrim = Color(0xCC000000),
         success = Color(0xFF4CD787), warning = Color(0xFFFFC14D), danger = Color(0xFFFF5C6C), isDark = true,
     )
     ThemeMode.BLACK -> LauncherColors(
         background = Color.Black, surface = Color(0xFF0B0B0D), surfaceRaised = Color(0xFF17171B),
         onSurface = Color(0xFFF2F3F7), onSurfaceMuted = Color(0xFF9A9EAC),
-        accent = accent, onAccent = onColor(accent), focusRing = Color.White, scrim = Color(0xE6000000),
+        accentState = accent, focusRing = Color.White, scrim = Color(0xE6000000),
         success = Color(0xFF4CD787), warning = Color(0xFFFFC14D), danger = Color(0xFFFF5C6C), isDark = true,
     )
     ThemeMode.LIGHT -> LauncherColors(
         background = Color(0xFFF3F4F8), surface = Color.White, surfaceRaised = Color(0xFFE7E9F0),
         onSurface = Color(0xFF14161C), onSurfaceMuted = Color(0xFF5B6070),
-        accent = accent, onAccent = onColor(accent), focusRing = Color(0xFF14161C), scrim = Color(0x99000000),
+        accentState = accent, focusRing = Color(0xFF14161C), scrim = Color(0x99000000),
         success = Color(0xFF178A4C), warning = Color(0xFFB57800), danger = Color(0xFFD02B3C), isDark = false,
     )
 }
@@ -140,23 +148,25 @@ fun LauncherTheme(settings: LauncherSettings, content: @Composable () -> Unit) {
     val targetAccent = if (settings.accentMode == io.github.thecodingdad.moonlightlauncher.data.settings.AccentMode.COVER) {
         accentHolder.coverAccent.value ?: fixedAccent
     } else fixedAccent
-    val accent by animateColorAsState(targetAccent, tween(if (settings.reduceMotion) 0 else 600), label = "accent")
+    val accent = animateColorAsState(targetAccent, tween(if (settings.reduceMotion) 0 else 600), label = "accent")
 
-    val colors = palette(settings.themeMode, accent)
+    // One colours object per theme: the animated accent is read through its state.
+    val colors = remember(settings.themeMode, accent) { palette(settings.themeMode, accent) }
     val dimens = dimensFor(settings.cardSize)
-    val scheme = if (colors.isDark) {
+    // Material's scheme keeps the fixed accent: the cover accent would re-theme everything per frame.
+    val scheme = remember(colors, fixedAccent) { if (colors.isDark) {
         darkColorScheme(
-            primary = colors.accent, onPrimary = colors.onAccent, background = colors.background,
+            primary = fixedAccent, onPrimary = onColor(fixedAccent), background = colors.background,
             surface = colors.surface, onSurface = colors.onSurface, surfaceVariant = colors.surfaceRaised,
             onSurfaceVariant = colors.onSurfaceMuted, onBackground = colors.onSurface, error = colors.danger,
         )
     } else {
         lightColorScheme(
-            primary = colors.accent, onPrimary = colors.onAccent, background = colors.background,
+            primary = fixedAccent, onPrimary = onColor(fixedAccent), background = colors.background,
             surface = colors.surface, onSurface = colors.onSurface, surfaceVariant = colors.surfaceRaised,
             onSurfaceVariant = colors.onSurfaceMuted, onBackground = colors.onSurface, error = colors.danger,
         )
-    }
+    } }
 
     CompositionLocalProvider(
         LocalLauncherColors provides colors,
