@@ -43,10 +43,11 @@ class PcLibrary(
     val sources: List<String> get() = scanners.map { it.source }
 
     /** Whether the store reports [entry] as installed now (local data only, no online calls). */
-    suspend fun installedNow(entry: GameEntry): Boolean {
-        val scanner = if (entry.source == "steam") SteamScanner(http, includeOwned = false) else scanners.firstOrNull { it.source == entry.source }
-        return runCatching { scanner?.scan().orEmpty().any { it.id == entry.id && it.installed } }.getOrDefault(false)
-    }
+    suspend fun installedNow(entry: GameEntry): Boolean = installedNow(entry, http)
+
+    /** Stores whose last scan failed (their games may be missing, not gone). */
+    @Volatile var incompleteSources: Set<String> = emptySet()
+        private set
 
     /** Looks again now (e.g. after an install or when a game ended). */
     fun rescan() {
@@ -55,16 +56,18 @@ class PcLibrary(
 
     override suspend fun scan(): List<LocalApp> = withContext(Dispatchers.IO) {
         val off = disabled()
+        val failed = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
         val found = coroutineScope {
             scanners.filter { it.source !in off }.map { scanner ->
                 async {
                     runCatching { scanner.scan() }
-                        .onFailure { Log.w("${scanner.source}: scan failed", it) }
+                        .onFailure { Log.w("${scanner.source}: scan failed", it); failed += scanner.source }
                         .getOrDefault(emptyList())
                         .also { if (it.isNotEmpty()) Log.i("${scanner.source}: ${it.size} games (${it.count { g -> g.installed }} installed)") }
                 }
             }.awaitAll().flatten()
         }
+        incompleteSources = failed.toSet()
         _counts.value = found.groupBy { it.source }.mapValues { (_, games) -> games.size to games.count { it.installed } }
         entries.keys.retainAll(found.map { it.id }.toSet())
         found.forEach { entries[it.id] = it }
@@ -87,7 +90,23 @@ class PcLibrary(
         },
     )
 
-    private companion object {
-        const val RESCAN_MS = 5 * 60_000L
+    companion object {
+        private const val RESCAN_MS = 5 * 60_000L
+
+        /** Whether the store reports [entry] as installed now (local data only; also used by the runner). */
+        suspend fun installedNow(entry: GameEntry, http: OkHttpClient): Boolean {
+            val scanner: GameScanner? = when (entry.source) {
+                "steam" -> SteamScanner(http, includeOwned = false)
+                "epic" -> EpicScanner()
+                "gog" -> GogScanner()
+                "xbox" -> XboxScanner()
+                "ea" -> EaScanner()
+                "ubisoft" -> UbisoftScanner()
+                "battlenet" -> BattleNetScanner()
+                "amazon" -> AmazonScanner()
+                else -> null
+            }
+            return runCatching { scanner?.scan().orEmpty().any { it.id == entry.id && it.installed } }.getOrDefault(false)
+        }
     }
 }

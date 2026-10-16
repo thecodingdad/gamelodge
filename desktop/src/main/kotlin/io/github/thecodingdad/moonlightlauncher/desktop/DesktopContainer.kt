@@ -98,6 +98,25 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
         }
     }
 
+    /** The PC's games for the streaming host and paired launchers. */
+    val hostGames: io.github.thecodingdad.moonlightlauncher.desktop.host.LibraryHostGames by lazy {
+        io.github.thecodingdad.moonlightlauncher.desktop.host.LibraryHostGames(database, pcLibrary, { metadata }, { hostRole.settings.value }, { hostSync }, http)
+    }
+
+    /** Puts the PC's games on the streaming host (Vibepollo …) with the launcher as runner. */
+    val hostSync: io.github.thecodingdad.moonlightlauncher.desktop.host.sync.HostSync by lazy {
+        io.github.thecodingdad.moonlightlauncher.desktop.host.sync.HostSync(
+            dataDir, http,
+            connection = {
+                val s = hostRole.settings.value
+                io.github.thecodingdad.moonlightlauncher.desktop.host.sync.HostConnection(s.hostUrl, s.hostType, s.hostUser, secrets.get(HOST_SECRET))
+            },
+            wanted = { hostGames.syncEntries().map { it.first } },
+            incompleteSources = { pcLibrary.incompleteSources },
+            runnerCommand = { Runner.command() },
+        )
+    }
+
     /** Kept current from the settings (the scan runs off the UI). */
     @Volatile var disabledSources: Set<String> = emptySet()
 
@@ -130,6 +149,11 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
     override val hostPower: HostPower by lazy { HostPower(database.hostConfigDao(), hosts, hostActions, ha) }
     override val launcher: LaunchCoordinator by lazy {
         LaunchCoordinator(hosts, hostActions, { hostPower }, { NoAutoSleep }, profiles, playtime, settings, { ha }, scope, DesktopLaunches(pcLibrary, playtime, scope) { onGameEnded() })
+    }
+
+    companion object {
+        /** Vibepollo API token or Apollo / Sunshine password of the sync. */
+        const val HOST_SECRET = "host_sync_secret"
     }
 
     /** A PC drives its monitors itself; there is no handheld screen to mirror. */

@@ -55,4 +55,23 @@
     <string name="host_web_password_set">Passwort festgelegt.</string>
     <string name="host_web_reset">Halten zum Zurücksetzen des Passworts</string>
     <string name="host_web_enable">Zugriff per Browser</string>
+    <string name="host_sync">Streaming-Host</string>
+    <string name="host_sync_intro">Trägt die Spiele dieses PCs in Vibepollo, Apollo oder Sunshine ein, damit jeder Moonlight-Client sie starten kann. Der Launcher startet das Spiel, der Stream endet mit ihm.</string>
+    <string name="host_sync_enable">Spiele abgleichen</string>
+    <string name="host_sync_type">Host-Programm</string>
+    <string name="host_sync_url">Web-Adresse des Hosts</string>
+    <string name="host_sync_token">API-Token</string>
+    <string name="host_sync_token_hint">Vibepollo: Einstellungen › API-Tokens, mit Zugriff auf die Apps.</string>
+    <string name="host_sync_user">Benutzername</string>
+    <string name="host_sync_password">Passwort</string>
+    <string name="host_sync_stored">gespeichert – leer lassen zum Behalten</string>
+    <string name="host_sync_not_installed">Auch nicht installierte Spiele</string>
+    <string name="host_sync_not_installed_sub">Beim Starten öffnet sich die Installation im Store.</string>
+    <string name="host_sync_now">Jetzt abgleichen</string>
+    <string name="host_sync_running">Gleiche ab…</string>
+    <string name="host_sync_result">Letzter Abgleich: %1$d neu, %2$d geändert, %3$d entfernt</string>
+    <string name="host_sync_result_failed">Letzter Abgleich: %1$d Änderungen fehlgeschlagen (siehe Log)</string>
+    <string name="host_sync_error_unreachable">Der Host ist nicht erreichbar. Läuft er und stimmt die Adresse?</string>
+    <string name="host_sync_error_status">Der Host hat die Anfrage abgelehnt (%1$s). Prüfe die Anmeldung.</string>
+    <string name="host_sync_error_no_host">Kein Host eingerichtet.</string>
 </resources>

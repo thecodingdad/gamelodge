@@ -22,6 +22,15 @@ data class HostSettings(
     val webEnabled: Boolean = false,
     /** Paired launchers may use this PC's SteamGridDB / IGDB keys. */
     val proxyEnabled: Boolean = false,
+    /** Puts the PC's games on the streaming host. */
+    val syncEnabled: Boolean = false,
+    /** Also games that are owned but not installed (starting them installs them). */
+    val syncNotInstalled: Boolean = false,
+    /** Web API of the streaming host on this PC. */
+    val hostUrl: String = "https://localhost:47990",
+    val hostType: io.github.thecodingdad.moonlightlauncher.desktop.host.sync.HostType = io.github.thecodingdad.moonlightlauncher.desktop.host.sync.HostType.VIBEPOLLO,
+    /** Apollo / Sunshine login name (the password or Vibepollo token is in the secret store). */
+    val hostUser: String? = null,
 )
 
 /** Which servers run; "failed" means the port couldn't be opened (in use). */

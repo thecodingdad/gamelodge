@@ -95,18 +95,19 @@ class RenderTest {
         role.update { it.copy(serverEnabled = true, webEnabled = true) }
         role.pairing.open()
         role.devices.add("Odin 2 Portal", "AB".repeat(32), io.github.thecodingdad.moonlightlauncher.desktop.host.Permissions.all, "192.168.1.20")
-        PlatformUi.current = DesktopPlatformUi(Gamepads(InputDispatcher()), { null }, { null }) { role }
+        val services = HostServices(role, container.hostSync, container.secrets)
+        PlatformUi.current = DesktopPlatformUi(Gamepads(InputDispatcher()), { null }, { null }) { services }
         fun <T> ui(block: () -> T): T {
             var result: Result<T>? = null
             javax.swing.SwingUtilities.invokeAndWait { result = runCatching(block) }
             return result!!.getOrThrow()
         }
         val scene = ui {
-            ImageComposeScene(1600, 1400, Density(1.5f)) {
+            ImageComposeScene(1600, 2400, Density(1.5f)) {
                 CompositionLocalProvider(LocalContainer provides container) {
                     io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme(io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings()) {
                         androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.fillMaxSize().background(io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme.colors.background)) {
-                            HostRolePage(role)
+                            HostRolePage(services)
                         }
                     }
                 }

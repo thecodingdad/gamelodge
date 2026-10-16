@@ -55,4 +55,23 @@
     <string name="host_web_password_set">Password set.</string>
     <string name="host_web_reset">Hold to reset the password</string>
     <string name="host_web_enable">Access from the browser</string>
+    <string name="host_sync">Streaming host</string>
+    <string name="host_sync_intro">Puts this PC's games on Vibepollo, Apollo or Sunshine, so every Moonlight client can start them. The launcher starts the game and the stream ends with it.</string>
+    <string name="host_sync_enable">Sync games</string>
+    <string name="host_sync_type">Host program</string>
+    <string name="host_sync_url">Web address of the host</string>
+    <string name="host_sync_token">API token</string>
+    <string name="host_sync_token_hint">Vibepollo: Settings › API tokens, with access to the apps.</string>
+    <string name="host_sync_user">User name</string>
+    <string name="host_sync_password">Password</string>
+    <string name="host_sync_stored">stored – leave empty to keep</string>
+    <string name="host_sync_not_installed">Also games that aren't installed</string>
+    <string name="host_sync_not_installed_sub">Starting one opens its store's installation.</string>
+    <string name="host_sync_now">Sync now</string>
+    <string name="host_sync_running">Syncing…</string>
+    <string name="host_sync_result">Last sync: %1$d new, %2$d changed, %3$d removed</string>
+    <string name="host_sync_result_failed">Last sync: %1$d changes failed (see the log)</string>
+    <string name="host_sync_error_unreachable">The host can't be reached. Is it running, and is the address right?</string>
+    <string name="host_sync_error_status">The host refused the request (%1$s). Check the login.</string>
+    <string name="host_sync_error_no_host">No host set up.</string>
 </resources>

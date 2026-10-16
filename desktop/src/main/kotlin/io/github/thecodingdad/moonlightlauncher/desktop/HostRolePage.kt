@@ -7,6 +7,7 @@ import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.PhonelinkLock
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -28,6 +30,11 @@ import io.github.thecodingdad.moonlightlauncher.desktop.host.PairingRequestInfo
 import io.github.thecodingdad.moonlightlauncher.desktop.host.PairingState
 import io.github.thecodingdad.moonlightlauncher.desktop.host.Permissions
 import io.github.thecodingdad.moonlightlauncher.desktop.host.WebAdmin
+import io.github.thecodingdad.moonlightlauncher.desktop.host.sync.HostSync
+import io.github.thecodingdad.moonlightlauncher.desktop.host.sync.HostType
+import io.github.thecodingdad.moonlightlauncher.data.settings.SecretStore
+import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.ChoiceRow
+import kotlinx.coroutines.launch
 import io.github.thecodingdad.moonlightlauncher.resources.*
 import io.github.thecodingdad.moonlightlauncher.ui.components.HoldToConfirmButton
 import io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton
@@ -55,9 +62,13 @@ private val permissionTexts: List<Pair<String, StringResource>> = listOf(
     Permissions.HOST_GAMES_WRITE to Res.string.host_perm_hostgames_write,
 )
 
+/** What the Devices & pairing page works with. */
+class HostServices(val role: HostRole, val sync: HostSync?, val secrets: SecretStore?)
+
 /** Settings → Devices & pairing: the PC as host for other launchers (the former companion's job). */
 @Composable
-fun HostRolePage(role: HostRole) {
+fun HostRolePage(services: HostServices) {
+    val role = services.role
     val settings by role.settings.collectAsState()
     val status by role.status.collectAsState()
     val pairing by role.pairing.status.collectAsState()
@@ -130,6 +141,8 @@ fun HostRolePage(role: HostRole) {
             )
         }
 
+        services.sync?.let { HostSyncSection(role, it, services.secrets) }
+
         SectionHeader(stringResource(Res.string.host_web))
         SwitchRow(
             stringResource(Res.string.host_web_enable), settings.webEnabled, { on -> role.update { it.copy(webEnabled = on) } },
@@ -160,6 +173,54 @@ fun HostRolePage(role: HostRole) {
             LauncherButton(stringResource(Res.string.action_done), onClick = { setupCode = null; webRevision++ }, primary = true, modifier = Modifier.fillMaxWidth())
         }
     }
+}
+
+/** Streaming host on this PC: connection and the games sync. */
+@Composable
+private fun HostSyncSection(role: HostRole, sync: HostSync, secrets: SecretStore?) {
+    val settings by role.settings.collectAsState()
+    val running by sync.running.collectAsState()
+    val last by sync.last.collectAsState()
+    val scope = rememberCoroutineScope()
+    SectionHeader(stringResource(Res.string.host_sync))
+    Text(stringResource(Res.string.host_sync_intro), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+    val status = when {
+        running -> stringResource(Res.string.host_sync_running)
+        last == null -> null
+        last!!.error == "unreachable" -> stringResource(Res.string.host_sync_error_unreachable)
+        last!!.error == "no_host" -> stringResource(Res.string.host_sync_error_no_host)
+        last!!.error != null -> stringResource(Res.string.host_sync_error_status, last!!.error!!.substringAfter(':'))
+        last!!.failed > 0 -> stringResource(Res.string.host_sync_result_failed, last!!.failed)
+        else -> stringResource(Res.string.host_sync_result, last!!.added, last!!.updated, last!!.removed)
+    }
+    SwitchRow(stringResource(Res.string.host_sync_enable), settings.syncEnabled, { on -> role.update { it.copy(syncEnabled = on) } }, subtitle = status)
+    ChoiceRow(
+        stringResource(Res.string.host_sync_type), HostType.entries, settings.hostType,
+        label = { when (it) { HostType.VIBEPOLLO -> "Vibepollo"; HostType.APOLLO -> "Apollo"; HostType.SUNSHINE -> "Sunshine" } },
+        onSelect = { v -> role.update { it.copy(hostType = v) } },
+    )
+    LauncherTextField(stringResource(Res.string.host_sync_url), settings.hostUrl, { v -> role.update { it.copy(hostUrl = v.trim()) } }, kind = TextKind.URL)
+    // The secret is never shown again: a new value replaces it, an empty field keeps it.
+    var secret by remember { mutableStateOf("") }
+    val stored = remember(secret) { secrets?.get(DesktopContainer.HOST_SECRET) != null }
+    fun saveSecret(v: String) {
+        secret = v
+        if (v.isNotBlank()) secrets?.put(DesktopContainer.HOST_SECRET, v)
+    }
+    if (settings.hostType == HostType.VIBEPOLLO) {
+        LauncherTextField(stringResource(Res.string.host_sync_token), secret, ::saveSecret, kind = TextKind.PASSWORD,
+            placeholder = if (stored) stringResource(Res.string.host_sync_stored) else null)
+        Text(stringResource(Res.string.host_sync_token_hint), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+    } else {
+        LauncherTextField(stringResource(Res.string.host_sync_user), settings.hostUser.orEmpty(), { v -> role.update { it.copy(hostUser = v.trim().ifEmpty { null }) } })
+        LauncherTextField(stringResource(Res.string.host_sync_password), secret, ::saveSecret, kind = TextKind.PASSWORD,
+            placeholder = if (stored) stringResource(Res.string.host_sync_stored) else null)
+    }
+    SwitchRow(
+        stringResource(Res.string.host_sync_not_installed), settings.syncNotInstalled, { on -> role.update { it.copy(syncNotInstalled = on) } },
+        subtitle = stringResource(Res.string.host_sync_not_installed_sub),
+    )
+    LauncherButton(stringResource(Res.string.host_sync_now), onClick = { scope.launch { sync.run() } }, icon = Icons.Filled.Sync, enabled = !running)
 }
 
 /** PIN the device shows; the J-PAKE exchange checks it (a wrong PIN fails on the device). */

@@ -32,10 +32,13 @@ import io.github.thecodingdad.moonlightlauncher.ui.feedback.UiSound
 import io.github.thecodingdad.moonlightlauncher.ui.input.InputDispatcher
 import io.github.thecodingdad.moonlightlauncher.ui.input.PadButton
 import io.github.thecodingdad.moonlightlauncher.util.Log
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import java.io.File
 
-fun main() {
+fun main(args: Array<String>) {
+    // The streaming host starts synced games through the launcher: no window then.
+    if (args.firstOrNull() == Runner.ARG) kotlin.system.exitProcess(Runner.run(args.getOrNull(1)))
     val dataDir = dataDirectory()
     Log.init(File(dataDir, "logs/launcher.log"))
     Log.i("Moonlight Launcher ${DesktopPlatformInfo(dataDir).versionName} starting, data in $dataDir")
@@ -55,7 +58,8 @@ fun main() {
     val dispatcher = InputDispatcher()
     val gamepads = Gamepads(dispatcher)
     var mainWindow: java.awt.Frame? = null
-    val platformUi = DesktopPlatformUi(gamepads, { mainWindow }, { container.pcLibrary }) { container.hostRole }
+    val hostServices by lazy { HostServices(container.hostRole, container.hostSync, container.secrets) }
+    val platformUi = DesktopPlatformUi(gamepads, { mainWindow }, { container.pcLibrary }) { hostServices }
     PlatformUi.current = platformUi
     val feedback = UiFeedback(File(dataDir, "cache"), DesktopFeedbackOutput { gamepads }).also { it.load() }
 
@@ -66,7 +70,19 @@ fun main() {
     container.metadata.start()
     container.artwork.start()
     // Servers for other launchers (only what the user switched on); the key is created on first use.
-    container.scope.launch(kotlinx.coroutines.Dispatchers.IO) { container.hostRole.start() }
+    container.scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+        container.hostRole.hostGames = container.hostGames
+        container.hostRole.start()
+    }
+    // The streaming host follows the library (scans, renames, hidden games) and the sync settings.
+    container.scope.launch {
+        @OptIn(kotlinx.coroutines.FlowPreview::class)
+        kotlinx.coroutines.flow.combine(
+            container.pcLibrary.counts, container.database.libraryDao().observeAll(), container.hostRole.settings,
+        ) { _, _, settings -> settings }
+            .debounce(20_000)
+            .collect { if (it.syncEnabled) container.hostSync.run() }
+    }
     container.scope.launch {
         container.settings.settings.collect {
             gamepads.nintendoLayout = it.buttonLayout == ButtonLayout.NINTENDO
