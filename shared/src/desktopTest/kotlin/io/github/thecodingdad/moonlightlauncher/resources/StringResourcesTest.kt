@@ -12,12 +12,14 @@ import javax.xml.parsers.DocumentBuilderFactory
 
 /** The strings read at run time are exactly what Android made of the same XML (escapes, entities, placeholders). */
 class StringResourcesTest {
-    private fun xml(folder: String): Map<String, String> {
-        val file = File("src/commonMain/composeResources/$folder/strings.xml")
+    /** Common strings plus the desktop's own (the test runs on the desktop). */
+    private fun xml(folder: String): Map<String, String> = listOf("commonMain", "desktopMain").flatMap { set ->
+        val file = File("src/$set/composeResources/$folder/strings.xml")
+        if (!file.exists()) return@flatMap emptyList()
         val doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file)
         val nodes = doc.getElementsByTagName("string")
-        return (0 until nodes.length).map { nodes.item(it) as Element }.associate { it.getAttribute("name") to androidText(it.textContent) }
-    }
+        (0 until nodes.length).map { nodes.item(it) as Element }.map { it.getAttribute("name") to androidText(it.textContent) }
+    }.toMap()
 
     /** What aapt does with a string's text: backslash escapes resolved. */
     private fun androidText(raw: String): String {

@@ -18,7 +18,6 @@ import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -171,7 +170,7 @@ fun AppTileCard(
 @Composable
 fun SourceBadges(entry: LibraryEntry, modifier: Modifier = Modifier) {
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-        if (entry.localTarget != null) Badge(Icons.Filled.PhoneAndroid)
+        if (entry.localTarget != null) Badge(io.github.thecodingdad.moonlightlauncher.ui.PlatformUi.current.localIcon)
         if (entry.romTargets.isNotEmpty()) Badge(Icons.Filled.SportsEsports)
         if (entry.remoteTargets.isNotEmpty()) Badge(Icons.Filled.Cloud)
         if (entry.notInstalled) Badge(Icons.Filled.Download)

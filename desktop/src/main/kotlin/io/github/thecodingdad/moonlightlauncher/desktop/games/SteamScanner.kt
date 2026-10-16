@@ -23,6 +23,8 @@ class SteamScanner(
     private val http: OkHttpClient,
     private val steamPath: String? = null,
     private val includeOwned: Boolean = true,
+    /** Signed-in Steam account: lists every owned game, also with a private profile. */
+    private val account: SteamAccount? = null,
 ) : GameScanner {
     override val source = "steam"
 
@@ -51,11 +53,15 @@ class SteamScanner(
             }
         }
         if (includeOwned && root != null) {
-            val id = detectSteamId(root)
+            val token = account?.accessToken()
+            val id = account?.steamId?.takeIf { token != null } ?: detectSteamId(root)
             if (id == null) {
                 Log.i("Steam: owned games skipped (not logged in to Steam?)")
             } else {
-                val owned = playniteSteamKey()?.let { ownedGames(it, id) } ?: publicProfileGames(id)
+                // Order: signed-in account, Playnite's API key, public profile.
+                val owned = token?.let { ownedGames("access_token=$it", id) }
+                    ?: playniteSteamKey()?.let { ownedGames("key=$it", id) }
+                    ?: publicProfileGames(id)
                 owned?.forEach { result.putIfAbsent(it.id, it) }
             }
         }
@@ -77,8 +83,9 @@ class SteamScanner(
         return paths.distinctBy { it.lowercase() }
     }
 
-    private fun ownedGames(key: String, steamId: String): List<GameEntry>? = runCatching {
-        val url = "https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key=$key&steamid=$steamId&include_appinfo=1&include_played_free_games=1"
+    /** [auth]: "key=…" or "access_token=…" (never logged). */
+    private fun ownedGames(auth: String, steamId: String): List<GameEntry>? = runCatching {
+        val url = "https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?$auth&steamid=$steamId&include_appinfo=1&include_played_free_games=1"
         http.newCall(Request.Builder().url(url).build()).execute().use { r ->
             if (!r.isSuccessful) return@use null
             val games = Json.parseToJsonElement(r.body?.string().orEmpty()).jsonObject["response"]?.jsonObject?.get("games")?.jsonArray ?: return@use null
@@ -88,7 +95,7 @@ class SteamScanner(
                 owned(id, o["name"]?.jsonPrimitive?.content ?: id)
             }.also { Log.i("Steam: Web API lists ${it.size} owned games") }
         }
-    }.onFailure { Log.w("Steam: Web API request failed", it) }.getOrNull()
+    }.onFailure { Log.w("Steam: Web API request failed (${it.javaClass.simpleName})") }.getOrNull()
 
     /** Owned games from the public profile (works when "game details" are public). */
     private fun publicProfileGames(steamId: String): List<GameEntry>? = runCatching {

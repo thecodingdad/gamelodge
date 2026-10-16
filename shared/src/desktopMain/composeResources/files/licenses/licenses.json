@@ -69,6 +69,27 @@
     "url": "https://github.com/libgdx/Jamepad"
   },
   {
+    "name": "JavaSteam",
+    "copyright": "Longi94 and contributors",
+    "license": "MIT",
+    "text": "javasteam",
+    "url": "https://github.com/Longi94/JavaSteam"
+  },
+  {
+    "name": "QR Code generator",
+    "copyright": "Project Nayuki",
+    "license": "MIT",
+    "text": "qrcodegen",
+    "url": "https://www.nayuki.io/page/qr-code-generator-library"
+  },
+  {
+    "name": "Ktor, Protocol Buffers, Apache Commons Lang",
+    "copyright": "JetBrains s.r.o., Google LLC, The Apache Software Foundation",
+    "license": "Apache-2.0 / BSD-3-Clause",
+    "text": "apache-2.0",
+    "url": "https://ktor.io"
+  },
+  {
     "name": "SDL",
     "copyright": "Sam Lantinga",
     "license": "Zlib",

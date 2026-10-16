@@ -20,15 +20,27 @@ import java.util.concurrent.ConcurrentHashMap
  * The PC's own games from every installed store, as the library's local source. The entries are
  * kept for starting them (launch command, folder, process names).
  */
-class PcLibrary(private val http: OkHttpClient) : LocalAppSource {
+class PcLibrary(
+    private val http: OkHttpClient,
+    val steam: SteamAccount,
+    /** Stores the user switched off. */
+    private val disabled: () -> Set<String>,
+) : LocalAppSource {
     private val scanners: List<GameScanner> = listOf(
-        SteamScanner(http), EpicScanner(), GogScanner(), XboxScanner(), EaScanner(), UbisoftScanner(), BattleNetScanner(), AmazonScanner(),
+        SteamScanner(http, account = steam), EpicScanner(), GogScanner(), XboxScanner(), EaScanner(), UbisoftScanner(), BattleNetScanner(), AmazonScanner(),
     )
+
+    /** Games per store at the last scan: (all, installed). */
+    private val _counts = kotlinx.coroutines.flow.MutableStateFlow<Map<String, Pair<Int, Int>>>(emptyMap())
+    val counts: kotlinx.coroutines.flow.StateFlow<Map<String, Pair<Int, Int>>> = _counts
     private val entries = ConcurrentHashMap<String, GameEntry>()
     private val rescans = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
     /** The scanned entry behind a library target's package name. */
     fun entry(id: String): GameEntry? = entries[id]
+
+    /** The stores in the order the settings list them. */
+    val sources: List<String> get() = scanners.map { it.source }
 
     /** Whether the store reports [entry] as installed now (local data only, no online calls). */
     suspend fun installedNow(entry: GameEntry): Boolean {
@@ -42,8 +54,9 @@ class PcLibrary(private val http: OkHttpClient) : LocalAppSource {
     }
 
     override suspend fun scan(): List<LocalApp> = withContext(Dispatchers.IO) {
+        val off = disabled()
         val found = coroutineScope {
-            scanners.map { scanner ->
+            scanners.filter { it.source !in off }.map { scanner ->
                 async {
                     runCatching { scanner.scan() }
                         .onFailure { Log.w("${scanner.source}: scan failed", it) }
@@ -52,6 +65,7 @@ class PcLibrary(private val http: OkHttpClient) : LocalAppSource {
                 }
             }.awaitAll().flatten()
         }
+        _counts.value = found.groupBy { it.source }.mapValues { (_, games) -> games.size to games.count { it.installed } }
         entries.keys.retainAll(found.map { it.id }.toSet())
         found.forEach { entries[it.id] = it }
         found.map { e ->

@@ -31,7 +31,6 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.PowerSettingsNew
@@ -158,7 +157,7 @@ fun TargetPickerDialog(
                 LauncherButton(
                     text = option.label,
                     icon = when (option.target.type) {
-                        TargetType.LOCAL -> Icons.Filled.PhoneAndroid
+                        TargetType.LOCAL -> io.github.thecodingdad.moonlightlauncher.ui.PlatformUi.current.localIcon
                         TargetType.ROM -> Icons.Filled.SportsEsports
                         TargetType.REMOTE -> Icons.Filled.Cloud
                     },

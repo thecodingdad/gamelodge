@@ -30,6 +30,8 @@ sqlite = "2.6.2"
 bouncycastle = "1.81"
 jamepad = "2.30.0.0"
 jna = "5.18.1"
+javasteam = "1.8.0"
+qrcodegen = "1.8.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -85,6 +87,8 @@ androidx-room-runtime-kmp = { group = "androidx.room", name = "room-runtime", ve
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
 jamepad = { group = "com.badlogicgames.jamepad", name = "jamepad", version.ref = "jamepad" }
 jna-platform = { group = "net.java.dev.jna", name = "jna-platform", version.ref = "jna" }
+javasteam = { group = "in.dragonbra", name = "javasteam", version.ref = "javasteam" }
+qrcodegen = { group = "io.nayuki", name = "qrcodegen", version.ref = "qrcodegen" }
 kotlinx-coroutines-swing = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-swing", version.ref = "coroutines" }
 coil-network-okhttp-jvm = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
 

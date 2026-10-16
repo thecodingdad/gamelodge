@@ -34,6 +34,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -207,12 +208,14 @@ fun SwitchRow(
     subtitle: String? = null,
     icon: ImageVector? = null,
     initialFocus: Boolean = false,
+    /** Off: shown dimmed and not switchable (e.g. a store that isn't installed). */
+    enabled: Boolean = true,
 ) {
-    RowShell({ onChange(!checked) }, Modifier, initialFocus) {
+    RowShell({ if (enabled) onChange(!checked) }, if (enabled) Modifier else Modifier.alpha(0.45f), initialFocus) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Texts(title, subtitle, icon, Modifier.weight(1f))
             Switch(
-                checked = checked, onCheckedChange = null,
+                checked = checked, onCheckedChange = null, enabled = enabled,
                 colors = SwitchDefaults.colors(checkedTrackColor = LauncherTheme.colors.accent),
             )
         }

@@ -16,6 +16,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
 import java.nio.file.Files
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxSize
 
 /** The whole launcher UI comes up on the desktop JVM (database, settings, resources, navigation). */
 class RenderTest {
@@ -27,7 +29,7 @@ class RenderTest {
         ArtworkPlatform.current = DesktopArtwork
         val dispatcher = InputDispatcher()
         val gamepads = Gamepads(dispatcher)
-        PlatformUi.current = DesktopPlatformUi(gamepads) { null }
+        PlatformUi.current = DesktopPlatformUi(gamepads, { null }) { null }
         val feedback = UiFeedback(File(dir, "cache"), DesktopFeedbackOutput { null })
 
         // Compose and the view model live on the UI thread (Swing's event thread on the desktop).
@@ -55,5 +57,33 @@ class RenderTest {
         val pixels = org.jetbrains.skia.Bitmap.makeFromImage(image)
         val distinct = (0 until 1600 step 40).flatMap { x -> (0 until 900 step 40).map { y -> pixels.getColor(x, y) } }.toSet()
         assertTrue("UI drew something", distinct.size > 3)
+    }
+
+    @Test
+    fun gameSourcesPageRenders() {
+        val dir = Files.createTempDirectory("launcher-sources").toFile()
+        val container = DesktopContainer(dir)
+        val gamepads = Gamepads(InputDispatcher())
+        PlatformUi.current = DesktopPlatformUi(gamepads, { null }) { container.pcLibrary }
+        fun <T> ui(block: () -> T): T {
+            var result: Result<T>? = null
+            javax.swing.SwingUtilities.invokeAndWait { result = runCatching(block) }
+            return result!!.getOrThrow()
+        }
+        val scene = ui {
+            ImageComposeScene(1600, 900, Density(1.5f)) {
+                CompositionLocalProvider(LocalContainer provides container) {
+                    io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme(io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings()) {
+                        androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.fillMaxSize().background(io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme.colors.background)) {
+                            GameSourcesPage(container.pcLibrary, io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings(disabledGameSources = setOf("amazon"))) {}
+                        }
+                    }
+                }
+            }
+        }
+        ui { scene.render(0) }
+        Thread.sleep(800)
+        val image = ui { scene.render(1_000_000_000L).also { scene.close() } }
+        File("build/render").apply { mkdirs() }.resolve("game-sources.png").writeBytes(image.encodeToData(EncodedImageFormat.PNG)!!.bytes)
     }
 }

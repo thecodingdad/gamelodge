@@ -24,6 +24,8 @@ dependencies {
     implementation(libs.androidx.sqlite.bundled)
     implementation(libs.jamepad)
     implementation(libs.jna.platform)
+    implementation(libs.javasteam)
+    implementation(libs.qrcodegen)
 
     testImplementation(libs.junit)
 }

@@ -11,6 +11,9 @@ import io.github.thecodingdad.moonlightlauncher.ui.shell.TopCutout
  * tiles and screens of platform features. Set once at start.
  */
 interface PlatformUi {
+    /** Badge of entries that run on this device (phone on Android, monitor on the PC). */
+    val localIcon: androidx.compose.ui.graphics.vector.ImageVector
+
     /** Battery and network state of the device, updated on changes. */
     @Composable
     fun rememberSystemStatus(): SystemStatus

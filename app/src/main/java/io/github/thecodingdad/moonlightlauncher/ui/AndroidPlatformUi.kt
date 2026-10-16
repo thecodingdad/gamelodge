@@ -11,6 +11,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Android
+import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -38,6 +39,8 @@ import java.util.UUID
 
 /** Android's side of the shared UI: system state, controllers, intents and the Android-only settings. */
 class AndroidPlatformUi(private val context: Context) : PlatformUi {
+    override val localIcon = Icons.Filled.PhoneAndroid
+
     @Composable
     override fun rememberSystemStatus(): SystemStatus = io.github.thecodingdad.moonlightlauncher.ui.shell.rememberAndroidSystemStatus()
 

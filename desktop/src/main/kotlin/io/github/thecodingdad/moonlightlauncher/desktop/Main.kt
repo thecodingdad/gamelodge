@@ -53,7 +53,7 @@ fun main() {
     val dispatcher = InputDispatcher()
     val gamepads = Gamepads(dispatcher)
     var mainWindow: java.awt.Frame? = null
-    val platformUi = DesktopPlatformUi(gamepads) { mainWindow }
+    val platformUi = DesktopPlatformUi(gamepads, { mainWindow }) { container.pcLibrary }
     PlatformUi.current = platformUi
     val feedback = UiFeedback(File(dataDir, "cache"), DesktopFeedbackOutput { gamepads }).also { it.load() }
 
@@ -66,6 +66,10 @@ fun main() {
     container.scope.launch {
         container.settings.settings.collect {
             gamepads.nintendoLayout = it.buttonLayout == ButtonLayout.NINTENDO
+            if (it.disabledGameSources != container.disabledSources) {
+                container.disabledSources = it.disabledGameSources
+                container.pcLibrary.rescan()
+            }
             DesktopPlatformUi.applyLocale(it.language)
         }
     }

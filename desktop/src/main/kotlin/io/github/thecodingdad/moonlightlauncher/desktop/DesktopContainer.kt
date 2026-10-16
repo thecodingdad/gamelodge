@@ -77,7 +77,14 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
     override val vpn = NoVpn
 
     /** The PC's own games from the installed stores. */
-    val pcLibrary: io.github.thecodingdad.moonlightlauncher.desktop.games.PcLibrary by lazy { io.github.thecodingdad.moonlightlauncher.desktop.games.PcLibrary(http) }
+    val pcLibrary: io.github.thecodingdad.moonlightlauncher.desktop.games.PcLibrary by lazy {
+        io.github.thecodingdad.moonlightlauncher.desktop.games.PcLibrary(http, io.github.thecodingdad.moonlightlauncher.desktop.games.SteamAccount(secrets)) {
+            disabledSources
+        }
+    }
+
+    /** Kept current from the settings (the scan runs off the UI). */
+    @Volatile var disabledSources: Set<String> = emptySet()
 
     /** Called when a game started from the launcher has ended (the window comes back to the front). */
     @Volatile var onGameEnded: () -> Unit = {}

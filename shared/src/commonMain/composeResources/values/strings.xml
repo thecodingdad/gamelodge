@@ -979,4 +979,6 @@
     <!-- Companion & metadata server -->
     <string name="host_companion_section">Companion</string>
     <string name="host_companion_hint">Pair the companion of this PC: it delivers the host games with their metadata.</string>
+    <string name="settings_game_sources">Game sources</string>
+    <string name="settings_game_sources_sub">Steam, Epic, GOG, Xbox and other stores on this PC</string>
 </resources>

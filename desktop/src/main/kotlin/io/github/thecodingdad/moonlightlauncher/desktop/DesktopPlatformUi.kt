@@ -2,6 +2,7 @@ package io.github.thecodingdad.moonlightlauncher.desktop
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DesktopWindows
 import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material3.Text
@@ -51,7 +52,10 @@ import java.util.UUID
 class DesktopPlatformUi(
     private val gamepads: Gamepads,
     private val window: () -> Frame?,
+    private val pcLibrary: () -> io.github.thecodingdad.moonlightlauncher.desktop.games.PcLibrary?,
 ) : PlatformUi {
+    override val localIcon = Icons.Filled.DesktopWindows
+
     /** Bumped when the language changes: the window content is rebuilt in the new language. */
     val languageRevision = mutableIntStateOf(0)
 
@@ -155,10 +159,14 @@ class DesktopPlatformUi(
 
     override fun openAppInfo(packageName: String) = Unit
 
-    override fun hasPage(id: SettingsPageId) = false
+    override fun hasPage(id: SettingsPageId) = id == SettingsPageId.GAME_SOURCES
 
     @Composable
-    override fun PlatformSettingsPage(id: SettingsPageId, vm: LauncherViewModel, openProfile: (UUID?) -> Unit, openStats: () -> Unit) = Unit
+    override fun PlatformSettingsPage(id: SettingsPageId, vm: LauncherViewModel, openProfile: (UUID?) -> Unit, openStats: () -> Unit) {
+        val settings by vm.settings.collectAsState()
+        val library = pcLibrary() ?: return
+        if (id == SettingsPageId.GAME_SOURCES) GameSourcesPage(library, settings, vm::updateSettings)
+    }
 
     @Composable
     override fun ControllersScreen() {
