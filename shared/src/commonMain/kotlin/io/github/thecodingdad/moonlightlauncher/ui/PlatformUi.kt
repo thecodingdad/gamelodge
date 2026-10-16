@@ -70,6 +70,10 @@ interface PlatformUi {
     @Composable
     fun rememberOnTv(): Boolean
 
+    /** Whether the screensaver may start (desktop: only in full screen; a window shares the screen). */
+    @Composable
+    fun rememberScreensaverAllowed(): Boolean = true
+
     /** Keeps the display awake while true (screensaver instead of the system's screen timeout). */
     @Composable
     fun rememberScreenKeeper(): (Boolean) -> Unit

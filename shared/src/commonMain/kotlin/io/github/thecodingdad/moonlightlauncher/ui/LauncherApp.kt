@@ -544,9 +544,10 @@ fun LauncherApp(
                 // Screensaver after the configured idle time (also protects the OLED panel).
                 var idle by remember { mutableStateOf(false) }
                 val lastInput by vm.lastInteraction.collectAsState()
-                LaunchedEffect(lastInput, settings.screensaverMinutes) {
+                val screensaverAllowed = io.github.thecodingdad.moonlightlauncher.ui.PlatformUi.current.rememberScreensaverAllowed()
+                LaunchedEffect(lastInput, settings.screensaverMinutes, screensaverAllowed) {
                     idle = false
-                    if (settings.screensaverMinutes <= 0) return@LaunchedEffect
+                    if (settings.screensaverMinutes <= 0 || !screensaverAllowed) return@LaunchedEffect
                     kotlinx.coroutines.delay(settings.screensaverMinutes * 60_000L)
                     idle = true
                 }

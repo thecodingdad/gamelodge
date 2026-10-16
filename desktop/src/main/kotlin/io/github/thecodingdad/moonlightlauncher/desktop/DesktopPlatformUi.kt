@@ -180,6 +180,10 @@ class DesktopPlatformUi(
     @Composable
     override fun rememberOnTv() = false
 
+    // In a window the rest of the desktop stays visible: a screensaver only disturbs there.
+    @Composable
+    override fun rememberScreensaverAllowed(): Boolean = windowControls?.fullscreen?.collectAsState()?.value ?: true
+
     @Composable
     override fun rememberScreenKeeper(): (Boolean) -> Unit = remember { { _: Boolean -> } }
 
