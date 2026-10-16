@@ -96,8 +96,10 @@ fun HeroHome(
     var focusedList by remember { mutableStateOf<List<LibraryEntry>?>(null) }
     var focusedListKey by remember { mutableStateOf<String?>(null) }
     var shown by remember { mutableStateOf<LibraryEntry?>(null) }
-    // Mouse over a card: its artwork shows like for the focused one (the focus itself stays).
+    // Mouse over a card: its artwork shows like for the focused one (the focus itself stays) and
+    // remains after the mouse left; the next focus move takes over again.
     var hovered by remember { mutableStateOf<LibraryEntry?>(null) }
+    LaunchedEffect(focused) { hovered = null }
     // Back on the tab (e.g. from a detail page): the game focused, tapped or browsed to last.
     // By controller the card regains focus anyway; by touch nothing has focus, so the hero
     // starts with that game instead of the first one.
@@ -286,7 +288,7 @@ fun HeroHome(
                         "row:${row.key}", null, row.entries, callbacks, pinned,
                         firstRow = rows.running.isEmpty() && index == firstFilled,
                         onFocus = { entry, list -> focused = entry; focusedSession = null; focusedList = list; focusedListKey = "row:${row.key}" },
-                        onHover = { entry, on -> if (on) hovered = entry else if (hovered === entry) hovered = null },
+                        onHover = { entry, on -> if (on) hovered = entry },
                         actions = actions,
                         titleText = { filterLabel(row, row = true) },
                     )

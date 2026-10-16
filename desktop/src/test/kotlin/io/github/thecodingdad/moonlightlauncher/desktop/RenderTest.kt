@@ -151,6 +151,22 @@ class RenderTest {
         Thread.sleep(800)
         val image = ui { scene.render(1_000_000_000L).also { scene.close() } }
         File("build/render").apply { mkdirs() }.resolve("profile-editor.png").writeBytes(image.encodeToData(EncodedImageFormat.PNG)!!.bytes)
+        // Narrow (portrait): controls move below their texts.
+        val narrow = ui {
+            ImageComposeScene(700, 2400, Density(1.5f)) {
+                CompositionLocalProvider(LocalContainer provides container) {
+                    io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme(io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings()) {
+                        androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.fillMaxSize().background(io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme.colors.background)) {
+                            io.github.thecodingdad.moonlightlauncher.ui.screens.profiles.ProfileEditor(container.profiles, uuid, "Handheld") {}
+                        }
+                    }
+                }
+            }
+        }
+        ui { narrow.render(0) }
+        Thread.sleep(500)
+        val narrowImage = ui { narrow.render(1_000_000_000L).also { narrow.close() } }
+        File("build/render/profile-editor-narrow.png").writeBytes(narrowImage.encodeToData(EncodedImageFormat.PNG)!!.bytes)
         org.junit.Assert.assertTrue(DesktopProfiles.options(container.profiles.values(uuid)).containsAll(listOf("--resolution", "1920x1080")))
     }
 

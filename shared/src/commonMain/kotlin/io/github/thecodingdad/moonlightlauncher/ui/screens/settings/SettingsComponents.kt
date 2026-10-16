@@ -196,7 +196,11 @@ fun NavRow(
     RowShell(onClick, Modifier, initialFocus) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Texts(title, subtitle, icon, Modifier.weight(1f))
-            if (trailing != null) Text(trailing, style = MaterialTheme.typography.labelLarge, color = LauncherTheme.colors.onSurfaceMuted)
+            // Kept short so the title keeps its room.
+            if (trailing != null) Text(
+                trailing, style = MaterialTheme.typography.labelLarge, color = LauncherTheme.colors.onSurfaceMuted,
+                maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 180.dp),
+            )
             trailingContent?.let { Box(Modifier.padding(end = 8.dp)) { it() } }
             Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = LauncherTheme.colors.onSurfaceMuted)
         }
@@ -224,6 +228,9 @@ fun SwitchRow(
         }
     }
 }
+
+/** Rows narrower than this put their control below the texts. */
+private val NARROW_ROW = 520.dp
 
 /** Cycles through [options] with A, D-pad left/right or touch on the arrows. */
 @Composable
@@ -255,18 +262,38 @@ fun <T> ChoiceRow(
         },
         initialFocus = initialFocus,
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Texts(title, subtitle, icon, Modifier.weight(1f))
-            // Touch: the arrows step in their direction (the tap doesn't reach the row).
-            ChoiceArrow(Icons.AutoMirrored.Filled.KeyboardArrowLeft) { step(-1) }
-            Text(
-                label(options[index]),
-                style = MaterialTheme.typography.labelLarge,
-                color = LauncherTheme.colors.onSurface,
-                modifier = Modifier.widthIn(min = 120.dp).padding(horizontal = 4.dp),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-            )
-            ChoiceArrow(Icons.AutoMirrored.Filled.KeyboardArrowRight) { step(1) }
+        val value = label(options[index])
+        // The title and its description keep their room: the value takes at most 40 % of the row
+        // (wrapping), and on narrow rows it moves below the texts.
+        androidx.compose.foundation.layout.BoxWithConstraints {
+            val narrow = maxWidth < NARROW_ROW
+            val valueMax = if (narrow) maxWidth - 112.dp else maxWidth * 0.4f
+            val control: @Composable () -> Unit = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    // Touch: the arrows step in their direction (the tap doesn't reach the row).
+                    ChoiceArrow(Icons.AutoMirrored.Filled.KeyboardArrowLeft) { step(-1) }
+                    Text(
+                        value,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = LauncherTheme.colors.onSurface,
+                        maxLines = 2,
+                        modifier = Modifier.widthIn(min = 96.dp, max = valueMax).padding(horizontal = 4.dp),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    )
+                    ChoiceArrow(Icons.AutoMirrored.Filled.KeyboardArrowRight) { step(1) }
+                }
+            }
+            if (narrow) {
+                Column {
+                    Texts(title, subtitle, icon)
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) { control() }
+                }
+            } else {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Texts(title, subtitle, icon, Modifier.weight(1f))
+                    control()
+                }
+            }
         }
     }
 }
