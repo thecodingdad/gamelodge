@@ -18,7 +18,15 @@ object StreamSettingsSchema {
 
     @Volatile private var cached: List<StreamOptionCategory>? = null
 
-    fun load(context: Context): List<StreamOptionCategory> = cached ?: parse(context).also { cached = it }
+    fun load(context: Context): List<StreamOptionCategory> = (cached ?: parse(context).also { cached = it }).let { schema ->
+        // The screen's own resolution and refresh rate, as Artemis' settings offer them.
+        val display = (context.getSystemService(Context.DISPLAY_SERVICE) as android.hardware.display.DisplayManager).getDisplay(android.view.Display.DEFAULT_DISPLAY)
+        val mode = display?.mode
+        schema.withNativeDisplay(
+            mode?.physicalWidth ?: 0, mode?.physicalHeight ?: 0, mode?.refreshRate ?: 0f,
+            context.getString(com.limelight.R.string.resolution_prefix_native), context.getString(com.limelight.R.string.fps_suffix_fps),
+        )
+    }
 
     private fun parse(context: Context): List<StreamOptionCategory> {
         val res = context.resources

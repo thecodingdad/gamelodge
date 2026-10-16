@@ -61,3 +61,25 @@ interface ProfileEditing {
     /** Default of an option that depends on others (bitrate from resolution and frame rate), or null. */
     fun dynamicDefault(key: String, values: ProfileValues): Int?
 }
+
+/**
+ * Adds this screen's own resolution and refresh rate to the resolution and frame rate choices,
+ * as Artemis' settings do ("Native (2880x1920)"), unless the lists have them already.
+ */
+fun List<StreamOptionCategory>.withNativeDisplay(width: Int, height: Int, refreshRate: Float, nativeLabel: String, fpsSuffix: String): List<StreamOptionCategory> {
+    if (width <= 0 || height <= 0) return this
+    val w = maxOf(width, height)
+    val h = minOf(width, height)
+    val fps = kotlin.math.round(refreshRate).toInt()
+    return map { category ->
+        category.copy(options = category.options.map { option ->
+            when {
+                option is StreamOption.Choice && option.key == "list_resolution" && "${w}x$h" !in option.values ->
+                    option.copy(labels = option.labels + "$nativeLabel (${w}x$h)", values = option.values + "${w}x$h")
+                option is StreamOption.Choice && option.key == "list_fps" && fps > 0 && "$fps" !in option.values ->
+                    option.copy(labels = option.labels + "$nativeLabel ($fps $fpsSuffix)", values = option.values + "$fps")
+                else -> option
+            }
+        })
+    }
+}

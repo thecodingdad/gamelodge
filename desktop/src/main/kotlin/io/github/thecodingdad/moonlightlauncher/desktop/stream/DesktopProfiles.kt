@@ -9,6 +9,7 @@ import io.github.thecodingdad.moonlightlauncher.stream.StreamOption
 import io.github.thecodingdad.moonlightlauncher.stream.StreamOptionCategory
 import io.github.thecodingdad.moonlightlauncher.stream.StreamProfile
 import io.github.thecodingdad.moonlightlauncher.stream.StreamProfiles
+import io.github.thecodingdad.moonlightlauncher.stream.withNativeDisplay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
@@ -68,6 +69,12 @@ class DesktopProfiles(dataDir: File) : StreamProfiles, ProfileEditing {
 
     @Composable
     override fun rememberSchema(): List<StreamOptionCategory> {
+        val nativeLabel = stringResource(Res.string.sopt_resolution_prefix_native)
+        val fpsSuffix = stringResource(Res.string.sopt_fps_suffix_fps)
+        // The primary screen's mode (physical pixels), as Artemis offers "Native".
+        val mode = androidx.compose.runtime.remember {
+            runCatching { java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment().defaultScreenDevice.displayMode }.getOrNull()
+        }
         fun toggle(key: String, title: String, summary: String?) = StreamOption.Toggle(key, title, summary, toggleDefaults.getValue(key))
         return listOf(
             StreamOptionCategory(
@@ -162,7 +169,7 @@ class DesktopProfiles(dataDir: File) : StreamProfiles, ProfileEditing {
                     toggle(YUV444, stringResource(Res.string.dprofile_yuv444), stringResource(Res.string.dprofile_yuv444_sub)),
                 ),
             ),
-        )
+        ).withNativeDisplay(mode?.width ?: 0, mode?.height ?: 0, mode?.refreshRate?.toFloat() ?: 0f, nativeLabel, fpsSuffix)
     }
 
     override val essentialKeys = listOf(RESOLUTION, FPS, BITRATE, VIDEO_FORMAT, HDR, FRAME_PACING, AUDIO, MULTI_CONTROLLER, PERF_OVERLAY)

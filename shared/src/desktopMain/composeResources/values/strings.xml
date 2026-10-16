@@ -156,4 +156,6 @@
     <string name="dprofile_quit_after_sub">Ends the app on the host when the stream is closed.</string>
     <string name="dprofile_decoder_sub">Software decoding only helps when the graphics card's decoder causes problems.</string>
     <string name="dprofile_yuv444_sub">Sharper text and colors, if the host and this PC support it. Needs more bandwidth.</string>
+    <string name="sopt_resolution_prefix_native">Native</string>
+    <string name="sopt_fps_suffix_fps">FPS</string>
 </resources>

@@ -156,4 +156,6 @@
     <string name="dprofile_yuv444_sub">Schärferer Text und Farben, wenn Host und dieser PC es unterstützen. Braucht mehr Bandbreite.</string>
     <string name="sopt_category_video_settings">Video Einstellungen</string>
     <string name="sopt_category_perf_monitor_settings">Leistungsanzeige</string>
+    <string name="sopt_resolution_prefix_native">Nativ</string>
+    <string name="sopt_fps_suffix_fps">FPS</string>
 </resources>
