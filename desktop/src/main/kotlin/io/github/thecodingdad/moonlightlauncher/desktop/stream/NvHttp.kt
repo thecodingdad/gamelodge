@@ -84,6 +84,27 @@ class StreamIdentity(val certificate: X509Certificate, val privateKey: PrivateKe
     }
 }
 
+/**
+ * Hosts (Sunshine and its forks, OpenSSL with client certificates) answer a resumed TLS session
+ * with "internal_error": every connection does a full TLS 1.2 handshake (1.3 resumes through
+ * tickets that arrive after the handshake), the session is dropped right after it.
+ */
+private class NoResumptionSocketFactory(private val base: javax.net.ssl.SSLSocketFactory) : javax.net.ssl.SSLSocketFactory() {
+    private fun prepare(s: Socket): Socket = (s as javax.net.ssl.SSLSocket).apply {
+        enabledProtocols = arrayOf("TLSv1.2")
+        addHandshakeCompletedListener { it.session.invalidate() }
+    }
+
+    override fun getDefaultCipherSuites(): Array<String> = base.defaultCipherSuites
+    override fun getSupportedCipherSuites(): Array<String> = base.supportedCipherSuites
+    override fun createSocket(s: Socket?, host: String?, port: Int, autoClose: Boolean) = prepare(base.createSocket(s, host, port, autoClose))
+    override fun createSocket(host: String?, port: Int) = prepare(base.createSocket(host, port))
+    override fun createSocket(host: String?, port: Int, local: java.net.InetAddress?, localPort: Int) = prepare(base.createSocket(host, port, local, localPort))
+    override fun createSocket(host: java.net.InetAddress?, port: Int) = prepare(base.createSocket(host, port))
+    override fun createSocket(address: java.net.InetAddress?, port: Int, local: java.net.InetAddress?, localPort: Int) = prepare(base.createSocket(address, port, local, localPort))
+    override fun createSocket(): Socket = prepare(base.createSocket())
+}
+
 /** What a host's serverinfo tells. */
 data class ServerInfo(
     val name: String,
@@ -143,7 +164,8 @@ class NvHttp(
         }
         val ssl = SSLContext.getInstance("TLS").apply { init(arrayOf(keyManager), arrayOf(pinned), SecureRandom()) }
         http.newBuilder()
-            .sslSocketFactory(ssl.socketFactory, pinned)
+            .sslSocketFactory(NoResumptionSocketFactory(ssl.socketFactory), pinned)
+            .connectionSpecs(listOf(okhttp3.ConnectionSpec.Builder(okhttp3.ConnectionSpec.MODERN_TLS).tlsVersions(okhttp3.TlsVersion.TLS_1_2).build()))
             .hostnameVerifier { _, _ -> true }
             .connectTimeout(3, TimeUnit.SECONDS)
             .readTimeout(15, TimeUnit.SECONDS)
