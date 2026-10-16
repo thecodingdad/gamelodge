@@ -67,15 +67,22 @@ class Gamepads(private val dispatcher: InputDispatcher) {
         }
         var lastList = 0L
         while (true) {
-            val focused = window?.isFocused == true
-            synchronized(manager) {
-                manager.update()
-                val now = System.currentTimeMillis()
-                if (now - lastList > 2_000) {
-                    _controllers.value = list()
-                    lastList = now
+            val focused = window?.let { it.isActive || it.isFocused } == true
+            try {
+                synchronized(manager) {
+                    manager.update()
+                    val now = System.currentTimeMillis()
+                    if (now - lastList > 2_000) {
+                        val list = list()
+                        if (list.map { it.name } != _controllers.value.map { it.name }) Log.i("Controllers: ${list.joinToString { it.name }.ifEmpty { "none" }}")
+                        _controllers.value = list
+                        lastList = now
+                    }
+                    if (focused) poll(now) else release()
                 }
-                if (focused) poll(now) else release()
+            } catch (e: Exception) {
+                // A pad unplugged mid-poll and the like: log it and carry on with the next round.
+                Log.w("Gamepad poll failed", e)
             }
             Thread.sleep(if (focused) 16 else 250)
         }
@@ -137,9 +144,9 @@ class Gamepads(private val dispatcher: InputDispatcher) {
         if (back && !wasBack) onBack()
         key(KeyEvent.VK_ESCAPE, wasBack, back)
 
-        // D-pad and left stick: arrows that repeat while held.
-        direction("up", p.dpadUp || p.leftStickY > STICK, s.dpadUp || s.leftStickY > STICK, KeyEvent.VK_UP, now)
-        direction("down", p.dpadDown || p.leftStickY < -STICK, s.dpadDown || s.leftStickY < -STICK, KeyEvent.VK_DOWN, now)
+        // D-pad and left stick: arrows that repeat while held. SDL reports stick down as positive.
+        direction("up", p.dpadUp || p.leftStickY < -STICK, s.dpadUp || s.leftStickY < -STICK, KeyEvent.VK_UP, now)
+        direction("down", p.dpadDown || p.leftStickY > STICK, s.dpadDown || s.leftStickY > STICK, KeyEvent.VK_DOWN, now)
         direction("left", p.dpadLeft || p.leftStickX < -STICK, s.dpadLeft || s.leftStickX < -STICK, KeyEvent.VK_LEFT, now)
         direction("right", p.dpadRight || p.leftStickX > STICK, s.dpadRight || s.leftStickX > STICK, KeyEvent.VK_RIGHT, now)
 
@@ -149,8 +156,8 @@ class Gamepads(private val dispatcher: InputDispatcher) {
         button(PadButton.R1, p.rb, s.rb, now)
         button(PadButton.START, p.start, s.start, now)
         select(p.back, s.back, now)
-        // Stick up is negative on Android; SDL reports it positive.
-        EventQueue.invokeLater { dispatcher.dispatchAxes(s.leftTrigger, s.rightTrigger, s.rightStickX, -s.rightStickY, now) }
+        // Same orientation as Android's axes (down positive).
+        EventQueue.invokeLater { dispatcher.dispatchAxes(s.leftTrigger, s.rightTrigger, s.rightStickX, s.rightStickY, now) }
     }
 
     private fun button(button: PadButton, was: Boolean, now: Boolean, time: Long) {

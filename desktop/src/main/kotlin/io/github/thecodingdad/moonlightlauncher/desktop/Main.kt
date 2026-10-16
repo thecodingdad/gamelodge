@@ -101,12 +101,15 @@ fun main() {
                 mainWindow = window
                 gamepads.start(window)
             }
+            // A language change rebuilds the content (the texts are read once); the navigation
+            // lives outside, so the settings page stays open.
+            val nav = androidx.navigation.compose.rememberNavController()
             val revision by platformUi.languageRevision
             key(revision) {
                 CompositionLocalProvider(LocalContainer provides container) {
                     val settings by vm.settings.collectAsState()
                     ApplyStoredLanguage(settings.language, platformUi)
-                    LauncherApp(vm, dispatcher, feedback)
+                    LauncherApp(vm, dispatcher, feedback, nav)
                 }
             }
         }

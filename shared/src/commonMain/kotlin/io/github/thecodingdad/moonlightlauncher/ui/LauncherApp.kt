@@ -143,9 +143,14 @@ enum class MainTab(val title: org.jetbrains.compose.resources.StringResource, va
 
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
-fun LauncherApp(vm: LauncherViewModel, dispatcher: InputDispatcher, feedback: UiFeedback) {
+fun LauncherApp(
+    vm: LauncherViewModel,
+    dispatcher: InputDispatcher,
+    feedback: UiFeedback,
+    /** Passed in where the UI may be rebuilt (desktop language change) and must stay on its page. */
+    nav: androidx.navigation.NavHostController = rememberNavController(),
+) {
     val settings by vm.settings.collectAsState()
-    val nav = rememberNavController()
     val keyboard = remember { KeyboardController() }
     val hints = remember { HintHolder() }
     val container = io.github.thecodingdad.moonlightlauncher.LocalContainer.current
