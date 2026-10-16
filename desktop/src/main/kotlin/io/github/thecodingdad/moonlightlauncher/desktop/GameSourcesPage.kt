@@ -49,6 +49,7 @@ import org.jetbrains.compose.resources.stringResource
 internal val storeNames = mapOf(
     "steam" to "Steam", "epic" to "Epic Games", "gog" to "GOG", "xbox" to "Xbox / Microsoft Store", "ea" to "EA app",
     "ubisoft" to "Ubisoft Connect", "battlenet" to "Battle.net", "amazon" to "Amazon Games",
+    "playnite" to "Playnite",
 )
 
 /** Settings → Game sources: which stores feed the library, and the Steam account. */

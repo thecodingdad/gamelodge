@@ -21,6 +21,7 @@ object StoreDetection {
                 "ubisoft" -> Reg.read("HKLM", "SOFTWARE\\WOW6432Node\\Ubisoft\\Launcher", "InstallDir") != null || uninstall("Ubisoft Connect")
                 "battlenet" -> uninstall("Battle.net") || File("C:\\Program Files (x86)\\Battle.net\\Battle.net.exe").exists()
                 "amazon" -> File(System.getenv("LOCALAPPDATA") ?: "", "Amazon Games").isDirectory
+                "playnite" -> io.github.thecodingdad.moonlightlauncher.desktop.games.playnite.PlayniteScanner.installed()
                 else -> true
             }
         }.getOrNull()

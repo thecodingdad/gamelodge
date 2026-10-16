@@ -30,6 +30,7 @@ class PcLibrary(
 ) : LocalAppSource {
     private val scanners: List<GameScanner> = listOf(
         SteamScanner(http, account = steam), EpicScanner(), GogScanner(), XboxScanner(), EaScanner(), UbisoftScanner(), BattleNetScanner(), AmazonScanner(),
+        io.github.thecodingdad.moonlightlauncher.desktop.games.playnite.PlayniteScanner(),
     )
 
     /** Games per store at the last scan: (all, installed). */
@@ -132,6 +133,11 @@ class PcLibrary(
 
         /** Whether the store reports [entry] as installed now (local data only; also used by the runner). */
         suspend fun installedNow(entry: GameEntry, http: OkHttpClient): Boolean {
+            // Playnite games: the program (or ROM's emulator) is there; links always work.
+            if (entry.source == "playnite" || entry.source == "emulator") {
+                val launch = entry.launch ?: return false
+                return !java.io.File(launch).isAbsolute || java.io.File(launch).exists()
+            }
             val scanner: GameScanner? = when (entry.source) {
                 "steam" -> SteamScanner(http, includeOwned = false)
                 "epic" -> EpicScanner()
