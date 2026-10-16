@@ -62,3 +62,15 @@ class MoonlightIniAddressTest {
         assertTrue(out.contains("1\\manualaddress=\"Win11VM\""))
     }
 }
+
+class MoonlightIniAppsTest {
+    @Test
+    fun appsOfTheHost() {
+        val id = StreamIdentity.create()
+        val host = StoredHost("U", "PC", "1.2.3.4", serverCert = id.certificatePem)
+        val out = MoonlightIni.update("", id, listOf(host), mapOf("U" to listOf(MoonlightIni.App(908074682, "Desktop", true))))
+        assertTrue(out.contains("1\\apps\\1\\name=\"Desktop\""))
+        assertTrue(out.contains("1\\apps\\1\\id=908074682"))
+        assertTrue(out.contains("1\\apps\\size=1"))
+    }
+}

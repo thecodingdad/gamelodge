@@ -168,7 +168,8 @@ class NvHttp(
             .connectionSpecs(listOf(okhttp3.ConnectionSpec.Builder(okhttp3.ConnectionSpec.MODERN_TLS).tlsVersions(okhttp3.TlsVersion.TLS_1_2).build()))
             .hostnameVerifier { _, _ -> true }
             .connectTimeout(3, TimeUnit.SECONDS)
-            .readTimeout(15, TimeUnit.SECONDS)
+            // Vibepollo can take a long while for HTTPS answers (big app lists, right after pairing).
+            .readTimeout(60, TimeUnit.SECONDS)
             .build()
     }
 

@@ -27,9 +27,9 @@ class MoonlightQt(private val dir: File) {
      */
     suspend fun stream(
         identity: StreamIdentity, hosts: List<StoredHost>, host: StoredHost, appId: Int, options: List<String>,
-        started: (Start) -> Unit,
+        apps: Map<String, List<MoonlightIni.App>>, started: (Start) -> Unit,
     ): Int = withContext(Dispatchers.IO) {
-        prepare(identity, hosts)
+        prepare(identity, hosts, apps)
         val command = listOf(exe.path, "stream", host.uuid, "appid:$appId") + options
         Log.i("Streaming app $appId of ${host.name}")
         val builder = ProcessBuilder(command).directory(dir).redirectErrorStream(true)
@@ -60,12 +60,12 @@ class MoonlightQt(private val dir: File) {
     }
 
     /** portable.dat and the identity / hosts part of Moonlight.ini. */
-    fun prepare(identity: StreamIdentity, hosts: List<StoredHost>) {
+    fun prepare(identity: StreamIdentity, hosts: List<StoredHost>, apps: Map<String, List<MoonlightIni.App>> = emptyMap()) {
         File(dir, "portable.dat").takeIf { !it.exists() }?.writeText("")
         // Portable mode keeps QSettings in <dir>/<organization>/<application>.ini.
         val ini = File(dir, "Moonlight Game Streaming Project/Moonlight.ini").apply { parentFile.mkdirs() }
         val text = runCatching { ini.readText() }.getOrDefault("")
-        ini.writeText(MoonlightIni.update(text, identity, hosts.filter { it.serverCert != null }))
+        ini.writeText(MoonlightIni.update(text, identity, hosts.filter { it.serverCert != null }, apps))
     }
 
     companion object {
@@ -83,7 +83,14 @@ class MoonlightQt(private val dir: File) {
  * [hosts] section are written; everything else (its own preferences) stays as it is.
  */
 object MoonlightIni {
-    fun update(existing: String, identity: StreamIdentity, hosts: List<StoredHost>): String {
+    /** An app of a host as Moonlight-Qt keeps it. */
+    data class App(val id: Int, val name: String, val hdr: Boolean)
+
+    /**
+     * [apps]: the hosts' app lists the launcher knows, so Moonlight-Qt finds the app right away
+     * (it waits only 10 s for its own list, which a host with many apps may not deliver in time).
+     */
+    fun update(existing: String, identity: StreamIdentity, hosts: List<StoredHost>, apps: Map<String, List<App>> = emptyMap()): String {
         val sections = parse(existing)
         val general = sections.getOrPut("General") { linkedMapOf() }
         general["certificate"] = byteArray(identity.certificatePem)
@@ -104,6 +111,14 @@ object MoonlightIni {
             h["${p}manualport"] = host.port.toString()
             h["${p}srvcert"] = byteArray(host.serverCert!!)
             h["${p}nvidiasw"] = "false"
+            val list = apps[host.uuid].orEmpty()
+            list.forEachIndexed { j, app ->
+                val a = "${p}apps\\${j + 1}\\"
+                h["${a}name"] = quote(app.name)
+                h["${a}id"] = app.id.toString()
+                h["${a}hdr"] = app.hdr.toString()
+            }
+            if (list.isNotEmpty()) h["${p}apps\\size"] = list.size.toString()
         }
         h["size"] = hosts.size.toString()
         sections["hosts"] = h
