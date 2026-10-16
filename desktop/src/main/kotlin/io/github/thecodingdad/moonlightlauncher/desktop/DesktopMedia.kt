@@ -40,8 +40,15 @@ class DesktopFeedbackOutput(private val gamepads: () -> Gamepads?) : FeedbackOut
         clips.remove(id)?.close()
     }
 
+    // Java Sound may block for milliseconds on stop/start: never on the UI thread (focus moves stutter).
+    private val audio = java.util.concurrent.Executors.newSingleThreadExecutor { r -> Thread(r, "ui-sound").apply { isDaemon = true } }
+
     override fun play(id: Int, volume: Float) {
         val clip = clips[id] ?: return
+        audio.execute { playNow(clip, volume) }
+    }
+
+    private fun playNow(clip: Clip, volume: Float) {
         runCatching {
             (clip.getControl(FloatControl.Type.MASTER_GAIN) as? FloatControl)?.let { gain ->
                 val db = if (volume <= 0.0001f) gain.minimum else (20 * log10(volume)).coerceIn(gain.minimum, gain.maximum)
@@ -65,7 +72,8 @@ class DesktopFeedbackOutput(private val gamepads: () -> Gamepads?) : FeedbackOut
             UiSound.ERROR -> 160
             else -> 40
         }
-        gamepads()?.vibrate(strength = power, millis = millis)
+        // The pads are busy polling now and then; the rumble waits for them off the UI thread.
+        audio.execute { gamepads()?.vibrate(strength = power, millis = millis) }
     }
 }
 

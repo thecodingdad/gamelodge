@@ -156,8 +156,11 @@ class Gamepads(private val dispatcher: InputDispatcher) {
         button(PadButton.R1, p.rb, s.rb, now)
         button(PadButton.START, p.start, s.start, now)
         select(p.back, s.back, now)
-        // Same orientation as Android's axes (down positive).
-        EventQueue.invokeLater { dispatcher.dispatchAxes(s.leftTrigger, s.rightTrigger, s.rightStickX, s.rightStickY, now) }
+        // Same orientation as Android's axes (down positive). Only on change: 60 calls a second
+        // on the UI thread for a resting stick cost frames for nothing.
+        if (p.leftTrigger != s.leftTrigger || p.rightTrigger != s.rightTrigger || p.rightStickX != s.rightStickX || p.rightStickY != s.rightStickY) {
+            EventQueue.invokeLater { dispatcher.dispatchAxes(s.leftTrigger, s.rightTrigger, s.rightStickX, s.rightStickY, now) }
+        }
     }
 
     private fun button(button: PadButton, was: Boolean, now: Boolean, time: Long) {
