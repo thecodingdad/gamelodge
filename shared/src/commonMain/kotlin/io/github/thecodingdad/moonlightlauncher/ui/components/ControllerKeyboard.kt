@@ -34,6 +34,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -92,7 +93,9 @@ fun LauncherTextField(
 ) {
     val keyboard = LocalKeyboardController.current
     val colors = LauncherTheme.colors
-    if (!isControllerMode()) {
+    // Typing on a hardware keyboard switches to key input mode: the field being edited stays a field.
+    var editing by remember { mutableStateOf(false) }
+    if (!isControllerMode() || editing) {
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
@@ -108,7 +111,7 @@ fun LauncherTextField(
                     TextKind.TEXT -> KeyboardType.Text
                 },
             ),
-            modifier = modifier.fillMaxWidth(),
+            modifier = modifier.fillMaxWidth().onFocusChanged { editing = it.isFocused },
         )
         return
     }
