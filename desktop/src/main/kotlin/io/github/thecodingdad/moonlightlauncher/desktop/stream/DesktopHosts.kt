@@ -71,6 +71,8 @@ class DesktopHosts(
     private val pairing = Mutex()
     private var polling: Job? = null
     private val appListAt = mutableMapOf<String, Long>()
+    /** Last box art request per host: the host answers HTTPS one by one, polling waits meanwhile. */
+    private val boxArtAt = java.util.concurrent.ConcurrentHashMap<String, Long>()
     /** Hosts found in the network, not added or paired yet (kept in memory only). */
     private val discovered = java.util.concurrent.ConcurrentHashMap<String, StoredHost>()
     private val discovery = HostDiscovery { address, port -> scope.launch(Dispatchers.IO) { found(address, port) } }
@@ -134,7 +136,12 @@ class DesktopHosts(
         val file = File(boxArtDir, "${safe(host.uuid)}/${app.appId}.png")
         if (file.isFile) return@withContext file
         val s = stored(host.uuid)?.takeIf { it.serverCert != null } ?: return@withContext null
-        val bytes = client(s).boxArt(app.appId) ?: return@withContext null
+        val started = System.currentTimeMillis()
+        boxArtAt[host.uuid] = started
+        val bytes = try { client(s).boxArt(app.appId) } finally { boxArtAt[host.uuid] = System.currentTimeMillis() }
+        val took = System.currentTimeMillis() - started
+        if (took > SLOW_MS) Log.i("Box art of ${app.appName} from ${s.name} took ${took / 1000} s")
+        if (bytes == null) return@withContext null
         file.parentFile.mkdirs()
         file.writeBytes(bytes)
         file
@@ -243,15 +250,20 @@ class DesktopHosts(
 
     private suspend fun poll(s: StoredHost) {
         val c = client(s)
-        var result = runCatching { c.serverInfo() }
+        // Covers loading: state over plain HTTP only, no app list, so the downloads go on without waiting.
+        val downloading = s.serverCert != null && System.currentTimeMillis() - (boxArtAt[s.uuid] ?: 0) < BOX_ART_QUIET_MS
+        var result = if (downloading) {
+            runCatching { NvHttp(s.address, s.port, identity(), null, http, deviceName()).serverInfo() }
+        } else runCatching { c.serverInfo() }
         // A host busy with HTTPS (Vibepollo right after pairing, many box art requests) can take
         // a minute: it is online when plain HTTP answers, and keeps its pairing state meanwhile.
-        var keepPaired = false
+        var keepPaired = downloading
         if (result.isFailure && s.serverCert != null && result.exceptionOrNull() is java.io.IOException) {
             val plain = runCatching { NvHttp(s.address, s.port, identity(), null, http, deviceName()).serverInfo() }
             if (plain.isSuccess) {
                 result = plain
-                keepPaired = _hosts.value[s.uuid]?.paired ?: true
+                // The pinned certificate comes from a pairing (unpairing removes it): still paired.
+                keepPaired = true
             }
         }
         val info = result.getOrNull()
@@ -279,7 +291,7 @@ class DesktopHosts(
             ))
         }
         val now = System.currentTimeMillis()
-        if (paired && now - (appListAt[s.uuid] ?: 0) > APP_LIST_MS) {
+        if (paired && !downloading && now - (appListAt[s.uuid] ?: 0) > APP_LIST_MS) {
             runCatching { c.appList() }.onSuccess { apps ->
                 appListAt[s.uuid] = now
                 if (_appLists.value[s.uuid]?.size != apps.size) Log.i("App list of ${info.name}: ${apps.size} apps")
@@ -316,6 +328,8 @@ class DesktopHosts(
     companion object {
         private const val POLL_MS = 3_000L
         private const val APP_LIST_MS = 30_000L
+        private const val BOX_ART_QUIET_MS = 5_000L
+        private const val SLOW_MS = 3_000L
         private val WOL_PORTS = listOf(7, 9, 47998, 47999, 48000, 48002, 48010)
 
         /** "host", "host:port", "[v6]:port" → address and HTTP port. */
