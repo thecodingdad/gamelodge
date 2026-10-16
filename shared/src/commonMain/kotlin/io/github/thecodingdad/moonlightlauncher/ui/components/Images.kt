@@ -191,6 +191,7 @@ fun AppIcon(packageName: String, modifier: Modifier = Modifier) {
 }
 
 private val accentCache = Lru<Any, Color>(300)
+private const val ACCENT_SETTLE_MS = 300L
 
 /**
  * Publishes the dominant vibrant colour of [model] as the theme accent (when the user chose
@@ -202,6 +203,9 @@ fun PublishAccentFrom(model: Any?) {
     LaunchedEffect(model) {
         if (model == null) return@LaunchedEffect
         accentCache.get(model)?.let { holder.coverAccent.value = it; return@LaunchedEffect }
+        // Only once the focus rests: moving on cancels this (no image analysis and colour
+        // animation for every card passed on the way).
+        kotlinx.coroutines.delay(ACCENT_SETTLE_MS)
         val color = withContext(Dispatchers.IO) {
             runCatching { ArtworkPlatform.current.accentColor(model) }.getOrNull()
         } ?: return@LaunchedEffect

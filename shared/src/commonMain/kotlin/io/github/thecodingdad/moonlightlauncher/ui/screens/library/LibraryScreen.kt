@@ -104,9 +104,9 @@ fun LibraryScreen(
     var selectedKey by rememberSaveable { mutableStateOf<String?>(null) }
     var sort by rememberSaveable { mutableStateOf(LibrarySort.TITLE) }
     var search by rememberSaveable { mutableStateOf("") }
-    var focused by remember { mutableStateOf<LibraryEntry?>(null) }
-    var gridFocused by remember { mutableStateOf(true) }
-    PublishAccentFrom(focused?.coverModel())
+    // Read only where it is shown (hints, accent): a focus move must not recompose the grid.
+    val focused = remember { mutableStateOf<LibraryEntry?>(null) }
+    val gridFocused = remember { mutableStateOf(true) }
 
     val selected = filters.firstOrNull { it.key == selectedKey }
         ?: filters.firstOrNull { it.builtin == BuiltinFilter.ALL } ?: filters.firstOrNull()
@@ -147,17 +147,15 @@ fun LibraryScreen(
     PadAction(PadButton.R2) { stepFilter(1) }
     PadAction(PadButton.SELECT) { sort = sort.next(manualSort) }
     PadAction(PadButton.START) { openSearch() }
-    PadAction(PadButton.X) { focused?.let { openContext(it) } }
+    PadAction(PadButton.X) { focused.value?.let { openContext(it) } }
 
-    ScreenHints(
-        listOf(
-            // On the filter chips A selects a filter; only on a card it opens/starts.
-            ButtonHint(PadButton.A, stringResource(if (gridFocused) actions.openLabel(focused) else Res.string.hint_select)),
-            ButtonHint(PadButton.X, stringResource(Res.string.hint_options), onClick = { focused?.let { openContext(it) } }),
-            ButtonHint(PadButton.L2, stringResource(Res.string.hint_filters), onClick = { stepFilter(1) }, secondButton = PadButton.R2),
-            ButtonHint(PadButton.SELECT, sortLabel(sort), onClick = { sort = sort.next(manualSort) }),
-            ButtonHint(PadButton.START, stringResource(Res.string.hint_search), onClick = ::openSearch),
-        ),
+    LibraryFocusDependents(
+        focused, gridFocused,
+        onOptions = { focused.value?.let { openContext(it) } },
+        onFilters = { stepFilter(1) },
+        sortLabel = sortLabel(sort),
+        onSort = { sort = sort.next(manualSort) },
+        onSearch = ::openSearch,
     )
     // Scroll position and focused game are kept per filter.
     val gridStates = androidx.compose.runtime.saveable.rememberSaveableStateHolder()
@@ -191,8 +189,11 @@ fun LibraryScreen(
             if (lastId != null && lastId != focusByFilter[filterKey] && shown.any { it.item.id == lastId }) focusByFilter[filterKey] = lastId
             true
         }
-        val targetId = listOfNotNull(focusByFilter[filterKey], lastId).firstOrNull { id -> shown.any { it.item.id == id } }
-            ?: shown.first().item.id
+        // Not observed: the remembered position only matters when the cards appear, and every
+        // focus move writes it (observing it recomposed all cards on each move).
+        val targetId = androidx.compose.runtime.snapshots.Snapshot.withoutReadObservation {
+            listOfNotNull(focusByFilter[filterKey], lastId).firstOrNull { id -> shown.any { it.item.id == id } }
+        } ?: shown.first().item.id
         gridStates.SaveableStateProvider(filterKey) {
         val gridState = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
         io.github.thecodingdad.moonlightlauncher.ui.input.RegisterStickScroll(gridState)
@@ -219,7 +220,7 @@ fun LibraryScreen(
             contentPadding = PaddingValues(horizontal = if (io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current) 16.dp else 36.dp, vertical = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(if (io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current) 12.dp else 18.dp),
             verticalArrangement = Arrangement.spacedBy(22.dp),
-            modifier = Modifier.focusRestorer().onFocusChanged { gridFocused = it.hasFocus }.mouseDragScroll(gridState),
+            modifier = Modifier.focusRestorer().onFocusChanged { gridFocused.value = it.hasFocus }.mouseDragScroll(gridState),
         ) {
             itemsIndexed(shown, key = { _, it -> it.item.id }) { index, entry ->
                 val key = "library:${entry.item.id}"
@@ -229,7 +230,7 @@ fun LibraryScreen(
                         actions.open(entry, shown) { id -> focusByFilter[filterKey] = id; onFocusKey("library:$id") }
                     },
                     onLongClick = { openContext(entry) },
-                    onFocused = { focused = entry; focusByFilter[filterKey] = entry.item.id; onFocusKey(key); snapTo(index) },
+                    onFocused = { focused.value = entry; focusByFilter[filterKey] = entry.item.id; onFocusKey(key); snapTo(index) },
                     showTitle = true,
                     animated = animatedArtwork,
                     modifier = Modifier.restoreFocusIf(entry.item.id == targetId).focusAfterBrowse(entry.item.id),
@@ -239,6 +240,32 @@ fun LibraryScreen(
         }
         }
     }
+}
+
+/** What follows the focused card: the button hints and the accent from its cover. */
+@Composable
+private fun LibraryFocusDependents(
+    focused: androidx.compose.runtime.State<LibraryEntry?>,
+    gridFocused: androidx.compose.runtime.State<Boolean>,
+    onOptions: () -> Unit,
+    onFilters: () -> Unit,
+    sortLabel: String,
+    onSort: () -> Unit,
+    onSearch: () -> Unit,
+) {
+    val actions = LocalEntryActions.current
+    val entry = focused.value
+    PublishAccentFrom(entry?.coverModel())
+    ScreenHints(
+        listOf(
+            // On the filter chips A selects a filter; only on a card it opens/starts.
+            ButtonHint(PadButton.A, stringResource(if (gridFocused.value) actions.openLabel(entry) else Res.string.hint_select)),
+            ButtonHint(PadButton.X, stringResource(Res.string.hint_options), onClick = onOptions),
+            ButtonHint(PadButton.L2, stringResource(Res.string.hint_filters), onClick = onFilters, secondButton = PadButton.R2),
+            ButtonHint(PadButton.SELECT, sortLabel, onClick = onSort),
+            ButtonHint(PadButton.START, stringResource(Res.string.hint_search), onClick = onSearch),
+        ),
+    )
 }
 
 @Composable

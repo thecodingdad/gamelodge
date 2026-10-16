@@ -84,10 +84,20 @@ object DesktopArtwork : ArtworkPlatform {
 
     override suspend fun accentColor(model: Any): Color? {
         val context = PlatformContext.INSTANCE
-        val request = ImageRequest.Builder(context).data(model).size(96).build()
+        // Small and not kept in the memory cache (it would push out images that are shown).
+        val request = ImageRequest.Builder(context).data(model).size(64)
+            .memoryCachePolicy(coil3.request.CachePolicy.DISABLED).build()
         val result = SingletonImageLoader.get(context).execute(request) as? SuccessResult ?: return null
         val bitmap = result.image.toBitmap()
-        return vibrantColor(IntArray(bitmap.width * bitmap.height) { i -> bitmap.getColor(i % bitmap.width, i / bitmap.width) })
+        // All pixels in one call (per-pixel reads cross into native code each time).
+        val info = org.jetbrains.skia.ImageInfo.makeN32(bitmap.width, bitmap.height, org.jetbrains.skia.ColorAlphaType.UNPREMUL)
+        val bytes = bitmap.readPixels(info, info.minRowBytes, 0, 0) ?: return null
+        val n = bitmap.width * bitmap.height
+        // N32 is BGRA on little-endian machines.
+        return vibrantColor(IntArray(n) { i ->
+            val o = i * 4
+            ((bytes[o + 3].toInt() and 0xFF) shl 24) or ((bytes[o + 2].toInt() and 0xFF) shl 16) or ((bytes[o + 1].toInt() and 0xFF) shl 8) or (bytes[o].toInt() and 0xFF)
+        })
     }
 
     /**
