@@ -4,12 +4,16 @@
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
-    alias(libs.plugins.android.library)
+    alias(libs.plugins.android.library) apply false
     alias(libs.plugins.kotlin.serialization)
 }
 
+// The metadata server's Docker build (-PserverOnly) has no Android SDK: JVM only there.
+val withAndroid = !providers.gradleProperty("serverOnly").isPresent
+if (withAndroid) apply(plugin = "com.android.library")
+
 kotlin {
-    androidTarget {
+    if (withAndroid) androidTarget {
         compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) }
     }
     jvm {
@@ -28,7 +32,7 @@ kotlin {
     }
 }
 
-android {
+if (withAndroid) extensions.configure<com.android.build.gradle.LibraryExtension>("android") {
     namespace = "io.github.thecodingdad.moonlightlauncher.protocol"
     compileSdk = 36
     defaultConfig { minSdk = 29 }

@@ -26,6 +26,17 @@ import javax.net.ssl.KeyManagerFactory
 import javax.net.ssl.SSLContext
 
 /** Whether the connection for launchers (the API server) runs, and switching it on (pairing needs it). */
+/** Name and metadata provider keys of a standalone server, edited in the web admin. Keys are write-only. */
+interface ServerSettingsForm {
+    val name: String
+    val steamGridDbKeySet: Boolean
+    val igdbClientId: String?
+    val igdbClientSecretSet: Boolean
+
+    /** Null keeps a value, "" clears it. */
+    fun save(name: String?, steamGridDbKey: String?, igdbClientId: String?, igdbClientSecret: String?)
+}
+
 interface PairingGate {
     val ready: Boolean
     fun fix()
@@ -44,6 +55,14 @@ class WebAdmin(
     private val pairing: PairingManager,
     private val gate: PairingGate? = null,
     private val clock: () -> Long = System::currentTimeMillis,
+    /** Permissions a paired device can be given here (the metadata server only has metadata). */
+    private val permissionChoices: List<String> = listOf(Permissions.METADATA, Permissions.HOST_GAMES, Permissions.HOST_GAMES_WRITE),
+    /** Product name in titles and the menu (default: the launcher's). */
+    private val product: String? = null,
+    /** Server name and provider keys, edited here (metadata server); none in the launcher. */
+    private val serverSettings: ServerSettingsForm? = null,
+    /** Also answer public addresses (metadata server behind a reverse proxy; off by default). */
+    private val allowPublic: Boolean = false,
 ) {
     private class Session(val id: String, val version: Int, val issued: Long, var seen: Long, val csrf: String) {
         var flash: String? = null
@@ -126,7 +145,7 @@ class WebAdmin(
         h["Cache-Control"] = listOf("no-store")
 
         val remote = ex.remoteAddress?.address
-        if (remote == null || !isPrivate(remote)) {
+        if (remote == null || (!allowPublic && !isPrivate(remote))) {
             Log.w("Web UI request from public address refused")
             return status(ex, 403)
         }
@@ -193,9 +212,17 @@ class WebAdmin(
                 redirect(ex, "/devices")
             }
             path == "/devices/permissions" && post -> {
-                devices.setPermissions(form["id"].orEmpty(), Permissions.all.filter { form["perm_$it"] == "on" }.toSet())
+                devices.setPermissions(form["id"].orEmpty(), permissionChoices.filter { form["perm_$it"] == "on" }.toSet())
                 flash(session, "saved")
                 redirect(ex, "/devices")
+            }
+            path == "/server" && !post && serverSettings != null -> serverPage(r, serverSettings)
+            path == "/server/save" && post && serverSettings != null -> {
+                // Empty key fields keep the stored key; the checkboxes clear them.
+                fun key(field: String) = if (form["clear_$field"] == "on") "" else form[field]?.trim()?.ifEmpty { null }
+                serverSettings.save(form["name"]?.trim()?.ifEmpty { null }, key("sgdb"), form["igdb_id"]?.trim(), key("igdb_secret"))
+                flash(session, "saved")
+                redirect(ex, "/server")
             }
             path == "/security" && !post -> securityPage(r)
             path == "/security/password" && post -> {
@@ -400,7 +427,7 @@ class WebAdmin(
                 append("<form method=\"post\" action=\"/devices/permissions\"><div class=\"perms\">")
                 csrf(r)
                 append("<input type=\"hidden\" name=\"id\" value=\"").append(e(d.id)).append("\">")
-                for (p in PERMISSION_ORDER) {
+                for (p in permissionChoices) {
                     append("<label class=\"check\"><input type=\"checkbox\" name=\"perm_").append(e(p)).append("\"")
                     if (d.may(p)) append(" checked")
                     append("> ").append(e(t(r, "perm_" + p.replace('.', '_')))).append("</label>")
@@ -408,6 +435,26 @@ class WebAdmin(
                 append("<button type=\"submit\" class=\"secondary\">").append(e(t(r, "save"))).append("</button></div></form>")
                 append("<div class=\"hint mono\">").append(e(Fingerprint.pretty(d.fingerprint))).append("</div></section>")
             }
+        }
+    }
+
+    private fun serverPage(r: Request, settings: ServerSettingsForm) {
+        page(r, t(r, "nav_server"), "server") {
+            append("<h1>").append(e(t(r, "nav_server"))).append("</h1><p>").append(e(t(r, "server_intro"))).append("</p>")
+            flash(r)
+            append("<section class=\"card\"><form method=\"post\" action=\"/server/save\">")
+            csrf(r)
+            append("<label>").append(e(t(r, "server_name"))).append("<input name=\"name\" maxlength=\"64\" value=\"").append(e(settings.name)).append("\"></label>")
+            val stored = t(r, "key_stored")
+            append("<h2>SteamGridDB</h2>")
+            field(t(r, "sgdb_key"), "sgdb", "password", "off", placeholder = if (settings.steamGridDbKeySet) stored else null)
+            if (settings.steamGridDbKeySet) append("<label class=\"check\"><input type=\"checkbox\" name=\"clear_sgdb\"> ").append(e(t(r, "key_clear"))).append("</label>")
+            append("<h2>IGDB</h2>")
+            append("<label>").append(e(t(r, "igdb_client_id"))).append("<input name=\"igdb_id\" autocomplete=\"off\" value=\"").append(e(settings.igdbClientId.orEmpty())).append("\"></label>")
+            field(t(r, "igdb_client_secret"), "igdb_secret", "password", "off", placeholder = if (settings.igdbClientSecretSet) stored else null)
+            if (settings.igdbClientSecretSet) append("<label class=\"check\"><input type=\"checkbox\" name=\"clear_igdb_secret\"> ").append(e(t(r, "key_clear"))).append("</label>")
+            append("<p class=\"hint\">").append(e(t(r, "keys_hint"))).append("</p>")
+            append("<button type=\"submit\" class=\"primary\">").append(e(t(r, "save"))).append("</button></form></section>")
         }
     }
 
@@ -485,7 +532,11 @@ class WebAdmin(
         if (r.session != null && nav != null) {
             sb.append("<div class=\"shell\"><nav class=\"side\"><div class=\"brand\"><img src=\"/icon.svg\" alt=\"\"><span>")
                 .append(e(t(r, "product"))).append("</span></div>")
-            for ((href, key, icon) in listOf(Triple("pairing", "nav_pairing", "⇄"), Triple("devices", "nav_devices", "▣"), Triple("security", "nav_security", "✱"))) {
+            val items = listOfNotNull(
+                Triple("pairing", "nav_pairing", "⇄"), Triple("devices", "nav_devices", "▣"),
+                if (serverSettings != null) Triple("server", "nav_server", "⚙") else null, Triple("security", "nav_security", "✱"),
+            )
+            for ((href, key, icon) in items) {
                 sb.append("<a class=\"nav-item").append(if (href == nav) " active" else "").append("\" href=\"/").append(href)
                     .append("\"><span class=\"icon\">").append(icon).append("</span><span>").append(e(t(r, key))).append("</span></a>")
             }
@@ -566,6 +617,7 @@ class WebAdmin(
     }
 
     private fun t(r: Request, key: String, vararg args: Any): String {
+        if (key == "product" && product != null) return product
         val bundle = ResourceBundle.getBundle("web.strings", r.lang, ResourceBundle.Control.getNoFallbackControl(ResourceBundle.Control.FORMAT_PROPERTIES))
         var text = if (bundle.containsKey(key)) bundle.getString(key) else key
         args.forEachIndexed { i, a -> text = text.replace("{$i}", a.toString()) }
@@ -609,7 +661,6 @@ class WebAdmin(
         const val MAX_SESSION_MS = 12 * 3_600_000L
         const val LOCAL_LOGIN_MS = 2 * 60_000L
         private const val MAX_BODY = 16 * 1024
-        private val PERMISSION_ORDER = listOf(Permissions.METADATA, Permissions.HOST_GAMES, Permissions.HOST_GAMES_WRITE)
 
         fun e(s: String): String {
             val sb = StringBuilder(s.length + 16)

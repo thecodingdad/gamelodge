@@ -1,0 +1,11 @@
+# Only what the metadata server image needs (server/Dockerfile).
+*
+!gradlew
+!gradle/
+!settings.gradle.kts
+!build.gradle.kts
+!gradle.properties
+!protocol/
+!host/
+!server/
+**/build/

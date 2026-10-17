@@ -72,73 +72,14 @@ object DesktopNetworkStatus : NetworkStatus {
     override fun metered(): Flow<Boolean> = flowOf(false)
 }
 
-/**
- * Credentials in a JSON file in the data folder, each value encrypted: with Windows DPAPI (bound
- * to the user account) on Windows, else with AES-GCM and a key file only the user can read.
- */
-class DesktopSecretBackend(dir: File) : SecretBackend {
-    private val file = File(dir, "secrets.json")
-    private val json = Json { prettyPrint = true }
-    private val cipher: ValueCipher = if (isWindows) DpapiCipher else KeyFileCipher(File(dir, "secrets.key"))
-    private val values: MutableMap<String, String> = load()
+/** Secrets of the PC: Windows DPAPI (bound to the user account), a key file elsewhere. */
+fun DesktopSecretBackend(dir: File): SecretBackend = io.github.thecodingdad.moonlightlauncher.host.FileSecretBackend(
+    dir, if (isWindows) DpapiCipher else io.github.thecodingdad.moonlightlauncher.host.KeyFileCipher(File(dir, "secrets.key")),
+)
 
-    @Synchronized
-    override fun get(key: String): String? {
-        val stored = values[key] ?: return null
-        return runCatching { String(cipher.decrypt(Base64.getDecoder().decode(stored)), Charsets.UTF_8) }
-            .onFailure { Log.w("Secret $key unreadable", it) }.getOrNull()
-    }
-
-    @Synchronized
-    override fun put(key: String, value: String?) {
-        if (value.isNullOrEmpty()) values.remove(key)
-        else values[key] = Base64.getEncoder().encodeToString(cipher.encrypt(value.toByteArray(Charsets.UTF_8)))
-        save()
-    }
-
-    @Synchronized
-    override fun keys(): Set<String> = values.keys.toSet()
-
-    private fun load(): MutableMap<String, String> =
-        runCatching { json.decodeFromString<Map<String, String>>(file.readText()).toMutableMap() }.getOrDefault(mutableMapOf())
-
-    private fun save() {
-        val tmp = File(file.parentFile, "${file.name}.tmp")
-        tmp.writeText(json.encodeToString(values.toMap()))
-        restrictToOwner(tmp)
-        Files.move(tmp.toPath(), file.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE)
-    }
-
-    private interface ValueCipher {
-        fun encrypt(plain: ByteArray): ByteArray
-        fun decrypt(data: ByteArray): ByteArray
-    }
-
-    private object DpapiCipher : ValueCipher {
-        override fun encrypt(plain: ByteArray): ByteArray = com.sun.jna.platform.win32.Crypt32Util.cryptProtectData(plain)
-        override fun decrypt(data: ByteArray): ByteArray = com.sun.jna.platform.win32.Crypt32Util.cryptUnprotectData(data)
-    }
-
-    private class KeyFileCipher(private val keyFile: File) : ValueCipher {
-        private val key by lazy {
-            if (!keyFile.exists()) {
-                keyFile.writeBytes(ByteArray(32).also { SecureRandom().nextBytes(it) })
-                restrictToOwner(keyFile)
-            }
-            SecretKeySpec(keyFile.readBytes(), "AES")
-        }
-
-        override fun encrypt(plain: ByteArray): ByteArray {
-            val iv = ByteArray(12).also { SecureRandom().nextBytes(it) }
-            val c = Cipher.getInstance("AES/GCM/NoPadding").apply { init(Cipher.ENCRYPT_MODE, key, GCMParameterSpec(128, iv)) }
-            return iv + c.doFinal(plain)
-        }
-
-        override fun decrypt(data: ByteArray): ByteArray {
-            val c = Cipher.getInstance("AES/GCM/NoPadding").apply { init(Cipher.DECRYPT_MODE, key, GCMParameterSpec(128, data, 0, 12)) }
-            return c.doFinal(data, 12, data.size - 12)
-        }
-    }
+private object DpapiCipher : io.github.thecodingdad.moonlightlauncher.host.ValueCipher {
+    override fun encrypt(plain: ByteArray): ByteArray = com.sun.jna.platform.win32.Crypt32Util.cryptProtectData(plain)
+    override fun decrypt(data: ByteArray): ByteArray = com.sun.jna.platform.win32.Crypt32Util.cryptUnprotectData(data)
 }
 
 /** Only the owner may read the file (no-op where the file system has no POSIX permissions). */

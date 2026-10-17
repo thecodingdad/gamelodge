@@ -17,9 +17,14 @@ dependencyResolutionManagement {
 
 rootProject.name = "moonlight-launcher"
 
-include(":app")
+// -PserverOnly: only the metadata server and what it needs (Docker build, no Android SDK).
+val serverOnly = providers.gradleProperty("serverOnly").isPresent
 include(":protocol")
-include(":shared")
 include(":host")
-include(":desktop")
-include(":moonlight-core")
+include(":server")
+if (!serverOnly) {
+    include(":app")
+    include(":shared")
+    include(":desktop")
+    include(":moonlight-core")
+}

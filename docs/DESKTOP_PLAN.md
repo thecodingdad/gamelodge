@@ -95,6 +95,13 @@ user tests on Windows. Android stays releasable from `desktop` at all times.
   `LaunchPlatform`, `StreamProfiles`, `LocalAppSource`, `Emulators`, `Vpn`, `SecretBackend`,
   `PlatformInfo`. Android implements them in `app`; platform-free tests run on the desktop JVM.
 
+- 2026-10-17 – phases 1–4 done (desktop shell, PC games with emulators and own games, hosts and
+  streaming via Moonlight-Qt, host role). Phase 5: companion removed (fresh setup instead of a data
+  migration), Inno Setup installer (`tools/build-installer.sh`, per user or for all users). The
+  server side lives in `:protocol` (wire protocol, log, secrets; Android + JVM) and `:host` (client
+  API, pairing, devices, metadata proxy, web admin); the headless metadata server `:server` uses
+  the same code (`server/Dockerfile`, built on the Docker host, amd64/arm64).
+
 ## Open points (decide when reached)
 
 - Windows packaging from Linux: portable zip (jlinked Windows JRE + launcher exe) vs. MSI built

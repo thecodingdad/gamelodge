@@ -70,6 +70,8 @@ class ApiServer(
     private val serverName: () -> String,
     private val proxy: () -> MetadataProxyApi? = { null },
     private val hostGames: () -> HostGamesSource? = { null },
+    /** What this server is to clients: [KIND] (Windows launcher, companion) or [KIND_METADATA]. */
+    private val kind: String = KIND,
 ) {
     private var server: HttpsServer? = null
     private val json = Json { ignoreUnknownKeys = true; explicitNulls = false; encodeDefaults = true }
@@ -137,7 +139,7 @@ class ApiServer(
     private fun pairingRoute(ex: HttpsExchange, rest: String, fingerprint: String, address: String?) = guard(ex) {
         val parts = rest.split('/')
         when {
-            ex.requestMethod == "GET" && rest == "hello" -> respond(ex, HelloResponse(VERSION, KIND, pairing.isOpen))
+            ex.requestMethod == "GET" && rest == "hello" -> respond(ex, HelloResponse(VERSION, kind, pairing.isOpen))
             ex.requestMethod == "POST" && rest == "start" -> {
                 val body = read<PairStartRequest>(ex) ?: return@guard error(ex, 400, "invalid")
                 if (body.deviceName.isBlank() || body.deviceName.length > 64) return@guard error(ex, 400, "bad_name")
@@ -157,7 +159,7 @@ class ApiServer(
                 val body = read<PairRound3Request>(ex) ?: return@guard error(ex, 400, "invalid")
                 val (round3, binding, device) = pairing.round3(parts[0], fingerprint, body.round3, body.binding)
                 Log.i("Paired ${device.name}")
-                respond(ex, PairRound3Response(round3, binding, serverName(), KIND))
+                respond(ex, PairRound3Response(round3, binding, serverName(), kind))
             }
             else -> empty(ex, 404)
         }
@@ -170,7 +172,7 @@ class ApiServer(
                 respond(
                     ex,
                     InfoResponse(
-                        VERSION, KIND, serverName(), device.name, device.permissions.toList(),
+                        VERSION, kind, serverName(), device.name, device.permissions.toList(),
                         steamGridDb = p?.steamGridDbConfigured == true && device.may(Permissions.METADATA),
                         igdb = p?.igdbConfigured == true && device.may(Permissions.METADATA),
                         hostId = hostGames()?.hostId,
@@ -285,6 +287,7 @@ class ApiServer(
     companion object {
         const val VERSION = 1
         const val KIND = "companion"
+        const val KIND_METADATA = "metadata"
         private const val MAX_BODY = 64 * 1024
         private const val MAX_IGDB_QUERY = 8 * 1024
 
