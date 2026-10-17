@@ -66,6 +66,11 @@ val downloadWindowsJre by tasks.registering {
     }
 }
 
+// The version shown in the launcher and its logs.
+tasks.named<Jar>("jar") {
+    manifest { attributes("Implementation-Version" to providers.gradleProperty("launcher.versionName").get()) }
+}
+
 val windowsApp by tasks.registering(Sync::class) {
     dependsOn(downloadWindowsJre)
     into(layout.buildDirectory.dir("windows/MoonlightLauncher"))

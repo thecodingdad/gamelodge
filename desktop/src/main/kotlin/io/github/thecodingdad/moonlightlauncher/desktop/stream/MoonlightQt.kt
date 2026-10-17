@@ -69,11 +69,42 @@ class MoonlightQt(val dir: File) {
     }
 
     companion object {
-        /** Next to the running launcher (lib/ → moonlight/). */
+        @Volatile private var located: MoonlightQt? = null
+
+        /**
+         * Next to the running launcher (lib/ → moonlight/). Moonlight-Qt keeps its settings next to
+         * its program (portable mode): installed for all users (Program Files, not writable) it runs
+         * from a copy in the launcher's data folder, renewed when the bundled one changes.
+         */
+        @Synchronized
         fun locate(): MoonlightQt {
+            located?.let { return it }
             val jar = File(MoonlightQt::class.java.protectionDomain.codeSource.location.toURI())
             val base = if (jar.isFile) jar.parentFile.parentFile else File(".")
-            return MoonlightQt(File(base, "moonlight"))
+            val bundled = File(base, "moonlight")
+            val dir = if (!bundled.isDirectory || writable(bundled)) bundled else mirror(bundled, File(io.github.thecodingdad.moonlightlauncher.desktop.dataDirectory(), "moonlight"))
+            return MoonlightQt(dir).also { located = it }
+        }
+
+        private fun writable(dir: File): Boolean = runCatching {
+            val probe = File(dir, ".write-test")
+            probe.writeText("")
+            probe.delete()
+        }.getOrDefault(false)
+
+        private fun mirror(source: File, target: File): File {
+            val exe = File(source, "Moonlight.exe")
+            val stamp = "${exe.length()}-${exe.lastModified()}"
+            val stampFile = File(target, ".bundled")
+            if (stampFile.isFile && stampFile.readText() == stamp) return target
+            io.github.thecodingdad.moonlightlauncher.util.Log.i("Moonlight-Qt: copying to ${target.path} (install folder not writable)")
+            source.walkTopDown().forEach { f ->
+                val rel = f.relativeTo(source)
+                val out = File(target, rel.path)
+                if (f.isDirectory) out.mkdirs() else f.copyTo(out, overwrite = true)
+            }
+            stampFile.writeText(stamp)
+            return target
         }
     }
 }
