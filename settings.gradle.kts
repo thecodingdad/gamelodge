@@ -15,7 +15,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "moonlight-launcher"
+rootProject.name = "gamelodge"
 
 // -PserverOnly: only the metadata server and what it needs (Docker build, no Android SDK).
 val serverOnly = providers.gradleProperty("serverOnly").isPresent

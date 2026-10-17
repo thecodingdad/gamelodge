@@ -1,6 +1,6 @@
-# Moonlight Metadata Server – built from source on the Docker host (amd64 or arm64), from the
+# GameLodge Metadata Server – built from source on the Docker host (amd64 or arm64), from the
 # repository root:
-#   docker build -f server/Dockerfile -t moonlight-metadata-server .
+#   docker build -f server/Dockerfile -t gamelodge-metadata-server .
 # Both architectures at once (buildx): add --platform linux/amd64,linux/arm64.
 FROM --platform=$BUILDPLATFORM eclipse-temurin:17-jdk AS build
 WORKDIR /src
@@ -13,10 +13,10 @@ COPY server server
 RUN ./gradlew --no-daemon --quiet -PserverOnly -Dorg.gradle.jvmargs=-Xmx1g :server:installDist
 
 FROM eclipse-temurin:17-jre
-RUN useradd --system --uid 10001 --no-create-home mlserver && mkdir /data && chown mlserver /data
-COPY --from=build /src/server/build/install/mlserver /app
-ENV MLSERVER_DATA=/data
+RUN useradd --system --uid 10001 --no-create-home gamelodge-server && mkdir /data && chown gamelodge-server /data
+COPY --from=build /src/server/build/install/gamelodge-server /app
+ENV GAMELODGE_DATA=/data
 VOLUME /data
 EXPOSE 47900 47901
-USER mlserver
-ENTRYPOINT ["/app/bin/mlserver"]
+USER gamelodge-server
+ENTRYPOINT ["/app/bin/gamelodge-server"]

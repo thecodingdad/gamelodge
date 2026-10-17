@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Only what the manifest and Android XML need; everything else is in shared/composeResources. -->
-    <string name="launcher_name" translatable="false">Moonlight Launcher</string>
+    <string name="launcher_name" translatable="false">GameLodge</string>
     <string name="quick_menu">Quick menu</string>
-    <string name="combo_service_label">Moonlight Launcher combos</string>
+    <string name="combo_service_label">GameLodge combos</string>
     <string name="combo_service_description">Detects your configured controller button combinations in every app and in the stream (Android Home, quick menu). Only controller buttons are read, nothing on the screen.</string>
 </resources>

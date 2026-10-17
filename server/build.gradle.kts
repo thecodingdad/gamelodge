@@ -1,4 +1,4 @@
-// Moonlight Metadata Server: SteamGridDB/IGDB for paired launchers, headless (Docker). The same
+// GameLodge Metadata Server: SteamGridDB/IGDB for paired launchers, headless (Docker). The same
 // client API, pairing and web admin as the Windows launcher's host role (:host).
 
 plugins {
@@ -17,8 +17,8 @@ dependencies {
 }
 
 application {
-    applicationName = "mlserver"
-    mainClass.set("io.github.thecodingdad.moonlightlauncher.server.MainKt")
+    applicationName = "gamelodge-server"
+    mainClass.set("io.github.thecodingdad.gamelodge.server.MainKt")
     applicationDefaultJvmArgs = listOf("-Xmx256m", "-XX:+UseSerialGC")
 }
 

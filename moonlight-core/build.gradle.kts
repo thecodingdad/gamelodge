@@ -24,10 +24,10 @@ android {
         buildConfigField("boolean", "ROOT_BUILD", "false")
 
         // Normally injected by Artemis' app module via resValue.
-        resValue("string", "app_label", "Moonlight Launcher")
-        resValue("string", "app_label_root", "Moonlight Launcher")
-        resValue("string", "app_label_game", "Moonlight Launcher")
-        resValue("string", "obtainium_app_url", "https://github.com/thecodingdad/moonlight-launcher")
+        resValue("string", "app_label", "GameLodge")
+        resValue("string", "app_label_root", "GameLodge")
+        resValue("string", "app_label_game", "GameLodge")
+        resValue("string", "obtainium_app_url", "https://github.com/thecodingdad/gamelodge")
 
         externalNativeBuild {
             ndkBuild {

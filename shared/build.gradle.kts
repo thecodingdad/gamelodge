@@ -65,7 +65,7 @@ kotlin {
 }
 
 android {
-    namespace = "io.github.thecodingdad.moonlightlauncher.shared"
+    namespace = "io.github.thecodingdad.gamelodge.shared"
     compileSdk = 36
     defaultConfig { minSdk = 29 }
     compileOptions {
@@ -76,7 +76,7 @@ android {
 
 compose.resources {
     publicResClass = true
-    packageOfResClass = "io.github.thecodingdad.moonlightlauncher.resources"
+    packageOfResClass = "io.github.thecodingdad.gamelodge.resources"
     generateResClass = always
 }
 

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="launcher_name">Moonlight Launcher</string>
+    <string name="launcher_name">GameLodge</string>
 
     <!-- Tabs -->
     <string name="tab_home">Home</string>
@@ -266,7 +266,7 @@
     <string name="profile_rename">Rename</string>
     <string name="profile_delete">Delete</string>
     <string name="profile_essentials">Most important</string>
-    <string name="launcher_intro">Use Moonlight Launcher as your home screen. You can switch back at any time; the app keeps working as a normal app too.</string>
+    <string name="launcher_intro">Use GameLodge as your home screen. You can switch back at any time; the app keeps working as a normal app too.</string>
     <string name="launcher_enable">Use as home screen</string>
     <string name="launcher_enable_sub">Shows whether the launcher is the default home app; turning it on opens Android's choice</string>
     <string name="launcher_system_settings">Android home screen settings</string>
@@ -692,9 +692,9 @@
     <string name="combo_quick_menu">Open quick menu</string>
     <string name="combo_quick_menu_sub">Opens the quick menu</string>
     <string name="combo_service">System-wide (accessibility)</string>
-    <string name="combo_service_sub">Enable "Moonlight Launcher combos" in the accessibility settings so the combinations also work in other apps and in the stream</string>
+    <string name="combo_service_sub">Enable "GameLodge combos" in the accessibility settings so the combinations also work in other apps and in the stream</string>
     <string name="combo_service_on">On</string>
-    <string name="combo_service_label">Moonlight Launcher combos</string>
+    <string name="combo_service_label">GameLodge combos</string>
     <string name="combo_service_description">Detects your configured controller button combinations in every app and in the stream (Android Home, quick menu). Only controller buttons are read, nothing on the screen.</string>
     <string name="combo_none">Not set</string>
     <string name="combo_help">Record a single button (e.g. Guide) or a combination (e.g. Select + Start). In the stream only the last pressed button of a combination is held back from the host.</string>
@@ -966,7 +966,7 @@
     <!-- About -->
     <string name="about_open_source">Open source licenses</string>
     <string name="about_open_source_sub">Components this app is built on</string>
-    <string name="about_open_source_intro">Moonlight Launcher uses these open source components. Select one to read its license.</string>
+    <string name="about_open_source_intro">GameLodge uses these open source components. Select one to read its license.</string>
     <string name="about_data_sources">Data sources</string>
     <string name="about_source_sgdb">Covers, backgrounds, logos and icons</string>
     <string name="about_source_igdb">Descriptions, genres, developers and release dates</string>

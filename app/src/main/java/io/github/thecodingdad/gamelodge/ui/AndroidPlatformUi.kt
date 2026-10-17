@@ -1,0 +1,176 @@
+package io.github.thecodingdad.gamelodge.ui
+
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
+import android.webkit.MimeTypeMap
+import androidx.activity.compose.LocalActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Android
+import androidx.compose.material.icons.filled.PhoneAndroid
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalView
+import io.github.thecodingdad.gamelodge.CurrentActivity
+import io.github.thecodingdad.gamelodge.MainActivity
+import io.github.thecodingdad.gamelodge.data.settings.LauncherSettings
+import io.github.thecodingdad.gamelodge.resources.*
+import io.github.thecodingdad.gamelodge.system.TvSession
+import io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerInfo
+import io.github.thecodingdad.gamelodge.ui.screens.settings.NavRow
+import io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId
+import io.github.thecodingdad.gamelodge.ui.shell.SystemStatus
+import io.github.thecodingdad.gamelodge.ui.shell.TileModel
+import io.github.thecodingdad.gamelodge.ui.shell.TopCutout
+import io.github.thecodingdad.gamelodge.util.AppLanguage
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import org.jetbrains.compose.resources.stringResource
+import java.io.File
+import java.util.Date
+import java.util.UUID
+
+/** Android's side of the shared UI: system state, controllers, intents and the Android-only settings. */
+class AndroidPlatformUi(private val context: Context) : PlatformUi {
+    override val localIcon = Icons.Filled.PhoneAndroid
+
+    @Composable
+    override fun rememberSystemStatus(): SystemStatus = io.github.thecodingdad.gamelodge.ui.shell.rememberAndroidSystemStatus()
+
+    @Composable
+    override fun rememberTopCutout(): TopCutout = io.github.thecodingdad.gamelodge.ui.shell.rememberAndroidTopCutout()
+
+    override fun formatTime(millis: Long): String = android.text.format.DateFormat.getTimeFormat(context).format(Date(millis))
+
+    @Composable
+    override fun rememberControllers(): List<ControllerInfo> = io.github.thecodingdad.gamelodge.ui.screens.settings.rememberAndroidControllers()
+
+    override fun vibrateController(id: Int) = io.github.thecodingdad.gamelodge.ui.screens.settings.vibrateAndroidController(id)
+
+    @Composable
+    override fun ControllerDetailDialog(controller: ControllerInfo?, onDismiss: () -> Unit) =
+        io.github.thecodingdad.gamelodge.ui.screens.settings.AndroidControllerDetailDialog(controller, onDismiss)
+
+    override fun openUrl(url: String) {
+        runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+    }
+
+    override fun bringToFront() {
+        context.startActivity(Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_NEW_TASK))
+    }
+
+    @Composable
+    override fun rememberSystemTiles(ids: List<String>, revision: Int): Map<String, List<TileModel>> =
+        io.github.thecodingdad.gamelodge.ui.shell.rememberAndroidSystemTiles(ids, revision)
+
+    override fun quickTileAvailable(id: String): Boolean = io.github.thecodingdad.gamelodge.ui.shell.androidQuickTileAvailable(context, id)
+
+    @Composable
+    override fun SystemControls(visible: Boolean) = io.github.thecodingdad.gamelodge.ui.shell.AndroidSystemControls(visible)
+
+    override fun appLabel(packageName: String): String = io.github.thecodingdad.gamelodge.ui.shell.androidAppLabel(context, packageName)
+
+    @Composable
+    override fun rememberImagePicker(onPicked: (String?) -> Unit): () -> Unit {
+        val launcher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> onPicked(uri?.toString()) }
+        return { launcher.launch(arrayOf("image/*")) }
+    }
+
+    override suspend fun copyImage(address: String, dir: File, baseName: String): File? = withContext(Dispatchers.IO) {
+        runCatching {
+            dir.mkdirs()
+            val uri = if (address.startsWith("/")) Uri.fromFile(File(address)) else Uri.parse(address)
+            val ext = context.contentResolver.getType(uri)?.let { MimeTypeMap.getSingleton().getExtensionFromMimeType(it) }
+                ?: uri.lastPathSegment?.substringAfterLast('.', "")?.takeIf { it.length in 2..4 } ?: "img"
+            val out = File(dir, "$baseName.$ext")
+            context.contentResolver.openInputStream(uri)?.use { input -> out.outputStream().use { input.copyTo(it) } }?.let { out }
+        }.getOrNull()
+    }
+
+    @Composable
+    override fun rememberOnTv(): Boolean {
+        val configuration = LocalConfiguration.current
+        val activity = LocalActivity.current
+        return remember(configuration) { activity?.let(TvSession::isOnTv) == true }
+    }
+
+    @Composable
+    override fun rememberScreenKeeper(): (Boolean) -> Unit {
+        val view = LocalView.current
+        return remember(view) { { on: Boolean -> view.keepScreenOn = on } }
+    }
+
+    override fun openAppInfo(packageName: String) {
+        runCatching {
+            context.startActivity(
+                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", packageName, null)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            )
+        }
+    }
+
+    private val profileEditing by lazy { io.github.thecodingdad.gamelodge.stream.AndroidProfileEditing(context) }
+
+    override fun hasPage(id: SettingsPageId): Boolean = id in PAGES
+
+    override val hasButtonCombos = true
+
+    @Composable
+    override fun PlatformSettingsPage(id: SettingsPageId, vm: LauncherViewModel, openProfile: (UUID?) -> Unit, openStats: () -> Unit) {
+        val settings by vm.settings.collectAsState()
+        when (id) {
+            SettingsPageId.USAGE -> io.github.thecodingdad.gamelodge.ui.screens.settings.UsageSettings(openStats)
+            SettingsPageId.EMULATORS -> io.github.thecodingdad.gamelodge.ui.screens.settings.EmulatorSettings(vm)
+            SettingsPageId.QUICK_MENU -> io.github.thecodingdad.gamelodge.ui.screens.settings.QuickMenuSettings(vm, settings, vm::updateSettings)
+            SettingsPageId.PROFILES -> {
+                val profiles by vm.profiles.collectAsState()
+                val active by vm.activeProfile.collectAsState()
+                io.github.thecodingdad.gamelodge.ui.screens.profiles.ProfilesList(profileEditing, profiles, active, openProfile)
+            }
+            SettingsPageId.LAUNCHER -> io.github.thecodingdad.gamelodge.ui.screens.settings.LauncherModeSettings(settings, vm::updateSettings)
+            SettingsPageId.VPN -> io.github.thecodingdad.gamelodge.ui.screens.settings.VpnSettings(settings, vm::updateSettings)
+            else -> Unit
+        }
+    }
+
+    @Composable
+    override fun ControllersScreen() = io.github.thecodingdad.gamelodge.ui.screens.settings.ControllersScreen()
+
+    @Composable
+    override fun ProfileEditor(uuid: UUID?, name: String, onDeleted: () -> Unit) =
+        io.github.thecodingdad.gamelodge.ui.screens.profiles.ProfileEditor(profileEditing, uuid, name, onDeleted)
+
+    @Composable
+    override fun SystemSettingsRow() {
+        NavRow(
+            stringResource(Res.string.settings_android), {
+                runCatching { context.startActivity(Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+            },
+            stringResource(Res.string.settings_android_sub), Icons.Filled.Android,
+        )
+    }
+
+    /** Android deletes the app's data (databases, settings, keys) and ends the process. */
+    override fun resetAllData() {
+        (context.getSystemService(android.content.Context.ACTIVITY_SERVICE) as android.app.ActivityManager).clearApplicationUserData()
+    }
+
+    override fun applyLanguage(tag: String) {
+        AppLanguage.apply(context, tag)
+        // Before Android 13 the activity takes the language when it starts again.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) CurrentActivity.get()?.recreate()
+    }
+
+    private companion object {
+        val PAGES = setOf(
+            SettingsPageId.USAGE, SettingsPageId.EMULATORS, SettingsPageId.QUICK_MENU, SettingsPageId.PROFILES,
+            SettingsPageId.LAUNCHER, SettingsPageId.VPN,
+        )
+    }
+}

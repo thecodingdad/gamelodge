@@ -2,6 +2,6 @@
 <resources>
     <!-- Only what the manifest and Android XML need; everything else is in shared/composeResources. -->
     <string name="quick_menu">Schnellmenü</string>
-    <string name="combo_service_label">Moonlight Launcher Tastenkombinationen</string>
+    <string name="combo_service_label">GameLodge-Tastenkombinationen</string>
     <string name="combo_service_description">Erkennt deine eingestellten Controller-Tastenkombinationen in jeder App und im Stream (Android-Home, Schnellmenü). Gelesen werden nur Controller-Tasten, nichts vom Bildschirminhalt.</string>
 </resources>

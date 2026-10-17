@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "io.github.thecodingdad.moonlightlauncher"
+    namespace = "io.github.thecodingdad.gamelodge"
     compileSdk = 36
 
     defaultConfig {
@@ -109,6 +109,6 @@ dependencies {
 val copyDebugApk by tasks.registering(Copy::class) {
     from(layout.buildDirectory.dir("outputs/apk/debug")) { include("*.apk") }
     into(rootProject.layout.projectDirectory.dir("bin"))
-    rename { "moonlight-launcher-debug.apk" }
+    rename { "gamelodge-debug.apk" }
 }
 tasks.matching { it.name == "assembleDebug" }.configureEach { finalizedBy(copyDebugApk) }

@@ -264,7 +264,7 @@
     <string name="profile_rename">Umbenennen</string>
     <string name="profile_delete">Löschen</string>
     <string name="profile_essentials">Wichtigste Einstellungen</string>
-    <string name="launcher_intro">Moonlight Launcher als Startbildschirm verwenden. Du kannst jederzeit zurückwechseln, die App funktioniert auch weiter als normale App.</string>
+    <string name="launcher_intro">GameLodge als Startbildschirm verwenden. Du kannst jederzeit zurückwechseln, die App funktioniert auch weiter als normale App.</string>
     <string name="launcher_enable">Als Startbildschirm verwenden</string>
     <string name="launcher_enable_sub">Zeigt an, ob der Launcher der Standard-Startbildschirm ist; Einschalten öffnet Androids Auswahl</string>
     <string name="launcher_system_settings">Android-Startbildschirm-Einstellungen</string>
@@ -690,9 +690,9 @@
     <string name="combo_quick_menu">Schnellmenü öffnen</string>
     <string name="combo_quick_menu_sub">Öffnet das Schnellmenü</string>
     <string name="combo_service">Systemweit (Bedienungshilfe)</string>
-    <string name="combo_service_sub">„Moonlight Launcher Tastenkombinationen“ in den Bedienungshilfen aktivieren, damit die Kombinationen auch in anderen Apps und im Stream funktionieren</string>
+    <string name="combo_service_sub">„GameLodge-Tastenkombinationen“ in den Bedienungshilfen aktivieren, damit die Kombinationen auch in anderen Apps und im Stream funktionieren</string>
     <string name="combo_service_on">An</string>
-    <string name="combo_service_label">Moonlight Launcher Tastenkombinationen</string>
+    <string name="combo_service_label">GameLodge-Tastenkombinationen</string>
     <string name="combo_service_description">Erkennt deine eingestellten Controller-Tastenkombinationen in jeder App und im Stream (Android-Home, Schnellmenü). Gelesen werden nur Controller-Tasten, nichts vom Bildschirminhalt.</string>
     <string name="combo_none">Nicht belegt</string>
     <string name="combo_help">Nimm eine einzelne Taste (z. B. Guide) oder eine Kombination (z. B. Select + Start) auf. Im Stream wird nur die zuletzt gedrückte Taste einer Kombination vom Host ferngehalten.</string>
@@ -964,7 +964,7 @@
     <!-- About -->
     <string name="about_open_source">Open-Source-Lizenzen</string>
     <string name="about_open_source_sub">Komponenten, auf denen die App aufbaut</string>
-    <string name="about_open_source_intro">Moonlight Launcher nutzt diese Open-Source-Komponenten. Wähle eine aus, um ihre Lizenz zu lesen.</string>
+    <string name="about_open_source_intro">GameLodge nutzt diese Open-Source-Komponenten. Wähle eine aus, um ihre Lizenz zu lesen.</string>
     <string name="about_data_sources">Datenquellen</string>
     <string name="about_source_sgdb">Cover, Hintergründe, Logos und Icons</string>
     <string name="about_source_igdb">Beschreibungen, Genres, Entwickler und Erscheinungsdaten</string>

@@ -1,4 +1,4 @@
-# Moonlight Launcher for Windows – Plan
+# GameLodge for Windows – Plan
 
 Branch `desktop`. Decided 2026-10-15.
 
@@ -27,7 +27,7 @@ The metadata server stays .NET/Docker (separate product, only the protocol is sh
 Kotlin Multiplatform with Compose Multiplatform (JetBrains), targets Android and JVM desktop.
 
 ```
-moonlight-launcher/
+gamelodge/
 ├─ shared/          KMP module (android library + jvm "desktop")
 │  ├─ commonMain    UI (all screens, theme, focus, hints, keyboard), view model, library,
 │  │                metadata, Room DB, settings, HA, pairing client, protocol models.
@@ -39,7 +39,7 @@ moonlight-launcher/
 └─ desktop/         Windows app: main(), window, tray, packaging
 ```
 
-- Package names stay (`io.github.thecodingdad.moonlightlauncher…`): moving a file changes no imports.
+- Package names stay (`io.github.thecodingdad.gamelodge…`): moving a file changes no imports.
 - **Platform seam:** interfaces in commonMain, implemented per platform, handed to the UI through
   one `LauncherContainer` (CompositionLocal) instead of `LocalContext.current.container`.
   Main seams: hosts/streaming, local library sources, input devices, system status (battery,

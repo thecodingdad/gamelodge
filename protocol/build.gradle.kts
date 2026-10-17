@@ -33,7 +33,7 @@ kotlin {
 }
 
 if (withAndroid) extensions.configure<com.android.build.gradle.LibraryExtension>("android") {
-    namespace = "io.github.thecodingdad.moonlightlauncher.protocol"
+    namespace = "io.github.thecodingdad.gamelodge.protocol"
     compileSdk = 36
     defaultConfig { minSdk = 29 }
     compileOptions {

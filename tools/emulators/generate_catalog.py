@@ -6,7 +6,7 @@ start a ROM with each of them.
 The start commands and emulator packages come from ES-DE (https://es-de.org), whose Android
 configuration is maintained and tested by its community (MIT licence, see the notice in the
 generated file). Scanning (folders, file extensions) uses our own curated table below, with the
-platform names of the Moonlight Launcher Companion so ROMs merge with host entries.
+platform names of the GameLodge Companion so ROMs merge with host entries.
 
 Usage: python3 tools/emulators/generate_catalog.py [es_systems.xml es_find_rules.xml]
 Without arguments the current files are downloaded from the ES-DE repository.
