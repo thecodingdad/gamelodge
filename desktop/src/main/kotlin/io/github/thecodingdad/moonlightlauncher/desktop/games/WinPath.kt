@@ -12,6 +12,15 @@ object WinPath {
         return if (dot > 0) name.substring(dot).lowercase() else ""
     }
 
+    fun fileNameWithoutExtension(path: String): String = fileName(path).let { n -> n.lastIndexOf('.').takeIf { it > 0 }?.let { n.substring(0, it) } ?: n }
+
+    /** The folder [path] lies in; null for a bare name. */
+    fun directory(path: String): String? {
+        val trimmed = path.trimEnd(*separators)
+        val i = trimmed.lastIndexOfAny(separators)
+        return if (i > 0) trimmed.substring(0, i) else null
+    }
+
     /** True when [path] lies inside [dir] (case-insensitive). */
     fun isUnder(path: String, dir: String): Boolean {
         val d = dir.replace('/', '\\').trimEnd('\\') + "\\"

@@ -54,6 +54,8 @@ class DesktopPlatformInfo(override val filesDir: File) : PlatformInfo {
             StorageArea(StorageKind.LOGS, listOf(File(filesDir, "logs"))),
             StorageArea(StorageKind.STREAMING, listOf(io.github.thecodingdad.moonlightlauncher.desktop.stream.MoonlightQt.locate().dir)),
             StorageArea(StorageKind.HOST_ROLE, listOf(File(filesDir, "covers"), File(filesDir, "backups"))),
+            // Covers of own games (taken over from Playnite); referenced from the settings, not cleaned up.
+            StorageArea(StorageKind.OWN_IMAGES, listOf(File(filesDir, "custom-covers"))),
         )
     }
 }

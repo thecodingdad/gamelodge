@@ -27,11 +27,13 @@ class PcLibrary(
     val steam: SteamAccount,
     /** Stores the user switched off. */
     private val disabled: () -> Set<String>,
+    /** Sources that are always on (emulated games, games added by hand). */
+    private val others: List<GameScanner> = emptyList(),
 ) : LocalAppSource {
-    private val scanners: List<GameScanner> = listOf(
+    private val stores: List<GameScanner> = listOf(
         SteamScanner(http, account = steam), EpicScanner(), GogScanner(), XboxScanner(), EaScanner(), UbisoftScanner(), BattleNetScanner(), AmazonScanner(),
-        io.github.thecodingdad.moonlightlauncher.desktop.games.playnite.PlayniteScanner(),
     )
+    private val scanners: List<GameScanner> = stores + others
 
     /** Games per store at the last scan: (all, installed). */
     private val _counts = kotlinx.coroutines.flow.MutableStateFlow<Map<String, Pair<Int, Int>>>(emptyMap())
@@ -43,7 +45,7 @@ class PcLibrary(
     fun entry(id: String): GameEntry? = entries[id]
 
     /** The stores in the order the settings list them. */
-    val sources: List<String> get() = scanners.map { it.source }
+    val sources: List<String> get() = stores.map { it.source }
 
     /** Whether the store reports [entry] as installed now (local data only, no online calls). */
     suspend fun installedNow(entry: GameEntry): Boolean = installedNow(entry, http)
@@ -134,7 +136,7 @@ class PcLibrary(
         /** Whether the store reports [entry] as installed now (local data only; also used by the runner). */
         suspend fun installedNow(entry: GameEntry, http: OkHttpClient): Boolean {
             // Playnite games: the program (or ROM's emulator) is there; links always work.
-            if (entry.source == "playnite" || entry.source == "emulator") {
+            if (entry.source == "custom" || entry.source == "emulator") {
                 val launch = entry.launch ?: return false
                 return !java.io.File(launch).isAbsolute || java.io.File(launch).exists()
             }

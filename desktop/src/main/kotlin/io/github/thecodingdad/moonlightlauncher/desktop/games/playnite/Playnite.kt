@@ -1,9 +1,12 @@
 package io.github.thecodingdad.moonlightlauncher.desktop.games.playnite
 
-import io.github.thecodingdad.moonlightlauncher.data.library.PlatformResolver
-import io.github.thecodingdad.moonlightlauncher.desktop.games.GameEntry
-import io.github.thecodingdad.moonlightlauncher.desktop.games.GameScanner
-import io.github.thecodingdad.moonlightlauncher.desktop.games.WinPath
+import io.github.thecodingdad.moonlightlauncher.desktop.games.CustomGame
+import io.github.thecodingdad.moonlightlauncher.desktop.emulation.EmulatorPresets
+import io.github.thecodingdad.moonlightlauncher.desktop.emulation.PcEmulation
+import io.github.thecodingdad.moonlightlauncher.desktop.emulation.PcEmulator
+import io.github.thecodingdad.moonlightlauncher.desktop.emulation.PcEmulatorPlatform
+import io.github.thecodingdad.moonlightlauncher.desktop.emulation.PcRomFolder
+import io.github.thecodingdad.moonlightlauncher.desktop.emulation.RomScanner
 import io.github.thecodingdad.moonlightlauncher.util.Log
 import java.io.File
 import java.util.UUID
@@ -15,11 +18,22 @@ data class PlayniteGame(
     val installDir: String?, val actions: List<PlayniteAction>, val roms: List<String>, val platformIds: List<UUID>, val cover: String?,
 )
 
-data class PlayniteProfile(val id: String, val name: String, val executable: String?, val arguments: String?, val workingDir: String?, val builtInProfileName: String?)
+data class PlayniteProfile(
+    val id: String, val name: String, val executable: String?, val arguments: String?, val workingDir: String?, val builtInProfileName: String?,
+    val platformIds: List<UUID> = emptyList(), val extensions: List<String> = emptyList(),
+)
+
+/** A ROM folder Playnite scans for one emulator profile. */
+data class PlayniteScannerConfig(val name: String?, val emulatorId: UUID?, val profileId: String?, val directory: String?, val platformOverride: UUID?)
 
 data class PlayniteEmulator(val id: UUID, val name: String, val installDir: String?, val builtInConfigId: String?, val profiles: List<PlayniteProfile>)
 
-data class PlayniteLibrary(val games: List<PlayniteGame>, val platforms: Map<UUID, String>, val emulators: List<PlayniteEmulator>) {
+data class PlayniteLibrary(
+    val games: List<PlayniteGame>,
+    val platforms: Map<UUID, String>,
+    val emulators: List<PlayniteEmulator>,
+    val scanners: List<PlayniteScannerConfig> = emptyList(),
+) {
     companion object {
         /** Reads the library folder (copies first: Playnite keeps the files open). */
         fun read(dir: File): PlayniteLibrary {
@@ -33,8 +47,12 @@ data class PlayniteLibrary(val games: List<PlayniteGame>, val platforms: Map<UUI
             val games = docs("games.db").mapNotNull(::game)
             val platforms = docs("platforms.db").mapNotNull { d -> (d["_id"] as? UUID)?.let { id -> (d["Name"] as? String)?.let { id to it } } }.toMap()
             val emulators = docs("emulators.db").mapNotNull(::emulator)
-            Log.i("Playnite: ${games.size} games, ${platforms.size} platforms, ${emulators.size} emulators")
-            return PlayniteLibrary(games, platforms, emulators)
+            // Playnite 9 called the file gamescanners.db.
+            val scanners = (docs("scanners.db") + docs("gamescanners.db")).map { d ->
+                PlayniteScannerConfig(d.str("Name"), d.guid("EmulatorId"), d.str("EmulatorProfileId"), d.str("Directory"), d.guid("PlatformOverride"))
+            }
+            Log.i("Playnite: ${games.size} games, ${platforms.size} platforms, ${emulators.size} emulators, ${scanners.size} ROM scanners")
+            return PlayniteLibrary(games, platforms, emulators, scanners)
         }
 
         private fun Map<String, Any?>.str(key: String) = this[key] as? String
@@ -60,7 +78,10 @@ data class PlayniteLibrary(val games: List<PlayniteGame>, val platforms: Map<UUI
             val id = d["_id"] as? UUID ?: return null
             val profiles = (d.docs("CustomProfiles") + d.docs("BuiltinProfiles")).map { p ->
                 val args = if (p.bool("OverrideDefaultArgs")) p.str("CustomArguments") else p.str("Arguments")
-                PlayniteProfile(p.str("Id").orEmpty(), p.str("Name").orEmpty(), p.str("Executable"), args, p.str("WorkingDirectory"), p.str("BuiltInProfileName"))
+                PlayniteProfile(
+                    p.str("Id") ?: (p["_id"] as? String).orEmpty(), p.str("Name").orEmpty(), p.str("Executable"), args, p.str("WorkingDirectory"),
+                    p.str("BuiltInProfileName"), p.guids("Platforms"), (p["ImageExtensions"] as? List<*>)?.filterIsInstance<String>().orEmpty(),
+                )
             }
             return PlayniteEmulator(id, d.str("Name").orEmpty(), d.str("InstallDir"), d.str("BuiltInConfigId"), profiles)
         }
@@ -76,23 +97,147 @@ data class PlayniteLibrary(val games: List<PlayniteGame>, val platforms: Map<UUI
     }
 }
 
-/**
- * Games from Playnite that the store scanners don't find: emulated games (started with the
- * emulator Playnite has set up) and games added by hand (their play action). Store games come
- * from the store scanners themselves. Playnite is only the data source: games start directly.
- */
-class PlayniteScanner(private val locate: () -> Pair<File?, File?> = ::locatePlaynite) : GameScanner {
-    override val source = "playnite"
+/** What an import from Playnite brings into the launcher (applied by [PlayniteImport.merge]). */
+data class PlayniteImportResult(
+    val emulators: List<PcEmulator>,
+    val folders: List<PcRomFolder>,
+    val defaults: Map<String, String>,
+    val games: List<CustomGame>,
+    /** Playnite emulators that couldn't be set up (no known program). */
+    val skippedEmulators: List<String>,
+    /** Games only their Playnite add-on can start. */
+    val skippedGames: Int,
+)
 
-    override suspend fun scan(): List<GameEntry> {
-        val (library, install) = locate()
-        if (library == null) return emptyList()
-        return PlayniteImporter(PlayniteLibrary.read(library), library, install).games()
+/**
+ * One-time import from Playnite: emulators (program, arguments, consoles), the ROM folders of its
+ * scanners and emulated games, and games added there by hand. Everything is copied: paths into
+ * the launcher's own settings, cover images into its data folder, so Playnite can be removed.
+ * Store games are left to the store scanners.
+ */
+class PlayniteImport(
+    private val data: PlayniteLibrary,
+    private val libraryDir: File,
+    private val playniteDir: File?,
+    /** Where cover images of imported games are copied to. */
+    private val coverDir: File,
+    private val exists: (String) -> Boolean = { File(it).exists() },
+) {
+    private val builtIn: Map<Pair<String, String>, Pair<String?, String?>> =
+        playniteDir?.let { builtInProfiles(File(it, "Emulation/Emulators")) }.orEmpty()
+
+    fun run(): PlayniteImportResult {
+        val platformName = { id: UUID -> data.platforms[id]?.let(::companionPlatform) }
+        val emulators = LinkedHashMap<UUID, PcEmulator>()
+        val skipped = ArrayList<String>()
+        for (e in data.emulators) {
+            val converted = convert(e, platformName)
+            if (converted != null) emulators[e.id] = converted else skipped += e.name
+        }
+
+        val folders = LinkedHashMap<String, PcRomFolder>()
+        val counts = HashMap<Pair<String, String>, Int>()
+        fun addFolder(path: String?, platform: String?, emulatorId: UUID?) {
+            val dir = path?.trim()?.trimEnd('\\', '/')?.takeIf { it.isNotEmpty() } ?: return
+            val emu = emulatorId?.let { emulators[it] } ?: return
+            val p = platform ?: emu.platforms.singleOrNull()?.platform ?: return
+            // A console Playnite assigned that the preset doesn't list: the emulator runs it too.
+            if (!emu.supports(p)) emulators[emulatorId] = emu.copy(platforms = emu.platforms + PcEmulatorPlatform(p))
+            folders.putIfAbsent(dir.lowercase(), PcRomFolder(dir, p, emu.id))
+            counts.merge(p to emu.id, 1, Int::plus)
+        }
+        data.scanners.forEach { s ->
+            val profile = data.emulators.firstOrNull { it.id == s.emulatorId }?.profiles?.firstOrNull { it.id == s.profileId }
+            val platform = s.platformOverride?.let(platformName) ?: profile?.platformIds?.firstNotNullOfOrNull(platformName)
+            addFolder(s.directory?.let { expand(it, null, null, null) }, platform, s.emulatorId)
+        }
+
+        val games = ArrayList<CustomGame>()
+        var skippedGames = 0
+        for (g in data.games.filter { !it.hidden }) {
+            if (g.pluginId != null && g.pluginId in STORE_PLUGINS && !g.gameId.isNullOrEmpty()) continue
+            val emu = g.actions.firstOrNull { it.type == 2 && it.isPlayAction } ?: g.actions.firstOrNull { it.type == 2 }
+            if (emu != null && g.roms.isNotEmpty()) {
+                // The game's folder becomes a ROM folder (most are covered by a scanner already).
+                val rom = expand(g.roms.first(), g.installDir, null, null)
+                addFolder(WinPathDir(rom), g.platformIds.firstNotNullOfOrNull(platformName), emu.emulatorId)
+                continue
+            }
+            val action = g.actions.firstOrNull { it.isPlayAction && it.type in 0..1 } ?: g.actions.firstOrNull { it.type in 0..1 }
+            val path = action?.path
+            if (path == null) { skippedGames++; continue }
+            val id = g.id.toString()
+            games += CustomGame(
+                id = id, name = g.name,
+                path = if (action.type == 1) path else expand(path, g.installDir, null, null),
+                arguments = action.arguments?.let { expand(it, g.installDir, null, null) },
+                workingDir = action.workingDir?.let { expand(it, g.installDir, null, null) } ?: g.installDir,
+                cover = g.cover?.let { copyCover(it, id) },
+            )
+        }
+
+        // Each console's default: the emulator most of its folders use.
+        val defaults = counts.entries.groupBy({ it.key.first }) { it.key.second to it.value }.mapValues { (_, l) -> l.maxBy { it.second }.first }
+        val result = PlayniteImportResult(emulators.values.toList(), folders.values.toList(), defaults, games, skipped, skippedGames)
+        Log.i("Playnite import: ${result.emulators.size} emulators, ${result.folders.size} ROM folders, ${games.size} own games; skipped ${skipped.size} emulators, $skippedGames games")
+        return result
+    }
+
+    private fun convert(e: PlayniteEmulator, platformName: (UUID) -> String?): PcEmulator? {
+        val preset = e.builtInConfigId?.let(EmulatorPresets::forPlaynite)
+        // The profile most of its games use (else the first).
+        val used = data.games.flatMap { it.actions }.filter { it.emulatorId == e.id }.groupingBy { it.emulatorProfileId }.eachCount()
+        val profile = e.profiles.maxByOrNull { used[it.id] ?: 0 } ?: e.profiles.firstOrNull()
+        val def = profile?.builtInProfileName?.let { name -> e.builtInConfigId?.let { builtIn[it to name] } }
+        val installDir = e.installDir?.trimEnd('\\', '/')
+        val exe = profile?.executable?.let { expand(it, installDir, installDir, null) }
+            ?: def?.second?.let { regex -> installDir?.let { findExe(File(it), regex) } }
+            ?: preset?.let { p -> installDir?.let { dir -> p.executables.map { "$dir\\$it" }.firstOrNull(exists) ?: "$dir\\${p.executables.first()}" } }
+            ?: return null
+        val args = profile?.arguments ?: def?.first ?: preset?.arguments ?: "\"{ImagePath}\""
+        val platforms = preset?.platforms?.map { PcEmulatorPlatform(it.platform, emptyList(), it.core) }
+            ?: profile?.platformIds?.mapNotNull(platformName)?.distinct()?.map { PcEmulatorPlatform(it, profile.extensions) }.orEmpty()
+        return PcEmulator(
+            id = UUID.nameUUIDFromBytes("playnite:${e.id}".toByteArray()).toString(), name = e.name, executable = exe,
+            arguments = args.replace("{EmulatorDir}", "{emuDir}"), platforms = platforms, presetId = preset?.id,
+            workingDir = profile?.workingDir?.let { expand(it, installDir, installDir, null) }, folderGameFile = preset?.folderGameFile,
+        )
+    }
+
+    private fun copyCover(relative: String, id: String): String? {
+        val source = File(coverPath(relative)).takeIf { it.isFile } ?: return null
+        return runCatching {
+            coverDir.mkdirs()
+            val target = File(coverDir, "playnite-$id.${source.extension.ifEmpty { "jpg" }}")
+            source.copyTo(target, overwrite = true)
+            target.path
+        }.getOrNull()
+    }
+
+    private fun coverPath(relative: String): String =
+        if (File(relative).isAbsolute || relative.matches(Regex("^[A-Za-z]:\\\\.*"))) relative else File(File(libraryDir, "files"), relative.replace('\\', File.separatorChar)).path
+
+    /** Playnite's placeholders in paths; ROM placeholders stay for the emulator's arguments. */
+    fun expand(value: String, installDir: String?, emulatorDir: String?, rom: String?): String {
+        var s = value
+            .replace("{InstallDir}", installDir.orEmpty())
+            .replace("{EmulatorDir}", emulatorDir ?: installDir.orEmpty())
+            .replace("{PlayniteDir}", playniteDir?.path.orEmpty())
+        if (rom != null) s = RomScanner.expand(s, rom, emulatorDir.orEmpty(), null)
+        return s
+    }
+
+    private fun WinPathDir(path: String) = io.github.thecodingdad.moonlightlauncher.desktop.games.WinPath.directory(path)
+
+    private fun findExe(dir: File, regex: String): String? {
+        if (!dir.isDirectory) return null
+        val re = Regex(regex, RegexOption.IGNORE_CASE)
+        return dir.walkTopDown().maxDepth(3).firstOrNull { it.isFile && it.extension.equals("exe", true) && re.containsMatchIn(it.name) }?.path
     }
 
     companion object {
         /** Library folder and installation: portable (library next to the program) or %APPDATA%\Playnite. */
-        fun locatePlaynite(): Pair<File?, File?> {
+        fun locate(): Pair<File?, File?> {
             val local = System.getenv("LOCALAPPDATA")?.let { File(it, "Playnite") }
             val programs = System.getenv("ProgramFiles")?.let { File(it, "Playnite") }
             val install = listOfNotNull(local, programs).firstOrNull { File(it, "Playnite.DesktopApp.exe").isFile }
@@ -101,108 +246,17 @@ class PlayniteScanner(private val locate: () -> Pair<File?, File?> = ::locatePla
             return library to install
         }
 
-        fun installed(): Boolean = locatePlaynite().first != null
-    }
-}
-
-class PlayniteImporter(
-    private val data: PlayniteLibrary,
-    private val libraryDir: File,
-    private val playniteDir: File?,
-    private val exists: (String) -> Boolean = { File(it).exists() },
-) {
-    private val builtIn: Map<Pair<String, String>, Pair<String?, String?>> =
-        playniteDir?.let { builtInProfiles(File(it, "Emulation/Emulators")) }.orEmpty()
-
-    fun games(): List<GameEntry> {
-        val list = data.games.filter { !it.hidden }.mapNotNull { g ->
-            runCatching { convert(g) }.onFailure { Log.w("Playnite: ${g.name} not importable", it) }.getOrNull()
-        }
-        Log.i("Playnite: ${list.size} games imported (${list.count { it.source == "emulator" }} emulated)")
-        return list
-    }
-
-    /** Playnite's platform in the companion's naming (ids stay the same as the companion's). */
-    private fun platformOf(g: PlayniteGame): String? = g.platformIds.firstNotNullOfOrNull { data.platforms[it] }?.let(::companionPlatform)
-
-    private fun convert(g: PlayniteGame): GameEntry? {
-        val covers = listOfNotNull(g.cover?.let(::coverPath)?.takeIf(exists))
-        // Store games: found by the store scanners.
-        if (g.pluginId != null && g.pluginId in STORE_PLUGINS && !g.gameId.isNullOrEmpty()) return null
-
-        val emu = g.actions.firstOrNull { it.type == 2 && it.isPlayAction } ?: g.actions.firstOrNull { it.type == 2 }
-        if (emu != null && g.roms.isNotEmpty()) {
-            // ROM paths may be relative to the game's folder ("{InstallDir}\game.nsp").
-            val rom = expand(g.roms.first(), g.installDir, null, null)
-            val resolved = resolveEmulator(emu.emulatorId, emu.emulatorProfileId, rom)
-            if (resolved == null) { Log.w("Playnite: ${g.name}: emulator profile not resolvable"); return null }
-            val platform = platformOf(g) ?: "Unknown"
-            return GameEntry(
-                id = "rom:${slug(platform)}:${slug(g.name)}", name = g.name, source = "emulator", platform = PlatformResolver.normalizeIgdb(platform),
-                installed = exists(rom), launch = resolved.exe, launchArgs = resolved.args, workingDir = resolved.workDir,
-                processDir = File(resolved.exe).parent, processNames = listOf(WinPath.fileName(resolved.exe)), covers = covers,
-            )
+        /** Takes [result] into the launcher's own setup: known emulators, folders and games are kept, new ones added. */
+        fun merge(emulation: PcEmulation, games: List<CustomGame>, result: PlayniteImportResult): Pair<PcEmulation, List<CustomGame>> {
+            val emulators = emulation.emulators.associateBy { it.id }.toMutableMap()
+            result.emulators.forEach { emulators.putIfAbsent(it.id, it) }
+            val folders = emulation.folders.toMutableList()
+            result.folders.forEach { f -> if (folders.none { it.path.equals(f.path, ignoreCase = true) }) folders += f }
+            val defaults = result.defaults + emulation.defaults
+            val known = games.map { it.id }.toSet()
+            return PcEmulation(folders, emulators.values.toList(), defaults) to (games + result.games.filter { it.id !in known })
         }
 
-        val action = g.actions.firstOrNull { it.isPlayAction && it.type in 0..1 } ?: g.actions.firstOrNull { it.type in 0..1 }
-        val path = action?.path ?: return null
-        return GameEntry(
-            id = "playnite:${g.id}", name = g.name, source = "playnite", platform = platformOf(g)?.let(PlatformResolver::normalizeIgdb) ?: PlatformResolver.PC,
-            installed = g.installed || action.type == 1, installDir = g.installDir,
-            launch = if (action.type == 1) path else expand(path, g.installDir, null, null),
-            launchArgs = action.arguments?.let { expand(it, g.installDir, null, null) },
-            workingDir = action.workingDir?.let { expand(it, g.installDir, null, null) } ?: g.installDir,
-            covers = covers,
-        )
-    }
-
-    private fun coverPath(relative: String): String =
-        if (File(relative).isAbsolute || relative.matches(Regex("^[A-Za-z]:\\\\.*"))) relative else File(File(libraryDir, "files"), relative.replace('\\', File.separatorChar)).path
-
-    data class Resolved(val exe: String, val args: String, val workDir: String?, val name: String)
-
-    /** Executable, arguments and working folder of an emulator profile for one ROM. */
-    fun resolveEmulator(emulatorId: UUID?, profileId: String?, rom: String): Resolved? {
-        val emulator = data.emulators.firstOrNull { it.id == emulatorId } ?: return null
-        val profile = emulator.profiles.firstOrNull { it.id == profileId } ?: emulator.profiles.firstOrNull() ?: return null
-        var exe = profile.executable?.let { expand(it, emulator.installDir, emulator.installDir, rom) }
-        var args = profile.arguments
-        val config = emulator.builtInConfigId
-        if (profile.builtInProfileName != null && config != null) {
-            builtIn[config to profile.builtInProfileName]?.let { (defArgs, exeRegex) ->
-                if (args == null) args = defArgs
-                if (exe == null && exeRegex != null && emulator.installDir != null) exe = findExe(File(emulator.installDir), exeRegex)
-            }
-        }
-        val program = exe ?: return null
-        val expanded = expand(args ?: "\"{ImagePath}\"", emulator.installDir, emulator.installDir, rom)
-        val workDir = profile.workingDir?.let { expand(it, emulator.installDir, emulator.installDir, rom) } ?: File(program).parent
-        return Resolved(program, expanded, workDir, emulator.name)
-    }
-
-    /** Playnite's placeholders in paths and arguments. */
-    fun expand(value: String, installDir: String?, emulatorDir: String?, rom: String?): String {
-        var s = value
-            .replace("{InstallDir}", installDir.orEmpty())
-            .replace("{EmulatorDir}", emulatorDir ?: installDir.orEmpty())
-            .replace("{PlayniteDir}", playniteDir?.path.orEmpty())
-        if (rom != null) {
-            val name = WinPath.fileName(rom)
-            s = s.replace("{ImagePath}", rom)
-                .replace("{ImageNameNoExt}", name.substringBeforeLast('.'))
-                .replace("{ImageName}", name)
-                .replace("{ImageDir}", rom.substringBeforeLast('\\', rom.substringBeforeLast('/', "")))
-        }
-        return s
-    }
-
-    private fun findExe(dir: File, regex: String): String? {
-        if (!dir.isDirectory) return null
-        val re = Regex(regex, RegexOption.IGNORE_CASE)
-        return dir.walkTopDown().firstOrNull { it.isFile && it.extension.equals("exe", true) && re.containsMatchIn(it.name) }?.path
-    }
-
-    companion object {
         /** Playnite's library plugins of the stores the launcher scans itself. */
         val STORE_PLUGINS: Set<UUID> = listOf(
             "cb91dfc9-b977-43bf-8e70-55f46e410fab", "00000002-dbd1-46c6-b5d0-b1ba559d10e4", "aebe8b7c-6dc3-4a66-af31-e7375c6b5e9e",
@@ -217,16 +271,16 @@ class PlayniteImporter(
             "nintendo wii" to "Wii", "nintendo wii u" to "Wii U", "nintendo super nintendo entertainment system" to "Super Nintendo Entertainment System",
             "nintendo snes" to "Super Nintendo Entertainment System", "nintendo nes" to "Nintendo Entertainment System",
             "nintendo game boy" to "Game Boy", "nintendo game boy color" to "Game Boy Color", "nintendo game boy advance" to "Game Boy Advance",
+            "nintendo gamecube" to "Nintendo GameCube", "nintendo 64" to "Nintendo 64", "nintendo ds" to "Nintendo DS", "nintendo 3ds" to "Nintendo 3DS",
+            "nintendo switch" to "Nintendo Switch",
             "microsoft xbox" to "Xbox", "microsoft xbox 360" to "Xbox 360", "microsoft xbox one" to "Xbox One",
             "sega genesis" to "Sega Mega Drive/Genesis", "sega mega drive" to "Sega Mega Drive/Genesis", "sega dreamcast" to "Dreamcast",
+            "sega saturn" to "Sega Saturn", "sega master system" to "Sega Master System",
             "pc (windows)" to "PC", "pc (dos)" to "DOS", "windows" to "PC",
         )
 
         /** Playnite's platform names in IGDB's naming (as the companion does). */
         fun companionPlatform(name: String): String = platformNames[name.trim().lowercase()] ?: name.trim()
-
-        /** Same as the companion's, so ids (and the host's app entries) stay the same. */
-        fun slug(s: String) = s.lowercase().map { if (it.isLetterOrDigit()) it else '-' }.joinToString("").trim('-').replace("--", "-")
 
         /**
          * Playnite's built-in emulator definitions (emulator.yaml): profile → (arguments, executable

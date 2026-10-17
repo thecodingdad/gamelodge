@@ -163,6 +163,42 @@ class RenderTest {
     }
 
     @Test
+    fun emulatorsPageRenders() {
+        val dir = Files.createTempDirectory("launcher-emu").toFile()
+        val container = DesktopContainer(dir)
+        PlatformUi.current = DesktopPlatformUi(Gamepads(InputDispatcher()), { null }, { container.pcLibrary })
+        val emulation = io.github.thecodingdad.moonlightlauncher.desktop.emulation.PcEmulation(
+            folders = listOf(io.github.thecodingdad.moonlightlauncher.desktop.emulation.PcRomFolder("Y:\\ROMs"), io.github.thecodingdad.moonlightlauncher.desktop.emulation.PcRomFolder("Y:\\Switch", "Nintendo Switch")),
+            emulators = listOf(
+                io.github.thecodingdad.moonlightlauncher.desktop.emulation.PcEmulator("d", "Dolphin", "Y:\\Emu\\Dolphin.exe", "-b -e \"{rom}\"", listOf(io.github.thecodingdad.moonlightlauncher.desktop.emulation.PcEmulatorPlatform("Nintendo GameCube"), io.github.thecodingdad.moonlightlauncher.desktop.emulation.PcEmulatorPlatform("Wii"))),
+                io.github.thecodingdad.moonlightlauncher.desktop.emulation.PcEmulator("e", "Eden", "Y:\\Emu\\eden.exe", "-f -g \"{rom}\"", listOf(io.github.thecodingdad.moonlightlauncher.desktop.emulation.PcEmulatorPlatform("Nintendo Switch"))),
+                io.github.thecodingdad.moonlightlauncher.desktop.emulation.PcEmulator("r", "Ryujinx", "Y:\\Emu\\Ryujinx.exe", "\"{rom}\"", listOf(io.github.thecodingdad.moonlightlauncher.desktop.emulation.PcEmulatorPlatform("Nintendo Switch"))),
+            ),
+        )
+        val settings = io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings(pcEmulation = emulation.encode())
+        fun <T> ui(block: () -> T): T {
+            var result: Result<T>? = null
+            javax.swing.SwingUtilities.invokeAndWait { result = runCatching(block) }
+            return result!!.getOrThrow()
+        }
+        val scene = ui {
+            ImageComposeScene(1600, 1800, Density(1.5f)) {
+                CompositionLocalProvider(LocalContainer provides container) {
+                    io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme(settings) {
+                        androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.fillMaxSize().background(io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme.colors.background)) {
+                            io.github.thecodingdad.moonlightlauncher.desktop.emulation.EmulatorsPage(container.pcLibrary, settings, {}, File(dir, "covers"))
+                        }
+                    }
+                }
+            }
+        }
+        ui { scene.render(0) }
+        Thread.sleep(800)
+        val image = ui { scene.render(1_000_000_000L).also { scene.close() } }
+        File("build/render").apply { mkdirs() }.resolve("emulators.png").writeBytes(image.encodeToData(EncodedImageFormat.PNG)!!.bytes)
+    }
+
+    @Test
     fun hostRolePageRenders() {
         val dir = Files.createTempDirectory("launcher-host").toFile()
         val container = DesktopContainer(dir)

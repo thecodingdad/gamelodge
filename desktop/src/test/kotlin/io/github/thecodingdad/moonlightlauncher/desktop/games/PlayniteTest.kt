@@ -1,7 +1,7 @@
 package io.github.thecodingdad.moonlightlauncher.desktop.games
 
 import io.github.thecodingdad.moonlightlauncher.desktop.games.playnite.LiteDb
-import io.github.thecodingdad.moonlightlauncher.desktop.games.playnite.PlayniteImporter
+import io.github.thecodingdad.moonlightlauncher.desktop.games.playnite.PlayniteImport
 import io.github.thecodingdad.moonlightlauncher.desktop.games.playnite.PlayniteLibrary
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -37,24 +37,39 @@ class PlayniteTest {
     }
 
     @Test
-    fun importsEmulatedAndOwnGamesButNotStoreGames() {
-        val library = PlayniteLibrary.read(dir)
-        val games = PlayniteImporter(library, dir, null, exists = { true }).games()
-        assertEquals(listOf("Super Mario World", "Own Game"), games.map { it.name })
+    fun importsEmulatorsFoldersAndOwnGamesButNotStoreGames() {
+        val covers = java.nio.file.Files.createTempDirectory("covers").toFile()
+        val result = PlayniteImport(PlayniteLibrary.read(dir), dir, null, covers, exists = { true }).run()
 
-        val rom = games[0]
-        assertEquals("rom:super-nintendo-entertainment-system:super-mario-world", rom.id)
-        assertEquals("emulator", rom.source)
-        assertEquals("SNES", rom.platform)
-        assertEquals("C:\\Emus\\snes9x\\snes9x-x64.exe", rom.launch)
-        assertEquals("\"D:\\Roms\\SNES\\smw.sfc\" -fullscreen", rom.launchArgs)
-        assertEquals(listOf("snes9x-x64.exe"), rom.processNames)
+        val emu = result.emulators.single()
+        assertEquals("Snes9x", emu.name)
+        assertEquals("C:\\Emus\\snes9x\\snes9x-x64.exe", emu.executable)
+        assertEquals("\"{ImagePath}\" -fullscreen", emu.arguments)
+        assertEquals(listOf("Super Nintendo Entertainment System"), emu.platforms.map { it.platform })
+        assertEquals(listOf(".sfc", ".smc"), emu.platforms.single().effectiveExtensions())
 
-        val own = games[1]
-        assertEquals("playnite:99999999-0000-0000-0000-000000000002", own.id)
-        assertEquals("C:\\Games\\Own\\own.exe", own.launch)
-        assertEquals("-fullscreen", own.launchArgs)
+        // The emulated game's folder, played with that emulator; its console's default.
+        val folder = result.folders.single()
+        assertEquals("D:\\Roms\\SNES", folder.path)
+        assertEquals("Super Nintendo Entertainment System", folder.platform)
+        assertEquals(emu.id, folder.emulator)
+        assertEquals(mapOf("Super Nintendo Entertainment System" to emu.id), result.defaults)
+
+        // Store games stay with the store scanners; the hand-added game is an own game.
+        val own = result.games.single()
+        assertEquals("Own Game", own.name)
+        assertEquals("C:\\Games\\Own\\own.exe", own.path)
+        assertEquals("-fullscreen", own.arguments)
         assertEquals("C:\\Games\\Own", own.workingDir)
+    }
+
+    @Test
+    fun mergeKeepsWhatIsThereAndAddsTheRest() {
+        val result = PlayniteImport(PlayniteLibrary.read(dir), dir, null, java.nio.file.Files.createTempDirectory("c").toFile(), exists = { true }).run()
+        val (once, games) = PlayniteImport.merge(io.github.thecodingdad.moonlightlauncher.desktop.emulation.PcEmulation(), emptyList(), result)
+        val (twice, gamesTwice) = PlayniteImport.merge(once, games, result)
+        assertEquals(once, twice)
+        assertEquals(games, gamesTwice)
     }
 
     @Test
@@ -72,7 +87,7 @@ class PlayniteTest {
               - Name: Windowed
                 StartupArguments: '"{ImagePath}"'
         """.trimIndent()
-        val profiles = PlayniteImporter.parseEmulatorYaml(yaml)
+        val profiles = PlayniteImport.parseEmulatorYaml(yaml)
         assertEquals("\"{ImagePath}\" -fullscreen" to "^snes9x(-x64)?\\.exe$", profiles["snes9x" to "Default"])
         assertNotNull(profiles["snes9x" to "Windowed"])
         assertNull(profiles["snes9x" to "Missing"])

@@ -189,7 +189,7 @@ class DesktopPlatformUi(
 
     override fun openAppInfo(packageName: String) = Unit
 
-    override fun hasPage(id: SettingsPageId) = id == SettingsPageId.GAME_SOURCES || (id == SettingsPageId.HOST_ROLE && host() != null) ||
+    override fun hasPage(id: SettingsPageId) = id == SettingsPageId.GAME_SOURCES || (id == SettingsPageId.EMULATORS && pcLibrary() != null) || (id == SettingsPageId.HOST_ROLE && host() != null) ||
         (id == SettingsPageId.STARTUP && startup != null) ||
         (id == SettingsPageId.PROFILES && profiles != null)
 
@@ -198,6 +198,9 @@ class DesktopPlatformUi(
         val settings by vm.settings.collectAsState()
         when (id) {
             SettingsPageId.GAME_SOURCES -> pcLibrary()?.let { GameSourcesPage(it, settings, vm::updateSettings) }
+            SettingsPageId.EMULATORS -> pcLibrary()?.let {
+                io.github.thecodingdad.moonlightlauncher.desktop.emulation.EmulatorsPage(it, settings, vm::updateSettings, java.io.File(dataDirectory(), "custom-covers"))
+            }
             SettingsPageId.HOST_ROLE -> host()?.let { HostRolePage(it) }
             SettingsPageId.STARTUP -> startup?.let { StartupPage(it, windowControls) }
             SettingsPageId.PROFILES -> profiles?.let { store ->

@@ -35,7 +35,7 @@ object GameLauncher {
         val isFile = File(launch).isAbsolute && File(launch).exists()
         // The game itself (game EXE, emulator): wait for that process. A store client or URI:
         // watch the game's folder / names instead.
-        val direct = isFile && (processDir == null || WinPath.isUnder(launch, processDir) || entry.source in setOf("emulator", "playnite", "gog"))
+        val direct = isFile && (processDir == null || WinPath.isUnder(launch, processDir) || entry.source in setOf("emulator", "custom", "gog"))
         Log.i("Starting ${entry.name} (${entry.id}): $launch${if (direct) " (direct)" else ""}")
         if (direct) {
             val exit = runAndWait(launch, entry.launchArgs, entry.workingDir ?: File(launch).parent, started) ?: return@withContext false

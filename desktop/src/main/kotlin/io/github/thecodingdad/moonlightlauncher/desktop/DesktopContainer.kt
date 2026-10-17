@@ -89,9 +89,13 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
 
     /** The PC's own games from the installed stores. */
     val pcLibrary: io.github.thecodingdad.moonlightlauncher.desktop.games.PcLibrary by lazy {
-        io.github.thecodingdad.moonlightlauncher.desktop.games.PcLibrary(http, io.github.thecodingdad.moonlightlauncher.desktop.games.SteamAccount(secrets)) {
-            disabledSources
-        }
+        io.github.thecodingdad.moonlightlauncher.desktop.games.PcLibrary(
+            http, io.github.thecodingdad.moonlightlauncher.desktop.games.SteamAccount(secrets), { disabledSources },
+            listOf(
+                io.github.thecodingdad.moonlightlauncher.desktop.emulation.RomScanner { pcEmulation },
+                io.github.thecodingdad.moonlightlauncher.desktop.games.CustomGameScanner { customGames },
+            ),
+        )
     }
 
     /** The PC as host for other launchers: their API, pairing, paired devices, web UI. */
@@ -130,6 +134,9 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
 
     /** Kept current from the settings (the scan runs off the UI). */
     @Volatile var disabledSources: Set<String> = emptySet()
+    /** Emulators and ROM folders, games added by hand (from the settings, kept current by main). */
+    @Volatile var pcEmulation = io.github.thecodingdad.moonlightlauncher.desktop.emulation.PcEmulation()
+    @Volatile var customGames: List<io.github.thecodingdad.moonlightlauncher.desktop.games.CustomGame> = emptyList()
 
     /** Called when a game started from the launcher has ended (the window comes back to the front). */
     @Volatile var onGameEnded: () -> Unit = {}

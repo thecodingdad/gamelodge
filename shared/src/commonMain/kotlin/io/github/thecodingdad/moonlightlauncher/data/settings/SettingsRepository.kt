@@ -92,6 +92,10 @@ data class LauncherSettings(
     val quickMenuEdgeHandle: Boolean = false,
     /** Emulators and ROM folders ([io.github.thecodingdad.moonlightlauncher.data.emulation.EmulationConfig] as JSON). */
     val emulation: String = "",
+    /** PC: emulators and ROM folders (desktop's own format, JSON). */
+    val pcEmulation: String = "",
+    /** PC: games and apps added by hand (JSON). */
+    val pcCustomGames: String = "",
     /** Version of the automatic platform rules the library was last re-evaluated with. */
     val platformRule: Int = 0,
     /** AYN Odin: put every external controller on Odin Mapping's blacklist (keeps battery/rumble). */
@@ -169,6 +173,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val gamesDirectStart = booleanPreferencesKey("games_direct_start")
         val quickMenuEdgeHandle = booleanPreferencesKey("quick_menu_edge_handle")
         val emulation = stringPreferencesKey("emulation")
+        val pcEmulation = stringPreferencesKey("pc_emulation")
+        val pcCustomGames = stringPreferencesKey("pc_custom_games")
         val platformRule = intPreferencesKey("platform_rule")
         val odinKeepControllers = booleanPreferencesKey("odin_keep_controllers")
         val quickTiles = stringPreferencesKey("quick_tiles")
@@ -243,6 +249,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             gamesDirectStart = this[K.gamesDirectStart] ?: d.gamesDirectStart,
             quickMenuEdgeHandle = this[K.quickMenuEdgeHandle] ?: d.quickMenuEdgeHandle,
             emulation = this[K.emulation] ?: d.emulation,
+            pcEmulation = this[K.pcEmulation] ?: d.pcEmulation,
+            pcCustomGames = this[K.pcCustomGames] ?: d.pcCustomGames,
             platformRule = this[K.platformRule] ?: d.platformRule,
             odinKeepControllers = this[K.odinKeepControllers] ?: d.odinKeepControllers,
             quickTiles = this[K.quickTiles]?.split(',')?.filter { it.isNotBlank() } ?: d.quickTiles,
@@ -306,6 +314,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         this[K.gamesDirectStart] = s.gamesDirectStart
         this[K.quickMenuEdgeHandle] = s.quickMenuEdgeHandle
         this[K.emulation] = s.emulation
+        this[K.pcEmulation] = s.pcEmulation
+        this[K.pcCustomGames] = s.pcCustomGames
         this[K.platformRule] = s.platformRule
         this[K.odinKeepControllers] = s.odinKeepControllers
         this[K.quickTiles] = s.quickTiles.joinToString(",")

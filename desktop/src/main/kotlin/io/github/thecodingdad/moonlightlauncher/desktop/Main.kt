@@ -94,6 +94,7 @@ fun main(args: Array<String>) {
     container.metadata.start()
     container.artwork.start()
     container.backupStorage.window = { mainWindow }
+    FilePickers.window = { mainWindow }
     container.scope.launch { container.backupStorage.scheduleAuto(container.settings.current().autoBackup) }
     // Servers for other launchers (only what the user switched on); the key is created on first use.
     container.scope.launch(kotlinx.coroutines.Dispatchers.IO) {
@@ -112,8 +113,12 @@ fun main(args: Array<String>) {
     container.scope.launch {
         container.settings.settings.collect {
             gamepads.nintendoLayout = it.buttonLayout == ButtonLayout.NINTENDO
-            if (it.disabledGameSources != container.disabledSources) {
+            val emulation = io.github.thecodingdad.moonlightlauncher.desktop.emulation.PcEmulation.decode(it.pcEmulation)
+            val custom = io.github.thecodingdad.moonlightlauncher.desktop.games.CustomGame.decode(it.pcCustomGames)
+            if (it.disabledGameSources != container.disabledSources || emulation != container.pcEmulation || custom != container.customGames) {
                 container.disabledSources = it.disabledGameSources
+                container.pcEmulation = emulation
+                container.customGames = custom
                 container.pcLibrary.rescan()
             }
             DesktopPlatformUi.applyLocale(it.language)
