@@ -197,15 +197,7 @@ class MainActivity : ComponentActivity() {
             }
             if (consumed) return true
         }
-        val e = if (vm.settings.value.buttonLayout == ButtonLayout.NINTENDO) {
-            val swapped = io.github.thecodingdad.moonlightlauncher.ui.input.AndroidPad.swapForNintendo(event.keyCode)
-            if (swapped != event.keyCode) {
-                KeyEvent(
-                    event.downTime, event.eventTime, event.action, swapped, event.repeatCount,
-                    event.metaState, event.deviceId, event.scanCode, event.flags, event.source,
-                )
-            } else event
-        } else event
+        val e = io.github.thecodingdad.moonlightlauncher.ui.input.AndroidPad.inLayout(event, vm.settings.value)
         if (e.action == KeyEvent.ACTION_DOWN && e.repeatCount == 0 &&
             (e.keyCode == KeyEvent.KEYCODE_BUTTON_B || e.keyCode == KeyEvent.KEYCODE_BACK)
         ) {

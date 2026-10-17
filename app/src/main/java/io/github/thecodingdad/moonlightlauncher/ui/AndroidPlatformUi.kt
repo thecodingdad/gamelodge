@@ -119,6 +119,8 @@ class AndroidPlatformUi(private val context: Context) : PlatformUi {
 
     override fun hasPage(id: SettingsPageId): Boolean = id in PAGES
 
+    override val hasButtonCombos = true
+
     @Composable
     override fun PlatformSettingsPage(id: SettingsPageId, vm: LauncherViewModel, openProfile: (UUID?) -> Unit, openStats: () -> Unit) {
         val settings by vm.settings.collectAsState()
@@ -143,10 +145,6 @@ class AndroidPlatformUi(private val context: Context) : PlatformUi {
     @Composable
     override fun ProfileEditor(uuid: UUID?, name: String, onDeleted: () -> Unit) =
         io.github.thecodingdad.moonlightlauncher.ui.screens.profiles.ProfileEditor(profileEditing, uuid, name, onDeleted)
-
-    @Composable
-    override fun ControlsExtras(settings: LauncherSettings, update: ((LauncherSettings) -> LauncherSettings) -> Unit) =
-        io.github.thecodingdad.moonlightlauncher.ui.screens.settings.ButtonComboRows(settings, update)
 
     @Composable
     override fun SystemSettingsRow() {

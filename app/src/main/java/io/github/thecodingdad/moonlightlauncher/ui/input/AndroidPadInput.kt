@@ -34,6 +34,21 @@ object AndroidPad {
         KeyEvent.KEYCODE_BUTTON_Y -> KeyEvent.KEYCODE_BUTTON_X
         else -> keyCode
     }
+
+    /**
+     * [event] in the layout of the controller it comes from (its own, else the default of all
+     * controllers); remembers that controller as the active one (button hints follow it).
+     */
+    fun inLayout(event: KeyEvent, settings: io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings): KeyEvent {
+        val device = event.device?.takeIf { (it.sources and android.view.InputDevice.SOURCE_GAMEPAD) == android.view.InputDevice.SOURCE_GAMEPAD }
+        val key = device?.descriptor
+        if (key != null && event.action == KeyEvent.ACTION_DOWN) io.github.thecodingdad.moonlightlauncher.ui.screens.settings.ActivePad.key = key
+        val layout = settings.controllerLayouts[key] ?: settings.buttonLayout
+        if (layout != io.github.thecodingdad.moonlightlauncher.data.settings.ButtonLayout.NINTENDO) return event
+        val swapped = swapForNintendo(event.keyCode)
+        if (swapped == event.keyCode) return event
+        return KeyEvent(event.downTime, event.eventTime, event.action, swapped, event.repeatCount, event.metaState, event.deviceId, event.scanCode, event.flags, event.source)
+    }
 }
 
 /** Returns true if the event was consumed. Call for every key event of the activity. */

@@ -117,6 +117,16 @@ fun ControllersScreen() {
                 initialFocus = index == 0,
             )
         }
+        // Launcher controls every controller uses unless its own settings say otherwise.
+        val settingsRepo = context.container.settings
+        val settings by settingsRepo.settings.collectAsState(io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings())
+        val scope = androidx.compose.runtime.rememberCoroutineScope()
+        val update: ((io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings) -> io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings) -> Unit =
+            { t -> scope.launch { settingsRepo.update(t) } }
+        SectionHeader(stringResource(Res.string.controllers_defaults))
+        Text(stringResource(Res.string.controllers_defaults_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+        ControllerLayoutDefaultRow(settings, update, initialFocus = controllers.isEmpty())
+        ButtonComboRows(settings, update)
         OdinMappingSection()
     }
 
@@ -178,35 +188,17 @@ private fun ControllerOverrideRows(c: ControllerInfo) {
     val tri = listOf<Boolean?>(null, true, false)
     val triLabel: @Composable (Boolean?) -> String = { v -> when (v) { null -> global; true -> on; false -> off } }
 
-    SectionHeader(stringResource(Res.string.controller_overrides))
-    Text(stringResource(Res.string.controller_overrides_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
-    ChoiceRow(
-        stringResource(Res.string.controller_player), listOf<Int?>(null, 0, 1, 2, 3), s.playerSlot,
-        label = { v -> v?.let { stringResource(Res.string.controller_player_n, it + 1) } ?: stringResource(Res.string.controller_player_auto) },
-        onSelect = { v -> save { it.copy(playerSlot = v) } },
-    )
-    ChoiceRow(stringResource(Res.string.controller_flip), tri, s.flipFaceButtons, label = triLabel, onSelect = { v -> save { it.copy(flipFaceButtons = v) } })
-    ChoiceRow(
-        stringResource(Res.string.controller_deadzone), listOf<Int?>(null, 0, 3, 5, 8, 10, 15, 20), s.deadzonePercent,
-        label = { v -> v?.let { "$it %" } ?: global },
-        onSelect = { v -> save { it.copy(deadzonePercent = v) } },
-    )
-    if (c.canVibrate) {
-        ChoiceRow(
-            stringResource(Res.string.controller_rumble), listOf<Int?>(null, 0, 25, 50, 75, 100), s.rumblePercent,
-            label = { v -> when (v) { null -> global; 0 -> off; else -> "$v %" } },
-            onSelect = { v -> save { it.copy(rumblePercent = v) } },
-        )
+    val launcherSettings by LocalContext.current.container.settings.settings.collectAsState(null)
+    // In the launcher: layout and button combinations of this controller.
+    val settingsRepo = LocalContext.current.container.settings
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    SectionHeader(stringResource(Res.string.controller_launcher_section))
+    launcherSettings?.let { ls ->
+        ControllerLayoutOverrideRow(c, ls) { t -> scope.launch { settingsRepo.update(t) } }
     }
-    ChoiceRow(stringResource(Res.string.controller_motion), tri, s.motionSensors, label = triLabel, onSelect = { v -> save { it.copy(motionSensors = v) } })
-    if (c.hasTouchpad) {
-        ChoiceRow(stringResource(Res.string.controller_touchpad_mouse), tri, s.touchpadAsMouse, label = triLabel, onSelect = { v -> save { it.copy(touchpadAsMouse = v) } })
-    }
-
     // Button combinations of this controller (e.g. Guide on an Xbox pad, Select + Start elsewhere).
-    val launcher by LocalContext.current.container.settings.settings.collectAsState(null)
-    val globalHome = launcher?.comboHome.orEmpty()
-    val globalMenu = launcher?.comboQuickMenu.orEmpty()
+    val globalHome = launcherSettings?.comboHome.orEmpty()
+    val globalMenu = launcherSettings?.comboQuickMenu.orEmpty()
     var editing by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<io.github.thecodingdad.moonlightlauncher.input.ComboAction?>(null) }
     val home = s.comboHome?.toSet()
     val menu = s.comboQuickMenu?.toSet()
@@ -232,6 +224,32 @@ private fun ControllerOverrideRows(c: ControllerInfo) {
         },
         onDismiss = { editing = null },
     )
+
+    SectionHeader(stringResource(Res.string.controller_stream_section))
+    Text(stringResource(Res.string.controller_overrides_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+    ChoiceRow(
+        stringResource(Res.string.controller_player), listOf<Int?>(null, 0, 1, 2, 3), s.playerSlot,
+        label = { v -> v?.let { stringResource(Res.string.controller_player_n, it + 1) } ?: stringResource(Res.string.controller_player_auto) },
+        onSelect = { v -> save { it.copy(playerSlot = v) } },
+    )
+    ChoiceRow(stringResource(Res.string.controller_flip), tri, s.flipFaceButtons, label = triLabel, onSelect = { v -> save { it.copy(flipFaceButtons = v) } })
+    ChoiceRow(
+        stringResource(Res.string.controller_deadzone), listOf<Int?>(null, 0, 3, 5, 8, 10, 15, 20), s.deadzonePercent,
+        label = { v -> v?.let { "$it %" } ?: global },
+        onSelect = { v -> save { it.copy(deadzonePercent = v) } },
+    )
+    if (c.canVibrate) {
+        ChoiceRow(
+            stringResource(Res.string.controller_rumble), listOf<Int?>(null, 0, 25, 50, 75, 100), s.rumblePercent,
+            label = { v -> when (v) { null -> global; 0 -> off; else -> "$v %" } },
+            onSelect = { v -> save { it.copy(rumblePercent = v) } },
+        )
+    }
+    ChoiceRow(stringResource(Res.string.controller_motion), tri, s.motionSensors, label = triLabel, onSelect = { v -> save { it.copy(motionSensors = v) } })
+    if (c.hasTouchpad) {
+        ChoiceRow(stringResource(Res.string.controller_touchpad_mouse), tri, s.touchpadAsMouse, label = triLabel, onSelect = { v -> save { it.copy(touchpadAsMouse = v) } })
+    }
+
 }
 
 /**

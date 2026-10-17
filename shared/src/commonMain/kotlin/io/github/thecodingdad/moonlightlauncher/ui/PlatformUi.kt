@@ -100,12 +100,8 @@ interface PlatformUi {
     @Composable
     fun ProfileEditor(uuid: java.util.UUID?, name: String, onDeleted: () -> Unit)
 
-    /** Extra rows of Settings → Buttons & controls (button combinations on Android). */
-    @Composable
-    fun ControlsExtras(
-        settings: io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings,
-        update: ((io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings) -> io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings) -> Unit,
-    )
+    /** Button combinations (Home, quick menu) exist here (Android). */
+    val hasButtonCombos: Boolean get() = false
 
     /** Row on the settings overview that opens the device's own settings; nothing where there are none. */
     @Composable

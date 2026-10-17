@@ -28,8 +28,11 @@ import io.github.thecodingdad.moonlightlauncher.ui.PlatformUi
 import io.github.thecodingdad.moonlightlauncher.ui.components.LauncherButton
 import io.github.thecodingdad.moonlightlauncher.ui.components.Modal
 import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.ControllerInfo
+import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.ControllerLayoutDefaultRow
+import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.ControllerLayoutOverrideRow
 import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.NavRow
 import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.SectionHeader
+import kotlinx.coroutines.launch
 import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.SettingsPage
 import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.SettingsPageId
 import io.github.thecodingdad.moonlightlauncher.ui.shell.QuickTile
@@ -113,6 +116,11 @@ class DesktopPlatformUi(
         Modal(visible = controller != null, onDismiss = onDismiss, title = controller?.name, maxWidth = 560.dp) {
             val c = controller ?: return@Modal
             c.batteryPercent?.let { Text(stringResource(Res.string.controller_battery, it), color = LauncherTheme.colors.onSurfaceMuted) }
+            // As on Android: the launcher settings of this controller (Moonlight-Qt has no per-controller stream settings).
+            settingsState()?.let { (settings, update) ->
+                SectionHeader(stringResource(Res.string.controller_launcher_section))
+                ControllerLayoutOverrideRow(c, settings, update)
+            }
             if (c.canVibrate) {
                 LauncherButton(
                     stringResource(Res.string.controller_vibrate_test), onClick = { gamepads.vibrate(c.id) },
@@ -212,6 +220,15 @@ class DesktopPlatformUi(
         }
     }
 
+    /** The launcher settings and their update, for the controller pages. */
+    @Composable
+    private fun settingsState(): Pair<LauncherSettings, ((LauncherSettings) -> LauncherSettings) -> Unit>? {
+        val container = io.github.thecodingdad.moonlightlauncher.LocalContainer.current
+        val settings by container.settings.settings.collectAsState(null)
+        val scope = androidx.compose.runtime.rememberCoroutineScope()
+        return settings?.let { s -> s to { t: (LauncherSettings) -> LauncherSettings -> scope.launch { container.settings.update(t) }; Unit } }
+    }
+
     @Composable
     override fun ControllersScreen() {
         val controllers = rememberControllers()
@@ -226,6 +243,11 @@ class DesktopPlatformUi(
                     icon = Icons.Filled.SportsEsports, initialFocus = index == 0,
                 )
             }
+            settingsState()?.let { (settings, update) ->
+                SectionHeader(stringResource(Res.string.controllers_defaults))
+                Text(stringResource(Res.string.controllers_defaults_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+                ControllerLayoutDefaultRow(settings, update, initialFocus = controllers.isEmpty())
+            }
         }
         ControllerDetailDialog(selected) { selected = null }
     }
@@ -234,9 +256,6 @@ class DesktopPlatformUi(
     override fun ProfileEditor(uuid: UUID?, name: String, onDeleted: () -> Unit) {
         profiles?.let { io.github.thecodingdad.moonlightlauncher.ui.screens.profiles.ProfileEditor(it, uuid, name, onDeleted) }
     }
-
-    @Composable
-    override fun ControlsExtras(settings: LauncherSettings, update: ((LauncherSettings) -> LauncherSettings) -> Unit) = Unit
 
     @Composable
     override fun SystemSettingsRow() = Unit

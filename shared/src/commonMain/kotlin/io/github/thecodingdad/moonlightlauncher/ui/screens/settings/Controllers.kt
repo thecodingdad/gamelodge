@@ -1,5 +1,8 @@
 package io.github.thecodingdad.moonlightlauncher.ui.screens.settings
 
+import androidx.compose.runtime.getValue
+import io.github.thecodingdad.moonlightlauncher.resources.*
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.Composable
 import io.github.thecodingdad.moonlightlauncher.ui.PlatformUi
 
@@ -15,6 +18,58 @@ data class ControllerInfo(
     val hasTouchpad: Boolean = false,
     /** Odin Mapping's copy of an external controller (no battery, no rumble). */
     val odinCopy: Boolean = false,
+) {
+    /** Stable id for this controller's own settings: the device descriptor, else its name. */
+    val key: String get() = descriptor.ifEmpty { name }
+}
+
+/** The controller used last (its layout decides the button hints); set by the platform on pad input. */
+object ActivePad {
+    var key by androidx.compose.runtime.mutableStateOf<String?>(null)
+}
+
+/** The layout a controller uses: its own, else the default of all controllers. */
+fun io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings.layoutFor(key: String?): io.github.thecodingdad.moonlightlauncher.data.settings.ButtonLayout =
+    key?.let { controllerLayouts[it] } ?: buttonLayout
+
+/** Default button layout of all controllers (Settings → Controllers). */
+@androidx.compose.runtime.Composable
+fun ControllerLayoutDefaultRow(
+    settings: io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings,
+    update: ((io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings) -> io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings) -> Unit,
+    initialFocus: Boolean = false,
+) {
+    ChoiceRow(
+        org.jetbrains.compose.resources.stringResource(io.github.thecodingdad.moonlightlauncher.resources.Res.string.setting_button_layout),
+        io.github.thecodingdad.moonlightlauncher.data.settings.ButtonLayout.entries, settings.buttonLayout,
+        label = { layoutLabel(it) },
+        onSelect = { v -> update { it.copy(buttonLayout = v) } },
+        subtitle = org.jetbrains.compose.resources.stringResource(io.github.thecodingdad.moonlightlauncher.resources.Res.string.setting_button_layout_sub),
+        initialFocus = initialFocus,
+    )
+}
+
+/** One controller's layout: the default of all controllers or its own (controller dialog). */
+@androidx.compose.runtime.Composable
+fun ControllerLayoutOverrideRow(
+    controller: ControllerInfo,
+    settings: io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings,
+    update: ((io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings) -> io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings) -> Unit,
+) {
+    val default = org.jetbrains.compose.resources.stringResource(io.github.thecodingdad.moonlightlauncher.resources.Res.string.controller_layout_default, layoutLabel(settings.buttonLayout))
+    ChoiceRow(
+        org.jetbrains.compose.resources.stringResource(io.github.thecodingdad.moonlightlauncher.resources.Res.string.setting_button_layout),
+        listOf<io.github.thecodingdad.moonlightlauncher.data.settings.ButtonLayout?>(null) + io.github.thecodingdad.moonlightlauncher.data.settings.ButtonLayout.entries,
+        settings.controllerLayouts[controller.key],
+        label = { it?.let { l -> layoutLabel(l) } ?: default },
+        onSelect = { v -> update { s -> s.copy(controllerLayouts = if (v == null) s.controllerLayouts - controller.key else s.controllerLayouts + (controller.key to v)) } },
+    )
+}
+
+@androidx.compose.runtime.Composable
+private fun layoutLabel(l: io.github.thecodingdad.moonlightlauncher.data.settings.ButtonLayout) = org.jetbrains.compose.resources.stringResource(
+    if (l == io.github.thecodingdad.moonlightlauncher.data.settings.ButtonLayout.XBOX) io.github.thecodingdad.moonlightlauncher.resources.Res.string.button_layout_xbox
+    else io.github.thecodingdad.moonlightlauncher.resources.Res.string.button_layout_nintendo,
 )
 
 /** Connected controllers, updated when one connects, disconnects or changes (battery). */

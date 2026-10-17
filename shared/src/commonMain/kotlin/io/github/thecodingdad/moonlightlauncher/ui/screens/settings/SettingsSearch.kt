@@ -18,7 +18,7 @@ sealed interface SettingsTarget {
 }
 
 /** One searchable setting: its title, the page it is on and (optionally) the section there. */
-private class SearchEntry(val title: StringResource, val target: SettingsTarget, val section: StringResource? = null)
+private class SearchEntry(val title: StringResource, val target: SettingsTarget, val section: StringResource? = null, val combos: Boolean = false)
 
 private fun page(id: SettingsPageId, vararg titles: StringResource, section: StringResource? = null) =
     titles.map { SearchEntry(it, SettingsTarget.Page(id), section) }
@@ -79,13 +79,11 @@ private val settingsIndex: List<SearchEntry> = buildList {
         Res.string.vpn_auto_outside, Res.string.vpn_disconnect_home,
     ))
     addAll(page(SettingsPageId.HOME_ASSISTANT, Res.string.ha_tiles, Res.string.ha_show_home_row))
-    addAll(page(SettingsPageId.CONTROLS, Res.string.setting_button_layout, Res.string.setting_hint_bar, Res.string.setting_games_direct_start))
-    addAll(page(
-        SettingsPageId.CONTROLS, Res.string.combo_section, Res.string.combo_home, Res.string.combo_quick_menu, Res.string.combo_service,
-        section = Res.string.combo_section,
-    ))
-    listOf(Res.string.controllers_connected, Res.string.odin_mapping_section)
+    addAll(page(SettingsPageId.CONTROLS, Res.string.setting_hint_bar, Res.string.setting_games_direct_start))
+    listOf(Res.string.controllers_connected, Res.string.controllers_defaults, Res.string.setting_button_layout, Res.string.odin_mapping_section)
         .forEach { add(SearchEntry(it, SettingsTarget.Controllers)) }
+    listOf(Res.string.combo_section, Res.string.combo_home, Res.string.combo_quick_menu, Res.string.combo_service)
+        .forEach { add(SearchEntry(it, SettingsTarget.Controllers, Res.string.combo_section, combos = true)) }
     addAll(page(SettingsPageId.QUICK_MENU, Res.string.qt_add))
     addAll(page(
         SettingsPageId.QUICK_MENU, Res.string.qm_touch_section, Res.string.qm_edge_handle, Res.string.qm_tile_add,
@@ -119,6 +117,7 @@ fun SettingsSearchResults(query: String, onOpen: (SettingsTarget, String?) -> Un
     val platform = io.github.thecodingdad.moonlightlauncher.ui.PlatformUi.current
     val hits = settingsIndex.filter { e ->
         if (e.target is SettingsTarget.Page && e.target.id in platformPages && !platform.hasPage(e.target.id)) return@filter false
+        if (e.combos && !platform.hasButtonCombos) return@filter false
         val haystack = listOfNotNull(e.title, pageTitle(e.target), e.section).joinToString(" ") { texts.getValue(it) }
         TitleNormalizer.normalize(haystack).contains(q)
     }.distinctBy { it.title to it.target }

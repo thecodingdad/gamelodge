@@ -113,6 +113,7 @@ fun main(args: Array<String>) {
     container.scope.launch {
         container.settings.settings.collect {
             gamepads.nintendoLayout = it.buttonLayout == ButtonLayout.NINTENDO
+            gamepads.layoutOverrides = it.controllerLayouts.mapValues { (_, l) -> l == ButtonLayout.NINTENDO }
             val emulation = io.github.thecodingdad.moonlightlauncher.desktop.emulation.PcEmulation.decode(it.pcEmulation)
             val custom = io.github.thecodingdad.moonlightlauncher.desktop.games.CustomGame.decode(it.pcCustomGames)
             if (it.disabledGameSources != container.disabledSources || emulation != container.pcEmulation || custom != container.customGames) {

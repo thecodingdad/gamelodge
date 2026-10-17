@@ -46,6 +46,8 @@ data class LauncherSettings(
     val homeRowOrder: List<String> = emptyList(),
     // Input & feedback
     val buttonLayout: ButtonLayout = ButtonLayout.XBOX,
+    /** Controllers with their own layout ([io.github.thecodingdad.moonlightlauncher.ui.screens.settings.ControllerInfo.key] → layout). */
+    val controllerLayouts: Map<String, ButtonLayout> = emptyMap(),
     val uiSounds: Boolean = true,
     val uiSoundVolume: Int = 60,
     val haptics: Boolean = true,
@@ -142,6 +144,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val showHaRowOnHome = booleanPreferencesKey("show_ha_row_on_home")
         val homeRowOrder = stringPreferencesKey("home_row_order")
         val buttonLayout = stringPreferencesKey("button_layout")
+        val controllerLayouts = stringPreferencesKey("controller_layouts")
         val uiSounds = booleanPreferencesKey("ui_sounds")
         val uiSoundVolume = intPreferencesKey("ui_sound_volume")
         val haptics = booleanPreferencesKey("haptics")
@@ -216,6 +219,11 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             showHaRowOnHome = this[K.showHaRowOnHome] ?: d.showHaRowOnHome,
             homeRowOrder = this[K.homeRowOrder]?.split(',')?.filter { it.isNotEmpty() } ?: d.homeRowOrder,
             buttonLayout = enumOr(this[K.buttonLayout], d.buttonLayout),
+            // "key\tLAYOUT" lines (controller names may hold any character but tabs and line breaks).
+            controllerLayouts = this[K.controllerLayouts]?.lines()?.mapNotNull { line ->
+                val key = line.substringBeforeLast('\t', "").takeIf { it.isNotEmpty() } ?: return@mapNotNull null
+                runCatching { ButtonLayout.valueOf(line.substringAfterLast('\t')) }.getOrNull()?.let { key to it }
+            }?.toMap() ?: d.controllerLayouts,
             uiSounds = this[K.uiSounds] ?: d.uiSounds,
             uiSoundVolume = this[K.uiSoundVolume] ?: d.uiSoundVolume,
             haptics = this[K.haptics] ?: d.haptics,
@@ -283,6 +291,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         this[K.showHaRowOnHome] = s.showHaRowOnHome
         this[K.homeRowOrder] = s.homeRowOrder.joinToString(",")
         this[K.buttonLayout] = s.buttonLayout.name
+        this[K.controllerLayouts] = s.controllerLayouts.entries.joinToString("\n") { "${it.key}\t${it.value.name}" }
         this[K.uiSounds] = s.uiSounds
         this[K.uiSoundVolume] = s.uiSoundVolume
         this[K.haptics] = s.haptics

@@ -297,22 +297,16 @@ fun DisplaySettings(
 @Composable
 fun ControlsSettings(settings: LauncherSettings, update: ((LauncherSettings) -> LauncherSettings) -> Unit) {
     SettingsPage(stringResource(Res.string.settings_controls)) {
-        ChoiceRow(
-            stringResource(Res.string.setting_button_layout), ButtonLayout.entries, settings.buttonLayout,
-            label = { stringResource(if (it == ButtonLayout.XBOX) Res.string.button_layout_xbox else Res.string.button_layout_nintendo) },
-            onSelect = { v -> update { it.copy(buttonLayout = v) } },
-            subtitle = stringResource(Res.string.setting_button_layout_sub),
-            initialFocus = true,
-        )
+        // Button layout and combinations depend on the controller: Settings → Controllers.
         SwitchRow(
             stringResource(Res.string.setting_hint_bar), settings.showHintBar, { v -> update { it.copy(showHintBar = v) } },
             subtitle = stringResource(Res.string.setting_hint_bar_sub),
+            initialFocus = true,
         )
         SwitchRow(
             stringResource(Res.string.setting_games_direct_start), settings.gamesDirectStart, { v -> update { it.copy(gamesDirectStart = v) } },
             subtitle = stringResource(Res.string.setting_games_direct_start_sub),
         )
-        io.github.thecodingdad.moonlightlauncher.ui.PlatformUi.current.ControlsExtras(settings, update)
     }
 }
 

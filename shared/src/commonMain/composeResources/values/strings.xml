@@ -349,6 +349,11 @@
     <string name="power_restart">Restart</string>
     <string name="power_shutdown">Shut down</string>
     <string name="controllers_intro">In a stream every controller is passed to the host as its own gamepad. Select a controller to give it its own settings or a fixed player number.</string>
+    <string name="controller_layout_default">Default (%1$s)</string>
+    <string name="controllers_defaults">Default for all controllers</string>
+    <string name="controllers_defaults_sub">Each controller can differ: select it above.</string>
+    <string name="controller_launcher_section">In the launcher</string>
+    <string name="controller_stream_section">In the stream</string>
     <string name="controllers_none">No controllers connected.</string>
     <string name="controller_external">External</string>
     <string name="controller_builtin">Internal</string>
@@ -706,7 +711,7 @@
     <!-- Button combos -->
     <string name="combo_use_global">Use global</string>
     <string name="combo_off">Off</string>
-    <string name="combo_global_value">Global (%1$s)</string>
+    <string name="combo_global_value">Default (%1$s)</string>
     <string name="combo_recording_help_controller">Hold the buttons together on this controller, then release them. Cancels after 10 seconds.</string>
 
     <!-- Odin -->

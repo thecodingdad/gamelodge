@@ -102,6 +102,7 @@ import io.github.thecodingdad.moonlightlauncher.ui.shell.StatusCluster
 import io.github.thecodingdad.moonlightlauncher.ui.shell.TargetPickerDialog
 import io.github.thecodingdad.moonlightlauncher.ui.theme.LauncherTheme
 import io.github.thecodingdad.moonlightlauncher.resources.*
+import io.github.thecodingdad.moonlightlauncher.ui.screens.settings.layoutFor
 
 /** Maps the stored settings to the feedback engine's configuration. */
 fun io.github.thecodingdad.moonlightlauncher.data.settings.LauncherSettings.feedbackConfig() =
@@ -256,7 +257,7 @@ fun LauncherApp(
             LocalKeyboardController provides keyboard,
             LocalHintHolder provides hints,
             LocalEntryActions provides entryActions,
-            LocalButtonLayout provides settings.buttonLayout,
+            LocalButtonLayout provides settings.layoutFor(io.github.thecodingdad.moonlightlauncher.ui.screens.settings.ActivePad.key),
             LocalBringIntoViewSpec provides scrollSpec,
             io.github.thecodingdad.moonlightlauncher.ui.components.LocalAnimatedTilesAlways provides settings.animatedTilesAlways,
         ) {

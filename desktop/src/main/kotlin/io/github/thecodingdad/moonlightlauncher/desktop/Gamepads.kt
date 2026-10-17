@@ -29,8 +29,14 @@ class Gamepads(private val dispatcher: InputDispatcher) {
     private val _controllers = MutableStateFlow<List<ControllerInfo>>(emptyList())
     val controllers: StateFlow<List<ControllerInfo>> = _controllers.asStateFlow()
 
-    /** Nintendo layout: confirm on the right button (A/B and X/Y swapped). */
+    /** Nintendo layout: confirm on the right button (A/B and X/Y swapped); the default of all pads. */
     @Volatile var nintendoLayout = false
+
+    /** Pads with their own layout, by name ([ControllerInfo.key] on the PC): true = Nintendo. */
+    @Volatile var layoutOverrides: Map<String, Boolean> = emptyMap()
+
+    /** Names of the connected pads by index (for their own layout). */
+    private val names = java.util.concurrent.ConcurrentHashMap<Int, String>()
 
     /** Called on every pad input (screensaver, sounds). */
     @Volatile var onInput: () -> Unit = {}
@@ -105,6 +111,7 @@ class Gamepads(private val dispatcher: InputDispatcher) {
         val index: ControllerIndex = manager.getControllerIndex(i)
         if (!index.isConnected) return@mapNotNull null
         runCatching {
+            names[i] = index.name
             ControllerInfo(
                 id = i,
                 name = index.name,
@@ -134,9 +141,10 @@ class Gamepads(private val dispatcher: InputDispatcher) {
             if (changed(p, s)) {
                 lastUsed = i
                 padInUse = true
+                names[i]?.let { name -> java.awt.EventQueue.invokeLater { io.github.thecodingdad.moonlightlauncher.ui.screens.settings.ActivePad.key = name } }
                 onInput()
             }
-            handle(p, s, now)
+            handle(p, s, now, names[i]?.let { layoutOverrides[it] } ?: nintendoLayout)
         }
         repeatHeld(now)
     }
@@ -148,7 +156,7 @@ class Gamepads(private val dispatcher: InputDispatcher) {
             abs(p.rightStickX - s.rightStickX) > 0.2f || abs(p.rightStickY - s.rightStickY) > 0.2f ||
             abs(p.leftTrigger - s.leftTrigger) > 0.2f || abs(p.rightTrigger - s.rightTrigger) > 0.2f
 
-    private fun handle(p: ControllerState, s: ControllerState, now: Long) {
+    private fun handle(p: ControllerState, s: ControllerState, now: Long, nintendoLayout: Boolean) {
         val (confirm, back) = if (nintendoLayout) s.b to s.a else s.a to s.b
         val (wasConfirm, wasBack) = if (nintendoLayout) p.b to p.a else p.a to p.b
         val (y, x) = if (nintendoLayout) s.x to s.y else s.y to s.x
