@@ -229,6 +229,7 @@ fun LauncherApp(
     val detailOpenFor = detailShownId
     var collectionsFor by remember { mutableStateOf<io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry?>(null) }
     var emulatorFor by remember { mutableStateOf<String?>(null) }
+    var launchSettingsFor by remember { mutableStateOf<String?>(null) }
 
     val density = androidx.compose.ui.platform.LocalDensity.current
     val scrollSpec = remember(density) { io.github.thecodingdad.moonlightlauncher.ui.components.MarginBringIntoViewSpec(density) }
@@ -438,10 +439,14 @@ fun LauncherApp(
                     onEditMetadata = { metaEditorFor = it.item.id },
                     onAppArtwork = { appTileFor = it.item.id },
                     onEmulator = { emulatorFor = it.item.id },
+                    onLaunchSettings = { launchSettingsFor = it.item.id },
                     inDetail = detailOpenFor == entryActions.contextMenuFor?.item?.id,
                 )
                 // Metadata editor with its match and artwork dialogs, reachable from every menu.
                 val metaLibrary by vm.allEntries.collectAsState()
+                io.github.thecodingdad.moonlightlauncher.ui.PlatformUi.current.LaunchSettingsDialog(
+                    launchSettingsFor?.let { id -> metaLibrary.firstOrNull { it.item.id == id } },
+                ) { launchSettingsFor = null }
                 io.github.thecodingdad.moonlightlauncher.ui.shell.GameEmulatorDialog(
                     entry = emulatorFor?.let { id -> metaLibrary.firstOrNull { it.item.id == id } },
                     onDismiss = { emulatorFor = null },

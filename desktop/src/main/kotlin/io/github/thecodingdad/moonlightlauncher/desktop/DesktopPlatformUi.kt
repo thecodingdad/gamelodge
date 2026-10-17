@@ -130,6 +130,16 @@ class DesktopPlatformUi(
         }
     }
 
+    override fun canEditLaunch(entry: io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry): Boolean =
+        entry.localTarget?.packageName?.let { pcLibrary()?.original(it) } != null
+
+    @Composable
+    override fun LaunchSettingsDialog(entry: io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry?, onDismiss: () -> Unit) {
+        val state = settingsState() ?: return
+        val original = entry?.localTarget?.packageName?.let { pcLibrary()?.original(it) }
+        io.github.thecodingdad.moonlightlauncher.desktop.games.LaunchSettingsDialog(entry?.item?.title, original, state.first, state.second, onDismiss)
+    }
+
     override fun openUrl(url: String) = BrowserOpener.open(url)
 
     override fun bringToFront() {

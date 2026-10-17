@@ -95,6 +95,7 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
                 io.github.thecodingdad.moonlightlauncher.desktop.emulation.RomScanner { pcEmulation },
                 io.github.thecodingdad.moonlightlauncher.desktop.games.CustomGameScanner { customGames },
             ),
+            { launchOverrides },
         )
     }
 
@@ -137,6 +138,7 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
     /** Emulators and ROM folders, games added by hand (from the settings, kept current by main). */
     @Volatile var pcEmulation = io.github.thecodingdad.moonlightlauncher.desktop.emulation.PcEmulation()
     @Volatile var customGames: List<io.github.thecodingdad.moonlightlauncher.desktop.games.CustomGame> = emptyList()
+    @Volatile var launchOverrides: Map<String, io.github.thecodingdad.moonlightlauncher.desktop.games.LaunchOverride> = emptyMap()
 
     /** Called when a game started from the launcher has ended (the window comes back to the front). */
     @Volatile var onGameEnded: () -> Unit = {}

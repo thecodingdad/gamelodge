@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.SportsEsports
+import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -291,6 +292,8 @@ fun EntryContextMenu(
     onAppArtwork: (LibraryEntry) -> Unit = {},
     /** ROMs: the emulator this game starts with. */
     onEmulator: (LibraryEntry) -> Unit = {},
+    /** PC games: their start command. */
+    onLaunchSettings: (LibraryEntry) -> Unit = {},
     /** Opened from the game's own detail page: its buttons already cover play and favorite. */
     inDetail: Boolean = false,
 ) {
@@ -348,6 +351,9 @@ fun EntryContextMenu(
             }
             if (e.romTargets.isNotEmpty()) {
                 LauncherButton(stringResource(Res.string.action_emulator), act { onEmulator(e) }, Modifier.fillMaxWidth(), Icons.Filled.SportsEsports)
+            }
+            if (io.github.thecodingdad.moonlightlauncher.ui.PlatformUi.current.canEditLaunch(e)) {
+                LauncherButton(stringResource(Res.string.action_launch_settings), act { onLaunchSettings(e) }, Modifier.fillMaxWidth(), Icons.Filled.Terminal)
             }
             LauncherButton(stringResource(Res.string.action_collections), act { onCollections(e) }, Modifier.fillMaxWidth(), Icons.Filled.CollectionsBookmark)
             LauncherButton(stringResource(Res.string.action_hide), act { onHide(e) }, Modifier.fillMaxWidth(), Icons.Filled.VisibilityOff)

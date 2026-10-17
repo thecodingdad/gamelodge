@@ -29,6 +29,8 @@ class PcLibrary(
     private val disabled: () -> Set<String>,
     /** Sources that are always on (emulated games, games added by hand). */
     private val others: List<GameScanner> = emptyList(),
+    /** Start commands the user changed (entry id → override). */
+    private val overrides: () -> Map<String, LaunchOverride> = { emptyMap() },
 ) : LocalAppSource {
     private val stores: List<GameScanner> = listOf(
         SteamScanner(http, account = steam), EpicScanner(), GogScanner(), XboxScanner(), EaScanner(), UbisoftScanner(), BattleNetScanner(), AmazonScanner(),
@@ -39,10 +41,15 @@ class PcLibrary(
     private val _counts = kotlinx.coroutines.flow.MutableStateFlow<Map<String, Pair<Int, Int>>>(emptyMap())
     val counts: kotlinx.coroutines.flow.StateFlow<Map<String, Pair<Int, Int>>> = _counts
     private val entries = ConcurrentHashMap<String, GameEntry>()
+    /** As scanned, before the user's overrides. */
+    private val originals = ConcurrentHashMap<String, GameEntry>()
     private val rescans = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
-    /** The scanned entry behind a library target's package name. */
+    /** The scanned entry behind a library target's package name (with the user's override). */
     fun entry(id: String): GameEntry? = entries[id]
+
+    /** The entry as the scan found it (defaults of the launch options dialog). */
+    fun original(id: String): GameEntry? = originals[id]
 
     /** The stores in the order the settings list them. */
     val sources: List<String> get() = stores.map { it.source }
@@ -107,9 +114,15 @@ class PcLibrary(
         }
         incompleteSources = failed.toSet()
         _counts.value = found.groupBy { it.source }.mapValues { (_, games) -> games.size to games.count { it.installed } }
-        entries.keys.retainAll(found.map { it.id }.toSet())
-        found.forEach { entries[it.id] = it }
-        found.map { e ->
+        val ids = found.map { it.id }.toSet()
+        entries.keys.retainAll(ids)
+        originals.keys.retainAll(ids)
+        val changed = overrides()
+        found.forEach { e ->
+            originals[e.id] = e
+            entries[e.id] = changed[e.id]?.applyTo(e) ?: e
+        }
+        found.map { entries[it.id] ?: it }.map { e ->
             LocalApp(
                 packageName = e.id, label = e.name, isGame = e.game, knownGame = e.game,
                 installed = e.installed, platform = e.platform, cover = e.covers.firstOrNull(),

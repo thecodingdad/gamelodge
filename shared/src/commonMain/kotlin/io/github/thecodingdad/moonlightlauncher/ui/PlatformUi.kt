@@ -78,6 +78,13 @@ interface PlatformUi {
     @Composable
     fun rememberScreenKeeper(): (Boolean) -> Unit
 
+    /** Whether the start command of [entry] can be changed here (PC games on the desktop). */
+    fun canEditLaunch(entry: io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry): Boolean = false
+
+    /** Start command of one game: program, arguments, folder, process names (hidden while [entry] is null). */
+    @Composable
+    fun LaunchSettingsDialog(entry: io.github.thecodingdad.moonlightlauncher.data.db.LibraryEntry?, onDismiss: () -> Unit) = Unit
+
     /** The system's information page of an installed app. */
     fun openAppInfo(packageName: String)
 

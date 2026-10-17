@@ -206,4 +206,8 @@
     <string name="custom_is_app_sub">Erscheint im Apps-Tab</string>
     <string name="custom_remove">Gedrückt halten, um zu entfernen</string>
     <string name="custom_missing">Programm nicht gefunden</string>
+    <string name="launch_options_intro">Ändert, wie dieses Spiel startet. Leere Felder behalten, was gefunden wurde (grau angezeigt).</string>
+    <string name="launch_options_processes">Prozessnamen (optional)</string>
+    <string name="launch_options_processes_sub">Programme des Spiels, durch Kommas getrennt (z. B. game.exe): Der Launcher wartet, bis sie beendet sind (Spielzeit, Streams).</string>
+    <string name="launch_options_reset">Zurücksetzen</string>
 </resources>

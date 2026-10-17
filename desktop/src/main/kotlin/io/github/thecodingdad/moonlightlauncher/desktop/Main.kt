@@ -116,10 +116,14 @@ fun main(args: Array<String>) {
             gamepads.layoutOverrides = it.controllerLayouts.mapValues { (_, l) -> l == ButtonLayout.NINTENDO }
             val emulation = io.github.thecodingdad.moonlightlauncher.desktop.emulation.PcEmulation.decode(it.pcEmulation)
             val custom = io.github.thecodingdad.moonlightlauncher.desktop.games.CustomGame.decode(it.pcCustomGames)
-            if (it.disabledGameSources != container.disabledSources || emulation != container.pcEmulation || custom != container.customGames) {
+            val overrides = io.github.thecodingdad.moonlightlauncher.desktop.games.LaunchOverride.decode(it.pcLaunchOverrides)
+            if (it.disabledGameSources != container.disabledSources || emulation != container.pcEmulation || custom != container.customGames ||
+                overrides != container.launchOverrides
+            ) {
                 container.disabledSources = it.disabledGameSources
                 container.pcEmulation = emulation
                 container.customGames = custom
+                container.launchOverrides = overrides
                 container.pcLibrary.rescan()
             }
             DesktopPlatformUi.applyLocale(it.language)

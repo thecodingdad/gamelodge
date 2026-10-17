@@ -955,6 +955,7 @@
 
     <!-- Emulation -->
     <string name="action_emulator">Emulator wählen</string>
+    <string name="action_launch_settings">Start anpassen</string>
     <string name="emu_use_default">Standard der Plattform (%1$s)</string>
 
     <!-- Emulators -->

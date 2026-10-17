@@ -206,4 +206,8 @@
     <string name="custom_is_app_sub">Shown in the Apps tab</string>
     <string name="custom_remove">Hold to remove</string>
     <string name="custom_missing">Program not found</string>
+    <string name="launch_options_intro">Changes how this game starts. Empty fields keep what was found (shown greyed out).</string>
+    <string name="launch_options_processes">Process names (optional)</string>
+    <string name="launch_options_processes_sub">Programs of the game, separated by commas (e.g. game.exe): the launcher waits for them to end (play time, streams).</string>
+    <string name="launch_options_reset">Reset</string>
 </resources>
