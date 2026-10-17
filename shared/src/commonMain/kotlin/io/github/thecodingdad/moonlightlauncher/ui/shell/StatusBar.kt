@@ -141,10 +141,10 @@ fun StatusCluster(
                     .clickable { if (combined) onHostsClick() else onHostClick(group.first()) }
                     .padding(horizontal = 6.dp, vertical = 4.dp),
             ) {
-                // The icon itself carries the state: accent = streaming, green = online, red = offline.
+                // The icon itself carries the state: blue = streaming, green = online, red = offline.
                 Icon(
                     Icons.Filled.Computer, group.singleOrNull()?.name,
-                    tint = hostTint(group, colors.accent, colors.success, colors.danger, colors.onSurfaceMuted),
+                    tint = hostTint(group, HostStreamingColor, colors.success, colors.danger, colors.onSurfaceMuted),
                     modifier = Modifier.size(22.dp),
                 )
                 if (combined) Text("${group.size}", style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceMuted)

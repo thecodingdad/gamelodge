@@ -171,6 +171,9 @@ const val ALL_HOSTS = "*"
 fun showHostsCombined(hosts: Collection<HostState>): Boolean = hosts.size >= 2
 
 /** Colour of a host icon; combined, the "best" state wins (streaming, then online, then offline). */
+/** Host streaming: blue in every theme (red = offline, green = online; not the accent colour). */
+val HostStreamingColor = Color(0xFF42A5F5)
+
 fun hostTint(hosts: Collection<HostState>, streaming: Color, online: Color, offline: Color, unknown: Color): Color = when {
     hosts.any { it.isStreaming } -> streaming
     hosts.any { it.status == HostStatus.ONLINE } -> online
@@ -197,7 +200,7 @@ fun HostListPopup(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        StatusDot(hostTint(listOf(h), colors.accent, colors.success, colors.danger, colors.onSurfaceMuted))
+                        StatusDot(hostTint(listOf(h), HostStreamingColor, colors.success, colors.danger, colors.onSurfaceMuted))
                         Column(Modifier.weight(1f)) {
                             Text(h.name, style = MaterialTheme.typography.titleMedium, color = colors.onSurface, maxLines = 1)
                             Text(

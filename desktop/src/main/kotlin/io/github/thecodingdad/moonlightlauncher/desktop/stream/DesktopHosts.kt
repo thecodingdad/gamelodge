@@ -332,7 +332,7 @@ class DesktopHosts(
     private fun safe(s: String) = s.filter { it.isLetterOrDigit() || it == '-' }
 
     companion object {
-        private const val POLL_MS = 5_000L
+        private const val POLL_MS = 3_000L
         private const val APP_LIST_MS = 5 * 60_000L
         private const val BOX_ART_QUIET_MS = 5_000L
         private const val SLOW_MS = 3_000L

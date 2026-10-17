@@ -187,13 +187,13 @@ fun rememberQuickTiles(ids: List<String>, onHost: (String) -> Unit, onController
                 QuickTile.HOSTS -> if (showHostsCombined(hosts.values)) listOf(
                     TileModel(
                         id, Icons.Filled.Computer, labelHosts.format(hosts.size),
-                        hostTint(hosts.values, colors.accent, on, colors.danger, off),
+                        hostTint(hosts.values, HostStreamingColor, on, colors.danger, off),
                         { onHost(ALL_HOSTS) },
                     ),
                 ) else hosts.values.map { host ->
                     TileModel(
                         "$id:${host.uuid}", Icons.Filled.Computer, host.name,
-                        hostTint(listOf(host), colors.accent, on, colors.danger, off),
+                        hostTint(listOf(host), HostStreamingColor, on, colors.danger, off),
                         { onHost(host.uuid) },
                     )
                 }
