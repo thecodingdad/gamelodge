@@ -1,4 +1,4 @@
-package io.github.thecodingdad.moonlightlauncher.desktop.host
+package io.github.thecodingdad.moonlightlauncher.host
 
 import io.github.thecodingdad.moonlightlauncher.data.settings.SecretStore
 import io.github.thecodingdad.moonlightlauncher.platform.SecretBackend

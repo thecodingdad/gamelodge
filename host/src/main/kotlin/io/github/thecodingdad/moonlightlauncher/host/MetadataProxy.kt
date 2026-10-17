@@ -1,4 +1,4 @@
-package io.github.thecodingdad.moonlightlauncher.desktop.host
+package io.github.thecodingdad.moonlightlauncher.host
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement

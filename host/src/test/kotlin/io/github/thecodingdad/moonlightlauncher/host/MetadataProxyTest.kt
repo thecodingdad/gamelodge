@@ -1,4 +1,4 @@
-package io.github.thecodingdad.moonlightlauncher.desktop.host
+package io.github.thecodingdad.moonlightlauncher.host
 
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient

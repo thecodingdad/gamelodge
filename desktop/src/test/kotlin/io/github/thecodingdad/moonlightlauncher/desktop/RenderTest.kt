@@ -205,7 +205,7 @@ class RenderTest {
         val role = container.hostRole
         role.update { it.copy(serverEnabled = true, webEnabled = true) }
         role.pairing.open()
-        role.devices.add("Odin 2 Portal", "AB".repeat(32), io.github.thecodingdad.moonlightlauncher.desktop.host.Permissions.all, "192.168.1.20")
+        role.devices.add("Odin 2 Portal", "AB".repeat(32), io.github.thecodingdad.moonlightlauncher.host.Permissions.all, "192.168.1.20")
         val services = HostServices(role, container.hostSync, container.secrets)
         PlatformUi.current = DesktopPlatformUi(Gamepads(InputDispatcher()), { null }, { null }, { services })
         fun <T> ui(block: () -> T): T {

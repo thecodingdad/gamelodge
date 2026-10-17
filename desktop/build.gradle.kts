@@ -17,6 +17,7 @@ kotlin {
 
 dependencies {
     implementation(project(":shared"))
+    implementation(project(":host"))
     implementation(compose.desktop.currentOs)
     // Windows natives as well, so a build from Linux runs on Windows.
     implementation(compose.desktop.windows_x64)

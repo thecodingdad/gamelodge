@@ -17,14 +17,6 @@ interface PlatformInfo {
     fun storageAreas(): List<io.github.thecodingdad.moonlightlauncher.data.storage.StorageArea> = emptyList()
 }
 
-/** Encrypted storage for credentials; the platform keeps the key (Android Keystore, Windows DPAPI). */
-interface SecretBackend {
-    fun get(key: String): String?
-    /** Null or empty removes the entry. */
-    fun put(key: String, value: String?)
-    fun keys(): Set<String>
-}
-
 /** Opens a web page outside the launcher (browser, custom tab). */
 fun interface UrlOpener {
     fun open(url: String)

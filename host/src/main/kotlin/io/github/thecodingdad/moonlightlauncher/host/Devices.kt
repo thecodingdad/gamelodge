@@ -1,4 +1,4 @@
-package io.github.thecodingdad.moonlightlauncher.desktop.host
+package io.github.thecodingdad.moonlightlauncher.host
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

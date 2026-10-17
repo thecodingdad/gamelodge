@@ -1,7 +1,6 @@
-package io.github.thecodingdad.moonlightlauncher.desktop.host
+package io.github.thecodingdad.moonlightlauncher.host
 
 import io.github.thecodingdad.moonlightlauncher.data.settings.SecretStore
-import io.github.thecodingdad.moonlightlauncher.desktop.restrictToOwner
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.bouncycastle.crypto.generators.Argon2BytesGenerator

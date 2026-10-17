@@ -1,5 +1,7 @@
 package io.github.thecodingdad.moonlightlauncher.desktop.host.sync
 
+import io.github.thecodingdad.moonlightlauncher.host.*
+
 import io.github.thecodingdad.moonlightlauncher.desktop.games.GameEntry
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json

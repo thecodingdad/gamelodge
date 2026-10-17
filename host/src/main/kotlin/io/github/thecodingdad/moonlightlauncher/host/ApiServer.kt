@@ -1,4 +1,4 @@
-package io.github.thecodingdad.moonlightlauncher.desktop.host
+package io.github.thecodingdad.moonlightlauncher.host
 
 import com.sun.net.httpserver.HttpsConfigurator
 import com.sun.net.httpserver.HttpsExchange

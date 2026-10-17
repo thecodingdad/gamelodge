@@ -1,5 +1,7 @@
 package io.github.thecodingdad.moonlightlauncher.desktop.host
 
+import io.github.thecodingdad.moonlightlauncher.host.*
+
 import io.github.thecodingdad.moonlightlauncher.data.companion.HostGame
 import io.github.thecodingdad.moonlightlauncher.data.companion.HostGameCorrection
 import io.github.thecodingdad.moonlightlauncher.data.companion.HostGamesList

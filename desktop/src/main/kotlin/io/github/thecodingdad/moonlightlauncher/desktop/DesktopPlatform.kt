@@ -142,6 +142,4 @@ class DesktopSecretBackend(dir: File) : SecretBackend {
 }
 
 /** Only the owner may read the file (no-op where the file system has no POSIX permissions). */
-fun restrictToOwner(file: File) {
-    runCatching { Files.setPosixFilePermissions(file.toPath(), PosixFilePermissions.fromString("rw-------")) }
-}
+fun restrictToOwner(file: File) = io.github.thecodingdad.moonlightlauncher.host.restrictToOwner(file)

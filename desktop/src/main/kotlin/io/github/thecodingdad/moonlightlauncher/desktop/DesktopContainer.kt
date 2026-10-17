@@ -103,13 +103,13 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
     val hostRole: io.github.thecodingdad.moonlightlauncher.desktop.host.HostRole by lazy {
         io.github.thecodingdad.moonlightlauncher.desktop.host.HostRole(dataDir, secrets) { platform.deviceName }.also { role ->
             // Paired devices may look up metadata with this launcher's own keys (if switched on).
-            val keys = object : io.github.thecodingdad.moonlightlauncher.desktop.host.MetadataKeys {
+            val keys = object : io.github.thecodingdad.moonlightlauncher.host.MetadataKeys {
                 override val steamGridDbKey get() = secrets.get(SecretStore.Keys.SGDB_API_KEY)
                 override val igdbClientId get() = secrets.get(SecretStore.Keys.IGDB_CLIENT_ID)
                 override val igdbClientSecret get() = secrets.get(SecretStore.Keys.IGDB_CLIENT_SECRET)
             }
-            role.proxy = io.github.thecodingdad.moonlightlauncher.desktop.host.MetadataProxy(
-                http, keys, io.github.thecodingdad.moonlightlauncher.desktop.host.ResponseCache(File(dataDir, "cache/proxy")),
+            role.proxy = io.github.thecodingdad.moonlightlauncher.host.MetadataProxy(
+                http, keys, io.github.thecodingdad.moonlightlauncher.host.ResponseCache(File(dataDir, "cache/proxy")),
             )
         }
     }

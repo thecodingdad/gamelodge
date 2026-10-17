@@ -25,12 +25,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.thecodingdad.moonlightlauncher.data.companion.Fingerprint
 import io.github.thecodingdad.moonlightlauncher.data.companion.PairedServer
-import io.github.thecodingdad.moonlightlauncher.desktop.host.Device
+import io.github.thecodingdad.moonlightlauncher.host.Device
 import io.github.thecodingdad.moonlightlauncher.desktop.host.HostRole
-import io.github.thecodingdad.moonlightlauncher.desktop.host.PairingRequestInfo
-import io.github.thecodingdad.moonlightlauncher.desktop.host.PairingState
-import io.github.thecodingdad.moonlightlauncher.desktop.host.Permissions
-import io.github.thecodingdad.moonlightlauncher.desktop.host.WebAdmin
+import io.github.thecodingdad.moonlightlauncher.host.PairingRequestInfo
+import io.github.thecodingdad.moonlightlauncher.host.PairingState
+import io.github.thecodingdad.moonlightlauncher.host.Permissions
+import io.github.thecodingdad.moonlightlauncher.host.WebAdmin
 import io.github.thecodingdad.moonlightlauncher.desktop.host.sync.HostSync
 import io.github.thecodingdad.moonlightlauncher.desktop.host.sync.HostType
 import io.github.thecodingdad.moonlightlauncher.data.settings.SecretStore
