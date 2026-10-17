@@ -84,7 +84,7 @@ private val settingsIndex: List<SearchEntry> = buildList {
         SettingsPageId.CONTROLS, Res.string.combo_section, Res.string.combo_home, Res.string.combo_quick_menu, Res.string.combo_service,
         section = Res.string.combo_section,
     ))
-    listOf(Res.string.controllers_connected, Res.string.controllers_stream_settings, Res.string.odin_mapping_section)
+    listOf(Res.string.controllers_connected, Res.string.odin_mapping_section)
         .forEach { add(SearchEntry(it, SettingsTarget.Controllers)) }
     addAll(page(SettingsPageId.QUICK_MENU, Res.string.qt_add))
     addAll(page(

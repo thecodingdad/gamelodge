@@ -216,11 +216,6 @@ class DesktopPlatformUi(
     override fun ControllersScreen() {
         val controllers = rememberControllers()
         var selected by remember { mutableStateOf<ControllerInfo?>(null) }
-        // As on Android: the stream's gamepad options of the base settings.
-        val editing = profiles
-        val gamepadOptions = editing?.rememberSchema()?.firstOrNull { it.key == "category_gamepad_settings" }?.options.orEmpty()
-        val base = remember(editing) { editing?.values(null) }
-        var revision by remember { mutableIntStateOf(0) }
         SettingsPage(stringResource(Res.string.settings_controllers)) {
             SectionHeader(stringResource(Res.string.controllers_connected))
             if (controllers.isEmpty()) Text(stringResource(Res.string.controllers_none), color = LauncherTheme.colors.onSurface)
@@ -230,15 +225,6 @@ class DesktopPlatformUi(
                     subtitle = c.batteryPercent?.let { stringResource(Res.string.controller_battery, it) },
                     icon = Icons.Filled.SportsEsports, initialFocus = index == 0,
                 )
-            }
-            if (editing != null && base != null && gamepadOptions.isNotEmpty()) {
-                SectionHeader(stringResource(Res.string.controllers_stream_settings))
-                Text(stringResource(Res.string.controllers_stream_settings_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
-                gamepadOptions.forEachIndexed { i, option ->
-                    io.github.thecodingdad.moonlightlauncher.ui.screens.profiles.OptionRow(
-                        option, base, revision, initialFocus = controllers.isEmpty() && i == 0, editing = editing,
-                    ) { revision++ }
-                }
             }
         }
         ControllerDetailDialog(selected) { selected = null }

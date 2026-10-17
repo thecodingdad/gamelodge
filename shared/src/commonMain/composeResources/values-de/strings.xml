@@ -595,9 +595,9 @@
     <string name="qm_android">Android</string>
 
     <!-- Controller overrides -->
-    <string name="controller_override_global">Global</string>
+    <string name="controller_override_global">Wie im Profil</string>
     <string name="controller_overrides">Einstellungen für diesen Controller</string>
-    <string name="controller_overrides_sub">Gelten ab dem nächsten Stream. „Global“ übernimmt die Controller-Einstellungen im Stream.</string>
+    <string name="controller_overrides_sub">Gelten ab dem nächsten Stream für diesen Controller und haben Vorrang vor dem Stream-Profil. „Wie im Profil“ übernimmt den Wert des aktiven Stream-Profils.</string>
     <string name="controller_player">Spieler am Host</string>
     <string name="controller_player_auto">Automatisch</string>
     <string name="controller_player_n">Spieler %1$d</string>

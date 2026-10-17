@@ -99,14 +99,6 @@ fun ControllersScreen() {
     val controllers = rememberAndroidControllers()
     val context = LocalContext.current
     var selected by remember { mutableStateOf<ControllerInfo?>(null) }
-    // Artemis' gamepad options (dead zone, rumble, motion sensors …) of the base stream settings;
-    // they apply to all controllers and to every profile that doesn't override them.
-    val store = remember { io.github.thecodingdad.moonlightlauncher.stream.ProfileStore(context, null) }
-    val gamepadOptions = remember {
-        io.github.thecodingdad.moonlightlauncher.stream.StreamSettingsSchema.load(context)
-            .firstOrNull { c -> c.options.any { it.key == "seekbar_deadzone" } }?.options.orEmpty()
-    }
-    var revision by remember { mutableIntStateOf(0) }
 
     SettingsPage(stringResource(Res.string.settings_controllers)) {
         Text(stringResource(Res.string.controllers_intro), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
@@ -126,16 +118,6 @@ fun ControllersScreen() {
             )
         }
         OdinMappingSection()
-        if (gamepadOptions.isNotEmpty()) {
-            SectionHeader(stringResource(Res.string.controllers_stream_settings))
-            Text(stringResource(Res.string.controllers_stream_settings_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
-            gamepadOptions.forEachIndexed { i, option ->
-                io.github.thecodingdad.moonlightlauncher.ui.screens.profiles.OptionRow(
-                    option, store, revision, initialFocus = controllers.isEmpty() && i == 0,
-                    editing = remember { io.github.thecodingdad.moonlightlauncher.stream.AndroidProfileEditing(context) },
-                ) { revision++ }
-            }
-        }
     }
 
     AndroidControllerDetailDialog(selected, onDismiss = { selected = null })
