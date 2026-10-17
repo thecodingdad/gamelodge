@@ -70,11 +70,11 @@ class DesktopLaunches(
                 val apps = hosts.appLists.value.mapValues { (_, list) ->
                     list.map { io.github.thecodingdad.moonlightlauncher.desktop.stream.MoonlightIni.App(it.app.appId, it.app.appName, it.app.isHdrSupported) }
                 }
-                hosts.streaming = true
+                hosts.quietForStream()
                 try {
                     client.stream(identity(), hosts.storedHosts.value, stored, appId, streamOptions(), apps) { start.complete(it) }
                 } finally {
-                    hosts.streaming = false
+                    hosts.streamEnded()
                 }
             }.onFailure { start.complete(io.github.thecodingdad.moonlightlauncher.desktop.stream.MoonlightQt.Start.Failed(it.message)) }
             hosts.invalidate(host.uuid)

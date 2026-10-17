@@ -211,6 +211,12 @@ fun HeroHome(
             val opaqueBottomPx = if (io.github.thecodingdad.moonlightlauncher.ui.components.LocalCompactWidth.current) {
                 with(density) { insets.calculateBottomPadding().toPx() }
             } else 0f
+            // Room below the first row in its start position. Landscape: the cards end just above
+            // the hint bar (the inset includes some margin), so with small cards the next row stays
+            // hidden too. Portrait: above the fade.
+            val startBottomPx = if (opaqueBottomPx > 0f) fadePx.toInt() else with(density) { (insets.calculateBottomPadding() - 16.dp).coerceAtLeast(0.dp).roundToPx() }
+            // A single row stays in its start position: no room to scroll below it.
+            val bottomPadding = if (rowKeys.size <= 1) with(density) { startBottomPx.toDp() } else 24.dp + insets.calculateBottomPadding()
             LazyColumn(
                 state = listState,
                 modifier = Modifier.fillMaxWidth().weight(1f).mouseDragScroll(listState)
@@ -241,17 +247,14 @@ fun HeroHome(
                     },
                 // Top padding = fade height: a snapped row starts below the fade, so its title isn't dimmed
                 // (the list is pulled up by the same amount below, so the row keeps its position).
-                contentPadding = PaddingValues(top = 48.dp, bottom = 24.dp + insets.calculateBottomPadding()),
+                contentPadding = PaddingValues(top = 48.dp, bottom = bottomPadding),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 // Start position: the top row sits at the bottom edge with the artwork above it.
                 // Scrolling the spacer away still lets the rows go up to below the info block.
                 item(key = "start-spacer") {
                     val viewport = listState.layoutInfo.viewportSize.height
-                    // Landscape: the cards end just above the hint bar (the inset includes some margin),
-                    // so with small cards the next row stays hidden too. Portrait: above the fade.
-                    val bottom = if (opaqueBottomPx > 0f) fadePx.toInt() else with(density) { (insets.calculateBottomPadding() - 16.dp).coerceAtLeast(0.dp).roundToPx() }
-                    val gap = with(density) { 10.dp.roundToPx() + 48.dp.roundToPx() } + bottom
+                    val gap = with(density) { 10.dp.roundToPx() + 48.dp.roundToPx() } + startBottomPx
                     val height = if (firstRowHeight == 0) 0 else (viewport - firstRowHeight - gap).coerceAtLeast(0)
                     androidx.compose.foundation.layout.Spacer(Modifier.fillMaxWidth().height(with(density) { height.toDp() }))
                 }

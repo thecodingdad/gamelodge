@@ -79,6 +79,25 @@ class DesktopHosts(
 
     /** Set while Moonlight-Qt streams: no polling meanwhile. */
     @Volatile var streaming = false
+        private set
+
+    /** Cover requests running now. */
+    private val boxArtRunning = java.util.concurrent.atomic.AtomicInteger(0)
+
+    /**
+     * Before Moonlight-Qt starts: the host answers HTTPS requests one after the other and the
+     * client gives up after a few seconds, so polling and cover downloads pause (the running
+     * request is waited for) until [streamEnded].
+     */
+    suspend fun quietForStream() {
+        streaming = true
+        val until = System.currentTimeMillis() + QUIET_WAIT_MS
+        while (boxArtRunning.get() > 0 && System.currentTimeMillis() < until) delay(100)
+    }
+
+    fun streamEnded() {
+        streaming = false
+    }
 
     override val hosts: StateFlow<Map<String, HostState>> = _hosts.asStateFlow()
     override val appLists: StateFlow<Map<String, List<RemoteApp>>> = _appLists.asStateFlow()
@@ -140,9 +159,17 @@ class DesktopHosts(
         val file = File(boxArtDir, "${safe(host.uuid)}/${app.appId}.png")
         if (file.isFile) return@withContext file
         val s = stored(host.uuid)?.takeIf { it.serverCert != null } ?: return@withContext null
+        // A stream starts or runs: covers wait until it ended.
+        while (streaming) delay(2_000)
+        boxArtRunning.incrementAndGet()
         val started = System.currentTimeMillis()
         boxArtAt[host.uuid] = started
-        val bytes = try { client(s).boxArt(app.appId) } finally { boxArtAt[host.uuid] = System.currentTimeMillis() }
+        val bytes = try {
+            client(s).boxArt(app.appId)
+        } finally {
+            boxArtAt[host.uuid] = System.currentTimeMillis()
+            boxArtRunning.decrementAndGet()
+        }
         val took = System.currentTimeMillis() - started
         if (took > SLOW_MS) Log.i("Box art of ${app.appName} from ${s.name} took ${took / 1000} s")
         if (bytes == null) return@withContext null
@@ -336,6 +363,7 @@ class DesktopHosts(
         private const val APP_LIST_MS = 5 * 60_000L
         private const val BOX_ART_QUIET_MS = 5_000L
         private const val SLOW_MS = 3_000L
+        private const val QUIET_WAIT_MS = 15_000L
         private val WOL_PORTS = listOf(7, 9, 47998, 47999, 48000, 48002, 48010)
 
         /** "host", "host:port", "[v6]:port" → address and HTTP port. */
