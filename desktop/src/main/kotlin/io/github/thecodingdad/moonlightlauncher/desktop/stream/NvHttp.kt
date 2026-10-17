@@ -175,6 +175,11 @@ class NvHttp(
             .build()
     }
 
+    /** Closes the kept-alive HTTPS connections (before the streaming client talks to the host). */
+    fun closeConnections() {
+        secure.connectionPool.evictAll()
+    }
+
     private val httpBase: HttpUrl get() = "http://$host:$httpPort/".toHttpUrl()
     private val httpsBase: HttpUrl get() = "https://$host:$httpsPort/".toHttpUrl()
 

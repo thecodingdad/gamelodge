@@ -81,6 +81,9 @@ class DesktopHosts(
     @Volatile var streaming = false
         private set
 
+    /** Last HTTPS problem per host (logged when it changes). */
+    private val httpsTrouble = java.util.concurrent.ConcurrentHashMap<String, String?>()
+
     /** Cover requests running now. */
     private val boxArtRunning = java.util.concurrent.atomic.AtomicInteger(0)
 
@@ -93,6 +96,8 @@ class DesktopHosts(
         streaming = true
         val until = System.currentTimeMillis() + QUIET_WAIT_MS
         while (boxArtRunning.get() > 0 && System.currentTimeMillis() < until) delay(100)
+        // The streaming client uses the same client certificate: no connection of ours stays open.
+        synchronized(this) { clients.values.toList() }.forEach { runCatching { it.closeConnections() } }
     }
 
     fun streamEnded() {
@@ -289,15 +294,23 @@ class DesktopHosts(
         // A host busy with HTTPS (Vibepollo right after pairing, many box art requests) can take
         // a minute: it is online when plain HTTP answers, and keeps its pairing state meanwhile.
         var keepPaired = downloading
+        var viaHttps = !downloading && s.serverCert != null
         if (result.isFailure && s.serverCert != null && result.exceptionOrNull() is java.io.IOException) {
             val plain = runCatching { NvHttp(s.address, s.port, identity(), null, http, deviceName()).serverInfo() }
+            val reason = result.exceptionOrNull()?.let { "${it::class.simpleName}: ${it.message}" }
+            if (httpsTrouble[s.uuid] != reason) {
+                httpsTrouble[s.uuid] = reason
+                Log.i("Host ${s.name}: HTTPS not answering ($reason), plain HTTP ${if (plain.isSuccess) "does" else "doesn't either"}")
+            }
             if (plain.isSuccess) {
+                viaHttps = false
                 result = plain
                 // The pinned certificate comes from a pairing (unpairing removes it): still paired.
                 keepPaired = true
             }
         }
         val info = result.getOrNull()
+        if (result.isSuccess && viaHttps && httpsTrouble.remove(s.uuid) != null) Log.i("Host ${s.name}: HTTPS answers again")
         if (info == null || info.uuid != s.uuid) {
             if (_hosts.value[s.uuid]?.status != HostStatus.OFFLINE) {
                 Log.i("Host ${s.name} offline: ${result.exceptionOrNull()?.let { "${it::class.simpleName}: ${it.message}" } ?: "other host at ${s.address}"}")
