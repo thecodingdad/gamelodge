@@ -64,8 +64,8 @@ Type: filesandordirs; Name: "{app}\lib"
 Type: filesandordirs; Name: "{app}\runtime"
 
 [Icons]
-Name: "{autoprograms}\{#AppName}"; Filename: "{app}\GameLodge.exe"; WorkingDir: "{app}"; IconFilename: "{app}\icon.ico"
-Name: "{autodesktop}\{#AppName}"; Filename: "{app}\GameLodge.exe"; WorkingDir: "{app}"; IconFilename: "{app}\icon.ico"; Tasks: desktopicon
+Name: "{autoprograms}\{#AppName}"; Filename: "{app}\GameLodge.exe"; WorkingDir: "{app}"; IconFilename: "{app}\icon.ico"; AppUserModelID: "thecodingdad.GameLodge"
+Name: "{autodesktop}\{#AppName}"; Filename: "{app}\GameLodge.exe"; WorkingDir: "{app}"; IconFilename: "{app}\icon.ico"; AppUserModelID: "thecodingdad.GameLodge"; Tasks: desktopicon
 
 [Run]
 Filename: "{app}\GameLodge.exe"; WorkingDir: "{app}"; Description: "{cm:StartNow}"; Flags: nowait postinstall skipifsilent

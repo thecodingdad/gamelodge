@@ -55,6 +55,7 @@ fun main(args: Array<String>) {
     val windowVisible = kotlinx.coroutines.flow.MutableStateFlow(true)
     var bringToFront: () -> Unit = {}
     if (!SingleInstance.claim { windowVisible.value = true; bringToFront() }) return
+    TaskbarIdentity.applyToProcess()
     val dataDir = dataDirectory()
     DataReset.runIfRequested(dataDir)
     Log.init(File(dataDir, "logs/launcher.log"))
@@ -226,6 +227,7 @@ fun main(args: Array<String>) {
             LaunchedEffect(window) {
                 mainWindow = window
                 gamepads.start(window)
+                TaskbarIdentity.applyToWindow(window)
                 if (isWindows && startup.settings.value.startFullscreen) {
                     BorderlessFullscreen.enter(window)
                     windowControls.fullscreen.value = true
