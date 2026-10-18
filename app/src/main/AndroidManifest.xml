@@ -37,10 +37,10 @@
     <application
         android:name=".LauncherApplication"
         android:label="@string/launcher_name"
-        android:icon="@mipmap/ic_launcher"
-        android:banner="@drawable/atv_banner"
+        android:icon="@mipmap/ic_gamelodge"
+        android:banner="@drawable/gamelodge_banner"
         android:localeConfig="@xml/locales_config"
-        tools:replace="android:name,android:localeConfig">
+        tools:replace="android:name,android:localeConfig,android:icon,android:banner">
 
         <activity
             android:name=".MainActivity"
