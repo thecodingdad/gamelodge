@@ -28,7 +28,8 @@ import org.jetbrains.compose.resources.stringResource
 
 /**
  * Launch options of one scanned PC game (tile menu): program or link, arguments, working folder
- * and process names. Empty fields keep what the scan found (shown as the placeholder).
+ * and process names. The fields start with the current values; what equals the scan's value (or is
+ * cleared) keeps following the scan.
  */
 @Composable
 fun LaunchSettingsDialog(
@@ -41,33 +42,39 @@ fun LaunchSettingsDialog(
     Modal(visible = original != null, onDismiss = onDismiss, title = title, maxWidth = 760.dp) {
         val e = original ?: return@Modal
         val current = remember(e.id) { LaunchOverride.decode(settings.pcLaunchOverrides)[e.id] ?: LaunchOverride() }
-        var launch by remember(e.id) { mutableStateOf(current.launch.orEmpty()) }
-        var args by remember(e.id) { mutableStateOf(current.arguments.orEmpty()) }
-        var dir by remember(e.id) { mutableStateOf(current.workingDir.orEmpty()) }
-        var processes by remember(e.id) { mutableStateOf(current.processNames?.joinToString(", ").orEmpty()) }
+        // The scan's values, also what the fields start with when there is no own value.
+        val found = Found(e.launch ?: e.install, e.launchArgs, e.workingDir ?: e.installDir, e.processNames.joinToString(", "))
+        var launch by remember(e.id) { mutableStateOf(current.launch ?: found.launch.orEmpty()) }
+        var args by remember(e.id) { mutableStateOf(current.arguments ?: found.args.orEmpty()) }
+        var dir by remember(e.id) { mutableStateOf(current.workingDir ?: found.dir.orEmpty()) }
+        var processes by remember(e.id) { mutableStateOf(current.processNames?.joinToString(", ") ?: found.processes) }
         fun save(o: LaunchOverride?) = update { s ->
             val map = LaunchOverride.decode(s.pcLaunchOverrides)
             s.copy(pcLaunchOverrides = LaunchOverride.encode(if (o == null || o.isEmpty) map - e.id else map + (e.id to o)))
         }
         Column(Modifier.heightIn(max = 620.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(stringResource(Res.string.launch_options_intro), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
-            LauncherTextField(stringResource(Res.string.custom_path), launch, { launch = it.trim().removeSurrounding("\"") }, placeholder = e.launch ?: e.install)
+            LauncherTextField(stringResource(Res.string.custom_path), launch, { launch = it.trim().removeSurrounding("\"") }, placeholder = found.launch)
             LauncherButton(stringResource(Res.string.emu_pc_browse), icon = Icons.Filled.FolderOpen, onClick = {
                 FilePickers.pickFile(launch.ifBlank { e.launch })?.let { launch = it }
             })
-            LauncherTextField(stringResource(Res.string.custom_args), args, { args = it }, placeholder = e.launchArgs)
-            LauncherTextField(stringResource(Res.string.custom_workdir), dir, { dir = it.trim().removeSurrounding("\"") }, placeholder = e.workingDir ?: e.installDir)
+            LauncherTextField(stringResource(Res.string.custom_args), args, { args = it }, placeholder = found.args)
+            LauncherTextField(stringResource(Res.string.custom_workdir), dir, { dir = it.trim().removeSurrounding("\"") }, placeholder = found.dir)
             LauncherTextField(
                 stringResource(Res.string.launch_options_processes), processes, { processes = it },
-                placeholder = e.processNames.joinToString(", ").ifEmpty { null },
+                placeholder = found.processes.ifEmpty { null },
             )
             Text(stringResource(Res.string.launch_options_processes_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
             ButtonRow {
                 LauncherButton(stringResource(Res.string.action_save), primary = true, onClick = {
+                    // Only what differs from the scan is kept: the rest follows later scans.
+                    val names = processes.split(',', ';').map { it.trim() }.filter { it.isNotEmpty() }
                     save(
                         LaunchOverride(
-                            launch = launch.ifBlank { null }, arguments = args.trim().ifEmpty { null }, workingDir = dir.ifBlank { null },
-                            processNames = processes.split(',', ';').map { it.trim() }.filter { it.isNotEmpty() }.ifEmpty { null },
+                            launch = launch.ifBlank { null }?.takeIf { it != found.launch },
+                            arguments = args.trim().ifEmpty { null }?.takeIf { it != found.args?.trim() },
+                            workingDir = dir.ifBlank { null }?.takeIf { it != found.dir },
+                            processNames = names.ifEmpty { null }?.takeIf { it.joinToString(", ") != found.processes },
                         ),
                     )
                     onDismiss()
@@ -80,3 +87,6 @@ fun LaunchSettingsDialog(
         }
     }
 }
+
+/** What the scan found for a game. */
+private data class Found(val launch: String?, val args: String?, val dir: String?, val processes: String)
