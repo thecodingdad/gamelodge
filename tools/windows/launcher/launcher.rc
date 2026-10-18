@@ -1,0 +1,29 @@
+// Icon and version info of GameLodge.exe; VER_COMMA / VER_TEXT come from the build (e.g. 0,1,0,0 / "0.1.0").
+#include <winver.h>
+
+1 ICON "icon.ico"
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION VER_COMMA
+PRODUCTVERSION VER_COMMA
+FILEOS VOS_NT_WINDOWS32
+FILETYPE VFT_APP
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "CompanyName", "thecodingdad"
+            VALUE "FileDescription", "GameLodge"
+            VALUE "FileVersion", VER_TEXT
+            VALUE "InternalName", "GameLodge"
+            VALUE "OriginalFilename", "GameLodge.exe"
+            VALUE "ProductName", "GameLodge"
+            VALUE "ProductVersion", VER_TEXT
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END

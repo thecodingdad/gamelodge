@@ -13,8 +13,6 @@
 #endif
 
 #define AppName "GameLodge"
-; ISPP turns """" into "", which the [Icons]/[Run] parameters read as one quote.
-#define JavaArgs "-Xmx1g -XX:+UseZGC -cp """"{app}\lib\*"""" io.github.thecodingdad.gamelodge.desktop.MainKt"
 
 [Setup]
 AppId={{59B5CDFE-9278-4BE8-8CCC-2E6FEECC86F9}
@@ -33,7 +31,7 @@ ArchitecturesInstallIn64BitMode=x64compatible
 OutputDir={#OutputDir}
 OutputBaseFilename=GameLodge-Setup
 SetupIconFile=icon.ico
-UninstallDisplayIcon={app}\icon.ico
+UninstallDisplayIcon={app}\GameLodge.exe
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
@@ -66,11 +64,11 @@ Type: filesandordirs; Name: "{app}\lib"
 Type: filesandordirs; Name: "{app}\runtime"
 
 [Icons]
-Name: "{autoprograms}\{#AppName}"; Filename: "{app}\runtime\bin\GameLodge.exe"; Parameters: "{#JavaArgs}"; WorkingDir: "{app}"; IconFilename: "{app}\icon.ico"
-Name: "{autodesktop}\{#AppName}"; Filename: "{app}\runtime\bin\GameLodge.exe"; Parameters: "{#JavaArgs}"; WorkingDir: "{app}"; IconFilename: "{app}\icon.ico"; Tasks: desktopicon
+Name: "{autoprograms}\{#AppName}"; Filename: "{app}\GameLodge.exe"; WorkingDir: "{app}"; IconFilename: "{app}\icon.ico"
+Name: "{autodesktop}\{#AppName}"; Filename: "{app}\GameLodge.exe"; WorkingDir: "{app}"; IconFilename: "{app}\icon.ico"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\runtime\bin\GameLodge.exe"; Parameters: "{#JavaArgs}"; WorkingDir: "{app}"; Description: "{cm:StartNow}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\GameLodge.exe"; WorkingDir: "{app}"; Description: "{cm:StartNow}"; Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]
 ; Moonlight-Qt's settings and caches written next to it (current-user installs).

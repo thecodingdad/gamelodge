@@ -49,7 +49,7 @@ compose.desktop {
 }
 
 // Portable Windows test build, made on any OS: the app's jars, a Windows Java runtime (Temurin,
-// checksum verified) and a start file. Unzip anywhere and run "GameLodge.cmd".
+// checksum verified) and GameLodge.exe to start it. Unzip anywhere and run "GameLodge.exe".
 val windowsJreUrl = "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.20.1%2B1/OpenJDK17U-jre_x64_windows_hotspot_17.0.20.1_1.zip"
 val windowsJreSha256 = "bc21a93923103cdaac93ee337b0ae4365e739fde36df823dd456bc67c8a9d352"
 val windowsJreZip = gradle.gradleUserHomeDir.resolve("caches/gamelodge/OpenJDK17U-jre_x64_windows_hotspot_17.0.20.1_1.zip")
@@ -109,7 +109,16 @@ val windowsApp by tasks.registering(Sync::class) {
     } else {
         logger.warn("build/moonlight/MoonlightPortable-x64.zip missing: package without streaming client (tools/build-moonlight.sh)")
     }
-    from(layout.projectDirectory.file("windows/GameLodge.cmd"))
+    // The native starter and the runtime under the app's name (built on Windows by
+    // tools/build-windows-launcher.sh); without them the package starts with the .cmd file.
+    val starter = rootProject.layout.projectDirectory.dir("build/windows-launcher").asFile
+    if (File(starter, "GameLodge.exe").exists()) {
+        from(File(starter, "GameLodge.exe"))
+        into("runtime/bin") { from(File(starter, "runtime-GameLodge.exe")) { rename { "GameLodge.exe" } } }
+    } else {
+        logger.warn("build/windows-launcher/GameLodge.exe missing: package starts with GameLodge.cmd (tools/build-windows-launcher.sh)")
+        from(layout.projectDirectory.file("windows/GameLodge.cmd"))
+    }
 }
 
 val windowsZip by tasks.registering(Zip::class) {

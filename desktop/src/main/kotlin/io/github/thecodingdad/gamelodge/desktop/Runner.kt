@@ -50,6 +50,11 @@ object Runner {
 
     /** This launcher's Java runtime (javaw: no console window) with its jars and [arg]. */
     fun launcherCommand(arg: String): String {
+        // Installed or portable package: its starter (keeps the JVM options in one place).
+        val jarFile = File(Runner::class.java.protectionDomain.codeSource.location.toURI())
+        val starter = jarFile.parentFile?.parentFile?.let { File(it, "GameLodge.exe") }
+        if (arg != ARG && isWindows && starter?.isFile == true) return "\"${starter.path}\" $arg"
+
         val java = ProcessHandle.current().info().command().orElse(null)
             ?.let { File(it) }
             ?.let { exe -> if (exe.name.equals("java.exe", ignoreCase = true)) File(exe.parentFile, "javaw.exe") else exe }
