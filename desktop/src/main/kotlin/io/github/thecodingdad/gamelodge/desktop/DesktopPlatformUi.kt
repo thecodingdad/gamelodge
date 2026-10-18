@@ -47,7 +47,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.stringResource
-import java.awt.FileDialog
 import java.awt.Frame
 import java.io.File
 import java.net.NetworkInterface
@@ -180,13 +179,7 @@ class DesktopPlatformUi(
 
     @Composable
     override fun rememberImagePicker(onPicked: (String?) -> Unit): () -> Unit = {
-        val dialog = FileDialog(window(), null, FileDialog.LOAD).apply {
-            setFilenameFilter { _, name -> name.substringAfterLast('.').lowercase() in IMAGE_TYPES }
-            file = IMAGE_TYPES.joinToString(";") { "*.$it" } // Windows reads the filter from here
-            isVisible = true
-        }
-        val picked = dialog.file?.let { File(dialog.directory, it).absolutePath }
-        onPicked(picked)
+        onPicked(FilePickers.pickFile(types = FilePickers.Types.IMAGES)?.let { File(it).absolutePath })
     }
 
     override suspend fun copyImage(address: String, dir: File, baseName: String): File? = withContext(Dispatchers.IO) {

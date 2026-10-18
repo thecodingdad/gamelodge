@@ -12,11 +12,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.awt.FileDialog
-import java.awt.Frame
 import java.io.File
-import javax.swing.JFileChooser
-import javax.swing.UIManager
 import javax.swing.filechooser.FileSystemView
 
 /**
@@ -29,8 +25,6 @@ class DesktopBackupStorage(
     private val settings: SettingsRepository,
     private val backup: () -> BackupManager,
 ) : BackupStorage {
-    /** Parent of the file dialogs (set by main). */
-    var window: () -> Frame? = { null }
     private var autoJob: Job? = null
 
     override val defaultFolder: String =
@@ -86,32 +80,21 @@ class DesktopBackupStorage(
 
     @Composable
     override fun rememberFolderPicker(onPicked: (String) -> Unit): () -> Unit = {
-        useSystemLook()
-        val chooser = JFileChooser(defaultFolder).apply { fileSelectionMode = JFileChooser.DIRECTORIES_ONLY }
-        if (chooser.showOpenDialog(window()) == JFileChooser.APPROVE_OPTION) onPicked(chooser.selectedFile.path)
+        FilePickers.pickFolder(defaultFolder)?.let(onPicked)
     }
 
     @Composable
     override fun rememberCreateFile(onPicked: (String) -> Unit): (String) -> Unit = { name ->
-        val dialog = FileDialog(window(), null, FileDialog.SAVE).apply { directory = defaultFolder.also { File(it).mkdirs() }; file = name; isVisible = true }
-        dialog.file?.let { onPicked(File(dialog.directory, it).path) }
+        FilePickers.saveFile(defaultFolder.also { File(it).mkdirs() }, name, FilePickers.Types.BACKUPS)?.let(onPicked)
     }
 
     @Composable
     override fun rememberOpenFile(onPicked: (String) -> Unit): () -> Unit = {
-        val dialog = FileDialog(window(), null, FileDialog.LOAD).apply { directory = defaultFolder; file = "*.json"; isVisible = true }
-        dialog.file?.let { onPicked(File(dialog.directory, it).path) }
-    }
-
-    private fun useSystemLook() {
-        if (lookSet) return
-        lookSet = true
-        runCatching { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()) }
+        FilePickers.pickFile(defaultFolder, FilePickers.Types.BACKUPS)?.let(onPicked)
     }
 
     private companion object {
         const val DAY_MS = 24L * 60 * 60 * 1000
         const val CHECK_MS = 60L * 60 * 1000
-        var lookSet = false
     }
 }

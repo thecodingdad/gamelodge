@@ -103,7 +103,6 @@ fun main(args: Array<String>) {
     // Streaming hosts are polled while the window is shown.
     container.scope.launch { windowVisible.collect { if (it) container.hosts.startPolling() else container.hosts.stopPolling() } }
     container.scope.launch { container.filters.ensureDefaults() }
-    container.backupStorage.window = { mainWindow }
     FilePickers.window = { mainWindow }
     container.scope.launch { container.backupStorage.scheduleAuto(container.settings.current().autoBackup) }
     // Servers for other launchers (only what the user switched on); the key is created on first use.

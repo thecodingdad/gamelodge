@@ -1,6 +1,5 @@
 package io.github.thecodingdad.gamelodge.desktop
 
-import com.sun.jna.Function
 import com.sun.jna.Memory
 import com.sun.jna.Native
 import com.sun.jna.NativeLibrary
@@ -59,9 +58,9 @@ object TaskbarIdentity {
                 setString(ps, RELAUNCH_ICON, "${starter.path},0")
                 // The id last: the relaunch values only count together with it.
                 setString(ps, ID, APP_ID)
-                call(ps, COMMIT, arrayOf(ps))
+                comCall(ps, COMMIT)
             } finally {
-                call(ps, RELEASE, arrayOf(ps))
+                comRelease(ps)
             }
         }.onFailure { Log.w("Taskbar relaunch command not set", it) }
     }
@@ -74,7 +73,6 @@ object TaskbarIdentity {
 
     // ---- IPropertyStore through its vtable (QueryInterface, AddRef, Release, GetCount, GetAt, GetValue, SetValue, Commit) ----
 
-    private const val RELEASE = 2
     private const val SET_VALUE = 6
     private const val COMMIT = 7
 
@@ -85,11 +83,6 @@ object TaskbarIdentity {
     private val RELAUNCH_NAME = APP_MODEL to 4
     private val ID = APP_MODEL to 5
 
-    private fun call(obj: Pointer, index: Int, args: Array<Any>): Int {
-        val vtable = obj.getPointer(0)
-        return Function.getFunction(vtable.getPointer(index.toLong() * Native.POINTER_SIZE), Function.ALT_CONVENTION).invokeInt(args)
-    }
-
     private fun setString(store: Pointer, key: Pair<String, Int>, value: String) {
         // PROPERTYKEY: GUID + property id.
         val pkey = Memory(20)
@@ -98,7 +91,7 @@ object TaskbarIdentity {
         // PROPVARIANT with VT_LPWSTR: type at 0, the string pointer at 8 (x64 layout).
         val text = Memory((value.length + 1L) * 2).apply { setWideString(0, value) }
         val variant = Memory(24).apply { clear(); setShort(0, VT_LPWSTR); setPointer(8, text) }
-        val hr = call(store, SET_VALUE, arrayOf(store, pkey, variant))
+        val hr = comCall(store, SET_VALUE, pkey, variant)
         if (hr != WinNT.S_OK.toInt()) error("IPropertyStore.SetValue: 0x${hr.toString(16)}")
     }
 

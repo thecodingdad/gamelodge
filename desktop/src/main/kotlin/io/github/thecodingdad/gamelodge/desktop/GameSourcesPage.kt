@@ -120,7 +120,7 @@ fun GameSourcesPage(library: PcLibrary, settings: LauncherSettings, update: ((La
         }
         // Stores found on this PC first; the others folded away.
         val (present, missing) = library.sources.partition { installed[it] != false }
-        SectionHeader(stringResource(Res.string.settings_game_sources))
+        SectionHeader(stringResource(Res.string.game_stores))
         present.forEachIndexed { index, source -> StoreRow(source, index == 0) }
         if (missing.isNotEmpty()) {
             var showMissing by remember { mutableStateOf(false) }
@@ -132,7 +132,7 @@ fun GameSourcesPage(library: PcLibrary, settings: LauncherSettings, update: ((La
             if (showMissing) missing.forEach { StoreRow(it, false) }
         }
 
-        SectionHeader(stringResource(Res.string.steam_account))
+        SectionHeader(stringResource(Res.string.store_accounts))
         if (steam.signedIn) {
             ActionRow(
                 stringResource(Res.string.steam_sign_out), { library.steam.signOut(); library.rescan() },
