@@ -59,6 +59,8 @@ fun main(args: Array<String>) {
     val dataDir = dataDirectory()
     DataReset.runIfRequested(dataDir)
     Log.init(File(dataDir, "logs/launcher.log"))
+    // Class cache of a test version (no longer used).
+    File(dataDir, "cache/cds").takeIf { it.isDirectory }?.deleteRecursively()
     Log.i("GameLodge ${DesktopPlatformInfo(dataDir).versionName} starting, data in $dataDir")
 
     // Games installed here are PC games (IGDB platform choice, suggestions).
@@ -178,13 +180,6 @@ fun main(args: Array<String>) {
         }
         val startupSettings by startup.settings.collectAsState()
         val visible by windowVisible.collectAsState()
-        // Class cache: written once the window has been shown for a while (its classes are loaded by then).
-        if (visible && ClassCache.pending != null) {
-            LaunchedEffect(Unit) {
-                kotlinx.coroutines.delay(20_000)
-                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { ClassCache.write() }
-            }
-        }
         val hostStatus by container.hostRole.status.collectAsState()
         val icon = remember { BitmapPainter(DesktopContainer::class.java.getResourceAsStream("/icon.png")!!.use { loadImageBitmap(it) }) }
         // Tray icon while the launcher may run without its window.
