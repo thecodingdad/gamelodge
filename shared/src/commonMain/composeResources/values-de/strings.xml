@@ -928,6 +928,29 @@
     <string name="settings_search">Einstellungen durchsuchen</string>
     <string name="see_also">Siehe auch</string>
     <string name="settings_search_none">Keine passende Einstellung</string>
+    <string name="search_kw_home_screen">Start, Reihen, Startseite, Start-Tab</string>
+    <string name="search_kw_theme">Farbe, Dunkel, Hell, Schwarz, OLED, Akzent, Design</string>
+    <string name="search_kw_display">Größe, Skalierung, Zoom, Animation, animiert, Bildschirmschoner, TV, Fernseher, Monitor, Karten</string>
+    <string name="search_kw_filters">Gruppen, Sammlungen, Kategorien, Chips, sortieren</string>
+    <string name="search_kw_metadata">Cover, Bilder, Artwork, Beschreibung, IGDB, SteamGridDB, API-Schlüssel, Key, Logo, Hintergrund</string>
+    <string name="search_kw_usage">Spielzeit, Statistik, Nutzungszugriff</string>
+    <string name="search_kw_game_sources">Steam, Epic, GOG, Xbox, EA, Ubisoft, Battle.net, Amazon, Store, Playnite, eigene Spiele, scannen</string>
+    <string name="search_kw_emulators">ROMs, RetroArch, Konsole, Dolphin, Cemu, Eden, Xenia</string>
+    <string name="search_kw_hosts">PC, Sunshine, Apollo, Vibepollo, koppeln, Pairing, Wake-on-LAN, WoL, aufwecken, Moonlight</string>
+    <string name="search_kw_profiles">Auflösung, Bitrate, FPS, Bildrate, HDR, Qualität, Moonlight, Stream</string>
+    <string name="search_kw_vpn">WireGuard, unterwegs, Tunnel, Fernzugriff</string>
+    <string name="search_kw_streaming_host">Vibepollo, Apollo, Sunshine, Abgleich, Sync, API-Token, Moonlight</string>
+    <string name="search_kw_host_role">Server, Handheld, Handy, Gerät koppeln, Web-Oberfläche, Fingerabdruck, Pairing</string>
+    <string name="search_kw_home_assistant">HA, Smart Home, Licht, Schalter, Entität, Aufwecken, Herunterfahren, Favoriten</string>
+    <string name="search_kw_controls">Tasten, Belegung, Hinweise, Direktstart, Tastenkombination</string>
+    <string name="search_kw_controllers">Gamepad, Xbox, PlayStation, Nintendo, Spieler, Belegung, Rumble, Vibration</string>
+    <string name="search_kw_quick_menu">Helligkeit, Lautstärke, WLAN, Bluetooth, Kacheln, Schnellzugriff</string>
+    <string name="search_kw_sounds">Ton, Lautstärke, Audio, Klick, Haptik, Rumble, Vibration</string>
+    <string name="search_kw_launcher">Home-App, Standard-Launcher, Android-Startbildschirm</string>
+    <string name="search_kw_startup">Autostart, Vollbild, Tray, Taskleiste, Windows, Fenster</string>
+    <string name="search_kw_language">Sprache, Deutsch, Englisch, Language</string>
+    <string name="search_kw_data">Speicher, Cache, Backup, Sicherung, wiederherstellen, löschen, zurücksetzen, aufräumen, Werkseinstellungen</string>
+    <string name="search_kw_about">Version, Lizenz, Open Source, Quellcode, GitHub</string>
 
     <!-- Emulation -->
     <string name="target_rom">%1$s (Emulator)</string>

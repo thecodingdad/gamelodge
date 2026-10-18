@@ -930,6 +930,29 @@
     <string name="settings_search">Search settings</string>
     <string name="see_also">See also</string>
     <string name="settings_search_none">No matching setting</string>
+    <string name="search_kw_home_screen">start, rows, start tab</string>
+    <string name="search_kw_theme">colour, color, dark, light, black, OLED, accent</string>
+    <string name="search_kw_display">size, scale, zoom, animation, animated, screensaver, TV, monitor, cards</string>
+    <string name="search_kw_filters">groups, collections, categories, chips, sort</string>
+    <string name="search_kw_metadata">cover, images, artwork, description, IGDB, SteamGridDB, API key, logo, background</string>
+    <string name="search_kw_usage">play time, statistics, usage access</string>
+    <string name="search_kw_game_sources">Steam, Epic, GOG, Xbox, EA, Ubisoft, Battle.net, Amazon, store, Playnite, own games, scan</string>
+    <string name="search_kw_emulators">ROMs, RetroArch, console, Dolphin, Cemu, Eden, Xenia</string>
+    <string name="search_kw_hosts">PC, Sunshine, Apollo, Vibepollo, pair, pairing, Wake-on-LAN, WoL, wake, Moonlight</string>
+    <string name="search_kw_profiles">resolution, bitrate, FPS, frame rate, HDR, quality, Moonlight, stream</string>
+    <string name="search_kw_vpn">WireGuard, on the go, tunnel, remote</string>
+    <string name="search_kw_streaming_host">Vibepollo, Apollo, Sunshine, sync, API token, Moonlight</string>
+    <string name="search_kw_host_role">server, handheld, phone, pair device, web interface, fingerprint, pairing</string>
+    <string name="search_kw_home_assistant">HA, smart home, light, switch, entity, wake, shut down, favourites</string>
+    <string name="search_kw_controls">buttons, layout, hints, direct start, button combination</string>
+    <string name="search_kw_controllers">gamepad, Xbox, PlayStation, Nintendo, player, layout, rumble, vibration</string>
+    <string name="search_kw_quick_menu">brightness, volume, Wi-Fi, Bluetooth, tiles, quick access</string>
+    <string name="search_kw_sounds">sound, volume, audio, click, haptics, rumble, vibration</string>
+    <string name="search_kw_launcher">home app, default launcher, Android home</string>
+    <string name="search_kw_startup">autostart, full screen, tray, taskbar, Windows, window</string>
+    <string name="search_kw_language">language, German, English, Sprache</string>
+    <string name="search_kw_data">storage, cache, backup, restore, delete, reset, clean up, factory reset</string>
+    <string name="search_kw_about">version, license, open source, source code, GitHub</string>
 
     <!-- Emulation -->
     <string name="target_rom">%1$s (emulator)</string>

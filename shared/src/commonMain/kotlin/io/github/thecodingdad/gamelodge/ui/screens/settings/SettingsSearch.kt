@@ -56,6 +56,59 @@ private val pageTitles: List<Pair<SettingsTarget, StringResource>> = listOf(
     SettingsTarget.Page(SettingsPageId.LICENSES) to Res.string.about_open_source,
 )
 
+/** Further words a page is found by (synonyms, brands, what its settings are about). */
+private val pageKeywords: Map<SettingsTarget, StringResource> = mapOf(
+    SettingsTarget.Page(SettingsPageId.HOME_SCREEN) to Res.string.search_kw_home_screen,
+    SettingsTarget.Page(SettingsPageId.THEME) to Res.string.search_kw_theme,
+    SettingsTarget.Page(SettingsPageId.DISPLAY) to Res.string.search_kw_display,
+    SettingsTarget.Page(SettingsPageId.FILTERS) to Res.string.search_kw_filters,
+    SettingsTarget.Page(SettingsPageId.METADATA) to Res.string.search_kw_metadata,
+    SettingsTarget.Page(SettingsPageId.USAGE) to Res.string.search_kw_usage,
+    SettingsTarget.Page(SettingsPageId.GAME_SOURCES) to Res.string.search_kw_game_sources,
+    SettingsTarget.Page(SettingsPageId.EMULATORS) to Res.string.search_kw_emulators,
+    SettingsTarget.Page(SettingsPageId.HOSTS) to Res.string.search_kw_hosts,
+    SettingsTarget.Page(SettingsPageId.PROFILES) to Res.string.search_kw_profiles,
+    SettingsTarget.Page(SettingsPageId.VPN) to Res.string.search_kw_vpn,
+    SettingsTarget.Page(SettingsPageId.STREAMING_HOST) to Res.string.search_kw_streaming_host,
+    SettingsTarget.Page(SettingsPageId.HOST_ROLE) to Res.string.search_kw_host_role,
+    SettingsTarget.Page(SettingsPageId.HOME_ASSISTANT) to Res.string.search_kw_home_assistant,
+    SettingsTarget.Page(SettingsPageId.CONTROLS) to Res.string.search_kw_controls,
+    SettingsTarget.Controllers to Res.string.search_kw_controllers,
+    SettingsTarget.Page(SettingsPageId.QUICK_MENU) to Res.string.search_kw_quick_menu,
+    SettingsTarget.Page(SettingsPageId.SOUNDS) to Res.string.search_kw_sounds,
+    SettingsTarget.Page(SettingsPageId.LAUNCHER) to Res.string.search_kw_launcher,
+    SettingsTarget.Page(SettingsPageId.STARTUP) to Res.string.search_kw_startup,
+    SettingsTarget.Page(SettingsPageId.LANGUAGE) to Res.string.search_kw_language,
+    SettingsTarget.Page(SettingsPageId.DATA) to Res.string.search_kw_data,
+    SettingsTarget.Page(SettingsPageId.ABOUT) to Res.string.search_kw_about,
+)
+
+/**
+ * How well [q] (normalised) matches: the title counts most (whole, start, start of a word,
+ * anywhere), then the page's keywords, then page and section names; 0 = no match.
+ */
+internal fun searchScore(q: String, title: String, keywords: List<String>, context: String, isPage: Boolean): Int {
+    if (q.isEmpty()) return 0
+    val words = title.split(' ')
+    val titleScore = when {
+        title == q -> 100
+        title.startsWith(q) -> 80
+        words.any { it.startsWith(q) } -> 60
+        title.contains(q) -> 40
+        else -> 0
+    }
+    val keywordScore = when {
+        keywords.any { it == q } -> 35
+        keywords.any { k -> k.split(' ').any { it.startsWith(q) } } -> 25
+        keywords.any { it.contains(q) } -> 15
+        else -> 0
+    }
+    val contextScore = if (context.contains(q)) 8 else 0
+    val best = maxOf(titleScore, keywordScore, contextScore)
+    // Pages slightly ahead of their own settings with the same match.
+    return if (best == 0) 0 else best + if (isPage) 3 else 0
+}
+
 /** Pages only some platforms have (shown in the search only where they exist). */
 private val platformPages = setOf(
     SettingsPageId.USAGE, SettingsPageId.EMULATORS, SettingsPageId.PROFILES, SettingsPageId.VPN, SettingsPageId.QUICK_MENU,
@@ -111,23 +164,29 @@ private val settingsIndex: List<SearchEntry> = buildList {
 }
 
 /**
- * Search hits for [query]: settings whose title, page or section contains it (case and accents
- * ignored). Pages come first, then their settings, in index order.
+ * Search hits for [query] (case and accents ignored), best match first: title, then the page's
+ * keywords, then page and section names.
  */
 @Composable
 fun SettingsSearchResults(query: String, onOpen: (SettingsTarget, String?) -> Unit) {
     // Every title resolved once in the current language; the search itself runs on plain text.
-    val texts = (settingsIndex.flatMap { listOfNotNull(it.title, it.section) } + pageTitles.map { it.second }).distinct()
+    val texts = (settingsIndex.flatMap { listOfNotNull(it.title, it.section) } + pageTitles.map { it.second } + pageKeywords.values).distinct()
         .associateWith { stringResource(it) }
     val q = TitleNormalizer.normalize(query)
     fun pageTitle(target: SettingsTarget) = pageTitles.first { it.first == target }.second
     val platform = io.github.thecodingdad.gamelodge.ui.PlatformUi.current
-    val hits = settingsIndex.filter { e ->
-        if (!settingsTargetAvailable(e.target)) return@filter false
-        if (e.combos && !platform.hasButtonCombos) return@filter false
-        val haystack = listOfNotNull(e.title, pageTitle(e.target), e.section).joinToString(" ") { texts.getValue(it) }
-        TitleNormalizer.normalize(haystack).contains(q)
-    }.distinctBy { it.title to it.target }
+    val hits = settingsIndex.withIndex().mapNotNull { (index, e) ->
+        if (!settingsTargetAvailable(e.target)) return@mapNotNull null
+        if (e.combos && !platform.hasButtonCombos) return@mapNotNull null
+        val isPage = pageTitles.any { it.first == e.target && it.second == e.title }
+        // A page's keywords find the page itself; its settings only by their own words.
+        val keywords = if (isPage) pageKeywords[e.target]?.let { texts.getValue(it).split(',').map { k -> TitleNormalizer.normalize(k) } }.orEmpty() else emptyList()
+        val context = listOfNotNull(pageTitle(e.target), e.section).joinToString(" ") { TitleNormalizer.normalize(texts.getValue(it)) }
+        val score = searchScore(q, TitleNormalizer.normalize(texts.getValue(e.title)), keywords, context, isPage)
+        if (score == 0) null else Triple(e, score, index)
+    }.sortedWith(compareByDescending<Triple<SearchEntry, Int, Int>> { it.second }.thenBy { it.third })
+        .map { it.first }
+        .distinctBy { it.title to it.target }
     if (hits.isEmpty()) {
         Text(stringResource(Res.string.settings_search_none), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
         return
