@@ -128,9 +128,11 @@ fun StatusCluster(
                 Text(" $controllerCount", style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceMuted)
             }
         }
-        // One icon per host; from two hosts on a single one with their number (tap: list of all).
-        val combined = showHostsCombined(hosts)
-        (if (combined) listOf(hosts) else hosts.map { listOf(it) }).forEach { group ->
+        // One icon per paired host; from two on a single one with their number (tap: list of all).
+        // Hosts found but not paired don't show here (pairing is in the settings).
+        val paired = hosts.filter { it.paired }
+        val combined = showHostsCombined(paired)
+        (if (combined) listOf(paired) else paired.map { listOf(it) }).forEach { group ->
             // Touch target for the host popup; like the other status icons not in D-pad navigation.
             Row(
                 verticalAlignment = Alignment.CenterVertically,

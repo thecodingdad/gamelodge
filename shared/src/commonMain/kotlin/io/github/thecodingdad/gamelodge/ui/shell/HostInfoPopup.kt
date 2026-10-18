@@ -193,7 +193,7 @@ fun HostListPopup(
     Modal(visible = visible, onDismiss = onDismiss, title = stringResource(Res.string.settings_hosts), maxWidth = 560.dp) {
         val colors = LauncherTheme.colors
         Column(Modifier.heightIn(max = 600.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            hosts.sortedBy { it.name.lowercase() }.forEach { h ->
+            hosts.filter { it.paired }.sortedBy { it.name.lowercase() }.forEach { h ->
                 FocusSurface(onClick = { onSelect(h.uuid) }, modifier = Modifier.fillMaxWidth()) {
                     Row(
                         Modifier.padding(horizontal = 18.dp, vertical = 14.dp),

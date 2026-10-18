@@ -66,7 +66,7 @@ class DesktopHosts(
     private val boxArtDir = File(dataDir, "boxart")
     private val stored = MutableStateFlow(load())
     private val clients = mutableMapOf<String, NvHttp>()
-    private val _hosts = MutableStateFlow(stored.value.associate { it.uuid to offline(it) })
+    private val _hosts = MutableStateFlow(stored.value.filterNot(::isThisPc).associate { it.uuid to offline(it) })
     private val _appLists = MutableStateFlow<Map<String, List<RemoteApp>>>(emptyMap())
     private val pairing = Mutex()
     private var polling: Job? = null
@@ -135,6 +135,8 @@ class DesktopHosts(
 
     /** A host announced itself: shown (unpaired) until the user pairs or adds it. */
     private suspend fun found(address: String, port: Int) {
+        // This PC's own streaming host (Vibepollo next to GameLodge): nothing to stream to.
+        if (isThisPc(address)) return
         if (stored.value.any { it.address == address && it.port == port } || discovered.values.any { it.address == address }) return
         val info = runCatching { NvHttp(address, port, identity(), null, http, deviceName()).serverInfo() }.getOrNull() ?: return
         if (stored(info.uuid) != null) return
@@ -280,7 +282,7 @@ class DesktopHosts(
     // ---- polling ----
 
     private suspend fun pollAll() = kotlinx.coroutines.coroutineScope {
-        (stored.value + discovered.values).map { async { poll(it) } }.awaitAll()
+        (stored.value + discovered.values).filterNot(::isThisPc).map { async { poll(it) } }.awaitAll()
     }
 
     private suspend fun poll(s: StoredHost) {
@@ -370,6 +372,17 @@ class DesktopHosts(
     }
 
     private fun safe(s: String) = s.filter { it.isLetterOrDigit() || it == '-' }
+
+    /** A host on this PC (its address or LAN address is one of ours): not shown, nothing to stream to. */
+    private fun isThisPc(s: StoredHost) = isThisPc(s.address) || s.localIp?.let(::isThisPc) == true
+
+    private fun isThisPc(address: String): Boolean {
+        val target = runCatching { InetAddress.getByName(address) }.getOrNull() ?: return false
+        if (target.isLoopbackAddress) return true
+        return runCatching {
+            java.net.NetworkInterface.getNetworkInterfaces().asSequence().flatMap { it.inetAddresses.asSequence() }.any { it == target }
+        }.getOrDefault(false)
+    }
 
     companion object {
         private const val POLL_MS = 3_000L

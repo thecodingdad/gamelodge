@@ -92,3 +92,19 @@ interface HostActions {
     /** Ends the app running on [host]; true when it is gone. */
     suspend fun quitApp(host: HostState): Boolean
 }
+
+/**
+ * Who wants the network searched for hosts right now (the hosts screen, the search after start):
+ * discovery runs while anyone does, so one ending doesn't stop the other's.
+ */
+object HostDiscovery {
+    private val holders = HashMap<HostRepository, MutableSet<String>>()
+
+    @Synchronized
+    fun hold(hosts: HostRepository, key: String, active: Boolean) {
+        val set = holders.getOrPut(hosts) { mutableSetOf() }
+        val before = set.isNotEmpty()
+        if (active) set += key else set -= key
+        if (set.isNotEmpty() != before) hosts.setDiscovery(set.isNotEmpty())
+    }
+}

@@ -70,10 +70,10 @@ fun HostsSettings(hosts: List<HostState>, openHostConfig: (HostState) -> Unit) {
     var message by remember { mutableStateOf<String?>(null) }
     var adding by remember { mutableStateOf(false) }
     var removing by remember { mutableStateOf<HostState?>(null) }
-    // New hosts are only searched for while this screen is open.
+    // New hosts are searched for while this screen is open (and once after start).
     DisposableEffect(Unit) {
-        launcherContainer.hosts.setDiscovery(true)
-        onDispose { launcherContainer.hosts.setDiscovery(false) }
+        io.github.thecodingdad.gamelodge.data.remote.HostDiscovery.hold(launcherContainer.hosts, "hosts-screen", true)
+        onDispose { io.github.thecodingdad.gamelodge.data.remote.HostDiscovery.hold(launcherContainer.hosts, "hosts-screen", false) }
     }
 
     fun startPairing(host: HostState) {

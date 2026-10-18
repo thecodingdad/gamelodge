@@ -158,7 +158,9 @@ fun rememberQuickTiles(ids: List<String>, onHost: (String) -> Unit, onController
             tick++
         }
     }
-    val hosts by c.hosts.hosts.collectAsState()
+    // Only paired hosts get tiles (found ones are paired in the settings).
+    val allHosts by c.hosts.hosts.collectAsState()
+    val hosts = remember(allHosts) { allHosts.filterValues { it.paired } }
     val vpnState by c.vpn.state.collectAsState()
     val tunnels by c.vpn.tunnels.collectAsState()
     val controllers = io.github.thecodingdad.gamelodge.ui.screens.settings.rememberControllers()
