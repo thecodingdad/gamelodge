@@ -185,13 +185,15 @@ public class IconGen {
     }
 
     public static void main(String[] args) throws Exception {
-        // Master SVG.
+        // Master SVG, also the host web UI's favicon and brand icon.
         AffineTransform id = new AffineTransform();
-        write("tools/icon/gamelodge-icon.svg",
+        String svg =
             "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 256 256\">\n"
                 + "<path fill=\"#565C64\" d=\"" + pathData(BODY, id) + "\"/>\n"
                 + "<path fill=\"#FFFFFF\" d=\"" + pathData(PAPER_AREA, id) + "\"/>\n"
-                + "<path fill=\"#565C64\" d=\"" + pathData(SPOKES, id) + "\"/>\n</svg>\n");
+                + "<path fill=\"#565C64\" d=\"" + pathData(SPOKES, id) + "\"/>\n</svg>\n";
+        write("tools/icon/gamelodge-icon.svg", svg);
+        write("host/src/main/resources/web/icon.svg", svg);
 
         // Android adaptive icon: 108dp canvas, content inside the 66dp safe circle.
         AffineTransform fg = fit(62, 54, 54);
