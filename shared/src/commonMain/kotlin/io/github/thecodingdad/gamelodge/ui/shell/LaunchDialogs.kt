@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.ui.shell
 
+import io.github.thecodingdad.gamelodge.ui.components.popupHeightIn
 import io.github.thecodingdad.gamelodge.ui.components.controllerScroll
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -314,7 +315,7 @@ fun EntryContextMenu(
     ) {
         fun act(block: () -> Unit) = { onDismiss(); block() }
         Column(
-            Modifier.heightIn(max = 420.dp).controllerScroll(),
+            Modifier.popupHeightIn(420.dp).controllerScroll(),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             if (session != null) RunningSessionActions(session, onResume = act { onResume(session) }, onDone = onDismiss)
@@ -382,7 +383,7 @@ fun GameEmulatorDialog(entry: LibraryEntry?, onDismiss: () -> Unit, onChoose: (L
         val e = entry ?: return@Modal
         val emulation = io.github.thecodingdad.gamelodge.LocalContainer.current.emulators
         val experimental = stringResource(Res.string.emu_experimental)
-        Column(Modifier.heightIn(max = 480.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.popupHeightIn(480.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             for (target in e.romTargets) {
                 val platform = target.romPlatform ?: continue
                 val choices = emulation.choices(platform)

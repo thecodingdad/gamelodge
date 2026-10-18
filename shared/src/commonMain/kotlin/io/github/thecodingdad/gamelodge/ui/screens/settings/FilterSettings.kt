@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.ui.screens.settings
 
+import io.github.thecodingdad.gamelodge.ui.components.popupHeightIn
 import io.github.thecodingdad.gamelodge.ui.components.fadingEdges
 import io.github.thecodingdad.gamelodge.ui.components.mouseDragScroll
 import io.github.thecodingdad.gamelodge.ui.components.controllerScroll
@@ -224,7 +225,7 @@ private fun FilterEditorDialog(
         val kind = if (f.scope == FilterScope.APPS) ItemKind.APP else ItemKind.GAME
         val games = entries.filter { it.item.kind == kind }
         Column(
-            Modifier.heightIn(max = 560.dp).controllerScroll(),
+            Modifier.popupHeightIn(560.dp).controllerScroll(),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             LauncherTextField(
@@ -329,7 +330,7 @@ private fun FilterEditorDialog(
                         )
                     }
                     Modal(visible = ordering, onDismiss = { ordering = false }, title = filterEntityLabel(f), maxWidth = 720.dp) {
-                        io.github.thecodingdad.gamelodge.ui.components.ScrollAreaColumn(Modifier.heightIn(max = 560.dp)) {
+                        io.github.thecodingdad.gamelodge.ui.components.ScrollAreaColumn(Modifier.popupHeightIn(560.dp)) {
                             ReorderableList(ordered, id = { it.item.id }, onReorder = { vm.reorderGroup(f.id, it) }) { _, entry ->
                                 Row(
                                     Modifier
@@ -390,7 +391,7 @@ private fun GroupMembersDialog(
                 .sortedBy { it.item.title.lowercase() }
         }
         val pickerList = io.github.thecodingdad.gamelodge.ui.input.rememberStickLazyListState()
-        LazyColumn(state = pickerList, modifier = Modifier.heightIn(max = 460.dp).fadingEdges(pickerList).mouseDragScroll(pickerList), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        LazyColumn(state = pickerList, modifier = Modifier.popupHeightIn(460.dp).fadingEdges(pickerList).mouseDragScroll(pickerList), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             items(shown, key = { it.item.id }) { entry ->
                 val member = entry.item.id in members
                 FocusSurface(
@@ -549,7 +550,7 @@ private fun ConditionDialog(
         val c = condition ?: return@Modal
         val field = c.field
         Column(
-            Modifier.heightIn(max = 560.dp).controllerScroll(),
+            Modifier.popupHeightIn(560.dp).controllerScroll(),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             if (field.boolean) {
@@ -611,7 +612,7 @@ private fun ConditionDialog(
 @Composable
 private fun FieldPickerDialog(visible: Boolean, onDismiss: () -> Unit, onPick: (FilterField) -> Unit) {
     Modal(visible = visible, onDismiss = onDismiss, title = stringResource(Res.string.filter_condition_add), maxWidth = 640.dp) {
-        Column(Modifier.heightIn(max = 600.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.popupHeightIn(600.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             FieldSection.entries.forEachIndexed { s, section ->
                 SectionHeader(
                     stringResource(

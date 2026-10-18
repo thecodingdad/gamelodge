@@ -3,6 +3,7 @@ package io.github.thecodingdad.gamelodge.desktop
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.ImageComposeScene
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
 import io.github.thecodingdad.gamelodge.LocalContainer
 import io.github.thecodingdad.gamelodge.resources.*
 import io.github.thecodingdad.gamelodge.data.artwork.ArtworkFiles
@@ -156,6 +157,20 @@ class RenderTest {
         Thread.sleep(200)
         val image = ui { scene.render(1_000_000_000L).also { scene.close() } }
         File("build/render").apply { mkdirs() }.resolve("$name.png").writeBytes(image.encodeToData(EncodedImageFormat.PNG)!!.bytes)
+    }
+
+    @Test
+    fun popupWithSettingsRows() {
+        renderPage("popup-rows", 1200) {
+            io.github.thecodingdad.gamelodge.ui.components.Modal(visible = true, onDismiss = {}, title = "Xbox Wireless Controller", maxWidth = 760.dp) {
+                io.github.thecodingdad.gamelodge.ui.screens.settings.SectionHeader("In the launcher")
+                io.github.thecodingdad.gamelodge.ui.screens.settings.ChoiceRow("Button layout", listOf("Xbox", "Nintendo"), "Xbox", label = { it }, onSelect = {})
+                io.github.thecodingdad.gamelodge.ui.screens.settings.NavRow("Android home", {}, trailing = "Default (off)")
+                io.github.thecodingdad.gamelodge.ui.screens.settings.SwitchRow("Vibration", true, {})
+                io.github.thecodingdad.gamelodge.ui.screens.settings.InfoRow("Battery", "80 %")
+                io.github.thecodingdad.gamelodge.ui.components.LauncherButton("Done", {}, primary = true)
+            }
+        }
     }
 
     @Test

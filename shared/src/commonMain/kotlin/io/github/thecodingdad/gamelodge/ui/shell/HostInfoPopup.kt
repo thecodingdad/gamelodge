@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.ui.shell
 
+import io.github.thecodingdad.gamelodge.ui.components.popupHeightIn
 import io.github.thecodingdad.gamelodge.ui.components.controllerScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -69,7 +70,7 @@ fun HostInfoPopup(
     Modal(visible = host != null, onDismiss = onDismiss, title = host?.name, maxWidth = 560.dp) {
         val h = host ?: return@Modal
         val colors = LauncherTheme.colors
-        Column(Modifier.heightIn(max = 600.dp).controllerScroll()) {
+        Column(Modifier.popupHeightIn(600.dp).controllerScroll()) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             StatusDot(
                 when {
@@ -192,7 +193,7 @@ fun HostListPopup(
 ) {
     Modal(visible = visible, onDismiss = onDismiss, title = stringResource(Res.string.settings_hosts), maxWidth = 560.dp) {
         val colors = LauncherTheme.colors
-        Column(Modifier.heightIn(max = 600.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.popupHeightIn(600.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             hosts.filter { it.paired }.sortedBy { it.name.lowercase() }.forEach { h ->
                 FocusSurface(onClick = { onSelect(h.uuid) }, modifier = Modifier.fillMaxWidth()) {
                     Row(

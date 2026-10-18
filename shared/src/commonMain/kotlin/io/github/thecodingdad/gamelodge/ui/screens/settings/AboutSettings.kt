@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.ui.screens.settings
 
+import io.github.thecodingdad.gamelodge.ui.components.popupHeightIn
 import io.github.thecodingdad.gamelodge.ui.components.fadingEdges
 import io.github.thecodingdad.gamelodge.ui.components.mouseDragScroll
 import androidx.compose.foundation.Image
@@ -146,7 +147,7 @@ private fun LicenseTextModal(license: LicenseText?, onDismiss: () -> Unit) {
             color = LauncherTheme.colors.onSurface,
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 520.dp)
+                .popupHeightIn(520.dp)
                 .focusRequester(focus)
                 .dpadScroll(scroll)
                 .focusable()

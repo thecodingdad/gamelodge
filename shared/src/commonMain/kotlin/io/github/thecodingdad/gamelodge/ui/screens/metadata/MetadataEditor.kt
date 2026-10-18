@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.ui.screens.metadata
 
+import io.github.thecodingdad.gamelodge.ui.components.popupHeightIn
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -159,7 +160,7 @@ private fun FieldDialog(
         val title = rowTitle(r)
         val invalid = stringResource(Res.string.meta_invalid)
         var error by remember(r) { mutableStateOf<String?>(null) }
-        Column(Modifier.heightIn(max = 600.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.popupHeightIn(600.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             when (r) {
                 EditRow.GENRES, EditRow.FEATURES -> ChipEditor(
                     current = splitList(if (r == EditRow.GENRES) it0.genres else it0.features),

@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.ui.screens.settings
 
+import io.github.thecodingdad.gamelodge.ui.components.popupHeightIn
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -261,7 +262,7 @@ private fun CustomEmulatorDialog(
             mutableStateOf(e.extras.joinToString("; ") { x -> (if (x.type == "string") "" else "${x.type}:") + "${x.name}=${x.value}" })
         }
         var chosen by remember(e.id) { mutableStateOf(e.platforms.toSet()) }
-        Column(Modifier.heightIn(max = 600.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.popupHeightIn(600.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             LauncherTextField(stringResource(Res.string.emu_custom_name), name, { name = it })
             LauncherTextField(stringResource(Res.string.emu_custom_package), pkg, { pkg = it.trim() }, placeholder = "org.example.emulator")
             LauncherTextField(stringResource(Res.string.emu_custom_activity), activity, { activity = it.trim() }, placeholder = ".EmulationActivity")

@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.ui.shell
 
+import io.github.thecodingdad.gamelodge.ui.components.popupHeightIn
 import io.github.thecodingdad.gamelodge.ui.components.controllerScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -55,7 +56,7 @@ fun PlatformDialog(
             style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted,
         )
         Column(
-            Modifier.heightIn(max = 400.dp).controllerScroll(),
+            Modifier.popupHeightIn(400.dp).controllerScroll(),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             LauncherButton(

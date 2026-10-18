@@ -68,6 +68,9 @@ fun Modal(
 ) = Overlay(visible, onDismiss) {
     AnimatedVisibility(visible, enter = fadeIn(), exit = fadeOut()) {
         ModalScaffold(onDismiss, alignment = Alignment.Center, scrim = PopupScrim) {
+            // Entries spaced and settings rows raised, so they stand apart on the popup's surface;
+            // scroll areas may grow on tall screens.
+            val heightScale = popupHeightScale()
             Column(
                 modifier = modifier
                     .widthIn(max = maxWidth)
@@ -75,15 +78,21 @@ fun Modal(
                     .background(LauncherTheme.colors.surface, RoundedCornerShape(24.dp))
                     .padding(28.dp)
                     .trapFocus(initialFocus),
+                verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp),
             ) {
                 if (title != null) {
-                    androidx.compose.foundation.layout.Row(verticalAlignment = Alignment.CenterVertically) {
+                    androidx.compose.foundation.layout.Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(bottom = 6.dp),
+                    ) {
                         if (closeButton) CloseArrow(onDismiss)
                         Text(title, style = MaterialTheme.typography.headlineSmall, color = LauncherTheme.colors.onSurface)
                     }
-                    androidx.compose.foundation.layout.Spacer(Modifier.padding(top = 18.dp))
                 }
-                content()
+                androidx.compose.runtime.CompositionLocalProvider(
+                    LocalRowSurface provides LauncherTheme.colors.surfaceRaised,
+                    LocalPopupHeightScale provides heightScale,
+                ) { content() }
             }
         }
     }

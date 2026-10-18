@@ -245,6 +245,7 @@ private fun RowShell(
     FocusSurface(
         onClick = onClick,
         modifier = modifier.fillMaxWidth().heightIn(min = 68.dp).restoreFocusIf(initialFocus).searchHighlight(title),
+        color = io.github.thecodingdad.gamelodge.ui.components.LocalRowSurface.current ?: LauncherTheme.colors.surface,
         focusScale = 1.02f,
     ) {
         // Vertically centred: rows have a minimum height, short content must not stick to the top.
@@ -449,7 +450,7 @@ fun InfoRow(title: String, value: String) {
         Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(LauncherTheme.colors.surface)
+            .background(io.github.thecodingdad.gamelodge.ui.components.LocalRowSurface.current ?: LauncherTheme.colors.surface)
             .padding(horizontal = 20.dp, vertical = 14.dp),
     ) {
         Text(title, style = MaterialTheme.typography.titleSmall, color = LauncherTheme.colors.onSurfaceMuted, modifier = Modifier.weight(1f))

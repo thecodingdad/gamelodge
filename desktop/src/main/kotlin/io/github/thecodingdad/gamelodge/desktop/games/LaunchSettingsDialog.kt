@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.desktop.games
 
+import io.github.thecodingdad.gamelodge.ui.components.popupHeightIn
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.heightIn
@@ -52,7 +53,7 @@ fun LaunchSettingsDialog(
             val map = LaunchOverride.decode(s.pcLaunchOverrides)
             s.copy(pcLaunchOverrides = LaunchOverride.encode(if (o == null || o.isEmpty) map - e.id else map + (e.id to o)))
         }
-        Column(Modifier.heightIn(max = 620.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.popupHeightIn(620.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(stringResource(Res.string.launch_options_intro), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
             LauncherTextField(stringResource(Res.string.custom_path), launch, { launch = it.trim().removeSurrounding("\"") }, placeholder = found.launch)
             LauncherButton(stringResource(Res.string.emu_pc_browse), icon = Icons.Filled.FolderOpen, onClick = {

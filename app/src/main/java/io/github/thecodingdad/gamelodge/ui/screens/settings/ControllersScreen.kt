@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.ui.screens.settings
 
+import io.github.thecodingdad.gamelodge.ui.components.popupHeightIn
 import io.github.thecodingdad.gamelodge.ui.components.controllerScroll
 import android.hardware.input.InputManager
 import android.os.Build
@@ -145,7 +146,7 @@ fun AndroidControllerDetailDialog(controller: ControllerInfo?, onDismiss: () -> 
     ) {
         val c = controller ?: return@Modal
         androidx.compose.foundation.layout.Column(
-            androidx.compose.ui.Modifier.heightIn(max = 560.dp).controllerScroll(),
+            androidx.compose.ui.Modifier.popupHeightIn(560.dp).controllerScroll(),
             verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
         ) {
             ControllerOverrideRows(c)
