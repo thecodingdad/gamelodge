@@ -70,7 +70,11 @@ fun main(args: Array<String>) {
     ArtworkPlatform.current = DesktopArtwork
     SingletonImageLoader.setSafe {
         ImageLoader.Builder(PlatformContext.INSTANCE)
-            .components { add(OkHttpNetworkFetcherFactory(callFactory = { container.http })) }
+            .components {
+                add(OkHttpNetworkFetcherFactory(callFactory = { container.http }))
+                // Animated GIF/WebP (Coil plays only the first frame on the desktop).
+                add(AnimatedImageDecoder.Factory())
+            }
             .crossfade(true)
             .build()
     }
