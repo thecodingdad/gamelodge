@@ -154,10 +154,16 @@ fun HomeScreenSettings(
         val byId = gameFilters.associateBy { it.id }
         val appsPrefix = stringResource(Res.string.tab_apps)
         val HA = io.github.thecodingdad.gamelodge.data.library.HomeRowOrder.HA
+        // The Home Assistant row only while signed in to Home Assistant; it keeps its place meanwhile.
+        val haShown = io.github.thecodingdad.gamelodge.LocalContainer.current.ha.auth.isLoggedIn
+        val allRows = io.github.thecodingdad.gamelodge.data.library.HomeRowOrder.ids(gameFilters.map { it.id }, settings.homeRowOrder)
         ReorderableList(
-            items = io.github.thecodingdad.gamelodge.data.library.HomeRowOrder.ids(gameFilters.map { it.id }, settings.homeRowOrder),
+            items = if (haShown) allRows else allRows - HA,
             id = { it },
-            onReorder = { ids -> update { it.copy(homeRowOrder = ids) } },
+            onReorder = { ids ->
+                val order = if (haShown) ids else ids.toMutableList().apply { add(allRows.indexOf(HA).coerceIn(0, size), HA) }
+                update { it.copy(homeRowOrder = order) }
+            },
         ) { _, id ->
             if (id == HA) {
                 SwitchRow(stringResource(Res.string.home_row_ha), settings.showHaRowOnHome, { v -> update { it.copy(showHaRowOnHome = v) } })

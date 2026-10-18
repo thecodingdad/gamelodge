@@ -697,7 +697,7 @@ private fun MainShell(
                         val empty: @Composable () -> Unit = { EmptyHome { tab = MainTab.SETTINGS.ordinal } }
                         HeroHome(
                             rows, callbacks, homeFilters,
-                            haRow = if (settings.showHaRowOnHome) ({ HaHomeRow() }) else null,
+                            haRow = if (settings.showHaRowOnHome && io.github.thecodingdad.gamelodge.LocalContainer.current.ha.auth.isLoggedIn) ({ HaHomeRow() }) else null,
                             emptyContent = empty,
                             haIndex = io.github.thecodingdad.gamelodge.data.library.HomeRowOrder.haIndex(homeFilters, settings.homeRowOrder),
                         )
@@ -1059,7 +1059,7 @@ private fun SettingsPageContent(
         SettingsPageId.SOUNDS -> io.github.thecodingdad.gamelodge.ui.screens.settings.SoundSettings(settings, vm::updateSettings)
         SettingsPageId.ABOUT -> AboutSettings(openLicenses = { openPage(SettingsPageId.LICENSES) })
         SettingsPageId.LICENSES -> io.github.thecodingdad.gamelodge.ui.screens.settings.OpenSourceLicenses()
-        SettingsPageId.HOME_ASSISTANT -> HaSettings(settings, vm::updateSettings, hosts.values.filter { it.paired }.sortedBy { it.name }, openHost)
+        SettingsPageId.HOME_ASSISTANT -> HaSettings(settings, vm::updateSettings, hosts.values.filter { it.paired }.sortedBy { it.name }, openHost, openPage)
         SettingsPageId.DATA -> io.github.thecodingdad.gamelodge.ui.screens.settings.DataSettings(settings, vm::updateSettings, vm)
         // Pages of platform features (VPN, backup, emulators …).
         else -> if (io.github.thecodingdad.gamelodge.ui.PlatformUi.current.hasPage(page)) io.github.thecodingdad.gamelodge.ui.PlatformUi.current.PlatformSettingsPage(page, vm, openProfile = openProfile, openStats = openStats)

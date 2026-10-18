@@ -62,7 +62,7 @@ fun QuickMenuSettings(vm: LauncherViewModel, settings: LauncherSettings, update:
             TileRow(id, unavailable = id in unavailable, initialFocus = index == 0, onRemove = { save(tiles - id) })
         }
         ButtonRow {
-            LauncherButton(stringResource(Res.string.qt_add), icon = Icons.Filled.Add, onClick = { adding = true })
+            LauncherButton(stringResource(Res.string.qt_add), modifier = Modifier.searchHighlight(stringResource(Res.string.qt_add), androidx.compose.foundation.shape.RoundedCornerShape(26.dp)), icon = Icons.Filled.Add, onClick = { adding = true })
             LauncherButton(stringResource(Res.string.qt_reset), icon = Icons.Filled.Restore, onClick = { save(QuickTile.defaults) })
         }
 

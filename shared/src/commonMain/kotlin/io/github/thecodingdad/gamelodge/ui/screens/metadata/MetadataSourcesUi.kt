@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.ui.screens.metadata
 
+import io.github.thecodingdad.gamelodge.ui.screens.settings.searchHighlight
 import io.github.thecodingdad.gamelodge.ui.components.mouseDragScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -95,7 +96,7 @@ internal fun SourcesSection(stored: List<String>) {
             icon = sourceIcon(entry.id, server),
         )
     }
-    LauncherButton(stringResource(Res.string.metadata_source_add), icon = Icons.Filled.Add, onClick = { dialog = SourceDialog.Add })
+    LauncherButton(stringResource(Res.string.metadata_source_add), modifier = Modifier.searchHighlight(stringResource(Res.string.metadata_source_add), androidx.compose.foundation.shape.RoundedCornerShape(26.dp)), icon = Icons.Filled.Add, onClick = { dialog = SourceDialog.Add })
 
     val changed: () -> Unit = { revision++ }
     when (val d = dialog) {

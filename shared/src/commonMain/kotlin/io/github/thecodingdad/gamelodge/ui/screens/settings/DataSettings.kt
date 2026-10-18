@@ -162,7 +162,7 @@ fun DataSettings(settings: LauncherSettings, update: ((LauncherSettings) -> Laun
 /** Title and explanation above an action button. */
 @Composable
 private fun ActionText(title: StringResource, text: String) {
-    Column(Modifier.fillMaxWidth().padding(top = 8.dp)) {
+    Column(Modifier.fillMaxWidth().padding(top = 8.dp).searchHighlight(stringResource(title), RoundedCornerShape(8.dp), focus = false)) {
         Text(stringResource(title), style = MaterialTheme.typography.titleSmall, color = LauncherTheme.colors.onSurface)
         Text(text, style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
     }
@@ -300,8 +300,8 @@ private fun BackupSection(settings: LauncherSettings, update: ((LauncherSettings
     )
     Text(stringResource(Res.string.backup_restore_hint), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.accentText)
     ButtonRow(spacing = 12.dp) {
-        LauncherButton(stringResource(Res.string.backup_now), icon = Icons.Filled.Save, primary = true, onClick = ::backupNow)
-        LauncherButton(stringResource(Res.string.backup_restore), icon = Icons.Filled.Restore, onClick = ::restore)
+        LauncherButton(stringResource(Res.string.backup_now), modifier = Modifier.searchHighlight(stringResource(Res.string.backup_now), androidx.compose.foundation.shape.RoundedCornerShape(26.dp)), icon = Icons.Filled.Save, primary = true, onClick = ::backupNow)
+        LauncherButton(stringResource(Res.string.backup_restore), modifier = Modifier.searchHighlight(stringResource(Res.string.backup_restore), androidx.compose.foundation.shape.RoundedCornerShape(26.dp)), icon = Icons.Filled.Restore, onClick = ::restore)
     }
     message?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurface) }
 

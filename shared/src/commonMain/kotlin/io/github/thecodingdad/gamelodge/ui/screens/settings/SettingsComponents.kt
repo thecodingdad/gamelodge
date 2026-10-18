@@ -35,6 +35,8 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.focusRestorer
@@ -142,16 +144,37 @@ fun SettingsPage(title: String, content: @Composable ColumnScope.() -> Unit) {
 
 @Composable
 fun SectionHeader(text: String) {
-    val highlight = rememberSearchHighlight(text, focus = false)
     Text(
         text,
         style = MaterialTheme.typography.titleSmall,
         color = LauncherTheme.colors.accentText,
-        modifier = Modifier.padding(top = 14.dp, bottom = 2.dp).then(highlight.modifier)
-            .clip(RoundedCornerShape(6.dp))
-            .background(LauncherTheme.colors.accent.copy(alpha = highlight.amount * 0.35f))
+        modifier = Modifier.padding(top = 14.dp, bottom = 2.dp)
+            .searchHighlight(text, RoundedCornerShape(6.dp), focus = false)
             .padding(horizontal = 4.dp),
     )
+}
+
+/**
+ * A search hit with this [title] scrolls the element into view, focuses it ([focus]) and pulses
+ * an accent outline and tint over it in [shape] (drawn on top, so it shows with focus too).
+ */
+@Composable
+fun Modifier.searchHighlight(
+    title: String?,
+    shape: androidx.compose.ui.graphics.Shape = RoundedCornerShape(LauncherTheme.dimens.cornerRadius),
+    focus: Boolean = true,
+): Modifier {
+    val highlight = rememberSearchHighlight(title, focus)
+    val accent = LauncherTheme.colors.accent
+    return then(highlight.modifier).drawWithContent {
+        drawContent()
+        val amount = highlight.amount
+        if (amount > 0f) {
+            val outline = shape.createOutline(size, layoutDirection, this)
+            drawOutline(outline, accent.copy(alpha = amount * 0.25f))
+            drawOutline(outline, accent.copy(alpha = amount), style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3.dp.toPx()))
+        }
+    }
 }
 
 /** Where a settings search hit leads: the title of the setting to show once its page opens. */
@@ -174,7 +197,7 @@ internal class HighlightState(val modifier: Modifier, private val anim: androidx
  * lights up briefly in the accent colour.
  */
 @Composable
-internal fun rememberSearchHighlight(title: String?, focus: Boolean = true): HighlightState {
+private fun rememberSearchHighlight(title: String?, focus: Boolean = true): HighlightState {
     val anim = remember { androidx.compose.animation.core.Animatable(0f) }
     val requester = remember { androidx.compose.foundation.relocation.BringIntoViewRequester() }
     val focusRequester = remember { androidx.compose.ui.focus.FocusRequester() }
@@ -212,11 +235,9 @@ private fun RowShell(
     title: String? = null,
     content: @Composable () -> Unit,
 ) {
-    val highlight = rememberSearchHighlight(title)
     FocusSurface(
         onClick = onClick,
-        modifier = modifier.fillMaxWidth().heightIn(min = 68.dp).restoreFocusIf(initialFocus).then(highlight.modifier),
-        color = androidx.compose.ui.graphics.lerp(LauncherTheme.colors.surface, LauncherTheme.colors.accent, highlight.amount * 0.35f),
+        modifier = modifier.fillMaxWidth().heightIn(min = 68.dp).restoreFocusIf(initialFocus).searchHighlight(title),
         focusScale = 1.02f,
     ) {
         // Vertically centred: rows have a minimum height, short content must not stick to the top.

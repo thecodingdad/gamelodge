@@ -108,7 +108,7 @@ fun EmulatorSettings(vm: LauncherViewModel) {
             )
         }
         ButtonRow {
-            LauncherButton(stringResource(Res.string.emu_folder_add), icon = Icons.Filled.CreateNewFolder, onClick = { pickFolder.launch(null) })
+            LauncherButton(stringResource(Res.string.emu_folder_add), modifier = Modifier.searchHighlight(stringResource(Res.string.emu_folder_add), androidx.compose.foundation.shape.RoundedCornerShape(26.dp)), icon = Icons.Filled.CreateNewFolder, onClick = { pickFolder.launch(null) })
             if (config.folders.isNotEmpty()) {
                 LauncherButton(
                     stringResource(if (scanning) Res.string.emu_scanning else Res.string.emu_scan), icon = Icons.Filled.Refresh,

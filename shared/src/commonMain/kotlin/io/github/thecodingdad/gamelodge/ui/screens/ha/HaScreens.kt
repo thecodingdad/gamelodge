@@ -126,6 +126,7 @@ fun HaSettings(
     update: ((LauncherSettings) -> LauncherSettings) -> Unit,
     hosts: List<io.github.thecodingdad.gamelodge.data.remote.HostState> = emptyList(),
     openHost: (String) -> Unit = {},
+    openPage: (io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId) -> Unit = {},
 ) {
     val c = io.github.thecodingdad.gamelodge.LocalContainer.current
     val ha = c.ha
@@ -162,7 +163,20 @@ fun HaSettings(
         }
 
         SectionHeader(stringResource(Res.string.ha_tiles))
-        SwitchRow(stringResource(Res.string.ha_show_home_row), settings.showHaRowOnHome, { v -> update { it.copy(showHaRowOnHome = v) } }, icon = Icons.Filled.Home, initialFocus = true)
+        // Shown, hidden and placed with the other rows of the home screen: leads there.
+        val favourites = stringResource(Res.string.home_row_ha)
+        NavRow(
+            favourites,
+            {
+                io.github.thecodingdad.gamelodge.ui.screens.settings.SearchHighlight.request(favourites)
+                openPage(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId.HOME_SCREEN)
+            },
+            listOf(
+                stringResource(if (settings.showHaRowOnHome) Res.string.ha_on else Res.string.ha_off),
+                stringResource(Res.string.tab_settings) + " › " + stringResource(Res.string.settings_home_screen),
+            ).joinToString(" · "),
+            Icons.Filled.Home, initialFocus = true,
+        )
         tiles.forEach { tile ->
             val entity = entities[tile.entityId]
             val group = EntityGroup.of(tile.entityId.substringBefore('.'))

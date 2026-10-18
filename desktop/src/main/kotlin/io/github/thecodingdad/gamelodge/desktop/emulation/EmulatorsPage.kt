@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.desktop.emulation
 
+import io.github.thecodingdad.gamelodge.ui.screens.settings.searchHighlight
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -138,7 +139,7 @@ fun EmulatorsPage(
             )
         }
         ButtonRow {
-            LauncherButton(stringResource(Res.string.emu_folder_add), icon = Icons.Filled.CreateNewFolder, onClick = {
+            LauncherButton(stringResource(Res.string.emu_folder_add), modifier = Modifier.searchHighlight(stringResource(Res.string.emu_folder_add), androidx.compose.foundation.shape.RoundedCornerShape(26.dp)), icon = Icons.Filled.CreateNewFolder, onClick = {
                 FilePickers.pickFolder()?.let { path ->
                     // A folder named like a console ("snes") is that console, else one subfolder per console.
                     val folder = PcRomFolder(path, PcPlatforms.forFolder(File(path).name)?.name)

@@ -125,7 +125,7 @@
     <string name="settings_home_screen_sub">Start tab, rows</string>
     <string name="home_rows_section">Rows on the start tab</string>
     <string name="home_rows_help">Which filters appear as rows on the start tab and in which order (independent of the library). Move a row with the handle: drag it, or select it and use up/down.</string>
-    <string name="home_row_ha">Smart home favourites</string>
+    <string name="home_row_ha">Home Assistant favourites</string>
     <string name="settings_theme">Theme &amp; colours</string>
     <string name="settings_theme_sub">Dark, black, light, accent colour</string>
     <string name="settings_display">Display</string>
@@ -137,7 +137,7 @@
     <string name="settings_metadata">Metadata &amp; artwork</string>
     <string name="settings_metadata_sub">SteamGridDB, IGDB, host, metadata server, review list</string>
     <string name="settings_home_assistant">Home Assistant</string>
-    <string name="settings_home_assistant_sub">Connection and smart home tiles</string>
+    <string name="settings_home_assistant_sub">Connection, entities and host actions</string>
     <string name="settings_vpn">VPN</string>
     <string name="settings_vpn_sub">WireGuard tunnels and auto-connect</string>
     <string name="settings_launcher">Launcher mode</string>
@@ -304,9 +304,8 @@
     <string name="ha_relogin">Sign in again</string>
     <string name="ha_logout">Sign out</string>
     <string name="ha_login_waiting">Finish the sign-in in the browser…</string>
-    <string name="ha_tiles">Tiles</string>
-    <string name="ha_show_home_row">Show favourite tiles on the start screen</string>
-    <string name="ha_add_tile">Add tile</string>
+    <string name="ha_tiles">Entities</string>
+    <string name="ha_add_tile">Add entity</string>
     <string name="ha_events_help">For automations the launcher fires the events moonlight_launcher_stream_started and moonlight_launcher_stream_stopped (with game, host and profile).</string>
 
     <!-- Phase 6: host features -->
@@ -419,7 +418,7 @@
     <string name="qm_quit_game">Quit game</string>
 
     <!-- Backup -->
-    <string name="backup_intro">Saves settings, stream profiles, host settings, favourites, filters and groups, corrected metadata and smart home tiles. Pairing with hosts is not included; on a new device pair the hosts first.</string>
+    <string name="backup_intro">Saves settings, stream profiles, host settings, favourites, filters and groups, corrected metadata and Home Assistant entities. Pairing with hosts is not included; on a new device pair the hosts first.</string>
     <string name="backup_restore_hint">Before restoring, pair all hosts under Settings → Hosts and wait until their games appear. Favourites, play time and metadata are only applied to games already in the library.</string>
     <string name="backup_folder">Backup folder</string>
     <string name="backup_auto">Daily automatic backup</string>
