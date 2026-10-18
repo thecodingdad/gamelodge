@@ -26,6 +26,8 @@ python3 -c "import shutil,sys; shutil.make_archive(sys.argv[1][:-4], 'zip', sys.
 "${SCP[@]}" "$zip" "$HOST:C:/build/installer/app.zip"
 "${SCP[@]}" "desktop/windows/GameLodge.iss" "$HOST:C:/build/installer/GameLodge.iss"
 "${SCP[@]}" desktop/windows/icon.ico "$HOST:C:/build/installer/icon.ico"
+"$VM" 'New-Item -ItemType Directory C:\build\installer\wizard -Force | Out-Null'
+"${SCP[@]}" desktop/windows/wizard/*.bmp "$HOST:C:/build/installer/wizard/"
 rm -f "$zip"
 "$VM" "Expand-Archive C:\\build\\installer\\app.zip -DestinationPath C:\\build\\installer\\stage -Force; cmd /c \"start /belownormal /wait /b C:\\build\\InnoSetup\\ISCC.exe /Q /DAppVersion=$version /DSourceDir=C:\\build\\installer\\stage /DOutputDir=C:\\build\\installer\\out C:\\build\\installer\\GameLodge.iss\"; if (\$LASTEXITCODE -ne 0) { exit 1 }"
 "${SCP[@]}" "$HOST:C:/build/installer/out/GameLodge-Setup.exe" bin/GameLodge-Setup.exe

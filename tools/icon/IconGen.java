@@ -153,6 +153,63 @@ public class IconGen {
         return img;
     }
 
+    /** Desktop splash (shown by Java before the launcher has loaded): the banner larger, rounded. */
+    static BufferedImage splash() {
+        double scale = 1.6;
+        int w = (int) (BANNER_W * scale), h = (int) (BANNER_H * scale);
+        Object[] layout = bannerLayout();
+        BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = img.createGraphics();
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
+        g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g.setColor(new Color(0x0E, 0x10, 0x15));
+        g.fill(new RoundRectangle2D.Double(0, 0, w, h, 40, 40));
+        g.scale(scale, scale);
+        g.setColor(new Color(0xF2, 0xF3, 0xF7));
+        g.fill((Shape) layout[0]);
+        g.transform((AffineTransform) layout[1]);
+        g.setColor(INK); g.fill(BODY);
+        g.setColor(PAPER); g.fill(PAPER_AREA);
+        g.setColor(INK); g.fill(SPOKES);
+        g.dispose();
+        return img;
+    }
+
+    /** Installer header image (top right, white wizard header): the icon, [w]x[h] pixels. */
+    static BufferedImage wizardSmall(int w, int h) {
+        BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = img.createGraphics();
+        g.setColor(Color.WHITE);
+        g.fillRect(0, 0, w, h);
+        g.drawImage(render(Math.min(w, h), 0.04), (w - Math.min(w, h)) / 2, (h - Math.min(w, h)) / 2, null);
+        g.dispose();
+        return img;
+    }
+
+    /** Installer side image (finish page, 164x314 at 100 %): icon and name on the launcher background. */
+    static BufferedImage wizardSide(int w, int h) {
+        BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = img.createGraphics();
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
+        g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g.setColor(new Color(0x0E, 0x10, 0x15));
+        g.fillRect(0, 0, w, h);
+        g.scale(w / 164.0, h / 314.0);
+        Font font = new Font("DejaVu Sans", Font.BOLD, 19);
+        Shape text = font.createGlyphVector(new java.awt.font.FontRenderContext(null, true, false), "GameLodge").getOutline();
+        Rectangle2D tb = text.getBounds2D();
+        g.setColor(new Color(0xF2, 0xF3, 0xF7));
+        g.fill(AffineTransform.getTranslateInstance(82 - tb.getCenterX(), 204 - tb.getY()).createTransformedShape(text));
+        g.transform(fit(116, 82, 140));
+        g.setColor(INK); g.fill(BODY);
+        g.setColor(PAPER); g.fill(PAPER_AREA);
+        g.setColor(INK); g.fill(SPOKES);
+        g.dispose();
+        return img;
+    }
+
     static String svgPath(Shape shape, AffineTransform t, String fill) {
         return "<path fill=\"" + fill + "\" d=\"" + pathData(shape, t) + "\"/>\n";
     }
@@ -237,7 +294,24 @@ public class IconGen {
         ImageIO.write(banner(), "png", new File(res + "drawable-xhdpi/gamelodge_banner.png"));
         System.out.println("wrote " + res + "drawable-xhdpi/gamelodge_banner.png");
 
-        // Desktop: window/tray icon and Windows .ico (exe, installer, shortcuts).
+        // Banner artwork for the launcher UI (about page; the page draws the background).
+        write("shared/src/commonMain/composeResources/drawable/gamelodge_banner.xml", vector(BANNER_W, BANNER_H,
+            vectorPath((Shape) layout[0], id, "#FFF2F3F7") + layered((AffineTransform) layout[1])));
+
+        // Installer images, one per display scaling (100, 125, 150, 175, 200, 250 %).
+        int[][] small = {{55, 55}, {64, 68}, {83, 80}, {92, 97}, {110, 106}, {138, 140}};
+        int[][] side = {{164, 314}, {192, 386}, {246, 459}, {273, 556}, {328, 604}, {410, 797}};
+        int[] scales = {100, 125, 150, 175, 200, 250};
+        Files.createDirectories(Paths.get("desktop/windows/wizard"));
+        for (int i = 0; i < scales.length; i++) {
+            ImageIO.write(wizardSmall(small[i][0], small[i][1]), "bmp", new File("desktop/windows/wizard/small-" + scales[i] + ".bmp"));
+            ImageIO.write(wizardSide(side[i][0], side[i][1]), "bmp", new File("desktop/windows/wizard/side-" + scales[i] + ".bmp"));
+        }
+        System.out.println("wrote desktop/windows/wizard/*.bmp");
+
+        // Desktop: splash, window/tray icon and Windows .ico (exe, installer, shortcuts).
+        ImageIO.write(splash(), "png", new File("desktop/windows/splash.png"));
+        System.out.println("wrote desktop/windows/splash.png");
         Files.write(Paths.get("desktop/src/main/resources/icon.png"), png(render(256, 0.04)));
         System.out.println("wrote desktop/src/main/resources/icon.png");
         writeIco(Paths.get("desktop/windows/icon.ico"), 16, 20, 24, 32, 40, 48, 64, 128, 256);

@@ -35,6 +35,9 @@ UninstallDisplayIcon={app}\GameLodge.exe
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
+; GameLodge icon in the header and the banner on the finish page, per display scaling.
+WizardSmallImageFile=wizard\small-100.bmp,wizard\small-125.bmp,wizard\small-150.bmp,wizard\small-175.bmp,wizard\small-200.bmp,wizard\small-250.bmp
+WizardImageFile=wizard\side-100.bmp,wizard\side-125.bmp,wizard\side-150.bmp,wizard\side-175.bmp,wizard\side-200.bmp,wizard\side-250.bmp
 ; A running launcher holds its files: offered to be closed (and started again afterwards).
 CloseApplications=yes
 RestartApplications=no
