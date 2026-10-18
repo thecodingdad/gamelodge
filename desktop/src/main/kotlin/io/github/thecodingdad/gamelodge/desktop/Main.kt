@@ -153,9 +153,12 @@ fun main(args: Array<String>) {
             if (m.inputMode != androidx.compose.ui.input.InputMode.Keyboard) m.requestInputMode(androidx.compose.ui.input.InputMode.Keyboard)
         }
         gamepads.onInput = { vm.touch(); java.awt.EventQueue.invokeLater { controllerInput() } }
+        // Starts maximized; sized like the work area already, so the first frames are not laid out
+        // for a smaller window and stretched once Windows has maximized it.
+        val workArea = remember { java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment().maximumWindowBounds }
         val state = rememberWindowState(
             placement = if (startup.settings.value.startFullscreen && !isWindows) WindowPlacement.Fullscreen else WindowPlacement.Maximized,
-            width = 1600.dp, height = 900.dp,
+            width = workArea.width.dp, height = workArea.height.dp,
         )
         LaunchedEffect(state) {
             windowControls.toggleFullscreen = {
@@ -178,7 +181,7 @@ fun main(args: Array<String>) {
         // Class cache: written once the window has been shown for a while (its classes are loaded by then).
         if (visible && ClassCache.pending != null) {
             LaunchedEffect(Unit) {
-                kotlinx.coroutines.delay(60_000)
+                kotlinx.coroutines.delay(20_000)
                 kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { ClassCache.write() }
             }
         }

@@ -8,7 +8,7 @@ import javax.management.ObjectName
 /**
  * Class cache (CDS archive) for faster starts: loading the UI's classes is most of the start time.
  * Without an archive the GameLodge.exe starter passes its path (gamelodge.cds) and lets the JVM
- * record what it loads; once the window has been shown for a while, the loaded classes are written
+ * record what it loads; once the window has been shown for a moment (20 s), the loaded classes are written
  * there and later starts map them instead of loading each class again.
  */
 object ClassCache {
