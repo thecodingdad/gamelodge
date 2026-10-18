@@ -241,6 +241,11 @@
     <string name="metadata_progress">Metadaten werden abgerufen: %1$d von %2$d</string>
     <string name="metadata_auth_error">Zugangsdaten abgelehnt: %1$s</string>
     <string name="metadata_fetch_now">Jetzt abrufen</string>
+    <string name="metadata_status_complete">%1$d von %2$d Spielen mit Metadaten</string>
+    <string name="metadata_status_no_source">Keine Quelle eingerichtet</string>
+    <string name="metadata_status_no_source_sub">Füge unten eine Quelle hinzu, z. B. SteamGridDB mit eigenem Schlüssel.</string>
+    <string name="metadata_maintenance">Wartung</string>
+    <string name="metadata_refetch_all_sub">Sucht alle automatisch gefundenen Metadaten neu; deine Korrekturen bleiben.</string>
     <string name="metadata_refetch_all">Alles neu abrufen</string>
     <string name="metadata_sgdb_help">Key erstellen unter steamgriddb.com → Preferences → API.</string>
     <string name="metadata_igdb_help">App unter dev.twitch.tv/console registrieren (Kategorie: Application Integration, OAuth-Redirect-URL: http://localhost, Client-Typ: Vertraulich), ein Secret erzeugen und Client-ID und Secret kopieren.</string>
@@ -417,8 +422,8 @@
     <string name="qm_quit_game">Spiel beenden</string>
 
     <!-- Backup -->
-    <string name="backup_intro">Sichert Einstellungen, Stream-Profile, Host-Einstellungen, Favoriten, Filter und Gruppen, korrigierte Metadaten und Home-Assistant-Entitäten. Die Kopplung mit Hosts ist nicht enthalten, auf einem neuen Gerät die Hosts erst neu koppeln.</string>
-    <string name="backup_restore_hint">Vor dem Wiederherstellen alle Hosts unter Einstellungen → Hosts koppeln und warten, bis ihre Spiele erscheinen. Favoriten, Spielzeiten und Metadaten werden nur Spielen zugeordnet, die schon in der Bibliothek sind.</string>
+    <string name="backup_intro">Sichert Einstellungen, Profile, Favoriten, Filter, Korrekturen und Home-Assistant-Entitäten, ohne Kopplungen.</string>
+    <string name="backup_restore_hint">Vorher alle Hosts koppeln, damit Favoriten und Spielzeit ihre Spiele finden.</string>
     <string name="backup_folder">Backup-Ordner</string>
     <string name="backup_auto">Tägliches automatisches Backup</string>
     <string name="backup_auto_sub">In den Backup-Ordner, ohne Zugangsdaten</string>
@@ -435,7 +440,6 @@
     <string name="settings_data_sub">Speicher, Aufräumen und Backups</string>
     <string name="data_storage">Speicherbelegung</string>
     <string name="data_measuring">Wird gemessen…</string>
-    <string name="data_total">Insgesamt</string>
     <string name="storage_database">Bibliotheks-Datenbank</string>
     <string name="storage_settings">Einstellungen, Hosts und Profile</string>
     <string name="storage_artwork">Heruntergeladene Bilder</string>
@@ -445,10 +449,6 @@
     <string name="storage_logs">Protokolle</string>
     <string name="storage_streaming">Streaming-Client (Moonlight-Qt)</string>
     <string name="storage_host_role">Streaming-Host (Cover, Backups)</string>
-    <string name="data_library">Bibliothek</string>
-    <string name="data_games">Spiele</string>
-    <string name="data_apps">Apps</string>
-    <string name="data_with_metadata">Mit Metadaten</string>
     <string name="data_cleanup">Aufräumen</string>
     <string name="data_clear_cache">Cache leeren</string>
     <string name="data_clear_cache_sub">Bild-Cache und gespeicherte Server-Antworten, wird bei Bedarf neu gefüllt.</string>
@@ -461,6 +461,11 @@
     <string name="data_redownload_sub">Löscht die gespeicherten Bilder, sie werden im Hintergrund neu geladen.</string>
     <string name="data_redownload_done">Bilder werden neu geladen.</string>
     <string name="data_reset">Alle Daten löschen</string>
+    <string name="data_status_used">%1$s belegt</string>
+    <string name="data_status_library">%1$d Spiele · %2$d Apps · %3$d mit Metadaten</string>
+    <string name="data_status_last_backup">Letzte Sicherung: %1$s</string>
+    <string name="data_status_no_backup">Noch keine Sicherung im Ordner</string>
+    <string name="data_reset_section">Zurücksetzen</string>
     <string name="data_reset_sub">Setzt den Launcher zurück: Bibliothek, Einstellungen, Kopplungen und Zugangsdaten werden gelöscht.</string>
     <string name="data_reset_title">Alle Daten löschen?</string>
     <string name="data_reset_text">Alles, was der Launcher speichert, wird gelöscht: Bibliothek, Spielzeiten, Metadaten, Einstellungen, Stream-Profile, gekoppelte Hosts und Zugangsdaten. Vorher ein Backup erstellen, wenn etwas erhalten bleiben soll. Der Launcher wird danach beendet.</string>
@@ -1046,7 +1051,7 @@
     <string name="servers_remove">Gedrückt halten zum Entfernen</string>
     <string name="servers_remove_hint">Entferne das Gerät auch am Server, damit der Zugriff dort endet.</string>
     <string name="metadata_sources">Quellen</string>
-    <string name="metadata_intro">Cover, Hintergründe und Logos kommen von SteamGridDB; Beschreibung, Genres, Entwickler, Publisher, Serie, Features, Altersfreigaben und Erscheinungsdatum von IGDB. Füge sie unten als Quellen hinzu: mit eigenen Schlüsseln, über einen Metadaten-Server oder über den Host.</string>
+    <string name="metadata_intro">Bilder kommen von SteamGridDB, Beschreibungen und Details von IGDB.</string>
     <string name="metadata_sources_help">Zuerst werden die eigenen Schlüssel genutzt (kürzester Weg), dann Metadaten-Server, dann Hosts; ist einer nicht erreichbar oder kann nicht antworten, kommt der nächste dran. Host-Spiele übernehmen immer die Daten ihres Hosts.</string>
     <string name="metadata_sources_empty">Noch keine Quelle hinzugefügt.</string>
     <string name="metadata_source_add">Quelle hinzufügen</string>

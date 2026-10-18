@@ -1031,6 +1031,11 @@ private fun SettingsPageContent(
             settings, vm::updateSettings,
             reviewCount = all.count { it.item.metadataState == MetadataState.REVIEW },
             openReview = openReview,
+            games = all.count { it.item.kind == io.github.thecodingdad.gamelodge.data.db.ItemKind.GAME },
+            gamesWithMetadata = all.count {
+                it.item.kind == io.github.thecodingdad.gamelodge.data.db.ItemKind.GAME &&
+                    it.item.metadataState in setOf(MetadataState.OK, MetadataState.LOCKED, MetadataState.REVIEW)
+            },
         )
         SettingsPageId.HOSTS -> HostsSettings(hosts.values.toList(), openHostConfig = { openHost(it.uuid) })
         SettingsPageId.HOME_SCREEN -> io.github.thecodingdad.gamelodge.ui.screens.settings.HomeScreenSettings(settings, vm::updateSettings, vm)

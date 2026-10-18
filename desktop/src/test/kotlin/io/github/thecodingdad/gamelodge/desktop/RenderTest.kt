@@ -162,6 +162,16 @@ class RenderTest {
     fun displayAndSoundPagesRender() {
         renderPage("display", 1600) { io.github.thecodingdad.gamelodge.ui.screens.settings.DisplaySettings(io.github.thecodingdad.gamelodge.data.settings.LauncherSettings(), {}) }
         renderPage("sounds", 1800) { io.github.thecodingdad.gamelodge.ui.screens.settings.SoundSettings(io.github.thecodingdad.gamelodge.data.settings.LauncherSettings(), {}) }
+        renderPage("metadata", 1400) { io.github.thecodingdad.gamelodge.ui.screens.metadata.MetadataSettings(io.github.thecodingdad.gamelodge.data.settings.LauncherSettings(), {}, 0, {}) }
+        renderPage("data-page", 2200) {
+            val c = LocalContainer.current as DesktopContainer
+            val vm = androidx.compose.runtime.remember { LauncherViewModel(c) }
+            io.github.thecodingdad.gamelodge.ui.screens.settings.DataSettings(io.github.thecodingdad.gamelodge.data.settings.LauncherSettings(), {}, vm)
+        }
+        renderPage("game-sources-page", 1800) {
+            val c = LocalContainer.current as DesktopContainer
+            GameSourcesPage(c.pcLibrary, io.github.thecodingdad.gamelodge.data.settings.LauncherSettings()) {}
+        }
     }
 
     @Test

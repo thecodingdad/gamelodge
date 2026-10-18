@@ -2,15 +2,17 @@
 <!-- Strings only the desktop app uses. -->
 <resources>
     <string name="game_sources_intro">Spiele der Stores, die auf diesem PC installiert sind. Ausgeschaltete Stores fehlen in der Bibliothek.</string>
+    <string name="game_sources_status">%1$d Spiele aus %2$d Stores</string>
+    <string name="game_sources_status_installed">davon %1$d installiert</string>
+    <string name="game_sources_not_installed">Nicht installiert (%1$d)</string>
+    <string name="game_sources_scanning">Suche Spiele …</string>
     <string name="game_sources_scan_now">Jetzt nach Spielen suchen</string>
-    <string name="game_sources_scan_now_sub">Stores und die App-Listen verbundener Hosts</string>
     <string name="game_source_not_installed">Auf diesem PC nicht installiert</string>
     <string name="game_source_count">%1$d Spiele, davon %2$d installiert</string>
     <string name="game_source_none">Keine Spiele gefunden</string>
     <string name="steam_account">Steam-Konto</string>
     <string name="steam_account_intro">Angemeldet listet Steam alle Spiele, die du besitzt – auch nicht installierte und bei privatem Profil.</string>
     <string name="steam_signed_in">Angemeldet als %1$s</string>
-    <string name="steam_signed_out">Nicht angemeldet: gekaufte Spiele nur über Playnite oder ein öffentliches Profil</string>
     <string name="steam_sign_in">Mit der Steam-App anmelden</string>
     <string name="steam_sign_out">Abmelden</string>
     <string name="steam_qr_title">Bei Steam anmelden</string>

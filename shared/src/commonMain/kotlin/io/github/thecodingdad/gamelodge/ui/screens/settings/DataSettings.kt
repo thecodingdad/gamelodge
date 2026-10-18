@@ -1,5 +1,7 @@
 package io.github.thecodingdad.gamelodge.ui.screens.settings
 
+import androidx.compose.material.icons.filled.Storage
+import io.github.thecodingdad.gamelodge.ui.components.StatusCard
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -92,59 +94,70 @@ fun DataSettings(settings: LauncherSettings, update: ((LauncherSettings) -> Laun
     val orphansDone = stringResource(Res.string.data_orphans_done)
     val redownloadDone = stringResource(Res.string.data_redownload_done)
 
+    val lastBackup by produceState<Long?>(null, revision, settings.backupFolderUri) {
+        val folder = settings.backupFolderUri.ifEmpty { container.backupStorage.defaultFolder.orEmpty() }
+        value = if (folder.isEmpty()) null else runCatching { container.backupStorage.list(folder).mapNotNull { it.createdAt }.maxOrNull() }.getOrNull()
+    }
+
     SettingsPage(stringResource(Res.string.settings_data)) {
-        SectionHeader(stringResource(Res.string.data_storage))
         val u = usage
-        if (u == null) {
-            Text(stringResource(Res.string.data_measuring), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
-        } else {
+        StatusCard(
+            if (u == null) stringResource(Res.string.data_measuring) else stringResource(Res.string.data_status_used, formatFileSize(u.values.sum())),
+            LauncherTheme.colors.accent, Icons.Filled.Storage, busy = u == null,
+            details = listOf(
+                stringResource(
+                    Res.string.data_status_library,
+                    entries.count { it.item.kind == ItemKind.GAME }, entries.count { it.item.kind == ItemKind.APP },
+                    entries.count { it.item.metadataState in setOf(MetadataState.OK, MetadataState.LOCKED) },
+                ),
+                lastBackup?.let { stringResource(Res.string.data_status_last_backup, DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(it))) }
+                    ?: stringResource(Res.string.data_status_no_backup),
+            ),
+        )
+
+        if (u != null) {
+            SectionHeader(stringResource(Res.string.data_storage))
             StorageBar(u)
-            InfoRow(stringResource(Res.string.data_total), formatFileSize(u.values.sum()))
             u.entries.sortedByDescending { it.value }.forEach { (kind, bytes) -> StorageLine(kind, bytes) }
         }
 
-        SectionHeader(stringResource(Res.string.data_library))
-        InfoRow(stringResource(Res.string.data_games), entries.count { it.item.kind == ItemKind.GAME }.toString())
-        InfoRow(stringResource(Res.string.data_apps), entries.count { it.item.kind == ItemKind.APP }.toString())
-        InfoRow(stringResource(Res.string.data_with_metadata), entries.count { it.item.metadataState in setOf(MetadataState.OK, MetadataState.LOCKED) }.toString())
-
         SectionHeader(stringResource(Res.string.data_cleanup))
-        ActionText(Res.string.data_clear_cache, stringResource(Res.string.data_clear_cache_sub))
-        LauncherButton(stringResource(Res.string.data_clear_cache), icon = Icons.Filled.CleaningServices, onClick = {
-            scope.launch {
-                val before = usage?.get(StorageKind.CACHE) ?: 0L
-                imageLoader.memoryCache?.clear()
-                withContext(Dispatchers.IO) { imageLoader.diskCache?.clear() }
-                data.clearCache()
-                message = org.jetbrains.compose.resources.getString(Res.string.data_cache_cleared, formatFileSize(before))
-                revision++
-            }
-        })
+        ActionRow(
+            stringResource(Res.string.data_clear_cache),
+            {
+                scope.launch {
+                    val before = usage?.get(StorageKind.CACHE) ?: 0L
+                    imageLoader.memoryCache?.clear()
+                    withContext(Dispatchers.IO) { imageLoader.diskCache?.clear() }
+                    data.clearCache()
+                    message = org.jetbrains.compose.resources.getString(Res.string.data_cache_cleared, formatFileSize(before))
+                    revision++
+                }
+            },
+            stringResource(Res.string.data_clear_cache_sub), Icons.Filled.CleaningServices,
+        )
         val o = orphans
-        ActionText(
-            Res.string.data_orphans,
+        ActionRow(
+            stringResource(Res.string.data_orphans),
+            { scope.launch { data.deleteOrphans(); message = orphansDone; revision++ } },
             when {
                 o == null -> stringResource(Res.string.data_measuring)
                 o.isEmpty -> stringResource(Res.string.data_orphans_none)
                 else -> stringResource(Res.string.data_orphans_sub, o.detachedGames, o.files.size, formatFileSize(o.bytes))
             },
+            Icons.Filled.DeleteSweep, enabled = o != null && !o.isEmpty, hold = true,
         )
-        if (o != null && !o.isEmpty) {
-            HoldToConfirmButton(stringResource(Res.string.data_orphans), icon = Icons.Filled.DeleteSweep, onConfirmed = {
-                scope.launch { data.deleteOrphans(); message = orphansDone; revision++ }
-            })
-        }
-        ActionText(Res.string.data_redownload, stringResource(Res.string.data_redownload_sub))
-        HoldToConfirmButton(stringResource(Res.string.data_redownload), icon = Icons.Filled.CloudDownload, onConfirmed = {
-            scope.launch { data.redownloadArtwork(); message = redownloadDone; revision++ }
-        })
+        ActionRow(
+            stringResource(Res.string.data_redownload),
+            { scope.launch { data.redownloadArtwork(); message = redownloadDone; revision++ } },
+            stringResource(Res.string.data_redownload_sub), Icons.Filled.CloudDownload, hold = true,
+        )
         message?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.accentText) }
 
         BackupSection(settings, update)
 
-        SectionHeader(stringResource(Res.string.data_reset))
-        Text(stringResource(Res.string.data_reset_sub), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
-        LauncherButton(stringResource(Res.string.data_reset), icon = Icons.Filled.DeleteForever, onClick = { resetting = true })
+        SectionHeader(stringResource(Res.string.data_reset_section))
+        ActionRow(stringResource(Res.string.data_reset), { resetting = true }, stringResource(Res.string.data_reset_sub), Icons.Filled.DeleteForever)
         SeeAlso(
             SeeAlsoLink(stringResource(Res.string.metadata_refetch_all), SettingsTarget.Page(SettingsPageId.METADATA), highlight = stringResource(Res.string.metadata_refetch_all), subtitle = stringResource(Res.string.settings_metadata)),
             SeeAlsoLink(stringResource(Res.string.settings_game_sources), SettingsTarget.Page(SettingsPageId.GAME_SOURCES)),
@@ -164,14 +177,6 @@ fun DataSettings(settings: LauncherSettings, update: ((LauncherSettings) -> Laun
 }
 
 /** Title and explanation above an action button. */
-@Composable
-private fun ActionText(title: StringResource, text: String) {
-    Column(Modifier.fillMaxWidth().padding(top = 8.dp).searchHighlight(stringResource(title), RoundedCornerShape(8.dp), focus = false)) {
-        Text(stringResource(title), style = MaterialTheme.typography.titleSmall, color = LauncherTheme.colors.onSurface)
-        Text(text, style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
-    }
-}
-
 private val storageColors = mapOf(
     StorageKind.DATABASE to Color(0xFF42A5F5),
     StorageKind.SETTINGS to Color(0xFF26A69A),
@@ -293,20 +298,20 @@ private fun BackupSection(settings: LauncherSettings, update: ((LauncherSettings
         subtitle = stringResource(Res.string.backup_auto_sub), icon = Icons.Filled.Schedule,
         enabled = folder.isNotEmpty(),
     )
-    ChoiceRow(
-        stringResource(Res.string.backup_keep), listOf(3, 7, 14, 30), settings.backupKeepCount,
-        label = { "$it" }, onSelect = { v -> update { it.copy(backupKeepCount = v) } },
-    )
+    // How many automatic backups stay: only with them on.
+    if (settings.autoBackup) {
+        ChoiceRow(
+            stringResource(Res.string.backup_keep), listOf(3, 7, 14, 30), settings.backupKeepCount,
+            label = { "$it" }, onSelect = { v -> update { it.copy(backupKeepCount = v) } },
+        )
+    }
     SwitchRow(
         stringResource(Res.string.backup_with_credentials), password != null,
         { on -> if (on) keyboard.open(pwTitle, "", TextKind.PASSWORD) { pw -> password = pw.ifEmpty { null } } else password = null },
         subtitle = stringResource(Res.string.backup_with_credentials_sub), icon = Icons.Filled.Key,
     )
-    Text(stringResource(Res.string.backup_restore_hint), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.accentText)
-    ButtonRow(spacing = 12.dp) {
-        LauncherButton(stringResource(Res.string.backup_now), modifier = Modifier.searchHighlight(stringResource(Res.string.backup_now), androidx.compose.foundation.shape.RoundedCornerShape(26.dp)), icon = Icons.Filled.Save, primary = true, onClick = ::backupNow)
-        LauncherButton(stringResource(Res.string.backup_restore), modifier = Modifier.searchHighlight(stringResource(Res.string.backup_restore), androidx.compose.foundation.shape.RoundedCornerShape(26.dp)), icon = Icons.Filled.Restore, onClick = ::restore)
-    }
+    ActionRow(stringResource(Res.string.backup_now), ::backupNow, folder.takeIf { it.isNotEmpty() }?.let(storage::folderLabel), Icons.Filled.Save)
+    ActionRow(stringResource(Res.string.backup_restore), ::restore, stringResource(Res.string.backup_restore_hint), Icons.Filled.Restore)
     message?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurface) }
 
     // Backups of the folder, newest first; restoring needs holding A (it overwrites settings).

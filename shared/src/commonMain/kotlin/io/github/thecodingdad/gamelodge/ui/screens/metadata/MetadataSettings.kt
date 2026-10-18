@@ -1,5 +1,10 @@
 package io.github.thecodingdad.gamelodge.ui.screens.metadata
 
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.CheckCircle
+import io.github.thecodingdad.gamelodge.ui.screens.settings.ActionRow
+import io.github.thecodingdad.gamelodge.ui.components.StatusCard
 import io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId
 import io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget
 import io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlsoLink
@@ -44,37 +49,52 @@ fun MetadataSettings(
     update: ((LauncherSettings) -> LauncherSettings) -> Unit,
     reviewCount: Int,
     openReview: () -> Unit,
+    /** Games in the library and how many of them have metadata. */
+    games: Int = 0,
+    gamesWithMetadata: Int = 0,
 ) {
     val container = io.github.thecodingdad.gamelodge.LocalContainer.current
     val metadata = container.metadata
     val scope = rememberCoroutineScope()
     val progress by metadata.progress.collectAsState()
     val error by metadata.lastError.collectAsState()
+    val stored by androidx.compose.runtime.produceState(0L, progress) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { io.github.thecodingdad.gamelodge.data.artwork.ArtworkFiles.sizeBytes() }
+    }
     SettingsPage(stringResource(Res.string.settings_metadata)) {
         Text(stringResource(Res.string.metadata_intro), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+        val colors = LauncherTheme.colors
+        val running = progress
+        val storedText = stringResource(Res.string.metadata_artwork_storage, io.github.thecodingdad.gamelodge.util.formatFileSize(stored))
+        when {
+            running != null -> StatusCard(
+                stringResource(Res.string.metadata_progress, running.done, running.total), colors.accent, Icons.Filled.CloudDownload, busy = true,
+            )
+            error != null -> StatusCard(stringResource(Res.string.metadata_auth_error, error!!), colors.danger, Icons.Filled.ErrorOutline)
+            !metadata.isConfigured -> StatusCard(
+                stringResource(Res.string.metadata_status_no_source), colors.warning, Icons.Filled.Image,
+                details = listOf(stringResource(Res.string.metadata_status_no_source_sub)),
+            )
+            else -> StatusCard(
+                stringResource(Res.string.metadata_status_complete, gamesWithMetadata, games),
+                if (reviewCount > 0) colors.warning else colors.success, if (reviewCount > 0) Icons.Filled.Checklist else Icons.Filled.CheckCircle,
+                details = listOfNotNull(stringResource(Res.string.metadata_review_count, reviewCount).takeIf { reviewCount > 0 }, storedText),
+            ) {
+                LauncherButton(stringResource(Res.string.metadata_fetch_now), icon = Icons.Filled.CloudDownload, onClick = metadata::refreshPending, primary = reviewCount == 0)
+                if (reviewCount > 0) LauncherButton(stringResource(Res.string.metadata_review_list), icon = Icons.Filled.Checklist, onClick = openReview, primary = true)
+            }
+        }
+        running?.let {
+            LinearProgressIndicator(progress = { it.done.toFloat() / it.total.coerceAtLeast(1) }, modifier = Modifier.fillMaxWidth(), color = colors.accent)
+        }
         SwitchRow(stringResource(Res.string.metadata_auto), settings.autoMetadata, { v -> update { it.copy(autoMetadata = v) } }, initialFocus = true)
-
-        if (reviewCount > 0) {
-            NavRow(stringResource(Res.string.metadata_review_list), openReview, stringResource(Res.string.metadata_review_count, reviewCount), Icons.Filled.Checklist)
-        }
-        progress?.let {
-            Text(stringResource(Res.string.metadata_progress, it.done, it.total), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurface)
-            LinearProgressIndicator(progress = { it.done.toFloat() / it.total.coerceAtLeast(1) }, modifier = Modifier.fillMaxWidth(), color = LauncherTheme.colors.accent)
-        }
-        error?.let { Text(stringResource(Res.string.metadata_auth_error, it), color = LauncherTheme.colors.danger) }
-        io.github.thecodingdad.gamelodge.ui.components.ButtonRow(spacing = 12.dp) {
-            LauncherButton(stringResource(Res.string.metadata_fetch_now), icon = Icons.Filled.CloudDownload, onClick = metadata::refreshPending)
-            HoldToConfirmButton(stringResource(Res.string.metadata_refetch_all), onConfirmed = { scope.launch { metadata.resetAutomatic() } }, icon = Icons.Filled.Refresh)
-        }
 
         SourcesSection(settings.metadataSources)
 
-        val stored by androidx.compose.runtime.produceState(0L, progress) {
-            value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { io.github.thecodingdad.gamelodge.data.artwork.ArtworkFiles.sizeBytes() }
-        }
-        Text(
-            stringResource(Res.string.metadata_artwork_storage, io.github.thecodingdad.gamelodge.util.formatFileSize(stored)),
-            style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted,
+        SectionHeader(stringResource(Res.string.metadata_maintenance))
+        ActionRow(
+            stringResource(Res.string.metadata_refetch_all), { scope.launch { metadata.resetAutomatic() } },
+            stringResource(Res.string.metadata_refetch_all_sub), Icons.Filled.Refresh, hold = true,
         )
         SeeAlso(
             SeeAlsoLink(stringResource(Res.string.settings_game_sources), SettingsTarget.Page(SettingsPageId.GAME_SOURCES)),

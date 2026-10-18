@@ -243,6 +243,11 @@
     <string name="metadata_progress">Fetching metadata: %1$d of %2$d</string>
     <string name="metadata_auth_error">Credentials rejected: %1$s</string>
     <string name="metadata_fetch_now">Fetch now</string>
+    <string name="metadata_status_complete">%1$d of %2$d games with metadata</string>
+    <string name="metadata_status_no_source">No source set up</string>
+    <string name="metadata_status_no_source_sub">Add a source below, e.g. SteamGridDB with your own key.</string>
+    <string name="metadata_maintenance">Maintenance</string>
+    <string name="metadata_refetch_all_sub">Looks up all automatically found metadata again; your corrections stay.</string>
     <string name="metadata_refetch_all">Re-fetch all</string>
     <string name="metadata_sgdb_help">Create a key at steamgriddb.com → Preferences → API.</string>
     <string name="metadata_igdb_help">Register an app at dev.twitch.tv/console (category: Application Integration, OAuth redirect URL: http://localhost, client type: Confidential), create a secret and copy client ID and secret.</string>
@@ -419,8 +424,8 @@
     <string name="qm_quit_game">Quit game</string>
 
     <!-- Backup -->
-    <string name="backup_intro">Saves settings, stream profiles, host settings, favourites, filters and groups, corrected metadata and Home Assistant entities. Pairing with hosts is not included; on a new device pair the hosts first.</string>
-    <string name="backup_restore_hint">Before restoring, pair all hosts under Settings → Hosts and wait until their games appear. Favourites, play time and metadata are only applied to games already in the library.</string>
+    <string name="backup_intro">Saves settings, profiles, favourites, filters, corrections and Home Assistant entities, without pairings.</string>
+    <string name="backup_restore_hint">Pair all hosts first, so favourites and play time find their games.</string>
     <string name="backup_folder">Backup folder</string>
     <string name="backup_auto">Daily automatic backup</string>
     <string name="backup_auto_sub">Into the backup folder, without credentials</string>
@@ -437,7 +442,6 @@
     <string name="settings_data_sub">Storage, clean-up and backups</string>
     <string name="data_storage">Storage</string>
     <string name="data_measuring">Measuring…</string>
-    <string name="data_total">In total</string>
     <string name="storage_database">Library database</string>
     <string name="storage_settings">Settings, hosts and profiles</string>
     <string name="storage_artwork">Downloaded artwork</string>
@@ -447,10 +451,6 @@
     <string name="storage_logs">Logs</string>
     <string name="storage_streaming">Streaming client (Moonlight-Qt)</string>
     <string name="storage_host_role">Streaming host (covers, backups)</string>
-    <string name="data_library">Library</string>
-    <string name="data_games">Games</string>
-    <string name="data_apps">Apps</string>
-    <string name="data_with_metadata">With metadata</string>
     <string name="data_cleanup">Clean up</string>
     <string name="data_clear_cache">Clear cache</string>
     <string name="data_clear_cache_sub">Image cache and stored server responses; filled again when needed.</string>
@@ -463,6 +463,11 @@
     <string name="data_redownload_sub">Deletes the stored artwork; it is downloaded again in the background.</string>
     <string name="data_redownload_done">Artwork is being downloaded again.</string>
     <string name="data_reset">Delete all data</string>
+    <string name="data_status_used">%1$s used</string>
+    <string name="data_status_library">%1$d games · %2$d apps · %3$d with metadata</string>
+    <string name="data_status_last_backup">Last backup: %1$s</string>
+    <string name="data_status_no_backup">No backup in the folder yet</string>
+    <string name="data_reset_section">Reset</string>
     <string name="data_reset_sub">Resets the launcher: library, settings, pairings and credentials are deleted.</string>
     <string name="data_reset_title">Delete all data?</string>
     <string name="data_reset_text">Everything the launcher stores is deleted: library, play times, metadata, settings, stream profiles, paired hosts and credentials. Back up first if you want to keep anything. The launcher closes afterwards.</string>
@@ -1048,7 +1053,7 @@
     <string name="servers_remove">Hold to remove</string>
     <string name="servers_remove_hint">Remove the device on the server too, so its access ends there.</string>
     <string name="metadata_sources">Sources</string>
-    <string name="metadata_intro">Covers, backgrounds and logos come from SteamGridDB; descriptions, genres, developer, publisher, series, features, age ratings and release dates from IGDB. Add them below as sources: with your own keys, through a metadata server or through the host.</string>
+    <string name="metadata_intro">Images come from SteamGridDB, descriptions and details from IGDB.</string>
     <string name="metadata_sources_help">Your own keys are used first (shortest way), then metadata servers, then hosts; when one is not reachable or can't answer, the next one is used. Host games always take the data of their host.</string>
     <string name="metadata_sources_empty">No source added yet.</string>
     <string name="metadata_source_add">Add source</string>

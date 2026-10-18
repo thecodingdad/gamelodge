@@ -1,5 +1,10 @@
 package io.github.thecodingdad.gamelodge.desktop
 
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.SportsEsports
+import io.github.thecodingdad.gamelodge.ui.screens.settings.ActionRow
+import io.github.thecodingdad.gamelodge.ui.components.StatusCard
 import io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId
 import io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget
 import io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlsoLink
@@ -72,23 +77,31 @@ fun GameSourcesPage(library: PcLibrary, settings: LauncherSettings, update: ((La
         // A scan running: which stores are still being looked at.
         val scanning by library.scanning.collectAsState()
         val hostRepository = io.github.thecodingdad.gamelodge.LocalContainer.current.hosts
-        NavRow(
-            stringResource(Res.string.game_sources_scan_now),
-            { library.rescan(); hostRepository.refreshAppLists() },
-            subtitle = stringResource(Res.string.game_sources_scan_now_sub),
-            icon = androidx.compose.material.icons.Icons.Filled.Refresh,
-        )
-        scanning?.let { p ->
-            Text(
-                stringResource(Res.string.task_pc_scan) + " · " + p.pending.joinToString { storeNames[it] ?: it },
-                style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted,
+        val active = library.sources.filter { installed[it] != false && it !in settings.disabledGameSources }
+        val total = active.sumOf { counts[it]?.first ?: 0 }
+        val installedGames = active.sumOf { counts[it]?.second ?: 0 }
+        val scan = scanning
+        StatusCard(
+            if (scan != null) stringResource(Res.string.game_sources_scanning) else stringResource(Res.string.game_sources_status, total, active.size),
+            if (scan != null) LauncherTheme.colors.accent else LauncherTheme.colors.success,
+            Icons.Filled.SportsEsports, busy = scan != null,
+            details = listOf(
+                if (scan != null) scan.pending.joinToString { storeNames[it] ?: it } else stringResource(Res.string.game_sources_status_installed, installedGames),
+            ),
+        ) {
+            LauncherButton(
+                stringResource(Res.string.game_sources_scan_now), onClick = { library.rescan(); hostRepository.refreshAppLists() },
+                icon = Icons.Filled.Refresh, enabled = scan == null, primary = true,
             )
+        }
+        scan?.let { p ->
             androidx.compose.material3.LinearProgressIndicator(
                 progress = { p.done.toFloat() / p.total.coerceAtLeast(1) },
                 modifier = androidx.compose.ui.Modifier.fillMaxWidth(), color = LauncherTheme.colors.accent,
             )
         }
-        library.sources.forEachIndexed { index, source ->
+        @Composable
+        fun StoreRow(source: String, initialFocus: Boolean) {
             val present = installed[source] != false
             val on = source !in settings.disabledGameSources
             val count = counts[source]
@@ -101,23 +114,37 @@ fun GameSourcesPage(library: PcLibrary, settings: LauncherSettings, update: ((La
                     count == null || count.first == 0 -> stringResource(Res.string.game_source_none)
                     else -> stringResource(Res.string.game_source_count, count.first, count.second)
                 },
-                initialFocus = index == 0,
+                initialFocus = initialFocus,
                 enabled = present,
             )
         }
+        // Stores found on this PC first; the others folded away.
+        val (present, missing) = library.sources.partition { installed[it] != false }
+        SectionHeader(stringResource(Res.string.settings_game_sources))
+        present.forEachIndexed { index, source -> StoreRow(source, index == 0) }
+        if (missing.isNotEmpty()) {
+            var showMissing by remember { mutableStateOf(false) }
+            ActionRow(
+                stringResource(Res.string.game_sources_not_installed, missing.size), { showMissing = !showMissing },
+                missing.joinToString { storeNames[it] ?: it },
+                if (showMissing) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+            )
+            if (showMissing) missing.forEach { StoreRow(it, false) }
+        }
 
         SectionHeader(stringResource(Res.string.steam_account))
-        Text(stringResource(Res.string.steam_account_intro), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
-        Text(
-            if (steam.signedIn) stringResource(Res.string.steam_signed_in, steam.accountName ?: "Steam") else stringResource(Res.string.steam_signed_out),
-            style = MaterialTheme.typography.bodyLarge, color = if (steam.signedIn) LauncherTheme.colors.success else LauncherTheme.colors.onSurface,
-        )
         if (steam.signedIn) {
-            LauncherButton(stringResource(Res.string.steam_sign_out), onClick = { library.steam.signOut(); library.rescan() }, icon = Icons.AutoMirrored.Filled.Logout)
+            ActionRow(
+                stringResource(Res.string.steam_sign_out), { library.steam.signOut(); library.rescan() },
+                stringResource(Res.string.steam_signed_in, steam.accountName ?: "Steam"), Icons.AutoMirrored.Filled.Logout,
+            )
         } else {
-            LauncherButton(stringResource(Res.string.steam_sign_in), onClick = { qr = true }, icon = Icons.Filled.QrCode2, primary = true)
+            ActionRow(
+                stringResource(Res.string.steam_sign_in), { qr = true },
+                stringResource(Res.string.steam_account_intro), Icons.Filled.QrCode2,
+            )
         }
-            io.github.thecodingdad.gamelodge.desktop.games.CustomGamesSection(settings, update)
+        io.github.thecodingdad.gamelodge.desktop.games.CustomGamesSection(settings, update)
         SeeAlso(
             SeeAlsoLink(stringResource(Res.string.settings_emulators), SettingsTarget.Page(SettingsPageId.EMULATORS)),
             SeeAlsoLink(stringResource(Res.string.settings_streaming_host), SettingsTarget.Page(SettingsPageId.STREAMING_HOST)),
