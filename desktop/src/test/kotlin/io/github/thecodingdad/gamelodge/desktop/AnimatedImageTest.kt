@@ -49,8 +49,13 @@ class AnimatedImageTest {
         assertEquals(1, image.width)
         val first = pixel(image)
         assertEquals(0xFFFF0000.toInt(), first)
-        Thread.sleep(130)
-        val second = pixel(image)
+        // The next frame is decoded in the background after the first one's 100 ms.
+        var second = first
+        val until = System.currentTimeMillis() + 2_000
+        while (second == first && System.currentTimeMillis() < until) {
+            Thread.sleep(30)
+            second = pixel(image)
+        }
         assertEquals(0xFF0000FF.toInt(), second)
         assertNotEquals(first, second)
     }
