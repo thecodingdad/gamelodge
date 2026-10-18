@@ -184,10 +184,16 @@ class ArtemisHostRepository(
         )
     }
 
+    /** Paired again (or added again), the host sends the same list: it must count as new then. */
+    fun forgetAppList(uuid: String) {
+        synchronized(lastRawAppLists) { lastRawAppLists.remove(uuid) }
+    }
+
     override fun removeHost(host: HostState) {
         details[host.uuid]?.let { binder?.removeComputer(it) }
         details.remove(host.uuid)
         nvApps.remove(host.uuid)
+        forgetAppList(host.uuid)
         _hosts.update { it - host.uuid }
         _appLists.update { it - host.uuid }
     }

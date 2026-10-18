@@ -27,6 +27,7 @@ class ArtemisHostActions(
             when (pm.pair(http.getServerInfo(true), pin, null)) {
                 PairingManager.PairState.PAIRED -> {
                     binder.getComputer(host.uuid)?.serverCert = pm.pairedCert
+                    hosts.forgetAppList(host.uuid)
                     binder.invalidateStateForComputer(host.uuid)
                     PairResult.PAIRED
                 }
