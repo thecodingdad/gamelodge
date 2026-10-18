@@ -702,7 +702,7 @@ private fun MainShell(
                                 ButtonHint(PadButton.L1, stringResource(Res.string.hint_tabs), secondButton = PadButton.R1),
                             ),
                         )
-                        val empty: @Composable () -> Unit = { EmptyHome { tab = MainTab.SETTINGS.ordinal } }
+                        val empty: @Composable () -> Unit = { io.github.thecodingdad.gamelodge.ui.screens.library.EmptyLibrary() }
                         HeroHome(
                             rows, callbacks, homeFilters,
                             haRow = if (settings.showHaRowOnHome && io.github.thecodingdad.gamelodge.LocalContainer.current.ha.auth.isLoggedIn) ({ HaHomeRow() }) else null,
@@ -1009,27 +1009,6 @@ private fun TabChip(label: String, selected: Boolean, onClick: () -> Unit) {
             style = MaterialTheme.typography.titleMedium,
             color = if (selected) colors.background else colors.onSurfaceMuted,
             modifier = Modifier.padding(horizontal = 18.dp, vertical = 8.dp),
-        )
-    }
-}
-
-@Composable
-private fun EmptyHome(openSettings: () -> Unit) {
-    Column(
-        Modifier.fillMaxSize().padding(48.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(stringResource(Res.string.home_empty_title), style = MaterialTheme.typography.headlineMedium, color = LauncherTheme.colors.onSurface)
-        Text(
-            stringResource(Res.string.home_empty_message),
-            style = MaterialTheme.typography.bodyLarge,
-            color = LauncherTheme.colors.onSurfaceMuted,
-            modifier = Modifier.padding(top = 8.dp, bottom = 24.dp),
-        )
-        io.github.thecodingdad.gamelodge.ui.components.LauncherButton(
-            stringResource(Res.string.settings_hosts), onClick = openSettings, primary = true,
-            modifier = Modifier.restoreFocusIf(true),
         )
     }
 }

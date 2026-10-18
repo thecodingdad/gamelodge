@@ -73,9 +73,34 @@ fun TasksPopup() {
         title = stringResource(Res.string.tasks_title),
         maxWidth = 600.dp,
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            tasks.forEach { TaskLine(it) }
+        val navigate = io.github.thecodingdad.gamelodge.ui.screens.settings.LocalSettingsNavigator.current
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            tasks.forEach { task ->
+                val target = settingsFor(task.id)
+                io.github.thecodingdad.gamelodge.ui.components.FocusSurface(
+                    onClick = {
+                        if (target != null) {
+                            BackgroundTasks.popupOpen = false
+                            navigate(target, null)
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(), color = LauncherTheme.colors.surfaceRaised, focusScale = 1.02f,
+                ) { Box(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) { TaskLine(task) } }
+            }
         }
+    }
+}
+
+/** Where a task is set up: tapping it in the list opens that page. */
+private fun settingsFor(taskId: String): io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget? {
+    fun to(id: io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId) = io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Page(id)
+    return when {
+        taskId == "metadata" || taskId == "artwork" -> to(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId.METADATA)
+        taskId == "host-sync" -> to(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId.STREAMING_HOST)
+        taskId == "pc-scan" -> to(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId.GAME_SOURCES)
+        taskId.startsWith("applist-") || taskId.startsWith("boxart-") ->
+            io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Host(taskId.substringAfter('-'))
+        else -> null
     }
 }
 

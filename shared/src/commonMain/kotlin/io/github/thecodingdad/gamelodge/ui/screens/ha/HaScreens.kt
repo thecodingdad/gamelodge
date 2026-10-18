@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Computer
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -91,7 +92,9 @@ fun HaPanel(visible: Boolean, onDismiss: () -> Unit, openSettings: () -> Unit) {
     SidePanel(visible = visible, onDismiss = onDismiss, width = 470.dp) {
         androidx.compose.foundation.layout.Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
             io.github.thecodingdad.gamelodge.ui.components.CloseArrow(onDismiss)
-            Text(stringResource(Res.string.settings_home_assistant), style = MaterialTheme.typography.headlineSmall, color = LauncherTheme.colors.onSurface)
+            Text(stringResource(Res.string.settings_home_assistant), style = MaterialTheme.typography.headlineSmall, color = LauncherTheme.colors.onSurface, modifier = Modifier.weight(1f))
+            // Entities and sign-in are edited in the settings.
+            LauncherButton("", onClick = { onDismiss(); openSettings() }, icon = Icons.Filled.Settings)
         }
         Text(connectionLabel(connection), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
         Spacer(Modifier.height(16.dp))

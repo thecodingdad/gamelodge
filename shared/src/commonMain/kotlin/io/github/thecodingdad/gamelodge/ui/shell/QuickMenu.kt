@@ -109,7 +109,11 @@ fun QuickMenu(
             val tileIds by c.settings.settings.collectAsState(io.github.thecodingdad.gamelodge.data.settings.LauncherSettings())
             // Running background work (the status bar spinner is touch only).
             TasksRow()
-            QuickTileGrid(rememberQuickTiles(tileIds.quickTiles, onHost = onHost, onControllers = onControllers))
+            val navigate = io.github.thecodingdad.gamelodge.ui.screens.settings.LocalSettingsNavigator.current
+            QuickTileGrid(rememberQuickTiles(tileIds.quickTiles, onHost = onHost, onControllers = onControllers)) { target ->
+                onDismiss()
+                navigate(target, null)
+            }
             // Volume, brightness … of the device.
             io.github.thecodingdad.gamelodge.ui.PlatformUi.current.SystemControls(visible)
 

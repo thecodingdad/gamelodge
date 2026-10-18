@@ -37,6 +37,7 @@ import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.CircularProgressIndicator
@@ -203,6 +204,16 @@ fun LaunchOverlay(
         Spacer(Modifier.height(24.dp))
         io.github.thecodingdad.gamelodge.ui.components.ButtonRow(spacing = 12.dp) {
             LauncherButton(stringResource(Res.string.action_retry), onClick = { onRetry(failed.entry) }, primary = true)
+            // Offline or not woken: how the host is woken is set in its settings.
+            val host = failed.entry.remoteTargets.firstOrNull()?.hostUuid
+            if (host != null && (failed.reason == io.github.thecodingdad.gamelodge.stream.LaunchError.HOST_OFFLINE || failed.reason == io.github.thecodingdad.gamelodge.stream.LaunchError.WAKE_FAILED)) {
+                val navigate = io.github.thecodingdad.gamelodge.ui.screens.settings.LocalSettingsNavigator.current
+                val wakeMethod = stringResource(Res.string.host_wake_method)
+                LauncherButton(stringResource(Res.string.host_wake_method), onClick = {
+                    onDismiss()
+                    navigate(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Host(host), wakeMethod)
+                }, icon = androidx.compose.material.icons.Icons.Filled.Settings)
+            }
             LauncherButton(stringResource(Res.string.action_close), onClick = onDismiss)
         }
     }

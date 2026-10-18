@@ -212,8 +212,16 @@ fun rememberQuickTiles(ids: List<String>, onHost: (String) -> Unit, onController
  * Quick tiles in pages of up to two rows of three. More than six tiles: page dots below, and
  * both swiping and the D-pad move a whole page at a time.
  */
+/** Where a launcher tile is set up (long press / hold A opens it); system tiles have none. */
+fun quickTileSettings(key: String): io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget? = when (key) {
+    QuickTile.CONTROLLERS -> io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Controllers
+    QuickTile.HOSTS -> io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Page(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId.HOSTS)
+    QuickTile.VPN -> io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Page(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId.VPN)
+    else -> null
+}
+
 @Composable
-fun QuickTileGrid(tiles: List<TileModel>) {
+fun QuickTileGrid(tiles: List<TileModel>, onSettings: (io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget) -> Unit = {}) {
     val columns = 3
     val pages = tiles.chunked(columns * 2).ifEmpty { listOf(emptyList()) }
     val pager = androidx.compose.foundation.pager.rememberPagerState { pages.size }
@@ -243,6 +251,7 @@ fun QuickTileGrid(tiles: List<TileModel>) {
                         row.forEachIndexed { i, tile ->
                             QuickTileView(
                                 tile,
+                                onLongClick = quickTileSettings(tile.key)?.let { target -> { onSettings(target) } },
                                 initialFocus = page == 0 && r == 0 && i == 0,
                                 // D-pad onto a tile of another page: show that whole page.
                                 onFocused = { if (pager.currentPage != page) scope.launch { pager.animateScrollToPage(page) } },
@@ -282,9 +291,10 @@ private fun PageDots(count: Int, current: Int, onSelect: (Int) -> Unit) {
 }
 
 @Composable
-private fun QuickTileView(tile: TileModel, initialFocus: Boolean, onFocused: () -> Unit, modifier: Modifier) {
+private fun QuickTileView(tile: TileModel, onLongClick: (() -> Unit)?, initialFocus: Boolean, onFocused: () -> Unit, modifier: Modifier) {
     FocusSurface(
         onClick = tile.onClick,
+        onLongClick = onLongClick,
         onFocused = onFocused,
         modifier = modifier.then(if (initialFocus) Modifier.restoreFocusIf(true) else Modifier),
         color = LauncherTheme.colors.surfaceRaised,

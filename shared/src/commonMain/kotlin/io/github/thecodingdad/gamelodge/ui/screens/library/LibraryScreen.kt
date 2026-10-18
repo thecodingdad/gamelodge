@@ -175,6 +175,10 @@ fun LibraryScreen(
         focusRequests = filterFocusRequests,
             onStats = openStats,
         )
+        if (allEntries.isEmpty()) {
+            EmptyLibrary()
+            return@Column
+        }
         if (shown.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(stringResource(Res.string.library_empty_filter), style = MaterialTheme.typography.titleMedium, color = LauncherTheme.colors.onSurfaceMuted)

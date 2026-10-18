@@ -84,6 +84,7 @@ fun FixMetadataDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
 
         if (!metadata.isConfigured) {
             Text(stringResource(Res.string.metadata_not_configured), style = MaterialTheme.typography.bodyLarge, color = LauncherTheme.colors.onSurface)
+            MetadataSourcesShortcut(onDismiss)
             return@Modal
         }
         LauncherTextField(stringResource(Res.string.hint_search), query, onValueChange = { q -> query = q })
@@ -125,6 +126,20 @@ fun FixMetadataDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
             }
         }
     }
+}
+
+/** Without a metadata source: straight to adding one (closes the dialog it is in). */
+@Composable
+private fun MetadataSourcesShortcut(onDismiss: () -> Unit) {
+    val navigate = io.github.thecodingdad.gamelodge.ui.screens.settings.LocalSettingsNavigator.current
+    val sources = stringResource(Res.string.metadata_sources)
+    io.github.thecodingdad.gamelodge.ui.components.LauncherButton(
+        stringResource(Res.string.metadata_source_add), primary = true,
+        onClick = {
+            onDismiss()
+            navigate(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Page(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId.METADATA), sources)
+        },
+    )
 }
 
 /**
@@ -296,7 +311,10 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, targets: List<io.github.thecod
                 }
                 when {
                     !metadata.isConfigured && list.isNullOrEmpty() -> item(key = "status", span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
-                        Text(stringResource(Res.string.metadata_not_configured), color = LauncherTheme.colors.onSurfaceMuted)
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Text(stringResource(Res.string.metadata_not_configured), color = LauncherTheme.colors.onSurfaceMuted)
+                            MetadataSourcesShortcut(onDismiss)
+                        }
                     }
                     list == null -> item(key = "status", span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
                         // A grid cell spans the full width: the spinner keeps its own size, centred.
