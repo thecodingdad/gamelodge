@@ -154,19 +154,18 @@ fun HomeScreenSettings(
         val byId = gameFilters.associateBy { it.id }
         val appsPrefix = stringResource(Res.string.tab_apps)
         val HA = io.github.thecodingdad.gamelodge.data.library.HomeRowOrder.HA
-        // The Home Assistant row only while signed in to Home Assistant; it keeps its place meanwhile.
-        val haShown = io.github.thecodingdad.gamelodge.LocalContainer.current.ha.auth.isLoggedIn
-        val allRows = io.github.thecodingdad.gamelodge.data.library.HomeRowOrder.ids(gameFilters.map { it.id }, settings.homeRowOrder)
+        // The Home Assistant row needs a Home Assistant sign-in; without one it is greyed out (still movable).
+        val haSignedIn = io.github.thecodingdad.gamelodge.LocalContainer.current.ha.auth.isLoggedIn
         ReorderableList(
-            items = if (haShown) allRows else allRows - HA,
+            items = io.github.thecodingdad.gamelodge.data.library.HomeRowOrder.ids(gameFilters.map { it.id }, settings.homeRowOrder),
             id = { it },
-            onReorder = { ids ->
-                val order = if (haShown) ids else ids.toMutableList().apply { add(allRows.indexOf(HA).coerceIn(0, size), HA) }
-                update { it.copy(homeRowOrder = order) }
-            },
+            onReorder = { ids -> update { it.copy(homeRowOrder = ids) } },
         ) { _, id ->
             if (id == HA) {
-                SwitchRow(stringResource(Res.string.home_row_ha), settings.showHaRowOnHome, { v -> update { it.copy(showHaRowOnHome = v) } })
+                SwitchRow(
+                    stringResource(Res.string.home_row_ha), settings.showHaRowOnHome, { v -> update { it.copy(showHaRowOnHome = v) } },
+                    subtitle = if (haSignedIn) null else stringResource(Res.string.home_row_ha_needs_ha), enabled = haSignedIn,
+                )
             } else {
                 // Same switch as "Show on start tab" in the filter settings.
                 byId[id]?.let { f ->

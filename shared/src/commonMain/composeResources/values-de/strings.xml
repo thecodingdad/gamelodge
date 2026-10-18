@@ -124,6 +124,7 @@
     <string name="home_rows_section">Reihen im Start-Tab</string>
     <string name="home_rows_help">Welche Filter als Reihen im Start-Tab erscheinen und in welcher Reihenfolge (unabhängig von der Bibliothek). Reihe am Griff verschieben: ziehen oder auswählen und mit hoch/runter bewegen.</string>
     <string name="home_row_ha">Home-Assistant-Favoriten</string>
+    <string name="home_row_ha_needs_ha">Braucht eine Home-Assistant-Anmeldung (Einstellungen › Home Assistant)</string>
     <string name="settings_theme">Theme &amp; Farben</string>
     <string name="settings_theme_sub">Dunkel, Schwarz, Hell, Akzentfarbe</string>
     <string name="settings_display">Anzeige</string>

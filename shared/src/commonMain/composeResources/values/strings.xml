@@ -126,6 +126,7 @@
     <string name="home_rows_section">Rows on the start tab</string>
     <string name="home_rows_help">Which filters appear as rows on the start tab and in which order (independent of the library). Move a row with the handle: drag it, or select it and use up/down.</string>
     <string name="home_row_ha">Home Assistant favourites</string>
+    <string name="home_row_ha_needs_ha">Needs a Home Assistant sign-in (Settings › Home Assistant)</string>
     <string name="settings_theme">Theme &amp; colours</string>
     <string name="settings_theme_sub">Dark, black, light, accent colour</string>
     <string name="settings_display">Display</string>
