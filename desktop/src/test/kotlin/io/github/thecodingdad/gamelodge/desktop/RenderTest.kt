@@ -128,6 +128,34 @@ class RenderTest {
     }
 
     @Test
+    fun aboutPageRenders() {
+        val dir = Files.createTempDirectory("launcher-about").toFile()
+        val container = DesktopContainer(dir)
+        PlatformUi.current = DesktopPlatformUi(Gamepads(InputDispatcher()), { null }, { null })
+        fun <T> ui(block: () -> T): T {
+            var result: Result<T>? = null
+            javax.swing.SwingUtilities.invokeAndWait { result = runCatching(block) }
+            return result!!.getOrThrow()
+        }
+        val settings = io.github.thecodingdad.gamelodge.data.settings.LauncherSettings()
+        val scene = ui {
+            ImageComposeScene(1600, 1400, Density(1.5f)) {
+                CompositionLocalProvider(LocalContainer provides container) {
+                    io.github.thecodingdad.gamelodge.ui.theme.LauncherTheme(settings) {
+                        androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.fillMaxSize().background(io.github.thecodingdad.gamelodge.ui.theme.LauncherTheme.colors.background)) {
+                            io.github.thecodingdad.gamelodge.ui.screens.settings.AboutSettings {}
+                        }
+                    }
+                }
+            }
+        }
+        ui { scene.render(0) }
+        Thread.sleep(1000)
+        val image = ui { scene.render(500_000_000L).also { scene.close() } }
+        File("build/render").apply { mkdirs() }.resolve("about.png").writeBytes(image.encodeToData(EncodedImageFormat.PNG)!!.bytes)
+    }
+
+    @Test
     fun dataPageRenders() {
         val dir = Files.createTempDirectory("launcher-data").toFile()
         val container = DesktopContainer(dir)

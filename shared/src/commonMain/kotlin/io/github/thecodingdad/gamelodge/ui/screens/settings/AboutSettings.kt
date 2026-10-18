@@ -1,7 +1,19 @@
 package io.github.thecodingdad.gamelodge.ui.screens.settings
 
 import io.github.thecodingdad.gamelodge.ui.components.mouseDragScroll
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import org.jetbrains.compose.resources.painterResource
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.rememberScrollState
@@ -52,7 +64,7 @@ fun AboutSettings(openLicenses: () -> Unit) {
     val version = io.github.thecodingdad.gamelodge.LocalContainer.current.platform.versionName
     var showing by remember { mutableStateOf<LicenseText?>(null) }
     SettingsPage(stringResource(Res.string.settings_about)) {
-        InfoRow(stringResource(Res.string.launcher_name), version)
+        AboutBanner(version)
         NavRow(
             stringResource(Res.string.about_license), { showing = LicenseText("GNU General Public License v3.0", "gpl-3.0") },
             icon = Icons.Filled.Gavel, trailing = "GPLv3",
@@ -72,6 +84,30 @@ fun AboutSettings(openLicenses: () -> Unit) {
         NavRow("ES-DE", { openUrl("https://es-de.org") }, stringResource(Res.string.about_source_esde), Icons.AutoMirrored.Filled.OpenInNew)
     }
     LicenseTextModal(showing) { showing = null }
+}
+
+/** GameLodge banner on the brand background, the version in the bottom right corner. */
+@Composable
+private fun AboutBanner(version: String) {
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .height(200.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(Brush.verticalGradient(listOf(Color(0xFF1A1E27), Color(0xFF0E1015)))),
+    ) {
+        Image(
+            painterResource(Res.drawable.gamelodge_banner),
+            contentDescription = stringResource(Res.string.launcher_name),
+            modifier = Modifier.align(Alignment.Center).fillMaxHeight(),
+        )
+        Text(
+            "v$version",
+            style = MaterialTheme.typography.labelLarge,
+            color = Color(0xFFA3A8B8),
+            modifier = Modifier.align(Alignment.BottomEnd).padding(horizontal = 16.dp, vertical = 12.dp),
+        )
+    }
 }
 
 /** Every bundled open source component; A shows its license text. */
