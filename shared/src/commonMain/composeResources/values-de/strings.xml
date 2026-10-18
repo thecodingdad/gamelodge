@@ -308,7 +308,8 @@
     <string name="ha_relogin">Neu anmelden</string>
     <string name="ha_logout">Abmelden</string>
     <string name="ha_login_waiting">Anmeldung im Browser abschließen …</string>
-    <string name="ha_tiles">Entitäten</string>
+    <string name="ha_tiles">Entitäten-Favoriten</string>
+    <string name="ha_entities_intro">Diese Entitäten steuerst du von überall im Home-Assistant-Panel (Y) und, wenn eingeschaltet, als Reihe auf dem Startbildschirm.</string>
     <string name="ha_add_tile">Entität hinzufügen</string>
     <string name="ha_events_help">Für Automationen sendet der Launcher die Events moonlight_launcher_stream_started und moonlight_launcher_stream_stopped (mit Spiel, Host und Profil).</string>
 

@@ -310,7 +310,8 @@
     <string name="ha_relogin">Sign in again</string>
     <string name="ha_logout">Sign out</string>
     <string name="ha_login_waiting">Finish the sign-in in the browser…</string>
-    <string name="ha_tiles">Entities</string>
+    <string name="ha_tiles">Entity favourites</string>
+    <string name="ha_entities_intro">Control these entities from anywhere in the Home Assistant panel (Y) and, when switched on, as a row on the home screen.</string>
     <string name="ha_add_tile">Add entity</string>
     <string name="ha_events_help">For automations the launcher fires the events moonlight_launcher_stream_started and moonlight_launcher_stream_stopped (with game, host and profile).</string>
 

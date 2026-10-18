@@ -166,22 +166,7 @@ fun HaSettings(
         }
 
         SectionHeader(stringResource(Res.string.ha_tiles))
-        // Shown, hidden and placed with the other rows of the home screen: leads there.
-        val favourites = stringResource(Res.string.home_row_ha)
-        NavRow(
-            favourites,
-            {
-                io.github.thecodingdad.gamelodge.ui.screens.settings.SearchHighlight.request(favourites)
-                openPage(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId.HOME_SCREEN)
-            },
-            listOf(
-                stringResource(if (settings.showHaRowOnHome) Res.string.ha_on else Res.string.ha_off),
-                stringResource(Res.string.tab_settings) + " › " + stringResource(Res.string.settings_home_screen),
-            ).joinToString(" · "),
-            Icons.Filled.Home, initialFocus = true,
-            // The link itself bears the title it lights up elsewhere: it must not take that request.
-            highlightable = false,
-        )
+        Text(stringResource(Res.string.ha_entities_intro), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceMuted)
         tiles.forEach { tile ->
             val entity = entities[tile.entityId]
             val group = EntityGroup.of(tile.entityId.substringBefore('.'))
@@ -214,6 +199,13 @@ fun HaSettings(
             }
         }
         Text(stringResource(Res.string.ha_events_help), style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceMuted)
+        io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlso(
+            io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlsoLink(
+                stringResource(Res.string.settings_home_screen),
+                io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Page(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId.HOME_SCREEN),
+                highlight = stringResource(Res.string.home_row_ha), subtitle = stringResource(Res.string.home_row_ha),
+            ),
+        )
     }
 
     if (loginShown) LoginDialog(settings, update) { loginShown = false }
