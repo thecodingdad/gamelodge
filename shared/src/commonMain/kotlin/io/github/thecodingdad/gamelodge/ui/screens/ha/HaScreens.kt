@@ -179,6 +179,8 @@ fun HaSettings(
                 stringResource(Res.string.tab_settings) + " › " + stringResource(Res.string.settings_home_screen),
             ).joinToString(" · "),
             Icons.Filled.Home, initialFocus = true,
+            // The link itself bears the title it lights up elsewhere: it must not take that request.
+            highlightable = false,
         )
         tiles.forEach { tile ->
             val entity = entities[tile.entityId]
