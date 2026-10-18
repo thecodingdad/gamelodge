@@ -66,11 +66,11 @@ Type: filesandordirs; Name: "{app}\lib"
 Type: filesandordirs; Name: "{app}\runtime"
 
 [Icons]
-Name: "{autoprograms}\{#AppName}"; Filename: "{app}\runtime\bin\javaw.exe"; Parameters: "{#JavaArgs}"; WorkingDir: "{app}"; IconFilename: "{app}\icon.ico"
-Name: "{autodesktop}\{#AppName}"; Filename: "{app}\runtime\bin\javaw.exe"; Parameters: "{#JavaArgs}"; WorkingDir: "{app}"; IconFilename: "{app}\icon.ico"; Tasks: desktopicon
+Name: "{autoprograms}\{#AppName}"; Filename: "{app}\runtime\bin\GameLodge.exe"; Parameters: "{#JavaArgs}"; WorkingDir: "{app}"; IconFilename: "{app}\icon.ico"
+Name: "{autodesktop}\{#AppName}"; Filename: "{app}\runtime\bin\GameLodge.exe"; Parameters: "{#JavaArgs}"; WorkingDir: "{app}"; IconFilename: "{app}\icon.ico"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\runtime\bin\javaw.exe"; Parameters: "{#JavaArgs}"; WorkingDir: "{app}"; Description: "{cm:StartNow}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\runtime\bin\GameLodge.exe"; Parameters: "{#JavaArgs}"; WorkingDir: "{app}"; Description: "{cm:StartNow}"; Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]
 ; Moonlight-Qt's settings and caches written next to it (current-user installs).
