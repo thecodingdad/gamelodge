@@ -61,7 +61,7 @@ class BackupManagerTest {
     @Test
     fun `user changes survive export and import into a fresh install`() = runTest {
         val settings = io.github.thecodingdad.gamelodge.platform.AndroidStores.settings(context)
-        val manager = BackupManager(context, source, settings, io.github.thecodingdad.gamelodge.platform.AndroidStores.secrets(context))
+        val manager = BackupManager(source, settings, io.github.thecodingdad.gamelodge.platform.AndroidStores.secrets(context), io.github.thecodingdad.gamelodge.data.backup.ArtemisStreamBackup(context))
         seedLibrary(source)
         val dao = source.libraryDao()
         val elden = dao.getAllItems().first { it.title == "Elden Ring" }
@@ -80,7 +80,7 @@ class BackupManagerTest {
         settings.update { it.copy(startTab = StartTab.HOME) }
         PreferenceManager.getDefaultSharedPreferences(context).edit().clear().apply()
         seedLibrary(target)
-        BackupManager(context, target, settings, io.github.thecodingdad.gamelodge.platform.AndroidStores.secrets(context)).restore(manager.decode(text), null)
+        BackupManager(target, settings, io.github.thecodingdad.gamelodge.platform.AndroidStores.secrets(context), io.github.thecodingdad.gamelodge.data.backup.ArtemisStreamBackup(context)).restore(manager.decode(text), null)
 
         val restored = target.libraryDao().getAllItems().associateBy { it.title }
         assertTrue(restored.getValue("Elden Ring").favorite)
@@ -97,7 +97,7 @@ class BackupManagerTest {
 
     @Test(expected = WrongPasswordException::class)
     fun `credentials need the right password`() = runTest {
-        val manager = BackupManager(context, source, io.github.thecodingdad.gamelodge.platform.AndroidStores.settings(context), io.github.thecodingdad.gamelodge.platform.AndroidStores.secrets(context))
+        val manager = BackupManager(source, io.github.thecodingdad.gamelodge.platform.AndroidStores.settings(context), io.github.thecodingdad.gamelodge.platform.AndroidStores.secrets(context), io.github.thecodingdad.gamelodge.data.backup.ArtemisStreamBackup(context))
         val backup = manager.create(password = "correct horse")
         manager.restore(manager.decode(manager.encode(backup)), "wrong")
     }
