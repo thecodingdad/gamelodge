@@ -135,6 +135,7 @@ fun HoldToConfirmButton(
                 if (e.type == KeyEventType.KeyDown) start() else if (e.type == KeyEventType.KeyUp) cancel()
                 true
             }
+            .handCursor(enabled)
             .pointerInput(Unit) {
                 detectTapGestures(onPress = {
                     start()

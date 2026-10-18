@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.ui.shell
 
+import io.github.thecodingdad.gamelodge.ui.components.handCursor
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -284,6 +285,7 @@ private fun PageDots(count: Int, current: Int, onSelect: (Int) -> Unit) {
                     .size(width = width, height = 6.dp)
                     .clip(androidx.compose.foundation.shape.CircleShape)
                     .background(if (active) LauncherTheme.colors.accent else LauncherTheme.colors.onSurfaceMuted.copy(alpha = 0.4f))
+                    .handCursor()
                     .clickable { onSelect(page) },
             )
         }

@@ -65,7 +65,7 @@ fun ButtonHintBar(hints: List<ButtonHint>, modifier: Modifier = Modifier, hideWh
                     .clip(RoundedCornerShape(20.dp))
                     // Touch only: the hints describe buttons, they must not catch D-pad focus.
                     .focusProperties { canFocus = false }
-                    .then(if (hint.onClick != null) Modifier.clickable(onClick = hint.onClick) else Modifier)
+                    .then(if (hint.onClick != null) Modifier.handCursor().clickable(onClick = hint.onClick) else Modifier)
                     .padding(horizontal = 6.dp, vertical = 4.dp),
             ) {
                 // A pair (previous/next) is one glyph "LB/RB" to save space.

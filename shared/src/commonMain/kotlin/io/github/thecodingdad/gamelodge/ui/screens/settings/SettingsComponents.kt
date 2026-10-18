@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.ui.screens.settings
 
+import io.github.thecodingdad.gamelodge.ui.components.handCursor
 import io.github.thecodingdad.gamelodge.ui.components.controllerScroll
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -82,7 +83,7 @@ fun PageTitle(title: String, modifier: Modifier = Modifier) {
     // Keyed by a stable value, not the (new every recomposition) lambda, so a tap isn't lost.
     // Going up the path sounds (and vibrates) like the back arrow.
     val feedback = LocalUiFeedback.current
-    fun Modifier.tap(key: Any, action: () -> Unit) = pointerInput(key) {
+    fun Modifier.tap(key: Any, action: () -> Unit) = handCursor().pointerInput(key) {
         detectTapGestures { feedback?.play(UiSound.BACK); action() }
     }
     androidx.compose.foundation.layout.BoxWithConstraints(modifier.fillMaxWidth()) {
@@ -180,12 +181,16 @@ fun Modifier.searchHighlight(
 
 /** Where a settings search hit leads: the title of the setting to show once its page opens. */
 object SearchHighlight {
-    internal var title by androidx.compose.runtime.mutableStateOf<String?>(null)
-    internal var at = 0L
+    /** One request: the setting's title, when it was made, and whether a row took it. */
+    internal class Request(val title: String, val at: Long) {
+        // Plain field: taking the request must not change the state the rows' effects are keyed on.
+        var taken = false
+    }
+
+    internal var current by androidx.compose.runtime.mutableStateOf<Request?>(null)
 
     fun request(title: String?) {
-        this.title = title
-        at = System.currentTimeMillis()
+        current = title?.let { Request(it, System.currentTimeMillis()) }
     }
 }
 
@@ -202,12 +207,13 @@ private fun rememberSearchHighlight(title: String?, focus: Boolean = true): High
     val anim = remember { androidx.compose.animation.core.Animatable(0f) }
     val requester = remember { androidx.compose.foundation.relocation.BringIntoViewRequester() }
     val focusRequester = remember { androidx.compose.ui.focus.FocusRequester() }
-    val wanted = title != null && SearchHighlight.title == title
-    androidx.compose.runtime.LaunchedEffect(wanted) {
-        if (!wanted) return@LaunchedEffect
-        SearchHighlight.title = null
+    val request = SearchHighlight.current?.takeIf { title != null && it.title == title }
+    androidx.compose.runtime.LaunchedEffect(request) {
+        if (request == null || request.taken) return@LaunchedEffect
+        // Only what can take the focus (a setting) uses the request up; a section title lights up along.
+        if (focus) request.taken = true
         // A stale request (the page had no such row) is dropped.
-        if (System.currentTimeMillis() - SearchHighlight.at > HIGHLIGHT_REQUEST_MS) return@LaunchedEffect
+        if (System.currentTimeMillis() - request.at > HIGHLIGHT_REQUEST_MS) return@LaunchedEffect
         // Let the page come in and place its initial focus first.
         kotlinx.coroutines.delay(HIGHLIGHT_DELAY_MS)
         requester.bringIntoView()
@@ -388,7 +394,7 @@ private fun ChoiceArrow(icon: ImageVector, onTap: () -> Unit) {
     // press feedback recomposes), and the tap got lost or went to the row instead.
     val tap by androidx.compose.runtime.rememberUpdatedState(onTap)
     Box(
-        Modifier.size(48.dp).clip(RoundedCornerShape(24.dp)).pointerInput(Unit) { detectTapGestures { tap() } },
+        Modifier.size(48.dp).clip(RoundedCornerShape(24.dp)).handCursor().pointerInput(Unit) { detectTapGestures { tap() } },
         contentAlignment = Alignment.Center,
     ) {
         Icon(icon, null, tint = LauncherTheme.colors.onSurfaceMuted)
@@ -430,7 +436,7 @@ fun SliderRow(
                 value = value.toFloat(),
                 onValueChange = { onChange(((it / step).toInt() * step).coerceIn(range)) },
                 valueRange = range.first.toFloat()..range.last.toFloat(),
-                modifier = Modifier.fillMaxWidth().height(32.dp),
+                modifier = Modifier.fillMaxWidth().height(32.dp).handCursor(),
             )
         }
     }

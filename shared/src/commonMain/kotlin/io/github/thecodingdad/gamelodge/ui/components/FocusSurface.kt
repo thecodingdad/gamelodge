@@ -177,6 +177,7 @@ fun FocusSurface(
                     }
                 },
             )
+            .handCursor(enabled)
             .combinedClickable(
                 interactionSource = interactionSource,
                 indication = ripple(),

@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.ui.shell
 
+import io.github.thecodingdad.gamelodge.ui.components.handCursor
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -116,6 +117,7 @@ fun StatusCluster(
             modifier = Modifier
                 .clip(RoundedCornerShape(12.dp))
                 .focusProperties { canFocus = false }
+                .handCursor()
                 .clickable(onClick = onControllerClick)
                 .padding(horizontal = 6.dp, vertical = 4.dp),
         ) {
@@ -140,6 +142,7 @@ fun StatusCluster(
                 modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))
                     .focusProperties { canFocus = false }
+                    .handCursor()
                     .clickable { if (combined) onHostsClick() else onHostClick(group.first()) }
                     .padding(horizontal = 6.dp, vertical = 4.dp),
             ) {
@@ -161,7 +164,7 @@ fun StatusCluster(
             Icon(
                 Icons.Filled.VpnLock, null,
                 tint = if (vpnState.status == VpnStatus.UP) colors.success else colors.onSurfaceMuted,
-                modifier = Modifier.size(22.dp).focusProperties { canFocus = false }.clickable {
+                modifier = Modifier.size(22.dp).focusProperties { canFocus = false }.handCursor().clickable {
                     if (vpn.ready()) scope.launch { vpn.toggle() }
                 },
             )
@@ -197,6 +200,7 @@ fun StatusCluster(
         Clock(
             if (onClockClick == null) Modifier
             else Modifier.clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
+                .handCursor(clockTap != null)
                 .pointerInput(Unit) { detectTapGestures { clockTap?.invoke() } }
                 .padding(horizontal = 4.dp, vertical = 2.dp),
         )

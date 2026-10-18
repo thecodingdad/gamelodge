@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.ui.shell
 
+import io.github.thecodingdad.gamelodge.ui.components.handCursor
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -42,6 +43,7 @@ fun TaskSpinner() {
         Modifier
             .clip(RoundedCornerShape(12.dp))
             .focusProperties { canFocus = false }
+            .handCursor()
             .clickable { BackgroundTasks.popupOpen = true }
             .padding(horizontal = 6.dp, vertical = 4.dp),
     ) {
