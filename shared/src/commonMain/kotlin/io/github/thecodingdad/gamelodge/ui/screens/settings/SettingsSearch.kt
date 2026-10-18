@@ -24,10 +24,10 @@ fun settingsTargetAvailable(target: SettingsTarget): Boolean =
     target !is SettingsTarget.Page || target.id !in platformPages || io.github.thecodingdad.gamelodge.ui.PlatformUi.current.hasPage(target.id)
 
 /** One searchable setting: its title, the page it is on and (optionally) the section there. */
-private class SearchEntry(val title: StringResource, val target: SettingsTarget, val section: StringResource? = null, val combos: Boolean = false)
+private class SearchEntry(val title: StringResource, val target: SettingsTarget, val section: StringResource? = null, val combos: Boolean = false, val device: Boolean = false)
 
-private fun page(id: SettingsPageId, vararg titles: StringResource, section: StringResource? = null) =
-    titles.map { SearchEntry(it, SettingsTarget.Page(id), section) }
+private fun page(id: SettingsPageId, vararg titles: StringResource, section: StringResource? = null, device: Boolean = false) =
+    titles.map { SearchEntry(it, SettingsTarget.Page(id), section, device = device) }
 
 private val pageTitles: List<Pair<SettingsTarget, StringResource>> = listOf(
     SettingsTarget.Page(SettingsPageId.HOME_SCREEN) to Res.string.settings_home_screen,
@@ -123,11 +123,12 @@ private val settingsIndex: List<SearchEntry> = buildList {
     addAll(page(SettingsPageId.THEME, Res.string.setting_theme, Res.string.setting_accent, Res.string.setting_accent_color))
     addAll(page(
         SettingsPageId.DISPLAY, Res.string.setting_card_size, Res.string.setting_animated_artwork, Res.string.setting_reduce_motion,
-        Res.string.setting_ui_scale, Res.string.setting_hide_nav_bar, Res.string.setting_screensaver,
+        Res.string.setting_ui_scale, Res.string.setting_screensaver,
     ))
+    addAll(page(SettingsPageId.DISPLAY, Res.string.setting_hide_nav_bar, device = true))
     addAll(page(
         SettingsPageId.DISPLAY, Res.string.tv_section, Res.string.setting_tv_launcher, Res.string.setting_tv_resolution,
-        Res.string.setting_tv_scale_auto, Res.string.setting_tv_scale, section = Res.string.tv_section,
+        Res.string.setting_tv_scale_auto, Res.string.setting_tv_scale, section = Res.string.tv_section, device = true,
     ))
     addAll(page(SettingsPageId.METADATA, Res.string.metadata_auto, Res.string.metadata_review_list, Res.string.metadata_sources, Res.string.metadata_source_add, Res.string.metadata_source_companion, Res.string.metadata_source_server))
     addAll(page(SettingsPageId.USAGE, Res.string.usage_access, Res.string.stats_title))
@@ -178,6 +179,7 @@ fun SettingsSearchResults(query: String, onOpen: (SettingsTarget, String?) -> Un
     val hits = settingsIndex.withIndex().mapNotNull { (index, e) ->
         if (!settingsTargetAvailable(e.target)) return@mapNotNull null
         if (e.combos && !platform.hasButtonCombos) return@mapNotNull null
+        if (e.device && !platform.deviceDisplayOptions) return@mapNotNull null
         val isPage = pageTitles.any { it.first == e.target && it.second == e.title }
         // A page's keywords find the page itself; its settings only by their own words.
         val keywords = if (isPage) pageKeywords[e.target]?.let { texts.getValue(it).split(',').map { k -> TitleNormalizer.normalize(k) } }.orEmpty() else emptyList()

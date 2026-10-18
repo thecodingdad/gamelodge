@@ -159,6 +159,12 @@ class RenderTest {
     }
 
     @Test
+    fun displayAndSoundPagesRender() {
+        renderPage("display", 1600) { io.github.thecodingdad.gamelodge.ui.screens.settings.DisplaySettings(io.github.thecodingdad.gamelodge.data.settings.LauncherSettings(), {}) }
+        renderPage("sounds", 1800) { io.github.thecodingdad.gamelodge.ui.screens.settings.SoundSettings(io.github.thecodingdad.gamelodge.data.settings.LauncherSettings(), {}) }
+    }
+
+    @Test
     fun homeAssistantPagesRender() {
         val host = io.github.thecodingdad.gamelodge.data.remote.HostState(
             "host-1", "Win11VM", io.github.thecodingdad.gamelodge.data.remote.HostStatus.ONLINE, true, 0, "192.168.1.68", null, false, emptyList(), -1,

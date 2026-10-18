@@ -238,6 +238,8 @@ fun DisplaySettings(
     update: ((LauncherSettings) -> LauncherSettings) -> Unit,
     externalDisplay: io.github.thecodingdad.gamelodge.system.ExternalDisplayInfo? = null,
 ) {
+    // Navigation bar, TV output and mobile data only exist on a handheld.
+    val device = io.github.thecodingdad.gamelodge.ui.PlatformUi.current.deviceDisplayOptions
     SettingsPage(stringResource(Res.string.settings_display)) {
         ChoiceRow(
             stringResource(Res.string.setting_card_size), CardSize.entries, settings.cardSize,
@@ -261,25 +263,30 @@ fun DisplaySettings(
                 label = { stringResource(if (it) Res.string.setting_animated_tiles_always else Res.string.setting_animated_tiles_focus) },
                 onSelect = { v -> update { it.copy(animatedTilesAlways = v) } },
             )
-            SwitchRow(
-                stringResource(Res.string.setting_animated_mobile), settings.animatedOnMobileData, { v -> update { it.copy(animatedOnMobileData = v) } },
-                subtitle = stringResource(Res.string.setting_animated_mobile_sub),
-            )
+            if (device) {
+                SwitchRow(
+                    stringResource(Res.string.setting_animated_mobile), settings.animatedOnMobileData, { v -> update { it.copy(animatedOnMobileData = v) } },
+                    subtitle = stringResource(Res.string.setting_animated_mobile_sub),
+                )
+            }
         }
         SwitchRow(stringResource(Res.string.setting_reduce_motion), settings.reduceMotion, { v -> update { it.copy(reduceMotion = v) } })
         SliderRow(
             stringResource(Res.string.setting_ui_scale), settings.uiScale, 60..130, 5,
             { v -> update { it.copy(uiScale = v) } }, { "$it %" },
         )
-        SwitchRow(
-            stringResource(Res.string.setting_hide_nav_bar), settings.hideNavigationBar, { v -> update { it.copy(hideNavigationBar = v) } },
-            subtitle = stringResource(Res.string.setting_hide_nav_bar_sub),
-        )
+        if (device) {
+            SwitchRow(
+                stringResource(Res.string.setting_hide_nav_bar), settings.hideNavigationBar, { v -> update { it.copy(hideNavigationBar = v) } },
+                subtitle = stringResource(Res.string.setting_hide_nav_bar_sub),
+            )
+        }
         ChoiceRow(
             stringResource(Res.string.setting_screensaver), listOf(0, 2, 5, 10, 20), settings.screensaverMinutes,
             label = { if (it == 0) stringResource(Res.string.off) else stringResource(Res.string.minutes_short, it) },
             onSelect = { v -> update { it.copy(screensaverMinutes = v) } },
         )
+        if (!device) return@SettingsPage
         SectionHeader(stringResource(Res.string.tv_section))
         InfoRow(
             stringResource(Res.string.tv_detected),
@@ -306,10 +313,12 @@ fun DisplaySettings(
             stringResource(Res.string.setting_tv_scale_auto), settings.tvScaleAuto, { v -> update { it.copy(tvScaleAuto = v) } },
             subtitle = stringResource(Res.string.setting_tv_scale_auto_sub),
         )
-        SliderRow(
-            stringResource(Res.string.setting_tv_scale), settings.tvScale, 40..100, 5,
-            { v -> update { it.copy(tvScale = v) } }, { "$it %" },
-        )
+        if (settings.tvScaleAuto) {
+            SliderRow(
+                stringResource(Res.string.setting_tv_scale), settings.tvScale, 40..100, 5,
+                { v -> update { it.copy(tvScale = v) } }, { "$it %" },
+            )
+        }
     }
 }
 

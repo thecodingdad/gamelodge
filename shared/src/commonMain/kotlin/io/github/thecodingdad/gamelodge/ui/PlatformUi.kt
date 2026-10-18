@@ -88,6 +88,9 @@ interface PlatformUi {
     /** The system's information page of an installed app. */
     fun openAppInfo(packageName: String)
 
+    /** Handheld display options (navigation bar, TV output, mobile data); not on a PC. */
+    val deviceDisplayOptions: Boolean get() = true
+
     /** Settings pages only some platforms have (VPN, backup, emulators …). */
     fun hasPage(id: io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId): Boolean
 

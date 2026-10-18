@@ -210,6 +210,8 @@ class DesktopPlatformUi(
 
     override fun openAppInfo(packageName: String) = Unit
 
+    override val deviceDisplayOptions: Boolean get() = false
+
     override fun hasPage(id: SettingsPageId) = id == SettingsPageId.GAME_SOURCES || (id == SettingsPageId.EMULATORS && pcLibrary() != null) || (id == SettingsPageId.HOST_ROLE && host() != null) || (id == SettingsPageId.STREAMING_HOST && host()?.sync != null) ||
         (id == SettingsPageId.STARTUP && startup != null) ||
         (id == SettingsPageId.PROFILES && profiles != null)

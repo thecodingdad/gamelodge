@@ -538,7 +538,6 @@
     <string name="sound_back">Zurück</string>
     <string name="sound_launch">Spielstart</string>
     <string name="sound_error">Fehler</string>
-    <string name="sounds_preview">Vorhören</string>
     <string name="haptics_section">Vibration</string>
     <string name="setting_haptic_strength">Stärke</string>
     <string name="haptic_light">Leicht</string>
