@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.ui.screens.settings
 
+import io.github.thecodingdad.gamelodge.ui.components.fadingEdges
 import io.github.thecodingdad.gamelodge.ui.components.mouseDragScroll
 import io.github.thecodingdad.gamelodge.ui.components.controllerScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -389,7 +390,7 @@ private fun GroupMembersDialog(
                 .sortedBy { it.item.title.lowercase() }
         }
         val pickerList = io.github.thecodingdad.gamelodge.ui.input.rememberStickLazyListState()
-        LazyColumn(state = pickerList, modifier = Modifier.heightIn(max = 460.dp).mouseDragScroll(pickerList), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        LazyColumn(state = pickerList, modifier = Modifier.heightIn(max = 460.dp).fadingEdges(pickerList).mouseDragScroll(pickerList), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             items(shown, key = { it.item.id }) { entry ->
                 val member = entry.item.id in members
                 FocusSurface(

@@ -161,7 +161,7 @@ class RenderTest {
     @Test
     fun displayAndSoundPagesRender() {
         renderPage("display", 1600) { io.github.thecodingdad.gamelodge.ui.screens.settings.DisplaySettings(io.github.thecodingdad.gamelodge.data.settings.LauncherSettings(), {}) }
-        renderPage("sounds", 1800) { io.github.thecodingdad.gamelodge.ui.screens.settings.SoundSettings(io.github.thecodingdad.gamelodge.data.settings.LauncherSettings(), {}) }
+        renderPage("sounds", 1100) { io.github.thecodingdad.gamelodge.ui.screens.settings.SoundSettings(io.github.thecodingdad.gamelodge.data.settings.LauncherSettings(), {}) }
         renderPage("metadata", 1400) { io.github.thecodingdad.gamelodge.ui.screens.metadata.MetadataSettings(io.github.thecodingdad.gamelodge.data.settings.LauncherSettings(), {}, 0, {}) }
         renderPage("data-page", 2200) {
             val c = LocalContainer.current as DesktopContainer

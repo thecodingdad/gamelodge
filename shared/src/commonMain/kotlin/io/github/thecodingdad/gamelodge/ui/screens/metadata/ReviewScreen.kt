@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.ui.screens.metadata
 
+import io.github.thecodingdad.gamelodge.ui.components.fadingEdges
 import io.github.thecodingdad.gamelodge.ui.components.mouseDragScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -68,7 +69,7 @@ fun ReviewScreen(items: List<LibraryEntry>) {
             state = listState,
             contentPadding = PaddingValues(vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
-            modifier = Modifier.focusRestorer().mouseDragScroll(listState),
+            modifier = Modifier.focusRestorer().fadingEdges(listState).mouseDragScroll(listState),
         ) {
             items(items, key = { it.item.id }) { entry ->
                 FocusSurface(

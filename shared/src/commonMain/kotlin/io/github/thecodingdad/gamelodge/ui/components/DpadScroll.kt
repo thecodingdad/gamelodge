@@ -56,6 +56,7 @@ fun Modifier.controllerScroll(state: ScrollState = androidx.compose.foundation.r
             }
             true
         }
+        .fadingEdges(state)
         .verticalScroll(state)
 }
 

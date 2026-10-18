@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.ui.screens.metadata
 
+import io.github.thecodingdad.gamelodge.ui.components.fadingEdges
 import io.github.thecodingdad.gamelodge.ui.components.mouseDragScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -95,7 +96,7 @@ fun FixMetadataDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
         when {
             applying || found == null -> CircularProgressIndicator(color = LauncherTheme.colors.accent, modifier = Modifier.align(Alignment.CenterHorizontally))
             found.isEmpty() -> Text(stringResource(Res.string.metadata_no_results), color = LauncherTheme.colors.onSurfaceMuted)
-            else -> LazyColumn(state = foundState, modifier = Modifier.heightIn(max = 340.dp).mouseDragScroll(foundState), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            else -> LazyColumn(state = foundState, modifier = Modifier.heightIn(max = 340.dp).fadingEdges(foundState).mouseDragScroll(foundState), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(found, key = { c -> "${c.source}:${c.id}" }) { c ->
                     FocusSurface(
                         onClick = {
@@ -247,7 +248,7 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, targets: List<io.github.thecod
                 columns = GridCells.Adaptive(if (wide) 260.dp else if (square) 150.dp else 120.dp),
                 state = gridState,
                 // Takes all the room between tabs and hints, which sit at the bottom.
-                modifier = Modifier.weight(1f).onFocusChanged { inGrid = it.hasFocus }.mouseDragScroll(gridState),
+                modifier = Modifier.weight(1f).onFocusChanged { inGrid = it.hasFocus }.fadingEdges(gridState).mouseDragScroll(gridState),
                 contentPadding = PaddingValues(4.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -453,7 +454,7 @@ fun AppTileDialog(entry: io.github.thecodingdad.gamelodge.data.db.LibraryEntry?,
             else -> LazyVerticalGrid(
                 columns = GridCells.Adaptive(240.dp),
                 state = tileGrid,
-                modifier = Modifier.heightIn(max = 380.dp).mouseDragScroll(tileGrid),
+                modifier = Modifier.heightIn(max = 380.dp).fadingEdges(tileGrid).mouseDragScroll(tileGrid),
                 contentPadding = PaddingValues(4.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),

@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.ui.screens.settings
 
+import io.github.thecodingdad.gamelodge.ui.components.fadingEdges
 import io.github.thecodingdad.gamelodge.ui.components.mouseDragScroll
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -150,6 +151,7 @@ private fun LicenseTextModal(license: LicenseText?, onDismiss: () -> Unit) {
                 .dpadScroll(scroll)
                 .focusable()
                 .mouseDragScroll(scroll)
+                .fadingEdges(scroll)
                 .verticalScroll(scroll),
         )
     }

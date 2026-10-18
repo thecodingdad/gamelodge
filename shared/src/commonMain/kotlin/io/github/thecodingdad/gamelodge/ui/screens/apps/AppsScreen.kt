@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.ui.screens.apps
 
+import io.github.thecodingdad.gamelodge.ui.components.fadingEdges
 import io.github.thecodingdad.gamelodge.ui.components.mouseDragScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -167,7 +168,7 @@ fun AppsScreen(
         contentPadding = PaddingValues(horizontal = if (io.github.thecodingdad.gamelodge.ui.components.LocalCompactWidth.current) 16.dp else 36.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp),
-        modifier = Modifier.fillMaxSize().focusRestorer().onFocusChanged { gridFocused = it.hasFocus }.mouseDragScroll(gridState),
+        modifier = Modifier.fillMaxSize().focusRestorer().onFocusChanged { gridFocused = it.hasFocus }.fadingEdges(gridState).mouseDragScroll(gridState),
     ) {
         var gridIndex = 0
         fun section(title: String, list: List<LibraryEntry>) {

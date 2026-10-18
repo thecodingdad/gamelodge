@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.ui.screens.ha
 
+import io.github.thecodingdad.gamelodge.ui.components.fadingEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -145,7 +146,7 @@ fun EntityPicker(
             else { onPick(e.id); onDismiss() }
         }
         val list = io.github.thecodingdad.gamelodge.ui.input.rememberStickLazyListState()
-        LazyColumn(state = list, modifier = Modifier.heightIn(max = 400.dp).mouseDragScroll(list), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        LazyColumn(state = list, modifier = Modifier.heightIn(max = 400.dp).fadingEdges(list).mouseDragScroll(list), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             if (allowNone && q.isEmpty() && group == null) {
                 item(key = "none") { EntityRow(Icons.Filled.Block, stringResource(Res.string.not_set), null) { onPick(null); onDismiss() } }
             }
