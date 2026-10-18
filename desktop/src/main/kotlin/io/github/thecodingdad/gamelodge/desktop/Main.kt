@@ -91,13 +91,16 @@ fun main(args: Array<String>) {
     val feedback = UiFeedback(File(dataDir, "cache"), DesktopFeedbackOutput { gamepads }).also { it.load() }
 
     container.onGameEnded = { platformUi.bringToFront() }
-    container.library.start()
+    // Started beside the window's first composition (their first use loads classes and opens the database).
+    container.scope.launch(kotlinx.coroutines.Dispatchers.Default) {
+        container.library.start()
+        container.servers.start()
+        container.metadata.start()
+        container.artwork.start()
+    }
     // Streaming hosts are polled while the window is shown.
     container.scope.launch { windowVisible.collect { if (it) container.hosts.startPolling() else container.hosts.stopPolling() } }
     container.scope.launch { container.filters.ensureDefaults() }
-    container.servers.start()
-    container.metadata.start()
-    container.artwork.start()
     container.backupStorage.window = { mainWindow }
     FilePickers.window = { mainWindow }
     container.scope.launch { container.backupStorage.scheduleAuto(container.settings.current().autoBackup) }
@@ -172,6 +175,13 @@ fun main(args: Array<String>) {
         }
         val startupSettings by startup.settings.collectAsState()
         val visible by windowVisible.collectAsState()
+        // Class cache: written once the window has been shown for a while (its classes are loaded by then).
+        if (visible && ClassCache.pending != null) {
+            LaunchedEffect(Unit) {
+                kotlinx.coroutines.delay(60_000)
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { ClassCache.write() }
+            }
+        }
         val hostStatus by container.hostRole.status.collectAsState()
         val icon = remember { BitmapPainter(DesktopContainer::class.java.getResourceAsStream("/icon.png")!!.use { loadImageBitmap(it) }) }
         // Tray icon while the launcher may run without its window.

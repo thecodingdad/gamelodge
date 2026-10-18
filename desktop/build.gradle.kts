@@ -114,6 +114,8 @@ val windowsApp by tasks.registering(Sync::class) {
     val starter = rootProject.layout.projectDirectory.dir("build/windows-launcher").asFile
     if (File(starter, "GameLodge.exe").exists()) {
         from(File(starter, "GameLodge.exe"))
+        // Shown by the starter until the window is there.
+        from(layout.projectDirectory.file("windows/splash.png"))
         into("runtime/bin") { from(File(starter, "runtime-GameLodge.exe")) { rename { "GameLodge.exe" } } }
     } else {
         logger.warn("build/windows-launcher/GameLodge.exe missing: package starts with GameLodge.cmd (tools/build-windows-launcher.sh)")
