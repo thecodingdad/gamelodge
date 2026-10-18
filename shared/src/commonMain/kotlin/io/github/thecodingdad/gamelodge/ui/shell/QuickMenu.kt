@@ -18,7 +18,6 @@ import androidx.compose.material.icons.filled.StopCircle
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.filled.VpnLock
 import androidx.compose.material.icons.filled.Wifi
-import androidx.compose.material.icons.filled.SettingsEthernet
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable

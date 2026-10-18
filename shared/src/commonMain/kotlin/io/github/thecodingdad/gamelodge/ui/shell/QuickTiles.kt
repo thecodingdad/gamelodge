@@ -19,7 +19,6 @@ import androidx.compose.material.icons.filled.FlashlightOn
 import androidx.compose.material.icons.filled.NetworkCell
 import androidx.compose.material.icons.filled.ScreenRotation
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.SettingsEthernet
 import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.filled.VpnLock

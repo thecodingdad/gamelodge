@@ -32,7 +32,7 @@ import androidx.compose.material.icons.filled.FlashlightOn
 import androidx.compose.material.icons.filled.NetworkCell
 import androidx.compose.material.icons.filled.ScreenRotation
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.SettingsEthernet
+import androidx.compose.material.icons.outlined.Lan
 import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.filled.VpnLock
@@ -115,7 +115,7 @@ fun rememberAndroidSystemTiles(ids: List<String>, revision: Int): Map<String, Li
         usable.associateWith { id ->
             when (id) {
                 QuickTile.WIFI -> listOf(
-                    if (system.ethernet) TileModel(id, Icons.Filled.SettingsEthernet, labelLan, on, { context.open(Intent(Settings.ACTION_WIRELESS_SETTINGS)) })
+                    if (system.ethernet) TileModel(id, Icons.Outlined.Lan, labelLan, on, { context.open(Intent(Settings.ACTION_WIRELESS_SETTINGS)) })
                     else TileModel(
                         id, Icons.Filled.Wifi,
                         when { !wifi.connected -> labelWifi; wifi.ssid != null -> wifi.ssid; else -> labelConnected },

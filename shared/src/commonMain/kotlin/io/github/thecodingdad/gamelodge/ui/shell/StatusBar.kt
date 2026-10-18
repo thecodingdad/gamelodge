@@ -20,7 +20,7 @@ import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.VpnLock
 import androidx.compose.material.icons.filled.Wifi
-import androidx.compose.material.icons.filled.SettingsEthernet
+import androidx.compose.material.icons.outlined.Lan
 import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -171,7 +171,7 @@ fun StatusCluster(
         // The connection in use: LAN (dock) wins over Wi-Fi.
         Icon(
             when {
-                status.ethernet -> Icons.Filled.SettingsEthernet
+                status.ethernet -> Icons.Outlined.Lan
                 status.wifi -> Icons.Filled.Wifi
                 else -> Icons.Filled.WifiOff
             },

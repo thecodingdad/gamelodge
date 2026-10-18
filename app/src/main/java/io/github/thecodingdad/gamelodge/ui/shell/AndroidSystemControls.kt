@@ -22,7 +22,6 @@ import androidx.compose.material.icons.filled.Computer
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.SettingsEthernet
 import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material.icons.filled.StopCircle
 import androidx.compose.material.icons.filled.VolumeUp
