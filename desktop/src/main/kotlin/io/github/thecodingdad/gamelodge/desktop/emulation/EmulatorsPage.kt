@@ -1,5 +1,9 @@
 package io.github.thecodingdad.gamelodge.desktop.emulation
 
+import io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId
+import io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget
+import io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlsoLink
+import io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlso
 import io.github.thecodingdad.gamelodge.ui.screens.settings.searchHighlight
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -172,6 +176,9 @@ fun EmulatorsPage(
                 )
             }
         }
+        SeeAlso(
+            SeeAlsoLink(stringResource(Res.string.settings_game_sources), SettingsTarget.Page(SettingsPageId.GAME_SOURCES)),
+        )
     }
 
     PresetDialog(choosingPreset, onDismiss = { choosingPreset = false }) { preset ->

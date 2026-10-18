@@ -1,5 +1,9 @@
 package io.github.thecodingdad.gamelodge.desktop
 
+import io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId
+import io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget
+import io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlsoLink
+import io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlso
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -43,6 +47,10 @@ fun StartupPage(startup: Startup, window: WindowControls?) {
         SwitchRow(
             stringResource(Res.string.startup_tray), settings.closeToTray, { on -> startup.update { it.copy(closeToTray = on) } },
             subtitle = stringResource(Res.string.startup_tray_sub),
+        )
+        SeeAlso(
+            SeeAlsoLink(stringResource(Res.string.settings_streaming_host), SettingsTarget.Page(SettingsPageId.STREAMING_HOST)),
+            SeeAlsoLink(stringResource(Res.string.settings_host_role), SettingsTarget.Page(SettingsPageId.HOST_ROLE)),
         )
     }
 }

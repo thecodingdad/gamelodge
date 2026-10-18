@@ -1,5 +1,9 @@
 package io.github.thecodingdad.gamelodge.desktop
 
+import io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId
+import io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget
+import io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlsoLink
+import io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlso
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -96,6 +100,10 @@ fun StreamingHostPage(role: HostRole, sync: HostSync, secrets: SecretStore?) {
         SwitchRow(
             stringResource(Res.string.host_sync_not_installed), settings.syncNotInstalled, { on -> role.update { it.copy(syncNotInstalled = on) } },
             subtitle = stringResource(Res.string.host_sync_not_installed_sub),
+        )
+        SeeAlso(
+            SeeAlsoLink(stringResource(Res.string.settings_game_sources), SettingsTarget.Page(SettingsPageId.GAME_SOURCES)),
+            SeeAlsoLink(stringResource(Res.string.startup_tray), SettingsTarget.Page(SettingsPageId.STARTUP), highlight = stringResource(Res.string.startup_tray), subtitle = stringResource(Res.string.settings_startup)),
         )
     }
 

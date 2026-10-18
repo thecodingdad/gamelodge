@@ -261,6 +261,14 @@ fun LauncherApp(
             LocalButtonLayout provides settings.layoutFor(io.github.thecodingdad.gamelodge.ui.screens.settings.ActivePad.key),
             LocalBringIntoViewSpec provides scrollSpec,
             io.github.thecodingdad.gamelodge.ui.components.LocalAnimatedTilesAlways provides settings.animatedTilesAlways,
+            io.github.thecodingdad.gamelodge.ui.screens.settings.LocalSettingsNavigator provides { target, highlight ->
+                io.github.thecodingdad.gamelodge.ui.screens.settings.SearchHighlight.request(highlight)
+                when (target) {
+                    is io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Page -> nav.navigate(Routes.settings(target.id))
+                    io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Controllers -> nav.navigate(Routes.CONTROLLERS)
+                    is io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Host -> nav.navigate(Routes.host(target.uuid))
+                }
+            },
         ) {
             io.github.thecodingdad.gamelodge.ui.input.RightStickScrollDriver()
             androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -1046,7 +1054,7 @@ private fun SettingsPageContent(
             openReview = openReview,
         )
         SettingsPageId.HOSTS -> HostsSettings(hosts.values.toList(), openHostConfig = { openHost(it.uuid) })
-        SettingsPageId.HOME_SCREEN -> io.github.thecodingdad.gamelodge.ui.screens.settings.HomeScreenSettings(settings, vm::updateSettings, vm, openFilters = { openPage(SettingsPageId.FILTERS) })
+        SettingsPageId.HOME_SCREEN -> io.github.thecodingdad.gamelodge.ui.screens.settings.HomeScreenSettings(settings, vm::updateSettings, vm)
         SettingsPageId.THEME -> io.github.thecodingdad.gamelodge.ui.screens.settings.ThemeSettings(settings, vm::updateSettings)
         SettingsPageId.DISPLAY -> {
             val external by vm.externalDisplay.collectAsState()

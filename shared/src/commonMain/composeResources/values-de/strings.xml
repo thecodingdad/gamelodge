@@ -926,6 +926,7 @@
 
     <!-- Settings -->
     <string name="settings_search">Einstellungen durchsuchen</string>
+    <string name="see_also">Siehe auch</string>
     <string name="settings_search_none">Keine passende Einstellung</string>
 
     <!-- Emulation -->

@@ -1,5 +1,9 @@
 package io.github.thecodingdad.gamelodge.ui.screens.metadata
 
+import io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId
+import io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget
+import io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlsoLink
+import io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlso
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.Icons
@@ -71,6 +75,10 @@ fun MetadataSettings(
         Text(
             stringResource(Res.string.metadata_artwork_storage, io.github.thecodingdad.gamelodge.util.formatFileSize(stored)),
             style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted,
+        )
+        SeeAlso(
+            SeeAlsoLink(stringResource(Res.string.settings_game_sources), SettingsTarget.Page(SettingsPageId.GAME_SOURCES)),
+            SeeAlsoLink(stringResource(Res.string.settings_data), SettingsTarget.Page(SettingsPageId.DATA)),
         )
     }
 }

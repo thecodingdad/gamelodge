@@ -128,6 +128,10 @@ fun ControllersScreen() {
         ControllerLayoutDefaultRow(settings, update, initialFocus = controllers.isEmpty())
         ButtonComboRows(settings, update)
         OdinMappingSection()
+        SeeAlso(
+            SeeAlsoLink(stringResource(Res.string.settings_sounds), SettingsTarget.Page(SettingsPageId.SOUNDS)),
+            SeeAlsoLink(stringResource(Res.string.settings_profiles), SettingsTarget.Page(SettingsPageId.PROFILES)),
+        )
     }
 
     AndroidControllerDetailDialog(selected, onDismiss = { selected = null })

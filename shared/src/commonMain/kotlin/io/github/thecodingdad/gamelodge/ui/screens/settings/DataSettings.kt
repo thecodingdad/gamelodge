@@ -145,6 +145,10 @@ fun DataSettings(settings: LauncherSettings, update: ((LauncherSettings) -> Laun
         SectionHeader(stringResource(Res.string.data_reset))
         Text(stringResource(Res.string.data_reset_sub), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
         LauncherButton(stringResource(Res.string.data_reset), icon = Icons.Filled.DeleteForever, onClick = { resetting = true })
+        SeeAlso(
+            SeeAlsoLink(stringResource(Res.string.metadata_refetch_all), SettingsTarget.Page(SettingsPageId.METADATA), highlight = stringResource(Res.string.metadata_refetch_all), subtitle = stringResource(Res.string.settings_metadata)),
+            SeeAlsoLink(stringResource(Res.string.settings_game_sources), SettingsTarget.Page(SettingsPageId.GAME_SOURCES)),
+        )
     }
 
     Modal(visible = resetting, onDismiss = { resetting = false }, title = stringResource(Res.string.data_reset_title), closeButton = false) {

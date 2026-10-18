@@ -26,6 +26,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.foundation.layout.Column
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -89,9 +91,14 @@ fun HoldToConfirmButton(
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
     holdMillis: Int = 1200,
+    /** Settings row look: full width, left-aligned title with [subtitle] (null: pill button). */
+    subtitle: String? = null,
+    row: Boolean = false,
+    enabled: Boolean = true,
 ) {
     val colors = LauncherTheme.colors
     val feedback = LocalUiFeedback.current
+    val shape = if (row) RoundedCornerShape(LauncherTheme.dimens.cornerRadius) else RoundedCornerShape(26.dp)
     val progress = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
     val jobHolder = remember { arrayOfNulls<Job>(1) }
@@ -100,7 +107,7 @@ fun HoldToConfirmButton(
     val controllerMode = isControllerMode()
 
     fun start() {
-        if (jobHolder[0]?.isActive == true) return
+        if (!enabled || jobHolder[0]?.isActive == true) return
         jobHolder[0] = scope.launch {
             progress.snapTo(0f)
             progress.animateTo(1f, tween(holdMillis, easing = LinearEasing))
@@ -117,10 +124,11 @@ fun HoldToConfirmButton(
 
     Box(
         modifier = modifier
-            .heightIn(min = 52.dp)
-            .clip(RoundedCornerShape(26.dp))
+            .then(if (row) Modifier.fillMaxWidth().heightIn(min = 68.dp) else Modifier.heightIn(min = 52.dp))
+            .then(if (enabled) Modifier else Modifier.alpha(0.45f))
+            .clip(shape)
             .background(colors.danger.copy(alpha = 0.18f))
-            .then(if (focused && controllerMode) Modifier.border(3.dp, colors.focusRing, RoundedCornerShape(26.dp)) else Modifier)
+            .then(if (focused && controllerMode) Modifier.border(3.dp, colors.focusRing, shape) else Modifier)
             .onPreviewKeyEvent { e ->
                 val confirmKey = e.key == Key.ButtonA || e.key == Key.DirectionCenter || e.key == Key.Enter
                 if (!confirmKey) return@onPreviewKeyEvent false
@@ -145,13 +153,27 @@ fun HoldToConfirmButton(
                     .background(colors.danger.copy(alpha = 0.55f)),
             )
         }
-        Row(
-            modifier = Modifier.align(Alignment.Center).padding(horizontal = 22.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            if (icon != null) Icon(icon, null, tint = colors.onSurface, modifier = Modifier.size(22.dp))
-            Text(text, style = MaterialTheme.typography.labelLarge, color = colors.onSurface)
+        if (row) {
+            Row(
+                modifier = Modifier.align(Alignment.CenterStart).padding(horizontal = 20.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                if (icon != null) Icon(icon, null, tint = colors.danger, modifier = Modifier.size(26.dp))
+                Column {
+                    Text(text, style = MaterialTheme.typography.titleMedium, color = colors.onSurface)
+                    if (!subtitle.isNullOrEmpty()) Text(subtitle, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceMuted)
+                }
+            }
+        } else {
+            Row(
+                modifier = Modifier.align(Alignment.Center).padding(horizontal = 22.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                if (icon != null) Icon(icon, null, tint = colors.onSurface, modifier = Modifier.size(22.dp))
+                Text(text, style = MaterialTheme.typography.labelLarge, color = colors.onSurface)
+            }
         }
     }
 }

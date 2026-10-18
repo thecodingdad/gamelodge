@@ -1,5 +1,9 @@
 package io.github.thecodingdad.gamelodge.desktop
 
+import io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId
+import io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget
+import io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlsoLink
+import io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlso
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -114,6 +118,11 @@ fun GameSourcesPage(library: PcLibrary, settings: LauncherSettings, update: ((La
             LauncherButton(stringResource(Res.string.steam_sign_in), onClick = { qr = true }, icon = Icons.Filled.QrCode2, primary = true)
         }
             io.github.thecodingdad.gamelodge.desktop.games.CustomGamesSection(settings, update)
+        SeeAlso(
+            SeeAlsoLink(stringResource(Res.string.settings_emulators), SettingsTarget.Page(SettingsPageId.EMULATORS)),
+            SeeAlsoLink(stringResource(Res.string.settings_streaming_host), SettingsTarget.Page(SettingsPageId.STREAMING_HOST)),
+            SeeAlsoLink(stringResource(Res.string.settings_metadata), SettingsTarget.Page(SettingsPageId.METADATA)),
+        )
     }
     if (qr) SteamQrDialog(library) { qr = false }
 }

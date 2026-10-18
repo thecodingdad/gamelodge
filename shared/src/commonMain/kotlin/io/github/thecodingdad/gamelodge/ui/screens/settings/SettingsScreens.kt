@@ -69,6 +69,7 @@ fun SettingsHome(
                 when (target) {
                     is SettingsTarget.Page -> open(target.id)
                     SettingsTarget.Controllers -> openControllers()
+                    is SettingsTarget.Host -> Unit
                 }
             }
             return@SettingsPage
@@ -126,7 +127,6 @@ fun HomeScreenSettings(
     settings: LauncherSettings,
     update: ((LauncherSettings) -> LauncherSettings) -> Unit,
     vm: io.github.thecodingdad.gamelodge.ui.LauncherViewModel,
-    openFilters: () -> Unit,
 ) {
     val filters by vm.filters.collectAsState()
     SettingsPage(stringResource(Res.string.settings_home_screen)) {
@@ -147,7 +147,6 @@ fun HomeScreenSettings(
         )
         SectionHeader(stringResource(Res.string.home_rows_section))
         Text(stringResource(Res.string.home_rows_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
-        NavRow(stringResource(Res.string.settings_filters), openFilters, stringResource(Res.string.settings_filters_sub), Icons.Filled.FilterAlt)
         // Game filters first, then app filters (their rows show landscape app tiles).
         val isApps = { f: io.github.thecodingdad.gamelodge.data.db.FilterEntity -> f.scope == io.github.thecodingdad.gamelodge.data.db.FilterScope.APPS }
         val gameFilters = filters.sortedWith(compareBy({ isApps(it) }, { it.sortOrder }))
@@ -174,6 +173,10 @@ fun HomeScreenSettings(
                 }
             }
         }
+        SeeAlso(
+            SeeAlsoLink(stringResource(Res.string.settings_filters), SettingsTarget.Page(SettingsPageId.FILTERS)),
+            SeeAlsoLink(stringResource(Res.string.settings_home_assistant), SettingsTarget.Page(SettingsPageId.HOME_ASSISTANT), subtitle = stringResource(Res.string.home_row_ha)),
+        )
     }
 }
 

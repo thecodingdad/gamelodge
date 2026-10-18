@@ -1,5 +1,9 @@
 package io.github.thecodingdad.gamelodge.desktop
 
+import io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId
+import io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget
+import io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlsoLink
+import io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlso
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
@@ -108,6 +112,10 @@ fun HostRolePage(services: HostServices) {
 
         SectionHeader(stringResource(Res.string.host_advanced))
         NavRow(stringResource(Res.string.host_web), { webShown = true }, subtitle = webState(role, status.webRunning), icon = Icons.Filled.Language)
+        SeeAlso(
+            SeeAlsoLink(stringResource(Res.string.startup_tray), SettingsTarget.Page(SettingsPageId.STARTUP), highlight = stringResource(Res.string.startup_tray), subtitle = stringResource(Res.string.settings_startup)),
+            SeeAlsoLink(stringResource(Res.string.metadata_sources), SettingsTarget.Page(SettingsPageId.METADATA), highlight = stringResource(Res.string.metadata_sources), subtitle = stringResource(Res.string.settings_metadata)),
+        )
     }
 
     if (pairingShown) PairingDialog(role, devices.size) { role.pairing.close(); pairingShown = false }

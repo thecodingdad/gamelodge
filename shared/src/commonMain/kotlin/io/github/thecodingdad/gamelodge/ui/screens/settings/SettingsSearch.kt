@@ -15,7 +15,13 @@ import org.jetbrains.compose.resources.StringResource
 sealed interface SettingsTarget {
     data class Page(val id: SettingsPageId) : SettingsTarget
     data object Controllers : SettingsTarget
+    /** Settings of one streaming host. */
+    data class Host(val uuid: String) : SettingsTarget
 }
+
+/** Whether [target] exists on this platform (platform-only pages). */
+fun settingsTargetAvailable(target: SettingsTarget): Boolean =
+    target !is SettingsTarget.Page || target.id !in platformPages || io.github.thecodingdad.gamelodge.ui.PlatformUi.current.hasPage(target.id)
 
 /** One searchable setting: its title, the page it is on and (optionally) the section there. */
 private class SearchEntry(val title: StringResource, val target: SettingsTarget, val section: StringResource? = null, val combos: Boolean = false)
@@ -117,7 +123,7 @@ fun SettingsSearchResults(query: String, onOpen: (SettingsTarget, String?) -> Un
     fun pageTitle(target: SettingsTarget) = pageTitles.first { it.first == target }.second
     val platform = io.github.thecodingdad.gamelodge.ui.PlatformUi.current
     val hits = settingsIndex.filter { e ->
-        if (e.target is SettingsTarget.Page && e.target.id in platformPages && !platform.hasPage(e.target.id)) return@filter false
+        if (!settingsTargetAvailable(e.target)) return@filter false
         if (e.combos && !platform.hasButtonCombos) return@filter false
         val haystack = listOfNotNull(e.title, pageTitle(e.target), e.section).joinToString(" ") { texts.getValue(it) }
         TitleNormalizer.normalize(haystack).contains(q)

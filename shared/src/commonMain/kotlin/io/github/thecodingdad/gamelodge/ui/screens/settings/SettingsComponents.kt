@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.draw.alpha
+import io.github.thecodingdad.gamelodge.resources.*
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.focus.focusRequester
@@ -447,5 +448,49 @@ fun InfoRow(title: String, value: String) {
     ) {
         Text(title, style = MaterialTheme.typography.titleSmall, color = LauncherTheme.colors.onSurfaceMuted, modifier = Modifier.weight(1f))
         Text(value, style = MaterialTheme.typography.titleSmall, color = LauncherTheme.colors.onSurface)
+    }
+}
+
+/** Opens a settings page, the controllers or a host's settings; [highlight] lights that setting up there. */
+val LocalSettingsNavigator = androidx.compose.runtime.staticCompositionLocalOf<(SettingsTarget, String?) -> Unit> { { _, _ -> } }
+
+/** A "see also" link: [title] of the page or setting, where it is ([target]) and what lights up there. */
+class SeeAlsoLink(val title: String, val target: SettingsTarget, val highlight: String? = null, val subtitle: String? = null)
+
+/** Related settings elsewhere, at the end of a page; links to pages this platform lacks are left out. */
+@Composable
+fun SeeAlso(vararg links: SeeAlsoLink?) {
+    val shown = links.filterNotNull().filter { settingsTargetAvailable(it.target) }
+    if (shown.isEmpty()) return
+    val navigate = LocalSettingsNavigator.current
+    SectionHeader(org.jetbrains.compose.resources.stringResource(Res.string.see_also))
+    shown.forEach { link ->
+        NavRow(
+            link.title, { navigate(link.target, link.highlight) }, link.subtitle, highlightable = false,
+        )
+    }
+}
+
+/**
+ * An action on a settings page (clear, search, download …): icon, title and what it does, no arrow.
+ * [hold] makes it a hold-to-confirm action for destructive ones.
+ */
+@Composable
+fun ActionRow(
+    title: String,
+    onClick: () -> Unit,
+    subtitle: String? = null,
+    icon: ImageVector? = null,
+    enabled: Boolean = true,
+    hold: Boolean = false,
+) {
+    if (hold) {
+        io.github.thecodingdad.gamelodge.ui.components.HoldToConfirmButton(
+            title, onConfirmed = onClick, modifier = Modifier.searchHighlight(title), icon = icon, subtitle = subtitle, row = true, enabled = enabled,
+        )
+        return
+    }
+    RowShell(if (enabled) onClick else ({}), if (enabled) Modifier else Modifier.alpha(0.45f), false, title) {
+        Texts(title, subtitle, icon)
     }
 }

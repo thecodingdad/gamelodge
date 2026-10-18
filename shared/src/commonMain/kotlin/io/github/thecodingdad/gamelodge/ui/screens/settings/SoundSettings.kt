@@ -90,5 +90,8 @@ fun SoundSettings(settings: LauncherSettings, update: ((LauncherSettings) -> Lau
             },
         )
         SwitchRow(stringResource(Res.string.setting_haptic_focus), settings.hapticOnFocus, { v -> update { it.copy(hapticOnFocus = v) } })
+        SeeAlso(
+            SeeAlsoLink(stringResource(Res.string.settings_controllers), SettingsTarget.Controllers),
+        )
     }
 }

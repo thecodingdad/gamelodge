@@ -133,6 +133,10 @@ fun HostConfigScreen(host: HostState, openHaSettings: () -> Unit) {
             subtitle = stringResource(Res.string.host_auto_sleep_sub),
         )
         CompanionSection(host)
+        SeeAlso(
+            SeeAlsoLink(stringResource(Res.string.settings_profiles), SettingsTarget.Page(SettingsPageId.PROFILES)),
+            SeeAlsoLink(stringResource(Res.string.settings_home_assistant), SettingsTarget.Page(SettingsPageId.HOME_ASSISTANT)),
+        )
     }
 
     val p = picking

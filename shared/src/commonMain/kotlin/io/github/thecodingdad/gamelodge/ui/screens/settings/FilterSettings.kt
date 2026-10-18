@@ -171,6 +171,9 @@ fun FilterSettings(vm: LauncherViewModel, initialScope: FilterScope) {
                 }
             }
         }
+        SeeAlso(
+            SeeAlsoLink(stringResource(Res.string.home_rows_section), SettingsTarget.Page(SettingsPageId.HOME_SCREEN), highlight = stringResource(Res.string.home_rows_section), subtitle = stringResource(Res.string.settings_home_screen)),
+        )
     }
 
     Modal(visible = resetting, onDismiss = { resetting = false }, title = stringResource(Res.string.filters_restore), maxWidth = 680.dp, closeButton = false) {
