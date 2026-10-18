@@ -96,8 +96,6 @@ class DesktopHosts(
         streaming = true
         val until = System.currentTimeMillis() + QUIET_WAIT_MS
         while (boxArtRunning.get() > 0 && System.currentTimeMillis() < until) delay(100)
-        // The streaming client uses the same client certificate: no connection of ours stays open.
-        synchronized(this) { clients.values.toList() }.forEach { runCatching { it.closeConnections() } }
     }
 
     fun streamEnded() {
@@ -212,7 +210,8 @@ class DesktopHosts(
                     save(stored.value.filter { it.uuid != s.uuid } + paired)
                     clients.remove(s.uuid)
                     appListAt.remove(s.uuid)
-                    poll(stored(s.uuid)!!)
+                    // The dialog closes now; state and app list follow in the background.
+                    scope.launch(Dispatchers.IO) { stored(s.uuid)?.let { poll(it) } }
                     PairResult.PAIRED
                 }
                 NvPairing.Result.PIN_WRONG -> PairResult.WRONG_PIN.also { Log.i("Pairing with ${s.name}: wrong PIN") }
@@ -339,7 +338,8 @@ class DesktopHosts(
         val now = System.currentTimeMillis()
         if (paired && !downloading && now - (appListAt[s.uuid] ?: 0) > APP_LIST_MS) {
             runCatching { c.appList() }.onSuccess { apps ->
-                appListAt[s.uuid] = now
+                // An empty list (e.g. permissions not granted yet on the host): asked again soon.
+                appListAt[s.uuid] = if (apps.isEmpty()) now - APP_LIST_MS + EMPTY_RETRY_MS else now
                 if (_appLists.value[s.uuid]?.size != apps.size) Log.i("App list of ${info.name}: ${apps.size} apps")
                 val list = apps.map { RemoteApp(s.uuid, info.name, HostApp(it.id, it.name, it.uuid, it.hdr)) }
                 if (_appLists.value[s.uuid] != list) _appLists.update { m -> m + (s.uuid to list) }
@@ -374,6 +374,7 @@ class DesktopHosts(
     companion object {
         private const val POLL_MS = 3_000L
         private const val APP_LIST_MS = 5 * 60_000L
+        private const val EMPTY_RETRY_MS = 5_000L
         private const val BOX_ART_QUIET_MS = 5_000L
         private const val SLOW_MS = 3_000L
         private const val QUIET_WAIT_MS = 15_000L

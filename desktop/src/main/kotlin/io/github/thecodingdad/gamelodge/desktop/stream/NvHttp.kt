@@ -141,7 +141,13 @@ class NvHttp(
     var httpsPort: Int = 47984
 
     private val host = if (address.contains(':') && !address.startsWith("[")) "[$address]" else address
-    private val plain: OkHttpClient = http.newBuilder().connectTimeout(3, TimeUnit.SECONDS).readTimeout(7, TimeUnit.SECONDS).build()
+    /**
+     * No connection is reused (as Moonlight does): a host decides about a client per connection
+     * (certificate, permissions), and a connection opened right after pairing stays without
+     * answers. Every request starts fresh.
+     */
+    private val noReuse = okhttp3.ConnectionPool(0, 1, TimeUnit.MILLISECONDS)
+    private val plain: OkHttpClient = http.newBuilder().connectionPool(noReuse).connectTimeout(3, TimeUnit.SECONDS).readTimeout(7, TimeUnit.SECONDS).build()
 
     private val secure: OkHttpClient by lazy {
         val keyManager = object : X509ExtendedKeyManager() {
@@ -164,8 +170,7 @@ class NvHttp(
         }
         val ssl = SSLContext.getInstance("TLS").apply { init(arrayOf(keyManager), arrayOf(pinned), SecureRandom()) }
         http.newBuilder()
-            // Own connections: the host checks our certificate once per connection (handshake).
-            .connectionPool(okhttp3.ConnectionPool())
+            .connectionPool(noReuse)
             .sslSocketFactory(NoResumptionSocketFactory(ssl.socketFactory), pinned)
             .connectionSpecs(listOf(okhttp3.ConnectionSpec.Builder(okhttp3.ConnectionSpec.MODERN_TLS).tlsVersions(okhttp3.TlsVersion.TLS_1_2).build()))
             .hostnameVerifier { _, _ -> true }
@@ -173,11 +178,6 @@ class NvHttp(
             // Vibepollo can take a long while for HTTPS answers (big app lists, right after pairing).
             .readTimeout(60, TimeUnit.SECONDS)
             .build()
-    }
-
-    /** Closes the kept-alive HTTPS connections (before the streaming client talks to the host). */
-    fun closeConnections() {
-        secure.connectionPool.evictAll()
     }
 
     private val httpBase: HttpUrl get() = "http://$host:$httpPort/".toHttpUrl()
@@ -193,9 +193,6 @@ class NvHttp(
             } catch (e: NvHttpException) {
                 // Unpaired by the host: it refuses our certificate (HTTP 401 or status_code 401); HTTP tells the rest.
                 if (e.status != 401) throw e
-                // A connection opened right after pairing, before the host took the new certificate,
-                // stays refused while kept alive: the next request starts a fresh one.
-                secure.connectionPool.evictAll()
             } catch (e: javax.net.ssl.SSLException) {
                 // Some hosts refuse an unknown client certificate in the handshake already.
             }
@@ -204,12 +201,7 @@ class NvHttp(
     }
 
     fun appList(): List<NvApp> {
-        val root = try {
-            parseRoot(get(httpsBase, "applist"))
-        } catch (e: NvHttpException) {
-            if (e.status == 401) secure.connectionPool.evictAll()
-            throw e
-        }
+        val root = parseRoot(get(httpsBase, "applist"))
         val apps = root.getElementsByTagName("App")
         return (0 until apps.length).mapNotNull { i ->
             val e = apps.item(i) as Element
