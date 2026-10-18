@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
@@ -108,7 +109,8 @@ class PcLibrary(
                 }.awaitAll().flatten()
             }
         } finally {
-            task.cancel()
+            // The reporting job may be just writing the last state: it has ended before the task goes.
+            kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) { task.cancelAndJoin() }
             _scanning.value = null
             io.github.thecodingdad.gamelodge.data.tasks.BackgroundTasks.remove(TASK_ID)
         }
