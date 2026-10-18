@@ -89,7 +89,9 @@ fun StreamingHostPage(role: HostRole, sync: HostSync, secrets: SecretStore?) {
                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = LauncherTheme.colors.accent)
             }
         }
-        SwitchRow(stringResource(Res.string.host_sync_enable), settings.syncEnabled, { on -> role.update { it.copy(syncEnabled = on) } }, initialFocus = true)
+        SwitchRow(stringResource(Res.string.host_sync_enable), settings.syncEnabled, { on -> role.update { it.copy(syncEnabled = on) } },
+            subtitle = stringResource(Res.string.host_sync_enable_sub), initialFocus = true,
+        )
         SwitchRow(
             stringResource(Res.string.host_sync_not_installed), settings.syncNotInstalled, { on -> role.update { it.copy(syncNotInstalled = on) } },
             subtitle = stringResource(Res.string.host_sync_not_installed_sub),

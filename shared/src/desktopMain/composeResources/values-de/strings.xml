@@ -60,6 +60,7 @@
     <string name="host_sync">Streaming-Host</string>
     <string name="host_sync_intro">Trägt die Spiele dieses PCs in Vibepollo, Apollo oder Sunshine ein, damit jeder Moonlight-Client sie starten kann. Der Launcher startet das Spiel, der Stream endet mit ihm.</string>
     <string name="host_sync_enable">Spiele abgleichen</string>
+    <string name="host_sync_enable_sub">Neue, geänderte und entfernte Spiele dieses PCs werden automatisch mit dem Streaming-Host abgeglichen.</string>
     <string name="host_sync_type">Host-Programm</string>
     <string name="host_sync_url">Web-Adresse des Hosts</string>
     <string name="host_sync_token">API-Token</string>
