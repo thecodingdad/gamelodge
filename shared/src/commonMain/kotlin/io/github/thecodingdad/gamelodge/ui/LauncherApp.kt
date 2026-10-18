@@ -340,7 +340,7 @@ fun LauncherApp(
                         val page = SettingsPageId.valueOf(backStack.arguments?.read { getStringOrNull("page") } ?: SettingsPageId.ABOUT.name)
                         val crumbs = listOfNotNull(
                             tabCrumb(vm, nav, MainTab.SETTINGS),
-                            if (page == SettingsPageId.LICENSES) backCrumb(nav, Res.string.settings_about) else null,
+                            if (page == SettingsPageId.LICENSES) pageCrumb(vm, nav, Res.string.settings_about, SettingsPageId.ABOUT) else null,
                         )
                         SubpageFrame(vm, nav, hints, MainTab.SETTINGS, crumbs, { hostInfoFor = it }, { controllerPopup = true }) {
                             SettingsPageContent(
@@ -358,7 +358,7 @@ fun LauncherApp(
                         val hosts by vm.hosts.collectAsState()
                         SubpageFrame(
                             vm, nav, hints, MainTab.SETTINGS,
-                            listOf(tabCrumb(vm, nav, MainTab.SETTINGS), backCrumb(nav, Res.string.settings_hosts)),
+                            listOf(tabCrumb(vm, nav, MainTab.SETTINGS), pageCrumb(vm, nav, Res.string.settings_hosts, SettingsPageId.HOSTS)),
                             { hostInfoFor = it }, { controllerPopup = true },
                         ) { hosts[uuid]?.let { HostConfigScreen(it) } }
                     }
@@ -381,7 +381,7 @@ fun LauncherApp(
                         val name = profiles.firstOrNull { it.uuid == uuid }?.name ?: stringResource(Res.string.profile_default)
                         SubpageFrame(
                             vm, nav, hints, MainTab.SETTINGS,
-                            listOf(tabCrumb(vm, nav, MainTab.SETTINGS), backCrumb(nav, Res.string.settings_profiles)),
+                            listOf(tabCrumb(vm, nav, MainTab.SETTINGS), pageCrumb(vm, nav, Res.string.settings_profiles, SettingsPageId.PROFILES)),
                             { hostInfoFor = it }, { controllerPopup = true },
                         ) { io.github.thecodingdad.gamelodge.ui.PlatformUi.current.ProfileEditor(uuid, name, onDeleted = { nav.popBackStack() }) }
                     }
@@ -390,7 +390,7 @@ fun LauncherApp(
                         val review = remember(all) { all.filter { it.item.metadataState == MetadataState.REVIEW } }
                         SubpageFrame(
                             vm, nav, hints, MainTab.SETTINGS,
-                            listOf(tabCrumb(vm, nav, MainTab.SETTINGS), backCrumb(nav, Res.string.settings_metadata)),
+                            listOf(tabCrumb(vm, nav, MainTab.SETTINGS), pageCrumb(vm, nav, Res.string.settings_metadata, SettingsPageId.METADATA)),
                             { hostInfoFor = it }, { controllerPopup = true },
                         ) { ReviewScreen(review) }
                     }
@@ -874,8 +874,23 @@ private fun tabCrumb(vm: LauncherViewModel, nav: NavHostController, tab: MainTab
 
 /** Path step back to the page this one was opened from. */
 @Composable
-private fun backCrumb(nav: NavHostController, label: org.jetbrains.compose.resources.StringResource) =
-    io.github.thecodingdad.gamelodge.ui.screens.settings.Crumb(stringResource(label)) { nav.popBackStack() }
+private fun pageCrumb(
+    vm: LauncherViewModel,
+    nav: NavHostController,
+    label: org.jetbrains.compose.resources.StringResource,
+    page: SettingsPageId,
+) = io.github.thecodingdad.gamelodge.ui.screens.settings.Crumb(stringResource(label)) {
+    val previous = nav.previousBackStackEntry
+    val previousPage = previous?.arguments?.read { getStringOrNull("page") }
+    if (previous?.destination?.route == Routes.SETTINGS && previousPage == page.name) {
+        nav.popBackStack()
+    } else {
+        // Opened from elsewhere (e.g. the host popup): to that settings page, which replaces this one.
+        vm.tab = MainTab.SETTINGS.ordinal
+        val current = nav.currentBackStackEntry?.destination?.route
+        nav.navigate(Routes.settings(page)) { current?.let { popUpTo(it) { inclusive = true } } }
+    }
+}
 
 /**
  * Frame of a page opened from a main tab (settings pages, statistics): the main screen's top
