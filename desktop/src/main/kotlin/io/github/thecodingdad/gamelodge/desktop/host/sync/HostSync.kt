@@ -26,7 +26,16 @@ import java.time.format.DateTimeFormatter
 data class SyncResult(val added: Int, val updated: Int, val removed: Int, val failed: Int, val error: String? = null, val at: Long = System.currentTimeMillis())
 
 /** Connection to the streaming host on this PC (its web API). */
-data class HostConnection(val url: String, val type: HostType, val user: String?, val secret: String?)
+data class HostConnection(val url: String, val type: HostType, val user: String?, val secret: String?) {
+    /** URL and the credentials its type needs are there. */
+    val complete: Boolean
+        get() = url.isNotBlank() && !secret.isNullOrBlank() && (type == HostType.VIBEPOLLO || !user.isNullOrBlank())
+}
+
+/** Whether the streaming host answers with these credentials ([apps]: entries it lists). */
+data class HostCheck(val state: State, val apps: Int = 0, val status: Int = 0, val at: Long = System.currentTimeMillis()) {
+    enum class State { CHECKING, CONNECTED, NOT_SET_UP, AUTH_FAILED, UNREACHABLE, ERROR }
+}
 
 /**
  * Puts the PC's games on the streaming host (Vibepollo, Apollo, Sunshine) as app entries that
@@ -52,6 +61,30 @@ class HostSync(
     /** Changes sent to the host so far (done, total) while a sync writes; null otherwise. */
     private val _progress = MutableStateFlow<Pair<Int, Int>?>(null)
     val progress: StateFlow<Pair<Int, Int>?> = _progress.asStateFlow()
+
+    private val _check = MutableStateFlow<HostCheck?>(null)
+    /** Last connection check (also updated by every sync). */
+    val check: StateFlow<HostCheck?> = _check.asStateFlow()
+
+    /** Checks the stored connection and publishes the result in [check]. */
+    suspend fun refreshCheck(): HostCheck {
+        if (_check.value == null) _check.value = HostCheck(HostCheck.State.CHECKING)
+        return test(connection()).also { _check.value = it }
+    }
+
+    /** Checks [conn] (e.g. values not saved yet) without publishing the result. */
+    suspend fun test(conn: HostConnection?): HostCheck = withContext(Dispatchers.IO) {
+        if (conn == null || !conn.complete) return@withContext HostCheck(HostCheck.State.NOT_SET_UP)
+        val (apps, res) = HostApiClient(conn.url, conn.type, conn.secret, conn.user, http).getApps()
+        checkOf(apps?.size, res.status)
+    }
+
+    private fun checkOf(apps: Int?, status: Int) = when {
+        apps != null -> HostCheck(HostCheck.State.CONNECTED, apps = apps, status = status)
+        status == 0 -> HostCheck(HostCheck.State.UNREACHABLE)
+        status == 401 || status == 403 -> HostCheck(HostCheck.State.AUTH_FAILED, status = status)
+        else -> HostCheck(HostCheck.State.ERROR, status = status)
+    }
 
     private val coverDir = File(dataDir, "covers")
     private val backupDir = File(dataDir, "backups")
@@ -80,6 +113,7 @@ class HostSync(
         val conn = connection() ?: return SyncResult(0, 0, 0, 0, "no_host")
         val host = HostApiClient(conn.url, conn.type, conn.secret, conn.user, http)
         val (apps, res) = host.getApps()
+        _check.value = checkOf(apps?.size, res.status)
         if (apps == null) {
             Log.w("Sync: host answered ${res.status}")
             return SyncResult(0, 0, 0, 0, if (res.status == 0) "unreachable" else "host_status:${res.status}")

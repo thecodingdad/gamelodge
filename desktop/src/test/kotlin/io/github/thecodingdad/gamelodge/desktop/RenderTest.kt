@@ -242,7 +242,7 @@ class RenderTest {
             return result!!.getOrThrow()
         }
         val scene = ui {
-            ImageComposeScene(1600, 2400, Density(1.5f)) {
+            ImageComposeScene(1600, 1500, Density(1.5f)) {
                 CompositionLocalProvider(LocalContainer provides container) {
                     io.github.thecodingdad.gamelodge.ui.theme.LauncherTheme(io.github.thecodingdad.gamelodge.data.settings.LauncherSettings()) {
                         androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.fillMaxSize().background(io.github.thecodingdad.gamelodge.ui.theme.LauncherTheme.colors.background)) {
@@ -257,6 +257,44 @@ class RenderTest {
             Thread.sleep(800)
             val image = ui { scene.render(1_000_000_000L).also { scene.close() } }
             File("build/render").apply { mkdirs() }.resolve("host-role.png").writeBytes(image.encodeToData(EncodedImageFormat.PNG)!!.bytes)
+        } finally {
+            role.stop()
+        }
+    }
+
+    @Test
+    fun streamingHostPageRenders() {
+        val dir = Files.createTempDirectory("launcher-streaming-host").toFile()
+        val container = DesktopContainer(dir)
+        val role = container.hostRole
+        role.update { it.copy(serverEnabled = true, webEnabled = true) }
+        role.pairing.open()
+        role.devices.add("Odin 2 Portal", "AB".repeat(32), io.github.thecodingdad.gamelodge.host.Permissions.all, "192.168.1.20")
+        val services = HostServices(role, container.hostSync, container.secrets)
+        PlatformUi.current = DesktopPlatformUi(Gamepads(InputDispatcher()), { null }, { null }, { services })
+        fun <T> ui(block: () -> T): T {
+            var result: Result<T>? = null
+            javax.swing.SwingUtilities.invokeAndWait { result = runCatching(block) }
+            return result!!.getOrThrow()
+        }
+        val scene = ui {
+            ImageComposeScene(1600, 1500, Density(1.5f)) {
+                CompositionLocalProvider(LocalContainer provides container) {
+                    io.github.thecodingdad.gamelodge.ui.theme.LauncherTheme(io.github.thecodingdad.gamelodge.data.settings.LauncherSettings()) {
+                        androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.fillMaxSize().background(io.github.thecodingdad.gamelodge.ui.theme.LauncherTheme.colors.background)) {
+                            StreamingHostPage(role, container.hostSync, container.secrets)
+                        }
+                    }
+                }
+            }
+        }
+        try {
+            ui { scene.render(0) }
+            Thread.sleep(1500)
+            ui { scene.render(500_000_000L) }
+            Thread.sleep(300)
+            val image = ui { scene.render(1_000_000_000L).also { scene.close() } }
+            File("build/render").apply { mkdirs() }.resolve("streaming-host.png").writeBytes(image.encodeToData(EncodedImageFormat.PNG)!!.bytes)
         } finally {
             role.stop()
         }

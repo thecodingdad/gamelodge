@@ -207,9 +207,37 @@ class DesktopPlatformUi(
 
     override fun openAppInfo(packageName: String) = Unit
 
-    override fun hasPage(id: SettingsPageId) = id == SettingsPageId.GAME_SOURCES || (id == SettingsPageId.EMULATORS && pcLibrary() != null) || (id == SettingsPageId.HOST_ROLE && host() != null) ||
+    override fun hasPage(id: SettingsPageId) = id == SettingsPageId.GAME_SOURCES || (id == SettingsPageId.EMULATORS && pcLibrary() != null) || (id == SettingsPageId.HOST_ROLE && host() != null) || (id == SettingsPageId.STREAMING_HOST && host()?.sync != null) ||
         (id == SettingsPageId.STARTUP && startup != null) ||
         (id == SettingsPageId.PROFILES && profiles != null)
+
+    @Composable
+    override fun pageStatus(id: SettingsPageId): String? {
+        val h = host() ?: return null
+        return when (id) {
+            SettingsPageId.STREAMING_HOST -> {
+                val sync = h.sync ?: return null
+                LaunchedEffect(sync) { sync.refreshCheck() }
+                val check by sync.check.collectAsState()
+                val settings by h.role.settings.collectAsState()
+                when (check?.state) {
+                    io.github.thecodingdad.gamelodge.desktop.host.sync.HostCheck.State.CONNECTED ->
+                        stringResource(Res.string.host_check_connected, hostTypeName(settings.hostType), check!!.apps)
+                    io.github.thecodingdad.gamelodge.desktop.host.sync.HostCheck.State.NOT_SET_UP -> stringResource(Res.string.host_check_not_set_up)
+                    io.github.thecodingdad.gamelodge.desktop.host.sync.HostCheck.State.AUTH_FAILED -> stringResource(Res.string.host_check_auth)
+                    io.github.thecodingdad.gamelodge.desktop.host.sync.HostCheck.State.UNREACHABLE -> stringResource(Res.string.host_check_unreachable)
+                    io.github.thecodingdad.gamelodge.desktop.host.sync.HostCheck.State.ERROR -> stringResource(Res.string.host_check_error, check!!.status)
+                    else -> null
+                }
+            }
+            SettingsPageId.HOST_ROLE -> {
+                val status by h.role.status.collectAsState()
+                val devices by h.role.devices.devices.collectAsState()
+                if (status.serverRunning) stringResource(Res.string.host_devices_count, devices.size) else stringResource(Res.string.host_server_off)
+            }
+            else -> null
+        }
+    }
 
     @Composable
     override fun PlatformSettingsPage(id: SettingsPageId, vm: LauncherViewModel, openProfile: (UUID?) -> Unit, openStats: () -> Unit) {
@@ -220,6 +248,7 @@ class DesktopPlatformUi(
                 io.github.thecodingdad.gamelodge.desktop.emulation.EmulatorsPage(it, settings, vm::updateSettings, java.io.File(dataDirectory(), "custom-covers"))
             }
             SettingsPageId.HOST_ROLE -> host()?.let { HostRolePage(it) }
+            SettingsPageId.STREAMING_HOST -> host()?.let { h -> h.sync?.let { StreamingHostPage(h.role, it, h.secrets) } }
             SettingsPageId.STARTUP -> startup?.let { StartupPage(it, windowControls) }
             SettingsPageId.PROFILES -> profiles?.let { store ->
                 val all by vm.profiles.collectAsState()

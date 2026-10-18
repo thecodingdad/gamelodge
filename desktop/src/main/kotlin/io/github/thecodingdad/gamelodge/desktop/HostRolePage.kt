@@ -3,12 +3,15 @@ package io.github.thecodingdad.gamelodge.desktop
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Devices
+import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.PhonelinkLock
 import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,7 +22,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -27,22 +29,17 @@ import io.github.thecodingdad.gamelodge.data.companion.Fingerprint
 import io.github.thecodingdad.gamelodge.data.companion.PairedServer
 import io.github.thecodingdad.gamelodge.host.Device
 import io.github.thecodingdad.gamelodge.desktop.host.HostRole
-import io.github.thecodingdad.gamelodge.host.PairingRequestInfo
 import io.github.thecodingdad.gamelodge.host.PairingState
 import io.github.thecodingdad.gamelodge.host.Permissions
 import io.github.thecodingdad.gamelodge.host.WebAdmin
 import io.github.thecodingdad.gamelodge.desktop.host.sync.HostSync
-import io.github.thecodingdad.gamelodge.desktop.host.sync.HostType
 import io.github.thecodingdad.gamelodge.data.settings.SecretStore
-import io.github.thecodingdad.gamelodge.ui.screens.settings.ChoiceRow
-import kotlinx.coroutines.launch
 import io.github.thecodingdad.gamelodge.resources.*
 import io.github.thecodingdad.gamelodge.ui.components.HoldToConfirmButton
 import io.github.thecodingdad.gamelodge.ui.components.LauncherButton
 import io.github.thecodingdad.gamelodge.ui.components.LauncherTextField
 import io.github.thecodingdad.gamelodge.ui.components.Modal
 import io.github.thecodingdad.gamelodge.ui.components.TextKind
-import io.github.thecodingdad.gamelodge.ui.screens.settings.InfoRow
 import io.github.thecodingdad.gamelodge.ui.screens.settings.NavRow
 import io.github.thecodingdad.gamelodge.ui.screens.settings.SectionHeader
 import io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPage
@@ -72,65 +69,31 @@ fun HostRolePage(services: HostServices) {
     val role = services.role
     val settings by role.settings.collectAsState()
     val status by role.status.collectAsState()
-    val pairing by role.pairing.status.collectAsState()
     val devices by role.devices.devices.collectAsState()
-    var pinFor by remember { mutableStateOf<PairingRequestInfo?>(null) }
+    var pairingShown by remember { mutableStateOf(false) }
+    var webShown by remember { mutableStateOf(false) }
     var deviceFor by remember { mutableStateOf<Device?>(null) }
-    var setupCode by remember { mutableStateOf<String?>(null) }
-    // Webpage changes (setup done, password reset) show up when the page is visited again.
-    var webRevision by remember { mutableStateOf(0) }
-    val needsSetup = remember(webRevision, status.webRunning) { role.auth.needsSetup }
-
-    // Countdown while the window is open or locked; expiries are re-evaluated with it.
-    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    LaunchedEffect(pairing.openUntil, pairing.lockedUntil) {
-        while (pairing.openUntil != null || pairing.lockedUntil != null) {
-            now = System.currentTimeMillis()
-            role.pairing.refresh()
-            delay(1000)
-        }
-    }
 
     SettingsPage(stringResource(Res.string.settings_host_role)) {
         Text(stringResource(Res.string.host_intro), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+        val colors = LauncherTheme.colors
+        when {
+            status.serverFailed -> StatusCard(stringResource(Res.string.host_port_failed, PairedServer.COMPANION_PORT), colors.danger, Icons.Filled.ErrorOutline)
+            !status.serverRunning -> StatusCard(stringResource(Res.string.host_server_off), colors.onSurfaceMuted, Icons.Filled.PowerSettingsNew)
+            else -> StatusCard(
+                stringResource(Res.string.host_server_on), colors.success, Icons.Filled.CheckCircle,
+                details = listOf(
+                    stringResource(Res.string.host_server_port, PairedServer.COMPANION_PORT, Fingerprint.pretty(role.identity.fingerprint).take(19) + " …"),
+                    stringResource(Res.string.host_devices_count, devices.size),
+                ),
+            ) {
+                LauncherButton(stringResource(Res.string.host_pair_start), onClick = { role.pairing.open(); pairingShown = true }, icon = Icons.Filled.Link, primary = true)
+            }
+        }
         SwitchRow(
             stringResource(Res.string.host_server), settings.serverEnabled, { on -> role.update { it.copy(serverEnabled = on) } },
-            subtitle = if (status.serverFailed) stringResource(Res.string.host_port_failed, PairedServer.COMPANION_PORT)
-            else stringResource(Res.string.host_server_sub, PairedServer.COMPANION_PORT),
-            initialFocus = true,
+            subtitle = stringResource(Res.string.host_server_sub, PairedServer.COMPANION_PORT), initialFocus = true,
         )
-        if (role.proxy != null) {
-            SwitchRow(
-                stringResource(Res.string.host_proxy), settings.proxyEnabled, { on -> role.update { it.copy(proxyEnabled = on) } },
-                subtitle = stringResource(Res.string.host_proxy_sub),
-            )
-        }
-
-        SectionHeader(stringResource(Res.string.host_pairing))
-        val locked = pairing.lockedUntil
-        val open = pairing.openUntil
-        when {
-            !status.serverRunning -> Text(stringResource(Res.string.host_pair_needs_server), color = LauncherTheme.colors.onSurfaceMuted)
-            locked != null -> Text(stringResource(Res.string.host_pair_locked, countdown(locked - now)), color = LauncherTheme.colors.danger)
-            open != null -> {
-                Text(stringResource(Res.string.host_pair_open, countdown(open - now)), color = LauncherTheme.colors.success, style = MaterialTheme.typography.bodyLarge)
-                if (pairing.requests.isEmpty()) Text(stringResource(Res.string.host_pair_waiting), color = LauncherTheme.colors.onSurfaceMuted)
-                pairing.requests.forEach { r ->
-                    NavRow(
-                        r.deviceName, { if (r.state == PairingState.WAITING_FOR_PIN) pinFor = r },
-                        subtitle = listOfNotNull(r.address, if (r.state == PairingState.WAITING_FOR_PIN) null else stringResource(Res.string.host_pair_running)).joinToString(" · "),
-                        icon = Icons.Filled.PhonelinkLock,
-                        trailing = if (r.state == PairingState.WAITING_FOR_PIN) stringResource(Res.string.host_pair_enter_pin) else null,
-                    )
-                }
-                LauncherButton(stringResource(Res.string.host_pair_stop), onClick = { role.pairing.close() }, icon = Icons.Filled.Stop)
-            }
-            else -> {
-                Text(stringResource(Res.string.host_pair_hint), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
-                LauncherButton(stringResource(Res.string.host_pair_start), onClick = { role.pairing.open() }, icon = Icons.Filled.Link, primary = true)
-            }
-        }
-        if (status.serverRunning) InfoRow(stringResource(Res.string.host_fingerprint), Fingerprint.pretty(role.identity.fingerprint).take(39) + " …")
 
         SectionHeader(stringResource(Res.string.host_devices))
         if (devices.isEmpty()) Text(stringResource(Res.string.host_devices_none), color = LauncherTheme.colors.onSurfaceMuted)
@@ -142,12 +105,107 @@ fun HostRolePage(services: HostServices) {
             )
         }
 
-        services.sync?.let { HostSyncSection(role, it, services.secrets) }
+        SectionHeader(stringResource(Res.string.host_advanced))
+        if (role.proxy != null) {
+            SwitchRow(
+                stringResource(Res.string.host_proxy), settings.proxyEnabled, { on -> role.update { it.copy(proxyEnabled = on) } },
+                subtitle = stringResource(Res.string.host_proxy_sub),
+            )
+        }
+        NavRow(stringResource(Res.string.host_web), { webShown = true }, subtitle = webState(role, status.webRunning), icon = Icons.Filled.Language)
+    }
 
-        SectionHeader(stringResource(Res.string.host_web))
+    if (pairingShown) PairingDialog(role, devices.size) { role.pairing.close(); pairingShown = false }
+    if (webShown) WebDialog(role) { webShown = false }
+    // The dialog follows the stored device (renames, permissions); closes when it is removed.
+    val current = deviceFor?.let { d -> devices.firstOrNull { it.id == d.id } }
+    if (deviceFor != null && current == null) deviceFor = null
+    current?.let { DeviceDialog(it, role, onDismiss = { deviceFor = null }) }
+}
+
+@Composable
+private fun webState(role: HostRole, running: Boolean): String = when {
+    !running -> stringResource(Res.string.host_web_state_off)
+    role.auth.needsSetup -> stringResource(Res.string.host_web_state_no_password)
+    else -> stringResource(Res.string.host_web_state_on)
+}
+
+/**
+ * Pairing window: what to do on the device, the countdown, devices asking with their PIN field.
+ * Closing it ends pairing; it closes by itself once a device is paired or the window runs out.
+ */
+@Composable
+private fun PairingDialog(role: HostRole, pairedBefore: Int, onClose: () -> Unit) {
+    val pairing by role.pairing.status.collectAsState()
+    val devices by role.devices.devices.collectAsState()
+    val startCount = remember { pairedBefore }
+    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            now = System.currentTimeMillis()
+            role.pairing.refresh()
+            delay(1000)
+        }
+    }
+    if (devices.size > startCount || (pairing.openUntil == null && pairing.lockedUntil == null)) {
+        LaunchedEffect(Unit) { onClose() }
+    }
+    var pinFor by remember { mutableStateOf<String?>(null) }
+    var pin by remember { mutableStateOf("") }
+    var invalid by remember { mutableStateOf(false) }
+    Modal(visible = true, onDismiss = onClose, title = stringResource(Res.string.host_pair_start), maxWidth = 620.dp) {
+        val locked = pairing.lockedUntil
+        val open = pairing.openUntil
+        Text(stringResource(Res.string.host_pair_hint), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+        when {
+            locked != null -> Text(stringResource(Res.string.host_pair_locked, countdown(locked - now)), color = LauncherTheme.colors.danger)
+            open != null -> Text(stringResource(Res.string.host_pair_open, countdown(open - now)), color = LauncherTheme.colors.success, style = MaterialTheme.typography.bodyLarge)
+        }
+        if (open != null && pairing.requests.isEmpty()) Text(stringResource(Res.string.host_pair_waiting), color = LauncherTheme.colors.onSurfaceMuted)
+        pairing.requests.forEach { r ->
+            val waiting = r.state == PairingState.WAITING_FOR_PIN
+            NavRow(
+                r.deviceName, { if (waiting) { pinFor = r.id; pin = ""; invalid = false } },
+                subtitle = listOfNotNull(r.address, if (waiting) null else stringResource(Res.string.host_pair_running)).joinToString(" · "),
+                icon = Icons.Filled.PhonelinkLock,
+                trailing = if (waiting) stringResource(Res.string.host_pair_enter_pin) else null,
+            )
+            if (pinFor == r.id && waiting) {
+                LauncherTextField(
+                    stringResource(Res.string.host_pair_pin_title, r.deviceName), pin, { v -> pin = v.filter(Char::isDigit).take(6); invalid = false },
+                    kind = TextKind.NUMBER, placeholder = "000000",
+                )
+                if (invalid) Text(stringResource(Res.string.host_pin_invalid), color = LauncherTheme.colors.danger)
+                LauncherButton(stringResource(Res.string.host_pair_confirm), primary = true, modifier = Modifier.fillMaxWidth(), onClick = {
+                    if (pin.length == 6 && role.pairing.enterPin(r.id, pin)) pinFor = null else invalid = true
+                })
+            }
+        }
+        LauncherButton(stringResource(Res.string.host_pair_stop), onClick = onClose, icon = Icons.Filled.Stop, modifier = Modifier.fillMaxWidth())
+    }
+}
+
+/** Web interface: on/off, address, sign-in on this PC and its password. */
+@Composable
+private fun WebDialog(role: HostRole, onDismiss: () -> Unit) {
+    val settings by role.settings.collectAsState()
+    val status by role.status.collectAsState()
+    var setupCode by remember { mutableStateOf<String?>(null) }
+    // Webpage changes (setup done, password reset) show up when the dialog is opened again.
+    var revision by remember { mutableStateOf(0) }
+    val needsSetup = remember(revision, status.webRunning) { role.auth.needsSetup }
+    Modal(visible = true, onDismiss = onDismiss, title = stringResource(Res.string.host_web), maxWidth = 640.dp) {
+        val code = setupCode
+        if (code != null) {
+            Text(stringResource(Res.string.host_web_setup_hint), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+            Text(code, style = MaterialTheme.typography.displaySmall, color = LauncherTheme.colors.onSurface)
+            LauncherButton(stringResource(Res.string.action_done), onClick = { setupCode = null; revision++ }, primary = true, modifier = Modifier.fillMaxWidth())
+            return@Modal
+        }
         SwitchRow(
             stringResource(Res.string.host_web_enable), settings.webEnabled, { on -> role.update { it.copy(webEnabled = on) } },
             subtitle = if (status.webFailed) stringResource(Res.string.host_port_failed, WebAdmin.DEFAULT_PORT) else stringResource(Res.string.host_web_sub),
+            initialFocus = true,
         )
         if (status.webRunning) {
             val address = remember { role.localAddresses().firstOrNull() ?: "localhost" }
@@ -162,95 +220,9 @@ fun HostRolePage(services: HostServices) {
                 LauncherButton(stringResource(Res.string.host_web_setup), onClick = { setupCode = role.auth.issueSetupCode() }, icon = Icons.Filled.Key)
             } else {
                 Text(stringResource(Res.string.host_web_password_set), color = LauncherTheme.colors.onSurfaceMuted)
-                HoldToConfirmButton(stringResource(Res.string.host_web_reset), onConfirmed = { setupCode = role.auth.reset(); webRevision++ }, icon = Icons.Filled.Key)
+                HoldToConfirmButton(stringResource(Res.string.host_web_reset), onConfirmed = { setupCode = role.auth.reset(); revision++ }, icon = Icons.Filled.Key)
             }
         }
-    }
-
-    pinFor?.let { r -> PinDialog(r, onDismiss = { pinFor = null }) { pin -> role.pairing.enterPin(r.id, pin) } }
-    // The dialog follows the stored device (renames, permissions); closes when it is removed.
-    val current = deviceFor?.let { d -> devices.firstOrNull { it.id == d.id } }
-    if (deviceFor != null && current == null) deviceFor = null
-    current?.let { DeviceDialog(it, role, onDismiss = { deviceFor = null }) }
-    setupCode?.let { code ->
-        Modal(visible = true, onDismiss = { setupCode = null; webRevision++ }, title = stringResource(Res.string.host_web_code_title), maxWidth = 560.dp) {
-            Text(stringResource(Res.string.host_web_setup_hint), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
-            Text(code, style = MaterialTheme.typography.displaySmall, color = LauncherTheme.colors.onSurface)
-            LauncherButton(stringResource(Res.string.action_done), onClick = { setupCode = null; webRevision++ }, primary = true, modifier = Modifier.fillMaxWidth())
-        }
-    }
-}
-
-/** Streaming host on this PC: connection and the games sync. */
-@Composable
-private fun HostSyncSection(role: HostRole, sync: HostSync, secrets: SecretStore?) {
-    val settings by role.settings.collectAsState()
-    val running by sync.running.collectAsState()
-    val last by sync.last.collectAsState()
-    val scope = rememberCoroutineScope()
-    SectionHeader(stringResource(Res.string.host_sync))
-    Text(stringResource(Res.string.host_sync_intro), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
-    val status = when {
-        running -> stringResource(Res.string.host_sync_running)
-        last == null -> null
-        last!!.error == "unreachable" -> stringResource(Res.string.host_sync_error_unreachable)
-        last!!.error == "no_host" -> stringResource(Res.string.host_sync_error_no_host)
-        last!!.error != null -> stringResource(Res.string.host_sync_error_status, last!!.error!!.substringAfter(':'))
-        last!!.failed > 0 -> stringResource(Res.string.host_sync_result_failed, last!!.failed)
-        else -> stringResource(Res.string.host_sync_result, last!!.added, last!!.updated, last!!.removed)
-    }
-    SwitchRow(stringResource(Res.string.host_sync_enable), settings.syncEnabled, { on -> role.update { it.copy(syncEnabled = on) } }, subtitle = status)
-    val progress by sync.progress.collectAsState()
-    progress?.let { (done, total) ->
-        if (total > 0) {
-            Text(stringResource(Res.string.task_count, done, total), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
-            androidx.compose.material3.LinearProgressIndicator(progress = { done.toFloat() / total }, modifier = androidx.compose.ui.Modifier.fillMaxWidth(), color = LauncherTheme.colors.accent)
-        } else {
-            androidx.compose.material3.LinearProgressIndicator(modifier = androidx.compose.ui.Modifier.fillMaxWidth(), color = LauncherTheme.colors.accent)
-        }
-    }
-    ChoiceRow(
-        stringResource(Res.string.host_sync_type), HostType.entries, settings.hostType,
-        label = { when (it) { HostType.VIBEPOLLO -> "Vibepollo"; HostType.APOLLO -> "Apollo"; HostType.SUNSHINE -> "Sunshine" } },
-        onSelect = { v -> role.update { it.copy(hostType = v) } },
-    )
-    LauncherTextField(stringResource(Res.string.host_sync_url), settings.hostUrl, { v -> role.update { it.copy(hostUrl = v.trim()) } }, kind = TextKind.URL)
-    // The secret is never shown again: a new value replaces it, an empty field keeps it.
-    var secret by remember { mutableStateOf("") }
-    val stored = remember(secret) { secrets?.get(DesktopContainer.HOST_SECRET) != null }
-    fun saveSecret(v: String) {
-        secret = v
-        if (v.isNotBlank()) secrets?.put(DesktopContainer.HOST_SECRET, v)
-    }
-    if (settings.hostType == HostType.VIBEPOLLO) {
-        LauncherTextField(stringResource(Res.string.host_sync_token), secret, ::saveSecret, kind = TextKind.PASSWORD,
-            placeholder = if (stored) stringResource(Res.string.host_sync_stored) else null)
-        Text(stringResource(Res.string.host_sync_token_hint), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
-    } else {
-        LauncherTextField(stringResource(Res.string.host_sync_user), settings.hostUser.orEmpty(), { v -> role.update { it.copy(hostUser = v.trim().ifEmpty { null }) } })
-        LauncherTextField(stringResource(Res.string.host_sync_password), secret, ::saveSecret, kind = TextKind.PASSWORD,
-            placeholder = if (stored) stringResource(Res.string.host_sync_stored) else null)
-    }
-    SwitchRow(
-        stringResource(Res.string.host_sync_not_installed), settings.syncNotInstalled, { on -> role.update { it.copy(syncNotInstalled = on) } },
-        subtitle = stringResource(Res.string.host_sync_not_installed_sub),
-    )
-    LauncherButton(stringResource(Res.string.host_sync_now), onClick = { scope.launch { sync.run() } }, icon = Icons.Filled.Sync, enabled = !running)
-}
-
-/** PIN the device shows; the J-PAKE exchange checks it (a wrong PIN fails on the device). */
-@Composable
-private fun PinDialog(request: PairingRequestInfo, onDismiss: () -> Unit, onPin: (String) -> Boolean) {
-    var pin by remember { mutableStateOf("") }
-    var invalid by remember { mutableStateOf(false) }
-    Modal(visible = true, onDismiss = onDismiss, title = stringResource(Res.string.host_pair_pin_title, request.deviceName), maxWidth = 520.dp) {
-        LauncherTextField(stringResource(Res.string.host_pair_enter_pin), pin, { v -> pin = v.filter(Char::isDigit).take(6); invalid = false }, kind = TextKind.NUMBER, placeholder = "000000")
-        if (invalid) Text(stringResource(Res.string.host_pin_invalid), color = LauncherTheme.colors.danger)
-        LauncherButton(
-            stringResource(Res.string.host_pair_confirm),
-            onClick = { if (pin.length == 6 && onPin(pin)) onDismiss() else invalid = true },
-            primary = true, modifier = Modifier.fillMaxWidth(),
-        )
     }
 }
 

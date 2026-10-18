@@ -91,6 +91,10 @@ interface PlatformUi {
     /** Settings pages only some platforms have (VPN, backup, emulators …). */
     fun hasPage(id: io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId): Boolean
 
+    /** Current state of a platform page for its row in the settings list (null: its description). */
+    @Composable
+    fun pageStatus(id: io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId): String? = null
+
     @Composable
     fun PlatformSettingsPage(
         id: io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId,

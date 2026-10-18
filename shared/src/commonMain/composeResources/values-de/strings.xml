@@ -1025,6 +1025,8 @@
     <string name="settings_game_sources_sub">Steam, Epic, GOG, Xbox und andere Stores auf diesem PC</string>
     <string name="settings_host_role">Geräte &amp; Pairing</string>
     <string name="settings_host_role_sub">Andere Launcher nutzen Spiele und Metadaten dieses PCs</string>
+    <string name="settings_streaming_host">Streaming-Host</string>
+    <string name="settings_streaming_host_sub">Spiele dieses PCs in Vibepollo, Apollo oder Sunshine</string>
     <string name="settings_startup">Fenster &amp; Start</string>
     <string name="settings_startup_sub">Vollbild, mit Windows starten, Tray</string>
     <string name="accent_picker_presets">Farben</string>
