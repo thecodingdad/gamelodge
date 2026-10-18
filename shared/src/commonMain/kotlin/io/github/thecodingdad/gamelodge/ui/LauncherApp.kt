@@ -360,7 +360,7 @@ fun LauncherApp(
                             vm, nav, hints, MainTab.SETTINGS,
                             listOf(tabCrumb(vm, nav, MainTab.SETTINGS), pageCrumb(vm, nav, Res.string.settings_hosts, SettingsPageId.HOSTS)),
                             { hostInfoFor = it }, { controllerPopup = true },
-                        ) { hosts[uuid]?.let { HostConfigScreen(it) } }
+                        ) { hosts[uuid]?.let { HostConfigScreen(it, openHaSettings = { nav.navigate(Routes.settings(SettingsPageId.HOME_ASSISTANT)) }) } }
                     }
                     composable(Routes.CONTROLLERS) {
                         SubpageFrame(vm, nav, hints, MainTab.SETTINGS, listOf(tabCrumb(vm, nav, MainTab.SETTINGS)), { hostInfoFor = it }, { controllerPopup = true }) {
@@ -1059,7 +1059,7 @@ private fun SettingsPageContent(
         SettingsPageId.SOUNDS -> io.github.thecodingdad.gamelodge.ui.screens.settings.SoundSettings(settings, vm::updateSettings)
         SettingsPageId.ABOUT -> AboutSettings(openLicenses = { openPage(SettingsPageId.LICENSES) })
         SettingsPageId.LICENSES -> io.github.thecodingdad.gamelodge.ui.screens.settings.OpenSourceLicenses()
-        SettingsPageId.HOME_ASSISTANT -> HaSettings(settings, vm::updateSettings)
+        SettingsPageId.HOME_ASSISTANT -> HaSettings(settings, vm::updateSettings, hosts.values.filter { it.paired }.sortedBy { it.name }, openHost)
         SettingsPageId.DATA -> io.github.thecodingdad.gamelodge.ui.screens.settings.DataSettings(settings, vm::updateSettings, vm)
         // Pages of platform features (VPN, backup, emulators …).
         else -> if (io.github.thecodingdad.gamelodge.ui.PlatformUi.current.hasPage(page)) io.github.thecodingdad.gamelodge.ui.PlatformUi.current.PlatformSettingsPage(page, vm, openProfile = openProfile, openStats = openStats)

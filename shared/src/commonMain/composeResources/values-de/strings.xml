@@ -305,8 +305,6 @@
     <string name="ha_tiles">Kacheln</string>
     <string name="ha_show_home_row">Favoriten-Kacheln auf dem Startbildschirm zeigen</string>
     <string name="ha_add_tile">Kachel hinzufügen</string>
-    <string name="ha_on_home">Auf Startbildschirm</string>
-    <string name="ha_not_on_home">Nicht auf Startbildschirm</string>
     <string name="ha_events_help">Für Automationen sendet der Launcher die Events moonlight_launcher_stream_started und moonlight_launcher_stream_stopped (mit Spiel, Host und Profil).</string>
 
     <!-- Phase 6: host features -->
@@ -318,7 +316,39 @@
     <string name="network_start_with">Mit „%1$s“ starten</string>
 
     <!-- HA additions -->
-    <string name="ha_login_first">Melde dich zuerst bei Home Assistant an.</string>
+    <string name="ha_status_not_configured_sub">Melde dich mit der Adresse deines Home Assistant an.</string>
+    <string name="ha_login_title">Bei Home Assistant anmelden</string>
+    <string name="ha_tile_on_home">Auf dem Startbildschirm zeigen</string>
+    <string name="ha_tile_move_up">Nach oben</string>
+    <string name="ha_tile_move_down">Nach unten</string>
+    <string name="ha_tile_remove">Halten zum Entfernen</string>
+    <string name="ha_tile_on_home_short">auf dem Startbildschirm</string>
+    <string name="ha_host_actions">Host-Aktionen</string>
+    <string name="ha_host_actions_hint">Aufwecken, Schlafen, Herunterfahren und Neustart eines Hosts legst du in seinen Einstellungen fest.</string>
+    <string name="ha_host_actions_none">Keine Aktionen festgelegt</string>
+    <string name="host_ha_actions">Home-Assistant-Aktionen</string>
+    <string name="host_ha_actions_needs_ha">Aufwecken, Schlafen, Herunterfahren und Neustart laufen als Home-Assistant-Aktionen. Richte zuerst Home Assistant ein.</string>
+    <string name="host_ha_setup">Home Assistant einrichten</string>
+    <string name="host_after_stream">Nach dem Streamen</string>
+    <string name="ha_pick_action_for">Aktion für %1$s</string>
+    <string name="ha_pick_all">Alle</string>
+    <string name="ha_pick_no_match">Keine passende Entität</string>
+    <string name="ha_switch_action">Was soll passieren?</string>
+    <string name="ha_turn_on">Einschalten</string>
+    <string name="ha_turn_off">Ausschalten</string>
+    <string name="ha_pick_apply">Übernehmen</string>
+    <string name="ha_group_switch">Schalter</string>
+    <string name="ha_group_script">Skripte</string>
+    <string name="ha_group_button">Buttons</string>
+    <string name="ha_group_scene">Szenen</string>
+    <string name="ha_group_light">Lichter</string>
+    <string name="ha_group_fan">Ventilatoren</string>
+    <string name="ha_group_cover">Rollos</string>
+    <string name="ha_group_climate">Klima</string>
+    <string name="ha_group_sensor">Sensoren</string>
+    <string name="ha_group_lock">Schlösser</string>
+    <string name="ha_group_media">Medien</string>
+    <string name="ha_group_automation">Automationen</string>
 
     <!-- Host config, controllers -->
     <string name="perm_launch">Apps starten</string>
@@ -333,14 +363,8 @@
     <string name="wake_wol">Wake-on-LAN</string>
     <string name="wake_ha">Home Assistant</string>
     <string name="wake_both">Beides</string>
-    <string name="host_ha_wake">Home-Assistant-Aktion zum Aufwecken</string>
-    <string name="host_power_section">Energie</string>
-    <string name="host_ha_sleep">Aktion für Schlafen</string>
-    <string name="host_ha_shutdown">Aktion für Herunterfahren</string>
-    <string name="host_ha_restart">Aktion für Neustart</string>
     <string name="host_auto_sleep">Host nach dem Streamen schlafen legen</string>
     <string name="host_auto_sleep_sub">Nach dem Ende des letzten Streams (nutzt die Schlaf- oder Herunterfahren-Aktion)</string>
-    <string name="host_pick_action">Home-Assistant-Entität wählen</string>
     <string name="not_set">Nicht festgelegt</string>
     <string name="power_sleep">Schlafen</string>
     <string name="power_restart">Neu starten</string>

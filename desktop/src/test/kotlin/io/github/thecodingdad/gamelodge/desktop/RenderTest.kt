@@ -127,6 +127,62 @@ class RenderTest {
         File("build/render").apply { mkdirs() }.resolve("game-sources.png").writeBytes(image.encodeToData(EncodedImageFormat.PNG)!!.bytes)
     }
 
+    /** Renders [content] in the launcher theme with a fresh container into build/render/[name]. */
+    private fun renderPage(name: String, height: Int = 1400, content: @androidx.compose.runtime.Composable () -> Unit) {
+        val dir = Files.createTempDirectory("launcher-$name").toFile()
+        val container = DesktopContainer(dir)
+        PlatformUi.current = DesktopPlatformUi(Gamepads(InputDispatcher()), { null }, { null })
+        fun <T> ui(block: () -> T): T {
+            var result: Result<T>? = null
+            javax.swing.SwingUtilities.invokeAndWait { result = runCatching(block) }
+            return result!!.getOrThrow()
+        }
+        val settings = io.github.thecodingdad.gamelodge.data.settings.LauncherSettings()
+        val scene = ui {
+            ImageComposeScene(1600, height, Density(1.5f)) {
+                CompositionLocalProvider(LocalContainer provides container) {
+                    io.github.thecodingdad.gamelodge.ui.theme.LauncherTheme(settings) {
+                        androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.fillMaxSize().background(io.github.thecodingdad.gamelodge.ui.theme.LauncherTheme.colors.background)) {
+                            content()
+                            io.github.thecodingdad.gamelodge.ui.components.OverlayOutlet()
+                        }
+                    }
+                }
+            }
+        }
+        ui { scene.render(0) }
+        Thread.sleep(1000)
+        ui { scene.render(400_000_000L) }
+        Thread.sleep(200)
+        val image = ui { scene.render(1_000_000_000L).also { scene.close() } }
+        File("build/render").apply { mkdirs() }.resolve("$name.png").writeBytes(image.encodeToData(EncodedImageFormat.PNG)!!.bytes)
+    }
+
+    @Test
+    fun homeAssistantPagesRender() {
+        val host = io.github.thecodingdad.gamelodge.data.remote.HostState(
+            "host-1", "Win11VM", io.github.thecodingdad.gamelodge.data.remote.HostStatus.ONLINE, true, 0, "192.168.1.68", null, false, emptyList(), -1,
+        )
+        renderPage("home-assistant") {
+            io.github.thecodingdad.gamelodge.ui.screens.ha.HaSettings(io.github.thecodingdad.gamelodge.data.settings.LauncherSettings(), {}, listOf(host)) {}
+        }
+        renderPage("host-config") { io.github.thecodingdad.gamelodge.ui.screens.settings.HostConfigScreen(host) {} }
+        fun entity(id: String, name: String, state: String) = io.github.thecodingdad.gamelodge.ha.HaEntity(
+            id, state, kotlinx.serialization.json.buildJsonObject { put("friendly_name", kotlinx.serialization.json.JsonPrimitive(name)) },
+        )
+        val entities = listOf(
+            entity("switch.gaming_vm", "Gaming-VM", "on"), entity("script.vm_stop", "Gaming-VM stoppen", "off"),
+            entity("button.vm_restart", "VM Neustart", "unknown"), entity("scene.movie", "Kino", "scening"),
+            entity("automation.lights", "Licht-Automation", "on"), entity("light.desk", "Schreibtisch", "on"),
+        )
+        renderPage("entity-picker", 1200) {
+            io.github.thecodingdad.gamelodge.ui.screens.ha.EntityPicker(
+                visible = true, title = "Action for Shut down", entities = entities,
+                domains = io.github.thecodingdad.gamelodge.ui.screens.ha.actionDomains, onPick = {}, onDismiss = {}, allowNone = true, switchDefault = false,
+            )
+        }
+    }
+
     @Test
     fun aboutPageRenders() {
         val dir = Files.createTempDirectory("launcher-about").toFile()

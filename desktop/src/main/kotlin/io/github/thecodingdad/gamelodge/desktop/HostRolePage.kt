@@ -37,6 +37,7 @@ import io.github.thecodingdad.gamelodge.data.settings.SecretStore
 import io.github.thecodingdad.gamelodge.resources.*
 import io.github.thecodingdad.gamelodge.ui.components.HoldToConfirmButton
 import io.github.thecodingdad.gamelodge.ui.components.LauncherButton
+import io.github.thecodingdad.gamelodge.ui.components.StatusCard
 import io.github.thecodingdad.gamelodge.ui.components.LauncherTextField
 import io.github.thecodingdad.gamelodge.ui.components.Modal
 import io.github.thecodingdad.gamelodge.ui.components.TextKind

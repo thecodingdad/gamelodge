@@ -1,4 +1,4 @@
-package io.github.thecodingdad.gamelodge.desktop
+package io.github.thecodingdad.gamelodge.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -21,7 +21,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import io.github.thecodingdad.gamelodge.ui.components.ButtonRow
 import io.github.thecodingdad.gamelodge.ui.theme.LauncherTheme
 
 /**

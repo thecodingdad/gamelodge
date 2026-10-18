@@ -11,6 +11,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bedtime
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Power
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Warning
@@ -33,15 +35,15 @@ import io.github.thecodingdad.gamelodge.data.db.HostConfigEntity
 import io.github.thecodingdad.gamelodge.data.db.WakeMethod
 import io.github.thecodingdad.gamelodge.data.remote.HostPermission
 import io.github.thecodingdad.gamelodge.data.remote.HostState
-import io.github.thecodingdad.gamelodge.ha.HaEntity
+import io.github.thecodingdad.gamelodge.ui.screens.ha.EntityPicker
+import io.github.thecodingdad.gamelodge.ui.screens.ha.actionDomains
+import io.github.thecodingdad.gamelodge.ui.screens.ha.actionLabel
 import io.github.thecodingdad.gamelodge.ui.components.FocusSurface
 import io.github.thecodingdad.gamelodge.ui.components.Modal
 import io.github.thecodingdad.gamelodge.ui.theme.LauncherTheme
 import kotlinx.coroutines.launch
 import io.github.thecodingdad.gamelodge.resources.*
 
-/** HA domains that can act as a host power action. */
-private val actionDomains = setOf("script", "button", "input_button", "switch", "scene", "automation", "input_boolean")
 
 @Composable
 fun permissionLabel(p: HostPermission) = stringResource(
@@ -67,20 +69,19 @@ fun MissingPermissionsNote(host: HostState) {
 }
 
 @Composable
-fun HostConfigScreen(host: HostState) {
+fun HostConfigScreen(host: HostState, openHaSettings: () -> Unit) {
     val c = io.github.thecodingdad.gamelodge.LocalContainer.current
     val scope = rememberCoroutineScope()
     val entities by c.ha.client.entities.collectAsState()
     var config by remember { mutableStateOf<HostConfigEntity?>(null) }
     LaunchedEffect(host.uuid) { config = c.hostPower.config(host.uuid) }
-    var picking by remember { mutableStateOf<((String?) -> Unit)?>(null) }
+    var picking by remember { mutableStateOf<Picking?>(null) }
     val cfg = config ?: return
 
     fun save(new: HostConfigEntity) {
         config = new
         scope.launch { c.hostPower.save(new) }
     }
-    fun entityLabel(id: String?) = id?.let { entities[it]?.name ?: it }
 
     SettingsPage(host.name) {
         MissingPermissionsNote(host)
@@ -101,13 +102,30 @@ fun HostConfigScreen(host: HostState) {
             subtitle = stringResource(Res.string.host_wake_method_sub),
             initialFocus = true,
         )
-        val haDisabled = !c.ha.auth.isLoggedIn
-        NavRow(stringResource(Res.string.host_ha_wake), { if (!haDisabled) picking = { id -> save(cfg.copy(haWakeEntity = id)) } }, entityLabel(cfg.haWakeEntity) ?: stringResource(Res.string.not_set))
-        SectionHeader(stringResource(Res.string.host_power_section))
-        NavRow(stringResource(Res.string.host_ha_sleep), { if (!haDisabled) picking = { id -> save(cfg.copy(haSleepEntity = id)) } }, entityLabel(cfg.haSleepEntity) ?: stringResource(Res.string.not_set))
-        NavRow(stringResource(Res.string.host_ha_shutdown), { if (!haDisabled) picking = { id -> save(cfg.copy(haShutdownEntity = id)) } }, entityLabel(cfg.haShutdownEntity) ?: stringResource(Res.string.not_set))
-        NavRow(stringResource(Res.string.host_ha_restart), { if (!haDisabled) picking = { id -> save(cfg.copy(haRestartEntity = id)) } }, entityLabel(cfg.haRestartEntity) ?: stringResource(Res.string.not_set))
-        if (haDisabled) Text(stringResource(Res.string.ha_login_first), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+
+        SectionHeader(stringResource(Res.string.host_ha_actions))
+        if (!c.ha.auth.isLoggedIn) {
+            Text(stringResource(Res.string.host_ha_actions_needs_ha), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+            io.github.thecodingdad.gamelodge.ui.components.LauncherButton(
+                stringResource(Res.string.host_ha_setup), onClick = openHaSettings, icon = Icons.Filled.Home, primary = true,
+            )
+        } else {
+            val notSet = stringResource(Res.string.not_set)
+            val wake = stringResource(Res.string.host_wake)
+            val sleep = stringResource(Res.string.power_sleep)
+            val shutdown = stringResource(Res.string.power_shutdown)
+            val restart = stringResource(Res.string.power_restart)
+            fun pick(title: String, switchOn: Boolean, apply: (String?) -> HostConfigEntity) {
+                c.ha.client.start()
+                picking = Picking(title, switchOn) { save(apply(it)) }
+            }
+            NavRow(wake, { pick(wake, true) { cfg.copy(haWakeEntity = it) } }, actionLabel(cfg.haWakeEntity, entities) ?: notSet, Icons.Filled.Power)
+            NavRow(sleep, { pick(sleep, false) { cfg.copy(haSleepEntity = it) } }, actionLabel(cfg.haSleepEntity, entities) ?: notSet, Icons.Filled.Bedtime)
+            NavRow(shutdown, { pick(shutdown, false) { cfg.copy(haShutdownEntity = it) } }, actionLabel(cfg.haShutdownEntity, entities) ?: notSet, Icons.Filled.PowerSettingsNew)
+            NavRow(restart, { pick(restart, false) { cfg.copy(haRestartEntity = it) } }, actionLabel(cfg.haRestartEntity, entities) ?: notSet, Icons.Filled.RestartAlt)
+        }
+
+        SectionHeader(stringResource(Res.string.host_after_stream))
         ChoiceRow(
             stringResource(Res.string.host_auto_sleep), listOf<Int?>(null, 5, 10, 15, 30, 60), cfg.autoSleepMinutes,
             label = { it?.let { m -> stringResource(Res.string.minutes_short, m) } ?: stringResource(Res.string.off) },
@@ -117,30 +135,18 @@ fun HostConfigScreen(host: HostState) {
         CompanionSection(host)
     }
 
-    val onPick = picking
-    Modal(visible = onPick != null, onDismiss = { picking = null }, title = stringResource(Res.string.host_pick_action), maxWidth = 760.dp) {
-        val candidates = entities.values.filter { it.domain in actionDomains }.sortedWith(compareBy({ it.domain }, { it.name }))
-        val pickerList = io.github.thecodingdad.gamelodge.ui.input.rememberStickLazyListState()
-        LazyColumn(state = pickerList, modifier = Modifier.heightIn(max = 400.dp).mouseDragScroll(pickerList), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            item {
-                EntityRow(null) { onPick?.invoke(null); picking = null }
-            }
-            items(candidates, key = { it.id }) { e ->
-                EntityRow(e) { onPick?.invoke(e.id); picking = null }
-            }
-        }
-    }
+    val p = picking
+    EntityPicker(
+        visible = p != null,
+        title = stringResource(Res.string.ha_pick_action_for, p?.title.orEmpty()),
+        entities = entities.values, domains = actionDomains,
+        onPick = { p?.onPick?.invoke(it) }, onDismiss = { picking = null },
+        allowNone = true, switchDefault = p?.switchOn ?: false,
+    )
 }
 
-@Composable
-private fun EntityRow(entity: HaEntity?, onClick: () -> Unit) {
-    FocusSurface(onClick = onClick, modifier = Modifier.fillMaxWidth(), color = LauncherTheme.colors.surfaceRaised, focusScale = 1.02f) {
-        Column(Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
-            Text(entity?.name ?: stringResource(Res.string.not_set), style = MaterialTheme.typography.titleSmall, color = LauncherTheme.colors.onSurface)
-            if (entity != null) Text(entity.id, style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
-        }
-    }
-}
+/** A host action being picked; [switchOn]: what a switch does for it unless changed. */
+private class Picking(val title: String, val switchOn: Boolean, val onPick: (String?) -> Unit)
 
 /** The companion on this host (paired or not): opens its settings or pairs one. */
 @Composable

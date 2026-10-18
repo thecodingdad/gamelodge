@@ -46,8 +46,13 @@ class HaRepository(
         }
     }
 
-    /** Fires an entity used as an action (scripts, scenes, buttons, switches). */
-    suspend fun runAction(entityId: String) = guarded {
+    /** Runs a stored action ([HaAction]: entity id, for switches with on or off). */
+    suspend fun runAction(action: String) = guarded {
+        val entityId = HaAction.entity(action)
+        if (HaAction.on(action) == false) {
+            client.callService("homeassistant", "turn_off", entityId)
+            return@guarded
+        }
         when (entityId.substringBefore('.')) {
             "script" -> client.callService("script", "turn_on", entityId)
             "scene" -> client.callService("scene", "turn_on", entityId)

@@ -24,6 +24,11 @@ import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Login
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.Computer
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -54,7 +59,7 @@ import io.github.thecodingdad.gamelodge.ui.components.SidePanel
 import io.github.thecodingdad.gamelodge.ui.components.TextKind
 import io.github.thecodingdad.gamelodge.ui.components.restoreFocusIf
 import io.github.thecodingdad.gamelodge.ui.input.PadButton
-import io.github.thecodingdad.gamelodge.ui.screens.settings.InfoRow
+import io.github.thecodingdad.gamelodge.ui.screens.settings.NavRow
 import io.github.thecodingdad.gamelodge.ui.screens.settings.SectionHeader
 import io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPage
 import io.github.thecodingdad.gamelodge.ui.screens.settings.SwitchRow
@@ -116,35 +121,124 @@ fun HaPanel(visible: Boolean, onDismiss: () -> Unit, openSettings: () -> Unit) {
 }
 
 @Composable
-fun HaSettings(settings: LauncherSettings, update: ((LauncherSettings) -> LauncherSettings) -> Unit) {
-    val ha = io.github.thecodingdad.gamelodge.LocalContainer.current.ha
+fun HaSettings(
+    settings: LauncherSettings,
+    update: ((LauncherSettings) -> LauncherSettings) -> Unit,
+    hosts: List<io.github.thecodingdad.gamelodge.data.remote.HostState> = emptyList(),
+    openHost: (String) -> Unit = {},
+) {
+    val c = io.github.thecodingdad.gamelodge.LocalContainer.current
+    val ha = c.ha
     val scope = rememberCoroutineScope()
     val connection by ha.client.connection.collectAsState()
     val tiles by ha.tiles.collectAsState(emptyList())
     val entities by ha.client.entities.collectAsState()
-    var url by remember { mutableStateOf(settings.haUrl.ifEmpty { ha.auth.baseUrl ?: "" }) }
-    var busy by remember { mutableStateOf(false) }
-    var error by remember { mutableStateOf<String?>(null) }
+    var loginShown by remember { mutableStateOf(false) }
     var picking by remember { mutableStateOf(false) }
+    var tileFor by remember { mutableStateOf<String?>(null) }
     androidx.compose.runtime.LaunchedEffect(Unit) { ha.client.start() }
 
     SettingsPage(stringResource(Res.string.settings_home_assistant)) {
-        InfoRow(stringResource(Res.string.ha_status), connectionLabel(connection))
+        val colors = LauncherTheme.colors
+        val url = settings.haUrl.ifEmpty { ha.auth.baseUrl.orEmpty() }
+        val loggedIn = ha.auth.isLoggedIn
+        val (color, icon) = when (connection) {
+            HaConnection.CONNECTED -> colors.success to Icons.Filled.CheckCircle
+            HaConnection.CONNECTING -> colors.onSurfaceMuted to Icons.Filled.Sync
+            HaConnection.AUTH_FAILED -> colors.danger to Icons.Filled.Lock
+            HaConnection.DISCONNECTED -> colors.warning to Icons.Filled.CloudOff
+            HaConnection.NOT_CONFIGURED -> colors.onSurfaceMuted to Icons.Filled.Home
+        }
+        io.github.thecodingdad.gamelodge.ui.components.StatusCard(
+            connectionLabel(connection), color, icon,
+            details = listOfNotNull(if (loggedIn) url.ifEmpty { null } else stringResource(Res.string.ha_status_not_configured_sub)),
+            busy = connection == HaConnection.CONNECTING,
+        ) {
+            LauncherButton(
+                stringResource(if (loggedIn) Res.string.ha_relogin else Res.string.ha_login), onClick = { loginShown = true },
+                icon = Icons.Filled.Login, primary = !loggedIn || connection == HaConnection.AUTH_FAILED,
+            )
+            if (loggedIn) HoldToConfirmButton(stringResource(Res.string.ha_logout), onConfirmed = { ha.client.stop(); ha.auth.logout() }, icon = Icons.AutoMirrored.Filled.Logout)
+        }
+
+        SectionHeader(stringResource(Res.string.ha_tiles))
+        SwitchRow(stringResource(Res.string.ha_show_home_row), settings.showHaRowOnHome, { v -> update { it.copy(showHaRowOnHome = v) } }, icon = Icons.Filled.Home, initialFocus = true)
+        tiles.forEach { tile ->
+            val entity = entities[tile.entityId]
+            val group = EntityGroup.of(tile.entityId.substringBefore('.'))
+            NavRow(
+                entity?.name ?: tile.entityId, { tileFor = tile.entityId },
+                subtitle = listOfNotNull(group?.let { stringResource(it.label) }, if (tile.showOnHome) stringResource(Res.string.ha_tile_on_home_short) else null).joinToString(" · "),
+                icon = group?.icon,
+            )
+        }
+        LauncherButton(
+            stringResource(Res.string.ha_add_tile), icon = Icons.Filled.Add, enabled = loggedIn,
+            onClick = { ha.client.start(); picking = true },
+        )
+
+        if (hosts.isNotEmpty()) {
+            SectionHeader(stringResource(Res.string.ha_host_actions))
+            Text(stringResource(Res.string.ha_host_actions_hint), style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceMuted)
+            val names = listOf(
+                stringResource(Res.string.host_wake), stringResource(Res.string.power_sleep),
+                stringResource(Res.string.power_shutdown), stringResource(Res.string.power_restart),
+            )
+            val none = stringResource(Res.string.ha_host_actions_none)
+            hosts.forEach { host ->
+                val set by androidx.compose.runtime.produceState(none, host.uuid) {
+                    val cfg = c.hostPower.config(host.uuid)
+                    value = listOf(cfg.haWakeEntity, cfg.haSleepEntity, cfg.haShutdownEntity, cfg.haRestartEntity)
+                        .mapIndexedNotNull { i, v -> names[i].takeIf { v != null } }.joinToString(", ").ifEmpty { none }
+                }
+                NavRow(host.name, { openHost(host.uuid) }, set, Icons.Filled.Computer)
+            }
+        }
+        Text(stringResource(Res.string.ha_events_help), style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceMuted)
+    }
+
+    if (loginShown) LoginDialog(settings, update) { loginShown = false }
+    tiles.firstOrNull { it.entityId == tileFor }?.let { tile ->
+        TileDialog(tile, entities[tile.entityId], ha, isFirst = tiles.first() == tile, isLast = tiles.last() == tile) { tileFor = null }
+    }
+    EntityPicker(
+        visible = picking, title = stringResource(Res.string.ha_add_tile),
+        entities = entities.values.filter { it.id !in tiles.map { t -> t.entityId } },
+        domains = HaRepository.supportedDomains,
+        onPick = { id -> entities[id]?.let { scope.launch { ha.addTile(it) } } },
+        onDismiss = { picking = false },
+    )
+}
+
+/** Address of Home Assistant and the sign-in in the browser. */
+@Composable
+private fun LoginDialog(settings: LauncherSettings, update: ((LauncherSettings) -> LauncherSettings) -> Unit, onDismiss: () -> Unit) {
+    val ha = io.github.thecodingdad.gamelodge.LocalContainer.current.ha
+    val scope = rememberCoroutineScope()
+    var url by remember { mutableStateOf(settings.haUrl.ifEmpty { ha.auth.baseUrl ?: "" }) }
+    var busy by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+    Modal(visible = true, onDismiss = onDismiss, title = stringResource(Res.string.ha_login_title), maxWidth = 640.dp) {
         LauncherTextField(
             stringResource(Res.string.ha_url), url, { url = it; update { s -> s.copy(haUrl = it) } },
             kind = TextKind.URL, placeholder = "http://homeassistant.local:8123",
-            modifier = Modifier.restoreFocusIf(true),
         )
-        io.github.thecodingdad.gamelodge.ui.components.ButtonRow(spacing = 12.dp) {
+        if (busy) {
+            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                CircularProgressIndicator(color = LauncherTheme.colors.accent)
+                Text("  " + stringResource(Res.string.ha_login_waiting), color = LauncherTheme.colors.onSurfaceMuted)
+            }
+        }
+        error?.let { Text(it, color = LauncherTheme.colors.danger) }
+        io.github.thecodingdad.gamelodge.ui.components.ButtonRow {
             LauncherButton(
-                stringResource(if (ha.auth.isLoggedIn) Res.string.ha_relogin else Res.string.ha_login),
-                icon = Icons.Filled.Login, primary = !ha.auth.isLoggedIn, enabled = url.isNotBlank() && !busy,
+                stringResource(Res.string.ha_login), icon = Icons.Filled.Login, primary = true, enabled = url.isNotBlank() && !busy,
                 onClick = {
                     busy = true
                     error = null
                     scope.launch {
                         runCatching { ha.auth.login(url) }
-                            .onSuccess { ha.client.restart() }
+                            .onSuccess { ha.client.restart(); onDismiss() }
                             .onFailure { error = it.message }
                         busy = false
                         // Bring the launcher back in front of the browser tab.
@@ -152,94 +246,26 @@ fun HaSettings(settings: LauncherSettings, update: ((LauncherSettings) -> Launch
                     }
                 },
             )
-            if (ha.auth.isLoggedIn) {
-                HoldToConfirmButton(stringResource(Res.string.ha_logout), onConfirmed = { ha.client.stop(); ha.auth.logout() }, icon = Icons.AutoMirrored.Filled.Logout)
-            }
+            LauncherButton(stringResource(Res.string.action_cancel), onClick = onDismiss)
         }
-        if (busy) {
-            Row { CircularProgressIndicator(color = LauncherTheme.colors.accent); Text("  " + stringResource(Res.string.ha_login_waiting), color = LauncherTheme.colors.onSurfaceMuted) }
-        }
-        error?.let { Text(it, color = LauncherTheme.colors.danger) }
-
-        SectionHeader(stringResource(Res.string.ha_tiles))
-        SwitchRow(stringResource(Res.string.ha_show_home_row), settings.showHaRowOnHome, { v -> update { it.copy(showHaRowOnHome = v) } }, icon = Icons.Filled.Home)
-        tiles.forEachIndexed { index, tile ->
-            TileRow(tile, entities[tile.entityId], ha, isFirst = index == 0, isLast = index == tiles.lastIndex)
-        }
-        LauncherButton(
-            stringResource(Res.string.ha_add_tile), icon = Icons.Filled.Add,
-            enabled = ha.auth.isLoggedIn,
-            onClick = {
-                ha.client.start()
-                picking = true
-            },
-        )
-        if (!ha.auth.isLoggedIn) {
-            Text(stringResource(Res.string.ha_login_first), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
-        }
-        Text(stringResource(Res.string.ha_events_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
     }
-
-    EntityPicker(
-        visible = picking,
-        entities = entities.values.filter { it.domain in HaRepository.supportedDomains && it.id !in tiles.map { t -> t.entityId } },
-        onPick = { entity -> scope.launch { ha.addTile(entity) } },
-        onDismiss = { picking = false },
-    )
 }
 
+/** One tile: on the home screen, its place, removing it. */
 @Composable
-private fun TileRow(tile: HaTileEntity, entity: HaEntity?, ha: HaRepository, isFirst: Boolean, isLast: Boolean) {
+private fun TileDialog(tile: HaTileEntity, entity: HaEntity?, ha: HaRepository, isFirst: Boolean, isLast: Boolean, onDismiss: () -> Unit) {
     val scope = rememberCoroutineScope()
-    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text(entity?.name ?: tile.entityId, style = MaterialTheme.typography.titleMedium, color = LauncherTheme.colors.onSurface)
-        io.github.thecodingdad.gamelodge.ui.components.ButtonRow(spacing = 10.dp) {
-            LauncherButton(
-                stringResource(if (tile.showOnHome) Res.string.ha_on_home else Res.string.ha_not_on_home),
-                icon = Icons.Filled.Home,
-                onClick = { scope.launch { ha.setShowOnHome(tile, !tile.showOnHome) } },
-            )
-            if (!isFirst) LauncherButton("", icon = Icons.Filled.ArrowUpward, onClick = { scope.launch { ha.move(tile, -1) } })
-            if (!isLast) LauncherButton("", icon = Icons.Filled.ArrowDownward, onClick = { scope.launch { ha.move(tile, 1) } })
-            LauncherButton("", icon = Icons.Filled.Delete, onClick = { scope.launch { ha.removeTile(tile.entityId) } })
+    Modal(visible = true, onDismiss = onDismiss, title = entity?.name ?: tile.entityId, maxWidth = 620.dp) {
+        Text(tile.entityId, style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+        SwitchRow(stringResource(Res.string.ha_tile_on_home), tile.showOnHome, { scope.launch { ha.setShowOnHome(tile, it) } }, icon = Icons.Filled.Home, initialFocus = true)
+        io.github.thecodingdad.gamelodge.ui.components.ButtonRow {
+            if (!isFirst) LauncherButton(stringResource(Res.string.ha_tile_move_up), icon = Icons.Filled.ArrowUpward, onClick = { scope.launch { ha.move(tile, -1) } })
+            if (!isLast) LauncherButton(stringResource(Res.string.ha_tile_move_down), icon = Icons.Filled.ArrowDownward, onClick = { scope.launch { ha.move(tile, 1) } })
         }
-    }
-}
-
-/** Searchable entity list; the search uses the controller keyboard in controller mode. */
-@Composable
-private fun EntityPicker(visible: Boolean, entities: List<HaEntity>, onPick: (HaEntity) -> Unit, onDismiss: () -> Unit) {
-    var query by remember { mutableStateOf("") }
-    Modal(visible = visible, onDismiss = onDismiss, title = stringResource(Res.string.ha_add_tile), maxWidth = 760.dp) {
-        LauncherTextField(stringResource(Res.string.hint_search), query, { query = it })
-        Spacer(Modifier.height(12.dp))
-        if (entities.isEmpty()) {
-            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                CircularProgressIndicator(color = LauncherTheme.colors.accent)
-                Text("  " + stringResource(Res.string.ha_connecting), color = LauncherTheme.colors.onSurfaceMuted)
-            }
-            return@Modal
-        }
-        val q = TitleNormalizer.normalize(query)
-        val shown = entities
-            .filter { q.isEmpty() || TitleNormalizer.normalize(it.name).contains(q) || it.id.contains(query.trim(), ignoreCase = true) }
-            .sortedWith(compareBy({ it.domain }, { it.name }))
-        val pickerList = io.github.thecodingdad.gamelodge.ui.input.rememberStickLazyListState()
-        LazyColumn(state = pickerList, modifier = Modifier.heightIn(max = 380.dp).mouseDragScroll(pickerList), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(shown, key = { it.id }) { entity ->
-                FocusSurface(
-                    onClick = { onPick(entity) },
-                    modifier = Modifier.fillMaxWidth(),
-                    color = LauncherTheme.colors.surfaceRaised,
-                    focusScale = 1.02f,
-                ) {
-                    Column(Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
-                        Text(entity.name, style = MaterialTheme.typography.titleSmall, color = LauncherTheme.colors.onSurface)
-                        Text("${entity.id}  ·  ${entity.state}", style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
-                    }
-                }
-            }
-        }
+        HoldToConfirmButton(
+            stringResource(Res.string.ha_tile_remove), onConfirmed = { scope.launch { ha.removeTile(tile.entityId) }; onDismiss() },
+            icon = Icons.Filled.Delete, modifier = Modifier.fillMaxWidth(),
+        )
     }
 }
 
