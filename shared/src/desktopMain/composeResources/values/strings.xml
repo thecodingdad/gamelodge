@@ -20,9 +20,7 @@
     <string name="host_intro">Launchers on other devices (handheld, phone, TV) can pair with this PC. They then show its games and look up artwork through it.</string>
     <string name="host_server">Connection for launchers</string>
     <string name="host_server_sub">Port %1$d. Off: paired devices can't reach this PC.</string>
-    <string name="host_port_failed">Port %1$d is in use. Is the companion still running?</string>
-    <string name="host_proxy">Metadata for paired devices</string>
-    <string name="host_proxy_sub">Paired launchers look up artwork and details with this PC's SteamGridDB and IGDB keys.</string>
+    <string name="host_port_failed">Port %1$d is in use.</string>
     <string name="host_pairing">Pairing</string>
     <string name="host_pair_hint">Start pairing, then choose this PC on the device. It shows a 6-digit PIN: enter it here.</string>
     <string name="host_pair_start">Pair a device</string>

@@ -20,9 +20,7 @@
     <string name="host_intro">Launcher auf anderen Geräten (Handheld, Handy, TV) können sich mit diesem PC koppeln. Sie zeigen dann seine Spiele und suchen Artwork über ihn.</string>
     <string name="host_server">Verbindung für Launcher</string>
     <string name="host_server_sub">Port %1$d. Aus: gekoppelte Geräte erreichen diesen PC nicht.</string>
-    <string name="host_port_failed">Port %1$d ist belegt. Läuft noch die Companion?</string>
-    <string name="host_proxy">Metadaten für gekoppelte Geräte</string>
-    <string name="host_proxy_sub">Gekoppelte Launcher suchen Artwork und Details mit den SteamGridDB- und IGDB-Schlüsseln dieses PCs.</string>
+    <string name="host_port_failed">Port %1$d ist belegt.</string>
     <string name="host_pairing">Koppeln</string>
     <string name="host_pair_hint">Starte das Koppeln und wähle dann auf dem Gerät diesen PC. Es zeigt eine 6-stellige PIN: gib sie hier ein.</string>
     <string name="host_pair_start">Gerät koppeln</string>

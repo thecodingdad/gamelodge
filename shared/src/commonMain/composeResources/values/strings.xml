@@ -135,7 +135,7 @@
     <string name="settings_controllers">Controllers</string>
     <string name="settings_controllers_sub">Connected controllers and player order</string>
     <string name="settings_metadata">Metadata &amp; artwork</string>
-    <string name="settings_metadata_sub">SteamGridDB, IGDB, companion, metadata server, review list</string>
+    <string name="settings_metadata_sub">SteamGridDB, IGDB, host, metadata server, review list</string>
     <string name="settings_home_assistant">Home Assistant</string>
     <string name="settings_home_assistant_sub">Connection and smart home tiles</string>
     <string name="settings_vpn">VPN</string>
@@ -190,7 +190,6 @@
     <string name="host_invalid_address">That doesn't look like a valid address.</string>
     <string name="host_unreachable">The host could not be reached.</string>
     <string name="host_pair">Pair</string>
-    <string name="host_unpair">Unpair</string>
     <string name="host_wake">Wake up</string>
     <string name="host_remove">Remove</string>
     <string name="host_settings">Host settings</string>
@@ -835,7 +834,7 @@
     <string name="setting_start_tab_sub">Shown after starting and when Home is pressed in the launcher</string>
 
     <!-- Host API -->
-    <string name="platform_source_companion">from the companion</string>
+    <string name="platform_source_companion">from the host</string>
     <string name="action_install">Install</string>
     <string name="not_installed">Not installed</string>
 
@@ -978,16 +977,16 @@
     <!-- Companion & metadata server -->
     <string name="servers_not_paired">Not paired</string>
     <string name="servers_pair">Pair</string>
-    <string name="servers_pair_companion_manual">Pair a companion by address</string>
+    <string name="servers_pair_companion_manual">Pair a host by address</string>
     <string name="servers_pair_metadata">Pair a metadata server</string>
     <string name="servers_online">online</string>
     <string name="servers_offline">not reachable</string>
     <string name="servers_checking">checking …</string>
-    <string name="servers_pair_title_host">Pair companion of %1$s</string>
+    <string name="servers_pair_title_host">Pair host %1$s</string>
     <string name="servers_pair_step1">1. On the server: start "Pair device". 2. Enter its address here.</string>
     <string name="servers_address">Address</string>
     <string name="servers_error_address">This address can't be used. Example: 192.168.1.20 or nas.local:47900</string>
-    <string name="servers_error_kind">This server is of another kind (companion instead of metadata server or vice versa).</string>
+    <string name="servers_error_kind">This server is of another kind (host instead of metadata server or vice versa).</string>
     <string name="servers_error_closed">Pairing isn't open on the server. Start "Pair device" there first, then try again.</string>
     <string name="servers_error_failed">Pairing failed. Was the PIN typed correctly?</string>
     <string name="servers_error_timeout">No PIN was entered on the server in time.</string>
@@ -1002,27 +1001,27 @@
     <string name="servers_remove">Hold to remove</string>
     <string name="servers_remove_hint">Remove the device on the server too, so its access ends there.</string>
     <string name="metadata_sources">Sources</string>
-    <string name="metadata_intro">Covers, backgrounds and logos come from SteamGridDB; descriptions, genres, developer, publisher, series, features, age ratings and release dates from IGDB. Add them below as sources: with your own keys, through a metadata server or through the companion.</string>
-    <string name="metadata_sources_help">Your own keys are used first (shortest way), then metadata servers, then companions; when one is not reachable or can't answer, the next one is used. Host games always take the data of their companion.</string>
+    <string name="metadata_intro">Covers, backgrounds and logos come from SteamGridDB; descriptions, genres, developer, publisher, series, features, age ratings and release dates from IGDB. Add them below as sources: with your own keys, through a metadata server or through the host.</string>
+    <string name="metadata_sources_help">Your own keys are used first (shortest way), then metadata servers, then hosts; when one is not reachable or can't answer, the next one is used. Host games always take the data of their host.</string>
     <string name="metadata_sources_empty">No source added yet.</string>
     <string name="metadata_source_add">Add source</string>
     <string name="metadata_source_sgdb_sub">Covers, backgrounds, logos and icons with your own API key</string>
     <string name="metadata_source_igdb_sub">Descriptions, genres and release dates with your own Twitch app</string>
     <string name="metadata_source_companion_sub">Delivers the host games of a gaming PC with their metadata, and SteamGridDB/IGDB if it offers them</string>
     <string name="metadata_source_server_sub">Docker server that answers SteamGridDB and IGDB with its keys for all your devices</string>
-    <string name="metadata_source_companion_of">Companion · %1$s</string>
+    <string name="metadata_source_companion_of">Host · %1$s</string>
     <string name="metadata_source_offers">Offers</string>
     <string name="metadata_source_host_games_only">host games only</string>
-    <string name="metadata_source_pick_host">Companion for which host?</string>
+    <string name="metadata_source_pick_host">Which host?</string>
     <string name="metadata_source_active">Active</string>
     <string name="metadata_source_off">Switched off</string>
-    <string name="metadata_source_companion_off_hint">Off: neither host games nor SteamGridDB/IGDB come from this companion.</string>
+    <string name="metadata_source_companion_off_hint">Off: neither host games nor SteamGridDB/IGDB come from this host.</string>
     <string name="metadata_source_server">Metadata server</string>
-    <string name="metadata_source_companion">Companion</string>
+    <string name="metadata_source_companion">Host</string>
 
     <!-- Companion & metadata server -->
-    <string name="host_companion_section">Companion</string>
-    <string name="host_companion_hint">Pair the companion of this PC: it delivers the host games with their metadata.</string>
+    <string name="host_companion_section">Host</string>
+    <string name="host_companion_hint">Pair GameLodge on this PC: it delivers the host games with their metadata.</string>
     <string name="settings_game_sources">Game sources</string>
     <string name="settings_game_sources_sub">Steam, Epic, GOG, Xbox and other stores on this PC</string>
     <string name="settings_host_role">Devices &amp; pairing</string>

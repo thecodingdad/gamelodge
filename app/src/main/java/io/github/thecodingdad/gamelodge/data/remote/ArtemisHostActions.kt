@@ -62,11 +62,6 @@ class ArtemisHostActions(
             .getOrDefault(false)
     }
 
-    override suspend fun unpair(host: HostState) = withContext(Dispatchers.IO) {
-        runCatching { hosts.http(host).unpair() }
-        hosts.invalidate(host.uuid)
-    }
-
     override suspend fun remove(host: HostState) {
         hosts.removeHost(host)
     }

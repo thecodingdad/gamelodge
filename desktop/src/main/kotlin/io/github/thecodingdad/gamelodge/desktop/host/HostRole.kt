@@ -22,8 +22,6 @@ data class HostSettings(
     val serverEnabled: Boolean = false,
     /** Web UI for pairing from another device (port 47912). */
     val webEnabled: Boolean = false,
-    /** Paired launchers may use this PC's SteamGridDB / IGDB keys. */
-    val proxyEnabled: Boolean = false,
     /** Puts the PC's games on the streaming host. */
     val syncEnabled: Boolean = false,
     /** Also games that are owned but not installed (starting them installs them). */
@@ -63,7 +61,7 @@ class HostRole(private val dataDir: File, private val secrets: SecretStore, priv
     @Volatile var proxy: MetadataProxyApi? = null
 
     private val api by lazy {
-        ApiServer(identity, devices, pairing, serverName, { proxy.takeIf { _settings.value.proxyEnabled } }, { hostGames })
+        ApiServer(identity, devices, pairing, serverName, { proxy }, { hostGames })
     }
     private val web by lazy {
         WebAdmin(identity, auth, devices, pairing, object : PairingGate {

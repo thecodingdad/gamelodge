@@ -85,8 +85,6 @@ interface HostActions {
 
     suspend fun wakeOnLan(host: HostState): Boolean
 
-    suspend fun unpair(host: HostState)
-
     suspend fun remove(host: HostState)
 
     /** Ends the app running on [host]; true when it is gone. */

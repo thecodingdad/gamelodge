@@ -133,7 +133,7 @@
     <string name="settings_controllers">Controller</string>
     <string name="settings_controllers_sub">Verbundene Controller und Spielerreihenfolge</string>
     <string name="settings_metadata">Metadaten &amp; Artwork</string>
-    <string name="settings_metadata_sub">SteamGridDB, IGDB, Companion, Metadaten-Server, Prüfliste</string>
+    <string name="settings_metadata_sub">SteamGridDB, IGDB, Host, Metadaten-Server, Prüfliste</string>
     <string name="settings_home_assistant">Home Assistant</string>
     <string name="settings_home_assistant_sub">Verbindung und Smart-Home-Kacheln</string>
     <string name="settings_vpn">VPN</string>
@@ -188,7 +188,6 @@
     <string name="host_invalid_address">Das sieht nicht nach einer gültigen Adresse aus.</string>
     <string name="host_unreachable">Der Host ist nicht erreichbar.</string>
     <string name="host_pair">Koppeln</string>
-    <string name="host_unpair">Entkoppeln</string>
     <string name="host_wake">Aufwecken</string>
     <string name="host_remove">Entfernen</string>
     <string name="host_settings">Host-Einstellungen</string>
@@ -833,7 +832,7 @@
     <string name="setting_start_tab_sub">Wird nach dem Start und bei Home im Launcher angezeigt</string>
 
     <!-- Host API -->
-    <string name="platform_source_companion">vom Companion</string>
+    <string name="platform_source_companion">vom Host</string>
     <string name="action_install">Installieren</string>
     <string name="not_installed">Nicht installiert</string>
 
@@ -976,16 +975,16 @@
     <!-- Companion & metadata server -->
     <string name="servers_not_paired">Nicht gekoppelt</string>
     <string name="servers_pair">Koppeln</string>
-    <string name="servers_pair_companion_manual">Companion per Adresse koppeln</string>
+    <string name="servers_pair_companion_manual">Host per Adresse koppeln</string>
     <string name="servers_pair_metadata">Metadaten-Server koppeln</string>
     <string name="servers_online">online</string>
     <string name="servers_offline">nicht erreichbar</string>
     <string name="servers_checking">wird geprüft …</string>
-    <string name="servers_pair_title_host">Companion von %1$s koppeln</string>
+    <string name="servers_pair_title_host">Host %1$s koppeln</string>
     <string name="servers_pair_step1">1. Am Server „Gerät koppeln“ starten. 2. Hier seine Adresse eingeben.</string>
     <string name="servers_address">Adresse</string>
     <string name="servers_error_address">Diese Adresse ist ungültig. Beispiel: 192.168.1.20 oder nas.local:47900</string>
-    <string name="servers_error_kind">Dieser Server ist von anderer Art (Companion statt Metadaten-Server oder umgekehrt).</string>
+    <string name="servers_error_kind">Dieser Server ist von anderer Art (Host statt Metadaten-Server oder umgekehrt).</string>
     <string name="servers_error_closed">Am Server ist Koppeln nicht gestartet. Starte dort zuerst „Gerät koppeln“ und versuche es erneut.</string>
     <string name="servers_error_failed">Koppeln fehlgeschlagen. Wurde die PIN richtig eingegeben?</string>
     <string name="servers_error_timeout">Am Server wurde nicht rechtzeitig eine PIN eingegeben.</string>
@@ -1000,27 +999,27 @@
     <string name="servers_remove">Gedrückt halten zum Entfernen</string>
     <string name="servers_remove_hint">Entferne das Gerät auch am Server, damit der Zugriff dort endet.</string>
     <string name="metadata_sources">Quellen</string>
-    <string name="metadata_intro">Cover, Hintergründe und Logos kommen von SteamGridDB; Beschreibung, Genres, Entwickler, Publisher, Serie, Features, Altersfreigaben und Erscheinungsdatum von IGDB. Füge sie unten als Quellen hinzu: mit eigenen Schlüsseln, über einen Metadaten-Server oder über die Companion.</string>
-    <string name="metadata_sources_help">Zuerst werden die eigenen Schlüssel genutzt (kürzester Weg), dann Metadaten-Server, dann Companions; ist einer nicht erreichbar oder kann nicht antworten, kommt der nächste dran. Host-Spiele übernehmen immer die Daten ihrer Companion.</string>
+    <string name="metadata_intro">Cover, Hintergründe und Logos kommen von SteamGridDB; Beschreibung, Genres, Entwickler, Publisher, Serie, Features, Altersfreigaben und Erscheinungsdatum von IGDB. Füge sie unten als Quellen hinzu: mit eigenen Schlüsseln, über einen Metadaten-Server oder über den Host.</string>
+    <string name="metadata_sources_help">Zuerst werden die eigenen Schlüssel genutzt (kürzester Weg), dann Metadaten-Server, dann Hosts; ist einer nicht erreichbar oder kann nicht antworten, kommt der nächste dran. Host-Spiele übernehmen immer die Daten ihres Hosts.</string>
     <string name="metadata_sources_empty">Noch keine Quelle hinzugefügt.</string>
     <string name="metadata_source_add">Quelle hinzufügen</string>
     <string name="metadata_source_sgdb_sub">Cover, Hintergründe, Logos und Icons mit eigenem API-Key</string>
     <string name="metadata_source_igdb_sub">Beschreibungen, Genres und Erscheinungsdaten mit eigener Twitch-App</string>
     <string name="metadata_source_companion_sub">Liefert die Host-Spiele eines Spiele-PCs mit ihren Metadaten, dazu SteamGridDB/IGDB, falls angeboten</string>
     <string name="metadata_source_server_sub">Docker-Server, der SteamGridDB und IGDB mit seinen Schlüsseln für alle deine Geräte beantwortet</string>
-    <string name="metadata_source_companion_of">Companion · %1$s</string>
+    <string name="metadata_source_companion_of">Host · %1$s</string>
     <string name="metadata_source_offers">Bietet an</string>
     <string name="metadata_source_host_games_only">nur Host-Spiele</string>
-    <string name="metadata_source_pick_host">Companion für welchen Host?</string>
+    <string name="metadata_source_pick_host">Welcher Host?</string>
     <string name="metadata_source_active">Aktiv</string>
     <string name="metadata_source_off">Deaktiviert</string>
-    <string name="metadata_source_companion_off_hint">Aus: Weder Host-Spiele noch SteamGridDB/IGDB kommen von dieser Companion.</string>
+    <string name="metadata_source_companion_off_hint">Aus: Weder Host-Spiele noch SteamGridDB/IGDB kommen von diesem Host.</string>
     <string name="metadata_source_server">Metadaten-Server</string>
-    <string name="metadata_source_companion">Companion</string>
+    <string name="metadata_source_companion">Host</string>
 
     <!-- Companion & metadata server -->
-    <string name="host_companion_section">Companion</string>
-    <string name="host_companion_hint">Kopple die Companion dieses PCs: sie liefert die Host-Spiele mit ihren Metadaten.</string>
+    <string name="host_companion_section">Host</string>
+    <string name="host_companion_hint">Kopple GameLodge auf diesem PC: es liefert die Host-Spiele mit ihren Metadaten.</string>
     <string name="settings_game_sources">Spielquellen</string>
     <string name="settings_game_sources_sub">Steam, Epic, GOG, Xbox und andere Stores auf diesem PC</string>
     <string name="settings_host_role">Geräte &amp; Pairing</string>

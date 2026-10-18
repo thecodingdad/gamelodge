@@ -14,7 +14,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Link
-import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.Power
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
@@ -136,7 +135,6 @@ fun HostsSettings(hosts: List<HostState>, openHostConfig: (HostState) -> Unit) {
                         notes[host.uuid] = if (online) wakeOnlineMsg else wakeTimeoutMsg
                     }
                 },
-                onUnpair = { scope.launch { actions.unpair(host) } },
                 onRemove = { removing = host },
                 onConfig = { openHostConfig(host) },
                 progress = hostProgress(host, appLists, boxArt, metadataProgress),
@@ -239,7 +237,6 @@ private fun HostCard(
     onPower: (io.github.thecodingdad.gamelodge.stream.PowerAction) -> Unit,
     onPair: () -> Unit,
     onWake: () -> Unit,
-    onUnpair: () -> Unit,
     onRemove: () -> Unit,
     onConfig: () -> Unit,
     /** What is going on for this host right now (app list, box art, metadata), or null. */
@@ -305,7 +302,6 @@ private fun HostCard(
                 if (power.haRestartEntity != null) HoldToConfirmButton(stringResource(Res.string.power_restart), { onPower(io.github.thecodingdad.gamelodge.stream.PowerAction.RESTART) }, icon = Icons.Filled.RestartAlt)
                 if (power.haShutdownEntity != null) HoldToConfirmButton(stringResource(Res.string.power_shutdown), { onPower(io.github.thecodingdad.gamelodge.stream.PowerAction.SHUTDOWN) }, icon = Icons.Filled.PowerSettingsNew)
             }
-            if (online && host.paired) LauncherButton(stringResource(Res.string.host_unpair), icon = Icons.Filled.LinkOff, onClick = onUnpair)
             if (host.paired) HoldToConfirmButton(stringResource(Res.string.host_remove), onConfirmed = onRemove, icon = Icons.Filled.Delete)
         }
         note?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = if (waking) colors.accent else colors.onSurfaceMuted) }

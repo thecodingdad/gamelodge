@@ -40,7 +40,6 @@ object NoHostActions : HostActions {
     override suspend fun pair(host: HostState, pin: String) = PairResult.FAILED
     override suspend fun addHost(rawAddress: String) = AddHostResult.UNREACHABLE
     override suspend fun wakeOnLan(host: HostState) = false
-    override suspend fun unpair(host: HostState) = Unit
     override suspend fun remove(host: HostState) = Unit
     override suspend fun quitApp(host: HostState) = false
 }

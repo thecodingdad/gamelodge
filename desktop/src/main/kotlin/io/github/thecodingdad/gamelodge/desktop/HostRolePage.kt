@@ -106,12 +106,6 @@ fun HostRolePage(services: HostServices) {
         }
 
         SectionHeader(stringResource(Res.string.host_advanced))
-        if (role.proxy != null) {
-            SwitchRow(
-                stringResource(Res.string.host_proxy), settings.proxyEnabled, { on -> role.update { it.copy(proxyEnabled = on) } },
-                subtitle = stringResource(Res.string.host_proxy_sub),
-            )
-        }
         NavRow(stringResource(Res.string.host_web), { webShown = true }, subtitle = webState(role, status.webRunning), icon = Icons.Filled.Language)
     }
 

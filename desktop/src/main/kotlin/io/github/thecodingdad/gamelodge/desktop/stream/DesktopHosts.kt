@@ -254,15 +254,6 @@ class DesktopHosts(
         }.isSuccess
     }
 
-    override suspend fun unpair(host: HostState) = withContext(Dispatchers.IO) {
-        val s = stored(host.uuid) ?: return@withContext
-        runCatching { client(s).unpair() }
-        save(stored.value.map { if (it.uuid == s.uuid) it.copy(serverCert = null) else it })
-        clients.remove(s.uuid)
-        _appLists.update { it - s.uuid }
-        poll(stored(s.uuid)!!)
-    }
-
     override suspend fun remove(host: HostState) = withContext(Dispatchers.IO) {
         save(stored.value.filter { it.uuid != host.uuid })
         discovered.remove(host.uuid)
