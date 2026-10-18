@@ -172,6 +172,18 @@ class LibraryRepository(
     }
 
     private suspend fun syncHost(hostUuid: String, apps: List<RemoteApp>) {
+        // Not an app list: a sync would delete every game of the host with its play time,
+        // favourites and corrections. Apollo/Vibepollo answer a device without the "list
+        // applications" permission (also briefly, e.g. while reloading) with one fake entry; an
+        // empty list while the host has games is a hiccup, not every app removed at once.
+        if (isPermissionPlaceholder(apps)) {
+            Log.w("Host ${apps.first().hostName}: app list refused (no list permission), library left as it is")
+            return
+        }
+        if (apps.isEmpty() && dao.getAllTargets().any { it.type == TargetType.REMOTE && it.hostUuid == hostUuid }) {
+            Log.w("Host $hostUuid: empty app list, library left as it is")
+            return
+        }
         // The host is back (paired again): its kept games return.
         if (settings != null && hostUuid in settings.settings.first().detachedHosts) {
             settings.update { it.copy(detachedHosts = it.detachedHosts - hostUuid) }
@@ -416,3 +428,11 @@ class LibraryRepository(
 
 /** Box art downloads running at the same time. */
 private const val BOX_ART_PARALLEL = 1
+
+/** Apollo/Vibepollo's stand-in list for a device that may not list the apps: one fake entry. */
+internal fun isPermissionPlaceholder(apps: List<RemoteApp>): Boolean {
+    val only = apps.singleOrNull() ?: return false
+    return only.app.appId == PERMISSION_PLACEHOLDER_ID || only.app.appName.startsWith("Permission denied", ignoreCase = true)
+}
+
+private const val PERMISSION_PLACEHOLDER_ID = 114514

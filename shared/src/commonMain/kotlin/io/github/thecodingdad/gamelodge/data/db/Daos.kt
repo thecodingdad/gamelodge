@@ -108,6 +108,13 @@ interface SessionDao {
 
     @Query("SELECT * FROM play_sessions WHERE endedAt IS NOT NULL ORDER BY startedAt DESC")
     fun observeFinished(): Flow<List<PlaySessionEntity>>
+
+    /** Sessions whose item is gone (e.g. removed and added again by a sync). */
+    @Query("SELECT * FROM play_sessions WHERE itemId NOT IN (SELECT id FROM library_items)")
+    suspend fun getOrphans(): List<PlaySessionEntity>
+
+    @Query("UPDATE play_sessions SET itemId = :itemId WHERE id = :id")
+    suspend fun relink(id: Long, itemId: String)
 }
 
 @Dao

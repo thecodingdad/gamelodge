@@ -100,6 +100,25 @@ class LibrarySync(
             val gone = existing.keys.filterNot { it in reportedIds }
             if (gone.isNotEmpty()) dao.deleteTargets(gone)
             dao.deleteItemsWithoutTargets()
+            relinkSessions()
+        }
+    }
+
+    /**
+     * Play sessions of an item that is gone go to the item now behind the same launch target (a
+     * game removed and found again): its play time and last played come back from them.
+     */
+    private suspend fun relinkSessions() {
+        val sessions = db.sessionDao()
+        val orphans = sessions.getOrphans()
+        if (orphans.isEmpty()) return
+        val targets = dao.getAllTargets().associateBy { it.id }
+        orphans.groupBy { targets[it.targetId]?.itemId }.forEach { (itemId, list) ->
+            if (itemId == null) return@forEach
+            list.forEach { sessions.relink(it.id, itemId) }
+            val seconds = list.sumOf { s -> s.endedAt?.let { (it - s.startedAt).coerceAtLeast(0) / 1000 } ?: 0L }
+            if (seconds > 0) dao.addPlaytime(itemId, seconds)
+            list.mapNotNull { it.endedAt }.maxOrNull()?.let { dao.setLastPlayedIfNewer(itemId, it) }
         }
     }
 

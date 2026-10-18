@@ -70,6 +70,25 @@ class LibrarySyncTest {
     }
 
     @Test
+    fun `a game removed and found again gets its play sessions back`() = runTest {
+        sync.syncHost("h1", listOf(remote("h1", 5, "Hades")))
+        val old = entries().single().item
+        db.sessionDao().insert(
+            io.github.thecodingdad.gamelodge.data.db.PlaySessionEntity(itemId = old.id, targetId = SourceEntry.remoteId("h1", 5), startedAt = 10_000, endedAt = 3_610_000),
+        )
+
+        // A broken app list removes the game, the next one brings it back as a new item.
+        sync.syncHost("h1", emptyList())
+        assertTrue(entries().isEmpty())
+        sync.syncHost("h1", listOf(remote("h1", 5, "Hades")))
+
+        val again = entries().single().item
+        assertEquals(3600L, again.playtimeSeconds)
+        assertEquals(3_610_000L, again.lastPlayedAt)
+        assertTrue(db.sessionDao().getOrphans().isEmpty())
+    }
+
+    @Test
     fun `local app without game flag is promoted when the host reports it as game`() = runTest {
         sync.syncLocal(listOf(local("com.example.stardew", "Stardew Valley")))
         assertEquals(ItemKind.APP, entries().single().item.kind)
