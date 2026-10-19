@@ -44,14 +44,15 @@ import io.github.thecodingdad.gamelodge.ui.theme.LauncherTheme
  * returning from the detail screen lands exactly where the user was.
  */
 @Composable
-fun Modifier.restoreFocusIf(shouldFocus: Boolean): Modifier {
+fun Modifier.restoreFocusIf(shouldFocus: Boolean, trigger: Any? = null): Modifier {
     val requester = remember { FocusRequester() }
     val target by androidx.compose.runtime.rememberUpdatedState(shouldFocus)
     // Only when the element appears (screen opened, filter switched, back from details) or the
     // user picks up the controller. Not whenever it becomes the remembered element: during fast
     // navigation late requests of two elements would keep stealing focus from each other.
+    // [trigger]: asks again when it changes (e.g. the library's filter, whose grid stays).
     val controllerMode = isControllerMode()
-    LaunchedEffect(controllerMode) {
+    LaunchedEffect(controllerMode, trigger) {
         // The element the user just touched wins over the remembered one.
         if (controllerMode && target && !TouchFocus.justRestored()) runCatching { requester.requestFocus() }
     }

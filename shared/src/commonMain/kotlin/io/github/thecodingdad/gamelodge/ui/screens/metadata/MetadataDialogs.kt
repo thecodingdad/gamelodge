@@ -223,10 +223,14 @@ fun ArtworkPickerDialog(
         LaunchedEffect(target.id, kind, appliedQuery) {
             // Landscape: the app's TV banner and tiles made from its icon and from the cover / box art.
             val made = if (kind != ArtworkKind.LANDSCAPE) emptyList() else kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                // New names every time: the image loader caches by file, an older tile (e.g. from
+                // a cover changed since) would show instead. The previous ones aren't needed.
+                val dir = java.io.File(filesDir, "tile-choices")
+                val prefix = "${target.id.hashCode().toUInt()}-"
+                dir.listFiles { f -> f.name.startsWith(prefix) }?.forEach { it.delete() }
                 runCatching {
                     io.github.thecodingdad.gamelodge.ui.components.ArtworkPlatform.current.localTiles(
-                        entry.localTarget?.packageName, entry.coverModel(), ratio,
-                        java.io.File(filesDir, "tile-choices"), "${target.id.hashCode().toUInt()}",
+                        entry.localTarget?.packageName, entry.coverModel(), ratio, dir, "$prefix${System.currentTimeMillis()}",
                     )
                 }.getOrDefault(emptyList())
             }

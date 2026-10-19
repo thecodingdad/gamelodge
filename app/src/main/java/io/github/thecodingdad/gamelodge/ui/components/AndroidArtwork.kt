@@ -145,11 +145,12 @@ private fun generatedHero(drawable: android.graphics.drawable.Drawable, portrait
 }
 
 /**
- * [cover] whole at the tile's full height, in front of itself filling the tile, blurred and
- * dimmed (blurred by scaling down and up again in steps: works on every Android version).
+ * [cover] whole at the tile's full height, in front of itself stretched over the whole tile
+ * (not keeping its shape), blurred and dimmed (blurred by scaling down and up again in steps:
+ * works on every Android version).
  */
 private fun fittedCover(cover: Bitmap, w: Int, h: Int): Bitmap {
-    val out = filledTile(cover, w, h, TileFit.CENTER)
+    val out = Bitmap.createScaledBitmap(cover, w, h, true).copy(Bitmap.Config.ARGB_8888, true)
     var blurred = out
     for (width in listOf(w / 6, w / 24)) blurred = Bitmap.createScaledBitmap(blurred, width.coerceAtLeast(4), (width * h / w).coerceAtLeast(2), true)
     for (width in listOf(w / 6, w)) blurred = Bitmap.createScaledBitmap(blurred, width, width * h / w, true)

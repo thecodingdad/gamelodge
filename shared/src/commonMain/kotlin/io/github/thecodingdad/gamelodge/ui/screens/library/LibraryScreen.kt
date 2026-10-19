@@ -136,9 +136,17 @@ fun LibraryScreen(
     fun openSearch() = keyboard.open(title = searchTitle, initial = search) { search = it }
     // LT/RT switch filters (LB/RB stay with the tabs).
     val feedback = io.github.thecodingdad.gamelodge.ui.feedback.LocalUiFeedback.current
+    // One grid for all filters: games in both stay as they are (animations keep running). Each
+    // filter's scroll position is kept here and restored when it is shown again.
+    val gridState = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
+    val positions = remember { HashMap<String, Pair<Int, Int>>() }
+    fun select(key: String?) {
+        positions[filterKey] = gridState.firstVisibleItemIndex to gridState.firstVisibleItemScrollOffset
+        selectedKey = key
+    }
     fun stepFilter(delta: Int) {
         filters.step(selected?.key, delta)?.let {
-            selectedKey = it
+            select(it)
             feedback?.play(io.github.thecodingdad.gamelodge.ui.feedback.UiSound.TOGGLE)
         }
     }
@@ -159,14 +167,12 @@ fun LibraryScreen(
         onSort = { sort = sort.next(manualSort) },
         onSearch = ::openSearch,
     )
-    // Scroll position and focused game are kept per filter.
-    val gridStates = androidx.compose.runtime.saveable.rememberSaveableStateHolder()
 
     Column(Modifier.fillMaxSize()) {
         FilterBar(
             filters = filters,
             selectedKey = selected?.key,
-            onSelect = { selectedKey = it },
+            onSelect = { select(it) },
             search = search,
             onSearch = ::openSearch,
             onClearSearch = { search = "" },
@@ -200,11 +206,16 @@ fun LibraryScreen(
         val targetId = androidx.compose.runtime.snapshots.Snapshot.withoutReadObservation {
             listOfNotNull(focusByFilter[filterKey], lastId).firstOrNull { id -> shown.any { it.item.id == id } }
         } ?: shown.first().item.id
-        gridStates.SaveableStateProvider(filterKey) {
-        val gridState = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
         io.github.thecodingdad.gamelodge.ui.input.RegisterStickScroll(gridState)
-        // Back from paging through details: the last game viewed may be off screen.
-        LaunchedEffect(Unit) {
+        // Another filter: its own scroll position. Back from paging through details: the last
+        // game viewed may be off screen.
+        var gridFilter by remember { mutableStateOf(filterKey) }
+        LaunchedEffect(filterKey) {
+            if (gridFilter != filterKey) {
+                gridFilter = filterKey
+                val (first, offset) = positions[filterKey] ?: (0 to 0)
+                gridState.scrollToItem(first, offset)
+            }
             val index = shown.indexOfFirst { it.item.id == targetId }
             androidx.compose.runtime.snapshotFlow { gridState.layoutInfo.visibleItemsInfo.isNotEmpty() }.first { it }
             // Not (fully) on screen: put its line at the top, like the controller focus does.
@@ -241,10 +252,9 @@ fun LibraryScreen(
                     showTitle = true,
                     animated = animatedArtwork,
                     format = tileFormat,
-                    modifier = Modifier.restoreFocusIf(entry.item.id == targetId).focusAfterBrowse(entry.item.id),
+                    modifier = Modifier.restoreFocusIf(entry.item.id == targetId, trigger = filterKey).focusAfterBrowse(entry.item.id),
                 )
             }
-        }
         }
         }
     }

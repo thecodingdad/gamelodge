@@ -102,13 +102,13 @@ object DesktopArtwork : ArtworkPlatform {
             val paint = org.jetbrains.skia.Paint()
             val sampling = org.jetbrains.skia.SamplingMode.LINEAR
             if (fit == io.github.thecodingdad.gamelodge.ui.components.TileFit.FIT) {
-                // The cover whole at full height, in front of itself filling the tile, blurred and dimmed.
-                val (l, tp, r, b) = io.github.thecodingdad.gamelodge.ui.components.fillCrop(image.width, image.height, ratio, io.github.thecodingdad.gamelodge.ui.components.TileFit.CENTER).toList()
+                // The cover whole at full height, in front of itself stretched over the tile
+                // (not keeping its shape), blurred and dimmed.
                 val blur = org.jetbrains.skia.Paint().apply {
                     imageFilter = org.jetbrains.skia.ImageFilter.makeBlur(h / 14f, h / 14f, org.jetbrains.skia.FilterTileMode.CLAMP)
                 }
                 canvas.drawImageRect(
-                    image, org.jetbrains.skia.Rect.makeLTRB(l.toFloat(), tp.toFloat(), r.toFloat(), b.toFloat()),
+                    image, org.jetbrains.skia.Rect.makeWH(image.width.toFloat(), image.height.toFloat()),
                     org.jetbrains.skia.Rect.makeWH(w.toFloat(), h.toFloat()), sampling, blur, true,
                 )
                 canvas.drawRect(org.jetbrains.skia.Rect.makeWH(w.toFloat(), h.toFloat()), org.jetbrains.skia.Paint().apply { color = org.jetbrains.skia.Color.makeARGB(90, 0, 0, 0) })
