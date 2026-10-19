@@ -93,10 +93,6 @@ object DesktopArtwork : ArtworkPlatform {
         val request = ImageRequest.Builder(context).data(source).size(1024).memoryCachePolicy(coil3.request.CachePolicy.DISABLED).build()
         val bitmap = (SingletonImageLoader.get(context).execute(request) as? SuccessResult)?.image?.toBitmap() ?: return emptyList()
         val image = org.jetbrains.skia.Image.makeFromBitmap(bitmap)
-        val base = (accentColor(source) ?: Color(0xFF444444)).let { org.jetbrains.skia.Color.makeARGB(255, (it.red * 255).toInt(), (it.green * 255).toInt(), (it.blue * 255).toInt()) }
-        val dark = org.jetbrains.skia.Color.makeARGB(
-            255, org.jetbrains.skia.Color.getR(base) / 2, org.jetbrains.skia.Color.getG(base) / 2, org.jetbrains.skia.Color.getB(base) / 2,
-        )
         val w = if (ratio > 2f) 920 else 640
         val h = (w / ratio).toInt()
         dir.mkdirs()
@@ -106,15 +102,18 @@ object DesktopArtwork : ArtworkPlatform {
             val paint = org.jetbrains.skia.Paint()
             val sampling = org.jetbrains.skia.SamplingMode.LINEAR
             if (fit == io.github.thecodingdad.gamelodge.ui.components.TileFit.FIT) {
-                // Like on Android: a gradient in the cover's main colour, the cover whole in the middle.
-                paint.shader = org.jetbrains.skia.Shader.makeLinearGradient(0f, 0f, w.toFloat(), h.toFloat(), intArrayOf(base, dark))
-                canvas.drawRect(org.jetbrains.skia.Rect.makeWH(w.toFloat(), h.toFloat()), paint)
-                paint.shader = null
-                // The whole cover at the tile's full height.
-                val scale = minOf(w.toFloat() / image.width, h.toFloat() / image.height)
-                val iw = image.width * scale
-                val ih = image.height * scale
-                canvas.drawImageRect(image, org.jetbrains.skia.Rect.makeWH(image.width.toFloat(), image.height.toFloat()), org.jetbrains.skia.Rect.makeXYWH((w - iw) / 2, (h - ih) / 2, iw, ih), sampling, paint, true)
+                // The cover whole at full height, in front of itself filling the tile, blurred and dimmed.
+                val (l, tp, r, b) = io.github.thecodingdad.gamelodge.ui.components.fillCrop(image.width, image.height, ratio, io.github.thecodingdad.gamelodge.ui.components.TileFit.CENTER).toList()
+                val blur = org.jetbrains.skia.Paint().apply {
+                    imageFilter = org.jetbrains.skia.ImageFilter.makeBlur(h / 14f, h / 14f, org.jetbrains.skia.FilterTileMode.CLAMP)
+                }
+                canvas.drawImageRect(
+                    image, org.jetbrains.skia.Rect.makeLTRB(l.toFloat(), tp.toFloat(), r.toFloat(), b.toFloat()),
+                    org.jetbrains.skia.Rect.makeWH(w.toFloat(), h.toFloat()), sampling, blur, true,
+                )
+                canvas.drawRect(org.jetbrains.skia.Rect.makeWH(w.toFloat(), h.toFloat()), org.jetbrains.skia.Paint().apply { color = org.jetbrains.skia.Color.makeARGB(90, 0, 0, 0) })
+                val iw = image.width * h.toFloat() / image.height
+                canvas.drawImageRect(image, org.jetbrains.skia.Rect.makeWH(image.width.toFloat(), image.height.toFloat()), org.jetbrains.skia.Rect.makeXYWH((w - iw) / 2, 0f, iw, h.toFloat()), sampling, paint, true)
             } else {
                 val (l, tp, r, b) = io.github.thecodingdad.gamelodge.ui.components.fillCrop(image.width, image.height, ratio, fit).toList()
                 canvas.drawImageRect(

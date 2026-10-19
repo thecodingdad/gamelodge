@@ -43,9 +43,9 @@ class AndroidArtwork(private val context: Context) : ArtworkPlatform {
         val h = (w / ratio).toInt()
         val tiles = mutableListOf<Triple<io.github.thecodingdad.gamelodge.metadata.ArtworkSource, TileFit?, Bitmap>>()
         val generated = io.github.thecodingdad.gamelodge.metadata.ArtworkSource.GENERATED
-        // A cover fitted fills the height; an icon stays smaller, with room around it.
+        // A cover fitted: whole at full height on its own blurred self; an icon smaller on a gradient.
         fun variants(image: Bitmap, cover: Boolean) {
-            tiles += Triple(generated, TileFit.FIT, generatedTile(image, w, h, if (cover) 1f else 0.6f).asAndroidBitmap())
+            tiles += Triple(generated, TileFit.FIT, if (cover) fittedCover(image, w, h) else generatedTile(image, w, h).asAndroidBitmap())
             listOf(TileFit.TOP, TileFit.CENTER, TileFit.BOTTOM).forEach { tiles += Triple(generated, it, filledTile(image, w, h, it)) }
         }
         if (packageName != null) {
@@ -144,6 +144,24 @@ private fun generatedHero(drawable: android.graphics.drawable.Drawable, portrait
     return out.asImageBitmap()
 }
 
+/**
+ * [cover] whole at the tile's full height, in front of itself filling the tile, blurred and
+ * dimmed (blurred by scaling down and up again in steps: works on every Android version).
+ */
+private fun fittedCover(cover: Bitmap, w: Int, h: Int): Bitmap {
+    val out = filledTile(cover, w, h, TileFit.CENTER)
+    var blurred = out
+    for (width in listOf(w / 6, w / 24)) blurred = Bitmap.createScaledBitmap(blurred, width.coerceAtLeast(4), (width * h / w).coerceAtLeast(2), true)
+    for (width in listOf(w / 6, w)) blurred = Bitmap.createScaledBitmap(blurred, width, width * h / w, true)
+    val canvas = android.graphics.Canvas(out)
+    val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG or android.graphics.Paint.FILTER_BITMAP_FLAG)
+    canvas.drawBitmap(blurred, null, android.graphics.Rect(0, 0, w, h), paint)
+    canvas.drawColor(android.graphics.Color.argb(90, 0, 0, 0))
+    val iw = cover.width * h / cover.height
+    canvas.drawBitmap(cover, null, android.graphics.Rect((w - iw) / 2, 0, (w + iw) / 2, h), paint)
+    return out
+}
+
 /** [image] filling a [w]×[h] tile, cut off at the side [fit] keeps (see [fillCrop]). */
 private fun filledTile(image: Bitmap, w: Int, h: Int, fit: TileFit): Bitmap {
     val (l, tp, r, b) = fillCrop(image.width, image.height, w.toFloat() / h, fit).toList()
@@ -154,7 +172,7 @@ private fun filledTile(image: Bitmap, w: Int, h: Int, fit: TileFit): Bitmap {
 }
 
 /** Gradient in the image's main colour with the image (icon / box art) centred; 16:9 by default. */
-private fun generatedTile(icon: Bitmap, w: Int = 640, h: Int = 360, fill: Float = 0.6f): ImageBitmap {
+private fun generatedTile(icon: Bitmap, w: Int = 640, h: Int = 360): ImageBitmap {
     val palette = Palette.from(icon).generate()
     val base = palette.vibrantSwatch?.rgb ?: palette.dominantSwatch?.rgb ?: android.graphics.Color.DKGRAY
     val dark = androidx.core.graphics.ColorUtils.blendARGB(base, android.graphics.Color.BLACK, 0.5f)
@@ -164,7 +182,7 @@ private fun generatedTile(icon: Bitmap, w: Int = 640, h: Int = 360, fill: Float 
     paint.shader = android.graphics.LinearGradient(0f, 0f, w.toFloat(), h.toFloat(), base, dark, android.graphics.Shader.TileMode.CLAMP)
     canvas.drawRect(0f, 0f, w.toFloat(), h.toFloat(), paint)
     paint.shader = null
-    val target = minOf(w, h) * fill
+    val target = minOf(w, h) * 0.6f
     val scale = target / maxOf(icon.width, icon.height)
     val iw = icon.width * scale
     val ih = icon.height * scale
