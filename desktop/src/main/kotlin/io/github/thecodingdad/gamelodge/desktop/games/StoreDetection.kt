@@ -21,6 +21,11 @@ object StoreDetection {
                 "ubisoft" -> Reg.read("HKLM", "SOFTWARE\\WOW6432Node\\Ubisoft\\Launcher", "InstallDir") != null || uninstall("Ubisoft Connect")
                 "battlenet" -> uninstall("Battle.net") || File("C:\\Program Files (x86)\\Battle.net\\Battle.net.exe").exists()
                 "amazon" -> File(System.getenv("LOCALAPPDATA") ?: "", "Amazon Games").isDirectory
+                "itch" -> File(System.getenv("APPDATA") ?: "", "itch").isDirectory
+                "rockstar" -> Reg.read("HKLM", "SOFTWARE\\WOW6432Node\\Rockstar Games\\Launcher", "InstallFolder") != null
+                "riot" -> File(System.getenv("ProgramData") ?: "C:\\ProgramData", "Riot Games").isDirectory
+                "humble" -> File(System.getenv("APPDATA") ?: "", "Humble App").isDirectory
+                "steamshortcuts" -> SteamScanner(okhttp3.OkHttpClient()).findSteamPath() != null
                 else -> true
             }
         }.getOrNull()

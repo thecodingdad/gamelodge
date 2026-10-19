@@ -35,6 +35,7 @@ class PcLibrary(
 ) : LocalAppSource {
     private val stores: List<GameScanner> = listOf(
         SteamScanner(http, account = steam), EpicScanner(), GogScanner(), XboxScanner(), EaScanner(), UbisoftScanner(), BattleNetScanner(), AmazonScanner(),
+        ItchScanner(), RockstarScanner(), RiotScanner(), HumbleScanner(), SteamShortcutsScanner(),
     )
     private val scanners: List<GameScanner> = stores + others
 
@@ -164,6 +165,11 @@ class PcLibrary(
                 "ubisoft" -> UbisoftScanner()
                 "battlenet" -> BattleNetScanner()
                 "amazon" -> AmazonScanner()
+                "itch" -> ItchScanner()
+                "rockstar" -> RockstarScanner()
+                "riot" -> RiotScanner()
+                "humble" -> HumbleScanner()
+                "steamshortcuts" -> SteamShortcutsScanner()
                 else -> null
             }
             return runCatching { scanner?.scan().orEmpty().any { it.id == entry.id && it.installed } }.getOrDefault(false)

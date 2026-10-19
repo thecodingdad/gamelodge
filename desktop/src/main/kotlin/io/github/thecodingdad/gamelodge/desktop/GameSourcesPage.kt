@@ -60,7 +60,14 @@ import org.jetbrains.compose.resources.stringResource
 internal val storeNames = mapOf(
     "steam" to "Steam", "epic" to "Epic Games", "gog" to "GOG", "xbox" to "Xbox / Microsoft Store", "ea" to "EA app",
     "ubisoft" to "Ubisoft Connect", "battlenet" to "Battle.net", "amazon" to "Amazon Games",
+    "itch" to "itch.io", "rockstar" to "Rockstar Games Launcher", "riot" to "Riot Client", "humble" to "Humble App",
+    "steamshortcuts" to "Steam: Non-Steam games",
 )
+
+/** A store's name in the UI (the non-Steam games of Steam are named in the UI language). */
+@Composable
+private fun storeLabel(source: String): String =
+    if (source == "steamshortcuts") stringResource(Res.string.store_steam_shortcuts) else storeNames[source] ?: source
 
 /** Settings → Game sources: which stores feed the library, and the Steam account. */
 @Composable
@@ -106,7 +113,7 @@ fun GameSourcesPage(library: PcLibrary, settings: LauncherSettings, update: ((La
             val on = source !in settings.disabledGameSources
             val count = counts[source]
             SwitchRow(
-                storeNames[source] ?: source, on && present,
+                storeLabel(source), on && present,
                 onChange = { enable -> update { s -> s.copy(disabledGameSources = if (enable) s.disabledGameSources - source else s.disabledGameSources + source) } },
                 subtitle = when {
                     !present -> stringResource(Res.string.game_source_not_installed)
@@ -126,7 +133,7 @@ fun GameSourcesPage(library: PcLibrary, settings: LauncherSettings, update: ((La
             var showMissing by remember { mutableStateOf(false) }
             ActionRow(
                 stringResource(Res.string.game_sources_not_installed, missing.size), { showMissing = !showMissing },
-                missing.joinToString { storeNames[it] ?: it },
+                missing.map { storeLabel(it) }.joinToString(),
                 if (showMissing) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
             )
             if (showMissing) missing.forEach { StoreRow(it, false) }

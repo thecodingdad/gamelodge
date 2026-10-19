@@ -3,6 +3,7 @@
 <resources>
     <string name="game_sources_intro">Games of the stores installed on this PC. Switched-off stores are left out of the library.</string>
     <string name="game_stores">Game stores</string>
+    <string name="store_steam_shortcuts">Steam: Non-Steam games</string>
     <string name="file_type_programs">Programs</string>
     <string name="file_type_images">Images</string>
     <string name="file_type_backups">Backups</string>
