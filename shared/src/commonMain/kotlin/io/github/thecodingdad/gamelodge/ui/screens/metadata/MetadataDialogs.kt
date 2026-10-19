@@ -449,6 +449,7 @@ fun AppTileDialog(entry: io.github.thecodingdad.gamelodge.data.db.LibraryEntry?,
         Spacer(Modifier.height(14.dp))
         val list = options
         val tileGrid = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
+        io.github.thecodingdad.gamelodge.ui.input.RegisterStickScroll(tileGrid)
         when {
             list == null -> CircularProgressIndicator(color = LauncherTheme.colors.accent)
             list.isEmpty() -> Text(stringResource(Res.string.app_tile_none), color = LauncherTheme.colors.onSurfaceMuted)

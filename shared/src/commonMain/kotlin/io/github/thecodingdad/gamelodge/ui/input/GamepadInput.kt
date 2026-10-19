@@ -2,6 +2,7 @@ package io.github.thecodingdad.gamelodge.ui.input
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.gestures.scrollBy
@@ -53,6 +54,11 @@ class InputDispatcher {
 
     internal fun unregisterScroll(state: androidx.compose.foundation.gestures.ScrollableState) {
         scrollTargets.remove(state)
+    }
+
+    /** The focus moved into [state]'s area: it becomes the stick's target (several areas side by side). */
+    internal fun focusScroll(state: androidx.compose.foundation.gestures.ScrollableState) {
+        if (scrollTargets.lastOrNull() !== state && scrollTargets.remove(state)) scrollTargets += state
     }
 
     /** The most recently shown scroll area (a popup's, else the screen's). */
@@ -192,14 +198,31 @@ fun PadAction(button: PadButton, enabled: Boolean = true, onPress: () -> Unit) {
     }
 }
 
-/** Makes [state] the target of right stick scrolling while it is in the composition. */
+/**
+ * False for content that is composed but not shown (neighbour pages of a pager): its scroll
+ * areas don't register for the right stick.
+ */
+val LocalStickScrollEnabled = staticCompositionLocalOf { true }
+
+/**
+ * Makes [state] the target of right stick scrolling while it is in the composition (unless
+ * [LocalStickScrollEnabled] is off); the latest registered area wins, see also [stickScrollFocus].
+ */
 @Composable
 fun RegisterStickScroll(state: androidx.compose.foundation.gestures.ScrollableState) {
     val dispatcher = LocalInputDispatcher.current
-    DisposableEffect(dispatcher, state) {
-        dispatcher.registerScroll(state)
+    val enabled = LocalStickScrollEnabled.current
+    DisposableEffect(dispatcher, state, enabled) {
+        if (enabled) dispatcher.registerScroll(state)
         onDispose { dispatcher.unregisterScroll(state) }
     }
+}
+
+/** Makes [state] the stick's target whenever the focus is inside this element. */
+@Composable
+fun androidx.compose.ui.Modifier.stickScrollFocus(state: androidx.compose.foundation.gestures.ScrollableState): androidx.compose.ui.Modifier {
+    val dispatcher = LocalInputDispatcher.current
+    return this.then(androidx.compose.ui.Modifier.onFocusChanged { if (it.hasFocus) dispatcher.focusScroll(state) })
 }
 
 /**

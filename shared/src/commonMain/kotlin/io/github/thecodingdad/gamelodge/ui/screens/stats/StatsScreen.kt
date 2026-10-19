@@ -76,6 +76,7 @@ fun StatsScreen(entries: List<LibraryEntry>, sessions: List<PlaySessionEntity>) 
     val byId = remember(entries) { entries.associateBy { it.item.id } }
     // The page is read-only; one focus target lets the D-pad scroll it.
     val scroll = rememberScrollState()
+    io.github.thecodingdad.gamelodge.ui.input.RegisterStickScroll(scroll)
     val focus = remember { androidx.compose.ui.focus.FocusRequester() }
     androidx.compose.runtime.LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
     Column(

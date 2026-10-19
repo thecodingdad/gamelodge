@@ -64,6 +64,11 @@ fun DetailBrowser(
                 // Neighbour pages are never reached by D-pad focus search.
                 .focusProperties { if (!active) enter = { FocusRequester.Cancel } }
                 .focusGroup(),
-        ) { content(list[page], browse, active) }
+        ) {
+            // Only the shown page scrolls with the right stick, not the composed neighbours.
+            androidx.compose.runtime.CompositionLocalProvider(io.github.thecodingdad.gamelodge.ui.input.LocalStickScrollEnabled provides active) {
+                content(list[page], browse, active)
+            }
+        }
     }
 }

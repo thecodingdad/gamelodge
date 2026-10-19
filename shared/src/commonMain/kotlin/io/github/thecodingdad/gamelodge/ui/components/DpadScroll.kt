@@ -14,6 +14,7 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.input.key.type
+import io.github.thecodingdad.gamelodge.ui.input.stickScrollFocus
 import kotlinx.coroutines.launch
 
 /** Lets the D-pad scroll read-only pages that have nothing focusable to move between. */
@@ -56,6 +57,7 @@ fun Modifier.controllerScroll(state: ScrollState = androidx.compose.foundation.r
             }
             true
         }
+        .stickScrollFocus(state)
         .fadingEdges(state)
         .verticalScroll(state)
 }

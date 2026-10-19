@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.ui.screens.metadata
 
+import io.github.thecodingdad.gamelodge.ui.components.controllerScroll
 import io.github.thecodingdad.gamelodge.ui.components.fadingEdges
 import io.github.thecodingdad.gamelodge.ui.screens.settings.searchHighlight
 import io.github.thecodingdad.gamelodge.ui.components.mouseDragScroll
@@ -263,7 +264,7 @@ private fun KeySourceDialog(id: String, entry: MetadataSources.Entry?, onChanged
 
     Modal(visible = true, onDismiss = onDismiss, title = name, maxWidth = 640.dp) {
         val formScroll = rememberScrollState()
-        Column(Modifier.mouseDragScroll(formScroll).fadingEdges(formScroll).verticalScroll(formScroll), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(Modifier.controllerScroll(formScroll), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(stringResource(if (sgdb) Res.string.metadata_sgdb_help else Res.string.metadata_igdb_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
             if (sgdb) {
                 LauncherTextField(stringResource(Res.string.metadata_api_key), first, { first = it }, kind = TextKind.PASSWORD)
@@ -395,7 +396,7 @@ private fun ServerSourceDialog(entry: MetadataSources.Entry, online: Boolean?, o
     val s = entry.server ?: return
     Modal(visible = true, onDismiss = onDismiss, title = s.name, maxWidth = 600.dp) {
         val formScroll = rememberScrollState()
-        Column(Modifier.mouseDragScroll(formScroll).fadingEdges(formScroll).verticalScroll(formScroll), verticalArrangement = Arrangement.spacedBy(10.dp), horizontalAlignment = Alignment.Start) {
+        Column(Modifier.controllerScroll(formScroll), verticalArrangement = Arrangement.spacedBy(10.dp), horizontalAlignment = Alignment.Start) {
             InfoRow(stringResource(Res.string.servers_address), s.baseUrl.removePrefix("https://"))
             InfoRow(stringResource(Res.string.servers_state), when (online) {
                 true -> stringResource(Res.string.servers_online)
