@@ -918,11 +918,6 @@
     <!-- Apps -->
     <string name="action_start">Start</string>
     <string name="action_app_artwork">Change tile</string>
-    <string name="app_tile_title">Start tab tile</string>
-    <string name="app_tile_own">Own image …</string>
-    <string name="app_tile_reset">Back to the app's own tile</string>
-    <string name="app_tile_help">Shown when the app is in a row of the start tab. Without a choice: the app's TV banner or a tile made from its icon.</string>
-    <string name="app_tile_none">SteamGridDB has no landscape images for this app (or no key is set).</string>
 
     <!-- Filters -->
     <string name="group_pick_games">Select games</string>
@@ -1146,4 +1141,19 @@
     <string name="host_progress_apps">Loading the app list…</string>
     <string name="host_progress_box_art">Loading covers: %1$d of %2$d</string>
     <string name="host_progress_metadata">Looking up metadata: %1$d of %2$d</string>
+    <string name="app_tile_title">Start tab tile</string>
+    <string name="app_tile_help">Shown when the app is in a row of the start tab.</string>
+    <string name="artwork_landscape">Landscape</string>
+    <string name="artwork_square">Square</string>
+    <string name="artwork_source_tv_banner">Android TV banner</string>
+    <string name="artwork_source_generated">Generated</string>
+    <string name="artwork_tile_auto">automatic: background with logo, else the cover</string>
+    <string name="artwork_app_tile_auto">automatic: the app's TV banner, else made from its icon</string>
+    <string name="artwork_search_info">Different search term: only for the images shown here, not saved.</string>
+    <string name="setting_tile_format_home">Tile shape on the start tab</string>
+    <string name="setting_tile_format_home_sub">Apps stay landscape.</string>
+    <string name="setting_tile_format_library">Tile shape in the library</string>
+    <string name="tile_portrait">Portrait</string>
+    <string name="tile_landscape">Landscape</string>
+    <string name="tile_square">Square</string>
 </resources>

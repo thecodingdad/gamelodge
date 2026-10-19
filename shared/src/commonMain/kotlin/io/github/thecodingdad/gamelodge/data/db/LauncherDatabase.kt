@@ -16,7 +16,7 @@ import androidx.room.RoomDatabaseConstructor
         HaTileEntity::class,
         FilterEntity::class,
     ],
-    version = 9,
+    version = 10,
     exportSchema = true,
 )
 @ConstructedBy(LauncherDatabaseConstructor::class)
@@ -43,5 +43,10 @@ object SchemaChanges {
         "ALTER TABLE library_items ADD COLUMN timeToBeatComplete INTEGER",
         "ALTER TABLE library_items ADD COLUMN timeToBeatIgdbId INTEGER",
         "ALTER TABLE library_items ADD COLUMN timeToBeatCheckedAt INTEGER",
+    )
+
+    /** v10: square tile. */
+    val V9_TO_V10 = listOf(
+        "ALTER TABLE library_items ADD COLUMN squareUrl TEXT",
     )
 }

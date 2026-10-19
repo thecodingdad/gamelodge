@@ -698,6 +698,7 @@ private fun MainShell(
                             onAtStart = { vm.homeAtStart = it },
                             onFocusedEntry = { homeFocused = it },
                             animatedArtwork = settings.animatedArtwork,
+                            tileFormat = settings.homeTileFormat,
                         )
                         io.github.thecodingdad.gamelodge.ui.shell.ScreenHints(
                             listOf(
@@ -718,6 +719,7 @@ private fun MainShell(
                     MainTab.LIBRARY -> LibraryScreen(
                         allEntries, libraryFilters, settings.animatedArtwork, vm.focusKeys[MainTab.LIBRARY.name], openStats,
                         openFilterSettings = { nav.navigate(Routes.settings(SettingsPageId.FILTERS)) },
+                        tileFormat = settings.libraryTileFormat,
                     ) { vm.focusKeys[MainTab.LIBRARY.name] = it }
                     MainTab.APPS -> AppsScreen(
                         apps, appsFilters, vm.focusKeys[MainTab.APPS.name],

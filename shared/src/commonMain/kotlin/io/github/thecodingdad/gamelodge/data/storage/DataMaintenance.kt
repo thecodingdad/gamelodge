@@ -65,7 +65,7 @@ class DataMaintenance(
         val items = dao.getAllItems()
         val used = buildSet {
             items.forEach { i ->
-                listOf(i.coverUrl, i.heroUrl, i.logoUrl, i.iconUrl, i.animatedCoverUrl, i.animatedHeroUrl, i.tileUrl)
+                listOf(i.coverUrl, i.heroUrl, i.logoUrl, i.iconUrl, i.animatedCoverUrl, i.animatedHeroUrl, i.tileUrl, i.squareUrl)
                     .forEach { url -> url?.takeIf { it.startsWith("/") }?.let { add(File(it).absolutePath) } }
             }
             dao.getAllTargets().forEach { t -> t.boxArtPath?.let { add(File(it).absolutePath) } }

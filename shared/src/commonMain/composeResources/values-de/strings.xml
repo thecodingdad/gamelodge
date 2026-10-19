@@ -916,11 +916,6 @@
     <!-- Apps -->
     <string name="action_start">Starten</string>
     <string name="action_app_artwork">Kachel ändern</string>
-    <string name="app_tile_title">Kachel im Start-Tab</string>
-    <string name="app_tile_own">Eigenes Bild …</string>
-    <string name="app_tile_reset">Zurück zur Standard-Kachel</string>
-    <string name="app_tile_help">Wird gezeigt, wenn die App in einer Reihe des Start-Tabs steht. Ohne Auswahl: das TV-Banner der App oder eine Kachel aus ihrem Icon.</string>
-    <string name="app_tile_none">SteamGridDB hat für diese App keine Querformat-Bilder (oder es ist kein Key eingetragen).</string>
 
     <!-- Filters -->
     <string name="group_pick_games">Spiele auswählen</string>
@@ -1144,4 +1139,19 @@
     <string name="host_progress_apps">Lade App-Liste…</string>
     <string name="host_progress_box_art">Lade Cover: %1$d von %2$d</string>
     <string name="host_progress_metadata">Suche Metadaten: %1$d von %2$d</string>
+    <string name="app_tile_title">Kachel im Start-Tab</string>
+    <string name="app_tile_help">Wird gezeigt, wenn die App in einer Reihe des Start-Tabs steht.</string>
+    <string name="artwork_landscape">Querformat</string>
+    <string name="artwork_square">Quadrat</string>
+    <string name="artwork_source_tv_banner">Android-TV-Banner</string>
+    <string name="artwork_source_generated">Generiert</string>
+    <string name="artwork_tile_auto">automatisch: Hintergrund mit Logo, sonst das Cover</string>
+    <string name="artwork_app_tile_auto">automatisch: TV-Banner der App, sonst aus ihrem Icon</string>
+    <string name="artwork_search_info">Anderer Suchbegriff: nur für die hier gezeigten Bilder, wird nicht gespeichert.</string>
+    <string name="setting_tile_format_home">Kachelformat im Start-Tab</string>
+    <string name="setting_tile_format_home_sub">Apps bleiben im Querformat.</string>
+    <string name="setting_tile_format_library">Kachelformat in der Bibliothek</string>
+    <string name="tile_portrait">Hochformat</string>
+    <string name="tile_landscape">Querformat</string>
+    <string name="tile_square">Quadrat</string>
 </resources>

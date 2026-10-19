@@ -17,6 +17,8 @@ enum class StartTab { HOME, LIBRARY, APPS }
 enum class ThemeMode { DARK, BLACK, LIGHT }
 enum class AccentMode { FIXED, COVER }
 enum class CardSize { SMALL, MEDIUM, LARGE }
+/** Shape of game tiles: cover (2:3), landscape (16:9) or square. */
+enum class TileFormat { PORTRAIT, LANDSCAPE, SQUARE }
 enum class ButtonLayout { XBOX, NINTENDO }
 enum class NetworkCheckMode { OFF, OUTSIDE_HOME, ALWAYS }
 enum class AutoVpnTrigger { HOST_UNREACHABLE, OUTSIDE_HOME }
@@ -33,6 +35,12 @@ data class LauncherSettings(
     /** Hosts removed with their games kept (hidden; back with the next pairing of the host). */
     val detachedHosts: Set<String> = emptySet(),
     val cardSize: CardSize = CardSize.MEDIUM,
+    /** Game tile shape on the start tab and in the library (apps on the start tab stay landscape). */
+    val homeTileFormat: TileFormat = TileFormat.PORTRAIT,
+    val libraryTileFormat: TileFormat = TileFormat.PORTRAIT,
+    /** Landscape / square tiles were looked up once for the games matched before the format was chosen. */
+    val landscapeBackfillDone: Boolean = false,
+    val squareBackfillDone: Boolean = false,
     val reduceMotion: Boolean = false,
     val animatedArtwork: Boolean = true,
     /** Animated covers on tiles: only the focused one (controller) or all visible ones. */
@@ -140,6 +148,10 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val accentTextColor = intPreferencesKey("accent_text_color")
         val detachedHosts = stringSetPreferencesKey("detached_hosts")
         val cardSize = stringPreferencesKey("card_size")
+        val homeTileFormat = stringPreferencesKey("home_tile_format")
+        val libraryTileFormat = stringPreferencesKey("library_tile_format")
+        val landscapeBackfillDone = booleanPreferencesKey("landscape_backfill_done")
+        val squareBackfillDone = booleanPreferencesKey("square_backfill_done")
         val reduceMotion = booleanPreferencesKey("reduce_motion")
         val animatedArtwork = booleanPreferencesKey("animated_artwork")
         val animatedTilesAlways = booleanPreferencesKey("animated_tiles_always")
@@ -217,6 +229,10 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             accentTextColor = this[K.accentTextColor],
             detachedHosts = this[K.detachedHosts] ?: d.detachedHosts,
             cardSize = enumOr(this[K.cardSize], d.cardSize),
+            homeTileFormat = enumOr(this[K.homeTileFormat], d.homeTileFormat),
+            libraryTileFormat = enumOr(this[K.libraryTileFormat], d.libraryTileFormat),
+            landscapeBackfillDone = this[K.landscapeBackfillDone] ?: d.landscapeBackfillDone,
+            squareBackfillDone = this[K.squareBackfillDone] ?: d.squareBackfillDone,
             reduceMotion = this[K.reduceMotion] ?: d.reduceMotion,
             animatedArtwork = this[K.animatedArtwork] ?: d.animatedArtwork,
             animatedTilesAlways = this[K.animatedTilesAlways] ?: d.animatedTilesAlways,
@@ -291,6 +307,10 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         s.accentTextColor?.let { this[K.accentTextColor] = it } ?: remove(K.accentTextColor)
         this[K.detachedHosts] = s.detachedHosts
         this[K.cardSize] = s.cardSize.name
+        this[K.homeTileFormat] = s.homeTileFormat.name
+        this[K.libraryTileFormat] = s.libraryTileFormat.name
+        this[K.landscapeBackfillDone] = s.landscapeBackfillDone
+        this[K.squareBackfillDone] = s.squareBackfillDone
         this[K.reduceMotion] = s.reduceMotion
         this[K.animatedArtwork] = s.animatedArtwork
         this[K.animatedTilesAlways] = s.animatedTilesAlways

@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.ui.screens.metadata
 
+import io.github.thecodingdad.gamelodge.ui.components.coverModel
 import io.github.thecodingdad.gamelodge.ui.components.popupHeightIn
 import io.github.thecodingdad.gamelodge.ui.components.fadingEdges
 import io.github.thecodingdad.gamelodge.ui.components.mouseDragScroll
@@ -149,7 +150,15 @@ private fun MetadataSourcesShortcut(onDismiss: () -> Unit) {
  * "back to automatic", below everything the sources offer (companion, IGDB, SteamGridDB).
  */
 @Composable
-fun ArtworkPickerDialog(item: LibraryItemEntity?, targets: List<io.github.thecodingdad.gamelodge.data.db.LaunchTargetEntity> = emptyList(), onDismiss: () -> Unit) {
+fun ArtworkPickerDialog(
+    item: LibraryItemEntity?,
+    targets: List<io.github.thecodingdad.gamelodge.data.db.LaunchTargetEntity> = emptyList(),
+    /** Only these kinds (one: no tabs), e.g. an app's start tab tile. */
+    only: List<ArtworkKind>? = null,
+    title: String? = null,
+    help: String? = null,
+    onDismiss: () -> Unit,
+) {
     val metadata = io.github.thecodingdad.gamelodge.LocalContainer.current.metadata
     val scope = rememberCoroutineScope()
     // An own image from the device's storage, copied into the launcher (the document may not stay readable).
@@ -165,15 +174,27 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, targets: List<io.github.thecod
         }
     }
     // Constant height (the whole screen but a margin): switching tabs doesn't make it jump.
-    Modal(visible = item != null, onDismiss = onDismiss, title = stringResource(Res.string.artwork_title), maxWidth = 1000.dp, modifier = Modifier.fillMaxHeight()) {
+    Modal(visible = item != null, onDismiss = onDismiss, title = title ?: stringResource(Res.string.artwork_title), maxWidth = 1000.dp, modifier = Modifier.fillMaxHeight()) {
         val target = item ?: return@Modal
+        val entry = io.github.thecodingdad.gamelodge.data.db.LibraryEntry(target, targets)
+        val isApp = target.kind == io.github.thecodingdad.gamelodge.data.db.ItemKind.APP
         // Animated cover / background have their own tabs (while animated artwork is wanted).
         val animatedOn = io.github.thecodingdad.gamelodge.LocalContainer.current.settings.settings.collectAsState(null).value?.animatedArtwork ?: true
-        val kinds = ArtworkKind.entries.filter { animatedOn || !it.animated }
+        // Apps have no square tiles (they show as icons or landscape tiles).
+        val kinds = only ?: ArtworkKind.entries.filter { (animatedOn || !it.animated) && !(isApp && it == ArtworkKind.SQUARE) }
         var kindIndex by remember(target.id) { mutableStateOf(0) }
         val kind = kinds[kindIndex.coerceIn(kinds.indices)]
         androidx.compose.runtime.SideEffect { ownKind = kind }
-        var options by remember(target.id, kind) { mutableStateOf<List<ArtworkOption>?>(null) }
+        // A different search term, only for this dialog (applied once typing pauses).
+        val defaultQuery = target.metadataQuery ?: io.github.thecodingdad.gamelodge.data.library.TitleNormalizer.searchTerm(target.title)
+        var query by remember(target.id) { mutableStateOf(defaultQuery) }
+        var appliedQuery by remember(target.id) { mutableStateOf(defaultQuery) }
+        LaunchedEffect(query) {
+            kotlinx.coroutines.delay(700)
+            appliedQuery = query
+        }
+        val tile = kind == ArtworkKind.LANDSCAPE || kind == ArtworkKind.SQUARE
+        var options by remember(target.id, kind, appliedQuery) { mutableStateOf<List<ArtworkOption>?>(null) }
         // The host's box art and a cover next to the ROM come first (they are what the game had before).
         val hostNames = io.github.thecodingdad.gamelodge.LocalContainer.current.hosts.hosts.collectAsState().value
         val local = if (kind != ArtworkKind.COVER) emptyList() else targets.mapNotNull { t ->
@@ -184,7 +205,18 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, targets: List<io.github.thecod
                 else -> null
             }
         }.distinctBy { it.url }
-        LaunchedEffect(target.id, kind) { options = local + runCatching { metadata.artworkOptions(target, kind) }.getOrDefault(emptyList()) }
+        LaunchedEffect(target.id, kind, appliedQuery) {
+            // Landscape: the app's TV banner and a tile made from its icon (host apps: their box art).
+            val made = if (kind != ArtworkKind.LANDSCAPE) emptyList() else kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                runCatching {
+                    io.github.thecodingdad.gamelodge.ui.components.ArtworkPlatform.current.localTiles(
+                        entry.localTarget?.packageName, if (entry.localTarget == null) entry.coverModel() else null,
+                        java.io.File(filesDir, "tile-choices"), "${target.id.hashCode().toUInt()}",
+                    )
+                }.getOrDefault(emptyList()).map { (source, file) -> ArtworkOption(file.absolutePath, thumbOf(file.absolutePath), source) }
+            }
+            options = local + made + runCatching { metadata.artworkOptions(target, kind, appliedQuery) }.getOrDefault(emptyList())
+        }
         // LB/RB like the library's filters: focus stays in the list (first image of the new tab)
         // or, while that is empty or loading, on the tab itself; it never gets lost.
         val tabFocus = remember(kinds.size) { List(kinds.size) { androidx.compose.ui.focus.FocusRequester() } }
@@ -213,24 +245,43 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, targets: List<io.github.thecod
         val gridState = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
         io.github.thecodingdad.gamelodge.ui.input.RegisterStickScroll(gridState)
         LaunchedEffect(kindIndex) { gridState.scrollToItem(0) }
-        val wide = kind.base == ArtworkKind.HERO
+        val wide = kind.base == ArtworkKind.HERO || kind == ArtworkKind.LANDSCAPE
+        // Logos and icons are shown whole (transparent, any shape).
         val square = kind == ArtworkKind.LOGO || kind == ArtworkKind.ICON
         val ratio = when (kind.base) {
             ArtworkKind.HERO -> 1920f / 620f
             ArtworkKind.LOGO -> 5f / 2f
-            ArtworkKind.ICON -> 1f
+            ArtworkKind.ICON, ArtworkKind.SQUARE -> 1f
+            ArtworkKind.LANDSCAPE -> 16f / 9f
             else -> 2f / 3f
         }
 
         // Tabs and hints stay; current image and choices scroll together.
         Column(Modifier.weight(1f)) {
-            io.github.thecodingdad.gamelodge.ui.components.ButtonRow(spacing = 10.dp) {
-                kinds.forEachIndexed { index, k ->
-                    io.github.thecodingdad.gamelodge.ui.screens.library.Chip(
-                        kindLabel(k), selected = index == kindIndex, onClick = { switchTo(index) },
-                        modifier = Modifier.focusRequester(tabFocus[index]),
-                    )
+            help?.let {
+                Text(it, style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+                Spacer(Modifier.height(12.dp))
+            }
+            if (kinds.size > 1) {
+                io.github.thecodingdad.gamelodge.ui.components.ButtonRow(spacing = 10.dp) {
+                    kinds.forEachIndexed { index, k ->
+                        io.github.thecodingdad.gamelodge.ui.screens.library.Chip(
+                            kindLabel(k), selected = index == kindIndex, onClick = { switchTo(index) },
+                            modifier = Modifier.focusRequester(tabFocus[index]),
+                        )
+                    }
                 }
+                Spacer(Modifier.height(12.dp))
+            }
+            io.github.thecodingdad.gamelodge.ui.components.LauncherTextField(
+                stringResource(Res.string.hint_search), query, { query = it },
+                modifier = Modifier.fillMaxWidth().then(if (kinds.size > 1) Modifier else Modifier.focusRequester(tabFocus[0])),
+            )
+            if (query.trim() != defaultQuery) {
+                Text(
+                    stringResource(Res.string.artwork_search_info), style = MaterialTheme.typography.bodySmall,
+                    color = LauncherTheme.colors.onSurfaceMuted, modifier = Modifier.padding(top = 6.dp),
+                )
             }
             Spacer(Modifier.height(14.dp))
             // The current image of this tab, picked by hand or automatic.
@@ -241,6 +292,8 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, targets: List<io.github.thecod
                 ArtworkKind.ANIMATED_HERO -> target.animatedHeroUrl
                 ArtworkKind.LOGO -> target.logoUrl
                 ArtworkKind.ICON -> target.iconUrl
+                ArtworkKind.LANDSCAPE -> target.tileUrl
+                ArtworkKind.SQUARE -> target.squareUrl
             }
             val manual = kind.field in target.manual
             val list = options
@@ -258,7 +311,15 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, targets: List<io.github.thecod
                     // Text and buttons beside the image; on narrow screens (portrait) below it.
                     androidx.compose.foundation.layout.BoxWithConstraints {
                         val image: @Composable () -> Unit = {
-                        current?.let { url ->
+                        // Tiles: what shows now, the automatic stand-in too.
+                        if (tile) {
+                            io.github.thecodingdad.gamelodge.ui.components.TileImage(
+                                entry,
+                                if (kind == ArtworkKind.LANDSCAPE) io.github.thecodingdad.gamelodge.data.settings.TileFormat.LANDSCAPE
+                                else io.github.thecodingdad.gamelodge.data.settings.TileFormat.SQUARE,
+                                Modifier.height(120.dp).aspectRatio(ratio).clip(RoundedCornerShape(8.dp)), showTitleOnPlaceholder = false,
+                            )
+                        } else current?.let { url ->
                             ArtworkImage(
                                 io.github.thecodingdad.gamelodge.data.artwork.ArtworkFiles.model(url), target.title,
                                 Modifier.height(if (wide) 90.dp else 120.dp).aspectRatio(ratio).clip(RoundedCornerShape(8.dp)),
@@ -270,6 +331,7 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, targets: List<io.github.thecod
                             Text(
                                 stringResource(
                                     when {
+                                        tile && current == null -> if (isApp) Res.string.artwork_app_tile_auto else Res.string.artwork_tile_auto
                                         manual && current == null -> if (kind.animated) Res.string.artwork_none_chosen else Res.string.artwork_removed
                                         manual -> Res.string.artwork_manual
                                         else -> Res.string.artwork_auto
@@ -283,14 +345,15 @@ fun ArtworkPickerDialog(item: LibraryItemEntity?, targets: List<io.github.thecod
                                     stringResource(Res.string.artwork_own), icon = androidx.compose.material.icons.Icons.Filled.Image,
                                     onClick = { pickOwnImage() },
                                 )
-                                // No image of this kind (animated: the still one shows instead).
-                                if (current != null) {
+                                // No image of this kind (animated: the still one shows instead). Tiles
+                                // always show something: back to automatic instead.
+                                if (current != null && !tile) {
                                     io.github.thecodingdad.gamelodge.ui.components.LauncherButton(
                                         stringResource(Res.string.artwork_none), icon = androidx.compose.material.icons.Icons.Filled.Delete,
                                         onClick = { scope.launch { metadata.clearArtwork(target.id, kind); onDismiss() } },
                                     )
                                 }
-                                if (manual) {
+                                if (manual || (tile && current != null)) {
                                     io.github.thecodingdad.gamelodge.ui.components.LauncherButton(
                                         stringResource(Res.string.artwork_reset_auto), icon = androidx.compose.material.icons.Icons.Filled.Restore,
                                         onClick = { scope.launch { metadata.resetArtwork(target.id, kind); onDismiss() } },
@@ -377,6 +440,8 @@ private fun kindLabel(kind: ArtworkKind) = stringResource(
         ArtworkKind.ANIMATED_HERO -> Res.string.artwork_animated_hero
         ArtworkKind.LOGO -> Res.string.artwork_logo
         ArtworkKind.ICON -> Res.string.artwork_icon
+        ArtworkKind.LANDSCAPE -> Res.string.artwork_landscape
+        ArtworkKind.SQUARE -> Res.string.artwork_square
     },
 )
 
@@ -388,6 +453,8 @@ private fun sourceLabel(option: ArtworkOption): String {
         ArtworkSource.COMPANION -> stringResource(Res.string.metadata_source_companion)
         ArtworkSource.IGDB -> "IGDB"
         ArtworkSource.STEAMGRIDDB -> "SteamGridDB"
+        ArtworkSource.TV_BANNER -> stringResource(Res.string.artwork_source_tv_banner)
+        ArtworkSource.GENERATED -> stringResource(Res.string.artwork_source_generated)
     }
     return listOfNotNull(name, option.detail).joinToString(" · ")
 }
@@ -411,68 +478,11 @@ fun ReviewConfirmAction(entry: io.github.thecodingdad.gamelodge.data.db.LibraryE
     )
 }
 
-/** Start tab tile of an app: SteamGridDB landscape images, an own image, or the default tile. */
+/** Start tab tile of an app: the artwork picker with only the landscape tile. */
 @Composable
 fun AppTileDialog(entry: io.github.thecodingdad.gamelodge.data.db.LibraryEntry?, onDismiss: () -> Unit) {
-    val launcherContainer = io.github.thecodingdad.gamelodge.LocalContainer.current
-    val metadata = launcherContainer.metadata
-    val scope = rememberCoroutineScope()
-    val target = entry
-    val pickImage = io.github.thecodingdad.gamelodge.ui.PlatformUi.current.rememberImagePicker { address ->
-        if (address == null || target == null) return@rememberImagePicker
-        scope.launch {
-            // Copy into the launcher's storage: the picked file may not stay readable.
-            val dir = java.io.File(launcherContainer.platform.filesDir, "tiles")
-            val file = io.github.thecodingdad.gamelodge.ui.PlatformUi.current.copyImage(address, dir, "${target.item.id}-${System.currentTimeMillis()}")
-            if (file != null) metadata.setTile(target.item.id, file.absolutePath)
-            onDismiss()
-        }
-    }
-    Modal(visible = target != null, onDismiss = onDismiss, title = stringResource(Res.string.app_tile_title), maxWidth = 1000.dp) {
-        val e = target ?: return@Modal
-        var options by remember(e.item.id) { mutableStateOf<List<SgdbAsset>?>(null) }
-        LaunchedEffect(e.item.id) { options = metadata.tileOptions(e.item) }
-        Text(stringResource(Res.string.app_tile_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
-        Spacer(Modifier.height(12.dp))
-        io.github.thecodingdad.gamelodge.ui.components.ButtonRow(spacing = 10.dp) {
-            io.github.thecodingdad.gamelodge.ui.components.LauncherButton(
-                stringResource(Res.string.app_tile_own), onClick = { pickImage() },
-                icon = androidx.compose.material.icons.Icons.Filled.Image,
-            )
-            if (e.item.tileUrl != null) {
-                io.github.thecodingdad.gamelodge.ui.components.LauncherButton(
-                    stringResource(Res.string.app_tile_reset), onClick = { scope.launch { metadata.setTile(e.item.id, null); onDismiss() } },
-                    icon = androidx.compose.material.icons.Icons.Filled.Restore,
-                )
-            }
-        }
-        Spacer(Modifier.height(14.dp))
-        val list = options
-        val tileGrid = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
-        io.github.thecodingdad.gamelodge.ui.input.RegisterStickScroll(tileGrid)
-        when {
-            list == null -> CircularProgressIndicator(color = LauncherTheme.colors.accent)
-            list.isEmpty() -> Text(stringResource(Res.string.app_tile_none), color = LauncherTheme.colors.onSurfaceMuted)
-            else -> LazyVerticalGrid(
-                columns = GridCells.Adaptive(240.dp),
-                state = tileGrid,
-                modifier = Modifier.popupHeightIn(380.dp).fadingEdges(tileGrid).mouseDragScroll(tileGrid),
-                contentPadding = PaddingValues(4.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                items(list, key = { a -> a.id }) { asset ->
-                    FocusSurface(
-                        onClick = { scope.launch { metadata.setTile(e.item.id, asset.url); onDismiss() } },
-                        modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f),
-                        color = LauncherTheme.colors.surfaceRaised,
-                    ) {
-                        ArtworkImage(asset.thumb ?: asset.url, e.item.title, Modifier.fillMaxSize(), showTitleOnPlaceholder = false)
-                    }
-                }
-            }
-        }
-        Spacer(Modifier.height(8.dp))
-        ButtonHintBar(listOf(ButtonHint(PadButton.A, stringResource(Res.string.hint_select)), ButtonHint(PadButton.B, stringResource(Res.string.action_close), onClick = onDismiss)), inPopup = true)
-    }
+    ArtworkPickerDialog(
+        entry?.item, entry?.targets.orEmpty(), only = listOf(ArtworkKind.LANDSCAPE),
+        title = stringResource(Res.string.app_tile_title), help = stringResource(Res.string.app_tile_help), onDismiss = onDismiss,
+    )
 }

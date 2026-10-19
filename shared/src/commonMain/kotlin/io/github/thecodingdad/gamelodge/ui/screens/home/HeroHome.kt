@@ -71,6 +71,8 @@ class HomeCallbacks(
     val lastFocusedKey: String?,
     val onFocusKey: (String) -> Unit,
     val animatedArtwork: Boolean,
+    /** Shape of the game tiles (apps stay landscape). */
+    val tileFormat: io.github.thecodingdad.gamelodge.data.settings.TileFormat = io.github.thecodingdad.gamelodge.data.settings.TileFormat.PORTRAIT,
     /** Reports whether the layout is in its initial state (top, first item focused). */
     val onAtStart: (Boolean) -> Unit = {},
     /** The entry the user is on (for the A hint). */
@@ -357,7 +359,13 @@ private fun androidx.compose.foundation.lazy.LazyListScope.homeRow(
                 } else {
                     CoverCard(
                         entry = entry,
-                        width = LauncherTheme.dimens.coverWidth * 0.82f,
+                        // Landscape matches the app tiles beside it; portrait and square stay a bit smaller.
+                        width = LauncherTheme.dimens.coverWidth * when (callbacks.tileFormat) {
+                            io.github.thecodingdad.gamelodge.data.settings.TileFormat.PORTRAIT -> 0.82f
+                            io.github.thecodingdad.gamelodge.data.settings.TileFormat.LANDSCAPE -> 1.6f
+                            io.github.thecodingdad.gamelodge.data.settings.TileFormat.SQUARE -> 1.0f
+                        },
+                        format = callbacks.tileFormat,
                         onClick = { actions.open(entry, entries) { id -> callbacks.onFocusKey("$key:$id") } },
                         onLongClick = { actions.context(entry, entries) { id -> callbacks.onFocusKey("$key:$id") } },
                         onFocused = { onFocus(entry, entries); callbacks.onFocusKey(focusKey) },

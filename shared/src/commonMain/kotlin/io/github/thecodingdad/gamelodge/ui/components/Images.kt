@@ -3,6 +3,8 @@ package io.github.thecodingdad.gamelodge.ui.components
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -108,12 +110,12 @@ fun ArtworkImage(
  * flash), it fades in when ready and falls back to the title text if it can't be loaded.
  */
 @Composable
-fun LogoImage(url: String?, title: String, modifier: Modifier = Modifier) {
+fun LogoImage(url: String?, title: String, modifier: Modifier = Modifier, alignment: Alignment = Alignment.CenterStart) {
     SubcomposeAsyncImage(
         model = ArtworkFiles.model(url),
         contentDescription = title,
         contentScale = ContentScale.Fit,
-        alignment = Alignment.CenterStart,
+        alignment = alignment,
         modifier = modifier,
         loading = {},
         error = {
@@ -155,6 +157,12 @@ interface ArtworkPlatform {
     suspend fun appIcon(packageName: String): ImageBitmap? = null
     /** Landscape tile of an app: its own banner, or one generated from its icon ([source]: box art of host apps). */
     suspend fun appTile(packageName: String?, source: Any?): ImageBitmap? = null
+    /**
+     * Landscape tiles the platform can make, stored as PNG files in [dir] (named after [name]) to
+     * be offered in the picker: an app's Android TV banner and a tile generated from its icon
+     * ([source]: box art of host apps instead).
+     */
+    suspend fun localTiles(packageName: String?, source: Any?, dir: File, name: String): List<Pair<io.github.thecodingdad.gamelodge.metadata.ArtworkSource, File>> = emptyList()
     /** Portrait cover generated from the icon of a local game without artwork. */
     suspend fun generatedCover(packageName: String): ImageBitmap? = null
     /** Wide backdrop generated from the icon of a local app or game without artwork. */
@@ -308,6 +316,64 @@ fun HeroImage(entry: LibraryEntry, modifier: Modifier = Modifier, animated: Bool
         if (image == null) TitlePlaceholder(entry.item.title, Modifier.fillMaxSize(), showTitle = false)
         else Image(image, contentDescription = entry.item.title, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
     }
+}
+
+/**
+ * A game tile in [format]. Landscape and square use their own image when there is one; else
+ * the background with the logo on it, else the whole cover on its blurred self (apps: their
+ * TV banner or generated tile; local games without artwork: a tile generated from the icon).
+ */
+@Composable
+fun TileImage(
+    entry: LibraryEntry,
+    format: io.github.thecodingdad.gamelodge.data.settings.TileFormat,
+    modifier: Modifier = Modifier,
+    animated: Boolean = false,
+    showTitleOnPlaceholder: Boolean = true,
+) {
+    val landscape = format == io.github.thecodingdad.gamelodge.data.settings.TileFormat.LANDSCAPE
+    if (format == io.github.thecodingdad.gamelodge.data.settings.TileFormat.PORTRAIT) {
+        CoverImage(entry, modifier, animated, showTitleOnPlaceholder)
+        return
+    }
+    val title = entry.item.title
+    ArtworkFiles.model(if (landscape) entry.item.tileUrl else entry.item.squareUrl)?.let {
+        ArtworkImage(it, title, modifier, ContentScale.Crop, showTitleOnPlaceholder = false)
+        return
+    }
+    if (landscape && entry.item.kind == io.github.thecodingdad.gamelodge.data.db.ItemKind.APP) {
+        AppTileImage(entry, modifier)
+        return
+    }
+    val hero = ArtworkFiles.model(entry.item.heroUrl)
+    val logo = entry.item.logoUrl
+    if (hero != null && logo != null) {
+        Box(modifier) {
+            ArtworkImage(hero, title, Modifier.fillMaxSize(), ContentScale.Crop, showTitleOnPlaceholder = false)
+            Box(Modifier.fillMaxSize().background(Color(0x40000000)))
+            LogoImage(
+                logo, title, Modifier.align(Alignment.Center).fillMaxSize(if (landscape) 0.7f else 0.78f).padding(4.dp),
+                alignment = Alignment.Center,
+            )
+        }
+        return
+    }
+    val cover = entry.coverModel()
+    if (cover != null) {
+        Box(modifier) {
+            BlurredCover(cover, title, Modifier.fillMaxSize())
+            CoverImage(
+                entry, Modifier.align(Alignment.Center).fillMaxHeight().aspectRatio(2f / 3f),
+                animated = animated, showTitleOnPlaceholder = false,
+            )
+        }
+        return
+    }
+    if (entry.localTarget?.packageName != null) {
+        AppTileImage(entry, modifier)
+        return
+    }
+    TitlePlaceholder(title, modifier, showTitleOnPlaceholder)
 }
 
 /** A cover as a calm full-area background: loaded tiny, scaled up smoothly and blurred. */

@@ -80,11 +80,18 @@ class SteamGridDbClient(
     }
 
     /** Portrait 600x900 grids for covers; animated ones only when [animated]. */
-    fun assets(gameId: Long, type: SgdbAssetType, animated: Boolean = false, landscape: Boolean = false): List<SgdbAsset> {
+    fun assets(gameId: Long, type: SgdbAssetType, animated: Boolean = false, landscape: Boolean = false, square: Boolean = false): List<SgdbAsset> {
         val url = baseUrl.newBuilder()
             .addPathSegment(type.path).addPathSegment("game").addPathSegment(gameId.toString())
             .apply {
-                if (type == SgdbAssetType.GRID) addQueryParameter("dimensions", if (landscape) "920x430,460x215" else "600x900,342x482,660x930")
+                if (type == SgdbAssetType.GRID) addQueryParameter(
+                    "dimensions",
+                    when {
+                        landscape -> "920x430,460x215"
+                        square -> "1024x1024,512x512"
+                        else -> "600x900,342x482,660x930"
+                    },
+                )
                 addQueryParameter("types", if (animated) "animated" else "static")
                 addQueryParameter("nsfw", "false")
                 addQueryParameter("humor", "false")

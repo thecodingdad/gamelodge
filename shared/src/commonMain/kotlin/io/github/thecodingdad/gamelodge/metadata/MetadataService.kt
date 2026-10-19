@@ -12,6 +12,7 @@ import io.github.thecodingdad.gamelodge.data.db.PlatformSource
 import io.github.thecodingdad.gamelodge.data.library.PlatformResolver
 import io.github.thecodingdad.gamelodge.data.settings.SecretStore
 import io.github.thecodingdad.gamelodge.data.settings.SettingsRepository
+import io.github.thecodingdad.gamelodge.data.settings.TileFormat
 import io.github.thecodingdad.gamelodge.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -44,13 +45,16 @@ data class MetadataCandidate(
 data class MetadataProgress(val done: Int, val total: Int)
 
 /** The images of an entry; the animated cover / background are chosen on their own. */
-enum class ArtworkKind(val field: MetaField, val animated: Boolean = false, val correction: String) {
+enum class ArtworkKind(val field: MetaField, val animated: Boolean = false, val correction: String?) {
     COVER(MetaField.COVER, correction = "cover"),
     ANIMATED_COVER(MetaField.ANIMATED_COVER, animated = true, correction = "animatedCover"),
     HERO(MetaField.HERO, correction = "hero"),
     ANIMATED_HERO(MetaField.ANIMATED_HERO, animated = true, correction = "animatedHero"),
     LOGO(MetaField.LOGO, correction = "logo"),
-    ICON(MetaField.ICON, correction = "icon");
+    ICON(MetaField.ICON, correction = "icon"),
+    /** Tiles for the landscape / square tile format (the launcher's own: no companion correction). */
+    LANDSCAPE(MetaField.LANDSCAPE, correction = null),
+    SQUARE(MetaField.SQUARE, correction = null);
 
     /** Cover-shaped or background-shaped (animated ones share the still one's shape and sources). */
     val base: ArtworkKind get() = when (this) {
@@ -61,7 +65,7 @@ enum class ArtworkKind(val field: MetaField, val animated: Boolean = false, val 
 }
 
 /** Where an image to choose from comes from. */
-enum class ArtworkSource { HOST, ROM, COMPANION, IGDB, STEAMGRIDDB }
+enum class ArtworkSource { HOST, ROM, COMPANION, IGDB, STEAMGRIDDB, TV_BANNER, GENERATED }
 
 /** One image in the picker: [url] is stored, [thumb] previewed. */
 data class ArtworkOption(
@@ -144,7 +148,7 @@ class MetadataService(
     }
 
     private fun ownFiles(i: LibraryItemEntity) =
-        listOfNotNull(i.coverUrl, i.animatedCoverUrl, i.heroUrl, i.animatedHeroUrl, i.logoUrl, i.iconUrl).filter { it.contains("/own-artwork/") }.toSet()
+        listOfNotNull(i.coverUrl, i.animatedCoverUrl, i.heroUrl, i.animatedHeroUrl, i.logoUrl, i.iconUrl, i.tileUrl, i.squareUrl).filter { it.contains("/own-artwork/") }.toSet()
 
     private val dao = db.libraryDao()
     private val mutex = Mutex()
@@ -167,6 +171,10 @@ class MetadataService(
     /** Animated artwork is wanted (Display settings): only then it is looked up. */
     @Volatile private var animated: Boolean = true
 
+    /** Landscape / square tiles are shown somewhere (tile format setting): only then they are looked up. */
+    @Volatile private var landscapeTiles: Boolean = false
+    @Volatile private var squareTiles: Boolean = false
+
     init {
         scope.launch {
             settings.settings.collect {
@@ -174,6 +182,12 @@ class MetadataService(
                 val switchedOn = it.animatedArtwork && !animated
                 animated = it.animatedArtwork
                 if (switchedOn && !it.animatedBackfillDone) launch(Dispatchers.IO) { backfillAnimated() }
+                val formats = setOf(it.homeTileFormat, it.libraryTileFormat)
+                val landscapeOn = TileFormat.LANDSCAPE in formats && !landscapeTiles
+                val squareOn = TileFormat.SQUARE in formats && !squareTiles
+                landscapeTiles = TileFormat.LANDSCAPE in formats
+                squareTiles = TileFormat.SQUARE in formats
+                if ((landscapeOn && !it.landscapeBackfillDone) || (squareOn && !it.squareBackfillDone)) launch(Dispatchers.IO) { backfillTiles() }
             }
         }
     }
@@ -230,6 +244,7 @@ class MetadataService(
             runCatching { refreshTimesToBeat() }.onFailure { Log.w("Time to beat lookup failed", it) }
             runCatching { fillArtworkGaps() }.onFailure { Log.w("Artwork gap fill failed", it) }
             runCatching { backfillAnimated() }.onFailure { Log.w("Animated artwork backfill failed", it) }
+            runCatching { backfillTiles() }.onFailure { Log.w("Tile backfill failed", it) }
             runCatching { dropAppMetadata() }.onFailure { Log.w("App metadata cleanup failed", it) }
             // Also catches games matched before IGDB keys were entered.
             refreshPending()
@@ -537,10 +552,13 @@ class MetadataService(
      * (cover; artworks and screenshots as background) and SteamGridDB's (animated ones for cover
      * and background while animated artwork is switched on).
      */
-    suspend fun artworkOptions(item: LibraryItemEntity, kind: ArtworkKind): List<ArtworkOption> = withContext(Dispatchers.IO) {
+    suspend fun artworkOptions(item: LibraryItemEntity, kind: ArtworkKind, query: String? = null): List<ArtworkOption> = withContext(Dispatchers.IO) {
         val result = mutableListOf<ArtworkOption>()
         val base = kind.base
-        runCatching { companionGame?.invoke(item.id) }.getOrNull()?.let { game ->
+        // A search term typed in the picker: its first hits instead of the matched game.
+        val search = query?.trim()?.takeIf { it.isNotEmpty() && it != searchQuery(item) }
+        val tile = kind == ArtworkKind.LANDSCAPE || kind == ArtworkKind.SQUARE
+        if (!tile) runCatching { companionGame?.invoke(item.id) }.getOrNull()?.let { game ->
             val url = when (kind) {
                 ArtworkKind.COVER -> game.cover
                 ArtworkKind.ANIMATED_COVER -> game.animatedCover
@@ -548,12 +566,13 @@ class MetadataService(
                 ArtworkKind.ANIMATED_HERO -> game.animatedHero
                 ArtworkKind.LOGO -> game.logo
                 ArtworkKind.ICON -> game.icon
+                ArtworkKind.LANDSCAPE, ArtworkKind.SQUARE -> null
             }
             url?.takeIf { it.startsWith("https://") }?.let { result += ArtworkOption(it, it, ArtworkSource.COMPANION, animated = kind.animated, detail = game.sourceLabel) }
         }
         // IGDB has still images only: its cover, and artworks / screenshots as background.
         if (igdb.isConfigured && !kind.animated && (base == ArtworkKind.COVER || base == ArtworkKind.HERO)) {
-            runCatching { item.igdbId?.let { igdb.byId(it) } ?: igdb.search(searchQuery(item), limit = 1).firstOrNull() }.getOrNull()?.let { game ->
+            runCatching { (if (search == null) item.igdbId?.let { igdb.byId(it) } else null) ?: igdb.search(search ?: searchQuery(item), limit = 1).firstOrNull() }.getOrNull()?.let { game ->
                 if (base == ArtworkKind.COVER) game.coverUrl?.let { result += ArtworkOption(it, it.replace("t_cover_big_2x", "t_cover_big"), ArtworkSource.IGDB) }
                 else (game.artworks + game.screenshots).mapNotNull { it.image_id?.takeIf { id -> id.isNotEmpty() } }.forEach { id ->
                     result += ArtworkOption(
@@ -565,14 +584,17 @@ class MetadataService(
         }
         if (sgdb.isConfigured) {
             runCatching {
-                val gameId = item.sgdbId ?: sgdb.search(searchQuery(item)).firstOrNull()?.id ?: return@runCatching
+                val gameId = (if (search == null) item.sgdbId else null) ?: sgdb.search(search ?: searchQuery(item)).firstOrNull()?.id ?: return@runCatching
                 val type = when (base) {
                     ArtworkKind.HERO -> SgdbAssetType.HERO
                     ArtworkKind.LOGO -> SgdbAssetType.LOGO
                     ArtworkKind.ICON -> SgdbAssetType.ICON
                     else -> SgdbAssetType.GRID
                 }
-                if (kind.animated) {
+                if (tile) {
+                    sgdb.assets(gameId, type, landscape = kind == ArtworkKind.LANDSCAPE, square = kind == ArtworkKind.SQUARE)
+                        .forEach { result += ArtworkOption(it.url, it.previewImage, ArtworkSource.STEAMGRIDDB) }
+                } else if (kind.animated) {
                     sgdb.assets(gameId, type, animated = true).filter { it.isPlayableAnimation }
                         .forEach { result += ArtworkOption(it.url, it.previewImage, ArtworkSource.STEAMGRIDDB, animated = true) }
                 } else {
@@ -595,23 +617,6 @@ class MetadataService(
         }
     }.getOrNull()
 
-    /** Landscape SteamGridDB grids for an app's start tab tile. */
-    suspend fun tileOptions(item: LibraryItemEntity): List<SgdbAsset> = withContext(Dispatchers.IO) {
-        if (!sgdb.isConfigured) return@withContext emptyList()
-        runCatching {
-            val gameId = sgdb.search(searchQuery(item)).firstOrNull()?.id ?: return@runCatching emptyList()
-            sgdb.assets(gameId, SgdbAssetType.GRID, landscape = true)
-        }.getOrDefault(emptyList())
-    }
-
-    /** Tile of an app: SteamGridDB URL, own image file, or null for the default tile. */
-    suspend fun setTile(itemId: String, url: String?) = withContext(Dispatchers.IO) {
-        val item = dao.getItem(itemId) ?: return@withContext
-        // An own image replaced or removed: its copy isn't needed any more.
-        item.tileUrl?.takeIf { !it.startsWith("http") && it != url }?.let { java.io.File(it).delete() }
-        dao.upsertItem(item.copy(tileUrl = url))
-    }
-
     /** A hand-picked image: protected against automatic changes and sent to the companion. */
     suspend fun setArtwork(itemId: String, kind: ArtworkKind, option: ArtworkOption) = setOwnArtwork(itemId, kind, option.url)
 
@@ -632,6 +637,8 @@ class MetadataService(
             ArtworkKind.ANIMATED_HERO -> item.animatedHeroUrl
             ArtworkKind.LOGO -> item.logoUrl
             ArtworkKind.ICON -> item.iconUrl
+            ArtworkKind.LANDSCAPE -> item.tileUrl
+            ArtworkKind.SQUARE -> item.squareUrl
         } ?: return
         // In the editor the old file may still come back with "Cancel" (cleaned up on save).
         if (old != keep && old.contains("/own-artwork/") && editing?.id != item.id) java.io.File(old).delete()
@@ -658,7 +665,7 @@ class MetadataService(
             if (game != null) auto = auto.withIgdbHero(game)
         }.onFailure { Log.w("Artwork for ${item.title} not looked up again", it) }
         dao.upsertItem(auto)
-        corrected(itemId, listOf(kind.correction))
+        corrected(itemId, listOfNotNull(kind.correction))
     }
 
     private fun LibraryItemEntity.withArtwork(kind: ArtworkKind, url: String?) = when (kind) {
@@ -668,6 +675,8 @@ class MetadataService(
         ArtworkKind.ANIMATED_HERO -> copy(animatedHeroUrl = url)
         ArtworkKind.LOGO -> copy(logoUrl = url)
         ArtworkKind.ICON -> copy(iconUrl = url)
+        ArtworkKind.LANDSCAPE -> copy(tileUrl = url)
+        ArtworkKind.SQUARE -> copy(squareUrl = url)
     }
 
     private fun LibraryItemEntity.withManual(fields: Set<MetaField>) =
@@ -735,7 +744,7 @@ class MetadataService(
                 MetaField.RATING -> unlocked.copy(rating = null)
                 MetaField.AGE_RATING -> unlocked.copy(ageRatings = null)
                 // Images go through resetArtwork.
-                MetaField.COVER, MetaField.ANIMATED_COVER, MetaField.HERO, MetaField.ANIMATED_HERO, MetaField.LOGO, MetaField.ICON -> unlocked
+                MetaField.COVER, MetaField.ANIMATED_COVER, MetaField.HERO, MetaField.ANIMATED_HERO, MetaField.LOGO, MetaField.ICON, MetaField.LANDSCAPE, MetaField.SQUARE -> unlocked
                 MetaField.TITLE -> unlocked
         }
         val restored = when {
@@ -771,7 +780,47 @@ class MetadataService(
             heroUrl = heroUrl ?: hero?.url,
             logoUrl = logoUrl ?: logo?.url,
             iconUrl = iconUrl ?: icon?.url,
-        ).withSgdbAnimated(gameId)
+        ).withSgdbAnimated(gameId).withSgdbTiles(gameId)
+    }
+
+    /** Landscape and square tiles from SteamGridDB, only for the tile formats in use; games only. */
+    private fun LibraryItemEntity.withSgdbTiles(gameId: Long): LibraryItemEntity {
+        if (kind != ItemKind.GAME) return this
+        val m = manual
+        val wide = if (!landscapeTiles || MetaField.LANDSCAPE in m || tileUrl != null) null else sgdb.assets(gameId, SgdbAssetType.GRID, landscape = true).firstOrNull()
+        val square = if (!squareTiles || MetaField.SQUARE in m || squareUrl != null) null else sgdb.assets(gameId, SgdbAssetType.GRID, square = true).firstOrNull()
+        return copy(tileUrl = tileUrl ?: wide?.url, squareUrl = squareUrl ?: square?.url)
+    }
+
+    /**
+     * Once a tile format is chosen: its tiles for the games matched before. Games without a
+     * SteamGridDB match (e.g. host games described by their companion) are searched by title.
+     */
+    private suspend fun backfillTiles() {
+        val s = settings.current()
+        val wide = landscapeTiles && !s.landscapeBackfillDone
+        val square = squareTiles && !s.squareBackfillDone
+        if (!(wide || square) || !sgdb.isConfigured) return
+        val items = dao.observeAll().first().map { it.item }.filter {
+            it.kind == ItemKind.GAME && it.metadataState != MetadataState.NONE &&
+                ((wide && it.tileUrl == null && MetaField.LANDSCAPE !in it.manual) || (square && it.squareUrl == null && MetaField.SQUARE !in it.manual))
+        }
+        for (item in items) {
+            if (!landscapeTiles && !squareTiles) return
+            try {
+                val fresh = dao.getItem(item.id) ?: continue
+                val gameId = fresh.sgdbId ?: sgdb.search(searchQuery(fresh)).firstOrNull()?.id ?: continue
+                val updated = fresh.withSgdbTiles(gameId)
+                if (updated != fresh) dao.upsertItem(updated)
+            } catch (e: MetadataAuthException) {
+                _lastError.value = e.message
+                return
+            } catch (e: Exception) {
+                Log.w("Tiles for ${item.title} failed", e)
+            }
+            delay(300)
+        }
+        settings.update { it.copy(landscapeBackfillDone = it.landscapeBackfillDone || wide, squareBackfillDone = it.squareBackfillDone || square) }
     }
 
     /** Animated cover and background from SteamGridDB, only while animated artwork is switched on. */

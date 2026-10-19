@@ -96,6 +96,7 @@ fun LibraryScreen(
     lastFocusedKey: String?,
     openStats: () -> Unit,
     openFilterSettings: () -> Unit,
+    tileFormat: io.github.thecodingdad.gamelodge.data.settings.TileFormat = io.github.thecodingdad.gamelodge.data.settings.TileFormat.PORTRAIT,
     onFocusKey: (String) -> Unit,
 ) {
     val actions = LocalEntryActions.current
@@ -221,7 +222,7 @@ fun LibraryScreen(
         LazyVerticalGrid(
             state = gridState,
             // Narrow screens get smaller covers (three columns instead of two huge ones).
-            columns = io.github.thecodingdad.gamelodge.ui.components.coverColumns(io.github.thecodingdad.gamelodge.ui.components.LocalCompactWidth.current),
+            columns = io.github.thecodingdad.gamelodge.ui.components.coverColumns(io.github.thecodingdad.gamelodge.ui.components.LocalCompactWidth.current, tileFormat),
             contentPadding = PaddingValues(horizontal = if (io.github.thecodingdad.gamelodge.ui.components.LocalCompactWidth.current) 16.dp else 36.dp, vertical = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(if (io.github.thecodingdad.gamelodge.ui.components.LocalCompactWidth.current) 12.dp else 18.dp),
             verticalArrangement = Arrangement.spacedBy(22.dp),
@@ -238,6 +239,7 @@ fun LibraryScreen(
                     onFocused = { focused.value = entry; focusByFilter[filterKey] = entry.item.id; onFocusKey(key); snapTo(index) },
                     showTitle = true,
                     animated = animatedArtwork,
+                    format = tileFormat,
                     modifier = Modifier.restoreFocusIf(entry.item.id == targetId).focusAfterBrowse(entry.item.id),
                 )
             }

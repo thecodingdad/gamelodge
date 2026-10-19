@@ -122,7 +122,7 @@ private val settingsIndex: List<SearchEntry> = buildList {
     addAll(page(SettingsPageId.HOME_SCREEN, Res.string.setting_start_tab, Res.string.home_rows_section, Res.string.home_row_ha))
     addAll(page(SettingsPageId.THEME, Res.string.setting_theme, Res.string.setting_accent, Res.string.setting_accent_color))
     addAll(page(
-        SettingsPageId.DISPLAY, Res.string.setting_card_size, Res.string.setting_animated_artwork, Res.string.setting_reduce_motion,
+        SettingsPageId.DISPLAY, Res.string.setting_card_size, Res.string.setting_tile_format_home, Res.string.setting_tile_format_library, Res.string.setting_animated_artwork, Res.string.setting_reduce_motion,
         Res.string.setting_ui_scale, Res.string.setting_screensaver,
     ))
     addAll(page(SettingsPageId.DISPLAY, Res.string.setting_hide_nav_bar, device = true))

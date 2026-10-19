@@ -255,6 +255,24 @@ fun DisplaySettings(
             onSelect = { v -> update { it.copy(cardSize = v) } },
             initialFocus = true,
         )
+        val formatLabel: @Composable (io.github.thecodingdad.gamelodge.data.settings.TileFormat) -> String = {
+            stringResource(
+                when (it) {
+                    io.github.thecodingdad.gamelodge.data.settings.TileFormat.PORTRAIT -> Res.string.tile_portrait
+                    io.github.thecodingdad.gamelodge.data.settings.TileFormat.LANDSCAPE -> Res.string.tile_landscape
+                    io.github.thecodingdad.gamelodge.data.settings.TileFormat.SQUARE -> Res.string.tile_square
+                },
+            )
+        }
+        ChoiceRow(
+            stringResource(Res.string.setting_tile_format_home), io.github.thecodingdad.gamelodge.data.settings.TileFormat.entries, settings.homeTileFormat,
+            label = formatLabel, onSelect = { v -> update { it.copy(homeTileFormat = v) } },
+            subtitle = stringResource(Res.string.setting_tile_format_home_sub),
+        )
+        ChoiceRow(
+            stringResource(Res.string.setting_tile_format_library), io.github.thecodingdad.gamelodge.data.settings.TileFormat.entries, settings.libraryTileFormat,
+            label = formatLabel, onSelect = { v -> update { it.copy(libraryTileFormat = v) } },
+        )
         // Switched on again: games matched meanwhile get their animated artwork looked up.
         SwitchRow(stringResource(Res.string.setting_animated_artwork), settings.animatedArtwork, { v -> update { it.copy(animatedArtwork = v, animatedBackfillDone = it.animatedBackfillDone && v) } })
         if (settings.animatedArtwork) {

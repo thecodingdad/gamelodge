@@ -82,7 +82,10 @@ data class LibraryItemEntity(
     val manualFields: String? = null,
     /** 1 = the IGDB fields of schema v3 were fetched for this match. */
     val metadataVersion: Int = 0,
-    /** Apps: landscape tile for the start tab (SteamGridDB, own image); null = TV banner or generated. */
+    /**
+     * Landscape (16:9) tile: apps on the start tab and games with the landscape tile format
+     * (SteamGridDB, Android TV banner, generated, own image). Null = automatic stand-in.
+     */
     val tileUrl: String? = null,
     // --- added in schema v9 ---
     /** Time to beat from IGDB in seconds: main story and completely (100 %). */
@@ -92,6 +95,9 @@ data class LibraryItemEntity(
     val timeToBeatIgdbId: Long? = null,
     /** When the times were last looked up (IGDB adds them over time). */
     val timeToBeatCheckedAt: Long? = null,
+    // --- added in schema v10 ---
+    /** Square tile for the square tile format; null = automatic stand-in. */
+    val squareUrl: String? = null,
 ) {
     /** Times to beat of the current match only. */
     val timesToBeatCurrent: Boolean get() = igdbId != null && timeToBeatIgdbId == igdbId
@@ -102,7 +108,7 @@ data class LibraryItemEntity(
 enum class MetaField {
     TITLE, DESCRIPTION, GENRES, DEVELOPER, PUBLISHER, SERIES, FEATURES, RELEASE, RATING, AGE_RATING,
     // Images picked by hand.
-    COVER, HERO, LOGO, ICON, ANIMATED_COVER, ANIMATED_HERO,
+    COVER, HERO, LOGO, ICON, ANIMATED_COVER, ANIMATED_HERO, LANDSCAPE, SQUARE,
 }
 
 /** Where [LibraryItemEntity.platform] came from; higher sources are never overwritten by lower ones. */
@@ -277,5 +283,7 @@ fun LibraryItemEntity.clearedMetadata(): LibraryItemEntity {
         coverUrl = coverUrl.takeIf { MetaField.COVER in m }, animatedCoverUrl = animatedCoverUrl.takeIf { MetaField.ANIMATED_COVER in m },
         heroUrl = heroUrl.takeIf { MetaField.HERO in m }, animatedHeroUrl = animatedHeroUrl.takeIf { MetaField.ANIMATED_HERO in m },
         logoUrl = logoUrl.takeIf { MetaField.LOGO in m }, iconUrl = iconUrl.takeIf { MetaField.ICON in m },
+        // App tiles were picked by hand before they were tracked as such.
+        tileUrl = tileUrl.takeIf { MetaField.LANDSCAPE in m || kind == ItemKind.APP }, squareUrl = squareUrl.takeIf { MetaField.SQUARE in m },
     )
 }

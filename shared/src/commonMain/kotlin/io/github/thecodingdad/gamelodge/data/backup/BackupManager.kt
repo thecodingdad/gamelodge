@@ -69,8 +69,9 @@ data class ItemBackup(
     val animatedHeroUrl: String?,
     /** Only manual platform choices are kept; automatic ones are detected again. */
     val manualPlatform: String? = null,
-    /** App tile from SteamGridDB (own images are files on the device and stay there). */
+    /** Landscape and square tiles from SteamGridDB (own images are files on the device and stay there). */
     val tileUrl: String? = null,
+    val squareUrl: String? = null,
 )
 
 @Serializable
@@ -159,7 +160,7 @@ class BackupManager(
                 .filter {
                     it.favorite || it.hidden || it.kindSource == KindSource.MANUAL || it.playtimeSeconds > 0 ||
                         it.metadataState != MetadataState.NONE || it.platformSource == PlatformSource.MANUAL ||
-                        it.tileUrl?.startsWith("http") == true
+                        it.tileUrl?.startsWith("http") == true || it.squareUrl?.startsWith("http") == true
                 }
                 .map {
                     ItemBackup(
@@ -169,6 +170,7 @@ class BackupManager(
                         it.animatedCoverUrl, it.animatedHeroUrl,
                         manualPlatform = it.platform.takeIf { _ -> it.platformSource == PlatformSource.MANUAL },
                         tileUrl = it.tileUrl?.takeIf { url -> url.startsWith("http") },
+                        squareUrl = it.squareUrl?.takeIf { url -> url.startsWith("http") },
                     )
                 },
             collections = collections.sortedBy { it.sortOrder }.map { c ->
@@ -246,6 +248,7 @@ class BackupManager(
                     animatedCoverUrl = b.animatedCoverUrl, animatedHeroUrl = b.animatedHeroUrl,
                     platform = b.manualPlatform ?: existing.platform,
                     tileUrl = b.tileUrl ?: existing.tileUrl,
+                    squareUrl = b.squareUrl ?: existing.squareUrl,
                     platformSource = if (b.manualPlatform != null) PlatformSource.MANUAL else existing.platformSource,
                 ),
             )
