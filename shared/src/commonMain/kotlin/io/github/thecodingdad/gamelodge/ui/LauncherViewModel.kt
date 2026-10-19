@@ -195,6 +195,11 @@ class LauncherViewModel(private val c: LauncherContainer) : ViewModel() {
         lastInteraction.value = System.currentTimeMillis()
     }
 
+    /** [touch] for frequent input (mouse moves): at most once a second. */
+    fun touchThrottled() {
+        if (System.currentTimeMillis() - lastInteraction.value >= 1000) touch()
+    }
+
     /** Selected main tab; lives here so the Home button can reset it from the activity. */
     val tabState = androidx.compose.runtime.mutableIntStateOf(0)
 

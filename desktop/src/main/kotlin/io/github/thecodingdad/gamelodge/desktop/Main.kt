@@ -268,6 +268,8 @@ fun main(args: Array<String>) {
                     awaitPointerEventScope {
                         while (true) {
                             val event = awaitPointerEvent(androidx.compose.ui.input.pointer.PointerEventPass.Initial)
+                            // Moving, clicking and scrolling with the mouse is using the launcher too (screensaver).
+                            vm.touchThrottled()
                             if (event.type == androidx.compose.ui.input.pointer.PointerEventType.Press) gamepads.otherInput()
                             if (event.type == androidx.compose.ui.input.pointer.PointerEventType.Press &&
                                 modeManager.inputMode != androidx.compose.ui.input.InputMode.Touch
