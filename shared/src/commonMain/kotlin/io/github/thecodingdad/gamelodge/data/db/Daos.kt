@@ -76,6 +76,9 @@ interface LibraryDao {
     @Query("UPDATE library_items SET platform = :platform, platformSource = :source WHERE id = :id")
     suspend fun setPlatform(id: String, platform: String?, source: PlatformSource?)
 
+    @Query("UPDATE library_items SET timeToBeatMain = :main, timeToBeatComplete = :complete, timeToBeatIgdbId = :igdbId, timeToBeatCheckedAt = :at WHERE id = :id")
+    suspend fun setTimeToBeat(id: String, main: Int?, complete: Int?, igdbId: Long, at: Long)
+
     @Query("UPDATE library_items SET playniteCategories = :categories, playnitePlugin = :plugin WHERE id = :id")
     suspend fun setPlayniteInfo(id: String, categories: String?, plugin: String?)
 

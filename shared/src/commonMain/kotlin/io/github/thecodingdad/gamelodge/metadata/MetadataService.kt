@@ -227,6 +227,7 @@ class MetadataService(
             runCatching { rematchUnofficial() }.onFailure { Log.w("Re-matching mods failed", it) }
             runCatching { backfillPlatforms() }.onFailure { Log.w("Platform backfill failed", it) }
             runCatching { backfillDetails() }.onFailure { Log.w("Metadata details backfill failed", it) }
+            runCatching { refreshTimesToBeat() }.onFailure { Log.w("Time to beat lookup failed", it) }
             runCatching { fillArtworkGaps() }.onFailure { Log.w("Artwork gap fill failed", it) }
             runCatching { backfillAnimated() }.onFailure { Log.w("Animated artwork backfill failed", it) }
             runCatching { dropAppMetadata() }.onFailure { Log.w("App metadata cleanup failed", it) }
@@ -248,6 +249,28 @@ class MetadataService(
                 if (PlatformResolver.mayReplace(entry.item, PlatformSource.IGDB, platform)) {
                     dao.setPlatform(entry.item.id, platform, PlatformSource.IGDB)
                 }
+            }
+            delay(300)
+        }
+    }
+
+    /**
+     * Times to beat (main story, completely) for games whose IGDB match has none yet, 100 per
+     * request; games without times on IGDB are asked again after a while (IGDB adds them over time).
+     */
+    private suspend fun refreshTimesToBeat() {
+        if (!igdb.isConfigured) return
+        val now = System.currentTimeMillis()
+        val due = dao.observeAll().first().map { it.item }.filter { item ->
+            val id = item.igdbId ?: return@filter false
+            item.timeToBeatIgdbId != id ||
+                (item.timeToBeatMain == null && item.timeToBeatComplete == null && now - (item.timeToBeatCheckedAt ?: 0L) > TIME_TO_BEAT_RECHECK_MS)
+        }
+        due.groupBy { it.igdbId!! }.entries.chunked(100).forEach { chunk ->
+            val times = igdb.timesToBeat(chunk.map { it.key }).associateBy { it.game_id }
+            chunk.forEach { (igdbId, items) ->
+                val t = times[igdbId]
+                items.forEach { dao.setTimeToBeat(it.id, t?.normally?.takeIf { s -> s > 0 }, t?.completely?.takeIf { s -> s > 0 }, igdbId, now) }
             }
             delay(300)
         }
@@ -342,6 +365,7 @@ class MetadataService(
                     }
                     delay(250)
                 }
+                runCatching { refreshTimesToBeat() }.onFailure { Log.w("Time to beat lookup failed", it) }
             } finally {
                 setProgress(null)
                 mutex.unlock()
@@ -504,6 +528,8 @@ class MetadataService(
         }
         dao.upsertItem(updated.copy(metadataState = MetadataState.LOCKED, matchConfidence = 1f, metadataQuery = candidate.name))
         corrected(itemId)
+        // The new match's times to beat.
+        runCatching { refreshTimesToBeat() }.onFailure { Log.w("Time to beat lookup failed", it) }
     }
 
     /**
@@ -885,6 +911,9 @@ class MetadataService(
  * on the same counter).
  */
 private const val IGDB_LOOKUP_VERSION = 4
+
+/** Games without times to beat on IGDB are asked again after 30 days. */
+private const val TIME_TO_BEAT_RECHECK_MS = 30L * 24 * 60 * 60 * 1000
 
 /** Games with an IGDB match got the SteamGridDB gap fill via their IGDB titles (3). */
 private const val ART_FILL_VERSION = 3

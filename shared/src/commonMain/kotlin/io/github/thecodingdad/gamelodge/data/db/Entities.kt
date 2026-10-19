@@ -84,7 +84,17 @@ data class LibraryItemEntity(
     val metadataVersion: Int = 0,
     /** Apps: landscape tile for the start tab (SteamGridDB, own image); null = TV banner or generated. */
     val tileUrl: String? = null,
+    // --- added in schema v9 ---
+    /** Time to beat from IGDB in seconds: main story and completely (100 %). */
+    val timeToBeatMain: Int? = null,
+    val timeToBeatComplete: Int? = null,
+    /** The IGDB match these times belong to (looked up again after a new match). */
+    val timeToBeatIgdbId: Long? = null,
+    /** When the times were last looked up (IGDB adds them over time). */
+    val timeToBeatCheckedAt: Long? = null,
 ) {
+    /** Times to beat of the current match only. */
+    val timesToBeatCurrent: Boolean get() = igdbId != null && timeToBeatIgdbId == igdbId
     val manual: Set<MetaField> get() = manualFields.orEmpty().split(',').mapNotNull { n -> MetaField.entries.firstOrNull { it.name == n } }.toSet()
 }
 

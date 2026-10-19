@@ -27,6 +27,10 @@ data class IgdbGameType(val type: String? = null)
 @Serializable
 data class IgdbGameRef(val game: Long? = null)
 
+/** Time to beat of a game in seconds (game_time_to_beats). */
+@Serializable
+data class IgdbTimeToBeat(val game_id: Long? = null, val normally: Int? = null, val completely: Int? = null)
+
 @Serializable
 data class IgdbRatingCategory(val rating: String? = null)
 
@@ -159,6 +163,11 @@ class IgdbClient(
     private fun escape(text: String) = text.replace("\\", "").replace("\"", "\\\"")
 
     fun byId(id: Long): IgdbGame? = post("games", "fields $GAME_FIELDS; where id = $id;").firstOrNull()
+
+    /** Times to beat of several games at once (main story and completely), 100 per request. */
+    fun timesToBeat(ids: List<Long>): List<IgdbTimeToBeat> =
+        if (ids.isEmpty()) emptyList()
+        else postRaw("game_time_to_beats", "fields game_id,normally,completely; where game_id = (${ids.joinToString(",")}); limit ${ids.size};")
 
     /** The text fields of several games at once (backfill of fields added later), 100 per request. */
     fun details(ids: List<Long>): List<IgdbGame> =

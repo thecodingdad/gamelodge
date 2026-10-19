@@ -16,7 +16,7 @@ import androidx.room.RoomDatabaseConstructor
         HaTileEntity::class,
         FilterEntity::class,
     ],
-    version = 8,
+    version = 9,
     exportSchema = true,
 )
 @ConstructedBy(LauncherDatabaseConstructor::class)
@@ -33,4 +33,15 @@ abstract class LauncherDatabase : RoomDatabase() {
 @Suppress("NO_ACTUAL_FOR_EXPECT", "KotlinNoActualForExpect")
 expect object LauncherDatabaseConstructor : RoomDatabaseConstructor<LauncherDatabase> {
     override fun initialize(): LauncherDatabase
+}
+
+/** Schema changes as SQL, for the Android and the desktop migrations alike. */
+object SchemaChanges {
+    /** v9: time to beat (IGDB). */
+    val V8_TO_V9 = listOf(
+        "ALTER TABLE library_items ADD COLUMN timeToBeatMain INTEGER",
+        "ALTER TABLE library_items ADD COLUMN timeToBeatComplete INTEGER",
+        "ALTER TABLE library_items ADD COLUMN timeToBeatIgdbId INTEGER",
+        "ALTER TABLE library_items ADD COLUMN timeToBeatCheckedAt INTEGER",
+    )
 }

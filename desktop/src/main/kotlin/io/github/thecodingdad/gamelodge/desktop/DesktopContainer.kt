@@ -57,6 +57,7 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
         Room.databaseBuilder<LauncherDatabase>(File(dataDir, "launcher.db").absolutePath)
             .setDriver(BundledSQLiteDriver())
             .setQueryCoroutineContext(Dispatchers.IO)
+            .addMigrations(MIGRATION_8_9)
             .build()
     }
     override val settings: SettingsRepository by lazy {
@@ -228,5 +229,14 @@ class StoredClientIdentity(private val secrets: SecretStore) : ClientIdentity {
     private companion object {
         const val KEY = "client_identity_key"
         const val CERT = "client_identity_cert"
+    }
+}
+
+/** Desktop databases start at v8 (the first desktop version). */
+internal val MIGRATION_8_9 = object : androidx.room.migration.Migration(8, 9) {
+    override fun migrate(connection: androidx.sqlite.SQLiteConnection) {
+        io.github.thecodingdad.gamelodge.data.db.SchemaChanges.V8_TO_V9.forEach { sql ->
+            connection.prepare(sql).use { it.step() }
+        }
     }
 }

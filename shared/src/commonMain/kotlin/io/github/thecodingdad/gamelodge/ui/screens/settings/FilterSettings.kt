@@ -478,6 +478,7 @@ private fun sortLabel(sort: LibrarySort?): String = stringResource(
         LibrarySort.LAST_PLAYED -> Res.string.filter_sort_last_played
         LibrarySort.ADDED -> Res.string.filter_sort_added
         LibrarySort.PLAYTIME -> Res.string.filter_sort_playtime
+        LibrarySort.TIME_TO_BEAT -> Res.string.filter_sort_time_to_beat
         LibrarySort.MANUAL -> Res.string.filter_sort_manual
     },
 )
@@ -501,6 +502,7 @@ private fun fieldLabel(field: FilterField): String = stringResource(
         FilterField.AGE_RATING -> Res.string.filter_field_age_rating
         FilterField.RELEASE_YEAR -> Res.string.filter_field_release_year
         FilterField.RATING -> Res.string.filter_field_rating
+        FilterField.TIME_TO_BEAT -> Res.string.filter_field_time_to_beat
         FilterField.PLAYED -> Res.string.filter_field_played
         FilterField.LAST_PLAYED -> Res.string.filter_field_last_played
         FilterField.PLAYTIME -> Res.string.filter_field_playtime
@@ -666,6 +668,17 @@ private fun bucketLabel(field: FilterField, key: String): String = when (field) 
             "10to100" -> Res.string.filter_playtime_10to100
             "100to500" -> Res.string.filter_playtime_100to500
             else -> Res.string.filter_playtime_gt500
+        },
+    )
+    FilterField.TIME_TO_BEAT -> stringResource(
+        when (key) {
+            "lt5" -> Res.string.filter_ttb_lt5
+            "5to10" -> Res.string.filter_ttb_5to10
+            "10to20" -> Res.string.filter_ttb_10to20
+            "20to40" -> Res.string.filter_ttb_20to40
+            "40to80" -> Res.string.filter_ttb_40to80
+            "gt80" -> Res.string.filter_ttb_gt80
+            else -> Res.string.filter_ttb_none
         },
     )
     FilterField.RATING -> when (key) {

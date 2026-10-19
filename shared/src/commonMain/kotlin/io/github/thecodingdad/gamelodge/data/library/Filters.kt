@@ -49,6 +49,8 @@ enum class FilterField(val type: FieldType, val section: FieldSection, val multi
     AGE_RATING(FieldType.LIST, FieldSection.METADATA),
     RELEASE_YEAR(FieldType.LIST, FieldSection.METADATA),
     RATING(FieldType.BUCKET, FieldSection.METADATA),
+    /** Main story time to beat (IGDB). */
+    TIME_TO_BEAT(FieldType.BUCKET, FieldSection.METADATA),
     PLAYED(FieldType.BOOLEAN, FieldSection.ACTIVITY),
     LAST_PLAYED(FieldType.BUCKET, FieldSection.ACTIVITY),
     PLAYTIME(FieldType.BUCKET, FieldSection.ACTIVITY),
@@ -68,6 +70,7 @@ enum class FilterField(val type: FieldType, val section: FieldSection, val multi
             LAST_PLAYED -> listOf("today", "yesterday", "week", "month", "year", "older", "never")
             ADDED -> listOf("today", "week", "month", "year", "older")
             RATING -> listOf("90", "80", "70", "60", "lt60", "none")
+            TIME_TO_BEAT -> listOf("lt5", "5to10", "10to20", "20to40", "40to80", "gt80", "none")
             else -> emptyList()
         }
 }
@@ -202,7 +205,7 @@ object BuiltinFilter {
 }
 
 /** [MANUAL]: the filter's own order (a group's manual order); only offered for groups. */
-enum class LibrarySort { TITLE, LAST_PLAYED, ADDED, PLAYTIME, MANUAL }
+enum class LibrarySort { TITLE, LAST_PLAYED, ADDED, PLAYTIME, TIME_TO_BEAT, MANUAL }
 
 /** Where a filter is being shown; decides which items it sees. */
 enum class FilterPlace { LIBRARY, HOME, APPS }
@@ -381,6 +384,20 @@ object FilterEngine {
                     },
                 )
             }
+            FilterField.TIME_TO_BEAT -> {
+                val main = item.timeToBeatMain?.takeIf { item.timesToBeatCurrent } ?: return setOf("none")
+                val hours = main / 3600.0
+                setOf(
+                    when {
+                        hours < 5 -> "lt5"
+                        hours < 10 -> "5to10"
+                        hours < 20 -> "10to20"
+                        hours < 40 -> "20to40"
+                        hours < 80 -> "40to80"
+                        else -> "gt80"
+                    },
+                )
+            }
             FilterField.RATING -> {
                 val r = item.rating ?: return setOf("none")
                 buildSet {
@@ -452,6 +469,8 @@ object FilterEngine {
                     LibrarySort.LAST_PLAYED -> seq.sortedByDescending { it.item.lastPlayedAt ?: 0L }
                     LibrarySort.ADDED -> seq.sortedByDescending { it.item.addedAt }
                     LibrarySort.PLAYTIME -> seq.sortedByDescending { it.item.playtimeSeconds }
+                    // Shortest first; games without a time last.
+                    LibrarySort.TIME_TO_BEAT -> seq.sortedBy { e -> e.item.timeToBeatMain?.takeIf { e.item.timesToBeatCurrent } ?: Int.MAX_VALUE }
                     LibrarySort.MANUAL -> seq
                 }
             }

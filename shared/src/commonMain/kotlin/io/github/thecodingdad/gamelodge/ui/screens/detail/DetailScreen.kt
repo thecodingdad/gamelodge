@@ -269,6 +269,7 @@ private fun InfoBlock(entry: LibraryEntry, sessions: List<PlaySessionEntity>) {
         entry.item.features?.let { add(stringResource(Res.string.filter_field_feature) to it) }
         io.github.thecodingdad.gamelodge.metadata.AgeRatings.display(entry.item.ageRatings)?.let { add(stringResource(Res.string.filter_field_age_rating) to it) }
         entry.item.rating?.let { add(stringResource(Res.string.detail_rating) to "%.0f / 100".format(it)) }
+        timeToBeatText(entry.item)?.let { add(stringResource(Res.string.detail_time_to_beat) to it) }
         add(stringResource(Res.string.detail_available) to entry.targets.map { targetLabelText(it) }.joinToString(", "))
         entry.item.lastPlayedAt?.let { add(stringResource(Res.string.detail_last_played) to DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(it))) }
         if (sessions.isNotEmpty()) add(stringResource(Res.string.detail_sessions) to sessions.size.toString())
@@ -283,8 +284,37 @@ private fun InfoBlock(entry: LibraryEntry, sessions: List<PlaySessionEntity>) {
                 Text(value, style = MaterialTheme.typography.bodyMedium, color = colors.onSurface, modifier = Modifier.weight(1f))
             }
         }
+        // How far into the main story the own play time reaches.
+        val main = entry.item.timeToBeatMain?.takeIf { entry.item.timesToBeatCurrent }
+        if (main != null && entry.item.playtimeSeconds > 0) {
+            androidx.compose.foundation.layout.Spacer(Modifier.height(6.dp))
+            Text(
+                stringResource(Res.string.detail_time_progress, hoursText(entry.item.playtimeSeconds), hoursText(main.toLong())),
+                style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceMuted,
+            )
+            androidx.compose.material3.LinearProgressIndicator(
+                progress = { (entry.item.playtimeSeconds.toFloat() / main).coerceIn(0f, 1f) },
+                modifier = Modifier.fillMaxWidth(), color = colors.accent, trackColor = colors.surfaceRaised,
+            )
+        }
     }
 }
+
+/** "Story 25 h · Completely 60 h" for the current match, null without times. */
+@Composable
+private fun timeToBeatText(item: io.github.thecodingdad.gamelodge.data.db.LibraryItemEntity): String? {
+    if (!item.timesToBeatCurrent) return null
+    val parts = listOfNotNull(
+        item.timeToBeatMain?.let { stringResource(Res.string.detail_time_main, hoursText(it.toLong())) },
+        item.timeToBeatComplete?.let { stringResource(Res.string.detail_time_complete, hoursText(it.toLong())) },
+    )
+    return parts.joinToString(" · ").ifEmpty { null }
+}
+
+/** Whole hours ("25 h"), "under 1 h" below an hour. */
+@Composable
+private fun hoursText(seconds: Long): String =
+    if (seconds < 3600) stringResource(Res.string.time_under_hour) else stringResource(Res.string.time_hours, ((seconds + 1800) / 3600).toInt())
 
 @Composable
 private fun targetLabelText(t: io.github.thecodingdad.gamelodge.data.db.LaunchTargetEntity) = targetLabel(t)

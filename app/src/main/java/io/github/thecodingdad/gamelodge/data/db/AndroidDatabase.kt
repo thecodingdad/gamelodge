@@ -7,8 +7,15 @@ import androidx.room.Room
 object AndroidDatabase {
     fun create(context: Context): LauncherDatabase =
         Room.databaseBuilder(context, LauncherDatabase::class.java, "launcher.db")
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
             .build()
+
+    /** v9: time to beat. */
+    val MIGRATION_8_9 = object : androidx.room.migration.Migration(8, 9) {
+        override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+            SchemaChanges.V8_TO_V9.forEach(db::execSQL)
+        }
+    }
 
     /** v4: host API type/user (companion data from Vibepollo, Apollo or Sunshine), not installed targets. */
     /** v8: the host web API (Vibepollo/Apollo/Sunshine logins) is gone; the companion delivers its data. */

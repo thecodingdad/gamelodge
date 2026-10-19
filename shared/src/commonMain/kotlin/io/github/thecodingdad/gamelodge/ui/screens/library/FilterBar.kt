@@ -193,6 +193,7 @@ fun sortLabel(sort: LibrarySort): String = stringResource(
         LibrarySort.LAST_PLAYED -> Res.string.sort_last_played
         LibrarySort.ADDED -> Res.string.sort_added
         LibrarySort.PLAYTIME -> Res.string.sort_playtime
+        LibrarySort.TIME_TO_BEAT -> Res.string.sort_time_to_beat
         LibrarySort.MANUAL -> Res.string.sort_manual
     },
 )
