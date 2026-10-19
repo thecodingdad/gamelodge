@@ -120,7 +120,7 @@ class ArtworkStore(
         val wanted = dao.observeAll().map { entries ->
             val items = entries.map { it.item }
             Wanted(
-                items.flatMap { listOf(it.coverUrl, it.heroUrl, it.logoUrl, it.iconUrl) }.filterWeb(),
+                items.flatMap { listOf(it.coverUrl, it.heroUrl, it.logoUrl, it.iconUrl, it.tileUrl, it.squareUrl) }.filterWeb(),
                 items.flatMap { listOf(it.animatedCoverUrl, it.animatedHeroUrl) }.filterWeb(),
             )
         }.distinctUntilChanged()

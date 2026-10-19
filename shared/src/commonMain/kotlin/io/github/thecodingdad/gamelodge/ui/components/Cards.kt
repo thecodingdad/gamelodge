@@ -82,7 +82,7 @@ fun CoverCard(
             onClick = onClick,
             onLongClick = onLongClick,
             onFocused = onFocused,
-            modifier = Modifier.fillMaxWidth().aspectRatio(format.aspectRatio),
+            modifier = Modifier.fillMaxWidth().aspectRatio(format.aspectRatio(entry.item.kind == io.github.thecodingdad.gamelodge.data.db.ItemKind.APP)),
         ) { focused ->
             val play = animated && (LocalAnimatedTilesAlways.current || (focused && isControllerMode()))
             TileImage(entry, format, Modifier.fillMaxSize(), animated = play)
@@ -129,17 +129,23 @@ class CoverColumns(private val mediumCell: Dp, private val step: Int) : androidx
     override fun hashCode() = 31 * mediumCell.hashCode() + step
 }
 
-/** Width : height of a tile in [this] format. */
-val io.github.thecodingdad.gamelodge.data.settings.TileFormat.aspectRatio: Float get() = when (this) {
+/** Landscape game tiles: the shape of Steam / SteamGridDB banners (920×430). */
+const val GAME_LANDSCAPE_RATIO = 92f / 43f
+
+/** App tiles: the shape of Android TV banners. */
+const val APP_LANDSCAPE_RATIO = 16f / 9f
+
+/** Width : height of a tile in [this] format ([app]: landscape app tiles keep 16:9). */
+fun io.github.thecodingdad.gamelodge.data.settings.TileFormat.aspectRatio(app: Boolean = false): Float = when (this) {
     io.github.thecodingdad.gamelodge.data.settings.TileFormat.PORTRAIT -> 2f / 3f
-    io.github.thecodingdad.gamelodge.data.settings.TileFormat.LANDSCAPE -> 16f / 9f
+    io.github.thecodingdad.gamelodge.data.settings.TileFormat.LANDSCAPE -> if (app) APP_LANDSCAPE_RATIO else GAME_LANDSCAPE_RATIO
     io.github.thecodingdad.gamelodge.data.settings.TileFormat.SQUARE -> 1f
 }
 
 /** Tile width relative to a cover's, so all formats have a similar weight on screen. */
 val io.github.thecodingdad.gamelodge.data.settings.TileFormat.widthFactor: Float get() = when (this) {
     io.github.thecodingdad.gamelodge.data.settings.TileFormat.PORTRAIT -> 1f
-    io.github.thecodingdad.gamelodge.data.settings.TileFormat.LANDSCAPE -> 1.95f
+    io.github.thecodingdad.gamelodge.data.settings.TileFormat.LANDSCAPE -> 2.1f
     io.github.thecodingdad.gamelodge.data.settings.TileFormat.SQUARE -> 1.25f
 }
 
@@ -173,7 +179,7 @@ fun AppTileCard(
         onClick = onClick,
         onLongClick = onLongClick,
         onFocused = onFocused,
-        modifier = modifier.width(width).aspectRatio(16f / 9f),
+        modifier = modifier.width(width).aspectRatio(APP_LANDSCAPE_RATIO),
     ) {
         AppTileImage(entry, Modifier.fillMaxSize())
         if (entry.item.favorite) {

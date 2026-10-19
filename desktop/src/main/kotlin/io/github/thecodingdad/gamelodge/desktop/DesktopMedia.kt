@@ -84,6 +84,50 @@ object DesktopArtwork : ArtworkPlatform {
     /** Store covers are web addresses, host box art and own images files. */
     override fun imageModel(value: String): Any = if (value.startsWith("http://") || value.startsWith("https://")) value else File(value)
 
+    /** Tiles generated from the cover / box art (no app icons or TV banners on Windows), in every fit. */
+    override suspend fun localTiles(
+        packageName: String?, source: Any?, ratio: Float, dir: File, name: String,
+    ): List<io.github.thecodingdad.gamelodge.ui.components.LocalTile> {
+        source ?: return emptyList()
+        val context = PlatformContext.INSTANCE
+        val request = ImageRequest.Builder(context).data(source).size(1024).memoryCachePolicy(coil3.request.CachePolicy.DISABLED).build()
+        val bitmap = (SingletonImageLoader.get(context).execute(request) as? SuccessResult)?.image?.toBitmap() ?: return emptyList()
+        val image = org.jetbrains.skia.Image.makeFromBitmap(bitmap)
+        val base = (accentColor(source) ?: Color(0xFF444444)).let { org.jetbrains.skia.Color.makeARGB(255, (it.red * 255).toInt(), (it.green * 255).toInt(), (it.blue * 255).toInt()) }
+        val dark = org.jetbrains.skia.Color.makeARGB(
+            255, org.jetbrains.skia.Color.getR(base) / 2, org.jetbrains.skia.Color.getG(base) / 2, org.jetbrains.skia.Color.getB(base) / 2,
+        )
+        val w = if (ratio > 2f) 920 else 640
+        val h = (w / ratio).toInt()
+        dir.mkdirs()
+        return io.github.thecodingdad.gamelodge.ui.components.TileFit.entries.mapIndexedNotNull { index, fit ->
+            val surface = org.jetbrains.skia.Surface.makeRasterN32Premul(w, h)
+            val canvas = surface.canvas
+            val paint = org.jetbrains.skia.Paint()
+            val sampling = org.jetbrains.skia.SamplingMode.LINEAR
+            if (fit == io.github.thecodingdad.gamelodge.ui.components.TileFit.FIT) {
+                // Like on Android: a gradient in the image's main colour, the image whole in the middle.
+                paint.shader = org.jetbrains.skia.Shader.makeLinearGradient(0f, 0f, w.toFloat(), h.toFloat(), intArrayOf(base, dark))
+                canvas.drawRect(org.jetbrains.skia.Rect.makeWH(w.toFloat(), h.toFloat()), paint)
+                paint.shader = null
+                val scale = minOf(w, h) * 0.6f / maxOf(image.width, image.height)
+                val iw = image.width * scale
+                val ih = image.height * scale
+                canvas.drawImageRect(image, org.jetbrains.skia.Rect.makeWH(image.width.toFloat(), image.height.toFloat()), org.jetbrains.skia.Rect.makeXYWH((w - iw) / 2, (h - ih) / 2, iw, ih), sampling, paint, true)
+            } else {
+                val (l, tp, r, b) = io.github.thecodingdad.gamelodge.ui.components.fillCrop(image.width, image.height, ratio, fit).toList()
+                canvas.drawImageRect(
+                    image, org.jetbrains.skia.Rect.makeLTRB(l.toFloat(), tp.toFloat(), r.toFloat(), b.toFloat()),
+                    org.jetbrains.skia.Rect.makeWH(w.toFloat(), h.toFloat()), sampling, paint, true,
+                )
+            }
+            val bytes = surface.makeImageSnapshot().encodeToData(org.jetbrains.skia.EncodedImageFormat.PNG)?.bytes ?: return@mapIndexedNotNull null
+            val file = File(dir, "$name-$index.png")
+            runCatching { file.writeBytes(bytes) }.getOrNull() ?: return@mapIndexedNotNull null
+            io.github.thecodingdad.gamelodge.ui.components.LocalTile(io.github.thecodingdad.gamelodge.metadata.ArtworkSource.GENERATED, file, fit)
+        }
+    }
+
     override suspend fun accentColor(model: Any): Color? {
         val context = PlatformContext.INSTANCE
         // Small and not kept in the memory cache (it would push out images that are shown).

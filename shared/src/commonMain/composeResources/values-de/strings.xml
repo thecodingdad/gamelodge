@@ -1141,8 +1141,6 @@
     <string name="host_progress_metadata">Suche Metadaten: %1$d von %2$d</string>
     <string name="app_tile_title">Kachel im Start-Tab</string>
     <string name="app_tile_help">Wird gezeigt, wenn die App in einer Reihe des Start-Tabs steht.</string>
-    <string name="artwork_landscape">Querformat</string>
-    <string name="artwork_square">Quadrat</string>
     <string name="artwork_source_tv_banner">Android-TV-Banner</string>
     <string name="artwork_source_generated">Generiert</string>
     <string name="artwork_tile_auto">automatisch: Hintergrund mit Logo, sonst das Cover</string>
@@ -1154,4 +1152,9 @@
     <string name="tile_portrait">Hochformat</string>
     <string name="tile_landscape">Querformat</string>
     <string name="tile_square">Quadrat</string>
+    <string name="task_tiles">Kacheln suchen</string>
+    <string name="artwork_fit_whole">eingepasst</string>
+    <string name="artwork_fit_top">gestreckt, oben</string>
+    <string name="artwork_fit_center">gestreckt, mittig</string>
+    <string name="artwork_fit_bottom">gestreckt, unten</string>
 </resources>

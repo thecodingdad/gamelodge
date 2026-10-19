@@ -805,8 +805,14 @@ class MetadataService(
             it.kind == ItemKind.GAME && it.metadataState != MetadataState.NONE &&
                 ((wide && it.tileUrl == null && MetaField.LANDSCAPE !in it.manual) || (square && it.squareUrl == null && MetaField.SQUARE !in it.manual))
         }
-        for (item in items) {
+        val tasks = io.github.thecodingdad.gamelodge.data.tasks.BackgroundTasks
+        fun report(done: Int) = tasks.set(
+            io.github.thecodingdad.gamelodge.data.tasks.BackgroundTask(TILES_TASK_ID, io.github.thecodingdad.gamelodge.resources.Res.string.task_tiles, done = done, total = items.size),
+        )
+        try {
+        for ((index, item) in items.withIndex()) {
             if (!landscapeTiles && !squareTiles) return
+            report(index)
             try {
                 val fresh = dao.getItem(item.id) ?: continue
                 val gameId = fresh.sgdbId ?: sgdb.search(searchQuery(fresh)).firstOrNull()?.id ?: continue
@@ -818,7 +824,10 @@ class MetadataService(
             } catch (e: Exception) {
                 Log.w("Tiles for ${item.title} failed", e)
             }
-            delay(300)
+            delay(150)
+        }
+        } finally {
+            tasks.remove(TILES_TASK_ID)
         }
         settings.update { it.copy(landscapeBackfillDone = it.landscapeBackfillDone || wide, squareBackfillDone = it.squareBackfillDone || square) }
     }
@@ -975,3 +984,6 @@ private const val REMATCH_RULE = 2
 
 /** Background task id of the metadata lookups. */
 private const val TASK_ID = "metadata"
+
+/** Background task id of looking up landscape / square tiles. */
+private const val TILES_TASK_ID = "tiles"

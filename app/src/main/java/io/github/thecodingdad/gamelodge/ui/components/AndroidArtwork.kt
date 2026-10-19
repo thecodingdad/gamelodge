@@ -38,29 +38,31 @@ class AndroidArtwork(private val context: Context) : ArtworkPlatform {
         return generatedTile(art)
     }
 
-    override suspend fun localTiles(
-        packageName: String?, source: Any?, dir: File, name: String,
-    ): List<Pair<io.github.thecodingdad.gamelodge.metadata.ArtworkSource, File>> {
-        val tiles = mutableListOf<Pair<io.github.thecodingdad.gamelodge.metadata.ArtworkSource, Bitmap>>()
+    override suspend fun localTiles(packageName: String?, source: Any?, ratio: Float, dir: File, name: String): List<LocalTile> {
+        val w = if (ratio > 2f) 920 else 640
+        val h = (w / ratio).toInt()
+        val tiles = mutableListOf<Triple<io.github.thecodingdad.gamelodge.metadata.ArtworkSource, TileFit?, Bitmap>>()
+        val generated = io.github.thecodingdad.gamelodge.metadata.ArtworkSource.GENERATED
+        fun variants(image: Bitmap) {
+            tiles += Triple(generated, TileFit.FIT, generatedTile(image, w, h).asAndroidBitmap())
+            listOf(TileFit.TOP, TileFit.CENTER, TileFit.BOTTOM).forEach { tiles += Triple(generated, it, filledTile(image, w, h, it)) }
+        }
         if (packageName != null) {
             val pm = context.packageManager
             val banner = runCatching { pm.getApplicationBanner(packageName) }.getOrNull()
                 ?: pm.getLeanbackLaunchIntentForPackage(packageName)?.let { runCatching { pm.getActivityBanner(it) }.getOrNull() }
-            banner?.let { tiles += io.github.thecodingdad.gamelodge.metadata.ArtworkSource.TV_BANNER to it.toBitmap(640, 360) }
-            runCatching { pm.getApplicationIcon(packageName) }.getOrNull()?.let {
-                tiles += io.github.thecodingdad.gamelodge.metadata.ArtworkSource.GENERATED to generatedTile(it.toBitmap(256, 256)).asAndroidBitmap()
-            }
-        } else if (source != null) {
-            val request = ImageRequest.Builder(context).data(source).size(512).allowHardware(false).build()
-            (context.imageLoader.execute(request) as? SuccessResult)?.image?.toBitmap()?.let {
-                tiles += io.github.thecodingdad.gamelodge.metadata.ArtworkSource.GENERATED to generatedTile(it).asAndroidBitmap()
-            }
+            banner?.let { tiles += Triple(io.github.thecodingdad.gamelodge.metadata.ArtworkSource.TV_BANNER, null, it.toBitmap(640, 360)) }
+            runCatching { pm.getApplicationIcon(packageName) }.getOrNull()?.let { variants(it.toBitmap(256, 256)) }
+        }
+        if (source != null) {
+            val request = ImageRequest.Builder(context).data(source).size(1024).allowHardware(false).build()
+            (context.imageLoader.execute(request) as? SuccessResult)?.image?.toBitmap()?.let { variants(it) }
         }
         dir.mkdirs()
-        return tiles.mapNotNull { (kind, bitmap) ->
-            val file = File(dir, "$name-${kind.name.lowercase()}.png")
-            runCatching { file.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) } }.getOrNull() ?: return@mapNotNull null
-            kind to file
+        return tiles.mapIndexedNotNull { index, (kind, fit, bitmap) ->
+            val file = File(dir, "$name-$index.png")
+            runCatching { file.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) } }.getOrNull() ?: return@mapIndexedNotNull null
+            LocalTile(kind, file, fit)
         }
     }
 
@@ -135,6 +137,15 @@ private fun generatedHero(drawable: android.graphics.drawable.Drawable, portrait
     canvas.drawBitmap(glyph.extractAlpha(), null, android.graphics.RectF(rect).apply { offset(0f, size * 0.04f) }, shadow)
     canvas.drawBitmap(glyph, null, rect, paint)
     return out.asImageBitmap()
+}
+
+/** [image] filling a [w]×[h] tile, cut off at the side [fit] keeps (see [fillCrop]). */
+private fun filledTile(image: Bitmap, w: Int, h: Int, fit: TileFit): Bitmap {
+    val (l, tp, r, b) = fillCrop(image.width, image.height, w.toFloat() / h, fit).toList()
+    val out = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+    val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG or android.graphics.Paint.FILTER_BITMAP_FLAG)
+    android.graphics.Canvas(out).drawBitmap(image, android.graphics.Rect(l, tp, r, b), android.graphics.Rect(0, 0, w, h), paint)
+    return out
 }
 
 /** Gradient in the image's main colour with the image (icon / box art) centred; 16:9 by default. */

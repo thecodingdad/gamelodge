@@ -359,10 +359,10 @@ private fun androidx.compose.foundation.lazy.LazyListScope.homeRow(
                 } else {
                     CoverCard(
                         entry = entry,
-                        // Landscape matches the app tiles beside it; portrait and square stay a bit smaller.
+                        // Landscape: as high as the app tiles beside it; portrait and square a bit smaller.
                         width = LauncherTheme.dimens.coverWidth * when (callbacks.tileFormat) {
                             io.github.thecodingdad.gamelodge.data.settings.TileFormat.PORTRAIT -> 0.82f
-                            io.github.thecodingdad.gamelodge.data.settings.TileFormat.LANDSCAPE -> 1.6f
+                            io.github.thecodingdad.gamelodge.data.settings.TileFormat.LANDSCAPE -> 1.6f / io.github.thecodingdad.gamelodge.ui.components.APP_LANDSCAPE_RATIO * io.github.thecodingdad.gamelodge.ui.components.GAME_LANDSCAPE_RATIO
                             io.github.thecodingdad.gamelodge.data.settings.TileFormat.SQUARE -> 1.0f
                         },
                         format = callbacks.tileFormat,

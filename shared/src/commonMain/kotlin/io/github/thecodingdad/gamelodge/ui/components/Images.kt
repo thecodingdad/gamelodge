@@ -149,6 +149,32 @@ fun TitlePlaceholder(title: String, modifier: Modifier = Modifier, showTitle: Bo
     }
 }
 
+/** How a generated tile places its image: whole on a gradient, or filling the tile aligned top / centre / bottom. */
+enum class TileFit { FIT, TOP, CENTER, BOTTOM }
+
+/** A tile made by the platform: where it came from, how it was laid out, its PNG file. */
+class LocalTile(val source: io.github.thecodingdad.gamelodge.metadata.ArtworkSource, val file: File, val fit: TileFit? = null)
+
+/**
+ * Source rectangle of a [w]×[h] image that fills a tile of [ratio] (width : height): the whole
+ * width or height, the rest cut off at the side [fit] keeps (top / centre / bottom; sideways centred).
+ */
+fun fillCrop(w: Int, h: Int, ratio: Float, fit: TileFit): IntArray {
+    return if (w.toFloat() / h > ratio) {
+        val cw = (h * ratio).toInt()
+        val x = (w - cw) / 2
+        intArrayOf(x, 0, x + cw, h)
+    } else {
+        val ch = (w / ratio).toInt()
+        val y = when (fit) {
+            TileFit.TOP, TileFit.FIT -> 0
+            TileFit.CENTER -> (h - ch) / 2
+            TileFit.BOTTOM -> h - ch
+        }
+        intArrayOf(0, y, w, y + ch)
+    }
+}
+
 /** Images the platform makes itself: app icons, generated tiles and backdrops, cover colours. */
 interface ArtworkPlatform {
     /** What the image loader gets for a stored path or platform address. */
@@ -158,11 +184,12 @@ interface ArtworkPlatform {
     /** Landscape tile of an app: its own banner, or one generated from its icon ([source]: box art of host apps). */
     suspend fun appTile(packageName: String?, source: Any?): ImageBitmap? = null
     /**
-     * Landscape tiles the platform can make, stored as PNG files in [dir] (named after [name]) to
-     * be offered in the picker: an app's Android TV banner and a tile generated from its icon
-     * ([source]: box art of host apps instead).
+     * Landscape tiles ([ratio] width : height) the platform can make, stored as PNG files in
+     * [dir] (named after [name]) to be offered in the picker: an app's Android TV banner, and
+     * tiles generated from its icon ([packageName]) and from [source] (cover / box art) in every
+     * [TileFit].
      */
-    suspend fun localTiles(packageName: String?, source: Any?, dir: File, name: String): List<Pair<io.github.thecodingdad.gamelodge.metadata.ArtworkSource, File>> = emptyList()
+    suspend fun localTiles(packageName: String?, source: Any?, ratio: Float, dir: File, name: String): List<LocalTile> = emptyList()
     /** Portrait cover generated from the icon of a local game without artwork. */
     suspend fun generatedCover(packageName: String): ImageBitmap? = null
     /** Wide backdrop generated from the icon of a local app or game without artwork. */

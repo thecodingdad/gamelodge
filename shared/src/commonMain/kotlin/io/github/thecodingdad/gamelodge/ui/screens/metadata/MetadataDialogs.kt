@@ -1,5 +1,7 @@
 package io.github.thecodingdad.gamelodge.ui.screens.metadata
 
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.border
 import io.github.thecodingdad.gamelodge.ui.components.coverModel
 import io.github.thecodingdad.gamelodge.ui.components.popupHeightIn
 import io.github.thecodingdad.gamelodge.ui.components.fadingEdges
@@ -181,7 +183,8 @@ fun ArtworkPickerDialog(
         // Animated cover / background have their own tabs (while animated artwork is wanted).
         val animatedOn = io.github.thecodingdad.gamelodge.LocalContainer.current.settings.settings.collectAsState(null).value?.animatedArtwork ?: true
         // Apps have no square tiles (they show as icons or landscape tiles).
-        val kinds = only ?: ArtworkKind.entries.filter { (animatedOn || !it.animated) && !(isApp && it == ArtworkKind.SQUARE) }
+        // The cover shapes side by side, then the rest.
+        val kinds = only ?: KIND_ORDER.filter { (animatedOn || !it.animated) && !(isApp && it == ArtworkKind.SQUARE) }
         var kindIndex by remember(target.id) { mutableStateOf(0) }
         val kind = kinds[kindIndex.coerceIn(kinds.indices)]
         androidx.compose.runtime.SideEffect { ownKind = kind }
@@ -205,17 +208,31 @@ fun ArtworkPickerDialog(
                 else -> null
             }
         }.distinctBy { it.url }
+        val wide = kind.base == ArtworkKind.HERO || kind == ArtworkKind.LANDSCAPE
+        // Logos and icons are shown whole (transparent, any shape).
+        val square = kind == ArtworkKind.LOGO || kind == ArtworkKind.ICON
+        val ratio = when (kind.base) {
+            ArtworkKind.HERO -> 1920f / 620f
+            ArtworkKind.LOGO -> 5f / 2f
+            ArtworkKind.ICON, ArtworkKind.SQUARE -> 1f
+            ArtworkKind.LANDSCAPE -> if (isApp) io.github.thecodingdad.gamelodge.ui.components.APP_LANDSCAPE_RATIO else io.github.thecodingdad.gamelodge.ui.components.GAME_LANDSCAPE_RATIO
+            else -> 2f / 3f
+        }
+        // How each generated tile lays out its image (shown on the tile).
+        var fits by remember(target.id) { mutableStateOf<Map<String, io.github.thecodingdad.gamelodge.ui.components.TileFit>>(emptyMap()) }
         LaunchedEffect(target.id, kind, appliedQuery) {
-            // Landscape: the app's TV banner and a tile made from its icon (host apps: their box art).
+            // Landscape: the app's TV banner and tiles made from its icon and from the cover / box art.
             val made = if (kind != ArtworkKind.LANDSCAPE) emptyList() else kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                 runCatching {
                     io.github.thecodingdad.gamelodge.ui.components.ArtworkPlatform.current.localTiles(
-                        entry.localTarget?.packageName, if (entry.localTarget == null) entry.coverModel() else null,
+                        entry.localTarget?.packageName, entry.coverModel(), ratio,
                         java.io.File(filesDir, "tile-choices"), "${target.id.hashCode().toUInt()}",
                     )
-                }.getOrDefault(emptyList()).map { (source, file) -> ArtworkOption(file.absolutePath, thumbOf(file.absolutePath), source) }
+                }.getOrDefault(emptyList())
             }
-            options = local + made + runCatching { metadata.artworkOptions(target, kind, appliedQuery) }.getOrDefault(emptyList())
+            fits = made.mapNotNull { t -> t.fit?.let { t.file.absolutePath to it } }.toMap()
+            options = local + made.map { ArtworkOption(it.file.absolutePath, thumbOf(it.file.absolutePath), it.source) } +
+                runCatching { metadata.artworkOptions(target, kind, appliedQuery) }.getOrDefault(emptyList())
         }
         // LB/RB like the library's filters: focus stays in the list (first image of the new tab)
         // or, while that is empty or loading, on the tab itself; it never gets lost.
@@ -245,16 +262,6 @@ fun ArtworkPickerDialog(
         val gridState = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
         io.github.thecodingdad.gamelodge.ui.input.RegisterStickScroll(gridState)
         LaunchedEffect(kindIndex) { gridState.scrollToItem(0) }
-        val wide = kind.base == ArtworkKind.HERO || kind == ArtworkKind.LANDSCAPE
-        // Logos and icons are shown whole (transparent, any shape).
-        val square = kind == ArtworkKind.LOGO || kind == ArtworkKind.ICON
-        val ratio = when (kind.base) {
-            ArtworkKind.HERO -> 1920f / 620f
-            ArtworkKind.LOGO -> 5f / 2f
-            ArtworkKind.ICON, ArtworkKind.SQUARE -> 1f
-            ArtworkKind.LANDSCAPE -> 16f / 9f
-            else -> 2f / 3f
-        }
 
         // Tabs and hints stay; current image and choices scroll together.
         Column(Modifier.weight(1f)) {
@@ -263,10 +270,21 @@ fun ArtworkPickerDialog(
                 Spacer(Modifier.height(12.dp))
             }
             if (kinds.size > 1) {
-                io.github.thecodingdad.gamelodge.ui.components.ButtonRow(spacing = 10.dp) {
+                // One line; scrolls sideways when it doesn't fit (the faded edge shows there is more).
+                val tabScroll = androidx.compose.foundation.rememberScrollState()
+                Row(
+                    Modifier.fillMaxWidth()
+                        .mouseDragScroll(tabScroll, androidx.compose.foundation.gestures.Orientation.Horizontal)
+                        .fadingEdges(tabScroll, androidx.compose.foundation.gestures.Orientation.Horizontal)
+                        .horizontalScroll(tabScroll)
+                        // Room for the focused chip's zoom.
+                        .padding(vertical = 4.dp, horizontal = 2.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
                     kinds.forEachIndexed { index, k ->
                         io.github.thecodingdad.gamelodge.ui.screens.library.Chip(
                             kindLabel(k), selected = index == kindIndex, onClick = { switchTo(index) },
+                            icon = shapeOf(k, isApp)?.let { ratio -> { ShapeMark(ratio) } },
                             modifier = Modifier.focusRequester(tabFocus[index]),
                         )
                     }
@@ -414,6 +432,7 @@ fun ArtworkPickerDialog(
                             Text(
                                 listOfNotNull(
                                     sourceLabel(option),
+                                    fits[option.url]?.let { fitLabel(it) },
                                     stringResource(Res.string.artwork_animated).takeIf { option.animated },
                                     option.bytes?.let { io.github.thecodingdad.gamelodge.util.formatFileSize(it) },
                                 ).joinToString(" · "),
@@ -431,6 +450,30 @@ fun ArtworkPickerDialog(
     }
 }
 
+/** Picker tabs: the cover shapes side by side, then the rest. */
+private val KIND_ORDER = listOf(
+    ArtworkKind.COVER, ArtworkKind.LANDSCAPE, ArtworkKind.SQUARE, ArtworkKind.ANIMATED_COVER,
+    ArtworkKind.HERO, ArtworkKind.ANIMATED_HERO, ArtworkKind.LOGO, ArtworkKind.ICON,
+)
+
+/** The covers' shape (width : height) for their tab's mark; null for the other kinds. */
+private fun shapeOf(kind: ArtworkKind, app: Boolean): Float? = when (kind) {
+    ArtworkKind.COVER -> 2f / 3f
+    ArtworkKind.LANDSCAPE -> if (app) io.github.thecodingdad.gamelodge.ui.components.APP_LANDSCAPE_RATIO else io.github.thecodingdad.gamelodge.ui.components.GAME_LANDSCAPE_RATIO
+    ArtworkKind.SQUARE -> 1f
+    else -> null
+}
+
+/** A small outlined rectangle in a cover's shape, before its tab's label. */
+@Composable
+private fun ShapeMark(ratio: Float) {
+    val height = if (ratio < 1f) 16.dp else if (ratio == 1f) 13.dp else 10.dp
+    androidx.compose.foundation.layout.Box(
+        Modifier.padding(end = 8.dp).height(height).aspectRatio(ratio)
+            .border(2.dp, androidx.compose.material3.LocalContentColor.current, RoundedCornerShape(2.dp)),
+    )
+}
+
 @Composable
 private fun kindLabel(kind: ArtworkKind) = stringResource(
     when (kind) {
@@ -440,8 +483,18 @@ private fun kindLabel(kind: ArtworkKind) = stringResource(
         ArtworkKind.ANIMATED_HERO -> Res.string.artwork_animated_hero
         ArtworkKind.LOGO -> Res.string.artwork_logo
         ArtworkKind.ICON -> Res.string.artwork_icon
-        ArtworkKind.LANDSCAPE -> Res.string.artwork_landscape
-        ArtworkKind.SQUARE -> Res.string.artwork_square
+        // The shape mark tells them apart.
+        ArtworkKind.LANDSCAPE, ArtworkKind.SQUARE -> Res.string.artwork_cover
+    },
+)
+
+@Composable
+private fun fitLabel(fit: io.github.thecodingdad.gamelodge.ui.components.TileFit) = stringResource(
+    when (fit) {
+        io.github.thecodingdad.gamelodge.ui.components.TileFit.FIT -> Res.string.artwork_fit_whole
+        io.github.thecodingdad.gamelodge.ui.components.TileFit.TOP -> Res.string.artwork_fit_top
+        io.github.thecodingdad.gamelodge.ui.components.TileFit.CENTER -> Res.string.artwork_fit_center
+        io.github.thecodingdad.gamelodge.ui.components.TileFit.BOTTOM -> Res.string.artwork_fit_bottom
     },
 )
 
