@@ -149,11 +149,15 @@ val io.github.thecodingdad.gamelodge.data.settings.TileFormat.widthFactor: Float
     io.github.thecodingdad.gamelodge.data.settings.TileFormat.SQUARE -> 1.25f
 }
 
-/** Cover grid columns for the chosen card size and tile [format]; [compact]: narrow screens (phone upright). */
+/**
+ * Cover grid columns for the chosen card size and tile [format]; [compact]: narrow screens
+ * (phone upright). [smaller]: that many more columns for every size.
+ */
 @Composable
 fun coverColumns(
     compact: Boolean,
     format: io.github.thecodingdad.gamelodge.data.settings.TileFormat = io.github.thecodingdad.gamelodge.data.settings.TileFormat.PORTRAIT,
+    smaller: Int = 0,
 ): androidx.compose.foundation.lazy.grid.GridCells {
     val medium = io.github.thecodingdad.gamelodge.ui.theme.dimensFor(io.github.thecodingdad.gamelodge.data.settings.CardSize.MEDIUM).coverWidth
     val current = LauncherTheme.dimens.coverWidth
@@ -162,7 +166,7 @@ fun coverColumns(
         current > medium -> -1
         else -> 0
     }
-    return CoverColumns((if (compact) medium * 0.62f else medium + 8.dp) * format.widthFactor, step)
+    return CoverColumns((if (compact) medium * 0.62f else medium + 8.dp) * format.widthFactor, step + smaller)
 }
 
 /** Landscape (16:9) tile of an app, for app rows on the start tab. */

@@ -43,8 +43,9 @@ class AndroidArtwork(private val context: Context) : ArtworkPlatform {
         val h = (w / ratio).toInt()
         val tiles = mutableListOf<Triple<io.github.thecodingdad.gamelodge.metadata.ArtworkSource, TileFit?, Bitmap>>()
         val generated = io.github.thecodingdad.gamelodge.metadata.ArtworkSource.GENERATED
-        fun variants(image: Bitmap) {
-            tiles += Triple(generated, TileFit.FIT, generatedTile(image, w, h).asAndroidBitmap())
+        // A cover fitted fills the height; an icon stays smaller, with room around it.
+        fun variants(image: Bitmap, cover: Boolean) {
+            tiles += Triple(generated, TileFit.FIT, generatedTile(image, w, h, if (cover) 1f else 0.6f).asAndroidBitmap())
             listOf(TileFit.TOP, TileFit.CENTER, TileFit.BOTTOM).forEach { tiles += Triple(generated, it, filledTile(image, w, h, it)) }
         }
         if (packageName != null) {
@@ -52,11 +53,15 @@ class AndroidArtwork(private val context: Context) : ArtworkPlatform {
             val banner = runCatching { pm.getApplicationBanner(packageName) }.getOrNull()
                 ?: pm.getLeanbackLaunchIntentForPackage(packageName)?.let { runCatching { pm.getActivityBanner(it) }.getOrNull() }
             banner?.let { tiles += Triple(io.github.thecodingdad.gamelodge.metadata.ArtworkSource.TV_BANNER, null, it.toBitmap(640, 360)) }
-            runCatching { pm.getApplicationIcon(packageName) }.getOrNull()?.let { variants(it.toBitmap(256, 256)) }
         }
-        if (source != null) {
-            val request = ImageRequest.Builder(context).data(source).size(1024).allowHardware(false).build()
-            (context.imageLoader.execute(request) as? SuccessResult)?.image?.toBitmap()?.let { variants(it) }
+        // Made from the current cover; without one from the app's icon.
+        val cover = source?.let {
+            val request = ImageRequest.Builder(context).data(it).size(1024).allowHardware(false).build()
+            (context.imageLoader.execute(request) as? SuccessResult)?.image?.toBitmap()
+        }
+        if (cover != null) variants(cover, cover = true)
+        else if (packageName != null) {
+            runCatching { context.packageManager.getApplicationIcon(packageName) }.getOrNull()?.let { variants(it.toBitmap(256, 256), cover = false) }
         }
         dir.mkdirs()
         return tiles.mapIndexedNotNull { index, (kind, fit, bitmap) ->
@@ -149,7 +154,7 @@ private fun filledTile(image: Bitmap, w: Int, h: Int, fit: TileFit): Bitmap {
 }
 
 /** Gradient in the image's main colour with the image (icon / box art) centred; 16:9 by default. */
-private fun generatedTile(icon: Bitmap, w: Int = 640, h: Int = 360): ImageBitmap {
+private fun generatedTile(icon: Bitmap, w: Int = 640, h: Int = 360, fill: Float = 0.6f): ImageBitmap {
     val palette = Palette.from(icon).generate()
     val base = palette.vibrantSwatch?.rgb ?: palette.dominantSwatch?.rgb ?: android.graphics.Color.DKGRAY
     val dark = androidx.core.graphics.ColorUtils.blendARGB(base, android.graphics.Color.BLACK, 0.5f)
@@ -159,7 +164,7 @@ private fun generatedTile(icon: Bitmap, w: Int = 640, h: Int = 360): ImageBitmap
     paint.shader = android.graphics.LinearGradient(0f, 0f, w.toFloat(), h.toFloat(), base, dark, android.graphics.Shader.TileMode.CLAMP)
     canvas.drawRect(0f, 0f, w.toFloat(), h.toFloat(), paint)
     paint.shader = null
-    val target = minOf(w, h) * 0.6f
+    val target = minOf(w, h) * fill
     val scale = target / maxOf(icon.width, icon.height)
     val iw = icon.width * scale
     val ih = icon.height * scale

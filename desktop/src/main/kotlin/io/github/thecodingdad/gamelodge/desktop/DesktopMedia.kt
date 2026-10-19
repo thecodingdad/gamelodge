@@ -106,11 +106,12 @@ object DesktopArtwork : ArtworkPlatform {
             val paint = org.jetbrains.skia.Paint()
             val sampling = org.jetbrains.skia.SamplingMode.LINEAR
             if (fit == io.github.thecodingdad.gamelodge.ui.components.TileFit.FIT) {
-                // Like on Android: a gradient in the image's main colour, the image whole in the middle.
+                // Like on Android: a gradient in the cover's main colour, the cover whole in the middle.
                 paint.shader = org.jetbrains.skia.Shader.makeLinearGradient(0f, 0f, w.toFloat(), h.toFloat(), intArrayOf(base, dark))
                 canvas.drawRect(org.jetbrains.skia.Rect.makeWH(w.toFloat(), h.toFloat()), paint)
                 paint.shader = null
-                val scale = minOf(w, h) * 0.6f / maxOf(image.width, image.height)
+                // The whole cover at the tile's full height.
+                val scale = minOf(w.toFloat() / image.width, h.toFloat() / image.height)
                 val iw = image.width * scale
                 val ih = image.height * scale
                 canvas.drawImageRect(image, org.jetbrains.skia.Rect.makeWH(image.width.toFloat(), image.height.toFloat()), org.jetbrains.skia.Rect.makeXYWH((w - iw) / 2, (h - ih) / 2, iw, ih), sampling, paint, true)
