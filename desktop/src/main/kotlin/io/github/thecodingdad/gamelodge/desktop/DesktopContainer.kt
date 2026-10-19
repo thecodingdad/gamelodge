@@ -170,11 +170,12 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
     override val hostPower: HostPower by lazy { HostPower(database.hostConfigDao(), hosts, hostActions, ha) }
     override val launcher: LaunchCoordinator by lazy {
         LaunchCoordinator(hosts, hostActions, { hostPower }, { NoAutoSleep }, profiles, playtime, settings, { ha }, scope, DesktopLaunches(
-            pcLibrary, playtime, scope, { onGameEnded() }, desktopHosts,
+            pcLibrary, playtime, scope, { launcher.gameActions.ended(); onGameEnded() }, desktopHosts,
             identity = { streamIdentity },
             streamOptions = { profiles.activeOptions() },
             onStreamEnded = {
                 launcher.restoreProfile()
+                launcher.gameActions.ended()
                 scope.launch { playtime.finishOpenSession() }
             },
         ))

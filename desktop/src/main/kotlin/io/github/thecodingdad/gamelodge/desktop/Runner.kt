@@ -36,7 +36,13 @@ object Runner {
                     val http = OkHttpClient()
                     GameLauncher.install(entry) { PcLibrary.installedNow(entry, http) }
                 } else {
-                    GameLauncher.play(entry)
+                    // The running launcher's game actions (if switched on for host starts).
+                    SingleInstance.reportGameStart(entry.id)
+                    try {
+                        GameLauncher.play(entry)
+                    } finally {
+                        SingleInstance.reportGameEnd(entry.id)
+                    }
                 }
             }
         }.fold({ ok -> if (ok) 0 else 1 }) {

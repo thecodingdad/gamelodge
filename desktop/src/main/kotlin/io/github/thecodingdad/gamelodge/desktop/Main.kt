@@ -66,6 +66,16 @@ fun main(args: Array<String>) {
     // Games installed here are PC games (IGDB platform choice, suggestions).
     io.github.thecodingdad.gamelodge.data.library.PlatformResolver.localPlatform = io.github.thecodingdad.gamelodge.data.library.PlatformResolver.PC
     val container = DesktopContainer(dataDir)
+    // Games another device starts through this PC as streaming host: their actions, when switched on.
+    val hostGameActions = io.github.thecodingdad.gamelodge.ha.GameActionRunner(
+        { container.ha.runAction(it) }, { io.github.thecodingdad.gamelodge.ha.GameActionSettings.decode(container.settings.current().gameActions) }, container.scope,
+    )
+    SingleInstance.onHostGame = { entryId, started ->
+        if (io.github.thecodingdad.gamelodge.ha.GameActionSettings.decode(container.settings.current().gameActions).hostStarts) {
+            val itemId = container.database.libraryDao().getTarget(io.github.thecodingdad.gamelodge.data.library.SourceEntry.localId(entryId))?.itemId
+            if (started) hostGameActions.beforeStart(itemId) else hostGameActions.ended()
+        }
+    }
     val startup = Startup(dataDir).also { it.start() }
     // Started with Windows and the tray on: no window until the user opens it.
     if (Startup.AUTOSTART_ARG in args && startup.settings.value.closeToTray) windowVisible.value = false

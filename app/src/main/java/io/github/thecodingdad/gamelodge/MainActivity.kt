@@ -156,8 +156,9 @@ class MainActivity : ComponentActivity() {
         // Also picks up a just granted overlay permission.
         io.github.thecodingdad.gamelodge.system.EdgeHandle.refresh(this)
         vm.touch()
-        // Back from a game or stream: close the play session, undo a one-off profile.
+        // Back from a game or stream: close the play session, undo a one-off profile, run the end actions.
         container.launcher.restoreProfile()
+        container.launcher.gameActions.ended()
         lifecycleScope.launch {
             val closed = container.playtime.finishOpenSession()
             container.usage.sync()

@@ -100,6 +100,8 @@ data class LauncherSettings(
     val pcCustomGames: String = "",
     /** PC: changed start commands of scanned games (JSON, entry id → override). */
     val pcLaunchOverrides: String = "",
+    /** Home Assistant actions before/after games ([io.github.thecodingdad.gamelodge.ha.GameActionSettings] as JSON). */
+    val gameActions: String = "",
     /** Version of the automatic platform rules the library was last re-evaluated with. */
     val platformRule: Int = 0,
     /** AYN Odin: put every external controller on Odin Mapping's blacklist (keeps battery/rumble). */
@@ -181,6 +183,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val pcEmulation = stringPreferencesKey("pc_emulation")
         val pcCustomGames = stringPreferencesKey("pc_custom_games")
         val pcLaunchOverrides = stringPreferencesKey("pc_launch_overrides")
+        val gameActions = stringPreferencesKey("game_actions")
         val platformRule = intPreferencesKey("platform_rule")
         val odinKeepControllers = booleanPreferencesKey("odin_keep_controllers")
         val quickTiles = stringPreferencesKey("quick_tiles")
@@ -263,6 +266,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             pcEmulation = this[K.pcEmulation] ?: d.pcEmulation,
             pcCustomGames = this[K.pcCustomGames] ?: d.pcCustomGames,
             pcLaunchOverrides = this[K.pcLaunchOverrides] ?: d.pcLaunchOverrides,
+            gameActions = this[K.gameActions] ?: d.gameActions,
             platformRule = this[K.platformRule] ?: d.platformRule,
             odinKeepControllers = this[K.odinKeepControllers] ?: d.odinKeepControllers,
             quickTiles = this[K.quickTiles]?.split(',')?.filter { it.isNotBlank() } ?: d.quickTiles,
@@ -330,6 +334,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         this[K.pcEmulation] = s.pcEmulation
         this[K.pcCustomGames] = s.pcCustomGames
         this[K.pcLaunchOverrides] = s.pcLaunchOverrides
+        this[K.gameActions] = s.gameActions
         this[K.platformRule] = s.platformRule
         this[K.odinKeepControllers] = s.odinKeepControllers
         this[K.quickTiles] = s.quickTiles.joinToString(",")

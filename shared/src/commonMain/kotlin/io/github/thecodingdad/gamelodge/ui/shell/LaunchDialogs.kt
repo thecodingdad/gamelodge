@@ -40,6 +40,7 @@ import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -266,6 +267,7 @@ private fun stepText(step: LaunchStep) = stringResource(
         LaunchStep.CONNECTING_VPN -> Res.string.step_connecting_vpn
         LaunchStep.CHECKING_NETWORK -> Res.string.step_checking_network
         LaunchStep.QUITTING_RUNNING -> Res.string.step_quitting
+        LaunchStep.RUNNING_ACTIONS -> Res.string.step_game_actions
         LaunchStep.STARTING -> Res.string.step_starting
     },
 )
@@ -306,6 +308,8 @@ fun EntryContextMenu(
     onEmulator: (LibraryEntry) -> Unit = {},
     /** PC games: their start command. */
     onLaunchSettings: (LibraryEntry) -> Unit = {},
+    /** Home Assistant actions around this game. */
+    onGameActions: (LibraryEntry) -> Unit = {},
     /** Opened from the game's own detail page: its buttons already cover play and favorite. */
     inDetail: Boolean = false,
 ) {
@@ -366,6 +370,9 @@ fun EntryContextMenu(
             }
             if (io.github.thecodingdad.gamelodge.ui.PlatformUi.current.canEditLaunch(e)) {
                 LauncherButton(stringResource(Res.string.action_launch_settings), act { onLaunchSettings(e) }, Modifier.fillMaxWidth(), Icons.Filled.Terminal)
+            }
+            if (e.item.kind == ItemKind.GAME && io.github.thecodingdad.gamelodge.LocalContainer.current.ha.auth.isLoggedIn) {
+                LauncherButton(stringResource(Res.string.action_game_actions), act { onGameActions(e) }, Modifier.fillMaxWidth(), Icons.Filled.Bolt)
             }
             LauncherButton(stringResource(Res.string.action_collections), act { onCollections(e) }, Modifier.fillMaxWidth(), Icons.Filled.CollectionsBookmark)
             LauncherButton(stringResource(Res.string.action_hide), act { onHide(e) }, Modifier.fillMaxWidth(), Icons.Filled.VisibilityOff)
@@ -452,7 +459,7 @@ private fun LaunchProgressScreen(working: LaunchState.Working, onCancel: () -> U
     StreamProgressContent(
         entry = working.entry,
         step = stepText(working.step),
-        detail = null,
+        detail = working.countdown?.let { stringResource(Res.string.step_starts_in, it) },
         timerKey = working.step,
         showTimer = working.step == LaunchStep.WAKING_HOST,
         onCancel = onCancel,

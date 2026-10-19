@@ -88,6 +88,12 @@ class Startup(dataDir: File) {
 object SingleInstance {
     private const val PORT = 47919
     private const val SHOW = "show"
+    private const val GAME_START = "game-start "
+    private const val GAME_END = "game-end "
+    private const val GO = "go"
+
+    /** Called for game starts/ends reported by the streaming host's runner (entry id, started). */
+    @Volatile var onHostGame: suspend (String, Boolean) -> Unit = { _, _ -> }
 
     /** True: this is the first instance, [onShow] runs when another start asks for the window. False: told the running one. */
     fun claim(onShow: () -> Unit): Boolean {
@@ -102,13 +108,42 @@ object SingleInstance {
         thread(isDaemon = true, name = "single-instance") {
             while (true) {
                 val socket = runCatching { server.accept() }.getOrNull() ?: break
-                socket.use { s ->
-                    s.soTimeout = 2000
-                    val line = runCatching { s.getInputStream().bufferedReader().readLine() }.getOrNull()
-                    if (line == SHOW) onShow()
+                // Own thread per message: a game start may wait for its actions.
+                thread(isDaemon = true, name = "single-instance-message") {
+                    socket.use { s ->
+                        s.soTimeout = 2000
+                        val line = runCatching { s.getInputStream().bufferedReader().readLine() }.getOrNull() ?: return@use
+                        when {
+                            line == SHOW -> onShow()
+                            line.startsWith(GAME_START) -> {
+                                runCatching { kotlinx.coroutines.runBlocking { onHostGame(line.removePrefix(GAME_START), true) } }
+                                runCatching { s.getOutputStream().write("$GO\n".toByteArray()) }
+                            }
+                            line.startsWith(GAME_END) -> runCatching { kotlinx.coroutines.runBlocking { onHostGame(line.removePrefix(GAME_END), false) } }
+                        }
+                    }
                 }
             }
         }
         return true
+    }
+
+    /**
+     * The runner reports a game start to the running launcher and waits until its actions before
+     * the start are done (at most [timeoutMs]); without a running launcher it returns at once.
+     */
+    fun reportGameStart(entryId: String, timeoutMs: Int = 120_000) {
+        runCatching {
+            Socket(InetAddress.getLoopbackAddress(), PORT).use { s ->
+                s.soTimeout = timeoutMs
+                s.getOutputStream().write("$GAME_START$entryId\n".toByteArray())
+                s.getInputStream().bufferedReader().readLine()
+            }
+        }
+    }
+
+    /** The runner reports that the game ended. */
+    fun reportGameEnd(entryId: String) {
+        runCatching { Socket(InetAddress.getLoopbackAddress(), PORT).use { it.getOutputStream().write("$GAME_END$entryId\n".toByteArray()) } }
     }
 }

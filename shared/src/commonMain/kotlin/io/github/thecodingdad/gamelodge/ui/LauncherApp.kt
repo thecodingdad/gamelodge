@@ -230,6 +230,7 @@ fun LauncherApp(
     var collectionsFor by remember { mutableStateOf<io.github.thecodingdad.gamelodge.data.db.LibraryEntry?>(null) }
     var emulatorFor by remember { mutableStateOf<String?>(null) }
     var launchSettingsFor by remember { mutableStateOf<String?>(null) }
+    var gameActionsFor by remember { mutableStateOf<String?>(null) }
 
     val density = androidx.compose.ui.platform.LocalDensity.current
     val scrollSpec = remember(density) { io.github.thecodingdad.gamelodge.ui.components.MarginBringIntoViewSpec(density) }
@@ -448,6 +449,7 @@ fun LauncherApp(
                     onAppArtwork = { appTileFor = it.item.id },
                     onEmulator = { emulatorFor = it.item.id },
                     onLaunchSettings = { launchSettingsFor = it.item.id },
+                    onGameActions = { gameActionsFor = it.item.id },
                     inDetail = detailOpenFor == entryActions.contextMenuFor?.item?.id,
                 )
                 // Metadata editor with its match and artwork dialogs, reachable from every menu.
@@ -455,6 +457,9 @@ fun LauncherApp(
                 io.github.thecodingdad.gamelodge.ui.PlatformUi.current.LaunchSettingsDialog(
                     launchSettingsFor?.let { id -> metaLibrary.firstOrNull { it.item.id == id } },
                 ) { launchSettingsFor = null }
+                io.github.thecodingdad.gamelodge.ui.screens.ha.GameActionsDialog(
+                    gameActionsFor?.let { id -> metaLibrary.firstOrNull { it.item.id == id } },
+                ) { gameActionsFor = null }
                 io.github.thecodingdad.gamelodge.ui.shell.GameEmulatorDialog(
                     entry = emulatorFor?.let { id -> metaLibrary.firstOrNull { it.item.id == id } },
                     onDismiss = { emulatorFor = null },

@@ -25,7 +25,8 @@ import java.util.UUID
 /** What the launch overlay shows. */
 sealed interface LaunchState {
     data object Idle : LaunchState
-    data class Working(val entry: LibraryEntry, val step: LaunchStep) : LaunchState
+    /** [countdown]: seconds until the start goes on (game actions before the start). */
+    data class Working(val entry: LibraryEntry, val step: LaunchStep, val countdown: Int? = null) : LaunchState
     data class Failed(val entry: LibraryEntry, val reason: LaunchError, val detail: String? = null) : LaunchState
     /** Another app runs on the host; the user must confirm quitting it. */
     data class ConfirmQuitRunning(val entry: LibraryEntry, val target: LaunchTargetEntity, val runningName: String, val override: StreamProfile?) : LaunchState
@@ -33,7 +34,7 @@ sealed interface LaunchState {
     data class NetworkWarning(val entry: LibraryEntry, val target: LaunchTargetEntity, val result: NetworkCheckResult, val override: StreamProfile?) : LaunchState
 }
 
-enum class LaunchStep { WAKING_HOST, CONNECTING_VPN, CHECKING_NETWORK, QUITTING_RUNNING, STARTING }
+enum class LaunchStep { WAKING_HOST, CONNECTING_VPN, CHECKING_NETWORK, QUITTING_RUNNING, RUNNING_ACTIONS, STARTING }
 
 enum class LaunchError { HOST_OFFLINE, WAKE_FAILED, NOT_PAIRED, NO_LAUNCH_PERMISSION, APP_NOT_INSTALLED, START_FAILED, QUIT_FAILED, NO_EMULATOR, ROM_NEEDS_PATH }
 
@@ -86,6 +87,16 @@ class LaunchCoordinator(
 
     var vpn: VpnAutoConnect = VpnAutoConnect { false }
 
+    /** Home Assistant actions before a start and after a game ended. */
+    val gameActions = io.github.thecodingdad.gamelodge.ha.GameActionRunner(
+        { ha().runAction(it) }, { io.github.thecodingdad.gamelodge.ha.GameActionSettings.decode(settings.current().gameActions) }, scope,
+    )
+
+    /** The game actions before [entry] starts; the start screen counts down where the start waits. */
+    private suspend fun runStartActions(entry: LibraryEntry) {
+        gameActions.beforeStart(entry.item.id) { left -> _state.value = LaunchState.Working(entry, LaunchStep.RUNNING_ACTIONS, left) }
+    }
+
     /** Game whose stream is being started; shown by the stream window while it connects. */
     @Volatile
     var streamingEntry: LibraryEntry? = null
@@ -119,9 +130,9 @@ class LaunchCoordinator(
     ) {
         running = kotlin.coroutines.coroutineContext[kotlinx.coroutines.Job]
         when (target.type) {
-            TargetType.LOCAL -> finish(entry, platform.launchLocal(entry, target))
+            TargetType.LOCAL -> { runStartActions(entry); finish(entry, platform.launchLocal(entry, target)) }
             TargetType.REMOTE -> launchRemote(entry, target, override, quitRunning, skipNetworkCheck)
-            TargetType.ROM -> finish(entry, platform.launchRom(entry, target, emulatorKey))
+            TargetType.ROM -> { runStartActions(entry); finish(entry, platform.launchRom(entry, target, emulatorKey)) }
         }
     }
 
@@ -196,6 +207,7 @@ class LaunchCoordinator(
             }
         }
 
+        runStartActions(entry)
         _state.value = LaunchState.Working(entry, LaunchStep.STARTING)
         if (override != null) applyOneOffProfile(override.uuid)
         autoSleep().cancel(hostUuid)
