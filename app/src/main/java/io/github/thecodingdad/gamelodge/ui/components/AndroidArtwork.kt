@@ -40,8 +40,8 @@ class AndroidArtwork(private val context: Context) : ArtworkPlatform {
     override suspend fun generatedCover(packageName: String): ImageBitmap? =
         generatedTile(context.packageManager.getApplicationIcon(packageName).toBitmap(256, 256), 400, 600)
 
-    override suspend fun generatedHero(packageName: String): ImageBitmap? =
-        generatedHero(context.packageManager.getApplicationIcon(packageName))
+    override suspend fun generatedHero(packageName: String, portrait: Boolean): ImageBitmap? =
+        generatedHero(context.packageManager.getApplicationIcon(packageName), portrait)
 
     override suspend fun accentColor(model: Any): Color? {
         val request = ImageRequest.Builder(context).data(model).size(96).allowHardware(false).build()
@@ -53,10 +53,13 @@ class AndroidArtwork(private val context: Context) : ArtworkPlatform {
     }
 }
 
-/** 16:9 backdrop: dark-to-colour gradient, a soft glow and the icon on the right. */
-private fun generatedHero(drawable: android.graphics.drawable.Drawable): ImageBitmap {
-    val w = 1280
-    val h = 720
+/**
+ * Backdrop: dark-to-colour gradient, a soft glow and the icon on the right. 16:9, or 9:16 for
+ * [portrait] areas with the icon kept well inside, so cropping to the screen never cuts it off.
+ */
+private fun generatedHero(drawable: android.graphics.drawable.Drawable, portrait: Boolean): ImageBitmap {
+    val w = if (portrait) 720 else 1280
+    val h = if (portrait) 1280 else 720
     val icon = drawable.toBitmap(384, 384)
     // Adaptive icons: only the motif, without the launcher's background shape. The foreground
     // layer is 108 units wide with the visible part in the middle 72.
@@ -79,10 +82,11 @@ private fun generatedHero(drawable: android.graphics.drawable.Drawable): ImageBi
         floatArrayOf(0f, 0.35f, 1f), android.graphics.Shader.TileMode.CLAMP,
     )
     canvas.drawRect(0f, 0f, w.toFloat(), h.toFloat(), paint)
-    // Upper right: the rows at the bottom must not cover it.
-    val cx = w * 0.72f
-    val cy = h * 0.3f
-    val size = h * 0.36f
+    // Upper right: the rows at the bottom must not cover it. Portrait: below the title and info,
+    // inside the middle 80 % of the width (taller screens crop the sides).
+    val cx = w * (if (portrait) 0.64f else 0.72f)
+    val cy = h * (if (portrait) 0.36f else 0.3f)
+    val size = if (portrait) w * 0.42f else h * 0.36f
     // Soft glow in the icon's colour behind it.
     paint.shader = android.graphics.RadialGradient(
         cx, cy, size * 1.4f,

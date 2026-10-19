@@ -23,6 +23,8 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.SubcomposeAsyncImage
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.BlurredEdgeTreatment
 import io.github.thecodingdad.gamelodge.data.artwork.ArtworkFiles
 import io.github.thecodingdad.gamelodge.data.db.LibraryEntry
 import io.github.thecodingdad.gamelodge.data.db.MetaField
@@ -156,7 +158,7 @@ interface ArtworkPlatform {
     /** Portrait cover generated from the icon of a local game without artwork. */
     suspend fun generatedCover(packageName: String): ImageBitmap? = null
     /** Wide backdrop generated from the icon of a local app or game without artwork. */
-    suspend fun generatedHero(packageName: String): ImageBitmap? = null
+    suspend fun generatedHero(packageName: String, portrait: Boolean = false): ImageBitmap? = null
     /** The dominant vibrant colour of an image. */
     suspend fun accentColor(model: Any): Color? = null
 
@@ -274,30 +276,55 @@ fun CoverImage(entry: LibraryEntry, modifier: Modifier = Modifier, animated: Boo
 }
 
 /**
- * Wide background of an entry. A local app or game without any artwork gets a generated one:
- * a gradient in the icon's colours with the icon large on the right, softly glowing.
+ * Wide background of an entry. Without a background image the cover stands in, softly blurred
+ * (stretched sharp it looks pixelated). A local app or game without any artwork gets a generated
+ * one in the shape of the area: a gradient in the icon's colours with the icon large and glowing.
  */
 @Composable
 fun HeroImage(entry: LibraryEntry, modifier: Modifier = Modifier, animated: Boolean = false) {
     val model = entry.heroModel()
     val pkg = entry.localTarget?.packageName
     if (model != null || pkg == null) {
+        val coverOnly = model != null && ArtworkFiles.model(entry.item.heroUrl) == null
         WithAnimated(if (animated) entry.animatedHeroModel() else null, entry.item.title, modifier) {
-            ArtworkImage(model, entry.item.title, it, ContentScale.Crop, showTitleOnPlaceholder = false)
+            if (coverOnly) BlurredCover(model, entry.item.title, it)
+            else ArtworkImage(model, entry.item.title, it, ContentScale.Crop, showTitleOnPlaceholder = false)
         }
         return
     }
-    val key = "hero:$pkg"
-    val bitmap by produceState(tileCache.get(key), key) {
-        if (value == null) {
-            value = withContext(Dispatchers.IO) {
-                runCatching { ArtworkPlatform.current.generatedHero(pkg) }
-                    .getOrNull()?.also { tileCache.put(key, it) }
+    androidx.compose.foundation.layout.BoxWithConstraints(modifier) {
+        // Generated in the area's aspect ratio (landscape or portrait), so the icon is never cut off.
+        val portrait = maxHeight > maxWidth
+        val key = "hero:$pkg:${if (portrait) "p" else "l"}"
+        val bitmap by produceState(tileCache.get(key), key) {
+            if (value == null) {
+                value = withContext(Dispatchers.IO) {
+                    runCatching { ArtworkPlatform.current.generatedHero(pkg, portrait) }
+                        .getOrNull()?.also { tileCache.put(key, it) }
+                }
             }
         }
+        val image = bitmap
+        if (image == null) TitlePlaceholder(entry.item.title, Modifier.fillMaxSize(), showTitle = false)
+        else Image(image, contentDescription = entry.item.title, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
     }
-    val image = bitmap
-    if (image == null) TitlePlaceholder(entry.item.title, modifier, showTitle = false)
-    else Image(image, contentDescription = entry.item.title, contentScale = ContentScale.Crop, modifier = modifier)
+}
+
+/** A cover as a calm full-area background: loaded tiny, scaled up smoothly and blurred. */
+@Composable
+private fun BlurredCover(model: Any, title: String, modifier: Modifier) {
+    val request = coil3.request.ImageRequest.Builder(coil3.compose.LocalPlatformContext.current)
+        .data(model).size(96).build()
+    Box(modifier.background(io.github.thecodingdad.gamelodge.ui.theme.LauncherTheme.colors.background)) {
+        coil3.compose.AsyncImage(
+            model = request,
+            contentDescription = title,
+            contentScale = ContentScale.Crop,
+            filterQuality = androidx.compose.ui.graphics.FilterQuality.High,
+            modifier = Modifier.fillMaxSize()
+                .blur(28.dp, BlurredEdgeTreatment.Rectangle)
+                .alpha(0.75f),
+        )
+    }
 }
 
