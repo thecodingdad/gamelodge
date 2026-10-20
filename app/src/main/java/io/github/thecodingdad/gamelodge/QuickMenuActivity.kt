@@ -145,8 +145,8 @@ class QuickMenuActivity : ComponentActivity() {
         val uiScale = (if (settings.tvScaleAuto && external != null) settings.tvScale else settings.uiScale) / 100f
         // Same size as the launcher, also on small handhelds.
         val window = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize
-        val density = remember(baseDensity, uiScale, window, settings.cardSize) {
-            Density(io.github.thecodingdad.gamelodge.ui.theme.fittedDensity(baseDensity.density * uiScale, window.width, window.height, settings.cardSize), baseDensity.fontScale)
+        val density = remember(baseDensity, uiScale, window, settings.homeLayout.cardSize) {
+            Density(io.github.thecodingdad.gamelodge.ui.theme.fittedDensity(baseDensity.density * uiScale, window.width, window.height, settings.homeLayout.cardSize), baseDensity.fontScale)
         }
         LauncherTheme(settings) {
             CompositionLocalProvider(

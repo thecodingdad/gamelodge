@@ -1,6 +1,13 @@
 package io.github.thecodingdad.gamelodge.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.draw.clip
+import io.github.thecodingdad.gamelodge.data.settings.TabLayout
+import io.github.thecodingdad.gamelodge.data.settings.TileBadge
+import io.github.thecodingdad.gamelodge.data.settings.TileInfo
+import io.github.thecodingdad.gamelodge.data.settings.TileTitle
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,6 +44,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.thecodingdad.gamelodge.data.db.LibraryEntry
+import io.github.thecodingdad.gamelodge.resources.*
 import io.github.thecodingdad.gamelodge.ui.theme.LauncherTheme
 
 /**
@@ -63,8 +71,9 @@ fun Modifier.restoreFocusIf(shouldFocus: Boolean, trigger: Any? = null): Modifie
 val LocalAnimatedTilesAlways = androidx.compose.runtime.staticCompositionLocalOf { false }
 
 /**
- * Portrait game cover with source badges. [animated]: animated covers are wanted; they play on
- * the focused tile (controller; touch has no focus) or, if so set, on all.
+ * A game tile in the tab's [layout] (shape, title, extra info, badges). [animated]: animated
+ * covers are wanted; they play on the focused tile (controller; touch has no focus) or, if so
+ * set, on all.
  */
 @Composable
 fun CoverCard(
@@ -74,41 +83,118 @@ fun CoverCard(
     width: Dp = LauncherTheme.dimens.coverWidth,
     onLongClick: (() -> Unit)? = null,
     onFocused: (() -> Unit)? = null,
-    showTitle: Boolean = false,
     animated: Boolean = false,
-    format: io.github.thecodingdad.gamelodge.data.settings.TileFormat = io.github.thecodingdad.gamelodge.data.settings.TileFormat.PORTRAIT,
+    layout: TabLayout = TabLayout(title = TileTitle.OFF),
 ) {
+    val style = LocalTileStyle.current
+    val format = layout.format
     Column(modifier.width(width), horizontalAlignment = Alignment.CenterHorizontally) {
         FocusSurface(
             onClick = onClick,
             onLongClick = onLongClick,
             onFocused = onFocused,
+            shape = style.shape,
+            focusScale = style.scale(),
+            glow = style.glow,
             modifier = Modifier.fillMaxWidth().aspectRatio(format.aspectRatio(entry.item.kind == io.github.thecodingdad.gamelodge.data.db.ItemKind.APP)),
         ) { focused ->
             val play = animated && (LocalAnimatedTilesAlways.current || (focused && isControllerMode()))
             TileImage(entry, format, Modifier.fillMaxSize(), animated = play)
             // Owned but not installed on the host: dimmed, playing it starts the installation.
-            if (entry.notInstalled) Box(Modifier.fillMaxSize().background(Color(0x99000000)))
-            SourceBadges(entry, Modifier.align(Alignment.TopEnd).padding(6.dp))
-            if (entry.item.favorite) {
-                Icon(
-                    Icons.Filled.Favorite, null, tint = Color(0xFFFF5C8A),
-                    modifier = Modifier.align(Alignment.TopStart).padding(8.dp).size(18.dp),
-                )
-            }
+            if (entry.notInstalled && style.dimNotInstalled) Box(Modifier.fillMaxSize().background(Color(0x99000000)))
+            TileOverlay(entry, layout)
         }
-        if (showTitle) {
-            Text(
-                entry.item.title,
-                style = MaterialTheme.typography.labelMedium,
-                color = LauncherTheme.colors.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 8.dp),
-            )
+        TileTexts(entry, layout)
+    }
+}
+
+/** Title / extra info on the tile, the progress bar and the badges (inside the tile's box). */
+@Composable
+private fun androidx.compose.foundation.layout.BoxScope.TileOverlay(entry: LibraryEntry, layout: TabLayout) {
+    val info = tileInfo(entry, layout.info)
+    val progress = tileProgress(entry, layout.info)
+    if (layout.title == TileTitle.ON_TILE) {
+        Column(
+            Modifier.align(Alignment.BottomStart).fillMaxWidth()
+                .background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color.Transparent, Color(0xCC000000))))
+                .padding(start = 10.dp, end = 10.dp, top = 22.dp, bottom = if (progress != null) 12.dp else 8.dp),
+        ) {
+            Text(entry.item.title, style = MaterialTheme.typography.labelLarge, color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            info?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.8f), maxLines = 1) }
+        }
+    } else if (layout.title == TileTitle.OFF && info != null) {
+        // No line below the tile: the extra info sits on it.
+        Text(
+            info, style = MaterialTheme.typography.labelSmall, color = Color.White, maxLines = 1,
+            modifier = Modifier.align(Alignment.BottomStart).padding(start = 6.dp, end = 6.dp, bottom = if (progress != null) 12.dp else 6.dp)
+                .background(Color(0x99000000), RoundedCornerShape(6.dp)).padding(horizontal = 6.dp, vertical = 2.dp),
+        )
+    }
+    progress?.let { p ->
+        Box(Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(6.dp).height(4.dp).clip(RoundedCornerShape(2.dp)).background(Color(0x66000000))) {
+            Box(Modifier.fillMaxHeight().fillMaxWidth(p).background(LauncherTheme.colors.accent))
         }
     }
+    TileBadges(entry, layout.badges)
+}
+
+/** Title and extra info below a tile, as the layout wants them. */
+@Composable
+private fun TileTexts(entry: LibraryEntry, layout: TabLayout) {
+    if (layout.title != TileTitle.BELOW) return
+    Text(
+        entry.item.title,
+        style = MaterialTheme.typography.labelMedium,
+        color = LauncherTheme.colors.onSurface,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.padding(top = 8.dp),
+    )
+    tileInfo(entry, layout.info)?.let {
+        Text(it, style = MaterialTheme.typography.labelSmall, color = LauncherTheme.colors.onSurfaceMuted, maxLines = 1, textAlign = TextAlign.Center)
+    }
+}
+
+/** The extra info as text (play time, last played), or null. */
+@Composable
+fun tileInfo(entry: LibraryEntry, info: TileInfo): String? = when (info) {
+    TileInfo.PLAYTIME -> entry.item.playtimeSeconds.takeIf { it > 0 }?.let { io.github.thecodingdad.gamelodge.ui.screens.stats.formatDuration(it) }
+    TileInfo.LAST_PLAYED -> entry.item.lastPlayedAt?.let { lastPlayedLabel(it) }
+    TileInfo.PROGRESS, TileInfo.NONE -> null
+}
+
+/** Play time against the time to beat (main story), when the progress is wanted and known. */
+fun tileProgress(entry: LibraryEntry, info: TileInfo): Float? {
+    if (info != TileInfo.PROGRESS || !entry.item.timesToBeatCurrent) return null
+    val main = entry.item.timeToBeatMain?.takeIf { it > 0 } ?: return null
+    return (entry.item.playtimeSeconds.toFloat() / main).coerceIn(0f, 1f)
+}
+
+/** "Today", "Yesterday", "3 days ago" or the date. */
+@Composable
+private fun lastPlayedLabel(at: Long): String {
+    val zone = java.time.ZoneId.systemDefault()
+    val day = java.time.Instant.ofEpochMilli(at).atZone(zone).toLocalDate()
+    val days = java.time.temporal.ChronoUnit.DAYS.between(day, java.time.LocalDate.now(zone)).toInt()
+    return when {
+        days <= 0 -> org.jetbrains.compose.resources.stringResource(Res.string.tile_today)
+        days == 1 -> org.jetbrains.compose.resources.stringResource(Res.string.tile_yesterday)
+        days < 30 -> org.jetbrains.compose.resources.stringResource(Res.string.tile_days_ago, days)
+        else -> java.time.format.DateTimeFormatter.ofLocalizedDate(java.time.format.FormatStyle.SHORT).format(day)
+    }
+}
+
+/** The badges of a tile: favourite (top left), where it runs and not installed (top right). */
+@Composable
+private fun androidx.compose.foundation.layout.BoxScope.TileBadges(entry: LibraryEntry, badges: Set<TileBadge>) {
+    if (TileBadge.FAVORITE in badges && entry.item.favorite) {
+        Icon(
+            Icons.Filled.Favorite, null, tint = Color(0xFFFF5C8A),
+            modifier = Modifier.align(Alignment.TopStart).padding(8.dp).size(18.dp),
+        )
+    }
+    SourceBadges(entry, Modifier.align(Alignment.TopEnd).padding(6.dp), badges)
 }
 
 /**
@@ -170,7 +256,7 @@ fun coverColumns(
     return CoverColumns((if (compact) medium * 0.62f else medium + 8.dp) * format.widthFactor, step + smaller)
 }
 
-/** Landscape (16:9) tile of an app, for app rows on the start tab. */
+/** Landscape (16:9) tile of an app: app rows on the start tab, the apps tab as banners. */
 @Composable
 fun AppTileCard(
     entry: LibraryEntry,
@@ -179,30 +265,33 @@ fun AppTileCard(
     width: Dp = LauncherTheme.dimens.coverWidth * 1.6f,
     onLongClick: (() -> Unit)? = null,
     onFocused: (() -> Unit)? = null,
+    layout: TabLayout = TabLayout(title = TileTitle.OFF, badges = setOf(TileBadge.FAVORITE)),
 ) {
-    FocusSurface(
-        onClick = onClick,
-        onLongClick = onLongClick,
-        onFocused = onFocused,
-        modifier = modifier.width(width).aspectRatio(APP_LANDSCAPE_RATIO),
-    ) {
-        AppTileImage(entry, Modifier.fillMaxSize())
-        if (entry.item.favorite) {
-            Icon(
-                Icons.Filled.Favorite, null, tint = Color(0xFFFF5C8A),
-                modifier = Modifier.align(Alignment.TopStart).padding(8.dp).size(18.dp),
-            )
+    val style = LocalTileStyle.current
+    Column(modifier.width(width), horizontalAlignment = Alignment.CenterHorizontally) {
+        FocusSurface(
+            onClick = onClick,
+            onLongClick = onLongClick,
+            onFocused = onFocused,
+            shape = style.shape,
+            focusScale = style.scale(),
+            glow = style.glow,
+            modifier = Modifier.fillMaxWidth().aspectRatio(APP_LANDSCAPE_RATIO),
+        ) {
+            AppTileImage(entry, Modifier.fillMaxSize())
+            TileOverlay(entry, layout)
         }
+        TileTexts(entry, layout)
     }
 }
 
 @Composable
-fun SourceBadges(entry: LibraryEntry, modifier: Modifier = Modifier) {
+fun SourceBadges(entry: LibraryEntry, modifier: Modifier = Modifier, badges: Set<TileBadge> = TileBadge.entries.toSet()) {
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-        if (entry.localTarget != null) Badge(io.github.thecodingdad.gamelodge.ui.PlatformUi.current.localIcon)
-        if (entry.romTargets.isNotEmpty()) Badge(Icons.Filled.SportsEsports)
-        if (entry.remoteTargets.isNotEmpty()) Badge(Icons.Filled.Cloud)
-        if (entry.notInstalled) Badge(Icons.Filled.Download)
+        if (TileBadge.LOCAL in badges && entry.localTarget != null) Badge(io.github.thecodingdad.gamelodge.ui.PlatformUi.current.localIcon)
+        if (TileBadge.ROM in badges && entry.romTargets.isNotEmpty()) Badge(Icons.Filled.SportsEsports)
+        if (TileBadge.HOST in badges && entry.remoteTargets.isNotEmpty()) Badge(Icons.Filled.Cloud)
+        if (TileBadge.NOT_INSTALLED in badges && entry.notInstalled) Badge(Icons.Filled.Download)
     }
 }
 
@@ -224,10 +313,13 @@ fun AppTile(
     modifier: Modifier = Modifier,
     onLongClick: (() -> Unit)? = null,
     onFocused: (() -> Unit)? = null,
+    layout: TabLayout = TabLayout(badges = emptySet()),
 ) {
     // Narrow screens: smaller tiles so four fit next to each other.
     val size = if (LocalCompactWidth.current) LauncherTheme.dimens.iconTile * 0.6f else LauncherTheme.dimens.iconTile
     val colors = LauncherTheme.colors
+    val style = LocalTileStyle.current
+    val onTile = layout.title == TileTitle.ON_TILE
     Column(modifier.width(size + 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         FocusSurface(
             onClick = onClick,
@@ -235,29 +327,38 @@ fun AppTile(
             onFocused = onFocused,
             modifier = Modifier.size(size),
             color = colors.surfaceRaised,
-            focusScale = 1.1f,
+            shape = style.shape,
+            focusScale = style.scale(1.1f),
+            glow = style.glow,
         ) {
             val pkg = entry.localTarget?.packageName
             if (pkg != null) {
-                AppIcon(pkg, Modifier.align(Alignment.Center).size(size * 0.62f))
+                // With the title on the tile the icon moves up a little.
+                AppIcon(pkg, Modifier.align(if (onTile) Alignment.TopCenter else Alignment.Center).padding(top = if (onTile) size * 0.12f else 0.dp).size(size * if (onTile) 0.5f else 0.62f))
+                if (onTile) {
+                    Text(
+                        entry.item.title, style = MaterialTheme.typography.labelSmall, color = colors.onSurface, maxLines = 1,
+                        overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center,
+                        modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(horizontal = 6.dp, vertical = 8.dp),
+                    )
+                }
             } else {
                 ArtworkImage(entry.coverModel(), entry.item.title, Modifier.fillMaxSize(), showTitleOnPlaceholder = true)
+                if (onTile) TileOverlay(entry, layout.copy(info = TileInfo.NONE))
             }
-            // In the apps grid the section already says where an app lives; badges only
-            // help when an app is available both locally and on a host.
-            if (entry.localTarget != null && entry.remoteTargets.isNotEmpty()) {
-                SourceBadges(entry, Modifier.align(Alignment.TopEnd).padding(4.dp))
-            }
+            if (pkg != null || !onTile) TileBadges(entry, layout.badges)
         }
-        Text(
-            entry.item.title,
-            style = MaterialTheme.typography.labelMedium,
-            color = colors.onSurface,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(top = 8.dp),
-        )
+        if (layout.title == TileTitle.BELOW) {
+            Text(
+                entry.item.title,
+                style = MaterialTheme.typography.labelMedium,
+                color = colors.onSurface,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+        }
     }
 }
 

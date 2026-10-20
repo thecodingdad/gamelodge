@@ -71,8 +71,8 @@ class HomeCallbacks(
     val lastFocusedKey: String?,
     val onFocusKey: (String) -> Unit,
     val animatedArtwork: Boolean,
-    /** Shape of the game tiles (apps stay landscape). */
-    val tileFormat: io.github.thecodingdad.gamelodge.data.settings.TileFormat = io.github.thecodingdad.gamelodge.data.settings.TileFormat.PORTRAIT,
+    /** How the tiles look (shape, title, extra info, badges; apps stay landscape). */
+    val layout: io.github.thecodingdad.gamelodge.data.settings.TabLayout = io.github.thecodingdad.gamelodge.data.settings.TabLayout(title = io.github.thecodingdad.gamelodge.data.settings.TileTitle.OFF),
     /** Reports whether the layout is in its initial state (top, first item focused). */
     val onAtStart: (Boolean) -> Unit = {},
     /** The entry the user is on (for the A hint). */
@@ -351,6 +351,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.homeRow(
                     // Apps on the start tab: landscape tiles.
                     io.github.thecodingdad.gamelodge.ui.components.AppTileCard(
                         entry = entry,
+                        layout = callbacks.layout,
                         onClick = { actions.open(entry, entries) },
                         onLongClick = { actions.context(entry, entries) { id -> callbacks.onFocusKey("$key:$id") } },
                         onFocused = { onFocus(entry, entries); callbacks.onFocusKey(focusKey) },
@@ -360,12 +361,12 @@ private fun androidx.compose.foundation.lazy.LazyListScope.homeRow(
                     CoverCard(
                         entry = entry,
                         // Landscape: as high as the app tiles beside it; portrait and square a bit smaller.
-                        width = LauncherTheme.dimens.coverWidth * when (callbacks.tileFormat) {
+                        width = LauncherTheme.dimens.coverWidth * when (callbacks.layout.format) {
                             io.github.thecodingdad.gamelodge.data.settings.TileFormat.PORTRAIT -> 0.82f
                             io.github.thecodingdad.gamelodge.data.settings.TileFormat.LANDSCAPE -> 1.6f / io.github.thecodingdad.gamelodge.ui.components.APP_LANDSCAPE_RATIO * io.github.thecodingdad.gamelodge.ui.components.GAME_LANDSCAPE_RATIO
                             io.github.thecodingdad.gamelodge.data.settings.TileFormat.SQUARE -> 1.0f
                         },
-                        format = callbacks.tileFormat,
+                        layout = callbacks.layout,
                         onClick = { actions.open(entry, entries) { id -> callbacks.onFocusKey("$key:$id") } },
                         onLongClick = { actions.context(entry, entries) { id -> callbacks.onFocusKey("$key:$id") } },
                         onFocused = { onFocus(entry, entries); callbacks.onFocusKey(focusKey) },

@@ -182,7 +182,7 @@ class MetadataService(
                 val switchedOn = it.animatedArtwork && !animated
                 animated = it.animatedArtwork
                 if (switchedOn && !it.animatedBackfillDone) launch(Dispatchers.IO) { backfillAnimated() }
-                val formats = setOf(it.homeTileFormat, it.libraryTileFormat)
+                val formats = setOf(it.homeLayout.format, it.libraryLayout.format)
                 val landscapeOn = TileFormat.LANDSCAPE in formats && !landscapeTiles
                 val squareOn = TileFormat.SQUARE in formats && !squareTiles
                 landscapeTiles = TileFormat.LANDSCAPE in formats

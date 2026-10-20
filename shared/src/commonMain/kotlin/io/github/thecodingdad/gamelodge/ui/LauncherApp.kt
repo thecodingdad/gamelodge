@@ -244,10 +244,10 @@ fun LauncherApp(
     val uiScale = (if (settings.tvScaleAuto && (external != null || onTv)) settings.tvScale else settings.uiScale) / 100f
     // Small handhelds: lowered further so a row of covers always fits (see fittedDensity).
     val window = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize
-    val scaledDensity = remember(baseDensity, uiScale, onTv, window, settings.cardSize) {
+    val scaledDensity = remember(baseDensity, uiScale, onTv, window, settings.homeLayout.cardSize) {
         // On the TV the launcher fills the screen: its width in pixels decides the density.
         val base = if (onTv) window.width / 960f else baseDensity.density
-        val fitted = io.github.thecodingdad.gamelodge.ui.theme.fittedDensity(base * uiScale, window.width, window.height, settings.cardSize)
+        val fitted = io.github.thecodingdad.gamelodge.ui.theme.fittedDensity(base * uiScale, window.width, window.height, settings.homeLayout.cardSize)
         androidx.compose.ui.unit.Density(fitted, baseDensity.fontScale)
     }
 
@@ -678,6 +678,13 @@ private fun MainShell(
                 // outgoing and incoming tab keep their own layout during the cross-fade.
                 val tabFullBleed = current == MainTab.HOME
                 Box(Modifier.fillMaxSize().then(if (tabFullBleed) Modifier else Modifier.padding(top = topBarHeight, bottom = hintBarHeight))) {
+                // Each tab its own card size.
+                val tabCards = when (current) {
+                    MainTab.LIBRARY -> settings.libraryLayout.cardSize
+                    MainTab.APPS -> settings.appsLayout.cardSize
+                    else -> settings.homeLayout.cardSize
+                }
+                CompositionLocalProvider(io.github.thecodingdad.gamelodge.ui.theme.LocalLauncherDimens provides io.github.thecodingdad.gamelodge.ui.theme.dimensFor(tabCards)) {
                 when (current) {
                     MainTab.HOME -> {
                         val rows = remember(games, running) { HomeRows.from(games, running) }
@@ -694,7 +701,7 @@ private fun MainShell(
                             onAtStart = { vm.homeAtStart = it },
                             onFocusedEntry = { homeFocused = it },
                             animatedArtwork = settings.animatedArtwork,
-                            tileFormat = settings.homeTileFormat,
+                            layout = settings.homeLayout,
                         )
                         io.github.thecodingdad.gamelodge.ui.shell.ScreenHints(
                             listOf(
@@ -715,11 +722,12 @@ private fun MainShell(
                     MainTab.LIBRARY -> LibraryScreen(
                         allEntries, libraryFilters, settings.animatedArtwork, vm.focusKeys[MainTab.LIBRARY.name], openStats,
                         openFilterSettings = { nav.navigate(Routes.settings(SettingsPageId.FILTERS)) },
-                        tileFormat = settings.libraryTileFormat,
+                        layout = settings.libraryLayout,
                     ) { vm.focusKeys[MainTab.LIBRARY.name] = it }
                     MainTab.APPS -> AppsScreen(
                         apps, appsFilters, vm.focusKeys[MainTab.APPS.name],
                         openFilterSettings = { nav.navigate(Routes.settings(SettingsPageId.APP_FILTERS)) },
+                        layout = settings.appsLayout,
                     ) { vm.focusKeys[MainTab.APPS.name] = it }
                     MainTab.SETTINGS -> {
                         io.github.thecodingdad.gamelodge.ui.shell.ScreenHints(
@@ -727,6 +735,7 @@ private fun MainShell(
                         )
                         SettingsHome(open = { nav.navigate(Routes.settings(it)) }, isFirstVisit = true, openControllers = { nav.navigate(Routes.CONTROLLERS) }, query = vm.settingsQuery.value, onQueryChange = { vm.settingsQuery.value = it })
                     }
+                }
                 }
                 }
                 }
@@ -1042,6 +1051,8 @@ private fun SettingsPageContent(
         )
         SettingsPageId.HOSTS -> HostsSettings(hosts.values.toList(), openHostConfig = { openHost(it.uuid) })
         SettingsPageId.HOME_SCREEN -> io.github.thecodingdad.gamelodge.ui.screens.settings.HomeScreenSettings(settings, vm::updateSettings, vm)
+        SettingsPageId.LIBRARY_VIEW -> io.github.thecodingdad.gamelodge.ui.screens.settings.LibraryViewSettings(settings, vm::updateSettings)
+        SettingsPageId.APPS_VIEW -> io.github.thecodingdad.gamelodge.ui.screens.settings.AppsViewSettings(settings, vm::updateSettings)
         SettingsPageId.THEME -> io.github.thecodingdad.gamelodge.ui.screens.settings.ThemeSettings(settings, vm::updateSettings)
         SettingsPageId.DISPLAY -> {
             val external by vm.externalDisplay.collectAsState()

@@ -169,7 +169,7 @@ fun LauncherTheme(settings: LauncherSettings, content: @Composable () -> Unit) {
     val colors = remember(settings.themeMode, accent, settings.accentTextColor) {
         palette(settings.themeMode, accent).apply { textAccentOverride = settings.accentTextColor?.let { Color(it) } }
     }
-    val dimens = dimensFor(settings.cardSize)
+    val dimens = dimensFor(settings.homeLayout.cardSize)
     // Material's scheme keeps the fixed accent: the cover accent would re-theme everything per frame.
     val scheme = remember(colors, fixedAccent) { if (colors.isDark) {
         darkColorScheme(
@@ -190,6 +190,9 @@ fun LauncherTheme(settings: LauncherSettings, content: @Composable () -> Unit) {
         LocalLauncherDimens provides dimens,
         LocalReduceMotion provides settings.reduceMotion,
         LocalAccentHolder provides accentHolder,
+        io.github.thecodingdad.gamelodge.ui.components.LocalTileStyle provides io.github.thecodingdad.gamelodge.ui.components.TileStyle(
+            settings.tileCorners, settings.focusZoom, settings.focusGlow, settings.dimNotInstalled,
+        ),
     ) {
         val family = launcherFontFamily()
         val typography = androidx.compose.runtime.remember(family) { LauncherTypography.withFamily(family) }

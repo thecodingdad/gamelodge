@@ -47,6 +47,7 @@ fun LauncherModeSettings(settings: LauncherSettings, update: ((LauncherSettings)
     }
 
     SettingsPage(stringResource(Res.string.settings_launcher)) {
+        StartTabRow()
         Text(stringResource(Res.string.launcher_intro), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
         SwitchRow(
             stringResource(Res.string.launcher_enable), isDefault,

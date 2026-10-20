@@ -34,7 +34,7 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 
 /** Swatches: 18 hues in a light and a deep tone, plus greys. */
-private val swatches: List<Int> = buildList {
+internal val swatches: List<Int> = buildList {
     for (tone in listOf(0.55f to 1f, 0.8f to 0.82f)) for (i in 0 until 18) add(Color.hsv(i * 20f, tone.first, tone.second).toArgb())
     addAll(listOf(0xFFFFFFFF, 0xFFC7CBD6, 0xFF8E93A3, 0xFF5B6070).map { it.toInt() })
 }

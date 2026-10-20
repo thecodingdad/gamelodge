@@ -20,6 +20,35 @@ enum class CardSize { SMALL, MEDIUM, LARGE }
 /** Shape of game tiles: cover (2:3), landscape (16:9) or square. */
 enum class TileFormat { PORTRAIT, LANDSCAPE, SQUARE }
 enum class ButtonLayout { XBOX, NINTENDO }
+/** Where a tile shows its title. */
+enum class TileTitle { OFF, BELOW, ON_TILE }
+/** Extra line on a tile. */
+enum class TileInfo { NONE, PLAYTIME, LAST_PLAYED, PROGRESS }
+/** Small marks on a tile: favourite, where it runs (this device, emulator, host), not installed. */
+enum class TileBadge { FAVORITE, LOCAL, ROM, HOST, NOT_INSTALLED }
+/** Apps tab: icon grid or landscape banners. */
+enum class AppsStyle { ICONS, BANNERS }
+enum class TileCorners { SHARP, SLIGHT, ROUND }
+enum class FocusZoom { NONE, LIGHT, STRONG }
+
+/** How one tab (start, library, apps) shows its tiles. */
+@kotlinx.serialization.Serializable
+data class TabLayout(
+    val cardSize: CardSize = CardSize.MEDIUM,
+    /** Games only (apps on the start tab stay landscape). */
+    val format: TileFormat = TileFormat.PORTRAIT,
+    val title: TileTitle = TileTitle.BELOW,
+    val info: TileInfo = TileInfo.NONE,
+    val badges: Set<TileBadge> = TileBadge.entries.toSet(),
+    /** Apps tab only. */
+    val appsStyle: AppsStyle = AppsStyle.ICONS,
+) {
+    companion object {
+        private val json = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
+        fun decode(text: String?): TabLayout? = text?.let { runCatching { json.decodeFromString<TabLayout>(it) }.getOrNull() }
+        fun encode(layout: TabLayout): String = json.encodeToString(layout)
+    }
+}
 enum class NetworkCheckMode { OFF, OUTSIDE_HOME, ALWAYS }
 
 @kotlinx.serialization.Serializable
@@ -33,10 +62,15 @@ data class LauncherSettings(
     val accentTextColor: Int? = null,
     /** Hosts removed with their games kept (hidden; back with the next pairing of the host). */
     val detachedHosts: Set<String> = emptySet(),
-    val cardSize: CardSize = CardSize.MEDIUM,
-    /** Game tile shape on the start tab and in the library (apps on the start tab stay landscape). */
-    val homeTileFormat: TileFormat = TileFormat.PORTRAIT,
-    val libraryTileFormat: TileFormat = TileFormat.PORTRAIT,
+    /** Tiles per tab: the start tab shows no titles (the hero above names the game). */
+    val homeLayout: TabLayout = TabLayout(title = TileTitle.OFF),
+    val libraryLayout: TabLayout = TabLayout(),
+    val appsLayout: TabLayout = TabLayout(badges = emptySet()),
+    /** Tiles in every tab: corners, focus effect, not installed games dimmed. */
+    val tileCorners: TileCorners = TileCorners.SLIGHT,
+    val focusZoom: FocusZoom = FocusZoom.LIGHT,
+    val focusGlow: Boolean = true,
+    val dimNotInstalled: Boolean = true,
     /** Landscape / square tiles were looked up once for the games matched before the format was chosen. */
     val landscapeBackfillDone: Boolean = false,
     val squareBackfillDone: Boolean = false,
@@ -151,9 +185,17 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val accentColor = intPreferencesKey("accent_color")
         val accentTextColor = intPreferencesKey("accent_text_color")
         val detachedHosts = stringSetPreferencesKey("detached_hosts")
+        /** Before the per tab layouts: one card size for all, a tile format for start and library. */
         val cardSize = stringPreferencesKey("card_size")
         val homeTileFormat = stringPreferencesKey("home_tile_format")
         val libraryTileFormat = stringPreferencesKey("library_tile_format")
+        val homeLayout = stringPreferencesKey("home_layout")
+        val libraryLayout = stringPreferencesKey("library_layout")
+        val appsLayout = stringPreferencesKey("apps_layout")
+        val tileCorners = stringPreferencesKey("tile_corners")
+        val focusZoom = stringPreferencesKey("focus_zoom")
+        val focusGlow = booleanPreferencesKey("focus_glow")
+        val dimNotInstalled = booleanPreferencesKey("dim_not_installed")
         val landscapeBackfillDone = booleanPreferencesKey("landscape_backfill_done")
         val squareBackfillDone = booleanPreferencesKey("square_backfill_done")
         val reduceMotion = booleanPreferencesKey("reduce_motion")
@@ -237,9 +279,15 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             accentColor = this[K.accentColor] ?: d.accentColor,
             accentTextColor = this[K.accentTextColor],
             detachedHosts = this[K.detachedHosts] ?: d.detachedHosts,
-            cardSize = enumOr(this[K.cardSize], d.cardSize),
-            homeTileFormat = enumOr(this[K.homeTileFormat], d.homeTileFormat),
-            libraryTileFormat = enumOr(this[K.libraryTileFormat], d.libraryTileFormat),
+            homeLayout = TabLayout.decode(this[K.homeLayout])
+                ?: d.homeLayout.copy(cardSize = enumOr(this[K.cardSize], CardSize.MEDIUM), format = enumOr(this[K.homeTileFormat], TileFormat.PORTRAIT)),
+            libraryLayout = TabLayout.decode(this[K.libraryLayout])
+                ?: d.libraryLayout.copy(cardSize = enumOr(this[K.cardSize], CardSize.MEDIUM), format = enumOr(this[K.libraryTileFormat], TileFormat.PORTRAIT)),
+            appsLayout = TabLayout.decode(this[K.appsLayout]) ?: d.appsLayout.copy(cardSize = enumOr(this[K.cardSize], CardSize.MEDIUM)),
+            tileCorners = enumOr(this[K.tileCorners], d.tileCorners),
+            focusZoom = enumOr(this[K.focusZoom], d.focusZoom),
+            focusGlow = this[K.focusGlow] ?: d.focusGlow,
+            dimNotInstalled = this[K.dimNotInstalled] ?: d.dimNotInstalled,
             landscapeBackfillDone = this[K.landscapeBackfillDone] ?: d.landscapeBackfillDone,
             squareBackfillDone = this[K.squareBackfillDone] ?: d.squareBackfillDone,
             reduceMotion = this[K.reduceMotion] ?: d.reduceMotion,
@@ -314,9 +362,16 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         this[K.accentColor] = s.accentColor
         s.accentTextColor?.let { this[K.accentTextColor] = it } ?: remove(K.accentTextColor)
         this[K.detachedHosts] = s.detachedHosts
-        this[K.cardSize] = s.cardSize.name
-        this[K.homeTileFormat] = s.homeTileFormat.name
-        this[K.libraryTileFormat] = s.libraryTileFormat.name
+        this[K.homeLayout] = TabLayout.encode(s.homeLayout)
+        this[K.libraryLayout] = TabLayout.encode(s.libraryLayout)
+        this[K.appsLayout] = TabLayout.encode(s.appsLayout)
+        this[K.tileCorners] = s.tileCorners.name
+        this[K.focusZoom] = s.focusZoom.name
+        this[K.focusGlow] = s.focusGlow
+        this[K.dimNotInstalled] = s.dimNotInstalled
+        remove(K.cardSize)
+        remove(K.homeTileFormat)
+        remove(K.libraryTileFormat)
         this[K.landscapeBackfillDone] = s.landscapeBackfillDone
         this[K.squareBackfillDone] = s.squareBackfillDone
         this[K.reduceMotion] = s.reduceMotion

@@ -109,6 +109,8 @@ fun FocusSurface(
     dpadFocusable: Boolean = true,
     clickSound: UiSound = UiSound.CONFIRM,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+    /** Soft glow around the focus frame. */
+    glow: Boolean = true,
     content: @Composable BoxScope.(focused: Boolean) -> Unit,
 ) {
     val currentLongClick = androidx.compose.runtime.rememberUpdatedState(onLongClick)
@@ -151,7 +153,7 @@ fun FocusSurface(
                 scaleX = scale
                 scaleY = scale
             }
-            .then(if (focused && controllerMode) Modifier.shadow(18.dp, shape, ambientColor = ring, spotColor = ring) else Modifier)
+            .then(if (focused && controllerMode && glow) Modifier.shadow(18.dp, shape, ambientColor = ring, spotColor = ring) else Modifier)
             .clip(shape)
             .background(color)
             .then(if (dpadFocusable) Modifier.focusRequester(requester) else Modifier.focusProperties { canFocus = false })

@@ -96,7 +96,7 @@ fun LibraryScreen(
     lastFocusedKey: String?,
     openStats: () -> Unit,
     openFilterSettings: () -> Unit,
-    tileFormat: io.github.thecodingdad.gamelodge.data.settings.TileFormat = io.github.thecodingdad.gamelodge.data.settings.TileFormat.PORTRAIT,
+    layout: io.github.thecodingdad.gamelodge.data.settings.TabLayout = io.github.thecodingdad.gamelodge.data.settings.TabLayout(),
     onFocusKey: (String) -> Unit,
 ) {
     val actions = LocalEntryActions.current
@@ -236,7 +236,7 @@ fun LibraryScreen(
             // device held sideways every card size is one step smaller here than on the start tab
             // (one more column); upright the sizes stay as they are.
             columns = io.github.thecodingdad.gamelodge.ui.components.coverColumns(
-                io.github.thecodingdad.gamelodge.ui.components.LocalCompactWidth.current, tileFormat,
+                io.github.thecodingdad.gamelodge.ui.components.LocalCompactWidth.current, layout.format,
                 smaller = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.let { if (it.height > it.width) 0 else 1 },
             ),
             contentPadding = PaddingValues(horizontal = if (io.github.thecodingdad.gamelodge.ui.components.LocalCompactWidth.current) 16.dp else 36.dp, vertical = 16.dp),
@@ -253,9 +253,8 @@ fun LibraryScreen(
                     },
                     onLongClick = { openContext(entry) },
                     onFocused = { focused.value = entry; focusByFilter[filterKey] = entry.item.id; onFocusKey(key); snapTo(index) },
-                    showTitle = true,
                     animated = animatedArtwork,
-                    format = tileFormat,
+                    layout = layout,
                     modifier = Modifier.restoreFocusIf(entry.item.id == targetId, trigger = filterKey).focusAfterBrowse(entry.item.id),
                 )
             }

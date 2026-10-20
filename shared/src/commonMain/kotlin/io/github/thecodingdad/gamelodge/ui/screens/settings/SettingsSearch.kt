@@ -31,6 +31,8 @@ private fun page(id: SettingsPageId, vararg titles: StringResource, section: Str
 
 private val pageTitles: List<Pair<SettingsTarget, StringResource>> = listOf(
     SettingsTarget.Page(SettingsPageId.HOME_SCREEN) to Res.string.settings_home_screen,
+    SettingsTarget.Page(SettingsPageId.LIBRARY_VIEW) to Res.string.settings_library_view,
+    SettingsTarget.Page(SettingsPageId.APPS_VIEW) to Res.string.settings_apps_view,
     SettingsTarget.Page(SettingsPageId.THEME) to Res.string.settings_theme,
     SettingsTarget.Page(SettingsPageId.DISPLAY) to Res.string.settings_display,
     SettingsTarget.Page(SettingsPageId.FILTERS) to Res.string.settings_filters,
@@ -61,6 +63,8 @@ private val pageKeywords: Map<SettingsTarget, StringResource> = mapOf(
     SettingsTarget.Page(SettingsPageId.HOME_SCREEN) to Res.string.search_kw_home_screen,
     SettingsTarget.Page(SettingsPageId.THEME) to Res.string.search_kw_theme,
     SettingsTarget.Page(SettingsPageId.DISPLAY) to Res.string.search_kw_display,
+    SettingsTarget.Page(SettingsPageId.LIBRARY_VIEW) to Res.string.search_kw_library_view,
+    SettingsTarget.Page(SettingsPageId.APPS_VIEW) to Res.string.search_kw_apps_view,
     SettingsTarget.Page(SettingsPageId.FILTERS) to Res.string.search_kw_filters,
     SettingsTarget.Page(SettingsPageId.METADATA) to Res.string.search_kw_metadata,
     SettingsTarget.Page(SettingsPageId.USAGE) to Res.string.search_kw_usage,
@@ -119,12 +123,22 @@ private val platformPages = setOf(
 private val settingsIndex: List<SearchEntry> = buildList {
     // The pages themselves.
     pageTitles.forEach { (target, title) -> add(SearchEntry(title, target)) }
-    addAll(page(SettingsPageId.HOME_SCREEN, Res.string.setting_start_tab, Res.string.home_rows_section, Res.string.home_row_ha))
-    addAll(page(SettingsPageId.THEME, Res.string.setting_theme, Res.string.setting_accent, Res.string.setting_accent_color))
+    // Tile settings of the three tabs (the same titles on each page; the section names the tab).
+    for ((id, tab) in listOf(SettingsPageId.HOME_SCREEN to Res.string.settings_home_screen, SettingsPageId.LIBRARY_VIEW to Res.string.settings_library_view, SettingsPageId.APPS_VIEW to Res.string.settings_apps_view)) {
+        addAll(page(id, Res.string.setting_card_size, Res.string.setting_tile_title, Res.string.setting_tile_badges, section = tab))
+    }
+    addAll(page(SettingsPageId.HOME_SCREEN, Res.string.setting_tile_format, Res.string.setting_tile_info, section = Res.string.settings_home_screen))
+    addAll(page(SettingsPageId.LIBRARY_VIEW, Res.string.setting_tile_format, Res.string.setting_tile_info, section = Res.string.settings_library_view))
+    addAll(page(SettingsPageId.APPS_VIEW, Res.string.setting_apps_style, section = Res.string.settings_apps_view))
+    addAll(page(SettingsPageId.HOME_SCREEN, Res.string.home_rows_section, Res.string.home_row_ha))
+    addAll(page(SettingsPageId.LAUNCHER, Res.string.setting_start_tab))
+    addAll(page(SettingsPageId.STARTUP, Res.string.setting_start_tab))
     addAll(page(
-        SettingsPageId.DISPLAY, Res.string.setting_card_size, Res.string.setting_tile_format_home, Res.string.setting_tile_format_library, Res.string.setting_animated_artwork, Res.string.setting_reduce_motion,
-        Res.string.setting_ui_scale, Res.string.setting_screensaver,
+        SettingsPageId.THEME, Res.string.setting_theme, Res.string.setting_accent, Res.string.setting_accent_color, Res.string.setting_tile_corners,
+        Res.string.setting_focus_zoom, Res.string.setting_focus_glow, Res.string.setting_dim_not_installed, Res.string.setting_animated_artwork,
+        Res.string.setting_reduce_motion, Res.string.setting_ui_scale,
     ))
+    addAll(page(SettingsPageId.DISPLAY, Res.string.setting_screensaver))
     addAll(page(SettingsPageId.DISPLAY, Res.string.setting_hide_nav_bar, device = true))
     addAll(page(
         SettingsPageId.DISPLAY, Res.string.tv_section, Res.string.setting_tv_launcher, Res.string.setting_tv_resolution,

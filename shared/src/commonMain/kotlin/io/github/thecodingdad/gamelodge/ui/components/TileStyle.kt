@@ -1,0 +1,34 @@
+package io.github.thecodingdad.gamelodge.ui.components
+
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.unit.dp
+import io.github.thecodingdad.gamelodge.data.settings.FocusZoom
+import io.github.thecodingdad.gamelodge.data.settings.TileCorners
+
+/** Look of the game and app tiles in every tab (appearance settings). */
+@Immutable
+data class TileStyle(
+    val corners: TileCorners = TileCorners.SLIGHT,
+    val zoom: FocusZoom = FocusZoom.LIGHT,
+    val glow: Boolean = true,
+    val dimNotInstalled: Boolean = true,
+) {
+    val shape get() = RoundedCornerShape(
+        when (corners) {
+            TileCorners.SHARP -> 4.dp
+            TileCorners.SLIGHT -> 14.dp
+            TileCorners.ROUND -> 26.dp
+        },
+    )
+
+    /** The focus zoom for a tile whose normal zoom is [base]. */
+    fun scale(base: Float = 1.06f): Float = when (zoom) {
+        FocusZoom.NONE -> 1f
+        FocusZoom.LIGHT -> base
+        FocusZoom.STRONG -> 1f + (base - 1f) * 2f
+    }
+}
+
+val LocalTileStyle = staticCompositionLocalOf { TileStyle() }

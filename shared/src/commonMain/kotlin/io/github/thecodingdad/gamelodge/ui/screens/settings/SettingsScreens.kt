@@ -1,6 +1,28 @@
 package io.github.thecodingdad.gamelodge.ui.screens.settings
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material.icons.filled.Cloud
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.Monitor
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import io.github.thecodingdad.gamelodge.data.settings.AppsStyle
+import io.github.thecodingdad.gamelodge.data.settings.FocusZoom
+import io.github.thecodingdad.gamelodge.data.settings.TabLayout
+import io.github.thecodingdad.gamelodge.data.settings.TileBadge
+import io.github.thecodingdad.gamelodge.data.settings.TileCorners
+import io.github.thecodingdad.gamelodge.data.settings.TileFormat
+import io.github.thecodingdad.gamelodge.data.settings.TileInfo
+import io.github.thecodingdad.gamelodge.data.settings.TileTitle
+import io.github.thecodingdad.gamelodge.ui.components.aspectRatio
+import kotlinx.coroutines.launch
 import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Computer
@@ -42,7 +64,7 @@ import io.github.thecodingdad.gamelodge.data.settings.LauncherSettings
 import io.github.thecodingdad.gamelodge.data.settings.ThemeMode
 import io.github.thecodingdad.gamelodge.resources.*
 
-enum class SettingsPageId { GAME_SOURCES, HOST_ROLE, STREAMING_HOST, STARTUP, HOSTS, PROFILES, HOME_SCREEN, THEME, DISPLAY, FILTERS, APP_FILTERS, QUICK_MENU, CONTROLS, SOUNDS, METADATA, USAGE, EMULATORS, HOME_ASSISTANT, VPN, LAUNCHER, DATA, LANGUAGE, ABOUT, LICENSES }
+enum class SettingsPageId { GAME_SOURCES, HOST_ROLE, STREAMING_HOST, STARTUP, HOSTS, PROFILES, HOME_SCREEN, LIBRARY_VIEW, APPS_VIEW, THEME, DISPLAY, FILTERS, APP_FILTERS, QUICK_MENU, CONTROLS, SOUNDS, METADATA, USAGE, EMULATORS, HOME_ASSISTANT, VPN, LAUNCHER, DATA, LANGUAGE, ABOUT, LICENSES }
 
 @Composable
 fun SettingsHome(
@@ -76,8 +98,10 @@ fun SettingsHome(
         }
         SectionHeader(stringResource(Res.string.settings_group_display))
         NavRow(stringResource(Res.string.settings_home_screen), { open(SettingsPageId.HOME_SCREEN) }, stringResource(Res.string.settings_home_screen_sub), Icons.Filled.Home, initialFocus = isFirstVisit)
+        NavRow(stringResource(Res.string.settings_library_view), { open(SettingsPageId.LIBRARY_VIEW) }, stringResource(Res.string.settings_library_view_sub), Icons.Filled.GridView)
+        NavRow(stringResource(Res.string.settings_apps_view), { open(SettingsPageId.APPS_VIEW) }, stringResource(Res.string.settings_apps_view_sub), Icons.Filled.Apps)
         NavRow(stringResource(Res.string.settings_theme), { open(SettingsPageId.THEME) }, stringResource(Res.string.settings_theme_sub), Icons.Filled.Palette)
-        NavRow(stringResource(Res.string.settings_display), { open(SettingsPageId.DISPLAY) }, stringResource(Res.string.settings_display_sub), Icons.Filled.AspectRatio)
+        NavRow(stringResource(Res.string.settings_display), { open(SettingsPageId.DISPLAY) }, stringResource(if (platform.deviceDisplayOptions) Res.string.settings_display_sub else Res.string.settings_display_sub_desktop), Icons.Filled.Monitor)
 
         SectionHeader(stringResource(Res.string.settings_group_library))
         NavRow(stringResource(Res.string.settings_filters), { open(SettingsPageId.FILTERS) }, stringResource(Res.string.settings_filters_sub), Icons.Filled.FilterAlt)
@@ -130,21 +154,7 @@ fun HomeScreenSettings(
 ) {
     val filters by vm.filters.collectAsState()
     SettingsPage(stringResource(Res.string.settings_home_screen)) {
-        ChoiceRow(
-            stringResource(Res.string.setting_start_tab), StartTab.entries, settings.startTab,
-            label = {
-                stringResource(
-                    when (it) {
-                        StartTab.HOME -> Res.string.tab_home
-                        StartTab.LIBRARY -> Res.string.tab_library
-                        StartTab.APPS -> Res.string.tab_apps
-                    },
-                )
-            },
-            onSelect = { v -> update { it.copy(startTab = v) } },
-            subtitle = stringResource(Res.string.setting_start_tab_sub),
-            initialFocus = true,
-        )
+        TileSettings(settings.homeLayout, { l -> update { it.copy(homeLayout = l) } }, startTab = true)
         SectionHeader(stringResource(Res.string.home_rows_section))
         Text(stringResource(Res.string.home_rows_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
         // Game filters first, then app filters (their rows show landscape app tiles).
@@ -180,13 +190,160 @@ fun HomeScreenSettings(
     }
 }
 
+/** The tile settings of one tab, below a live preview of them. */
+@Composable
+private fun TileSettings(layout: TabLayout, onChange: (TabLayout) -> Unit, apps: Boolean = false, startTab: Boolean = false) {
+    TabPreview(layout, apps = apps, startTab = startTab)
+    if (apps) {
+        ChoiceRow(
+            stringResource(Res.string.setting_apps_style), AppsStyle.entries, layout.appsStyle,
+            label = { stringResource(if (it == AppsStyle.ICONS) Res.string.apps_style_icons else Res.string.apps_style_banners) },
+            onSelect = { onChange(layout.copy(appsStyle = it)) },
+            optionIcon = { ShapeMark(if (it == AppsStyle.ICONS) 1f else 16f / 9f) },
+            initialFocus = true,
+        )
+    }
+    ChoiceRow(
+        stringResource(Res.string.setting_card_size), CardSize.entries, layout.cardSize,
+        label = {
+            stringResource(
+                when (it) {
+                    CardSize.SMALL -> Res.string.size_small
+                    CardSize.MEDIUM -> Res.string.size_medium
+                    CardSize.LARGE -> Res.string.size_large
+                },
+            )
+        },
+        onSelect = { onChange(layout.copy(cardSize = it)) },
+        initialFocus = !apps,
+    )
+    if (!apps) {
+        ChoiceRow(
+            stringResource(Res.string.setting_tile_format), TileFormat.entries, layout.format,
+            label = {
+                stringResource(
+                    when (it) {
+                        TileFormat.PORTRAIT -> Res.string.tile_portrait
+                        TileFormat.LANDSCAPE -> Res.string.tile_landscape
+                        TileFormat.SQUARE -> Res.string.tile_square
+                    },
+                )
+            },
+            onSelect = { onChange(layout.copy(format = it)) },
+            optionIcon = { ShapeMark(it.aspectRatio()) },
+            subtitle = if (startTab) stringResource(Res.string.setting_tile_format_home_sub) else null,
+        )
+    }
+    ChoiceRow(
+        stringResource(Res.string.setting_tile_title), TileTitle.entries, layout.title,
+        label = {
+            stringResource(
+                when (it) {
+                    TileTitle.OFF -> Res.string.tile_title_off
+                    TileTitle.BELOW -> Res.string.tile_title_below
+                    TileTitle.ON_TILE -> Res.string.tile_title_on
+                },
+            )
+        },
+        onSelect = { onChange(layout.copy(title = it)) },
+    )
+    // Icon tiles have no room for more than the name.
+    if (!(apps && layout.appsStyle == AppsStyle.ICONS)) {
+        ChoiceRow(
+            stringResource(Res.string.setting_tile_info), if (apps) listOf(TileInfo.NONE, TileInfo.PLAYTIME, TileInfo.LAST_PLAYED) else TileInfo.entries, layout.info,
+            label = {
+                stringResource(
+                    when (it) {
+                        TileInfo.NONE -> Res.string.tile_info_none
+                        TileInfo.PLAYTIME -> Res.string.tile_info_playtime
+                        TileInfo.LAST_PLAYED -> Res.string.tile_info_last
+                        TileInfo.PROGRESS -> Res.string.tile_info_progress
+                    },
+                )
+            },
+            onSelect = { onChange(layout.copy(info = it)) },
+            subtitle = if (apps) null else stringResource(Res.string.setting_tile_info_sub),
+        )
+    }
+    val localLabel = stringResource(
+        if (io.github.thecodingdad.gamelodge.ui.PlatformUi.current.hasPage(SettingsPageId.LAUNCHER)) Res.string.badge_android else Res.string.badge_pc,
+    )
+    val localIcon = io.github.thecodingdad.gamelodge.ui.PlatformUi.current.localIcon
+    ChipToggleRow(
+        stringResource(Res.string.setting_tile_badges),
+        if (apps) listOf(TileBadge.FAVORITE, TileBadge.LOCAL, TileBadge.HOST) else TileBadge.entries,
+        layout.badges,
+        label = {
+            when (it) {
+                TileBadge.FAVORITE -> stringResource(Res.string.badge_favorite)
+                TileBadge.LOCAL -> localLabel
+                TileBadge.ROM -> stringResource(Res.string.badge_rom)
+                TileBadge.HOST -> stringResource(Res.string.badge_host)
+                TileBadge.NOT_INSTALLED -> stringResource(Res.string.badge_not_installed)
+            }
+        },
+        icon = {
+            when (it) {
+                TileBadge.FAVORITE -> Icons.Filled.Favorite
+                TileBadge.LOCAL -> localIcon
+                TileBadge.ROM -> Icons.Filled.SportsEsports
+                TileBadge.HOST -> Icons.Filled.Cloud
+                TileBadge.NOT_INSTALLED -> Icons.Filled.Download
+            }
+        },
+        onToggle = { badge, on -> onChange(layout.copy(badges = if (on) layout.badges + badge else layout.badges - badge)) },
+        subtitle = stringResource(Res.string.setting_tile_badges_sub),
+    )
+}
+
+@Composable
+fun LibraryViewSettings(settings: LauncherSettings, update: ((LauncherSettings) -> LauncherSettings) -> Unit) {
+    SettingsPage(stringResource(Res.string.settings_library_view)) {
+        TileSettings(settings.libraryLayout, { l -> update { it.copy(libraryLayout = l) } })
+        SeeAlso(SeeAlsoLink(stringResource(Res.string.settings_filters), SettingsTarget.Page(SettingsPageId.FILTERS)))
+    }
+}
+
+@Composable
+fun AppsViewSettings(settings: LauncherSettings, update: ((LauncherSettings) -> LauncherSettings) -> Unit) {
+    SettingsPage(stringResource(Res.string.settings_apps_view)) {
+        TileSettings(settings.appsLayout, { l -> update { it.copy(appsLayout = l) } }, apps = true)
+        SeeAlso(SeeAlsoLink(stringResource(Res.string.settings_filters), SettingsTarget.Page(SettingsPageId.APP_FILTERS)))
+    }
+}
+
+/** Which tab the launcher opens with (system pages: launcher / startup). */
+@Composable
+fun StartTabRow(initialFocus: Boolean = false) {
+    val repo = io.github.thecodingdad.gamelodge.LocalContainer.current.settings
+    val settings by repo.settings.collectAsState(LauncherSettings())
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    ChoiceRow(
+        stringResource(Res.string.setting_start_tab), StartTab.entries, settings.startTab,
+        label = {
+            stringResource(
+                when (it) {
+                    StartTab.HOME -> Res.string.tab_home
+                    StartTab.LIBRARY -> Res.string.tab_library
+                    StartTab.APPS -> Res.string.tab_apps
+                },
+            )
+        },
+        onSelect = { v -> scope.launch { repo.update { it.copy(startTab = v) } } },
+        subtitle = stringResource(Res.string.setting_start_tab_sub),
+        initialFocus = initialFocus,
+    )
+}
+
+/** Theme, accent colours, how tiles look in every tab, motion and scale. */
 @Composable
 fun ThemeSettings(
     settings: LauncherSettings,
     update: ((LauncherSettings) -> LauncherSettings) -> Unit,
 ) {
+    val device = io.github.thecodingdad.gamelodge.ui.PlatformUi.current.deviceDisplayOptions
     SettingsPage(stringResource(Res.string.settings_theme)) {
-        ChoiceRow(
+        PictureChoiceRow(
             stringResource(Res.string.setting_theme), ThemeMode.entries, settings.themeMode,
             label = {
                 stringResource(
@@ -198,6 +355,7 @@ fun ThemeSettings(
                 )
             },
             onSelect = { v -> update { it.copy(themeMode = v) } },
+            picture = { ThemePicture(it) },
             initialFocus = true,
         )
         ChoiceRow(
@@ -206,9 +364,10 @@ fun ThemeSettings(
             onSelect = { v -> update { it.copy(accentMode = v) } },
         )
         var picker by androidx.compose.runtime.remember { mutableStateOf(false) }
-        NavRow(
-            stringResource(Res.string.setting_accent_color), { picker = true },
-            trailingContent = { ColorDot(settings.accentColor) },
+        AccentSwatchRow(
+            stringResource(Res.string.setting_accent_color), settings.accentColor,
+            onPick = { c -> update { it.copy(accentColor = c) } }, onMore = { picker = true },
+            subtitle = if (settings.accentMode == AccentMode.COVER) stringResource(Res.string.setting_accent_color_cover_sub) else null,
         )
         if (picker) AccentColorPicker(settings.accentColor, { c -> update { it.copy(accentColor = c) } }, { picker = false })
         // Accented texts (group headers): derived from the accent unless chosen.
@@ -228,51 +387,56 @@ fun ThemeSettings(
                 onAutomatic = { update { it.copy(accentTextColor = null) } }, automatic = settings.accentTextColor == null,
             )
         }
-    }
-}
 
-/** Sizes, motion and system bars. */
-@Composable
-fun DisplaySettings(
-    settings: LauncherSettings,
-    update: ((LauncherSettings) -> LauncherSettings) -> Unit,
-    externalDisplay: io.github.thecodingdad.gamelodge.system.ExternalDisplayInfo? = null,
-) {
-    // Navigation bar, TV output and mobile data only exist on a handheld.
-    val device = io.github.thecodingdad.gamelodge.ui.PlatformUi.current.deviceDisplayOptions
-    SettingsPage(stringResource(Res.string.settings_display)) {
+        SectionHeader(stringResource(Res.string.section_tiles))
         ChoiceRow(
-            stringResource(Res.string.setting_card_size), CardSize.entries, settings.cardSize,
+            stringResource(Res.string.setting_tile_corners), TileCorners.entries, settings.tileCorners,
             label = {
                 stringResource(
                     when (it) {
-                        CardSize.SMALL -> Res.string.size_small
-                        CardSize.MEDIUM -> Res.string.size_medium
-                        CardSize.LARGE -> Res.string.size_large
+                        TileCorners.SHARP -> Res.string.corners_sharp
+                        TileCorners.SLIGHT -> Res.string.corners_slight
+                        TileCorners.ROUND -> Res.string.corners_round
                     },
                 )
             },
-            onSelect = { v -> update { it.copy(cardSize = v) } },
-            initialFocus = true,
+            onSelect = { v -> update { it.copy(tileCorners = v) } },
+            optionIcon = { c ->
+                Box(
+                    Modifier.size(16.dp).border(
+                        2.dp, androidx.compose.material3.LocalContentColor.current,
+                        RoundedCornerShape(
+                            when (c) {
+                                TileCorners.SHARP -> 1.dp
+                                TileCorners.SLIGHT -> 4.dp
+                                TileCorners.ROUND -> 8.dp
+                            },
+                        ),
+                    ),
+                )
+            },
         )
-        val formatLabel: @Composable (io.github.thecodingdad.gamelodge.data.settings.TileFormat) -> String = {
-            stringResource(
-                when (it) {
-                    io.github.thecodingdad.gamelodge.data.settings.TileFormat.PORTRAIT -> Res.string.tile_portrait
-                    io.github.thecodingdad.gamelodge.data.settings.TileFormat.LANDSCAPE -> Res.string.tile_landscape
-                    io.github.thecodingdad.gamelodge.data.settings.TileFormat.SQUARE -> Res.string.tile_square
-                },
-            )
-        }
         ChoiceRow(
-            stringResource(Res.string.setting_tile_format_home), io.github.thecodingdad.gamelodge.data.settings.TileFormat.entries, settings.homeTileFormat,
-            label = formatLabel, onSelect = { v -> update { it.copy(homeTileFormat = v) } },
-            subtitle = stringResource(Res.string.setting_tile_format_home_sub),
+            stringResource(Res.string.setting_focus_zoom), FocusZoom.entries, settings.focusZoom,
+            label = {
+                stringResource(
+                    when (it) {
+                        FocusZoom.NONE -> Res.string.zoom_none
+                        FocusZoom.LIGHT -> Res.string.zoom_light
+                        FocusZoom.STRONG -> Res.string.zoom_strong
+                    },
+                )
+            },
+            onSelect = { v -> update { it.copy(focusZoom = v) } },
+            subtitle = stringResource(Res.string.setting_focus_zoom_sub),
         )
-        ChoiceRow(
-            stringResource(Res.string.setting_tile_format_library), io.github.thecodingdad.gamelodge.data.settings.TileFormat.entries, settings.libraryTileFormat,
-            label = formatLabel, onSelect = { v -> update { it.copy(libraryTileFormat = v) } },
+        SwitchRow(stringResource(Res.string.setting_focus_glow), settings.focusGlow, { v -> update { it.copy(focusGlow = v) } })
+        SwitchRow(
+            stringResource(Res.string.setting_dim_not_installed), settings.dimNotInstalled, { v -> update { it.copy(dimNotInstalled = v) } },
+            subtitle = stringResource(Res.string.setting_dim_not_installed_sub),
         )
+
+        SectionHeader(stringResource(Res.string.section_motion))
         // Switched on again: games matched meanwhile get their animated artwork looked up.
         SwitchRow(stringResource(Res.string.setting_animated_artwork), settings.animatedArtwork, { v -> update { it.copy(animatedArtwork = v, animatedBackfillDone = it.animatedBackfillDone && v) } })
         if (settings.animatedArtwork) {
@@ -293,17 +457,31 @@ fun DisplaySettings(
             stringResource(Res.string.setting_ui_scale), settings.uiScale, 60..130, 5,
             { v -> update { it.copy(uiScale = v) } }, { "$it %" },
         )
+    }
+}
+
+/** Screen saver, system bars and the TV output. */
+@Composable
+fun DisplaySettings(
+    settings: LauncherSettings,
+    update: ((LauncherSettings) -> LauncherSettings) -> Unit,
+    externalDisplay: io.github.thecodingdad.gamelodge.system.ExternalDisplayInfo? = null,
+) {
+    // Navigation bar, TV output and mobile data only exist on a handheld.
+    val device = io.github.thecodingdad.gamelodge.ui.PlatformUi.current.deviceDisplayOptions
+    SettingsPage(stringResource(Res.string.settings_display)) {
+        ChoiceRow(
+            stringResource(Res.string.setting_screensaver), listOf(0, 2, 5, 10, 20), settings.screensaverMinutes,
+            label = { if (it == 0) stringResource(Res.string.off) else stringResource(Res.string.minutes_short, it) },
+            onSelect = { v -> update { it.copy(screensaverMinutes = v) } },
+            initialFocus = true,
+        )
         if (device) {
             SwitchRow(
                 stringResource(Res.string.setting_hide_nav_bar), settings.hideNavigationBar, { v -> update { it.copy(hideNavigationBar = v) } },
                 subtitle = stringResource(Res.string.setting_hide_nav_bar_sub),
             )
         }
-        ChoiceRow(
-            stringResource(Res.string.setting_screensaver), listOf(0, 2, 5, 10, 20), settings.screensaverMinutes,
-            label = { if (it == 0) stringResource(Res.string.off) else stringResource(Res.string.minutes_short, it) },
-            onSelect = { v -> update { it.copy(screensaverMinutes = v) } },
-        )
         if (!device) return@SettingsPage
         SectionHeader(stringResource(Res.string.tv_section))
         InfoRow(

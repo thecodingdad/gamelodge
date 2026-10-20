@@ -24,6 +24,7 @@ import org.jetbrains.compose.resources.stringResource
 fun StartupPage(startup: Startup, window: WindowControls?) {
     val settings by startup.settings.collectAsState()
     SettingsPage(stringResource(Res.string.settings_startup)) {
+        io.github.thecodingdad.gamelodge.ui.screens.settings.StartTabRow()
         SectionHeader(stringResource(Res.string.startup_window))
         SwitchRow(
             stringResource(Res.string.startup_fullscreen), settings.startFullscreen, { on -> startup.update { it.copy(startFullscreen = on) } },

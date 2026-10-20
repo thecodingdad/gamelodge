@@ -21,6 +21,7 @@ import io.github.thecodingdad.gamelodge.ui.screens.library.sortLabel
 import io.github.thecodingdad.gamelodge.ui.screens.library.filterLabel
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -60,8 +61,10 @@ fun AppsScreen(
     filters: List<ResolvedFilter>,
     lastFocusedKey: String?,
     openFilterSettings: () -> Unit,
+    layout: io.github.thecodingdad.gamelodge.data.settings.TabLayout = io.github.thecodingdad.gamelodge.data.settings.TabLayout(badges = emptySet()),
     onFocusKey: (String) -> Unit,
 ) {
+    val banners = layout.appsStyle == io.github.thecodingdad.gamelodge.data.settings.AppsStyle.BANNERS
     val actions = LocalEntryActions.current
     var focused by remember { mutableStateOf<LibraryEntry?>(null) }
     var gridFocused by remember { mutableStateOf(true) }
@@ -173,8 +176,12 @@ fun AppsScreen(
     LazyVerticalGrid(
         state = gridState,
         columns = GridCells.Adaptive(
-            if (io.github.thecodingdad.gamelodge.ui.components.LocalCompactWidth.current) LauncherTheme.dimens.iconTile * 0.6f + 30.dp
-            else LauncherTheme.dimens.iconTile + 36.dp,
+            when {
+                // Banners: about as wide as the app tiles on the start tab.
+                banners -> LauncherTheme.dimens.coverWidth * if (io.github.thecodingdad.gamelodge.ui.components.LocalCompactWidth.current) 1.2f else 1.6f
+                io.github.thecodingdad.gamelodge.ui.components.LocalCompactWidth.current -> LauncherTheme.dimens.iconTile * 0.6f + 30.dp
+                else -> LauncherTheme.dimens.iconTile + 36.dp
+            },
         ),
         contentPadding = PaddingValues(horizontal = if (io.github.thecodingdad.gamelodge.ui.components.LocalCompactWidth.current) 16.dp else 36.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -191,17 +198,23 @@ fun AppsScreen(
             }
             itemsIndexed(list, key = { _, it -> it.item.id }) { position, entry ->
                 val key = "apps:${entry.item.id}"
-                AppTile(
-                    entry = entry,
-                    onClick = { actions.play(entry) },
-                    onLongClick = { actions.context(entry) },
-                    onFocused = {
-                        focused = entry; focusByFilter[filterKey] = entry.item.id; onFocusKey(key)
-                        val columns = gridState.layoutInfo.maxSpan.coerceAtLeast(1)
-                        snapTo(if (position < columns) headerIndex else headerIndex + 1 + position)
-                    },
-                    modifier = Modifier.restoreFocusIf(entry.item.id == targetId, trigger = filterKey),
-                )
+                val onFocused = {
+                    focused = entry; focusByFilter[filterKey] = entry.item.id; onFocusKey(key)
+                    val columns = gridState.layoutInfo.maxSpan.coerceAtLeast(1)
+                    snapTo(if (position < columns) headerIndex else headerIndex + 1 + position)
+                }
+                val tileModifier = Modifier.restoreFocusIf(entry.item.id == targetId, trigger = filterKey)
+                if (banners) {
+                    io.github.thecodingdad.gamelodge.ui.components.AppTileCard(
+                        entry = entry, onClick = { actions.play(entry) }, onLongClick = { actions.context(entry) },
+                        onFocused = onFocused, layout = layout, modifier = tileModifier.fillMaxWidth(),
+                    )
+                } else {
+                    AppTile(
+                        entry = entry, onClick = { actions.play(entry) }, onLongClick = { actions.context(entry) },
+                        onFocused = onFocused, layout = layout, modifier = tileModifier,
+                    )
+                }
             }
         }
         if (flat) {

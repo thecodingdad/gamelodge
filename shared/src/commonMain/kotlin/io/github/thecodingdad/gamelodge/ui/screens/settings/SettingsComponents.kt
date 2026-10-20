@@ -351,6 +351,8 @@ fun <T> ChoiceRow(
     subtitle: String? = null,
     icon: ImageVector? = null,
     initialFocus: Boolean = false,
+    /** A small picture per option (shape, colour …) in the segments. */
+    optionIcon: (@Composable (T) -> Unit)? = null,
 ) {
     val index = options.indexOf(selected).coerceAtLeast(0)
     val feedback = LocalUiFeedback.current
@@ -372,12 +374,18 @@ fun <T> ChoiceRow(
         initialFocus = initialFocus,
     ) {
         val value = label(options[index])
+        val labels = options.map { label(it) }
+        // Few short options: all side by side, the chosen one highlighted (D-pad left/right and A
+        // still step through them; a tap picks one directly).
+        val segmented = options.size in 2..4 && labels.all { it.length <= 16 } && labels.sumOf { it.length } <= 40
         // The title and its description keep their room: the value takes at most 40 % of the row
         // (wrapping), and on narrow rows it moves below the texts.
         androidx.compose.foundation.layout.BoxWithConstraints {
             val narrow = maxWidth < NARROW_ROW
             val valueMax = if (narrow) maxWidth - 112.dp else maxWidth * 0.4f
-            val control: @Composable () -> Unit = {
+            val control: @Composable () -> Unit = if (segmented) {
+                { Segments(labels, index, optionIcon?.let { draw -> { i: Int -> draw(options[i]) } }) { i -> feedback?.play(UiSound.TOGGLE); onSelect(options[i]) } }
+            } else { {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     // Touch: the arrows step in their direction (the tap doesn't reach the row).
                     ChoiceArrow(Icons.AutoMirrored.Filled.KeyboardArrowLeft) { step(-1) }
@@ -391,7 +399,7 @@ fun <T> ChoiceRow(
                     )
                     ChoiceArrow(Icons.AutoMirrored.Filled.KeyboardArrowRight) { step(1) }
                 }
-            }
+            } }
             if (narrow) {
                 Column {
                     Texts(title, subtitle, icon)
@@ -402,6 +410,34 @@ fun <T> ChoiceRow(
                     Texts(title, subtitle, icon, Modifier.weight(1f))
                     control()
                 }
+            }
+        }
+    }
+}
+
+/** The options of a [ChoiceRow] side by side, the chosen one in the accent colour. */
+@Composable
+private fun Segments(labels: List<String>, selected: Int, icon: (@Composable (Int) -> Unit)?, onPick: (Int) -> Unit) {
+    val colors = LauncherTheme.colors
+    val pick by androidx.compose.runtime.rememberUpdatedState(onPick)
+    Row(
+        Modifier.clip(RoundedCornerShape(22.dp)).background(colors.background.copy(alpha = 0.6f)).padding(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        labels.forEachIndexed { i, text ->
+            val on = i == selected
+            val content = if (on) colors.onAccent else colors.onSurface
+            Row(
+                Modifier.clip(RoundedCornerShape(18.dp)).background(if (on) colors.accent else androidx.compose.ui.graphics.Color.Transparent)
+                    .handCursor().pointerInput(i) { detectTapGestures { pick(i) } }
+                    .heightIn(min = 40.dp).padding(horizontal = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (icon != null) {
+                    androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides content) { icon(i) }
+                    if (text.isNotEmpty()) Spacer(Modifier.width(8.dp))
+                }
+                if (text.isNotEmpty()) Text(text, style = MaterialTheme.typography.labelLarge, color = content, maxLines = 1)
             }
         }
     }
