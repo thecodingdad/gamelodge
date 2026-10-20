@@ -110,6 +110,9 @@ fun LauncherTextField(
                     TextKind.PASSWORD -> KeyboardType.Password
                     TextKind.TEXT -> KeyboardType.Text
                 },
+                // Only a tap opens the system keyboard: focus arriving by itself (restored when
+                // a tab or page comes back, first element) must not pop it up.
+                showKeyboardOnFocus = false,
             ),
             modifier = modifier.fillMaxWidth().onFocusChanged {
                 editing = it.isFocused
