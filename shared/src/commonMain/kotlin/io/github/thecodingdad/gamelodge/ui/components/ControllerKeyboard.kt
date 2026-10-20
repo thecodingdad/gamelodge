@@ -51,6 +51,10 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.ui.zIndex
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import io.github.thecodingdad.gamelodge.ui.input.PadAction
@@ -100,6 +104,10 @@ fun LauncherTextField(
     val colors = LauncherTheme.colors
     // Typing on a hardware keyboard switches to key input mode: the field being edited stays a field.
     var editing by remember { mutableStateOf(false) }
+    // The text field only takes the focus from a tap or click: a D-pad move or a restored focus
+    // (e.g. the first key press after touch, before the switch to controller mode) never lands
+    // in it, so the system keyboard can't pop up.
+    var tapped by remember { mutableStateOf(false) }
     val controllerMode = isControllerMode()
     val softKeyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
     // Controller input while the field (focused by touch) is still a text field: no system keyboard.
@@ -123,8 +131,17 @@ fun LauncherTextField(
                 // a tab or page comes back, first element) must not pop it up.
                 showKeyboardOnFocus = false,
             ),
-            modifier = modifier.fillMaxWidth().onFocusChanged {
+            modifier = modifier.fillMaxWidth()
+                .pointerInput(Unit) {
+                    awaitEachGesture {
+                        awaitFirstDown(requireUnconsumed = false, pass = androidx.compose.ui.input.pointer.PointerEventPass.Initial)
+                        tapped = true
+                    }
+                }
+                .focusProperties { canFocus = tapped || editing }
+                .onFocusChanged {
                 editing = it.isFocused
+                if (!it.isFocused) tapped = false
                 // Continue from the field when a controller or arrow key comes next.
                 if (it.isFocused) TouchFocus.clear()
             }.onPreviewKeyEvent { e ->
@@ -286,9 +303,7 @@ fun ControllerKeyboardHost(controller: KeyboardController) {
             val gap = 8.dp
             val lines = rows.size + 1 + if (urlRowShown) 1 else 0
             // The lines share the height (up to 64 dp each), so they always fit.
-            val full = 64.dp * lines + gap * (lines - 1)
-            val total = if (constraints.hasBoundedHeight) minOf(maxHeight, full) else full
-            val keyHeight = (total - gap * (lines - 1)) / lines
+            val keyHeight0 = 64.dp
             // Widths in units of a letter key: every line must fit the width.
             val bottomUnits = (88 + 88 + 300 + (if (atKey) 64 else 0) + 88 + 140) / 60f
             val bottomGaps = if (atKey) 5 else 4
@@ -298,23 +313,29 @@ fun ControllerKeyboardHost(controller: KeyboardController) {
                 (maxWidth - gap * bottomGaps) / bottomUnits,
                 if (urlRowShown) (maxWidth - gap * (urlRow.size - 1)) / (urlRow.size * 72 / 60f) else null,
             ).minOf { it }
-            val unit = fit.coerceIn(28.dp, keyHeight * 1.6f)
+            val unit = fit.coerceIn(28.dp, keyHeight0 * 1.6f)
+            // Lines share the height (so they always fit), at most 64 dp and not much higher than
+            // a letter key is wide (upright screens: narrow keys).
+            val lineMax = minOf(64.dp, maxOf(unit * 1.1f, 40.dp))
+            val full = lineMax * lines + gap * (lines - 1)
+            val total = if (constraints.hasBoundedHeight) minOf(maxHeight, full) else full
+            val keyHeight = (total - gap * (lines - 1)) / lines
             androidx.compose.runtime.CompositionLocalProvider(LocalKeySize provides KeySize(unit, keyHeight)) {
                 Column(Modifier.height(total), verticalArrangement = Arrangement.spacedBy(gap), horizontalAlignment = Alignment.CenterHorizontally) {
                     if (urlRowShown) {
-                        Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(gap)) {
+                        KeyRow(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(gap)) {
                             urlRow.forEach { s -> KeyCap(s, onClick = { insert(s) }, minWidth = 72.dp) }
                         }
                     }
                     rows.forEach { row ->
-                        Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(gap)) {
+                        KeyRow(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(gap)) {
                             row.forEach { ch ->
                                 val label = if (shift) ch.uppercase() else ch.toString()
                                 KeyCap(label, onClick = { insert(ch.toString()) })
                             }
                         }
                     }
-                    Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(gap)) {
+                    KeyRow(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(gap)) {
                         KeyCap(if (symbolMode) "abc" else "#+=", onClick = { symbolMode = !symbolMode }, minWidth = 88.dp)
                         KeyCap("", icon = Icons.Filled.ArrowUpward, onClick = { shift = !shift }, minWidth = 88.dp, highlighted = shift)
                         KeyCap("", icon = Icons.Filled.SpaceBar, onClick = { insert(" ") }, minWidth = 300.dp)
@@ -364,10 +385,21 @@ private fun KeyCap(
     ) {
         Row(Modifier.align(Alignment.Center), verticalAlignment = Alignment.CenterVertically) {
             if (icon != null) Icon(icon, null, tint = colors.onSurface, modifier = Modifier.size(22.dp))
-            if (icon != null && label.isNotEmpty()) Spacer(Modifier.width(6.dp))
-            if (label.isNotEmpty()) Text(label, style = MaterialTheme.typography.titleMedium, color = colors.onSurface)
+            // Narrow keys (upright screens): the icon alone rather than a wrapped label.
+            val showLabel = label.isNotEmpty() && (icon == null || width >= 110.dp)
+            if (icon != null && showLabel) Spacer(Modifier.width(6.dp))
+            if (showLabel) {
+                Text(label, style = MaterialTheme.typography.titleMedium, color = colors.onSurface, maxLines = 1, softWrap = false)
+            }
         }
     }
+}
+
+/** A line of keys, drawn above the other lines while one of its keys has the focus (its zoomed frame). */
+@Composable
+private fun KeyRow(modifier: Modifier, horizontalArrangement: Arrangement.Horizontal, content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit) {
+    var focused by remember { mutableStateOf(false) }
+    Row(modifier.zIndex(if (focused) 1f else 0f).onFocusChanged { focused = it.hasFocus }, horizontalArrangement = horizontalArrangement, content = content)
 }
 
 /** Size of a letter key on the on-screen keyboard (the others are wider in proportion). */
