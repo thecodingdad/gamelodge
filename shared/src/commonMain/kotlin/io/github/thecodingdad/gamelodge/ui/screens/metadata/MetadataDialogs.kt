@@ -221,8 +221,8 @@ fun ArtworkPickerDialog(
         // How each generated tile lays out its image (shown on the tile).
         var fits by remember(target.id) { mutableStateOf<Map<String, io.github.thecodingdad.gamelodge.ui.components.TileFit>>(emptyMap()) }
         LaunchedEffect(target.id, kind, appliedQuery) {
-            // Landscape: the app's TV banner and tiles made from its icon and from the cover / box art.
-            val made = if (kind != ArtworkKind.LANDSCAPE) emptyList() else kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            // Landscape and square: tiles made from the cover (else the icon); landscape also the app's TV banner.
+            val made = if (!tile) emptyList() else kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                 // New names every time: the image loader caches by file, an older tile (e.g. from
                 // a cover changed since) would show instead. The previous ones aren't needed.
                 val dir = java.io.File(filesDir, "tile-choices")

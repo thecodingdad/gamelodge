@@ -52,7 +52,8 @@ class AndroidArtwork(private val context: Context) : ArtworkPlatform {
             val pm = context.packageManager
             val banner = runCatching { pm.getApplicationBanner(packageName) }.getOrNull()
                 ?: pm.getLeanbackLaunchIntentForPackage(packageName)?.let { runCatching { pm.getActivityBanner(it) }.getOrNull() }
-            banner?.let { tiles += Triple(io.github.thecodingdad.gamelodge.metadata.ArtworkSource.TV_BANNER, null, it.toBitmap(640, 360)) }
+            // Banners are landscape: not offered for square tiles.
+            if (ratio > 1.2f) banner?.let { tiles += Triple(io.github.thecodingdad.gamelodge.metadata.ArtworkSource.TV_BANNER, null, it.toBitmap(640, 360)) }
         }
         // Made from the current cover; without one from the app's icon.
         val cover = source?.let {
@@ -146,21 +147,55 @@ private fun generatedHero(drawable: android.graphics.drawable.Drawable, portrait
 
 /**
  * [cover] whole at the tile's full height, in front of itself stretched over the whole tile
- * (not keeping its shape), blurred and dimmed (blurred by scaling down and up again in steps:
- * works on every Android version).
+ * (not keeping its shape), blurred and dimmed. Blurred in software (works on every Android
+ * version): at a quarter of the size, then scaled up smoothly.
  */
 private fun fittedCover(cover: Bitmap, w: Int, h: Int): Bitmap {
-    val out = Bitmap.createScaledBitmap(cover, w, h, true).copy(Bitmap.Config.ARGB_8888, true)
-    var blurred = out
-    for (width in listOf(w / 6, w / 24)) blurred = Bitmap.createScaledBitmap(blurred, width.coerceAtLeast(4), (width * h / w).coerceAtLeast(2), true)
-    for (width in listOf(w / 6, w)) blurred = Bitmap.createScaledBitmap(blurred, width, width * h / w, true)
+    val small = Bitmap.createScaledBitmap(cover, (w / 4).coerceAtLeast(8), (h / 4).coerceAtLeast(8), true).copy(Bitmap.Config.ARGB_8888, true)
+    boxBlur(small, radius = (minOf(small.width, small.height) / 14).coerceAtLeast(2))
+    val out = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
     val canvas = android.graphics.Canvas(out)
     val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG or android.graphics.Paint.FILTER_BITMAP_FLAG)
-    canvas.drawBitmap(blurred, null, android.graphics.Rect(0, 0, w, h), paint)
+    canvas.drawBitmap(small, null, android.graphics.Rect(0, 0, w, h), paint)
     canvas.drawColor(android.graphics.Color.argb(90, 0, 0, 0))
     val iw = cover.width * h / cover.height
     canvas.drawBitmap(cover, null, android.graphics.Rect((w - iw) / 2, 0, (w + iw) / 2, h), paint)
     return out
+}
+
+/** Three passes of a box blur in both directions: close to a gaussian blur, in place. */
+private fun boxBlur(bitmap: Bitmap, radius: Int) {
+    val w = bitmap.width
+    val h = bitmap.height
+    var src = IntArray(w * h).also { bitmap.getPixels(it, 0, w, 0, 0, w, h) }
+    var dst = IntArray(w * h)
+    // One pass along lines of [len] pixels, [count] lines; [step] between neighbours, [next] between lines.
+    fun pass(len: Int, count: Int, step: Int, next: Int) {
+        val span = radius * 2 + 1
+        for (line in 0 until count) {
+            val base = line * next
+            var a = 0; var r = 0; var g = 0; var b = 0
+            for (i in -radius..radius) {
+                val p = src[base + i.coerceIn(0, len - 1) * step]
+                a += p ushr 24; r += (p shr 16) and 0xFF; g += (p shr 8) and 0xFF; b += p and 0xFF
+            }
+            for (i in 0 until len) {
+                dst[base + i * step] = ((a / span) shl 24) or ((r / span) shl 16) or ((g / span) shl 8) or (b / span)
+                val out = src[base + (i - radius).coerceIn(0, len - 1) * step]
+                val inc = src[base + (i + radius + 1).coerceIn(0, len - 1) * step]
+                a += (inc ushr 24) - (out ushr 24)
+                r += ((inc shr 16) and 0xFF) - ((out shr 16) and 0xFF)
+                g += ((inc shr 8) and 0xFF) - ((out shr 8) and 0xFF)
+                b += (inc and 0xFF) - (out and 0xFF)
+            }
+        }
+        val t = src; src = dst; dst = t
+    }
+    repeat(3) {
+        pass(w, h, 1, w)
+        pass(h, w, w, 1)
+    }
+    bitmap.setPixels(src, 0, w, 0, 0, w, h)
 }
 
 /** [image] filling a [w]×[h] tile, cut off at the side [fit] keeps (see [fillCrop]). */
