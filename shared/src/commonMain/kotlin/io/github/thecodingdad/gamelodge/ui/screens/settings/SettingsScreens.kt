@@ -204,7 +204,7 @@ fun HomeScreenSettings(
         val hidden = all.filter { !shown(it) && (it == HA || byId[it] != null) }
         NavRow(
             stringResource(Res.string.home_row_add), { adding = true },
-            if (hidden.isEmpty()) stringResource(Res.string.home_row_add_none) else null, Icons.Filled.Add,
+            stringResource(if (hidden.isEmpty()) Res.string.home_row_add_none else Res.string.home_row_add_sub), Icons.Filled.Add,
         )
         io.github.thecodingdad.gamelodge.ui.components.Modal(
             visible = adding && hidden.isNotEmpty(), onDismiss = { adding = false }, title = stringResource(Res.string.home_row_add),

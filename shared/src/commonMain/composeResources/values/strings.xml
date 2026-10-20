@@ -1231,4 +1231,5 @@
     <string name="home_row_add_none">All rows are on the start tab</string>
     <string name="home_row_remove">Remove row</string>
     <string name="home_rows_empty">No rows yet: add the first one below.</string>
+    <string name="home_row_add_sub">A filter, a group or the Home Assistant favourites</string>
 </resources>

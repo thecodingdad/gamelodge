@@ -1229,4 +1229,5 @@
     <string name="home_row_add_none">Alle Reihen sind im Start-Tab</string>
     <string name="home_row_remove">Reihe entfernen</string>
     <string name="home_rows_empty">Noch keine Reihen: füge unten die erste hinzu.</string>
+    <string name="home_row_add_sub">Einen Filter, eine Gruppe oder die Home-Assistant-Favoriten</string>
 </resources>
