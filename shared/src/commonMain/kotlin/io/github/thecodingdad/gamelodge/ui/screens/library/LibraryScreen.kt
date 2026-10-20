@@ -232,9 +232,12 @@ fun LibraryScreen(
         ) {
         LazyVerticalGrid(
             state = gridState,
-            // Narrow screens get smaller covers (three columns instead of two huge ones); every card
-            // size is one step smaller here than on the start tab (one more column).
-            columns = io.github.thecodingdad.gamelodge.ui.components.coverColumns(io.github.thecodingdad.gamelodge.ui.components.LocalCompactWidth.current, tileFormat, smaller = 1),
+            // Narrow screens get smaller covers (three columns instead of two huge ones). Landscape
+            // and square tiles are one card size smaller here than on the start tab (one more column).
+            columns = io.github.thecodingdad.gamelodge.ui.components.coverColumns(
+                io.github.thecodingdad.gamelodge.ui.components.LocalCompactWidth.current, tileFormat,
+                smaller = if (tileFormat == io.github.thecodingdad.gamelodge.data.settings.TileFormat.PORTRAIT) 0 else 1,
+            ),
             contentPadding = PaddingValues(horizontal = if (io.github.thecodingdad.gamelodge.ui.components.LocalCompactWidth.current) 16.dp else 36.dp, vertical = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(if (io.github.thecodingdad.gamelodge.ui.components.LocalCompactWidth.current) 12.dp else 18.dp),
             verticalArrangement = Arrangement.spacedBy(22.dp),
