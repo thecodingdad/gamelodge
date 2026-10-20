@@ -67,8 +67,10 @@ fun AppsScreen(
     var gridFocused by remember { mutableStateOf(true) }
     var selectedKey by rememberSaveable { mutableStateOf<String?>(null) }
     var sort by rememberSaveable { mutableStateOf(LibrarySort.TITLE) }
-    // Scroll position and focused app are kept per filter.
-    val gridStates = androidx.compose.runtime.saveable.rememberSaveableStateHolder()
+    // One grid for all filters: apps in both stay as they are. Each filter's scroll position is
+    // kept here and restored when it is shown again; the focused app is kept per filter too.
+    val gridState = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
+    val positions = remember { HashMap<String, Pair<Int, Int>>() }
     // Saveable: survives switching tabs (the tab's saved state is kept while another tab is shown).
     val focusByFilter = androidx.compose.runtime.saveable.rememberSaveable(
         saver = androidx.compose.runtime.saveable.Saver<androidx.compose.runtime.snapshots.SnapshotStateMap<String, String>, HashMap<String, String>>(
@@ -89,9 +91,13 @@ fun AppsScreen(
     val searchTitle = stringResource(Res.string.hint_search)
     fun openSearch() = keyboard.open(title = searchTitle, initial = search) { search = it }
     val feedback = io.github.thecodingdad.gamelodge.ui.feedback.LocalUiFeedback.current
+    fun select(key: String?) {
+        positions[selected?.key ?: BuiltinFilter.ALL] = gridState.firstVisibleItemIndex to gridState.firstVisibleItemScrollOffset
+        selectedKey = key
+    }
     fun stepFilter(delta: Int) {
         filters.step(selected?.key, delta)?.let {
-            selectedKey = it
+            select(it)
             feedback?.play(io.github.thecodingdad.gamelodge.ui.feedback.UiSound.TOGGLE)
         }
     }
@@ -126,7 +132,7 @@ fun AppsScreen(
     FilterBar(
         filters = filters,
         selectedKey = selected?.key,
-        onSelect = { selectedKey = it },
+        onSelect = { select(it) },
         search = search,
         onSearch = ::openSearch,
         onClearSearch = { search = "" },
@@ -151,9 +157,14 @@ fun AppsScreen(
     val deviceTitle = stringResource(Res.string.apps_on_device)
     val selectedTitle = selected?.let { filterLabel(it) }.orEmpty()
     val hostTitles = byHost.keys.associateWith { stringResource(Res.string.apps_on_host, it) }
-    gridStates.SaveableStateProvider(filterKey) {
-    val gridState = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
     io.github.thecodingdad.gamelodge.ui.input.RegisterStickScroll(gridState)
+    var gridFilter by remember { mutableStateOf(filterKey) }
+    androidx.compose.runtime.LaunchedEffect(filterKey) {
+        if (gridFilter == filterKey) return@LaunchedEffect
+        gridFilter = filterKey
+        val (firstItem, offset) = positions[filterKey] ?: (0 to 0)
+        gridState.scrollToItem(firstItem, offset)
+    }
     // Focused line snaps to the top; in a section's first line the section header stays visible.
     val snapTo = io.github.thecodingdad.gamelodge.ui.components.rememberFocusLineSnap(gridState)
     androidx.compose.runtime.CompositionLocalProvider(
@@ -189,7 +200,7 @@ fun AppsScreen(
                         val columns = gridState.layoutInfo.maxSpan.coerceAtLeast(1)
                         snapTo(if (position < columns) headerIndex else headerIndex + 1 + position)
                     },
-                    modifier = Modifier.restoreFocusIf(entry.item.id == targetId),
+                    modifier = Modifier.restoreFocusIf(entry.item.id == targetId, trigger = filterKey),
                 )
             }
         }
@@ -199,7 +210,6 @@ fun AppsScreen(
             section(deviceTitle, local)
             byHost.forEach { (host, list) -> section(hostTitles.getValue(host), list) }
         }
-    }
     }
     }
     }
