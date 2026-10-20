@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.ui.screens.settings
 
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import io.github.thecodingdad.gamelodge.ui.components.popupHeightIn
 import io.github.thecodingdad.gamelodge.ui.components.fadingEdges
 import io.github.thecodingdad.gamelodge.ui.components.mouseDragScroll
@@ -721,6 +722,15 @@ fun <T> ReorderableList(
     val scrollArea = io.github.thecodingdad.gamelodge.ui.components.LocalScrollArea.current
     val edge = with(androidx.compose.ui.platform.LocalDensity.current) { 72.dp.toPx() }
     val gap = with(androidx.compose.ui.platform.LocalDensity.current) { 10.dp.toPx() }
+    val feedback = io.github.thecodingdad.gamelodge.ui.feedback.LocalUiFeedback.current
+    // Moved by controller: the row stays in view (the page scrolls along).
+    val inView = remember { HashMap<String, androidx.compose.foundation.relocation.BringIntoViewRequester>() }
+    var keyMoved by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+    androidx.compose.runtime.LaunchedEffect(keyMoved) {
+        if (keyMoved == 0) return@LaunchedEffect
+        androidx.compose.runtime.withFrameNanos { }
+        picked?.let { inView[it]?.bringIntoView() }
+    }
 
     fun commit() {
         if (order != ids) onReorder(order)
@@ -772,7 +782,7 @@ fun <T> ReorderableList(
     // B drops a picked-up row instead of leaving the page.
     io.github.thecodingdad.gamelodge.ui.input.PadAction(
         io.github.thecodingdad.gamelodge.ui.input.PadButton.B, enabled = picked != null,
-    ) { picked = null; commit() }
+    ) { feedback?.play(io.github.thecodingdad.gamelodge.ui.feedback.UiSound.TOGGLE); picked = null; commit() }
 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         order.forEachIndexed { index, id ->
@@ -788,7 +798,8 @@ fun <T> ReorderableList(
                             heights[id] = it.size.height.toFloat()
                             rootTops[id] = it.positionInRoot().y
                         }
-                        .graphicsLayer { translationY = if (dragging == id) dragOffset else 0f },
+                        .graphicsLayer { translationY = if (dragging == id) dragOffset else 0f }
+                        .bringIntoViewRequester(inView.getOrPut(id) { androidx.compose.foundation.relocation.BringIntoViewRequester() }),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Box(Modifier.weight(1f)) { row(index, f) }
@@ -808,7 +819,11 @@ fun <T> ReorderableList(
                                     Key.DirectionLeft, Key.DirectionRight -> 0
                                     else -> return@onPreviewKeyEvent false
                                 }
-                                if (event.type == KeyEventType.KeyDown && delta != 0) move(id, delta)
+                                if (event.type == KeyEventType.KeyDown && delta != 0 && move(id, delta)) {
+                                    // Sound and vibration for every step (focus moves may be silent to the touch).
+                                    feedback?.play(io.github.thecodingdad.gamelodge.ui.feedback.UiSound.TOGGLE)
+                                    keyMoved++
+                                }
                                 true
                             }
                             // Keyed by the list as well: after a reorder the list state is new, and a
