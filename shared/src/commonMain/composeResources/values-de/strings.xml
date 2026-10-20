@@ -140,7 +140,7 @@
     <string name="settings_home_screen">Start-Tab</string>
     <string name="settings_home_screen_sub">Kacheln, Reihen</string>
     <string name="home_rows_section">Reihen im Start-Tab</string>
-    <string name="home_rows_help">Welche Filter als Reihen im Start-Tab erscheinen und in welcher Reihenfolge (unabhängig von der Bibliothek). Reihe am Griff verschieben: ziehen oder auswählen und mit hoch/runter bewegen.</string>
+    <string name="home_rows_help">Die Reihen im Start-Tab und ihre Reihenfolge (unabhängig von der Bibliothek). Reihe am Griff verschieben: ziehen oder auswählen und mit hoch/runter bewegen; ✕ entfernt sie.</string>
     <string name="home_row_ha">Home-Assistant-Favoriten</string>
     <string name="home_row_ha_needs_ha">Braucht eine Home-Assistant-Anmeldung (Einstellungen › Home Assistant)</string>
     <string name="settings_theme">Aussehen</string>
@@ -1224,5 +1224,9 @@
     <string name="settings_display_sub_desktop">Bildschirmschoner</string>
     <string name="search_kw_library_view">Kacheln, Cover, Größe, Titel, Abzeichen, Spielzeit, Fortschritt</string>
     <string name="search_kw_apps_view">Icons, Banner, Kacheln, Größe</string>
-    <string name="badge_source">Quelle (Gerät, Emulator, Host)</string>
+    <string name="badge_source">Quelle</string>
+    <string name="home_row_add">Reihe hinzufügen</string>
+    <string name="home_row_add_none">Alle Reihen sind im Start-Tab</string>
+    <string name="home_row_remove">Reihe entfernen</string>
+    <string name="home_rows_empty">Noch keine Reihen: füge unten die erste hinzu.</string>
 </resources>

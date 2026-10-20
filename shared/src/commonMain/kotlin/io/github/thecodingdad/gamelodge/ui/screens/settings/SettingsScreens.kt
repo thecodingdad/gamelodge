@@ -1,6 +1,15 @@
 package io.github.thecodingdad.gamelodge.ui.screens.settings
 
 import androidx.compose.material.icons.Icons
+import io.github.thecodingdad.gamelodge.ui.components.popupHeightIn
+import io.github.thecodingdad.gamelodge.ui.components.controllerScroll
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.background
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Download
@@ -165,21 +174,60 @@ fun HomeScreenSettings(
         val HA = io.github.thecodingdad.gamelodge.data.library.HomeRowOrder.HA
         // The Home Assistant row needs a Home Assistant sign-in; without one it is greyed out (still movable).
         val haSignedIn = io.github.thecodingdad.gamelodge.LocalContainer.current.ha.auth.isLoggedIn
+        // Only the rows shown: each can be moved (handle) or removed (✕); more are added below.
+        val all = io.github.thecodingdad.gamelodge.data.library.HomeRowOrder.ids(gameFilters.map { it.id }, settings.homeRowOrder)
+        fun shown(id: String) = if (id == HA) settings.showHaRowOnHome else byId[id]?.showOnHome == true
+        @Composable fun label(id: String) = byId[id]?.let { f -> if (isApps(f)) "$appsPrefix · ${filterEntityLabel(f)}" else filterEntityLabel(f) }
+        val haLabel = stringResource(Res.string.home_row_ha)
+        val visible = all.filter(::shown)
+        if (visible.isEmpty()) {
+            Text(stringResource(Res.string.home_rows_empty), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+        }
         ReorderableList(
-            items = io.github.thecodingdad.gamelodge.data.library.HomeRowOrder.ids(gameFilters.map { it.id }, settings.homeRowOrder),
+            items = visible,
             id = { it },
-            onReorder = { ids -> update { it.copy(homeRowOrder = ids) } },
+            // The hidden rows keep their place after the shown ones.
+            onReorder = { ids -> update { it.copy(homeRowOrder = ids + all.filter { id -> id !in ids }) } },
         ) { _, id ->
-            if (id == HA) {
-                SwitchRow(
-                    stringResource(Res.string.home_row_ha), settings.showHaRowOnHome, { v -> update { it.copy(showHaRowOnHome = v) } },
-                    subtitle = if (haSignedIn) null else stringResource(Res.string.home_row_ha_needs_ha), enabled = haSignedIn,
-                )
-            } else {
-                // Same switch as "Show on start tab" in the filter settings.
-                byId[id]?.let { f ->
-                    val label = if (isApps(f)) "$appsPrefix · ${filterEntityLabel(f)}" else filterEntityLabel(f)
-                    SwitchRow(label, f.showOnHome, { vm.saveFilter(f.copy(showOnHome = it)) })
+            val text = if (id == HA) haLabel else label(id) ?: return@ReorderableList
+            RemovableRow(
+                text,
+                subtitle = if (id == HA && !haSignedIn) stringResource(Res.string.home_row_ha_needs_ha) else null,
+                icon = if (id == HA) Icons.Filled.Home else if (byId[id]?.let(isApps) == true) Icons.Filled.Apps else Icons.Filled.GridView,
+                onRemove = {
+                    if (id == HA) update { it.copy(showHaRowOnHome = false) }
+                    else byId[id]?.let { f -> vm.saveFilter(f.copy(showOnHome = false)) }
+                },
+            )
+        }
+        var adding by androidx.compose.runtime.remember { mutableStateOf(false) }
+        val hidden = all.filter { !shown(it) && (it == HA || byId[it] != null) }
+        NavRow(
+            stringResource(Res.string.home_row_add), { adding = true },
+            if (hidden.isEmpty()) stringResource(Res.string.home_row_add_none) else null, Icons.Filled.Add,
+        )
+        io.github.thecodingdad.gamelodge.ui.components.Modal(
+            visible = adding && hidden.isNotEmpty(), onDismiss = { adding = false }, title = stringResource(Res.string.home_row_add),
+        ) {
+            androidx.compose.foundation.layout.Column(
+                Modifier.popupHeightIn(480.dp).controllerScroll(), verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp),
+            ) {
+                hidden.forEachIndexed { index, id ->
+                    val text = if (id == HA) haLabel else label(id) ?: return@forEachIndexed
+                    NavRow(
+                        text,
+                        {
+                            // New rows go after the shown ones.
+                            val rest = all - id
+                            val at = rest.indexOfLast(::shown) + 1
+                            update { it.copy(homeRowOrder = rest.toMutableList().apply { add(at, id) }, showHaRowOnHome = if (id == HA) true else it.showHaRowOnHome) }
+                            if (id != HA) byId[id]?.let { f -> vm.saveFilter(f.copy(showOnHome = true)) }
+                            adding = false
+                        },
+                        if (id == HA && !haSignedIn) stringResource(Res.string.home_row_ha_needs_ha) else null,
+                        if (id == HA) Icons.Filled.Home else if (byId[id]?.let(isApps) == true) Icons.Filled.Apps else Icons.Filled.GridView,
+                        initialFocus = index == 0,
+                    )
                 }
             }
         }
@@ -333,6 +381,33 @@ fun StartTabRow(initialFocus: Boolean = false) {
 }
 
 /** Theme, accent colours, how tiles look in every tab, motion and scale. */
+/** A row with a title and a ✕ that removes it (e.g. a start tab row). */
+@Composable
+private fun RemovableRow(title: String, subtitle: String?, icon: androidx.compose.ui.graphics.vector.ImageVector, onRemove: () -> Unit) {
+    val colors = LauncherTheme.colors
+    androidx.compose.foundation.layout.Row(
+        Modifier.fillMaxWidth().heightIn(min = 68.dp).clip(RoundedCornerShape(16.dp))
+            .background(io.github.thecodingdad.gamelodge.ui.components.LocalRowSurface.current ?: colors.surface)
+            .padding(start = 20.dp, end = 6.dp),
+        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+    ) {
+        androidx.compose.material3.Icon(icon, null, tint = colors.accent, modifier = Modifier.size(26.dp))
+        androidx.compose.foundation.layout.Column(Modifier.weight(1f).padding(start = 16.dp, top = 10.dp, bottom = 10.dp)) {
+            Text(title, style = MaterialTheme.typography.titleMedium, color = colors.onSurface)
+            subtitle?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceMuted) }
+        }
+        io.github.thecodingdad.gamelodge.ui.components.FocusSurface(
+            onClick = onRemove, shape = androidx.compose.foundation.shape.CircleShape, color = colors.surfaceRaised,
+            modifier = Modifier.size(48.dp),
+        ) {
+            androidx.compose.material3.Icon(
+                Icons.Filled.Close, stringResource(Res.string.home_row_remove), tint = colors.onSurface,
+                modifier = Modifier.align(androidx.compose.ui.Alignment.Center).size(22.dp),
+            )
+        }
+    }
+}
+
 @Composable
 fun ThemeSettings(
     settings: LauncherSettings,

@@ -142,7 +142,7 @@
     <string name="settings_home_screen">Start tab</string>
     <string name="settings_home_screen_sub">Tiles, rows</string>
     <string name="home_rows_section">Rows on the start tab</string>
-    <string name="home_rows_help">Which filters appear as rows on the start tab and in which order (independent of the library). Move a row with the handle: drag it, or select it and use up/down.</string>
+    <string name="home_rows_help">The rows of the start tab and their order (independent of the library). Move a row with the handle: drag it, or select it and use up/down; ✕ removes it.</string>
     <string name="home_row_ha">Home Assistant favourites</string>
     <string name="home_row_ha_needs_ha">Needs a Home Assistant sign-in (Settings › Home Assistant)</string>
     <string name="settings_theme">Appearance</string>
@@ -1226,5 +1226,9 @@
     <string name="settings_display_sub_desktop">Screen saver</string>
     <string name="search_kw_library_view">Tiles, covers, size, titles, badges, play time, progress</string>
     <string name="search_kw_apps_view">Icons, banners, tiles, size</string>
-    <string name="badge_source">Source (device, emulator, host)</string>
+    <string name="badge_source">Source</string>
+    <string name="home_row_add">Add row</string>
+    <string name="home_row_add_none">All rows are on the start tab</string>
+    <string name="home_row_remove">Remove row</string>
+    <string name="home_rows_empty">No rows yet: add the first one below.</string>
 </resources>
