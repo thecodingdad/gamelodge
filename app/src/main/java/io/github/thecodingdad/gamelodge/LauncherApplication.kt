@@ -70,7 +70,6 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
         container.artwork.start()
         io.github.thecodingdad.gamelodge.system.OdinMapping(this)
             .watch(container.scope, container.settings.settings.map { it.odinKeepControllers })
-        container.vpn.startNetworkWatch()
         // Host polling is driven by MainActivity's lifecycle: Artemis' stream activity runs in
         // this process too, and polling must not compete with an active stream.
     }

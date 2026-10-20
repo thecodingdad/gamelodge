@@ -30,6 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -198,7 +199,21 @@ fun Modifier.trapFocus(initialFocus: FocusRequester? = null): Modifier {
         runCatching { if (first) (initialFocus ?: requester).requestFocus() else requester.requestFocus() }
         first = false
     }
+    // The focused element went away or was disabled (e.g. a button that greys out once used):
+    // the focus comes back here, so the D-pad never reaches the page behind the popup.
+    var hasFocus by remember { mutableStateOf(false) }
+    var lost by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+    val controllerNow by androidx.compose.runtime.rememberUpdatedState(controllerMode)
+    LaunchedEffect(lost) {
+        if (lost == 0) return@LaunchedEffect
+        delay(30)
+        if (!hasFocus && controllerNow && (entry == null || OverlayHost.isTop(entry))) runCatching { requester.requestFocus() }
+    }
     return this
+        .onFocusChanged {
+            if (hasFocus && !it.hasFocus) lost++
+            hasFocus = it.hasFocus
+        }
         .focusRequester(requester)
         .focusProperties { onExit = { if (entry == null || OverlayHost.isTop(entry)) cancelFocusChange() } }
         .focusRestorer()

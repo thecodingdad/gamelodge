@@ -231,6 +231,9 @@ data class HostConfigEntity(
     val haSleepEntity: String? = null,
     /** Minutes after a stream ends before the host is put to sleep; null = never. */
     val autoSleepMinutes: Int? = null,
+    /** How long a stream start waits for the woken host (booting takes longer on some hardware). */
+    @androidx.room.ColumnInfo(defaultValue = "120")
+    val wakeTimeoutSeconds: Int = 120,
 )
 
 enum class HaTileType { SWITCH, LIGHT, BUTTON, SENSOR, COVER, CLIMATE }

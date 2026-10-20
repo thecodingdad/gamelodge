@@ -167,6 +167,7 @@ class MainActivity : ComponentActivity() {
                 val target = container.database.libraryDao().getTarget(closed.targetId)
                 val host = target?.hostName
                 target?.hostUuid?.let { container.autoSleep.scheduleAfterStream(it) }
+                container.launcher.streamEnded()
                 container.ha.fireLauncherEvent(
                     "stream_stopped",
                     mapOf("game" to title, "host" to host, "duration_seconds" to (((closed.endedAt ?: 0) - closed.startedAt) / 1000).toString()),

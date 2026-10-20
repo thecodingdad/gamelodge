@@ -3,20 +3,14 @@ package io.github.thecodingdad.gamelodge.vpn
 import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
-import android.net.Network
 import android.net.NetworkCapabilities
-import android.net.NetworkRequest
 import android.net.VpnService
-import android.net.wifi.WifiInfo
-import android.os.Build
 import com.wireguard.android.backend.GoBackend
 import com.wireguard.android.backend.Tunnel
 import com.wireguard.config.Config
-import io.github.thecodingdad.gamelodge.data.remote.HostState
-import io.github.thecodingdad.gamelodge.data.settings.AutoVpnTrigger
 import io.github.thecodingdad.gamelodge.data.settings.SecretStore
 import io.github.thecodingdad.gamelodge.data.settings.SettingsRepository
-import io.github.thecodingdad.gamelodge.stream.VpnAutoConnect
+import io.github.thecodingdad.gamelodge.stream.StreamVpn
 import io.github.thecodingdad.gamelodge.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -37,7 +31,7 @@ class VpnManager(
     private val secrets: SecretStore,
     private val settings: SettingsRepository,
     private val scope: CoroutineScope,
-) : VpnAutoConnect, Vpn {
+) : StreamVpn, Vpn {
     private val backend by lazy { GoBackend(context) }
     private val mutex = Mutex()
 
@@ -46,9 +40,6 @@ class VpnManager(
 
     private val _tunnels = MutableStateFlow(loadNames())
     override val tunnels: StateFlow<List<String>> = _tunnels.asStateFlow()
-
-    private val _currentSsid = MutableStateFlow<String?>(null)
-    val currentSsid: StateFlow<String?> = _currentSsid.asStateFlow()
 
     private inner class NamedTunnel(private val tunnelName: String) : Tunnel {
         override fun getName() = tunnelName
@@ -106,7 +97,7 @@ class VpnManager(
         }
     }
 
-    suspend fun disconnect() = mutex.withLock {
+    override suspend fun disconnect() = mutex.withLock {
         withContext(Dispatchers.IO) {
             active?.let { runCatching { backend.setState(it, Tunnel.State.DOWN, null) } }
             active = null
@@ -121,55 +112,37 @@ class VpnManager(
     private suspend fun defaultTunnel(): String? =
         settings.current().activeTunnel.takeIf { it in _tunnels.value } ?: _tunnels.value.firstOrNull()
 
-    /** Launch flow hook: connect when the host is unreachable and that trigger is enabled. */
-    override suspend fun connectIfNeeded(host: HostState?): Boolean {
-        if (_state.value.status == VpnStatus.UP) return false
-        if (AutoVpnTrigger.HOST_UNREACHABLE !in settings.current().autoVpnTriggers) return false
-        return defaultTunnel()?.let { connect(it) } ?: false
+    override suspend fun wantedForStream(): Boolean {
+        if (_state.value.status == VpnStatus.UP || defaultTunnel() == null) return false
+        val s = settings.current()
+        if (!s.vpnOnStreamStart) return false
+        // Without home networks the unreachable host alone decides.
+        return !(s.vpnOnlyOutsideHome && s.homeNetworks.isNotEmpty() && atHome(s.homeNetworks))
     }
 
-    /** Watches Wi-Fi changes for the "outside home Wi-Fi" trigger. Reading the SSID needs location permission. */
-    fun startNetworkWatch() {
-        val cm = context.getSystemService(ConnectivityManager::class.java)
-        val callback = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            object : ConnectivityManager.NetworkCallback(FLAG_INCLUDE_LOCATION_INFO) {
-                override fun onCapabilitiesChanged(network: Network, caps: NetworkCapabilities) = onNetwork(caps)
-                override fun onLost(network: Network) = onNetwork(null)
-            }
-        } else {
-            object : ConnectivityManager.NetworkCallback() {
-                override fun onCapabilitiesChanged(network: Network, caps: NetworkCapabilities) = onNetwork(caps)
-                override fun onLost(network: Network) = onNetwork(null)
-            }
-        }
-        val request = NetworkRequest.Builder()
-            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-            .removeCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
-            .build()
-        runCatching { cm.registerNetworkCallback(request, callback) }
-            .onFailure { Log.w("Network watch unavailable", it) }
-    }
+    override suspend fun connectForStream(): Boolean = defaultTunnel()?.let { connect(it) } ?: false
 
-    private fun onNetwork(caps: NetworkCapabilities?) {
-        if (caps?.hasTransport(NetworkCapabilities.TRANSPORT_VPN) == true) return
-        val ssid = if (caps?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true) {
-            (caps.transportInfo as? WifiInfo)?.ssid?.trim('"')?.takeIf { it != WifiManagerUnknownSsid }
-        } else null
-        if (ssid == _currentSsid.value && caps != null) return
-        _currentSsid.value = ssid
-        scope.launch {
-            val s = settings.current()
-            if (AutoVpnTrigger.OUTSIDE_HOME !in s.autoVpnTriggers || s.homeSsids.isEmpty()) return@launch
-            val atHome = ssid != null && ssid in s.homeSsids
-            when {
-                !atHome && caps != null && _state.value.status == VpnStatus.DOWN -> defaultTunnel()?.let { connect(it) }
-                atHome && s.vpnDisconnectAtHome && _state.value.status == VpnStatus.UP -> disconnect()
-            }
-        }
+    override suspend fun disconnectAfterStream() = settings.current().vpnDisconnectAfterStream
+
+    fun atHome(homeNetworks: Collection<String>) = HomeNetworks.contains(homeNetworks, localAddresses().map { it.first })
+
+    /**
+     * The device's own IPv4 addresses with their prefix length, on every network but the VPN
+     * (Wi-Fi and LAN alike).
+     */
+    fun localAddresses(): List<Pair<String, Int>> {
+        val cm = context.getSystemService(ConnectivityManager::class.java) ?: return emptyList()
+        return cm.allNetworks.mapNotNull { network ->
+            val caps = cm.getNetworkCapabilities(network) ?: return@mapNotNull null
+            if (caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) return@mapNotNull null
+            cm.getLinkProperties(network)
+        }.flatMap { it.linkAddresses }
+            .filter { it.address is java.net.Inet4Address && !it.address.isLoopbackAddress }
+            .map { it.address.hostAddress.orEmpty() to it.prefixLength }
+            .distinct()
     }
 
     private companion object {
         const val PREFIX = "wg_config_"
-        const val WifiManagerUnknownSsid = "<unknown ssid>"
     }
 }

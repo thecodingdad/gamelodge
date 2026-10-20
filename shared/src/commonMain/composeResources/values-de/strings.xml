@@ -447,15 +447,6 @@
     <string name="vpn_delete">%1$s löschen</string>
     <string name="vpn_imported">Tunnel importiert.</string>
     <string name="vpn_import_help">Exportiere die WireGuard-Konfiguration (.conf) aus deinem Router, z. B. FRITZ!Box → Internet → Freigaben → VPN (WireGuard).</string>
-    <string name="vpn_auto">Automatisch verbinden</string>
-    <string name="vpn_auto_unreachable">Wenn der Host nicht erreichbar ist</string>
-    <string name="vpn_auto_unreachable_sub">Vor einem Stream: verbinden und erneut versuchen</string>
-    <string name="vpn_auto_outside">Außerhalb des Heim-WLANs</string>
-    <string name="vpn_auto_outside_sub">Braucht Standortzugriff, um den WLAN-Namen zu lesen</string>
-    <string name="vpn_disconnect_home">Im Heim-WLAN trennen</string>
-    <string name="vpn_home_remove">Heim-WLAN · A entfernt es</string>
-    <string name="vpn_add_home">„%1$s“ als Heim-WLAN hinzufügen</string>
-    <string name="vpn_ssid_unknown">Aktueller WLAN-Name nicht verfügbar (Standort aus oder kein WLAN).</string>
 
     <!-- Quick menu -->
     <string name="quick_menu_hold">Schnellmenü (halten)</string>
@@ -1157,4 +1148,26 @@
     <string name="artwork_fit_top">gestreckt, oben</string>
     <string name="artwork_fit_center">gestreckt, mittig</string>
     <string name="artwork_fit_bottom">gestreckt, unten</string>
+    <string name="vpn_auto">Beim Stream-Start</string>
+    <string name="vpn_on_stream">Verbinden, wenn der Host nicht erreichbar ist</string>
+    <string name="vpn_on_stream_sub">Erst die VPN, dann den Host aufwecken</string>
+    <string name="vpn_only_outside">Nur außerhalb des Heimnetzes</string>
+    <string name="vpn_only_outside_none">Noch keine Heimnetze eingetragen: bis dahin immer</string>
+    <string name="vpn_at_home">Gerade im Heimnetz</string>
+    <string name="vpn_not_at_home">Gerade außerhalb des Heimnetzes</string>
+    <string name="vpn_home_networks">Heimnetze</string>
+    <string name="vpn_home_networks_none">Keine</string>
+    <string name="vpn_home_networks_help">IP-Adressen, Subnetze (192.168.1.0/24) oder Bereiche (192.168.1.10-192.168.1.50). Zu Hause ist das Gerät, wenn eine seiner Adressen (WLAN oder LAN) passt.</string>
+    <string name="vpn_home_empty">Noch keine Heimnetze.</string>
+    <string name="vpn_add_current_network">Aktuelles Netz</string>
+    <string name="vpn_add_current_ip">Aktuelle IP</string>
+    <string name="vpn_add_manual">Manuell …</string>
+    <string name="vpn_home_invalid">„%1$s“ ist keine IP-Adresse, kein Subnetz und kein Bereich.</string>
+    <string name="vpn_device_addresses">Dieses Gerät: %1$s</string>
+    <string name="vpn_device_no_address">Dieses Gerät hat gerade keine Netzwerkadresse.</string>
+    <string name="vpn_disconnect_after">Nach dem Stream trennen</string>
+    <string name="vpn_disconnect_after_sub">Nur wenn der Launcher die VPN für den Stream verbunden hat</string>
+    <string name="vpn_remove">Entfernen</string>
+    <string name="host_wake_timeout_setting">Wartezeit nach dem Aufwecken</string>
+    <string name="host_wake_timeout_sub">So lange wartet ein Spielstart, bis der Host bereit ist (Booten dauert je nach Hardware länger)</string>
 </resources>

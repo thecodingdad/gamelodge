@@ -136,8 +136,8 @@ private val settingsIndex: List<SearchEntry> = buildList {
         SettingsPageId.EMULATORS, Res.string.emu_folders, Res.string.emu_folder_add, Res.string.emu_all_files, Res.string.emu_emulators, Res.string.emu_custom,
     ))
     addAll(page(
-        SettingsPageId.VPN, Res.string.vpn_tunnels, Res.string.vpn_default_tunnel, Res.string.vpn_auto, Res.string.vpn_auto_unreachable,
-        Res.string.vpn_auto_outside, Res.string.vpn_disconnect_home,
+        SettingsPageId.VPN, Res.string.vpn_tunnels, Res.string.vpn_default_tunnel, Res.string.vpn_auto, Res.string.vpn_on_stream,
+        Res.string.vpn_only_outside, Res.string.vpn_home_networks, Res.string.vpn_disconnect_after,
     ))
     addAll(page(SettingsPageId.HOME_ASSISTANT, Res.string.ha_tiles, Res.string.ha_add_tile, Res.string.ha_host_actions))
     addAll(page(SettingsPageId.CONTROLS, Res.string.setting_hint_bar, Res.string.setting_games_direct_start))

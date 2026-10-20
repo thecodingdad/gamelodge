@@ -16,7 +16,7 @@ import androidx.room.RoomDatabaseConstructor
         HaTileEntity::class,
         FilterEntity::class,
     ],
-    version = 10,
+    version = 11,
     exportSchema = true,
 )
 @ConstructedBy(LauncherDatabaseConstructor::class)
@@ -48,5 +48,10 @@ object SchemaChanges {
     /** v10: square tile. */
     val V9_TO_V10 = listOf(
         "ALTER TABLE library_items ADD COLUMN squareUrl TEXT",
+    )
+
+    /** v11: wait time for a woken host. */
+    val V10_TO_V11 = listOf(
+        "ALTER TABLE host_config ADD COLUMN wakeTimeoutSeconds INTEGER NOT NULL DEFAULT 120",
     )
 }

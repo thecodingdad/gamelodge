@@ -449,15 +449,6 @@
     <string name="vpn_delete">Delete %1$s</string>
     <string name="vpn_imported">Tunnel imported.</string>
     <string name="vpn_import_help">Export the WireGuard config (.conf) from your router, e.g. FRITZ!Box → Internet → Permit Access → VPN (WireGuard).</string>
-    <string name="vpn_auto">Connect automatically</string>
-    <string name="vpn_auto_unreachable">When the host is unreachable</string>
-    <string name="vpn_auto_unreachable_sub">Before a stream: connect and try again</string>
-    <string name="vpn_auto_outside">Outside home Wi-Fi</string>
-    <string name="vpn_auto_outside_sub">Needs location access to read the Wi-Fi name</string>
-    <string name="vpn_disconnect_home">Disconnect in home Wi-Fi</string>
-    <string name="vpn_home_remove">Home Wi-Fi · A removes it</string>
-    <string name="vpn_add_home">Add "%1$s" as home Wi-Fi</string>
-    <string name="vpn_ssid_unknown">Current Wi-Fi name not available (location off or not on Wi-Fi).</string>
 
     <!-- Quick menu -->
     <string name="quick_menu_hold">Quick menu (hold)</string>
@@ -1159,4 +1150,26 @@
     <string name="artwork_fit_top">filled, top</string>
     <string name="artwork_fit_center">filled, centre</string>
     <string name="artwork_fit_bottom">filled, bottom</string>
+    <string name="vpn_auto">On stream start</string>
+    <string name="vpn_on_stream">Connect when the host isn't reachable</string>
+    <string name="vpn_on_stream_sub">First the VPN, then waking the host</string>
+    <string name="vpn_only_outside">Only outside the home network</string>
+    <string name="vpn_only_outside_none">No home networks yet: until then always</string>
+    <string name="vpn_at_home">Currently in the home network</string>
+    <string name="vpn_not_at_home">Currently outside the home network</string>
+    <string name="vpn_home_networks">Home networks</string>
+    <string name="vpn_home_networks_none">None</string>
+    <string name="vpn_home_networks_help">IP addresses, subnets (192.168.1.0/24) or ranges (192.168.1.10-192.168.1.50). The device is at home when one of its addresses (Wi-Fi or LAN) matches.</string>
+    <string name="vpn_home_empty">No home networks yet.</string>
+    <string name="vpn_add_current_network">Current network</string>
+    <string name="vpn_add_current_ip">Current IP</string>
+    <string name="vpn_add_manual">Manual …</string>
+    <string name="vpn_home_invalid">„%1$s“ is no IP address, subnet or range.</string>
+    <string name="vpn_device_addresses">This device: %1$s</string>
+    <string name="vpn_device_no_address">This device has no network address right now.</string>
+    <string name="vpn_disconnect_after">Disconnect after the stream</string>
+    <string name="vpn_disconnect_after_sub">Only when the launcher connected the VPN for the stream</string>
+    <string name="vpn_remove">Remove</string>
+    <string name="host_wake_timeout_setting">Wait after waking</string>
+    <string name="host_wake_timeout_sub">How long a game start waits for the host to be ready (booting takes longer on some hardware)</string>
 </resources>

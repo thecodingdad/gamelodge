@@ -21,7 +21,6 @@ enum class CardSize { SMALL, MEDIUM, LARGE }
 enum class TileFormat { PORTRAIT, LANDSCAPE, SQUARE }
 enum class ButtonLayout { XBOX, NINTENDO }
 enum class NetworkCheckMode { OFF, OUTSIDE_HOME, ALWAYS }
-enum class AutoVpnTrigger { HOST_UNREACHABLE, OUTSIDE_HOME }
 
 @kotlinx.serialization.Serializable
 data class LauncherSettings(
@@ -77,9 +76,14 @@ data class LauncherSettings(
     // Home Assistant (tokens live in SecretStore)
     val haUrl: String = "",
     // VPN
-    val autoVpnTriggers: Set<AutoVpnTrigger> = emptySet(),
-    val homeSsids: Set<String> = emptySet(),
-    val vpnDisconnectAtHome: Boolean = true,
+    /** Connect the VPN when a stream starts and the host isn't reachable (before waking it). */
+    val vpnOnStreamStart: Boolean = false,
+    /** ... only outside [homeNetworks] (when any are set). */
+    val vpnOnlyOutsideHome: Boolean = false,
+    /** Home networks: addresses, subnets or ranges (see [io.github.thecodingdad.gamelodge.vpn.HomeNetworks]). */
+    val homeNetworks: Set<String> = emptySet(),
+    /** Disconnect after the stream when the launcher connected the VPN for it. */
+    val vpnDisconnectAfterStream: Boolean = true,
     val activeTunnel: String = "",
     // Backup
     val backupFolderUri: String = "",
@@ -176,9 +180,14 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val showHiddenApps = booleanPreferencesKey("show_hidden_apps")
         val networkCheck = stringPreferencesKey("network_check")
         val haUrl = stringPreferencesKey("ha_url")
+        /** Before [vpnOnStreamStart]: any of its triggers switches the new setting on once. */
         val autoVpnTriggers = stringSetPreferencesKey("auto_vpn_triggers")
         val homeSsids = stringSetPreferencesKey("home_ssids")
         val vpnDisconnectAtHome = booleanPreferencesKey("vpn_disconnect_at_home")
+        val vpnOnStreamStart = booleanPreferencesKey("vpn_on_stream_start")
+        val vpnOnlyOutsideHome = booleanPreferencesKey("vpn_only_outside_home")
+        val homeNetworks = stringSetPreferencesKey("home_networks")
+        val vpnDisconnectAfterStream = booleanPreferencesKey("vpn_disconnect_after_stream")
         val activeTunnel = stringPreferencesKey("active_tunnel")
         val backupFolderUri = stringPreferencesKey("backup_folder_uri")
         val autoBackup = booleanPreferencesKey("auto_backup")
@@ -261,11 +270,10 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             showHiddenApps = this[K.showHiddenApps] ?: d.showHiddenApps,
             networkCheck = enumOr(this[K.networkCheck], d.networkCheck),
             haUrl = this[K.haUrl] ?: d.haUrl,
-            autoVpnTriggers = this[K.autoVpnTriggers]
-                ?.mapNotNullTo(HashSet()) { name -> AutoVpnTrigger.entries.firstOrNull { it.name == name } }
-                ?: d.autoVpnTriggers,
-            homeSsids = this[K.homeSsids] ?: d.homeSsids,
-            vpnDisconnectAtHome = this[K.vpnDisconnectAtHome] ?: d.vpnDisconnectAtHome,
+            vpnOnStreamStart = this[K.vpnOnStreamStart] ?: (this[K.autoVpnTriggers]?.isNotEmpty() ?: d.vpnOnStreamStart),
+            vpnOnlyOutsideHome = this[K.vpnOnlyOutsideHome] ?: d.vpnOnlyOutsideHome,
+            homeNetworks = this[K.homeNetworks] ?: d.homeNetworks,
+            vpnDisconnectAfterStream = this[K.vpnDisconnectAfterStream] ?: d.vpnDisconnectAfterStream,
             activeTunnel = this[K.activeTunnel] ?: d.activeTunnel,
             backupFolderUri = this[K.backupFolderUri] ?: d.backupFolderUri,
             autoBackup = this[K.autoBackup] ?: d.autoBackup,
@@ -335,9 +343,13 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         this[K.showHiddenApps] = s.showHiddenApps
         this[K.networkCheck] = s.networkCheck.name
         this[K.haUrl] = s.haUrl
-        this[K.autoVpnTriggers] = s.autoVpnTriggers.mapTo(HashSet()) { it.name }
-        this[K.homeSsids] = s.homeSsids
-        this[K.vpnDisconnectAtHome] = s.vpnDisconnectAtHome
+        this[K.vpnOnStreamStart] = s.vpnOnStreamStart
+        this[K.vpnOnlyOutsideHome] = s.vpnOnlyOutsideHome
+        this[K.homeNetworks] = s.homeNetworks
+        this[K.vpnDisconnectAfterStream] = s.vpnDisconnectAfterStream
+        remove(K.autoVpnTriggers)
+        remove(K.homeSsids)
+        remove(K.vpnDisconnectAtHome)
         this[K.activeTunnel] = s.activeTunnel
         this[K.backupFolderUri] = s.backupFolderUri
         this[K.autoBackup] = s.autoBackup

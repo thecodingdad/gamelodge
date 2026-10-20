@@ -38,9 +38,25 @@ enum class LaunchStep { WAKING_HOST, CONNECTING_VPN, CHECKING_NETWORK, QUITTING_
 
 enum class LaunchError { HOST_OFFLINE, WAKE_FAILED, NOT_PAIRED, NO_LAUNCH_PERMISSION, APP_NOT_INSTALLED, START_FAILED, QUIT_FAILED, NO_EMULATOR, ROM_NEEDS_PATH }
 
-/** Optional VPN hook, filled by the VPN module: connects if needed, returns true when it did. */
-fun interface VpnAutoConnect {
-    suspend fun connectIfNeeded(host: HostState?): Boolean
+/** The VPN as a stream start uses it, filled by the VPN module (platforms without one never connect). */
+interface StreamVpn {
+    /** The settings want the VPN for a stream right now (switched on, and outside the home networks if set). */
+    suspend fun wantedForStream(): Boolean
+
+    /** Connects the default tunnel; true when it is up. */
+    suspend fun connectForStream(): Boolean
+
+    suspend fun disconnect()
+
+    /** After a stream it connected, the VPN is disconnected again (setting). */
+    suspend fun disconnectAfterStream(): Boolean
+
+    object None : StreamVpn {
+        override suspend fun wantedForStream() = false
+        override suspend fun connectForStream() = false
+        override suspend fun disconnect() = Unit
+        override suspend fun disconnectAfterStream() = false
+    }
 }
 
 /** The platform's part of starting things: apps, emulators and the stream itself. */
@@ -85,7 +101,10 @@ class LaunchCoordinator(
     /** Profile that was active before a one-off "start with…"; restored when we return. */
     private var profileToRestore: Pair<Boolean, UUID?> = false to null
 
-    var vpn: VpnAutoConnect = VpnAutoConnect { false }
+    var vpn: StreamVpn = StreamVpn.None
+
+    /** The VPN was connected for the stream being started / running (disconnected again afterwards). */
+    @Volatile private var vpnForStream = false
 
     /** Home Assistant actions before a start and after a game ended. */
     val gameActions = io.github.thecodingdad.gamelodge.ha.GameActionRunner(
@@ -104,6 +123,27 @@ class LaunchCoordinator(
 
     fun dismiss() {
         _state.value = LaunchState.Idle
+        dropStreamVpn()
+    }
+
+    /** A start didn't get to the stream (failed, cancelled, dismissed): a VPN connected for it goes again. */
+    private fun dropStreamVpn() {
+        if (!vpnForStream || streamingEntry != null) return
+        vpnForStream = false
+        scope.launch { runCatching { vpn.disconnect() } }
+    }
+
+    /** The stream ended (launcher visible again): a VPN connected for it goes again, if so set. */
+    fun streamEnded() {
+        streamingEntry = null
+        if (!vpnForStream) return
+        vpnForStream = false
+        scope.launch { runCatching { if (vpn.disconnectAfterStream()) vpn.disconnect() } }
+    }
+
+    private fun fail(entry: LibraryEntry, error: LaunchError, detail: String? = null) {
+        _state.value = LaunchState.Failed(entry, error, detail)
+        dropStreamVpn()
     }
 
     private var running: kotlinx.coroutines.Job? = null
@@ -113,6 +153,7 @@ class LaunchCoordinator(
         running?.cancel()
         running = null
         _state.value = LaunchState.Idle
+        dropStreamVpn()
     }
 
     /**
@@ -152,32 +193,37 @@ class LaunchCoordinator(
         val hostUuid = target.hostUuid ?: return
         val appId = target.appId ?: return
 
-        // 1. Wake the host when it is offline.
+        // 1. Host not reachable: maybe only from here, so the VPN first (when wanted), then wake
+        //    it and wait as long as set for this host.
         if (host(hostUuid)?.status != HostStatus.ONLINE) {
-            _state.value = LaunchState.Working(entry, LaunchStep.WAKING_HOST)
-            if (!wakeAndWait(hostUuid)) {
-                // 2. Maybe it's only unreachable from here: try the VPN, then wait again.
+            if (!vpnForStream && runCatching { vpn.wantedForStream() }.getOrDefault(false)) {
                 _state.value = LaunchState.Working(entry, LaunchStep.CONNECTING_VPN)
-                val vpnUp = runCatching { vpn.connectIfNeeded(host(hostUuid)) }.getOrDefault(false)
-                if (!vpnUp || !waitOnline(hostUuid, 30_000)) {
-                    _state.value = LaunchState.Failed(entry, LaunchError.HOST_OFFLINE)
+                if (runCatching { vpn.connectForStream() }.getOrDefault(false)) {
+                    vpnForStream = true
+                    waitOnline(hostUuid, VPN_WAIT_MS)
+                }
+            }
+            if (host(hostUuid)?.status != HostStatus.ONLINE) {
+                _state.value = LaunchState.Working(entry, LaunchStep.WAKING_HOST)
+                if (!wakeAndWait(hostUuid)) {
+                    fail(entry, LaunchError.HOST_OFFLINE)
                     return
                 }
             }
         }
         val host = host(hostUuid)
         if (host == null || host.status != HostStatus.ONLINE || !platform.isReachable(host)) {
-            _state.value = LaunchState.Failed(entry, LaunchError.HOST_OFFLINE)
+            fail(entry, LaunchError.HOST_OFFLINE)
             return
         }
         if (!host.paired) {
-            _state.value = LaunchState.Failed(entry, LaunchError.NOT_PAIRED)
+            fail(entry, LaunchError.NOT_PAIRED)
             return
         }
         // 3. Permissions (Apollo/Vibepollo): resuming the running app only needs "view".
         val resuming = host.isStreaming && host.runningAppId == appId
         if (!resuming && !HostPermission.has(host.permission, HostPermission.LAUNCH_APPS)) {
-            _state.value = LaunchState.Failed(entry, LaunchError.NO_LAUNCH_PERMISSION)
+            fail(entry, LaunchError.NO_LAUNCH_PERMISSION)
             return
         }
 
@@ -202,7 +248,7 @@ class LaunchCoordinator(
             _state.value = LaunchState.Working(entry, LaunchStep.QUITTING_RUNNING)
             if (!hostActions.quitApp(host)) {
                 Log.w("Quit failed")
-                _state.value = LaunchState.Failed(entry, LaunchError.QUIT_FAILED)
+                fail(entry, LaunchError.QUIT_FAILED)
                 return
             }
         }
@@ -227,14 +273,15 @@ class LaunchCoordinator(
         } catch (e: Exception) {
             Log.e("Stream start failed", e)
             restoreProfile()
-            _state.value = LaunchState.Failed(entry, LaunchError.START_FAILED, e.message)
+            streamingEntry = null
+            fail(entry, LaunchError.START_FAILED, e.message)
         }
     }
 
-    /** Sends the configured wake actions and waits until the host answers. */
+    /** Sends the configured wake actions and waits until the host answers (as long as set for it). */
     private suspend fun wakeAndWait(hostUuid: String): Boolean {
         if (!hostPower().wake(hostUuid)) return false
-        return waitOnline(hostUuid, 120_000)
+        return waitOnline(hostUuid, hostPower().config(hostUuid).wakeTimeoutSeconds * 1000L)
     }
 
     private suspend fun waitOnline(hostUuid: String, timeoutMs: Long): Boolean {
@@ -262,5 +309,10 @@ class LaunchCoordinator(
         if (!profileToRestore.first) return
         profiles.setActive(profileToRestore.second)
         profileToRestore = false to null
+    }
+
+    private companion object {
+        /** After connecting the VPN: how long to wait for the host before waking it. */
+        const val VPN_WAIT_MS = 15_000L
     }
 }

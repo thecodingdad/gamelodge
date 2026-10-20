@@ -102,6 +102,15 @@ fun HostConfigScreen(host: HostState, openHaSettings: () -> Unit) {
             subtitle = stringResource(Res.string.host_wake_method_sub),
             initialFocus = true,
         )
+        if (cfg.wakeMethod != WakeMethod.NONE) {
+            val waits = listOf(60, 120, 180, 300, 600)
+            ChoiceRow(
+                stringResource(Res.string.host_wake_timeout_setting), (waits + cfg.wakeTimeoutSeconds).distinct().sorted(), cfg.wakeTimeoutSeconds,
+                label = { stringResource(Res.string.minutes_short, (it + 59) / 60) },
+                onSelect = { save(cfg.copy(wakeTimeoutSeconds = it)) },
+                subtitle = stringResource(Res.string.host_wake_timeout_sub),
+            )
+        }
 
         SectionHeader(stringResource(Res.string.host_ha_actions))
         if (!c.ha.auth.isLoggedIn) {

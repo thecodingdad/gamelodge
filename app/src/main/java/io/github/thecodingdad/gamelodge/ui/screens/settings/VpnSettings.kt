@@ -1,12 +1,26 @@
 package io.github.thecodingdad.gamelodge.ui.screens.settings
 
-import android.Manifest
 import android.content.ClipboardManager
 import android.net.Uri
 import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Lan
+import androidx.compose.material3.Icon
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import io.github.thecodingdad.gamelodge.ui.components.controllerScroll
+import io.github.thecodingdad.gamelodge.ui.components.popupHeightIn
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -15,7 +29,6 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FileOpen
 import androidx.compose.material.icons.filled.VpnKey
 import androidx.compose.material.icons.filled.VpnLock
-import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,7 +42,6 @@ import androidx.compose.ui.platform.LocalContext
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.thecodingdad.gamelodge.container
-import io.github.thecodingdad.gamelodge.data.settings.AutoVpnTrigger
 import io.github.thecodingdad.gamelodge.data.settings.LauncherSettings
 import io.github.thecodingdad.gamelodge.ui.components.HoldToConfirmButton
 import io.github.thecodingdad.gamelodge.ui.components.LauncherButton
@@ -55,8 +67,8 @@ fun VpnSettings(settings: LauncherSettings, update: ((LauncherSettings) -> Launc
     val scope = rememberCoroutineScope()
     val state by vpn.state.collectAsState()
     val tunnels by vpn.tunnels.collectAsState()
-    val ssid by vpn.currentSsid.collectAsState()
     var message by remember { mutableStateOf<String?>(null) }
+    var homeDialog by remember { mutableStateOf(false) }
     val importedMsg = stringResource(Res.string.vpn_imported)
 
     var pendingConnect by remember { mutableStateOf<String?>(null) }
@@ -83,9 +95,6 @@ fun VpnSettings(settings: LauncherSettings, update: ((LauncherSettings) -> Launc
         }?.substringBeforeLast('.') ?: "wg0"
         val text = context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }.orEmpty()
         importText(name, text)
-    }
-    val locationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) update { it.copy(autoVpnTriggers = it.autoVpnTriggers + AutoVpnTrigger.OUTSIDE_HOME) }
     }
 
     SettingsPage(stringResource(Res.string.settings_vpn)) {
@@ -124,27 +133,94 @@ fun VpnSettings(settings: LauncherSettings, update: ((LauncherSettings) -> Launc
 
         SectionHeader(stringResource(Res.string.vpn_auto))
         SwitchRow(
-            stringResource(Res.string.vpn_auto_unreachable), AutoVpnTrigger.HOST_UNREACHABLE in settings.autoVpnTriggers,
-            { on -> update { it.copy(autoVpnTriggers = if (on) it.autoVpnTriggers + AutoVpnTrigger.HOST_UNREACHABLE else it.autoVpnTriggers - AutoVpnTrigger.HOST_UNREACHABLE) } },
-            subtitle = stringResource(Res.string.vpn_auto_unreachable_sub), icon = Icons.Filled.VpnLock,
+            stringResource(Res.string.vpn_on_stream), settings.vpnOnStreamStart, { v -> update { it.copy(vpnOnStreamStart = v) } },
+            subtitle = stringResource(Res.string.vpn_on_stream_sub), icon = Icons.Filled.VpnLock,
         )
-        SwitchRow(
-            stringResource(Res.string.vpn_auto_outside), AutoVpnTrigger.OUTSIDE_HOME in settings.autoVpnTriggers,
-            { on ->
-                if (on) locationPermission.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-                else update { it.copy(autoVpnTriggers = it.autoVpnTriggers - AutoVpnTrigger.OUTSIDE_HOME) }
-            },
-            subtitle = stringResource(Res.string.vpn_auto_outside_sub), icon = Icons.Filled.Wifi,
+        if (settings.vpnOnStreamStart) {
+            SwitchRow(
+                stringResource(Res.string.vpn_only_outside), settings.vpnOnlyOutsideHome, { v -> update { it.copy(vpnOnlyOutsideHome = v) } },
+                subtitle = when {
+                    !settings.vpnOnlyOutsideHome -> null
+                    settings.homeNetworks.isEmpty() -> stringResource(Res.string.vpn_only_outside_none)
+                    vpn.atHome(settings.homeNetworks) -> stringResource(Res.string.vpn_at_home)
+                    else -> stringResource(Res.string.vpn_not_at_home)
+                },
+                icon = Icons.Filled.Home,
+            )
+            if (settings.vpnOnlyOutsideHome) {
+                NavRow(
+                    stringResource(Res.string.vpn_home_networks), { homeDialog = true },
+                    settings.homeNetworks.sorted().joinToString(", ").ifEmpty { stringResource(Res.string.vpn_home_networks_none) },
+                    Icons.Filled.Lan,
+                )
+            }
+            SwitchRow(
+                stringResource(Res.string.vpn_disconnect_after), settings.vpnDisconnectAfterStream, { v -> update { it.copy(vpnDisconnectAfterStream = v) } },
+                subtitle = stringResource(Res.string.vpn_disconnect_after_sub),
+            )
+        }
+    }
+    HomeNetworksDialog(homeDialog, settings.homeNetworks, update) { homeDialog = false }
+}
+
+/** The home networks: a list with ✕ per entry; the current network / IP or one typed in are added. */
+@Composable
+private fun HomeNetworksDialog(
+    visible: Boolean,
+    networks: Set<String>,
+    update: ((LauncherSettings) -> LauncherSettings) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val vpn = LocalContext.current.container.vpn
+    val keyboard = io.github.thecodingdad.gamelodge.ui.components.LocalKeyboardController.current
+    var error by remember(visible) { mutableStateOf<String?>(null) }
+    val title = stringResource(Res.string.vpn_home_networks)
+    val manualTitle = stringResource(Res.string.vpn_add_manual)
+    val invalid = stringResource(Res.string.vpn_home_invalid, "%s")
+    fun add(entries: List<String>) = update { it.copy(homeNetworks = it.homeNetworks + entries) }
+    io.github.thecodingdad.gamelodge.ui.components.Modal(visible = visible, onDismiss = onDismiss, title = title, maxWidth = 640.dp) {
+        // Read when the popup shows (the network may have changed since the page opened).
+        val addresses = remember(visible) { vpn.localAddresses() }
+        Text(stringResource(Res.string.vpn_home_networks_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+        Text(
+            if (addresses.isEmpty()) stringResource(Res.string.vpn_device_no_address)
+            else stringResource(Res.string.vpn_device_addresses, addresses.joinToString(", ") { "${it.first}/${it.second}" }),
+            style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted,
         )
-        if (AutoVpnTrigger.OUTSIDE_HOME in settings.autoVpnTriggers) {
-            SwitchRow(stringResource(Res.string.vpn_disconnect_home), settings.vpnDisconnectAtHome, { v -> update { it.copy(vpnDisconnectAtHome = v) } })
-            settings.homeSsids.sorted().forEach { home ->
-                NavRow(home, { update { it.copy(homeSsids = it.homeSsids - home) } }, stringResource(Res.string.vpn_home_remove), Icons.Filled.Wifi)
+        androidx.compose.foundation.layout.Column(
+            Modifier.popupHeightIn(320.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            if (networks.isEmpty()) Text(stringResource(Res.string.vpn_home_empty), color = LauncherTheme.colors.onSurfaceMuted)
+            networks.sorted().forEach { entry ->
+                Row(
+                    Modifier.fillMaxWidth().background(LauncherTheme.colors.surfaceRaised, RoundedCornerShape(14.dp)).padding(start = 18.dp, end = 6.dp, top = 6.dp, bottom = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(Icons.Filled.Lan, null, tint = LauncherTheme.colors.accentText, modifier = Modifier.size(22.dp))
+                    Text(entry, style = MaterialTheme.typography.titleMedium, color = LauncherTheme.colors.onSurface, modifier = Modifier.weight(1f).padding(start = 14.dp))
+                    io.github.thecodingdad.gamelodge.ui.components.FocusSurface(
+                        onClick = { update { it.copy(homeNetworks = it.homeNetworks - entry) } },
+                        shape = CircleShape, color = LauncherTheme.colors.surface, modifier = Modifier.size(44.dp),
+                    ) {
+                        Icon(Icons.Filled.Close, stringResource(Res.string.vpn_remove), tint = LauncherTheme.colors.onSurface, modifier = Modifier.align(Alignment.Center).size(22.dp))
+                    }
+                }
             }
-            ssid?.takeIf { it !in settings.homeSsids }?.let { current ->
-                LauncherButton(stringResource(Res.string.vpn_add_home, current), icon = Icons.Filled.Add, onClick = { update { it.copy(homeSsids = it.homeSsids + current) } })
-            }
-            if (ssid == null) Text(stringResource(Res.string.vpn_ssid_unknown), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+        }
+        error?.let { Text(it, color = LauncherTheme.colors.danger, style = MaterialTheme.typography.bodyMedium) }
+        // Enabled whenever there is an address (already listed ones are simply not added twice).
+        val subnets = addresses.mapNotNull { (ip, bits) -> io.github.thecodingdad.gamelodge.vpn.HomeNetworks.subnetOf(ip, bits) }
+        val ips = addresses.map { it.first }
+        io.github.thecodingdad.gamelodge.ui.components.ButtonRow(spacing = 10.dp) {
+            LauncherButton(stringResource(Res.string.vpn_add_current_network), icon = Icons.Filled.Add, enabled = subnets.isNotEmpty(), onClick = { add(subnets) })
+            LauncherButton(stringResource(Res.string.vpn_add_current_ip), icon = Icons.Filled.Add, enabled = ips.isNotEmpty(), onClick = { add(ips) })
+            LauncherButton(manualTitle, icon = Icons.Filled.Edit, onClick = {
+                keyboard.open(manualTitle, "", io.github.thecodingdad.gamelodge.ui.components.TextKind.URL) { typed ->
+                    if (typed.isBlank()) return@open
+                    val entry = io.github.thecodingdad.gamelodge.vpn.HomeNetworks.normalize(typed)
+                    if (entry == null) error = invalid.replace("%s", typed.trim()) else { error = null; add(listOf(entry)) }
+                }
+            })
         }
     }
 }

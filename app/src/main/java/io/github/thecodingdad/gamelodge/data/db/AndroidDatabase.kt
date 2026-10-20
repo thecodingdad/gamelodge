@@ -7,8 +7,15 @@ import androidx.room.Room
 object AndroidDatabase {
     fun create(context: Context): LauncherDatabase =
         Room.databaseBuilder(context, LauncherDatabase::class.java, "launcher.db")
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11)
             .build()
+
+    /** v11: wait time for a woken host. */
+    val MIGRATION_10_11 = object : androidx.room.migration.Migration(10, 11) {
+        override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+            SchemaChanges.V10_TO_V11.forEach(db::execSQL)
+        }
+    }
 
     /** v10: square tile. */
     val MIGRATION_9_10 = object : androidx.room.migration.Migration(9, 10) {
