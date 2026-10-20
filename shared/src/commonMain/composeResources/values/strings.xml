@@ -1172,4 +1172,17 @@
     <string name="vpn_remove">Remove</string>
     <string name="host_wake_timeout_setting">Wait after waking</string>
     <string name="host_wake_timeout_sub">How long a game start waits for the host to be ready (booting takes longer on some hardware)</string>
+    <string name="vpn_host_tunnel">Tunnel for streams</string>
+    <string name="vpn_host_auto">Automatic (%1$s)</string>
+    <string name="vpn_host_none">No VPN</string>
+    <string name="vpn_host_tunnel_sub">Automatic: the tunnel that reaches the host's address, else the default tunnel</string>
+    <string name="vpn_connect">Connect</string>
+    <string name="vpn_disconnect">Disconnect</string>
+    <string name="vpn_add_tunnel">Add tunnel</string>
+    <string name="vpn_add_tunnel_sub">WireGuard configuration (.conf) from a file or the clipboard</string>
+    <string name="vpn_set_default">Make default</string>
+    <string name="vpn_networks">Networks</string>
+    <string name="vpn_all_traffic">All traffic</string>
+    <string name="vpn_no_tunnel">No tunnel set up</string>
+    <string name="vpn_no_tunnel_sub">Add a WireGuard tunnel to stream from outside your home network.</string>
 </resources>

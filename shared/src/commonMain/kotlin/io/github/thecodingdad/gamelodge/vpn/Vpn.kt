@@ -18,7 +18,13 @@ interface Vpn {
 
     /** Connects the default tunnel or disconnects. */
     suspend fun toggle()
+
+    /** The tunnel automatic picks for [hostUuid]: the one routing the host's address, else the default. */
+    fun autoTunnelFor(hostUuid: String): String? = null
 }
+
+/** A host's VPN choice "no VPN" ([io.github.thecodingdad.gamelodge.data.db.HostConfigEntity.vpnTunnel]). */
+const val NO_TUNNEL = "-"
 
 /** Platforms without a VPN of the launcher's own: no tunnels, so nothing VPN related shows. */
 object NoVpn : Vpn {

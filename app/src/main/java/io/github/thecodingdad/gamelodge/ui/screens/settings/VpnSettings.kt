@@ -24,6 +24,9 @@ import io.github.thecodingdad.gamelodge.ui.components.popupHeightIn
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.LinkOff
+import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FileOpen
@@ -97,39 +100,49 @@ fun VpnSettings(settings: LauncherSettings, update: ((LauncherSettings) -> Launc
         importText(name, text)
     }
 
+    var tunnelDialog by remember { mutableStateOf<String?>(null) }
+    var importDialog by remember { mutableStateOf(false) }
+    val defaultTunnel = settings.activeTunnel.takeIf { it in tunnels } ?: tunnels.firstOrNull()
+
     SettingsPage(stringResource(Res.string.settings_vpn)) {
-        InfoRow(stringResource(Res.string.ha_status), vpnStatusLabel(state.status) + (state.tunnel?.let { " · $it" } ?: ""))
-        if (state.error != null && state.error != "consent") Text(state.error!!, color = LauncherTheme.colors.danger)
+        // Connection overview like the Home Assistant page.
+        val colors = LauncherTheme.colors
+        io.github.thecodingdad.gamelodge.ui.components.StatusCard(
+            if (tunnels.isEmpty()) stringResource(Res.string.vpn_no_tunnel) else vpnStatusLabel(state.status),
+            when (state.status) {
+                VpnStatus.UP -> colors.success
+                VpnStatus.ERROR -> colors.danger
+                VpnStatus.CONNECTING -> colors.accent
+                VpnStatus.DOWN -> colors.onSurfaceMuted
+            },
+            if (state.status == VpnStatus.UP) Icons.Filled.VpnLock else Icons.Filled.VpnKey,
+            details = listOfNotNull(
+                if (tunnels.isEmpty()) stringResource(Res.string.vpn_no_tunnel_sub) else state.tunnel ?: defaultTunnel,
+                state.error?.takeIf { it != "consent" && state.status == VpnStatus.ERROR },
+            ),
+            busy = state.status == VpnStatus.CONNECTING,
+        ) {
+            when {
+                tunnels.isEmpty() -> LauncherButton(stringResource(Res.string.vpn_add_tunnel), icon = Icons.Filled.Add, primary = true, onClick = { importDialog = true })
+                state.status == VpnStatus.UP -> LauncherButton(stringResource(Res.string.vpn_disconnect), icon = Icons.Filled.LinkOff, onClick = { scope.launch { vpn.disconnect() } })
+                else -> defaultTunnel?.let { name -> LauncherButton(stringResource(Res.string.vpn_connect), icon = Icons.Filled.Link, primary = true, onClick = { connect(name) }) }
+            }
+        }
 
         SectionHeader(stringResource(Res.string.vpn_tunnels))
         tunnels.forEachIndexed { index, name ->
             val isUp = state.status == VpnStatus.UP && state.tunnel == name
-            SwitchRow(
-                name, isUp,
-                onChange = { on -> if (on) connect(name) else scope.launch { vpn.disconnect() } },
-                subtitle = if (settings.activeTunnel == name) stringResource(Res.string.vpn_default_tunnel) else null,
-                icon = Icons.Filled.VpnKey,
+            NavRow(
+                name, { tunnelDialog = name },
+                listOfNotNull(
+                    stringResource(Res.string.vpn_default_tunnel).takeIf { name == defaultTunnel },
+                    vpnStatusLabel(if (isUp) VpnStatus.UP else VpnStatus.DOWN),
+                ).joinToString(" · "),
+                Icons.Filled.VpnKey,
                 initialFocus = index == 0,
             )
         }
-        if (tunnels.size > 1) {
-            ChoiceRow(
-                stringResource(Res.string.vpn_default_tunnel), tunnels, settings.activeTunnel.ifEmpty { tunnels.first() },
-                label = { it }, onSelect = { v -> update { it.copy(activeTunnel = v) } },
-            )
-        }
-        io.github.thecodingdad.gamelodge.ui.components.ButtonRow(spacing = 12.dp) {
-            LauncherButton(stringResource(Res.string.vpn_import_file), icon = Icons.Filled.FileOpen, primary = tunnels.isEmpty(), onClick = { openFile.launch(arrayOf("*/*")) })
-            LauncherButton(stringResource(Res.string.vpn_import_clipboard), icon = Icons.Filled.ContentPaste, onClick = {
-                val text = context.getSystemService(ClipboardManager::class.java).primaryClip?.getItemAt(0)?.coerceToText(context)?.toString().orEmpty()
-                importText("wg${tunnels.size}", text)
-            })
-            tunnels.firstOrNull { it == settings.activeTunnel }?.let { name ->
-                HoldToConfirmButton(stringResource(Res.string.vpn_delete, name), { vpn.delete(name) }, icon = Icons.Filled.Delete)
-            }
-        }
-        message?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted) }
-        Text(stringResource(Res.string.vpn_import_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+        NavRow(stringResource(Res.string.vpn_add_tunnel), { importDialog = true }, stringResource(Res.string.vpn_add_tunnel_sub), Icons.Filled.Add, initialFocus = tunnels.isEmpty())
 
         SectionHeader(stringResource(Res.string.vpn_auto))
         SwitchRow(
@@ -161,6 +174,46 @@ fun VpnSettings(settings: LauncherSettings, update: ((LauncherSettings) -> Launc
         }
     }
     HomeNetworksDialog(homeDialog, settings.homeNetworks, update) { homeDialog = false }
+
+    // One tunnel: state, networks, connect / disconnect, default, delete.
+    val shown = tunnelDialog
+    io.github.thecodingdad.gamelodge.ui.components.Modal(visible = shown != null, onDismiss = { tunnelDialog = null }, title = shown, maxWidth = 640.dp) {
+        val name = shown ?: return@Modal
+        val isUp = state.status == VpnStatus.UP && state.tunnel == name
+        val routes = remember(name) { vpn.allowedIps(name) }
+        InfoRow(stringResource(Res.string.ha_status), vpnStatusLabel(if (isUp) VpnStatus.UP else if (state.tunnel == name) state.status else VpnStatus.DOWN))
+        InfoRow(
+            stringResource(Res.string.vpn_networks),
+            if (routes.any { it.endsWith("/0") }) stringResource(Res.string.vpn_all_traffic) else routes.joinToString(", ").ifEmpty { "–" },
+        )
+        io.github.thecodingdad.gamelodge.ui.components.ButtonRow(spacing = 10.dp) {
+            if (isUp) LauncherButton(stringResource(Res.string.vpn_disconnect), icon = Icons.Filled.LinkOff, onClick = { scope.launch { vpn.disconnect() } })
+            else LauncherButton(stringResource(Res.string.vpn_connect), icon = Icons.Filled.Link, primary = true, onClick = { connect(name) })
+            if (name != defaultTunnel) LauncherButton(stringResource(Res.string.vpn_set_default), icon = Icons.Filled.Star, onClick = { update { it.copy(activeTunnel = name) } })
+        }
+        HoldToConfirmButton(
+            stringResource(Res.string.vpn_delete, name),
+            {
+                vpn.delete(name)
+                if (settings.activeTunnel == name) update { it.copy(activeTunnel = vpn.tunnels.value.firstOrNull().orEmpty()) }
+                tunnelDialog = null
+            },
+            icon = Icons.Filled.Delete, modifier = Modifier.fillMaxWidth(),
+        )
+    }
+
+    // Import: from a file or the clipboard.
+    io.github.thecodingdad.gamelodge.ui.components.Modal(visible = importDialog, onDismiss = { importDialog = false; message = null }, title = stringResource(Res.string.vpn_add_tunnel), maxWidth = 640.dp) {
+        Text(stringResource(Res.string.vpn_import_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+        io.github.thecodingdad.gamelodge.ui.components.ButtonRow(spacing = 10.dp) {
+            LauncherButton(stringResource(Res.string.vpn_import_file), icon = Icons.Filled.FileOpen, primary = true, onClick = { openFile.launch(arrayOf("*/*")) })
+            LauncherButton(stringResource(Res.string.vpn_import_clipboard), icon = Icons.Filled.ContentPaste, onClick = {
+                val text = context.getSystemService(ClipboardManager::class.java).primaryClip?.getItemAt(0)?.coerceToText(context)?.toString().orEmpty()
+                importText("wg${tunnels.size}", text)
+            })
+        }
+        message?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted) }
+    }
 }
 
 /** The home networks: a list with ✕ per entry; the current network / IP or one typed in are added. */

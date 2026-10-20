@@ -64,7 +64,14 @@ class AppContainer(context: Context) : LauncherContainer {
     val controllerSettings: io.github.thecodingdad.gamelodge.stream.ControllerOverrideStore by lazy {
         io.github.thecodingdad.gamelodge.stream.ControllerOverrideStore(appContext)
     }
-    override val vpn: VpnManager by lazy { VpnManager(appContext, secrets, settings, scope) }
+    override val vpn: VpnManager by lazy {
+        VpnManager(appContext, secrets, settings, scope).also { v ->
+            v.hostChoice = { uuid -> hostPower.config(uuid).vpnTunnel }
+            v.hostAddresses = { uuid ->
+                hosts.details(uuid)?.let { d -> listOfNotNull(d.localAddress, d.manualAddress, d.remoteAddress).map { it.address } }.orEmpty()
+            }
+        }
+    }
     override val profiles: io.github.thecodingdad.gamelodge.stream.StreamProfiles = io.github.thecodingdad.gamelodge.stream.ArtemisStreamProfiles(appContext)
     override val launcher: LaunchCoordinator by lazy {
         LaunchCoordinator(

@@ -103,6 +103,7 @@ data class HostConfigBackup(
     val haSleepEntity: String?,
     val autoSleepMinutes: Int?,
     val wakeTimeoutSeconds: Int = 120,
+    val vpnTunnel: String? = null,
 )
 
 @Serializable
@@ -183,7 +184,7 @@ class BackupManager(
             },
             haTiles = db.haTileDao().getAll().map { HaTileBackup(it.entityId, it.type, it.label, it.showOnHome) },
             hostConfigs = db.hostConfigDao().observeAll().first().map {
-                HostConfigBackup(it.hostUuid, it.wakeMethod, it.haWakeEntity, it.haShutdownEntity, it.haRestartEntity, it.haSleepEntity, it.autoSleepMinutes, it.wakeTimeoutSeconds)
+                HostConfigBackup(it.hostUuid, it.wakeMethod, it.haWakeEntity, it.haShutdownEntity, it.haRestartEntity, it.haSleepEntity, it.autoSleepMinutes, it.wakeTimeoutSeconds, it.vpnTunnel)
             },
             baseStreamSettings = stream.baseSettings(),
             profiles = stream.profiles(),
@@ -268,7 +269,7 @@ class BackupManager(
         db.haTileDao().upsert(backup.haTiles.mapIndexed { i, t -> HaTileEntity(t.entityId, t.type, t.label, i, t.showOnHome) })
         backup.hostConfigs.forEach {
             db.hostConfigDao().upsert(
-                HostConfigEntity(it.hostUuid, it.wakeMethod, it.haWakeEntity, it.haShutdownEntity, it.haRestartEntity, it.haSleepEntity, it.autoSleepMinutes, it.wakeTimeoutSeconds),
+                HostConfigEntity(it.hostUuid, it.wakeMethod, it.haWakeEntity, it.haShutdownEntity, it.haRestartEntity, it.haSleepEntity, it.autoSleepMinutes, it.wakeTimeoutSeconds, it.vpnTunnel),
             )
         }
 

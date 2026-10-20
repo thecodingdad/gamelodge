@@ -40,11 +40,14 @@ enum class LaunchError { HOST_OFFLINE, WAKE_FAILED, NOT_PAIRED, NO_LAUNCH_PERMIS
 
 /** The VPN as a stream start uses it, filled by the VPN module (platforms without one never connect). */
 interface StreamVpn {
-    /** The settings want the VPN for a stream right now (switched on, and outside the home networks if set). */
-    suspend fun wantedForStream(): Boolean
+    /**
+     * The settings want the VPN for a stream to [hostUuid] right now (switched on, outside the
+     * home networks if set, a tunnel for this host that isn't up yet).
+     */
+    suspend fun wantedForStream(hostUuid: String): Boolean
 
-    /** Connects the default tunnel; true when it is up. */
-    suspend fun connectForStream(): Boolean
+    /** Connects the tunnel for [hostUuid]; true when it is up. */
+    suspend fun connectForStream(hostUuid: String): Boolean
 
     suspend fun disconnect()
 
@@ -52,8 +55,8 @@ interface StreamVpn {
     suspend fun disconnectAfterStream(): Boolean
 
     object None : StreamVpn {
-        override suspend fun wantedForStream() = false
-        override suspend fun connectForStream() = false
+        override suspend fun wantedForStream(hostUuid: String) = false
+        override suspend fun connectForStream(hostUuid: String) = false
         override suspend fun disconnect() = Unit
         override suspend fun disconnectAfterStream() = false
     }
@@ -196,9 +199,9 @@ class LaunchCoordinator(
         // 1. Host not reachable: maybe only from here, so the VPN first (when wanted), then wake
         //    it and wait as long as set for this host.
         if (host(hostUuid)?.status != HostStatus.ONLINE) {
-            if (!vpnForStream && runCatching { vpn.wantedForStream() }.getOrDefault(false)) {
+            if (!vpnForStream && runCatching { vpn.wantedForStream(hostUuid) }.getOrDefault(false)) {
                 _state.value = LaunchState.Working(entry, LaunchStep.CONNECTING_VPN)
-                if (runCatching { vpn.connectForStream() }.getOrDefault(false)) {
+                if (runCatching { vpn.connectForStream(hostUuid) }.getOrDefault(false)) {
                     vpnForStream = true
                     waitOnline(hostUuid, VPN_WAIT_MS)
                 }

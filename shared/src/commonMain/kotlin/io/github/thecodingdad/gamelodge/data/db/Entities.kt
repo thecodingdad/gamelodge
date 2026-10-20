@@ -234,6 +234,8 @@ data class HostConfigEntity(
     /** How long a stream start waits for the woken host (booting takes longer on some hardware). */
     @androidx.room.ColumnInfo(defaultValue = "120")
     val wakeTimeoutSeconds: Int = 120,
+    /** VPN tunnel for streams to this host: null = automatic, [io.github.thecodingdad.gamelodge.vpn.NO_TUNNEL] = none. */
+    val vpnTunnel: String? = null,
 )
 
 enum class HaTileType { SWITCH, LIGHT, BUTTON, SENSOR, COVER, CLIMATE }

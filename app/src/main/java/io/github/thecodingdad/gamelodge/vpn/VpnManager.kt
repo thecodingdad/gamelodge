@@ -112,15 +112,62 @@ class VpnManager(
     private suspend fun defaultTunnel(): String? =
         settings.current().activeTunnel.takeIf { it in _tunnels.value } ?: _tunnels.value.firstOrNull()
 
-    override suspend fun wantedForStream(): Boolean {
-        if (_state.value.status == VpnStatus.UP || defaultTunnel() == null) return false
+    /** The default tunnel's name as last set (for synchronous callers such as the UI). */
+    @Volatile private var defaultName = ""
+
+    init {
+        scope.launch { settings.settings.collect { defaultName = it.activeTunnel } }
+    }
+
+    /** A host's own VPN choice (null = automatic), filled by the container. */
+    var hostChoice: suspend (hostUuid: String) -> String? = { null }
+
+    /** A host's known IPv4 addresses, filled by the container. */
+    var hostAddresses: (hostUuid: String) -> List<String> = { emptyList() }
+
+    override suspend fun wantedForStream(hostUuid: String): Boolean {
+        val tunnel = tunnelForHost(hostUuid) ?: return false
+        // Already through the right tunnel; a different one is switched.
+        if (_state.value.status == VpnStatus.UP && active?.name == tunnel) return false
         val s = settings.current()
         if (!s.vpnOnStreamStart) return false
         // Without home networks the unreachable host alone decides.
         return !(s.vpnOnlyOutsideHome && s.homeNetworks.isNotEmpty() && atHome(s.homeNetworks))
     }
 
-    override suspend fun connectForStream(): Boolean = defaultTunnel()?.let { connect(it) } ?: false
+    override suspend fun connectForStream(hostUuid: String): Boolean = tunnelForHost(hostUuid)?.let { connect(it) } ?: false
+
+    /** The tunnel for streams to [hostUuid]: the host's own choice, else automatic; null: no VPN. */
+    suspend fun tunnelForHost(hostUuid: String): String? {
+        val choice = hostChoice(hostUuid)
+        return when {
+            choice == NO_TUNNEL -> null
+            choice != null && choice in _tunnels.value -> choice
+            else -> autoTunnelFor(hostUuid)
+        }
+    }
+
+    override fun autoTunnelFor(hostUuid: String): String? {
+        val addresses = hostAddresses(hostUuid)
+        return _tunnels.value.firstOrNull { name -> HomeNetworks.contains(routedNetworks(name), addresses) }
+            ?: defaultName.takeIf { it in _tunnels.value } ?: _tunnels.value.firstOrNull()
+    }
+
+    /**
+     * The IPv4 networks a tunnel routes (its peers' AllowedIPs), without catch-all routes: a
+     * tunnel for all traffic says nothing about which host it reaches.
+     */
+    fun routedNetworks(name: String): List<String> = allowedIps(name).filter { !it.endsWith("/0") }
+
+    /** All AllowedIPs of a tunnel (IPv4), "0.0.0.0/0" included. */
+    fun allowedIps(name: String): List<String> {
+        val text = secrets.get(SecretStore.Keys.wireguardConfig(name)) ?: return emptyList()
+        return runCatching { Config.parse(text.byteInputStream()) }.getOrNull()?.peers.orEmpty()
+            .flatMap { it.allowedIps }
+            .filter { it.address is java.net.Inet4Address }
+            .map { "${it.address.hostAddress}/${it.mask}" }
+            .distinct()
+    }
 
     override suspend fun disconnectAfterStream() = settings.current().vpnDisconnectAfterStream
 

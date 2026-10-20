@@ -112,6 +112,27 @@ fun HostConfigScreen(host: HostState, openHaSettings: () -> Unit) {
             )
         }
 
+        // Only where the launcher has VPN tunnels of its own (Android).
+        val tunnels by c.vpn.tunnels.collectAsState()
+        if (tunnels.isNotEmpty()) {
+            SectionHeader(stringResource(Res.string.settings_vpn))
+            val auto = c.vpn.autoTunnelFor(host.uuid)
+            ChoiceRow(
+                stringResource(Res.string.vpn_host_tunnel),
+                listOf<String?>(null, io.github.thecodingdad.gamelodge.vpn.NO_TUNNEL) + tunnels,
+                cfg.vpnTunnel?.takeIf { it == io.github.thecodingdad.gamelodge.vpn.NO_TUNNEL || it in tunnels },
+                label = {
+                    when (it) {
+                        null -> stringResource(Res.string.vpn_host_auto, auto ?: "–")
+                        io.github.thecodingdad.gamelodge.vpn.NO_TUNNEL -> stringResource(Res.string.vpn_host_none)
+                        else -> it
+                    }
+                },
+                onSelect = { save(cfg.copy(vpnTunnel = it)) },
+                subtitle = stringResource(Res.string.vpn_host_tunnel_sub),
+            )
+        }
+
         SectionHeader(stringResource(Res.string.host_ha_actions))
         if (!c.ha.auth.isLoggedIn) {
             Text(stringResource(Res.string.host_ha_actions_needs_ha), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)

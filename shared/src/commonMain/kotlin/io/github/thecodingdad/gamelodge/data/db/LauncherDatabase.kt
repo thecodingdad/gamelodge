@@ -16,7 +16,7 @@ import androidx.room.RoomDatabaseConstructor
         HaTileEntity::class,
         FilterEntity::class,
     ],
-    version = 11,
+    version = 12,
     exportSchema = true,
 )
 @ConstructedBy(LauncherDatabaseConstructor::class)
@@ -53,5 +53,10 @@ object SchemaChanges {
     /** v11: wait time for a woken host. */
     val V10_TO_V11 = listOf(
         "ALTER TABLE host_config ADD COLUMN wakeTimeoutSeconds INTEGER NOT NULL DEFAULT 120",
+    )
+
+    /** v12: VPN tunnel per host. */
+    val V11_TO_V12 = listOf(
+        "ALTER TABLE host_config ADD COLUMN vpnTunnel TEXT",
     )
 }
