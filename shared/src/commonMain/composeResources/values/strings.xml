@@ -1204,10 +1204,6 @@
     <string name="setting_tile_badges">Badges</string>
     <string name="setting_tile_badges_sub">Small marks on the tiles</string>
     <string name="badge_favorite">Favourite</string>
-    <string name="badge_android">Android</string>
-    <string name="badge_pc">PC</string>
-    <string name="badge_rom">Emulator</string>
-    <string name="badge_host">Host</string>
     <string name="badge_not_installed">Not installed</string>
     <string name="setting_apps_style">Display</string>
     <string name="apps_style_icons">Icons</string>
@@ -1230,4 +1226,5 @@
     <string name="settings_display_sub_desktop">Screen saver</string>
     <string name="search_kw_library_view">Tiles, covers, size, titles, badges, play time, progress</string>
     <string name="search_kw_apps_view">Icons, banners, tiles, size</string>
+    <string name="badge_source">Source (device, emulator, host)</string>
 </resources>

@@ -1202,10 +1202,6 @@
     <string name="setting_tile_badges">Abzeichen</string>
     <string name="setting_tile_badges_sub">Kleine Symbole auf den Kacheln</string>
     <string name="badge_favorite">Favorit</string>
-    <string name="badge_android">Android</string>
-    <string name="badge_pc">PC</string>
-    <string name="badge_rom">Emulator</string>
-    <string name="badge_host">Host</string>
     <string name="badge_not_installed">Nicht installiert</string>
     <string name="setting_apps_style">Darstellung</string>
     <string name="apps_style_icons">Icons</string>
@@ -1228,4 +1224,5 @@
     <string name="settings_display_sub_desktop">Bildschirmschoner</string>
     <string name="search_kw_library_view">Kacheln, Cover, Größe, Titel, Abzeichen, Spielzeit, Fortschritt</string>
     <string name="search_kw_apps_view">Icons, Banner, Kacheln, Größe</string>
+    <string name="badge_source">Quelle (Gerät, Emulator, Host)</string>
 </resources>

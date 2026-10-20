@@ -265,33 +265,30 @@ private fun TileSettings(layout: TabLayout, onChange: (TabLayout) -> Unit, apps:
             subtitle = if (apps) null else stringResource(Res.string.setting_tile_info_sub),
         )
     }
-    val localLabel = stringResource(
-        if (io.github.thecodingdad.gamelodge.ui.PlatformUi.current.hasPage(SettingsPageId.LAUNCHER)) Res.string.badge_android else Res.string.badge_pc,
-    )
-    val localIcon = io.github.thecodingdad.gamelodge.ui.PlatformUi.current.localIcon
+    // Where a game runs (this device, emulator, host) is one badge: shown or not.
+    val sources = setOf(TileBadge.LOCAL, TileBadge.ROM, TileBadge.HOST)
     ChipToggleRow(
         stringResource(Res.string.setting_tile_badges),
-        if (apps) listOf(TileBadge.FAVORITE, TileBadge.LOCAL, TileBadge.HOST) else TileBadge.entries,
+        if (apps) listOf(TileBadge.FAVORITE, TileBadge.LOCAL) else listOf(TileBadge.FAVORITE, TileBadge.LOCAL, TileBadge.NOT_INSTALLED),
         layout.badges,
         label = {
             when (it) {
                 TileBadge.FAVORITE -> stringResource(Res.string.badge_favorite)
-                TileBadge.LOCAL -> localLabel
-                TileBadge.ROM -> stringResource(Res.string.badge_rom)
-                TileBadge.HOST -> stringResource(Res.string.badge_host)
                 TileBadge.NOT_INSTALLED -> stringResource(Res.string.badge_not_installed)
+                else -> stringResource(Res.string.badge_source)
             }
         },
         icon = {
             when (it) {
                 TileBadge.FAVORITE -> Icons.Filled.Favorite
-                TileBadge.LOCAL -> localIcon
-                TileBadge.ROM -> Icons.Filled.SportsEsports
-                TileBadge.HOST -> Icons.Filled.Cloud
                 TileBadge.NOT_INSTALLED -> Icons.Filled.Download
+                else -> Icons.Filled.Cloud
             }
         },
-        onToggle = { badge, on -> onChange(layout.copy(badges = if (on) layout.badges + badge else layout.badges - badge)) },
+        onToggle = { badge, on ->
+            val group = if (badge in sources) sources else setOf(badge)
+            onChange(layout.copy(badges = if (on) layout.badges + group else layout.badges - group))
+        },
         subtitle = stringResource(Res.string.setting_tile_badges_sub),
     )
 }
