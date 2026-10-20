@@ -128,6 +128,12 @@ private const val SEPARATOR = "  ›  "
 @Composable
 fun SettingsPage(title: String, content: @Composable ColumnScope.() -> Unit) {
     val horizontal = if (io.github.thecodingdad.gamelodge.ui.components.LocalCompactWidth.current) 20.dp else 48.dp
+    // Back on this page (B, back gesture): the row it was left from is in view and focused again.
+    val returnTitle = androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf<String?>(null) }
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        returnTitle.value?.let { SearchHighlight.returnTo(it) }
+        returnTitle.value = null
+    }
     Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
         // Limited width, centred on wide screens; the title lines up with the entries.
         PageTitle(title, Modifier.padding(horizontal = horizontal).padding(top = 16.dp, bottom = 12.dp).widthIn(max = 900.dp).fillMaxWidth())
@@ -137,7 +143,7 @@ fun SettingsPage(title: String, content: @Composable ColumnScope.() -> Unit) {
             inner = Modifier.padding(horizontal = horizontal).focusRestorer(),
         ) {
             Column(Modifier.widthIn(max = 900.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                content()
+                androidx.compose.runtime.CompositionLocalProvider(LocalReturnTitle provides returnTitle) { content() }
                 Spacer(Modifier.height(24.dp))
             }
         }
@@ -182,7 +188,7 @@ fun Modifier.searchHighlight(
 /** Where a settings search hit leads: the title of the setting to show once its page opens. */
 object SearchHighlight {
     /** One request: the setting's title, when it was made, and whether a row took it. */
-    internal class Request(val title: String, val at: Long) {
+    internal class Request(val title: String, val at: Long, val flash: Boolean = true) {
         // Plain field: taking the request must not change the state the rows' effects are keyed on.
         var taken = false
     }
@@ -192,7 +198,15 @@ object SearchHighlight {
     fun request(title: String?) {
         current = title?.let { Request(it, System.currentTimeMillis()) }
     }
+
+    /** Back on a page: the row the user left it from scrolls into view and takes the focus, without lighting up. */
+    fun returnTo(title: String) {
+        current = Request(title, System.currentTimeMillis(), flash = false)
+    }
 }
+
+/** The title of the row a page was left from (saved with the page), filled by the rows when used. */
+internal val LocalReturnTitle = androidx.compose.runtime.staticCompositionLocalOf<androidx.compose.runtime.MutableState<String?>?> { null }
 
 internal class HighlightState(val modifier: Modifier, private val anim: androidx.compose.animation.core.Animatable<Float, *>) {
     val amount: Float get() = anim.value
@@ -215,9 +229,10 @@ private fun rememberSearchHighlight(title: String?, focus: Boolean = true): High
         // A stale request (the page had no such row) is dropped.
         if (System.currentTimeMillis() - request.at > HIGHLIGHT_REQUEST_MS) return@LaunchedEffect
         // Let the page come in and place its initial focus first.
-        kotlinx.coroutines.delay(HIGHLIGHT_DELAY_MS)
+        kotlinx.coroutines.delay(if (request.flash) HIGHLIGHT_DELAY_MS else RETURN_DELAY_MS)
         requester.bringIntoView()
         if (focus) runCatching { focusRequester.requestFocus() }
+        if (!request.flash) return@LaunchedEffect
         repeat(2) {
             anim.animateTo(1f, androidx.compose.animation.core.tween(220))
             anim.animateTo(0.25f, androidx.compose.animation.core.tween(380))
@@ -231,6 +246,7 @@ private fun rememberSearchHighlight(title: String?, focus: Boolean = true): High
 }
 
 private const val HIGHLIGHT_DELAY_MS = 350L
+private const val RETURN_DELAY_MS = 60L
 private const val HIGHLIGHT_REQUEST_MS = 10_000L
 
 @Composable
@@ -242,8 +258,10 @@ private fun RowShell(
     title: String? = null,
     content: @Composable () -> Unit,
 ) {
+    val returnTitle = LocalReturnTitle.current
     FocusSurface(
-        onClick = onClick,
+        // Remembered: coming back from what this row opened, the page returns to it.
+        onClick = { if (title != null) returnTitle?.value = title; onClick() },
         modifier = modifier.fillMaxWidth().heightIn(min = 68.dp).restoreFocusIf(initialFocus).searchHighlight(title),
         color = io.github.thecodingdad.gamelodge.ui.components.LocalRowSurface.current ?: LauncherTheme.colors.surface,
         focusScale = 1.02f,
