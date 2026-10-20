@@ -550,10 +550,6 @@ fun LauncherApp(
         io.github.thecodingdad.gamelodge.ui.shell.HostInfoPopup(
             host = hostInfoFor?.let { hostsGlobal[it] },
             runningGame = running.firstOrNull { it.host.uuid == hostInfoFor }?.appName,
-            profiles = profiles,
-            activeProfile = activeProfile,
-            onProfile = vm::setActiveProfile,
-            onEditProfiles = { nav.navigate(Routes.settings(SettingsPageId.PROFILES)) },
             onDismiss = { hostInfoFor = null },
             openSettings = { nav.navigate(Routes.host(it.uuid)) },
         )

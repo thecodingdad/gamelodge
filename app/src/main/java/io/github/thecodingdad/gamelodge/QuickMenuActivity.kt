@@ -197,10 +197,6 @@ class QuickMenuActivity : ComponentActivity() {
                         HostInfoPopup(
                             host = hostInfoFor?.let { hosts[it] },
                             runningGame = running.firstOrNull { it.host.uuid == hostInfoFor }?.appName,
-                            profiles = profiles,
-                            activeProfile = activeProfile,
-                            onProfile = vm::setActiveProfile,
-                            onEditProfiles = ::openLauncher,
                             onDismiss = { hostInfoFor = null },
                             openSettings = { openLauncher() },
                         )

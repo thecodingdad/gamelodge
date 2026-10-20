@@ -14,7 +14,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bedtime
-import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.WbSunny
@@ -53,10 +52,6 @@ fun HostInfoPopup(
     runningGame: String?,
     onDismiss: () -> Unit,
     openSettings: (HostState) -> Unit,
-    profiles: List<io.github.thecodingdad.gamelodge.stream.StreamProfile> = emptyList(),
-    activeProfile: io.github.thecodingdad.gamelodge.stream.StreamProfile? = null,
-    onProfile: (io.github.thecodingdad.gamelodge.stream.StreamProfile) -> Unit = {},
-    onEditProfiles: () -> Unit = {},
 ) {
     val c = io.github.thecodingdad.gamelodge.LocalContainer.current
     val scope = rememberCoroutineScope()
@@ -105,19 +100,6 @@ fun HostInfoPopup(
             if (h.missingPermissions.isNotEmpty()) {
                 InfoRow(stringResource(Res.string.host_info_permissions), stringResource(Res.string.host_info_permissions_missing))
             }
-        }
-        // Stream profile used for the next streams (global, "start with…" overrides it per game).
-        if (profiles.isNotEmpty() && activeProfile != null) {
-            val profileStore = io.github.thecodingdad.gamelodge.LocalContainer.current.profiles
-            Spacer(Modifier.height(12.dp))
-            // One compact row: D-pad left/right or A cycles; editing lives in the settings.
-            io.github.thecodingdad.gamelodge.ui.screens.settings.ChoiceRow(
-                stringResource(Res.string.profile_picker_title), profiles,
-                profiles.firstOrNull { it.uuid == activeProfile.uuid } ?: profiles.first(),
-                label = { it.name }, onSelect = onProfile,
-                subtitle = profileStore.summary(activeProfile.uuid),
-                icon = Icons.Filled.Tune,
-            )
         }
         // Auto sleep after a stream, editable right here (same options as in the host settings).
         config?.let { cfg ->

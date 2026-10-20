@@ -47,7 +47,12 @@ import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.text.appendInlineContent
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import io.github.thecodingdad.gamelodge.ui.input.PadAction
 import io.github.thecodingdad.gamelodge.ui.input.PadButton
 import io.github.thecodingdad.gamelodge.ui.theme.LauncherTheme
@@ -95,7 +100,11 @@ fun LauncherTextField(
     val colors = LauncherTheme.colors
     // Typing on a hardware keyboard switches to key input mode: the field being edited stays a field.
     var editing by remember { mutableStateOf(false) }
-    if (!isControllerMode() || editing) {
+    val controllerMode = isControllerMode()
+    val softKeyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+    // Controller input while the field (focused by touch) is still a text field: no system keyboard.
+    androidx.compose.runtime.LaunchedEffect(controllerMode, editing) { if (controllerMode && editing) softKeyboard?.hide() }
+    if (!controllerMode || editing) {
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
@@ -118,6 +127,12 @@ fun LauncherTextField(
                 editing = it.isFocused
                 // Continue from the field when a controller or arrow key comes next.
                 if (it.isFocused) TouchFocus.clear()
+            }.onPreviewKeyEvent { e ->
+                // A (arrives as D-pad centre) would open the system keyboard: the controller's instead.
+                val confirm = e.key == androidx.compose.ui.input.key.Key.DirectionCenter || e.key == androidx.compose.ui.input.key.Key.ButtonA
+                if (!confirm) return@onPreviewKeyEvent false
+                if (e.type == androidx.compose.ui.input.key.KeyEventType.KeyUp) keyboard.open(label, value, kind, onValueChange)
+                true
             },
         )
         return
@@ -229,11 +244,29 @@ fun ControllerKeyboardHost(controller: KeyboardController) {
                 .padding(horizontal = 18.dp, vertical = 14.dp),
         ) {
             val display = if (request.kind == TextKind.PASSWORD) "•".repeat(text.length) else text
+            val at = cursor.coerceAtMost(display.length)
+            // The cursor is a thin bar with the same small gap on both sides (a text character
+            // like "▏" sits at the left of its width and leaves a wide gap after it).
+            val cursorText = androidx.compose.ui.text.buildAnnotatedString {
+                append(display.substring(0, at))
+                appendInlineContent("cursor", "|")
+                append(display.substring(at))
+            }
+            val accent = colors.accent
             Text(
-                display.substring(0, cursor.coerceAtMost(display.length)) + "▏" + display.substring(cursor.coerceAtMost(display.length)),
+                cursorText,
                 style = MaterialTheme.typography.titleLarge,
                 color = colors.onSurface,
                 maxLines = 2,
+                inlineContent = mapOf(
+                    "cursor" to androidx.compose.foundation.text.InlineTextContent(
+                        androidx.compose.ui.text.Placeholder(0.3.em, 1.2.em, androidx.compose.ui.text.PlaceholderVerticalAlign.TextCenter),
+                    ) {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Box(Modifier.width(2.dp).fillMaxHeight().background(accent))
+                        }
+                    },
+                ),
             )
         }
         Spacer(Modifier.height(16.dp))
@@ -244,33 +277,53 @@ fun ControllerKeyboardHost(controller: KeyboardController) {
             german -> qwertz
             else -> qwerty
         }
-        // Shrinks to the room left (small or portrait screens): every key always stays visible.
-        Box(Modifier.fillMaxWidth().weight(1f, fill = false), contentAlignment = Alignment.TopCenter) {
-        ScaleToFit {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            if (request.kind == TextKind.URL) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    urlRow.forEach { s -> KeyCap(s, onClick = { insert(s) }, minWidth = 72.dp) }
-                }
-            }
-            rows.forEach { row ->
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    row.forEach { ch ->
-                        val label = if (shift) ch.uppercase() else ch.toString()
-                        KeyCap(label, onClick = { insert(ch.toString()) })
+        // Key sizes from the room left: wider keys (less empty space beside them) and up to the
+        // full height on large screens; narrower and lower on small or portrait ones, so every
+        // key always stays visible. Text keeps its size (no scaling, stays sharp).
+        val urlRowShown = request.kind == TextKind.URL
+        val atKey = request.kind == TextKind.URL || request.kind == TextKind.TEXT
+        androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxWidth().weight(1f, fill = false), contentAlignment = Alignment.TopCenter) {
+            val gap = 8.dp
+            val lines = rows.size + 1 + if (urlRowShown) 1 else 0
+            // The lines share the height (up to 64 dp each), so they always fit.
+            val full = 64.dp * lines + gap * (lines - 1)
+            val total = if (constraints.hasBoundedHeight) minOf(maxHeight, full) else full
+            val keyHeight = (total - gap * (lines - 1)) / lines
+            // Widths in units of a letter key: every line must fit the width.
+            val bottomUnits = (88 + 88 + 300 + (if (atKey) 64 else 0) + 88 + 140) / 60f
+            val bottomGaps = if (atKey) 5 else 4
+            val widest = rows.maxOf { it.length }
+            val fit = listOfNotNull(
+                (maxWidth - gap * (widest - 1)) / widest,
+                (maxWidth - gap * bottomGaps) / bottomUnits,
+                if (urlRowShown) (maxWidth - gap * (urlRow.size - 1)) / (urlRow.size * 72 / 60f) else null,
+            ).minOf { it }
+            val unit = fit.coerceIn(28.dp, keyHeight * 1.6f)
+            androidx.compose.runtime.CompositionLocalProvider(LocalKeySize provides KeySize(unit, keyHeight)) {
+                Column(Modifier.height(total), verticalArrangement = Arrangement.spacedBy(gap), horizontalAlignment = Alignment.CenterHorizontally) {
+                    if (urlRowShown) {
+                        Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(gap)) {
+                            urlRow.forEach { s -> KeyCap(s, onClick = { insert(s) }, minWidth = 72.dp) }
+                        }
+                    }
+                    rows.forEach { row ->
+                        Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(gap)) {
+                            row.forEach { ch ->
+                                val label = if (shift) ch.uppercase() else ch.toString()
+                                KeyCap(label, onClick = { insert(ch.toString()) })
+                            }
+                        }
+                    }
+                    Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(gap)) {
+                        KeyCap(if (symbolMode) "abc" else "#+=", onClick = { symbolMode = !symbolMode }, minWidth = 88.dp)
+                        KeyCap("", icon = Icons.Filled.ArrowUpward, onClick = { shift = !shift }, minWidth = 88.dp, highlighted = shift)
+                        KeyCap("", icon = Icons.Filled.SpaceBar, onClick = { insert(" ") }, minWidth = 300.dp)
+                        if (atKey) KeyCap("@", onClick = { insert("@") }, minWidth = 64.dp)
+                        KeyCap("", icon = Icons.AutoMirrored.Filled.Backspace, onClick = { backspace() }, minWidth = 88.dp)
+                        KeyCap(stringResource(Res.string.keyboard_done), icon = Icons.Filled.Check, onClick = { done() }, minWidth = 140.dp, highlighted = true)
                     }
                 }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                KeyCap(if (symbolMode) "abc" else "#+=", onClick = { symbolMode = !symbolMode }, minWidth = 88.dp)
-                KeyCap("", icon = Icons.Filled.ArrowUpward, onClick = { shift = !shift }, minWidth = 88.dp, highlighted = shift)
-                KeyCap("", icon = Icons.Filled.SpaceBar, onClick = { insert(" ") }, minWidth = 300.dp)
-                if (request.kind == TextKind.URL || request.kind == TextKind.TEXT) KeyCap("@", onClick = { insert("@") }, minWidth = 64.dp)
-                KeyCap("", icon = Icons.AutoMirrored.Filled.Backspace, onClick = { backspace() }, minWidth = 88.dp)
-                KeyCap(stringResource(Res.string.keyboard_done), icon = Icons.Filled.Check, onClick = { done() }, minWidth = 140.dp, highlighted = true)
-            }
-        }
-        }
         }
         Spacer(Modifier.height(12.dp))
         ButtonHintBar(
@@ -292,15 +345,21 @@ private fun KeyCap(
     label: String,
     onClick: () -> Unit,
     icon: ImageVector? = null,
+    /** Width at the base size (a letter key is 60 dp), scaled with [LocalKeySize]. */
     minWidth: androidx.compose.ui.unit.Dp = 60.dp,
     highlighted: Boolean = false,
 ) {
     val colors = LauncherTheme.colors
+    val size = LocalKeySize.current
+    val width = size.unit * (minWidth / 60.dp)
+    // The focused key is drawn above its neighbours and every key grows by the same few dp
+    // (10 % of the space bar would reach far over the keys beside it).
+    var focused by remember { mutableStateOf(false) }
     FocusSurface(
         onClick = onClick,
-        modifier = Modifier.width(minWidth).height(56.dp),
+        modifier = Modifier.zIndex(if (focused) 1f else 0f).onFocusChanged { focused = it.hasFocus }.width(width).fillMaxHeight(),
         color = if (highlighted) colors.accent.copy(alpha = 0.35f) else colors.surfaceRaised,
-        focusScale = 1.1f,
+        focusScale = 1f + 12.dp / width,
         clickSound = io.github.thecodingdad.gamelodge.ui.feedback.UiSound.TOGGLE,
     ) {
         Row(Modifier.align(Alignment.Center), verticalAlignment = Alignment.CenterVertically) {
@@ -311,25 +370,10 @@ private fun KeyCap(
     }
 }
 
-/** Lays [content] out at its natural size and scales it down (never up) to fit the constraints. */
-@Composable
-private fun ScaleToFit(content: @Composable () -> Unit) {
-    androidx.compose.ui.layout.Layout(content) { measurables, constraints ->
-        val placeable = measurables.first().measure(androidx.compose.ui.unit.Constraints())
-        val scale = minOf(
-            1f,
-            if (constraints.hasBoundedWidth) constraints.maxWidth / placeable.width.toFloat() else 1f,
-            if (constraints.hasBoundedHeight) constraints.maxHeight / placeable.height.toFloat() else 1f,
-        )
-        layout((placeable.width * scale).toInt(), (placeable.height * scale).toInt()) {
-            placeable.placeWithLayer(0, 0) {
-                scaleX = scale
-                scaleY = scale
-                transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0f, 0f)
-            }
-        }
-    }
-}
+/** Size of a letter key on the on-screen keyboard (the others are wider in proportion). */
+private class KeySize(val unit: androidx.compose.ui.unit.Dp, val height: androidx.compose.ui.unit.Dp)
+
+private val LocalKeySize = androidx.compose.runtime.staticCompositionLocalOf { KeySize(60.dp, 56.dp) }
 
 /** Touch mode: text field with the system keyboard, opened right away. */
 @Composable
