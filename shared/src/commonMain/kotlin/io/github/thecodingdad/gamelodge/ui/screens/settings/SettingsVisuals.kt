@@ -74,16 +74,13 @@ fun <T> ChipToggleRow(
     subtitle: String? = null,
 ) {
     val colors = LauncherTheme.colors
-    Column(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
-            .background(io.github.thecodingdad.gamelodge.ui.components.LocalRowSurface.current ?: colors.surface)
-            .padding(horizontal = 20.dp, vertical = 14.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+    val texts: @Composable (Modifier) -> Unit = { m ->
+        Column(m, verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(title, style = MaterialTheme.typography.titleMedium, color = colors.onSurface)
             subtitle?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceMuted) }
         }
+    }
+    val chips: @Composable () -> Unit = {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             options.forEach { option ->
                 val on = option in selected
@@ -101,6 +98,31 @@ fun <T> ChipToggleRow(
                     }
                 }
             }
+        }
+    }
+    Box(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
+            .background(io.github.thecodingdad.gamelodge.ui.components.LocalRowSurface.current ?: colors.surface)
+            .padding(horizontal = 20.dp, vertical = 14.dp),
+    ) {
+        // Next to the title while the chips fit in one line there (the title keeps 40 %); else below it.
+        androidx.compose.ui.layout.SubcomposeLayout { constraints ->
+            val chipsWidth = subcompose("measure", chips).first().measure(Constraints()).width
+            val beside = chipsWidth <= constraints.maxWidth * 0.6f
+            val content = subcompose("content$beside") {
+                if (beside) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        texts(Modifier.weight(1f).padding(end = 12.dp))
+                        chips()
+                    }
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        texts(Modifier)
+                        chips()
+                    }
+                }
+            }.first().measure(constraints.copy(minHeight = 0))
+            layout(content.width, content.height) { content.place(0, 0) }
         }
     }
 }
