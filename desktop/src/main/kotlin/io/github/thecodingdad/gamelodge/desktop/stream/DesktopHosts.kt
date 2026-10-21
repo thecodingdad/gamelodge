@@ -323,7 +323,10 @@ class DesktopHosts(
         }
         _hosts.update {
             it + (s.uuid to HostState(
-                uuid = s.uuid, name = info.name, status = HostStatus.ONLINE, paired = paired, runningAppId = info.runningAppId,
+                // Plain HTTP never names the running game (only its owner learns it over HTTPS):
+                // the last state seen over HTTPS stays until HTTPS answers again.
+                uuid = s.uuid, name = info.name, status = HostStatus.ONLINE, paired = paired,
+                runningAppId = if (viaHttps || !paired) info.runningAppId else before?.runningAppId ?: 0,
                 address = s.address, macAddress = info.mac ?: s.mac, virtualDisplaySupported = info.virtualDisplay,
                 serverCommands = info.serverCommands, permission = info.permission,
             ))

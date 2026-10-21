@@ -15,10 +15,12 @@ import java.awt.Window
 object WindowsForeground {
     private const val WS_MINIMIZE = 0x20000000
 
-    fun claim(window: Window) {
+    fun claim(window: Window) = claim(WinDef.HWND(Native.getComponentPointer(window)))
+
+    /** Brings [hwnd] (also another process's window) to the front, restoring it when minimized. */
+    fun claim(hwnd: WinDef.HWND) {
         runCatching {
             val user32 = User32.INSTANCE
-            val hwnd = WinDef.HWND(Native.getComponentPointer(window))
             val front = user32.GetForegroundWindow()
             if (front == hwnd) return
             if (user32.GetWindowLong(hwnd, WinUser.GWL_STYLE) and WS_MINIMIZE != 0) user32.ShowWindow(hwnd, WinUser.SW_RESTORE)

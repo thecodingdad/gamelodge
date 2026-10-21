@@ -65,11 +65,14 @@ object Runner {
      * launcher's executable (the launcher itself runs once). Its Guide presses come from the
      * stream's virtual pad and belong to the client, not to this PC's launcher.
      */
-    fun hostGameRunning(): Boolean {
+    fun hostGameRunning(): Boolean = runners().isNotEmpty()
+
+    /** The runner processes (other processes of this launcher's executable). */
+    fun runners(): List<ProcessHandle> {
         val self = ProcessHandle.current()
-        val exe = self.info().command().orElse(null) ?: return false
+        val exe = self.info().command().orElse(null) ?: return emptyList()
         return ProcessHandle.allProcesses().use { all ->
-            all.anyMatch { it.pid() != self.pid() && it.info().command().orElse(null).equals(exe, ignoreCase = true) }
+            all.filter { it.pid() != self.pid() && it.info().command().orElse(null).equals(exe, ignoreCase = true) }.toList()
         }
     }
 

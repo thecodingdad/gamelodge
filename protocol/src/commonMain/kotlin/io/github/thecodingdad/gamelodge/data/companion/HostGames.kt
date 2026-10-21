@@ -84,3 +84,11 @@ data class HostGameCorrection(
     /** Fields chosen by hand to stay empty ("animatedCover", "animatedHero"). */
     val clear: List<String>? = null,
 )
+
+/**
+ * A launcher streams from this PC's streaming host (POST /v1/stream): while active (repeated
+ * every 30 s, expires after 90 s) the PC leaves controller buttons such as Guide to the client.
+ * [resume]: the stream continues a running game, whose window the PC brings to the front.
+ */
+@Serializable
+data class StreamNotice(val active: Boolean, val resume: Boolean = false)

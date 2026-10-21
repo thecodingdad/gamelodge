@@ -72,7 +72,19 @@ fun main(args: Array<String>) {
     val hostGameActions = io.github.thecodingdad.gamelodge.ha.GameActionRunner(
         { container.ha.runAction(it) }, { io.github.thecodingdad.gamelodge.ha.GameActionSettings.decode(container.settings.current().gameActions) }, container.scope,
     )
+    // The game the streaming host runs through a runner right now (its window comes to the front
+    // when a paired launcher resumes the stream).
+    var hostGame: String? = null
+    io.github.thecodingdad.gamelodge.desktop.host.HostStreams.onResume = {
+        val runners = Runner.runners()
+        val entry = hostGame?.let { container.pcLibrary.entry(it) }
+        val matcher = entry?.let { io.github.thecodingdad.gamelodge.desktop.games.GameMatcher(it.processDir ?: it.installDir, it.processNames) }
+        val pids = runners.flatMap { r -> r.descendants().use { d -> d.map { it.pid() }.toList() } } +
+            (matcher?.takeIf { it.hasCriteria }?.let { m -> io.github.thecodingdad.gamelodge.desktop.games.SystemProcesses.snapshot().filter(m::matches).map { it.id } } ?: emptyList())
+        if (!io.github.thecodingdad.gamelodge.desktop.games.GameWindow.focus(pids.toSet())) Log.i("Resume: no game window to bring to the front")
+    }
     SingleInstance.onHostGame = { entryId, started ->
+        hostGame = if (started) entryId else hostGame.takeIf { it != entryId }
         if (io.github.thecodingdad.gamelodge.ha.GameActionSettings.decode(container.settings.current().gameActions).hostStarts) {
             val itemId = container.database.libraryDao().getTarget(io.github.thecodingdad.gamelodge.data.library.SourceEntry.localId(entryId))?.itemId
             if (started) hostGameActions.beforeStart(itemId) else hostGameActions.ended()
@@ -157,8 +169,9 @@ fun main(args: Array<String>) {
         // Guide: back to the launcher (in it: to the start tab), held: the quick menu. Also from a
         // game or stream in front, which gets the button as well (not intercepted on Windows).
         gamepads.onGuide = guide@{ held ->
-            // Streamed to: the button came from the client, whose own launcher handles it.
-            if (Runner.hostGameRunning()) return@guide
+            // Streamed to: the button came from the client, whose own launcher handles it. A paired
+            // launcher says so (any app); for others the host's games run through a runner.
+            if (io.github.thecodingdad.gamelodge.desktop.host.HostStreams.active || Runner.hostGameRunning()) return@guide
             java.awt.EventQueue.invokeLater {
                 val inFront = windowVisible.value && mainWindow?.isActive == true
                 windowVisible.value = true

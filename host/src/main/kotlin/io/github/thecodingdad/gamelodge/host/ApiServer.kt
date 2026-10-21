@@ -17,6 +17,7 @@ import io.github.thecodingdad.gamelodge.data.companion.PairStartRequest
 import io.github.thecodingdad.gamelodge.data.companion.PairStartResponse
 import io.github.thecodingdad.gamelodge.data.companion.PairingFailed
 import io.github.thecodingdad.gamelodge.data.companion.Round2Message
+import io.github.thecodingdad.gamelodge.data.companion.StreamNotice
 import io.github.thecodingdad.gamelodge.util.Log
 import kotlinx.serialization.json.Json
 import java.net.Inet6Address
@@ -70,6 +71,8 @@ class ApiServer(
     private val serverName: () -> String,
     private val proxy: () -> MetadataProxyApi? = { null },
     private val hostGames: () -> HostGamesSource? = { null },
+    /** A paired launcher streams from this PC (or stopped); any paired device may say so. */
+    private val streamNotice: (Device, StreamNotice) -> Unit = { _, _ -> },
     /** What this server is to clients: [KIND] (Windows launcher, companion) or [KIND_METADATA]. */
     private val kind: String = KIND,
 ) {
@@ -212,6 +215,11 @@ class ApiServer(
                 val (data, type) = hostGames()?.image(id) ?: return empty(ex, 404)
                 ex.responseHeaders.set("Cache-Control", "private, max-age=86400")
                 bytes(ex, 200, data, type)
+            }
+            ex.requestMethod == "POST" && rest == "stream" -> {
+                val body = read<StreamNotice>(ex) ?: return error(ex, 400, "invalid")
+                streamNotice(device, body)
+                empty(ex, 204)
             }
             ex.requestMethod == "PUT" && rest.startsWith("hostgames/") && rest.endsWith("/metadata") -> {
                 if (!device.may(Permissions.HOST_GAMES_WRITE)) return empty(ex, 403)

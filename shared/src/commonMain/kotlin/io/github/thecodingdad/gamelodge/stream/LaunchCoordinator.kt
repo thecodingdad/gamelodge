@@ -106,6 +106,9 @@ class LaunchCoordinator(
 
     var vpn: StreamVpn = StreamVpn.None
 
+    /** Tells a paired GameLodge on the host's PC about the stream (Guide, game window on resume). */
+    var streamNotices: io.github.thecodingdad.gamelodge.data.companion.StreamNotices? = null
+
     /** The VPN was connected for the stream being started / running (disconnected again afterwards). */
     @Volatile private var vpnForStream = false
 
@@ -139,6 +142,7 @@ class LaunchCoordinator(
     /** The stream ended (launcher visible again): a VPN connected for it goes again, if so set. */
     fun streamEnded() {
         streamingEntry = null
+        streamNotices?.stopped()
         if (!vpnForStream) return
         vpnForStream = false
         scope.launch { runCatching { if (vpn.disconnectAfterStream()) vpn.disconnect() } }
@@ -265,6 +269,7 @@ class LaunchCoordinator(
             val profileName = profiles.active("").name.ifEmpty { null }
             playtime.start(entry.item.id, target.id, profileName)
             streamingEntry = entry
+            streamNotices?.started(hostUuid, resuming)
             platform.startStream(entry, target, host)
             _state.value = LaunchState.Idle
             scope.launch {
@@ -277,6 +282,7 @@ class LaunchCoordinator(
             Log.e("Stream start failed", e)
             restoreProfile()
             streamingEntry = null
+            streamNotices?.stopped()
             fail(entry, LaunchError.START_FAILED, e.message)
         }
     }

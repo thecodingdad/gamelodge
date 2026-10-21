@@ -61,7 +61,7 @@ class HostRole(private val dataDir: File, private val secrets: SecretStore, priv
     @Volatile var proxy: MetadataProxyApi? = null
 
     private val api by lazy {
-        ApiServer(identity, devices, pairing, serverName, { proxy }, { hostGames })
+        ApiServer(identity, devices, pairing, serverName, { proxy }, { hostGames }, streamNotice = { device, notice -> HostStreams.notice(device.id, device.name, notice) })
     }
     private val web by lazy {
         WebAdmin(identity, auth, devices, pairing, object : PairingGate {

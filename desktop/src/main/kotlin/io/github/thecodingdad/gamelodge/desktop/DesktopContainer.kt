@@ -179,7 +179,7 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
                 launcher.gameActions.ended()
                 scope.launch { playtime.finishOpenSession() }
             },
-        ))
+        )).also { it.streamNotices = io.github.thecodingdad.gamelodge.data.companion.StreamNotices(servers, scope) }
     }
 
     companion object {

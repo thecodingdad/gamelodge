@@ -31,7 +31,8 @@ class PairingServerTest {
     private val identity = ServerIdentity.create("Test PC")
     private val devices = DeviceRegistry(dir.resolve("devices.json"))
     private val pairing = PairingManager(devices, { identity.fingerprint }, setOf(Permissions.METADATA, Permissions.HOST_GAMES))
-    private val server = ApiServer(identity, devices, pairing, { "Test PC" })
+    private val notices = java.util.concurrent.CopyOnWriteArrayList<io.github.thecodingdad.gamelodge.data.companion.StreamNotice>()
+    private val server = ApiServer(identity, devices, pairing, { "Test PC" }, streamNotice = { _, n -> notices += n })
     private val http = OkHttpClient()
     private lateinit var base: String
 
@@ -103,6 +104,18 @@ class PairingServerTest {
         assertFalse(client().hello().pairingOpen)
         val closed = runBlocking { runCatching { client().pair("Odin", JPakeExchange.newPin()) } }
         assertEquals(403, (closed.exceptionOrNull() as ServerException).status)
+    }
+
+    @Test
+    fun onlyPairedDevicesReportStreams() {
+        val body = "{\"active\":true,\"resume\":true}"
+        client().rawPost("/v1/stream", body, "application/json").use { assertEquals(401, it.code) }
+        assertTrue(notices.isEmpty())
+        val me = newIdentity()
+        val paired = pair(client(me), "654321").getOrThrow()
+        client(me, paired.fingerprint).rawPost("/v1/stream", body, "application/json").use { assertEquals(204, it.code) }
+        assertEquals(listOf(io.github.thecodingdad.gamelodge.data.companion.StreamNotice(active = true, resume = true)), notices.toList())
+        client(me, paired.fingerprint).rawPost("/v1/stream", "nonsense", "application/json").use { assertEquals(400, it.code) }
     }
 
     @Test
