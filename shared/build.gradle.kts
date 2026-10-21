@@ -45,6 +45,7 @@ kotlin {
             api(libs.okhttp)
             api(libs.bouncycastle.prov)
             api(libs.bouncycastle.pkix)
+            implementation(libs.qrcodegen)
         }
         commonTest.dependencies {
             implementation(libs.junit)

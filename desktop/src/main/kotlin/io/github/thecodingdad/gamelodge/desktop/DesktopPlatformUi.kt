@@ -69,6 +69,13 @@ class DesktopPlatformUi(
 ) : PlatformUi {
     override val localIcon = Icons.Filled.DesktopWindows
 
+    private val wizard = DesktopWizard(host, pcLibrary, startup)
+    override val wizardSteps get() = wizard.steps
+    override val wizardDeviceSteps get() = wizard.deviceSteps
+
+    @Composable
+    override fun WizardStepContent(step: io.github.thecodingdad.gamelodge.ui.screens.wizard.WizardStep) = wizard.Content(step)
+
     /** Bumped when the language changes: the window content is rebuilt in the new language. */
     val languageRevision = mutableIntStateOf(0)
 

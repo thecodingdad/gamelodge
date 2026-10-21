@@ -161,6 +161,13 @@ class AndroidPlatformUi(private val context: Context) : PlatformUi {
         (context.getSystemService(android.content.Context.ACTIVITY_SERVICE) as android.app.ActivityManager).clearApplicationUserData()
     }
 
+    override val wizardSteps get() = io.github.thecodingdad.gamelodge.ui.screens.wizard.AndroidWizard.steps
+    override val wizardDeviceSteps get() = io.github.thecodingdad.gamelodge.ui.screens.wizard.AndroidWizard.deviceSteps
+
+    @Composable
+    override fun WizardStepContent(step: io.github.thecodingdad.gamelodge.ui.screens.wizard.WizardStep) =
+        io.github.thecodingdad.gamelodge.ui.screens.wizard.AndroidWizard.Content(step)
+
     override fun applyLanguage(tag: String) {
         AppLanguage.apply(context, tag)
         // Before Android 13 the activity takes the language when it starts again.

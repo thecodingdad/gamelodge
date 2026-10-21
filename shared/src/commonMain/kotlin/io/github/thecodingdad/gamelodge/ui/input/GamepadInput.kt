@@ -83,6 +83,17 @@ class InputDispatcher {
     /** Phase of a key event. */
     enum class KeyPhase { DOWN, UP, OTHER }
 
+    /**
+     * Sees every controller button press of the window ("A", "B", "X", "Y", "LB", "RB", "LT", "RT",
+     * "START", "SELECT", "L3", "R3", "UP", "DOWN", "LEFT", "RIGHT"; face buttons after the layout
+     * swap) without taking it: the button test of the setup wizard. Fed by the platform.
+     */
+    @Volatile var pressObserver: ((String) -> Unit)? = null
+
+    fun reportPress(name: String) {
+        pressObserver?.invoke(name)
+    }
+
     /** Returns true if the event was consumed. Call for every gamepad key event of the window. */
     fun dispatchButton(button: PadButton, phase: KeyPhase, repeatCount: Int, eventTime: Long): Boolean {
         if (button == PadButton.SELECT) return dispatchSelect(phase, repeatCount, eventTime)

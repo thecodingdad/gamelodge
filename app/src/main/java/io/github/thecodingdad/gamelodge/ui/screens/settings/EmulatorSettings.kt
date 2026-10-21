@@ -55,7 +55,7 @@ import kotlinx.coroutines.launch
 import io.github.thecodingdad.gamelodge.resources.*
 
 /** Platforms whose emulator needs BIOS/firmware files set up in the emulator itself. */
-private val needsBios = setOf("psx", "ps2", "ps3", "xbox", "xbox360", "dreamcast", "n3ds", "switch")
+internal val needsBios = setOf("psx", "ps2", "ps3", "xbox", "xbox360", "dreamcast", "n3ds", "switch")
 
 /**
  * Emulation: ROM folders (storage access framework, optionally "all files" access), the emulator
@@ -178,7 +178,7 @@ fun EmulatorSettings(vm: LauncherViewModel) {
 }
 
 /** "primary:ROMs/snes" → "ROMs/snes"; other volumes keep their id ("1234-ABCD/ROMs"). */
-private fun folderName(docId: String): String {
+internal fun folderName(docId: String): String {
     val volume = docId.substringBefore(':')
     val rest = docId.substringAfter(':')
     return when {
@@ -190,7 +190,7 @@ private fun folderName(docId: String): String {
 
 /** Default emulator of one platform among the installed ones. */
 @Composable
-private fun PlatformEmulatorRow(platform: CatalogPlatform, tick: Int) {
+internal fun PlatformEmulatorRow(platform: CatalogPlatform, tick: Int) {
     val emulation = LocalContext.current.container.emulation
     val config by emulation.config.collectAsState()
     val scope = rememberCoroutineScope()

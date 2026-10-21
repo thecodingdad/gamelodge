@@ -131,6 +131,15 @@ data class LauncherSettings(
     val backupKeepCount: Int = 7,
     // Onboarding
     val onboardingDone: Boolean = false,
+    /**
+     * The setup wizard was finished (or this install had settings before it existed). A fresh
+     * install starts it once; it can be run again from Settings › Data.
+     */
+    val setupDone: Boolean = false,
+    /** Step the setup wizard is at while it runs (continues there after a restart); empty otherwise. */
+    val setupStep: String = "",
+    /** Backup chosen in the wizard's backup path, restored after pairing; empty otherwise. */
+    val setupRestore: String = "",
     /** Default library filters were created (they may be deleted afterwards). */
     val filtersSeeded: Boolean = false,
     /** The "not installed" default filter (added later) was created for existing installs. */
@@ -245,6 +254,9 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val autoBackup = booleanPreferencesKey("auto_backup")
         val backupKeepCount = intPreferencesKey("backup_keep_count")
         val onboardingDone = booleanPreferencesKey("onboarding_done")
+        val setupDone = booleanPreferencesKey("setup_done")
+        val setupStep = stringPreferencesKey("setup_step")
+        val setupRestore = stringPreferencesKey("setup_restore")
         val filtersSeeded = booleanPreferencesKey("filters_seeded")
         val notInstalledFilterSeeded = booleanPreferencesKey("not_installed_filter_seeded")
         val emulationFilterSeeded = booleanPreferencesKey("emulation_filter_seeded")
@@ -339,6 +351,10 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             autoBackup = this[K.autoBackup] ?: d.autoBackup,
             backupKeepCount = this[K.backupKeepCount] ?: d.backupKeepCount,
             onboardingDone = this[K.onboardingDone] ?: d.onboardingDone,
+            // Not stored yet: an install with settings predates the wizard (done), an empty one is new.
+            setupDone = this[K.setupDone] ?: asMap().isNotEmpty(),
+            setupStep = this[K.setupStep] ?: d.setupStep,
+            setupRestore = this[K.setupRestore] ?: d.setupRestore,
             filtersSeeded = this[K.filtersSeeded] ?: d.filtersSeeded,
             notInstalledFilterSeeded = this[K.notInstalledFilterSeeded] ?: d.notInstalledFilterSeeded,
             emulationFilterSeeded = this[K.emulationFilterSeeded] ?: d.emulationFilterSeeded,
@@ -424,6 +440,9 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         this[K.autoBackup] = s.autoBackup
         this[K.backupKeepCount] = s.backupKeepCount
         this[K.onboardingDone] = s.onboardingDone
+        this[K.setupDone] = s.setupDone
+        this[K.setupStep] = s.setupStep
+        this[K.setupRestore] = s.setupRestore
         this[K.filtersSeeded] = s.filtersSeeded
         this[K.notInstalledFilterSeeded] = s.notInstalledFilterSeeded
         this[K.emulationFilterSeeded] = s.emulationFilterSeeded

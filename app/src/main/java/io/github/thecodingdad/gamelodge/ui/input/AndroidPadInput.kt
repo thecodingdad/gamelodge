@@ -27,6 +27,27 @@ object AndroidPad {
      * Nintendo layout: the confirm button sits where Xbox has B. Swapping key codes before
      * dispatch makes the rest of the app layout-agnostic.
      */
+    /** Name of a controller button for the button test (D-pad only from controllers, not keyboards). */
+    fun testName(event: KeyEvent): String? = when (event.keyCode) {
+        KeyEvent.KEYCODE_BUTTON_A -> "A"
+        KeyEvent.KEYCODE_BUTTON_B -> "B"
+        KeyEvent.KEYCODE_BUTTON_X -> "X"
+        KeyEvent.KEYCODE_BUTTON_Y -> "Y"
+        KeyEvent.KEYCODE_BUTTON_L1 -> "LB"
+        KeyEvent.KEYCODE_BUTTON_R1 -> "RB"
+        KeyEvent.KEYCODE_BUTTON_L2 -> "LT"
+        KeyEvent.KEYCODE_BUTTON_R2 -> "RT"
+        KeyEvent.KEYCODE_BUTTON_START -> "START"
+        KeyEvent.KEYCODE_BUTTON_SELECT -> "SELECT"
+        KeyEvent.KEYCODE_BUTTON_THUMBL -> "L3"
+        KeyEvent.KEYCODE_BUTTON_THUMBR -> "R3"
+        KeyEvent.KEYCODE_DPAD_UP -> "UP"
+        KeyEvent.KEYCODE_DPAD_DOWN -> "DOWN"
+        KeyEvent.KEYCODE_DPAD_LEFT -> "LEFT"
+        KeyEvent.KEYCODE_DPAD_RIGHT -> "RIGHT"
+        else -> null
+    }?.takeIf { KeyEvent.isGamepadButton(event.keyCode) || (event.source and android.view.InputDevice.SOURCE_GAMEPAD) == android.view.InputDevice.SOURCE_GAMEPAD }
+
     fun swapForNintendo(keyCode: Int): Int = when (keyCode) {
         KeyEvent.KEYCODE_BUTTON_A -> KeyEvent.KEYCODE_BUTTON_B
         KeyEvent.KEYCODE_BUTTON_B -> KeyEvent.KEYCODE_BUTTON_A

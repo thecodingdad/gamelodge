@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Key
+import androidx.compose.material.icons.filled.AutoFixHigh
 import androidx.compose.material.icons.filled.Restore
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Schedule
@@ -155,6 +156,12 @@ fun DataSettings(settings: LauncherSettings, update: ((LauncherSettings) -> Laun
         message?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.accentText) }
 
         BackupSection(settings, update)
+
+        SectionHeader(stringResource(Res.string.wizard_settings_row))
+        NavRow(
+            stringResource(Res.string.wizard_settings_row), { vm.wizardRequests.tryEmit(Unit) },
+            stringResource(Res.string.wizard_settings_row_sub), Icons.Filled.AutoFixHigh,
+        )
 
         SectionHeader(stringResource(Res.string.data_reset_section))
         ActionRow(stringResource(Res.string.data_reset), { resetting = true }, stringResource(Res.string.data_reset_sub), Icons.Filled.DeleteForever)

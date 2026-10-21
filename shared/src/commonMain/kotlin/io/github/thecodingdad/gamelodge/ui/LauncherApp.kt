@@ -129,6 +129,8 @@ private object Routes {
     const val STATS = "stats"
     const val HOST = "host/{uuid}"
     const val CONTROLLERS = "controllers"
+    const val WIZARD = "wizard/{manual}"
+    fun wizard(manual: Boolean) = "wizard/$manual"
     fun host(uuid: String) = "host/$uuid"
     const val PROFILE = "profile/{uuid}"
     fun profile(uuid: java.util.UUID?) = "profile/${uuid ?: "base"}"
@@ -182,6 +184,15 @@ fun LauncherApp(
             // Unless the user already switched tabs in the meantime.
             if (vm.tab == before) vm.tab = start
         }
+    }
+    // A fresh install (or a restart in the middle of it) goes through the setup wizard; from the
+    // settings it can be run again. The stored settings decide, not the defaults before loading.
+    LaunchedEffect(Unit) {
+        val stored = container.settings.settings.first()
+        // Navigating works once the graph is set (the NavHost's first frame).
+        nav.currentBackStackEntryFlow.first()
+        if (!stored.setupDone) nav.navigate(Routes.wizard(manual = false))
+        vm.wizardRequests.collect { nav.navigate(Routes.wizard(manual = true)) }
     }
     LaunchedEffect(Unit) {
         vm.homePressed.collect {
@@ -386,6 +397,13 @@ fun LauncherApp(
                             listOf(tabCrumb(vm, nav, MainTab.SETTINGS), pageCrumb(vm, nav, Res.string.settings_hosts, SettingsPageId.HOSTS)),
                             { hostInfoFor = it }, { controllerPopup = true },
                         ) { hosts[uuid]?.let { HostConfigScreen(it, openHaSettings = { nav.navigate(Routes.settings(SettingsPageId.HOME_ASSISTANT)) }) } }
+                    }
+                    composable(Routes.WIZARD) { backStack ->
+                        val manual = backStack.arguments?.read { getStringOrNull("manual") } == "true"
+                        io.github.thecodingdad.gamelodge.ui.screens.wizard.SetupWizard(vm, manual) {
+                            // Done: the start tab (from the settings: back to them).
+                            if (manual) nav.popBackStack() else nav.popBackStack(Routes.MAIN, inclusive = false)
+                        }
                     }
                     composable(Routes.CONTROLLERS) {
                         SubpageFrame(vm, nav, hints, MainTab.SETTINGS, listOf(tabCrumb(vm, nav, MainTab.SETTINGS)), { hostInfoFor = it }, { controllerPopup = true }) {

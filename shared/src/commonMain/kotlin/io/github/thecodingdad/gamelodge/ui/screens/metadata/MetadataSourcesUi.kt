@@ -166,7 +166,7 @@ private fun resolve(container: io.github.thecodingdad.gamelodge.LauncherContaine
     )
 }
 
-private fun companionTarget(host: HostState?) = PairTarget(
+internal fun companionTarget(host: HostState?) = PairTarget(
     PairedServer.KIND_COMPANION,
     host?.address?.substringBefore(':')?.let { "$it:${PairedServer.COMPANION_PORT}" }.orEmpty(),
     host?.name,
@@ -250,7 +250,7 @@ private fun PickHostDialog(hosts: Collection<HostState>, onPick: (HostState?) ->
 
 /** SteamGridDB key or IGDB credentials: enter/change, connection state, on/off, remove. */
 @Composable
-private fun KeySourceDialog(id: String, entry: MetadataSources.Entry?, onChanged: () -> Unit, onDismiss: () -> Unit) {
+fun KeySourceDialog(id: String, entry: MetadataSources.Entry?, onChanged: () -> Unit, onDismiss: () -> Unit) {
     val container = io.github.thecodingdad.gamelodge.LocalContainer.current
     val secrets = container.secrets
     val metadata = container.metadata

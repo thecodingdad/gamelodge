@@ -79,6 +79,11 @@ class ServerRepository(
         stored
     }
 
+    /** Whether a server of [kind] answers at [baseUrl] (the pairing greeting, no pairing needed). */
+    suspend fun probe(baseUrl: String, kind: String): Boolean = withContext(Dispatchers.IO) {
+        runCatching { ServerClient(baseHttp, identity, baseUrl, null).hello().kind == kind }.getOrDefault(false)
+    }
+
     /** Forgets the server here (on the server the device stays listed until removed there). */
     fun remove(id: String) {
         _servers.update { list -> list.filterNot { it.id == id } }

@@ -224,11 +224,13 @@ class BackupManager(
 
     suspend fun restore(backup: BackupFile, password: String?) = withContext(Dispatchers.IO) {
         if (backup.secrets != null && !password.isNullOrEmpty()) decryptSecrets(backup.secrets, password)
-        // Home app and backup folder belong to the device, not to the backup.
+        // Home app, backup folder and the setup wizard's state belong to the device, not to the backup.
         settings.update {
             backup.settings.copy(
                 launcherMode = it.launcherMode, backupFolderUri = it.backupFolderUri, autoBackup = it.autoBackup,
                 backupKeepCount = it.backupKeepCount,
+                // A restore inside the setup wizard must not end or move it.
+                setupDone = it.setupDone, setupStep = it.setupStep, setupRestore = it.setupRestore,
             )
         }
 

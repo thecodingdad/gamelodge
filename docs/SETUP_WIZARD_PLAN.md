@@ -34,7 +34,7 @@ Landscape (Odin, tablet, PC):
 - Progress: a row of dots (done / current / open) plus "Step n of N · Name". N counts only the steps of this platform and path.
 - Portrait (phone, tablet held upright): icon/title/text above, content below, scrolling.
 - Buttons at the bottom: Back (missing on step 1), Skip (missing on mandatory steps), Next (primary; "Finish" on the last step).
-- Keys: A = the focused element; Start = Next; B = previous step (nothing on step 1, never leaves the wizard); Y = Skip. The hint bar shows them (only with a controller). Touch and mouse use the buttons.
+- Keys: A = the focused element; Start = Next; B = previous step (nothing on step 1, never leaves the wizard); Y = Skip. No button hints in the wizard (decided after trying them: they took room and looked busy). Touch and mouse use the buttons.
 - Initial focus on the first choice of the step, otherwise on Next.
 
 ## Order

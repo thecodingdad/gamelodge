@@ -202,6 +202,9 @@ class MainActivity : ComponentActivity() {
             if (consumed) return true
         }
         val e = io.github.thecodingdad.gamelodge.ui.input.AndroidPad.inLayout(event, vm.settings.value)
+        if (e.action == KeyEvent.ACTION_DOWN && e.repeatCount == 0 && dispatcher.pressObserver != null) {
+            io.github.thecodingdad.gamelodge.ui.input.AndroidPad.testName(e)?.let(dispatcher::reportPress)
+        }
         if (e.action == KeyEvent.ACTION_DOWN && e.repeatCount == 0 &&
             (e.keyCode == KeyEvent.KEYCODE_BUTTON_B || e.keyCode == KeyEvent.KEYCODE_BACK)
         ) {

@@ -38,7 +38,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import io.nayuki.qrcodegen.QrCode
+import io.github.thecodingdad.gamelodge.ui.components.QrImage
 import io.github.thecodingdad.gamelodge.LocalContainer
 import io.github.thecodingdad.gamelodge.data.settings.LauncherSettings
 import io.github.thecodingdad.gamelodge.desktop.games.PcLibrary
@@ -66,7 +66,7 @@ internal val storeNames = mapOf(
 
 /** A store's name in the UI (the non-Steam games of Steam are named in the UI language). */
 @Composable
-private fun storeLabel(source: String): String =
+internal fun storeLabel(source: String): String =
     if (source == "steamshortcuts") stringResource(Res.string.store_steam_shortcuts) else storeNames[source] ?: source
 
 /** Settings → Game sources: which stores feed the library, and the Steam account. */
@@ -163,7 +163,7 @@ fun GameSourcesPage(library: PcLibrary, settings: LauncherSettings, update: ((La
 
 /** QR code for the Steam app; closes by itself once the user confirmed there. */
 @Composable
-private fun SteamQrDialog(library: PcLibrary, onDismiss: () -> Unit) {
+internal fun SteamQrDialog(library: PcLibrary, onDismiss: () -> Unit) {
     val deviceName = LocalContainer.current.platform.deviceName
     var url by remember { mutableStateOf<String?>(null) }
     var failed by remember { mutableStateOf(false) }
@@ -197,18 +197,6 @@ private fun SteamQrDialog(library: PcLibrary, onDismiss: () -> Unit) {
                     Modifier.align(Alignment.CenterHorizontally).padding(top = 12.dp).clip(RoundedCornerShape(12.dp)).background(Color.White).padding(16.dp),
                 ) { QrImage(current, Modifier.size(260.dp)) }
             }
-        }
-    }
-}
-
-/** Black modules on white, drawn from the text. */
-@Composable
-private fun QrImage(text: String, modifier: Modifier) {
-    val code = remember(text) { QrCode.encodeText(text, QrCode.Ecc.MEDIUM) }
-    Canvas(modifier) {
-        val cell = size.minDimension / code.size
-        for (y in 0 until code.size) for (x in 0 until code.size) {
-            if (code.getModule(x, y)) drawRect(Color.Black, Offset(x * cell, y * cell), Size(cell + 0.5f, cell + 0.5f))
         }
     }
 }

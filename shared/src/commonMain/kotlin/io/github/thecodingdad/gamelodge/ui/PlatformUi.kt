@@ -127,6 +127,16 @@ interface PlatformUi {
      */
     fun resetAllData()
 
+    /** The setup wizard's steps on this platform, in order (new setup, ends with FINISH). */
+    val wizardSteps: List<io.github.thecodingdad.gamelodge.ui.screens.wizard.WizardStep>
+
+    /** Steps a backup can't carry (permissions, home app …), shown after restoring one. */
+    val wizardDeviceSteps: List<io.github.thecodingdad.gamelodge.ui.screens.wizard.WizardStep>
+
+    /** Content of a wizard step only this platform has (inside the wizard's frame). */
+    @Composable
+    fun WizardStepContent(step: io.github.thecodingdad.gamelodge.ui.screens.wizard.WizardStep)
+
     /** Switches the UI language ("system", "en", "de"). */
     fun applyLanguage(tag: String)
 

@@ -139,7 +139,7 @@ private fun syncSummary(r: SyncResult): String? {
 
 /** Host program, address and access; tested before saving if wanted. The secret is never shown again. */
 @Composable
-private fun ConnectionDialog(role: HostRole, sync: HostSync, secrets: SecretStore?, onDismiss: () -> Unit, onSaved: () -> Unit) {
+internal fun ConnectionDialog(role: HostRole, sync: HostSync, secrets: SecretStore?, onDismiss: () -> Unit, onSaved: () -> Unit) {
     val saved = role.settings.value
     val stored = remember { secrets?.get(DesktopContainer.HOST_SECRET) }
     var type by remember { mutableStateOf(saved.hostType) }

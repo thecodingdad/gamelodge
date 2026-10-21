@@ -138,7 +138,7 @@ private fun webState(role: HostRole, running: Boolean): String = when {
  * Closing it ends pairing; it closes by itself once a device is paired or the window runs out.
  */
 @Composable
-private fun PairingDialog(role: HostRole, pairedBefore: Int, onClose: () -> Unit) {
+internal fun PairingDialog(role: HostRole, pairedBefore: Int, onClose: () -> Unit) {
     val pairing by role.pairing.status.collectAsState()
     val devices by role.devices.devices.collectAsState()
     val startCount = remember { pairedBefore }

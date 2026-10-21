@@ -174,7 +174,7 @@ private val settingsIndex: List<SearchEntry> = buildList {
     addAll(page(
         SettingsPageId.DATA, Res.string.data_storage, Res.string.data_clear_cache, Res.string.data_orphans, Res.string.data_redownload,
         Res.string.settings_backup, Res.string.backup_folder, Res.string.backup_auto, Res.string.backup_keep, Res.string.backup_with_credentials,
-        Res.string.backup_now, Res.string.backup_restore, Res.string.data_reset,
+        Res.string.backup_now, Res.string.backup_restore, Res.string.data_reset, Res.string.wizard_settings_row,
     ))
 }
 

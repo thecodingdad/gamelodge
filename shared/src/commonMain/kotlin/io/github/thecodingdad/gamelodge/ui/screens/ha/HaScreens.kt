@@ -238,7 +238,7 @@ fun HaSettings(
 
 /** Address of Home Assistant and the sign-in in the browser. */
 @Composable
-private fun LoginDialog(settings: LauncherSettings, update: ((LauncherSettings) -> LauncherSettings) -> Unit, onDismiss: () -> Unit) {
+internal fun LoginDialog(settings: LauncherSettings, update: ((LauncherSettings) -> LauncherSettings) -> Unit, onDismiss: () -> Unit) {
     val ha = io.github.thecodingdad.gamelodge.LocalContainer.current.ha
     val scope = rememberCoroutineScope()
     var url by remember { mutableStateOf(settings.haUrl.ifEmpty { ha.auth.baseUrl ?: "" }) }
