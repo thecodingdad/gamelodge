@@ -116,12 +116,17 @@ class ServerRepository(
 
     private fun load(): List<PairedServer> =
         runCatching { if (file.exists()) json.decodeFromString<List<PairedServer>>(file.readText()) else emptyList() }
-            .onFailure { Log.w("Paired servers unreadable", it) }
+            .onFailure {
+                // Kept aside: the next save would otherwise overwrite it with no servers at all.
+                Log.w("Paired servers unreadable, kept as ${file.name}.broken", it)
+                runCatching { java.nio.file.Files.copy(file.toPath(), File(file.parentFile, file.name + ".broken").toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING) }
+            }
             .getOrDefault(emptyList())
 
     private fun save() {
         val tmp = File(file.parentFile, file.name + ".tmp")
         tmp.writeText(json.encodeToString(servers.value))
-        tmp.renameTo(file)
+        // renameTo doesn't replace an existing file on Windows: the change would be lost.
+        java.nio.file.Files.move(tmp.toPath(), file.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE)
     }
 }

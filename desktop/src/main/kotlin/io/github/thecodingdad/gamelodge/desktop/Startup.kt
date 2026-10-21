@@ -55,8 +55,7 @@ class Startup(dataDir: File) {
         if (next.startWithWindows != _settings.value.startWithWindows) setAutostart(next.startWithWindows)
         _settings.value = next
         runCatching {
-            file.parentFile?.mkdirs()
-            file.writeText(json.encodeToString(next))
+            file.writeAtomically(json.encodeToString(next))
         }.onFailure { Log.w("Startup settings not saved", it) }
     }
 

@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.desktop.stream
 
+import io.github.thecodingdad.gamelodge.desktop.writeAtomically
 import io.github.thecodingdad.gamelodge.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -73,7 +74,7 @@ class MoonlightQt(val dir: File) {
         // Portable mode keeps QSettings in <dir>/<organization>/<application>.ini.
         val ini = File(dir, "Moonlight Game Streaming Project/Moonlight.ini").apply { parentFile.mkdirs() }
         val text = runCatching { ini.readText() }.getOrDefault("")
-        ini.writeText(MoonlightIni.update(text, identity, hosts.filter { it.serverCert != null }, apps))
+        ini.writeAtomically(MoonlightIni.update(text, identity, hosts.filter { it.serverCert != null }, apps))
     }
 
     companion object {

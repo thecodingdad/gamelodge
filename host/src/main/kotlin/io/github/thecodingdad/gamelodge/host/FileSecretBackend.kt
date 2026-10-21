@@ -64,8 +64,15 @@ class FileSecretBackend(dir: File, private val cipher: ValueCipher = KeyFileCiph
     @Synchronized
     override fun keys(): Set<String> = values.keys.toSet()
 
-    private fun load(): MutableMap<String, String> =
-        runCatching { json.decodeFromString<Map<String, String>>(file.readText()).toMutableMap() }.getOrDefault(mutableMapOf())
+    /** An unreadable file is kept aside: the next save would otherwise drop every secret in it. */
+    private fun load(): MutableMap<String, String> {
+        if (!file.isFile) return mutableMapOf()
+        return runCatching { json.decodeFromString<Map<String, String>>(file.readText()).toMutableMap() }.getOrElse { e ->
+            Log.w("Secrets unreadable, kept as ${file.name}.broken", e)
+            runCatching { Files.copy(file.toPath(), File(file.parentFile, "${file.name}.broken").toPath(), StandardCopyOption.REPLACE_EXISTING) }
+            mutableMapOf()
+        }
+    }
 
     private fun save() {
         file.parentFile?.mkdirs()

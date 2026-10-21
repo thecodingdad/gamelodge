@@ -88,3 +88,15 @@ private object DpapiCipher : io.github.thecodingdad.gamelodge.host.ValueCipher {
 
 /** Only the owner may read the file (no-op where the file system has no POSIX permissions). */
 fun restrictToOwner(file: File) = io.github.thecodingdad.gamelodge.host.restrictToOwner(file)
+
+/**
+ * Writes [text] beside the file and moves it over: ending mid-write (crash, power loss) never
+ * leaves half a file, which would read as "nothing stored" and get overwritten with that.
+ */
+fun java.io.File.writeAtomically(text: String, ownerOnly: Boolean = false) {
+    parentFile?.mkdirs()
+    val tmp = java.io.File(parentFile, "$name.tmp")
+    tmp.writeText(text)
+    if (ownerOnly) io.github.thecodingdad.gamelodge.host.restrictToOwner(tmp)
+    java.nio.file.Files.move(tmp.toPath(), toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE)
+}

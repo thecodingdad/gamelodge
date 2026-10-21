@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.desktop.host
 
+import io.github.thecodingdad.gamelodge.desktop.writeAtomically
 import io.github.thecodingdad.gamelodge.host.*
 
 import io.github.thecodingdad.gamelodge.data.companion.PairedServer
@@ -132,8 +133,6 @@ class HostRole(private val dataDir: File, private val secrets: SecretStore, priv
     private fun load(): HostSettings = runCatching { json.decodeFromString<HostSettings>(file.readText()) }.getOrDefault(HostSettings())
 
     private fun save(s: HostSettings) {
-        file.parentFile?.mkdirs()
-        file.writeText(json.encodeToString(s))
-        restrictToOwner(file)
+        file.writeAtomically(json.encodeToString(s), ownerOnly = true)
     }
 }

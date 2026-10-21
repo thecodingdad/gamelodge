@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.desktop.stream
 
+import io.github.thecodingdad.gamelodge.desktop.writeAtomically
 import io.github.thecodingdad.gamelodge.data.remote.AddHostResult
 import io.github.thecodingdad.gamelodge.data.remote.HostActions
 import io.github.thecodingdad.gamelodge.data.remote.HostApp
@@ -83,6 +84,9 @@ class DesktopHosts(
 
     /** Last HTTPS problem per host (logged when it changes). */
     private val httpsTrouble = java.util.concurrent.ConcurrentHashMap<String, String?>()
+
+    /** Polls in a row a host didn't answer (it goes offline only after [OFFLINE_AFTER_MISSES]). */
+    private val missed = java.util.concurrent.ConcurrentHashMap<String, Int>()
 
     /** Cover requests running now. */
     private val boxArtRunning = java.util.concurrent.atomic.AtomicInteger(0)
@@ -309,12 +313,21 @@ class DesktopHosts(
         val info = result.getOrNull()
         if (result.isSuccess && viaHttps && httpsTrouble.remove(s.uuid) != null) Log.i("Host ${s.name}: HTTPS answers again")
         if (info == null || info.uuid != s.uuid) {
+            // A host that just answered gets a second chance: one slow answer (the host busy, a
+            // timeout) must not make it blink offline. A different host at the address counts at once.
+            val misses = (missed[s.uuid] ?: 0) + 1
+            missed[s.uuid] = misses
+            if (info == null && misses < OFFLINE_AFTER_MISSES && _hosts.value[s.uuid]?.status == HostStatus.ONLINE) {
+                Log.d("Host ${s.name} didn't answer (${result.exceptionOrNull()?.let { "${it::class.simpleName}: ${it.message}" }}), asking again")
+                return
+            }
             if (_hosts.value[s.uuid]?.status != HostStatus.OFFLINE) {
                 Log.i("Host ${s.name} offline: ${result.exceptionOrNull()?.let { "${it::class.simpleName}: ${it.message}" } ?: "other host at ${s.address}"}")
             }
             _hosts.update { it + (s.uuid to offline(s)) }
             return
         }
+        missed.remove(s.uuid)
         val paired = (info.paired || keepPaired) && s.serverCert != null
         val before = _hosts.value[s.uuid]
         // Just came online: its app list right away (otherwise every few minutes).
@@ -358,15 +371,24 @@ class DesktopHosts(
         address = s.address, macAddress = s.mac, virtualDisplaySupported = false, serverCommands = emptyList(), permission = -1,
     )
 
-    private fun load(): List<StoredHost> = runCatching { json.decodeFromString<List<StoredHost>>(file.readText()) }.getOrDefault(emptyList())
+    /**
+     * The stored hosts. An unreadable file is kept aside (hosts.json.broken) and logged instead of
+     * being overwritten with an empty list by the next save: the pairings would be gone for good.
+     */
+    private fun load(): List<StoredHost> {
+        if (!file.isFile) return emptyList()
+        return runCatching { json.decodeFromString<List<StoredHost>>(file.readText()) }.getOrElse { e ->
+            Log.w("Stored hosts unreadable, kept as ${file.name}.broken", e)
+            runCatching { java.nio.file.Files.copy(file.toPath(), File(file.parentFile, "${file.name}.broken").toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING) }
+            emptyList()
+        }
+    }
 
     @Synchronized
     private fun save(list: List<StoredHost>) {
         stored.value = list
         runCatching {
-            file.parentFile?.mkdirs()
-            file.writeText(json.encodeToString(list))
-            restrictToOwner(file)
+            file.writeAtomically(json.encodeToString(list), ownerOnly = true)
         }.onFailure { Log.w("Hosts not saved", it) }
     }
 
@@ -385,6 +407,7 @@ class DesktopHosts(
 
     companion object {
         private const val POLL_MS = 3_000L
+        private const val OFFLINE_AFTER_MISSES = 2
         private const val APP_LIST_MS = 5 * 60_000L
         private const val EMPTY_RETRY_MS = 5_000L
         private const val BOX_ART_QUIET_MS = 5_000L

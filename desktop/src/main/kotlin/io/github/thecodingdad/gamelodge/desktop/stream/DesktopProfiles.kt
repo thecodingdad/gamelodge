@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.desktop.stream
 
+import io.github.thecodingdad.gamelodge.desktop.writeAtomically
 import androidx.compose.runtime.Composable
 import io.github.thecodingdad.gamelodge.data.backup.ProfileBackup
 import io.github.thecodingdad.gamelodge.data.backup.StreamSettingsBackup
@@ -242,9 +243,7 @@ class DesktopProfiles(dataDir: File) : StreamProfiles, ProfileEditing, StreamSet
     private fun save(next: ProfilesFile) {
         state.value = next
         runCatching {
-            file.parentFile?.mkdirs()
-            file.writeText(json.encodeToString(next))
-            restrictToOwner(file)
+            file.writeAtomically(json.encodeToString(next), ownerOnly = true)
         }
     }
 
