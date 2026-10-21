@@ -233,6 +233,18 @@ fun main(args: Array<String>) {
                 },
             )
         }
+        // A crash in the UI: into the log with its stack trace (Compose's own handler only shows a
+        // dialog with the message), then that dialog as before.
+        @OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
+        androidx.compose.runtime.CompositionLocalProvider(
+            androidx.compose.ui.window.LocalWindowExceptionHandlerFactory provides androidx.compose.ui.window.WindowExceptionHandlerFactory { window ->
+                val fallback = androidx.compose.ui.window.DefaultWindowExceptionHandlerFactory.exceptionHandler(window)
+                androidx.compose.ui.window.WindowExceptionHandler { t ->
+                    Log.e("UI crashed", t)
+                    fallback.onException(t)
+                }
+            },
+        ) {
         Window(
             onCloseRequest = { if (startup.settings.value.closeToTray) windowVisible.value = false else exitApplication() },
             visible = visible,
@@ -313,6 +325,7 @@ fun main(args: Array<String>) {
                     }
                 }
             }
+        }
         }
     }
 }
