@@ -102,6 +102,11 @@ class DesktopHosts(
         streaming = false
     }
 
+    /** This launcher streams [appId] from the host: running there (polling pauses during streams). */
+    fun markRunning(uuid: String, appId: Int) {
+        _hosts.update { m -> m[uuid]?.let { m + (uuid to it.copy(runningAppId = appId)) } ?: m }
+    }
+
     override val hosts: StateFlow<Map<String, HostState>> = _hosts.asStateFlow()
     override val appLists: StateFlow<Map<String, List<RemoteApp>>> = _appLists.asStateFlow()
 

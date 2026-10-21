@@ -25,6 +25,12 @@ class MoonlightQt(val dir: File) {
      * (launcher mode): [started] learns once the stream runs or failed; returns the exit code
      * once the stream has ended.
      */
+    /** The running stream: host uuid, app id and Moonlight-Qt's process. */
+    data class Running(val hostUuid: String, val appId: Int, val process: Process)
+
+    @Volatile var running: Running? = null
+        private set
+
     suspend fun stream(
         identity: StreamIdentity, hosts: List<StoredHost>, host: StoredHost, appId: Int, options: List<String>,
         apps: Map<String, List<MoonlightIni.App>>, started: (Start) -> Unit,
@@ -35,6 +41,7 @@ class MoonlightQt(val dir: File) {
         val builder = ProcessBuilder(command).directory(dir).redirectErrorStream(true)
         builder.environment()["MOONLIGHT_LAUNCHER_MODE"] = "1"
         val process = builder.start()
+        running = Running(host.uuid, appId, process)
         var reported = false
         var error: String? = null
         var appRunning = false
@@ -54,6 +61,7 @@ class MoonlightQt(val dir: File) {
             }
         }
         val code = process.waitFor()
+        running = null
         Log.i("Stream ended ($code)${error?.let { ": $it" } ?: ""}")
         if (!reported) started(Start.Failed(error, appRunning))
         code

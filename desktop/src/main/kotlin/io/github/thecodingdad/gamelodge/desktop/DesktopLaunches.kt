@@ -64,6 +64,11 @@ class DesktopLaunches(
         check(client.available) { "Moonlight-Qt is missing (${client.exe})" }
         val stored = hosts.stored(host.uuid) ?: error("Unknown host")
         val appId = target.appId ?: error("No app id")
+        // Still streaming it in the background (Guide brought the launcher to the front): back to that window.
+        client.running?.takeIf { it.hostUuid == host.uuid && it.appId == appId && it.process.isAlive }?.let { r ->
+            val pids = setOf(r.process.pid()) + r.process.descendants().map { it.pid() }.toList()
+            if (io.github.thecodingdad.gamelodge.desktop.games.GameWindow.focus(pids)) return
+        }
         val start = CompletableDeferred<io.github.thecodingdad.gamelodge.desktop.stream.MoonlightQt.Start>()
         scope.launch {
             runCatching {
@@ -72,7 +77,10 @@ class DesktopLaunches(
                 }
                 hosts.quietForStream()
                 try {
-                    client.stream(identity(), hosts.storedHosts.value, stored, appId, streamOptions(), apps) { start.complete(it) }
+                    client.stream(identity(), hosts.storedHosts.value, stored, appId, streamOptions(), apps) {
+                        if (it is io.github.thecodingdad.gamelodge.desktop.stream.MoonlightQt.Start.Streaming) hosts.markRunning(host.uuid, appId)
+                        start.complete(it)
+                    }
                 } finally {
                     hosts.streamEnded()
                 }
