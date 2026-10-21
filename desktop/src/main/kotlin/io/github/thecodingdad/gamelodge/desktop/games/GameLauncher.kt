@@ -19,6 +19,10 @@ import java.net.URI
  * URI goes to the store, then the game's processes (by folder or name) are followed until it ends.
  */
 object GameLauncher {
+    /** The running game's processes (empty when there is no game or it can't be followed). */
+    @Volatile var gameProcesses: () -> Set<Long> = { emptySet() }
+        private set
+
     /**
      * Starts [entry] and returns once the game has ended (or can't be followed). [started] learns
      * right after the start attempt whether anything started.
@@ -32,13 +36,15 @@ object GameLauncher {
         val processDir = entry.processDir ?: entry.installDir
         val matcher = GameMatcher(processDir, entry.processNames)
         val watcher = ProcessWatcher(processes, matcher)
+        var direct: Long? = null
+        gameProcesses = { setOfNotNull(direct) + if (matcher.hasCriteria) watcher.running().map { it.id } else emptyList() }
         val isFile = File(launch).isAbsolute && File(launch).exists()
         // The game itself (game EXE, emulator): wait for that process. A store client or URI:
         // watch the game's folder / names instead.
-        val direct = isFile && (processDir == null || WinPath.isUnder(launch, processDir) || entry.source in setOf("emulator", "custom", "gog"))
-        Log.i("Starting ${entry.name} (${entry.id}): $launch${if (direct) " (direct)" else ""}")
-        if (direct) {
-            val exit = runAndWait(launch, entry.launchArgs, entry.workingDir ?: File(launch).parent, started) ?: return@withContext false
+        val isDirect = isFile && (processDir == null || WinPath.isUnder(launch, processDir) || entry.source in setOf("emulator", "custom", "gog"))
+        Log.i("Starting ${entry.name} (${entry.id}): $launch${if (isDirect) " (direct)" else ""}")
+        if (isDirect) {
+            val exit = runAndWait(launch, entry.launchArgs, entry.workingDir ?: File(launch).parent, started) { direct = it } ?: return@withContext false
             Log.d("${entry.name}: process exited ($exit)")
             // Launch EXEs that hand over to the real game: keep waiting while it runs.
             if (matcher.hasCriteria && watcher.running().isNotEmpty()) watcher.waitForExit()
@@ -86,16 +92,18 @@ object GameLauncher {
     }
 
     /** Starts a program and waits for it; its exit code, null when it didn't start. */
-    private fun runAndWait(program: String, args: String?, workingDir: String?, started: (Boolean) -> Unit): Int? {
+    private fun runAndWait(program: String, args: String?, workingDir: String?, started: (Boolean) -> Unit, pid: (Long) -> Unit): Int? {
         if (!isWindows) {
             val p = runCatching { ProcessBuilder(listOf(program) + args.orEmpty().split(' ').filter { it.isNotBlank() }).directory(workingDir?.let(::File)).start() }.getOrNull()
             started(p != null)
+            p?.let { pid(it.pid()) }
             return p?.waitFor()
         }
         val info = execute(program, args, workingDir, wait = true)
         started(info != null)
         if (info == null) return null
         val handle = info.hProcess ?: return 0
+        pid(Kernel32.INSTANCE.GetProcessId(handle).toLong())
         try {
             Kernel32.INSTANCE.WaitForSingleObject(handle, WinBase.INFINITE)
             val code = com.sun.jna.ptr.IntByReference()

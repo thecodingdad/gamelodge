@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.desktop
 
+import io.github.thecodingdad.gamelodge.desktop.games.GameCloser
 import io.github.thecodingdad.gamelodge.desktop.games.GameLauncher
 import io.github.thecodingdad.gamelodge.desktop.games.PcLibrary
 import io.github.thecodingdad.gamelodge.desktop.host.sync.LaunchSpec
@@ -38,6 +39,14 @@ object Runner {
                 } else {
                     // The running launcher's game actions (if switched on for host starts).
                     SingleInstance.reportGameStart(entry.id)
+                    // The host ends the app: close the game first (like Alt+F4, hard only when it
+                    // stays), then end with it.
+                    CloseRequests.listen {
+                        Log.i("Runner: the host asked to end ${spec.name}")
+                        GameCloser.close({ GameLauncher.gameProcesses() })
+                        SingleInstance.reportGameEnd(entry.id)
+                        kotlin.system.exitProcess(0)
+                    }
                     try {
                         GameLauncher.play(entry)
                     } finally {

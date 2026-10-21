@@ -96,7 +96,8 @@ object AppBuilder {
         // The runner exits together with the game, so the host must wait for it.
         put("auto-detach", false)
         put("wait-all", true)
-        put("exit-timeout", 5)
+        // The runner closes the game on its own (up to 15 s, then hard): the host must not kill it before.
+        put("exit-timeout", 20)
         put("uuid", uuid(e.id))
         putJsonObject(MARKER) {
             put("id", e.id)
