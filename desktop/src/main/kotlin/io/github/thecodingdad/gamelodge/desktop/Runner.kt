@@ -60,6 +60,19 @@ object Runner {
         }
     }
 
+    /**
+     * True while the streaming host runs one of its games through a runner: another process of this
+     * launcher's executable (the launcher itself runs once). Its Guide presses come from the
+     * stream's virtual pad and belong to the client, not to this PC's launcher.
+     */
+    fun hostGameRunning(): Boolean {
+        val self = ProcessHandle.current()
+        val exe = self.info().command().orElse(null) ?: return false
+        return ProcessHandle.allProcesses().use { all ->
+            all.anyMatch { it.pid() != self.pid() && it.info().command().orElse(null).equals(exe, ignoreCase = true) }
+        }
+    }
+
     /** What the host runs for a game, followed by the encoded spec. */
     fun command(): String = launcherCommand(ARG)
 

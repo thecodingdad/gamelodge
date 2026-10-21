@@ -156,7 +156,9 @@ fun main(args: Array<String>) {
         gamepads.onBack = { feedback.play(UiSound.BACK) }
         // Guide: back to the launcher (in it: to the start tab), held: the quick menu. Also from a
         // game or stream in front, which gets the button as well (not intercepted on Windows).
-        gamepads.onGuide = { held ->
+        gamepads.onGuide = guide@{ held ->
+            // Streamed to: the button came from the client, whose own launcher handles it.
+            if (Runner.hostGameRunning()) return@guide
             java.awt.EventQueue.invokeLater {
                 val inFront = windowVisible.value && mainWindow?.isActive == true
                 windowVisible.value = true
