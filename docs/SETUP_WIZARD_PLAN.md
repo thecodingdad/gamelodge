@@ -48,10 +48,10 @@ Android:
 5. Appearance
 6. Launcher mode
 7. Permissions
-8. Streaming hosts
-9. GameLodge PC
-10. Metadata sources
-11. Emulators / ROMs
+8. Emulators / ROMs
+9. Streaming hosts
+10. GameLodge PC
+11. Metadata sources
 12. Home Assistant
 13. VPN
 14. Finish
@@ -162,7 +162,12 @@ Windows:
 - Steam sign-in (optional) for not installed games and play time.
 - Live counter while scanning: "123 games found".
 
-### 8 · Streaming hosts
+### 8 · Emulators / ROMs
+- **ROM folder:** the main folder, with per-platform subfolders detected. On Android this includes the file-access permission ("All files"), with explanation and button.
+- **Detected emulators:** installed emulators with their platforms. The mapping can be confirmed or changed per platform.
+- **Scan:** starts right away and shows the count per platform. Platforms whose emulator needs BIOS/firmware are marked with a hint.
+
+### 9 · Streaming hosts
 - **List:** hosts found in the network (live), each with status. "Add host by address" uses the controller keyboard.
 - **Pairing:**
   - Choosing a host shows a big PIN and the hint "Enter it in the web interface of Vibepollo / Apollo / Sunshine".
@@ -173,24 +178,19 @@ Windows:
   - Choosing Home Assistant opens the HA login as a popup when HA isn't connected yet, then the entity picker.
 - Next with at least one paired host or via Skip.
 
-### 9 · GameLodge PC
+### 10 · GameLodge PC
 - For every paired streaming host the wizard checks whether GameLodge runs on that PC (pairing API `/v1/pair/hello` at the host's address).
 - Hosts with GameLodge are listed with "Pair": enter the PIN shown on the PC.
 - Benefits in one sentence each: host games with metadata, Guide stays on this device while streaming, resume brings the game's window to the front.
 - Plus "Pair by address".
 - Skipped automatically when no paired host has GameLodge (and no address was entered). It still appears in the finish summary as skipped.
 
-### 10 · Metadata sources
+### 11 · Metadata sources
 - Three cards, each marked ✓ when it already works:
   1. **Through the GameLodge PC:** available when a paired PC provides keys; nothing else to do.
   2. **Metadata server:** pair one (address + PIN).
   3. **Own keys:** SteamGridDB API key, IGDB client ID + secret. A QR code to each provider's page, so the key can be made on a phone.
 - Next once one way works or via Skip. Without metadata, the library still works with store/host covers.
-
-### 11 · Emulators / ROMs
-- **ROM folder:** the main folder, with per-platform subfolders detected. On Android this includes the file-access permission ("All files"), with explanation and button.
-- **Detected emulators:** installed emulators with their platforms. The mapping can be confirmed or changed per platform.
-- **Scan:** starts right away and shows the count per platform. Platforms whose emulator needs BIOS/firmware are marked with a hint.
 
 ### 12 · Home Assistant
 - **Search:** `homeassistant.local` (and mDNS) is tried automatically; otherwise the URL is entered with the controller keyboard.
