@@ -1235,4 +1235,5 @@
     <string name="tile_preview_sample_app">Beispiel-App</string>
     <string name="tile_preview_close">B oder Antippen der Kachel schließt die Vorschau</string>
     <string name="section_tile_look">Kacheldarstellung</string>
+    <string name="pairing_running">Kopplung: PIN %1$s auf dem Host eingeben</string>
 </resources>

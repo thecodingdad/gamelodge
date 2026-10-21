@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.data.companion
 
+import io.github.thecodingdad.gamelodge.resources.*
 import io.github.thecodingdad.gamelodge.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -64,7 +65,11 @@ class ServerRepository(
      */
     suspend fun pair(baseUrl: String, onPin: (String) -> Unit): PairedServer = withContext(Dispatchers.IO) {
         val pin = JPakeExchange.newPin()
-        val paired = ServerClient(baseHttp, identity, baseUrl, null).pair(deviceName(), pin) { onPin(pin) }
+        // The PIN is typed on the server, often in a browser on this device: stay awake meanwhile.
+        val text = org.jetbrains.compose.resources.getString(Res.string.pairing_running, pin)
+        val paired = io.github.thecodingdad.gamelodge.util.BackgroundHold.during("pair-server", text) {
+            ServerClient(baseHttp, identity, baseUrl, null).pair(deviceName(), pin) { onPin(pin) }
+        }
         val info = runCatching { ServerClient(baseHttp, identity, baseUrl, paired.fingerprint).info() }.getOrNull()
         val stored = paired.withInfo(info)
         _servers.update { list -> list.filterNot { it.baseUrl == stored.baseUrl || it.fingerprint == stored.fingerprint } + stored }

@@ -68,6 +68,10 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
         io.github.thecodingdad.gamelodge.ui.components.ArtworkPlatform.current = io.github.thecodingdad.gamelodge.ui.components.AndroidArtwork(this)
         io.github.thecodingdad.gamelodge.ui.PlatformUi.current = io.github.thecodingdad.gamelodge.ui.AndroidPlatformUi(this)
         container.artwork.start()
+        // Pairing waits for a PIN typed in another app: a short foreground service keeps us awake.
+        io.github.thecodingdad.gamelodge.util.BackgroundHold.start = { tag, text ->
+            io.github.thecodingdad.gamelodge.system.KeepAliveService.hold(this, tag, text)
+        }
         io.github.thecodingdad.gamelodge.system.OdinMapping(this)
             .watch(container.scope, container.settings.settings.map { it.odinKeepControllers })
         // Host polling is driven by MainActivity's lifecycle: Artemis' stream activity runs in

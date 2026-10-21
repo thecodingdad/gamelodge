@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.data.remote
 
+import io.github.thecodingdad.gamelodge.resources.*
 import android.net.Uri
 import com.limelight.nvstream.http.ComputerDetails
 import com.limelight.nvstream.http.NvHTTP
@@ -17,12 +18,18 @@ class ArtemisHostActions(
 
     override suspend fun pair(host: HostState, pin: String): PairResult = withContext(Dispatchers.IO) {
         if (host.status != HostStatus.ONLINE || hosts.details(host.uuid)?.activeAddress == null) return@withContext PairResult.OFFLINE
+        // The PIN is typed in the host's web interface, often in a browser on this device.
+        val text = org.jetbrains.compose.resources.getString(Res.string.pairing_running, pin)
+        io.github.thecodingdad.gamelodge.util.BackgroundHold.during("pair-host", text) { pairNow(host, pin) }
+    }
+
+    private suspend fun pairNow(host: HostState, pin: String): PairResult {
         val binder = hosts.awaitBinder()
         // Polling while pairing makes concurrent requests the host rejects.
         binder.stopPolling()
-        try {
+        return try {
             val http = hosts.http(host)
-            if (http.pairState == PairingManager.PairState.PAIRED) return@withContext PairResult.PAIRED
+            if (http.pairState == PairingManager.PairState.PAIRED) return PairResult.PAIRED
             val pm = http.pairingManager
             when (pm.pair(http.getServerInfo(true), pin, null)) {
                 PairingManager.PairState.PAIRED -> {
