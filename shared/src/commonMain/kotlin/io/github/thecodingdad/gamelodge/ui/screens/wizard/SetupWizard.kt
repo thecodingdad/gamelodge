@@ -178,33 +178,38 @@ private fun WizardFrame(
         BoxWithConstraints(Modifier.fillMaxWidth().weight(1f)) {
             val landscape = maxWidth > maxHeight && maxWidth >= 720.dp
             val side = if (maxWidth < 600.dp) 20.dp else 40.dp
-            Column(Modifier.fillMaxSize()) {
-                Progress(steps, index, Modifier.padding(horizontal = side).padding(top = 18.dp, bottom = 8.dp))
-                // Each step is its own composition: its state and focus start fresh.
-                key(step) {
-                    if (landscape) {
-                        Row(Modifier.fillMaxWidth().weight(1f).padding(horizontal = side), horizontalArrangement = Arrangement.spacedBy(40.dp)) {
-                            Column(Modifier.weight(0.38f).fillMaxHeight().padding(top = 32.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                                StepHeader(info, big = true)
-                            }
-                            ScrollAreaColumn(
-                                modifier = Modifier.weight(0.62f).fillMaxHeight(),
-                                inner = Modifier.padding(top = 24.dp, bottom = 24.dp),
-                            ) {
-                                Column(Modifier.widthIn(max = 760.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                                    StepContent(step, settings)
+            // Like the settings: the room is used up to a limit, beyond it the wizard stays a
+            // centred block (wide screens, small UI scale) instead of spreading out.
+            val limit = (if (landscape) MAX_WIDTH_LANDSCAPE else MAX_WIDTH_PORTRAIT) + side * 2
+            Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(Modifier.widthIn(max = limit).fillMaxWidth().weight(1f)) {
+                    Progress(steps, index, Modifier.padding(horizontal = side).padding(top = 18.dp, bottom = 8.dp))
+                    // Each step is its own composition: its state and focus start fresh.
+                    key(step) {
+                        if (landscape) {
+                            Row(Modifier.fillMaxWidth().weight(1f).padding(horizontal = side), horizontalArrangement = Arrangement.spacedBy(40.dp)) {
+                                Column(Modifier.weight(0.38f).fillMaxHeight().padding(top = 32.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                                    StepHeader(info, big = true)
+                                }
+                                ScrollAreaColumn(
+                                    modifier = Modifier.weight(0.62f).fillMaxHeight(),
+                                    inner = Modifier.padding(top = 24.dp, bottom = 24.dp),
+                                ) {
+                                    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                        StepContent(step, settings)
+                                    }
                                 }
                             }
-                        }
-                    } else {
-                        ScrollAreaColumn(
-                            modifier = Modifier.fillMaxWidth().weight(1f),
-                            inner = Modifier.padding(horizontal = side).padding(top = 12.dp, bottom = 24.dp),
-                        ) {
-                            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                                StepHeader(info, big = false)
-                                Spacer(Modifier.height(4.dp))
-                                StepContent(step, settings)
+                        } else {
+                            ScrollAreaColumn(
+                                modifier = Modifier.fillMaxWidth().weight(1f),
+                                inner = Modifier.padding(horizontal = side).padding(top = 12.dp, bottom = 24.dp),
+                            ) {
+                                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    StepHeader(info, big = false)
+                                    Spacer(Modifier.height(4.dp))
+                                    StepContent(step, settings)
+                                }
                             }
                         }
                     }
@@ -214,6 +219,10 @@ private fun WizardFrame(
         BottomBar(step, index, onNext, onBack)
     }
 }
+
+/** Widest the wizard's content gets (without the side margins). */
+private val MAX_WIDTH_LANDSCAPE = 1240.dp
+private val MAX_WIDTH_PORTRAIT = 760.dp
 
 /** Dots for every step (done, current, open) and "Step 4 of 14 · Controller". */
 @Composable
@@ -276,8 +285,12 @@ private fun BottomBar(step: WizardStep, index: Int, onNext: () -> Unit, onBack: 
     val last = step == WizardStep.FINISH
     // Back and Next only (no button hints: the pad buttons work all the same; every step can be
     // left with Next unchanged, so there is no separate Skip).
+    // The buttons line up with the content (same width limit), the bar spans the screen.
+    val window = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize
+    val limit = (if (window.width > window.height) MAX_WIDTH_LANDSCAPE else MAX_WIDTH_PORTRAIT) + 80.dp
+    Box(Modifier.fillMaxWidth().background(colors.surface), contentAlignment = Alignment.Center) {
     Row(
-        Modifier.fillMaxWidth().background(colors.surface).padding(horizontal = 24.dp, vertical = 12.dp),
+        Modifier.widthIn(max = limit).fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -290,6 +303,7 @@ private fun BottomBar(step: WizardStep, index: Int, onNext: () -> Unit, onBack: 
             // Steps without choices of their own start on Next.
             modifier = Modifier.restoreFocusIf(step in FOCUS_NEXT, trigger = step),
         )
+    }
     }
 }
 

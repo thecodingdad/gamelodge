@@ -30,7 +30,7 @@ class WizardRenderTest {
         return result!!.getOrThrow()
     }
 
-    private fun render(step: WizardStep, width: Int, height: Int, name: String) {
+    private fun render(step: WizardStep, width: Int, height: Int, name: String, uiScale: Int = 100) {
         val dir = Files.createTempDirectory("wizard-${step.name.lowercase()}").toFile()
         val container = DesktopContainer(dir)
         ArtworkFiles.init(dir)
@@ -44,7 +44,7 @@ class WizardRenderTest {
         // A fresh install standing at this step (as after a restart in the middle of the wizard).
         // The restore step only exists on the backup path.
         val restore = if (step == WizardStep.RESTORE) File(dir, "gamelodge-backup.json").path else ""
-        runBlocking { container.settings.update { it.copy(setupDone = false, setupStep = step.name, setupRestore = restore) } }
+        runBlocking { container.settings.update { it.copy(setupDone = false, setupStep = step.name, setupRestore = restore, uiScale = uiScale) } }
         val feedback = UiFeedback(File(dir, "cache"), DesktopFeedbackOutput { null })
         val vm = ui { LauncherViewModel(container) }
         val scene = ui {
@@ -71,6 +71,11 @@ class WizardRenderTest {
         steps.forEach { step ->
             render(step, 1600, 900, "wizard-${step.name.lowercase()}-landscape")
             render(step, 900, 1600, "wizard-${step.name.lowercase()}-portrait")
+        }
+        // The UI scale: more room is used up to the width limit, less room stacks the step.
+        listOf(60, 130).forEach { scale ->
+            render(WizardStep.METADATA, 1600, 900, "wizard-scale-$scale-landscape", scale)
+            render(WizardStep.METADATA, 900, 1600, "wizard-scale-$scale-portrait", scale)
         }
     }
 }
