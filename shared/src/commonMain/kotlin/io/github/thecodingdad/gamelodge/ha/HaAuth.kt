@@ -43,11 +43,18 @@ class HaAuth(
     /** Base URL of the instance we are logged in to. */
     val baseUrl: String? get() = secrets.get(KEY_BASE_URL)
 
-    /** Opens the HA login page and waits (up to 5 minutes) for the redirect. */
-    suspend fun login(baseUrl: String): Unit = withContext(Dispatchers.IO) {
+    /**
+     * Opens the HA login page and waits (up to 5 minutes) for the redirect. With [onPhoneUrl] the
+     * login happens on another device (a phone scanning a QR code): the listener then waits on this
+     * device's LAN address instead of loopback, and the login page address goes to [onPhoneUrl]
+     * instead of the browser here. HA accepts client ids on private network addresses.
+     */
+    suspend fun login(baseUrl: String, onPhoneUrl: ((String) -> Unit)? = null): Unit = withContext(Dispatchers.IO) {
         val base = normalizeBaseUrl(baseUrl)
-        ServerSocket(0, 1, InetAddress.getByName("127.0.0.1")).use { server ->
-            val clientId = "http://127.0.0.1:${server.localPort}/"
+        val address = if (onPhoneUrl == null) InetAddress.getByName("127.0.0.1") else lanAddress(base)
+        ServerSocket(0, 4, address).use { server ->
+            val host = address.hostAddress.let { if (':' in it) "[$it]" else it }
+            val clientId = "http://$host:${server.localPort}/"
             val redirect = "${clientId}auth"
             val state = randomState()
             val authorize = "$base/auth/authorize".toHttpUrl().newBuilder()
@@ -57,7 +64,8 @@ class HaAuth(
                 .addQueryParameter("state", state)
                 .build()
 
-            withContext(Dispatchers.Main) { browser.open(authorize.toString()) }
+            if (onPhoneUrl != null) onPhoneUrl(authorize.toString())
+            else withContext(Dispatchers.Main) { browser.open(authorize.toString()) }
 
             server.soTimeout = 1000
             val code = withTimeoutOrNull(5 * 60_000L) { awaitRedirect(server, state) }
@@ -66,6 +74,26 @@ class HaAuth(
             secrets.put(KEY_CLIENT_ID, clientId)
             secrets.put(KEY_BASE_URL, base)
         }
+    }
+
+    /**
+     * The private address of this device that a phone in the same network reaches: the one the
+     * route to HA leaves from, else the first private address of an interface that is up.
+     */
+    private fun lanAddress(base: String): InetAddress {
+        val url = base.toHttpUrl()
+        val viaRoute = runCatching {
+            java.net.DatagramSocket().use { socket ->
+                socket.connect(InetAddress.getByName(url.host), url.port)
+                socket.localAddress
+            }
+        }.getOrNull()
+        if (viaRoute != null && viaRoute.isSiteLocalAddress) return viaRoute
+        return java.net.NetworkInterface.getNetworkInterfaces().toList()
+            .filter { it.isUp && !it.isLoopback }
+            .flatMap { it.inetAddresses.toList() }
+            .firstOrNull { it is java.net.Inet4Address && it.isSiteLocalAddress }
+            ?: throw HaAuthException("No local network address")
     }
 
     /** Valid access token, refreshed when it expires within a minute. */

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -24,6 +25,7 @@ import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Login
+import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Computer
@@ -242,14 +244,42 @@ internal fun LoginDialog(settings: LauncherSettings, update: ((LauncherSettings)
     val ha = io.github.thecodingdad.gamelodge.LocalContainer.current.ha
     val scope = rememberCoroutineScope()
     var url by remember { mutableStateOf(settings.haUrl.ifEmpty { ha.auth.baseUrl ?: "" }) }
-    var busy by remember { mutableStateOf(false) }
+    var job by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
+    // The login page for the phone, as long as a phone login waits.
+    var phoneUrl by remember { mutableStateOf<String?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
-    Modal(visible = true, onDismiss = onDismiss, title = stringResource(Res.string.ha_login_title), maxWidth = 640.dp) {
+    val busy = job != null
+    fun start(onPhone: Boolean) {
+        error = null
+        job = scope.launch {
+            runCatching { ha.auth.login(url, if (onPhone) { u -> phoneUrl = u } else null) }
+                .onSuccess { ha.client.restart(); onDismiss() }
+                .onFailure { if (it !is kotlinx.coroutines.CancellationException) error = it.message }
+            job = null
+            phoneUrl = null
+            // Bring the launcher back in front of the browser tab.
+            if (!onPhone) io.github.thecodingdad.gamelodge.ui.PlatformUi.current.bringToFront()
+        }
+    }
+    fun cancel() { job?.cancel(); job = null; phoneUrl = null }
+    Modal(visible = true, onDismiss = { cancel(); onDismiss() }, title = stringResource(Res.string.ha_login_title), maxWidth = 640.dp) {
         LauncherTextField(
             stringResource(Res.string.ha_url), url, { url = it; update { s -> s.copy(haUrl = it) } },
             kind = TextKind.URL, placeholder = "http://homeassistant.local:8123",
         )
-        if (busy) {
+        val qr = phoneUrl
+        if (qr != null) {
+            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+                io.github.thecodingdad.gamelodge.ui.components.QrCard(qr, 180.dp)
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(stringResource(Res.string.ha_login_phone_hint), color = LauncherTheme.colors.onSurface)
+                    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                        CircularProgressIndicator(color = LauncherTheme.colors.accent, modifier = Modifier.size(24.dp), strokeWidth = 3.dp)
+                        Text("  " + stringResource(Res.string.ha_login_phone_waiting), color = LauncherTheme.colors.onSurfaceMuted)
+                    }
+                }
+            }
+        } else if (busy) {
             Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                 CircularProgressIndicator(color = LauncherTheme.colors.accent)
                 Text("  " + stringResource(Res.string.ha_login_waiting), color = LauncherTheme.colors.onSurfaceMuted)
@@ -257,22 +287,17 @@ internal fun LoginDialog(settings: LauncherSettings, update: ((LauncherSettings)
         }
         error?.let { Text(it, color = LauncherTheme.colors.danger) }
         io.github.thecodingdad.gamelodge.ui.components.ButtonRow {
-            LauncherButton(
-                stringResource(Res.string.ha_login), icon = Icons.Filled.Login, primary = true, enabled = url.isNotBlank() && !busy,
-                onClick = {
-                    busy = true
-                    error = null
-                    scope.launch {
-                        runCatching { ha.auth.login(url) }
-                            .onSuccess { ha.client.restart(); onDismiss() }
-                            .onFailure { error = it.message }
-                        busy = false
-                        // Bring the launcher back in front of the browser tab.
-                        io.github.thecodingdad.gamelodge.ui.PlatformUi.current.bringToFront()
-                    }
-                },
-            )
-            LauncherButton(stringResource(Res.string.action_cancel), onClick = onDismiss)
+            if (!busy) {
+                LauncherButton(
+                    stringResource(Res.string.ha_login_here), icon = Icons.Filled.Login, primary = true, enabled = url.isNotBlank(),
+                    onClick = { start(onPhone = false) },
+                )
+                LauncherButton(
+                    stringResource(Res.string.ha_login_phone), icon = Icons.Filled.QrCode2, enabled = url.isNotBlank(),
+                    onClick = { start(onPhone = true) },
+                )
+            }
+            LauncherButton(stringResource(Res.string.action_cancel), onClick = { if (busy) cancel() else onDismiss() })
         }
     }
 }

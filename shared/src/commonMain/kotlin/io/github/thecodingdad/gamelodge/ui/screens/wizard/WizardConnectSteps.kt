@@ -235,11 +235,10 @@ private fun HostEntry(host: HostState, settings: LauncherSettings, initialFocus:
                     },
                     onSelect = { method ->
                         save(cfg.copy(wakeMethod = method))
-                        // Home Assistant chosen: sign in first when it isn't yet, then pick the action.
-                        if (needsHa(method)) {
-                            if (!c.ha.auth.isLoggedIn) login = true
-                            else if (cfg.haWakeEntity == null) { c.ha.client.start(); picking = true }
-                        }
+                        // Home Assistant chosen: sign in first when it isn't yet; the action is picked
+                        // with "Wake up" afterwards.
+                        if (needsHa(method) && !c.ha.auth.isLoggedIn) login = true
+                        if (needsHa(method)) c.ha.client.start()
                     },
                     subtitle = stringResource(Res.string.host_wake_method_sub),
                     initialFocus = initialFocus,
@@ -257,11 +256,7 @@ private fun HostEntry(host: HostState, settings: LauncherSettings, initialFocus:
         }
     }
     if (login) {
-        LoginDialog(settings, LocalNav.update) {
-            login = false
-            // Signed in: straight on to the wake action.
-            if (c.ha.auth.isLoggedIn) { c.ha.client.start(); picking = true }
-        }
+        LoginDialog(settings, LocalNav.update) { login = false }
     }
     EntityPicker(
         visible = picking,

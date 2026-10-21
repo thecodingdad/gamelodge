@@ -328,6 +328,10 @@
     <string name="ha_relogin">Sign in again</string>
     <string name="ha_logout">Sign out</string>
     <string name="ha_login_waiting">Finish the sign-in in the browser…</string>
+    <string name="ha_login_here">Sign in here</string>
+    <string name="ha_login_phone">Sign in with phone</string>
+    <string name="ha_login_phone_hint">Scan the code with your phone and sign in there. The phone has to be in the same network as this device.</string>
+    <string name="ha_login_phone_waiting">Waiting for the sign-in…</string>
     <string name="ha_tiles">Entity favourites</string>
     <string name="ha_entities_intro">Control these entities from anywhere in the Home Assistant panel (Y) and, when switched on, as a row on the home screen.</string>
     <string name="ha_add_tile">Add entity</string>

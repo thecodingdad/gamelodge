@@ -489,9 +489,5 @@ internal fun ColumnScope.FinishStep() {
             if (t.total > 0) LinearProgressIndicator(progress = { t.done.toFloat() / t.total }, modifier = Modifier.fillMaxWidth(), color = colors.accent, trackColor = colors.surfaceRaised)
             else LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = colors.accent, trackColor = colors.surfaceRaised)
         }
-        metadata?.takeIf { it.total > 0 }?.let { m ->
-            Text(stringResource(Res.string.host_progress_metadata, m.done, m.total), style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceMuted)
-            LinearProgressIndicator(progress = { m.done.toFloat() / m.total }, modifier = Modifier.fillMaxWidth(), color = colors.accent, trackColor = colors.surfaceRaised)
-        }
     }
 }
