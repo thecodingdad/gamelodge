@@ -4,7 +4,7 @@
 #include <windows.h>
 #include <wchar.h>
 
-#define JVM_OPTIONS L"-Xmx1g -XX:+UseZGC"
+#define JVM_OPTIONS L"-Xmx1g -XX:+UseZGC -XX:+ZGenerational"
 #define MAIN_CLASS L"io.github.thecodingdad.gamelodge.desktop.MainKt"
 
 int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previous, PWSTR args, int show) {

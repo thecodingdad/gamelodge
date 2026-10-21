@@ -92,7 +92,7 @@ object Runner {
             ?: File(System.getProperty("java.home"), if (isWindows) "bin/javaw.exe" else "bin/java")
         val jar = File(Runner::class.java.protectionDomain.codeSource.location.toURI())
         val classpath = if (jar.isFile) File(jar.parentFile, "*").path else jar.path
-        val memory = if (arg == ARG) "-Xmx256m" else "-Xmx1g -XX:+UseZGC"
+        val memory = if (arg == ARG) "-Xmx256m" else "-Xmx1g -XX:+UseZGC -XX:+ZGenerational"
         return "\"${java.path}\" $memory -cp \"$classpath\" $MAIN_CLASS $arg"
     }
 

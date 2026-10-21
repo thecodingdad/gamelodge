@@ -12,7 +12,7 @@ plugins {
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
 }
 
 dependencies {
@@ -50,9 +50,9 @@ compose.desktop {
 
 // Portable Windows test build, made on any OS: the app's jars, a Windows Java runtime (Temurin,
 // checksum verified) and GameLodge.exe to start it. Unzip anywhere and run "GameLodge.exe".
-val windowsJreUrl = "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.20.1%2B1/OpenJDK17U-jre_x64_windows_hotspot_17.0.20.1_1.zip"
-val windowsJreSha256 = "bc21a93923103cdaac93ee337b0ae4365e739fde36df823dd456bc67c8a9d352"
-val windowsJreZip = gradle.gradleUserHomeDir.resolve("caches/gamelodge/OpenJDK17U-jre_x64_windows_hotspot_17.0.20.1_1.zip")
+val windowsJreUrl = "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.12.1%2B1/OpenJDK21U-jre_x64_windows_hotspot_21.0.12.1_1.zip"
+val windowsJreSha256 = "d35f31e712f0fcf6ac5a093edc90204fbff22f720ba3950bd09d331d5e621636"
+val windowsJreZip = gradle.gradleUserHomeDir.resolve("caches/gamelodge/OpenJDK21U-jre_x64_windows_hotspot_21.0.12.1_1.zip")
 
 val downloadWindowsJre by tasks.registering {
     outputs.file(windowsJreZip)

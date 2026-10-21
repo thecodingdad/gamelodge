@@ -16,7 +16,7 @@ one library. Streaming is powered by [Artemis](https://github.com/ClassicOldSong
 
 ## Building
 
-Requirements: JDK 17, Android SDK 36, NDK 27.0.12077973.
+Requirements: JDK 21, Android SDK 36, NDK 27.0.12077973.
 
 ```bash
 git clone --recurse-submodules https://github.com/thecodingdad/gamelodge.git
