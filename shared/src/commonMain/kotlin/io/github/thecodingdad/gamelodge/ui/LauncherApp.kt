@@ -319,8 +319,23 @@ fun LauncherApp(
                             entry?.let { e ->
                                 val detailProfiles by vm.profiles.collectAsState()
                                 val detailActive by vm.activeProfile.collectAsState()
+                                val detailRunning by vm.runningSessions.collectAsState()
+                                val runningSession = detailRunning.firstOrNull { it.entry?.item?.id == e.item.id }
+                                val detailScope = androidx.compose.runtime.rememberCoroutineScope()
                                 DetailScreen(
                                     e, sessions, settings.animatedArtwork, onFavorite = { vm.setFavorite(e, it) }, onPlatform = { platformFor = e },
+                                    running = runningSession != null,
+                                    onResume = {
+                                        val s = runningSession ?: return@DetailScreen
+                                        e.remoteTargets.firstOrNull { it.hostUuid == s.host.uuid && it.appId == s.host.runningAppId }?.let { vm.launch(e, it) }
+                                    },
+                                    onQuit = {
+                                        val s = runningSession ?: return@DetailScreen
+                                        detailScope.launch {
+                                            container.hostActions.quitApp(s.host)
+                                            container.hosts.invalidate(s.host.uuid)
+                                        }
+                                    },
                                     profiles = detailProfiles, activeProfile = detailActive, onProfile = vm::setActiveProfile,
                                     onEditProfiles = { nav.navigate(Routes.settings(SettingsPageId.PROFILES)) },
                                     onBrowse = onBrowse,

@@ -18,6 +18,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.StopCircle
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MoreHoriz
@@ -84,6 +85,10 @@ fun DetailScreen(
     onBrowse: ((Int) -> Unit)? = null,
     /** False for the neighbour pages composed for swiping: no input, hints, accent or focus. */
     active: Boolean = true,
+    /** The game is running on a host right now: resume instead of play, and quit. */
+    running: Boolean = false,
+    onResume: () -> Unit = {},
+    onQuit: () -> Unit = {},
     extraActions: @Composable () -> Unit = {},
 ) {
     val actions = LocalEntryActions.current
@@ -93,7 +98,7 @@ fun DetailScreen(
     if (active) PublishAccentFrom(entry.coverModel())
 
     if (hasTargetChoice) PadAction(PadButton.X, enabled = active) { actions.playWith(entry) }
-    PadAction(PadButton.START, enabled = active) { actions.play(entry) }
+    PadAction(PadButton.START, enabled = active) { if (running) onResume() else actions.play(entry) }
     // Remote games: LB/RB switch the stream profile used for the next start.
     var profilePicker by remember { mutableStateOf(false) }
     fun stepProfile(delta: Int) {
@@ -161,12 +166,24 @@ fun DetailScreen(
                 }
         val buttons: @Composable () -> Unit = {
                     LauncherButton(
-                        stringResource(if (entry.notInstalled) Res.string.action_install else Res.string.action_play),
-                        onClick = { actions.play(entry) },
-                        icon = if (entry.notInstalled) Icons.Filled.Download else Icons.Filled.PlayArrow, primary = true,
+                        stringResource(
+                            when {
+                                running -> Res.string.qm_resume
+                                entry.notInstalled -> Res.string.action_install
+                                else -> Res.string.action_play
+                            },
+                        ),
+                        onClick = { if (running) onResume() else actions.play(entry) },
+                        icon = if (entry.notInstalled && !running) Icons.Filled.Download else Icons.Filled.PlayArrow, primary = true,
                         modifier = Modifier.focusWhenActive(active),
                     )
-                    if (hasTargetChoice) LauncherButton(stringResource(Res.string.action_play_with), onClick = { actions.playWith(entry) }, icon = Icons.Filled.Tune)
+                    // Quitting ends the game on the host: held, like everywhere else.
+                    if (running) {
+                        io.github.thecodingdad.gamelodge.ui.components.HoldToConfirmButton(
+                            stringResource(Res.string.qm_quit_game), onConfirmed = onQuit, icon = Icons.Filled.StopCircle,
+                        )
+                    }
+                    if (hasTargetChoice && !running) LauncherButton(stringResource(Res.string.action_play_with), onClick = { actions.playWith(entry) }, icon = Icons.Filled.Tune)
                     LauncherButton(
                         "", onClick = { onFavorite(!entry.item.favorite) },
                         icon = if (entry.item.favorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
