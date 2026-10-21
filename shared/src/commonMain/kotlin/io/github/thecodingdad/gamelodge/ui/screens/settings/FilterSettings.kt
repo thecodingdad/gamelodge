@@ -605,7 +605,7 @@ private fun ConditionDialog(
             }
             io.github.thecodingdad.gamelodge.ui.components.ButtonRow(spacing = 12.dp, modifier = Modifier.padding(top = 8.dp)) {
                 LauncherButton(stringResource(Res.string.action_done), onClick = onDismiss, primary = true)
-                LauncherButton(stringResource(Res.string.filter_condition_delete), onClick = onDelete, icon = Icons.Filled.Delete)
+                io.github.thecodingdad.gamelodge.ui.components.HoldToConfirmButton(stringResource(Res.string.filter_condition_delete), onConfirmed = onDelete, icon = Icons.Filled.Delete)
             }
         }
     }

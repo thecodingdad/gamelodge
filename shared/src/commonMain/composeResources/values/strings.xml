@@ -789,8 +789,8 @@
     <!-- Odin -->
     <string name="odin_mapping_all">Keep external controllers away from Odin Mapping</string>
     <string name="odin_mapping_all_sub">Odin otherwise replaces the first external controller with a copy without battery and rumble. New controllers are added below when they connect and stay untouched from their next connection on.</string>
-    <string name="odin_mapping_remove">Excluded from Odin Mapping · select to remove</string>
-    <string name="odin_mapping_remove_auto">Excluded from Odin Mapping · select to remove (re-added on the next connection while the switch is on)</string>
+    <string name="odin_mapping_remove">Excluded from the Odin mapping</string>
+    <string name="odin_mapping_remove_auto">Excluded from the Odin mapping · added again on the next connection while the switch is on</string>
 
     <!-- Odin -->
     <string name="controller_odin_copy">taken over by Odin Mapping</string>
@@ -1177,7 +1177,6 @@
     <string name="vpn_connect">Connect</string>
     <string name="vpn_disconnect">Disconnect</string>
     <string name="vpn_add_tunnel">Add tunnel</string>
-    <string name="vpn_add_tunnel_sub">WireGuard configuration (.conf) from a file or the clipboard</string>
     <string name="vpn_set_default">Make default</string>
     <string name="vpn_networks">Networks</string>
     <string name="vpn_all_traffic">All traffic</string>
@@ -1228,8 +1227,7 @@
     <string name="search_kw_apps_view">Icons, banners, tiles, size</string>
     <string name="badge_source">Source</string>
     <string name="home_row_add">Add row</string>
-    <string name="home_row_add_none">All rows are on the start tab</string>
     <string name="home_row_remove">Remove row</string>
     <string name="home_rows_empty">No rows yet: add the first one below.</string>
-    <string name="home_row_add_sub">A filter, a group or the Home Assistant favourites</string>
+    <string name="vpn_see_hosts">Tunnel per host, waiting for a woken host</string>
 </resources>

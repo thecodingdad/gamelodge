@@ -142,7 +142,7 @@ fun VpnSettings(settings: LauncherSettings, update: ((LauncherSettings) -> Launc
                 initialFocus = index == 0,
             )
         }
-        NavRow(stringResource(Res.string.vpn_add_tunnel), { importDialog = true }, stringResource(Res.string.vpn_add_tunnel_sub), Icons.Filled.Add, initialFocus = tunnels.isEmpty())
+        LauncherButton(stringResource(Res.string.vpn_add_tunnel), icon = Icons.Filled.Add, primary = tunnels.isEmpty(), onClick = { importDialog = true })
 
         SectionHeader(stringResource(Res.string.vpn_auto))
         SwitchRow(
@@ -172,6 +172,7 @@ fun VpnSettings(settings: LauncherSettings, update: ((LauncherSettings) -> Launc
                 subtitle = stringResource(Res.string.vpn_disconnect_after_sub),
             )
         }
+        SeeAlso(SeeAlsoLink(stringResource(Res.string.settings_hosts), SettingsTarget.Page(SettingsPageId.HOSTS), subtitle = stringResource(Res.string.vpn_see_hosts)))
     }
     HomeNetworksDialog(homeDialog, settings.homeNetworks, update) { homeDialog = false }
 

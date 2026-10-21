@@ -787,8 +787,8 @@
     <!-- Odin -->
     <string name="odin_mapping_all">Externe Controller nicht von Odin Mapping übernehmen</string>
     <string name="odin_mapping_all_sub">Odin ersetzt sonst den ersten externen Controller durch eine Kopie ohne Akku und Vibration. Neue Controller werden beim Verbinden unten eingetragen und bleiben ab dem nächsten Verbinden unberührt.</string>
-    <string name="odin_mapping_remove">Von Odin Mapping ausgenommen · auswählen zum Entfernen</string>
-    <string name="odin_mapping_remove_auto">Von Odin Mapping ausgenommen · auswählen zum Entfernen (wird beim nächsten Verbinden wieder eingetragen, solange der Schalter an ist)</string>
+    <string name="odin_mapping_remove">Von Odin Mapping ausgenommen</string>
+    <string name="odin_mapping_remove_auto">Von Odin Mapping ausgenommen · wird beim nächsten Verbinden wieder eingetragen, solange der Schalter an ist</string>
 
     <!-- Odin -->
     <string name="controller_odin_copy">von Odin Mapping übernommen</string>
@@ -1175,7 +1175,6 @@
     <string name="vpn_connect">Verbinden</string>
     <string name="vpn_disconnect">Trennen</string>
     <string name="vpn_add_tunnel">Tunnel hinzufügen</string>
-    <string name="vpn_add_tunnel_sub">WireGuard-Konfiguration (.conf) aus einer Datei oder der Zwischenablage</string>
     <string name="vpn_set_default">Als Standard</string>
     <string name="vpn_networks">Netze</string>
     <string name="vpn_all_traffic">Gesamter Datenverkehr</string>
@@ -1226,8 +1225,7 @@
     <string name="search_kw_apps_view">Icons, Banner, Kacheln, Größe</string>
     <string name="badge_source">Quelle</string>
     <string name="home_row_add">Reihe hinzufügen</string>
-    <string name="home_row_add_none">Alle Reihen sind im Start-Tab</string>
     <string name="home_row_remove">Reihe entfernen</string>
     <string name="home_rows_empty">Noch keine Reihen: füge unten die erste hinzu.</string>
-    <string name="home_row_add_sub">Einen Filter, eine Gruppe oder die Home-Assistant-Favoriten</string>
+    <string name="vpn_see_hosts">Tunnel pro Host, Wartezeit nach dem Aufwecken</string>
 </resources>

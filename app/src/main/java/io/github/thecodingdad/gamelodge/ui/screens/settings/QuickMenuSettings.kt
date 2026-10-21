@@ -94,6 +94,7 @@ fun QuickMenuSettings(vm: LauncherViewModel, settings: LauncherSettings, update:
         } else {
             Text(stringResource(Res.string.qm_tile_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
         }
+        SeeAlso(SeeAlsoLink(stringResource(Res.string.settings_controls), SettingsTarget.Page(SettingsPageId.CONTROLS)), SeeAlsoLink(stringResource(Res.string.settings_controllers), SettingsTarget.Controllers))
     }
 
     // Picker: system tiles by group, then installed apps as shortcuts.
@@ -149,34 +150,10 @@ private fun TileIcon(id: String) {
 /** Row of the tile list: icon, name and a delete button (the drag handle comes from the list). */
 @Composable
 private fun TileRow(id: String, unavailable: Boolean, initialFocus: Boolean, onRemove: () -> Unit) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .heightIn(min = 68.dp)
-            .clip(RoundedCornerShape(LauncherTheme.dimens.cornerRadius))
-            .background(LauncherTheme.colors.surface)
-            .padding(start = 20.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        TileIcon(id)
-        Spacer(Modifier.width(16.dp))
-        Column(Modifier.weight(1f)) {
-            Text(quickTileName(id), style = MaterialTheme.typography.titleMedium, color = LauncherTheme.colors.onSurface)
-            if (unavailable) {
-                Text(stringResource(Res.string.qt_unavailable), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
-            }
-        }
-        FocusSurface(
-            onClick = onRemove,
-            modifier = Modifier.size(48.dp).restoreFocusIf(initialFocus),
-            color = LauncherTheme.colors.surfaceRaised,
-        ) {
-            Icon(
-                Icons.Filled.Delete, stringResource(Res.string.qt_remove), tint = LauncherTheme.colors.onSurfaceMuted,
-                modifier = Modifier.align(Alignment.Center),
-            )
-        }
-    }
+    RemovableRow(
+        quickTileName(id), if (unavailable) stringResource(Res.string.qt_unavailable) else null, null, onRemove,
+        removeLabel = stringResource(Res.string.qt_remove), leading = { TileIcon(id) }, initialFocus = initialFocus,
+    )
 }
 
 /** Items two per row (a lone last item keeps half the width). */

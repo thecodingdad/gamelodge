@@ -68,5 +68,6 @@ fun LauncherModeSettings(settings: LauncherSettings, update: ((LauncherSettings)
             initialFocus = true,
         )
         NavRow(stringResource(Res.string.launcher_system_settings), { context.startActivity(mode.homeSettingsIntent()) }, icon = Icons.Filled.Settings)
+        SeeAlso(SeeAlsoLink(stringResource(Res.string.settings_home_screen), SettingsTarget.Page(SettingsPageId.HOME_SCREEN)))
     }
 }

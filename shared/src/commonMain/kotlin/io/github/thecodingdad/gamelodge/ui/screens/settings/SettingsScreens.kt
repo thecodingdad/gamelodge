@@ -1,6 +1,7 @@
 package io.github.thecodingdad.gamelodge.ui.screens.settings
 
 import androidx.compose.material.icons.Icons
+import io.github.thecodingdad.gamelodge.ui.components.restoreFocusIf
 import io.github.thecodingdad.gamelodge.ui.components.popupHeightIn
 import io.github.thecodingdad.gamelodge.ui.components.controllerScroll
 import androidx.compose.ui.draw.clip
@@ -202,9 +203,9 @@ fun HomeScreenSettings(
         }
         var adding by androidx.compose.runtime.remember { mutableStateOf(false) }
         val hidden = all.filter { !shown(it) && (it == HA || byId[it] != null) }
-        NavRow(
-            stringResource(Res.string.home_row_add), { adding = true },
-            stringResource(if (hidden.isEmpty()) Res.string.home_row_add_none else Res.string.home_row_add_sub), Icons.Filled.Add,
+        io.github.thecodingdad.gamelodge.ui.components.LauncherButton(
+            stringResource(Res.string.home_row_add), onClick = { adding = true }, icon = Icons.Filled.Add,
+            primary = visible.isEmpty(), enabled = hidden.isNotEmpty(),
         )
         io.github.thecodingdad.gamelodge.ui.components.Modal(
             visible = adding && hidden.isNotEmpty(), onDismiss = { adding = false }, title = stringResource(Res.string.home_row_add),
@@ -381,9 +382,17 @@ fun StartTabRow(initialFocus: Boolean = false) {
 }
 
 /** Theme, accent colours, how tiles look in every tab, motion and scale. */
-/** A row with a title and a ✕ that removes it (e.g. a start tab row). */
+/** A simple list entry with a ✕ that removes it right away (start tab rows, quick tiles, exceptions …). */
 @Composable
-private fun RemovableRow(title: String, subtitle: String?, icon: androidx.compose.ui.graphics.vector.ImageVector, onRemove: () -> Unit) {
+fun RemovableRow(
+    title: String,
+    subtitle: String?,
+    icon: androidx.compose.ui.graphics.vector.ImageVector?,
+    onRemove: () -> Unit,
+    removeLabel: String = stringResource(Res.string.home_row_remove),
+    leading: (@Composable () -> Unit)? = null,
+    initialFocus: Boolean = false,
+) {
     val colors = LauncherTheme.colors
     androidx.compose.foundation.layout.Row(
         Modifier.fillMaxWidth().heightIn(min = 68.dp).clip(RoundedCornerShape(16.dp))
@@ -391,17 +400,20 @@ private fun RemovableRow(title: String, subtitle: String?, icon: androidx.compos
             .padding(start = 20.dp, end = 6.dp),
         verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
     ) {
-        androidx.compose.material3.Icon(icon, null, tint = colors.accent, modifier = Modifier.size(26.dp))
-        androidx.compose.foundation.layout.Column(Modifier.weight(1f).padding(start = 16.dp, top = 10.dp, bottom = 10.dp)) {
+        when {
+            leading != null -> leading()
+            icon != null -> androidx.compose.material3.Icon(icon, null, tint = colors.accent, modifier = Modifier.size(26.dp))
+        }
+        androidx.compose.foundation.layout.Column(Modifier.weight(1f).padding(start = if (leading != null || icon != null) 16.dp else 0.dp, top = 10.dp, bottom = 10.dp)) {
             Text(title, style = MaterialTheme.typography.titleMedium, color = colors.onSurface)
             subtitle?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceMuted) }
         }
         io.github.thecodingdad.gamelodge.ui.components.FocusSurface(
             onClick = onRemove, shape = androidx.compose.foundation.shape.CircleShape, color = colors.surfaceRaised,
-            modifier = Modifier.size(48.dp),
+            modifier = Modifier.size(48.dp).restoreFocusIf(initialFocus),
         ) {
             androidx.compose.material3.Icon(
-                Icons.Filled.Close, stringResource(Res.string.home_row_remove), tint = colors.onSurface,
+                Icons.Filled.Close, removeLabel, tint = colors.onSurface,
                 modifier = Modifier.align(androidx.compose.ui.Alignment.Center).size(22.dp),
             )
         }

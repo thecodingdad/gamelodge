@@ -1,5 +1,8 @@
 package io.github.thecodingdad.gamelodge.ui.screens.settings
 
+import io.github.thecodingdad.gamelodge.ui.components.popupHeightIn
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.UnfoldMore
 import io.github.thecodingdad.gamelodge.ui.components.handCursor
 import io.github.thecodingdad.gamelodge.ui.components.controllerScroll
 import androidx.compose.foundation.background
@@ -341,6 +344,11 @@ fun SwitchRow(
 private val NARROW_ROW = 520.dp
 
 /** Cycles through [options] with A, D-pad left/right or touch on the arrows. */
+/**
+ * A choice from [options]. While they fit, all show side by side as segments (next to the title,
+ * or below it on narrow rows); otherwise the row shows the chosen value and A / a tap opens a
+ * list of all. D-pad left / right always steps through them.
+ */
 @Composable
 fun <T> ChoiceRow(
     title: String,
@@ -351,7 +359,7 @@ fun <T> ChoiceRow(
     subtitle: String? = null,
     icon: ImageVector? = null,
     initialFocus: Boolean = false,
-    /** A small picture per option (shape, colour …) in the segments. */
+    /** A small picture per option (shape, colour …) in the segments and the list. */
     optionIcon: (@Composable (T) -> Unit)? = null,
 ) {
     val index = options.indexOf(selected).coerceAtLeast(0)
@@ -360,8 +368,13 @@ fun <T> ChoiceRow(
         feedback?.play(UiSound.TOGGLE)
         onSelect(options[(index + delta).mod(options.size)])
     }
+    // How the options show, decided by the room the row gets (read by the click).
+    val segmented = remember { booleanArrayOf(true) }
+    var listShown by remember { androidx.compose.runtime.mutableStateOf(false) }
+    val labels = options.map { label(it) }
+    val drawIcon: (@Composable (Int) -> Unit)? = optionIcon?.let { draw -> @Composable { i: Int -> draw(options[i]) } }
     RowShell(
-        onClick = { step(1) },
+        onClick = { if (segmented[0]) step(1) else listShown = true },
         title = title,
         modifier = Modifier.onPreviewKeyEvent { e ->
             if (e.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
@@ -373,42 +386,78 @@ fun <T> ChoiceRow(
         },
         initialFocus = initialFocus,
     ) {
-        val value = label(options[index])
-        val labels = options.map { label(it) }
-        // Few short options: all side by side, the chosen one highlighted (D-pad left/right and A
-        // still step through them; a tap picks one directly).
-        val segmented = options.size in 2..4 && labels.all { it.length <= 16 } && labels.sumOf { it.length } <= 40
-        // The title and its description keep their room: the value takes at most 40 % of the row
-        // (wrapping), and on narrow rows it moves below the texts.
-        androidx.compose.foundation.layout.BoxWithConstraints {
-            val narrow = maxWidth < NARROW_ROW
-            val valueMax = if (narrow) maxWidth - 112.dp else maxWidth * 0.4f
-            val control: @Composable () -> Unit = if (segmented) {
-                { Segments(labels, index, optionIcon?.let { draw -> { i: Int -> draw(options[i]) } }) { i -> feedback?.play(UiSound.TOGGLE); onSelect(options[i]) } }
-            } else { {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    // Touch: the arrows step in their direction (the tap doesn't reach the row).
-                    ChoiceArrow(Icons.AutoMirrored.Filled.KeyboardArrowLeft) { step(-1) }
-                    Text(
-                        value,
-                        style = MaterialTheme.typography.labelLarge,
-                        color = LauncherTheme.colors.onSurface,
-                        maxLines = 2,
-                        modifier = Modifier.widthIn(min = 96.dp, max = valueMax).padding(horizontal = 4.dp),
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                    )
-                    ChoiceArrow(Icons.AutoMirrored.Filled.KeyboardArrowRight) { step(1) }
+        val segments: @Composable () -> Unit = { Segments(labels, index, drawIcon) { i -> feedback?.play(UiSound.TOGGLE); onSelect(options[i]) } }
+        androidx.compose.ui.layout.SubcomposeLayout { constraints ->
+            val width = constraints.maxWidth
+            val segmentsWidth = subcompose("measure", segments).first().measure(androidx.compose.ui.unit.Constraints()).width
+            // Next to the title while the title keeps 40 % of the row; else the value and a list.
+            val mode = if (segmentsWidth <= width * 0.6f) 0 else 2
+            segmented[0] = mode == 0
+            val content = subcompose("content$mode") {
+                when (mode) {
+                    0 -> Row(verticalAlignment = Alignment.CenterVertically) {
+                        Texts(title, subtitle, icon, Modifier.weight(1f))
+                        segments()
+                    }
+                    else -> ChoiceValue(title, subtitle, icon, labels[index], narrow = width < NARROW_ROW.roundToPx())
                 }
-            } }
-            if (narrow) {
-                Column {
-                    Texts(title, subtitle, icon)
-                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) { control() }
-                }
-            } else {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Texts(title, subtitle, icon, Modifier.weight(1f))
-                    control()
+            }.first().measure(constraints.copy(minHeight = 0))
+            layout(content.width, content.height) { content.place(0, 0) }
+        }
+    }
+    if (listShown) {
+        ChoiceList(title, labels, index, drawIcon, onPick = { i -> listShown = false; if (i != index) { feedback?.play(UiSound.TOGGLE); onSelect(options[i]) } }) { listShown = false }
+    }
+}
+
+/** A [ChoiceRow] too narrow for its segments: the chosen value and a mark that a list opens. */
+@Composable
+private fun ChoiceValue(title: String, subtitle: String?, icon: ImageVector?, value: String, narrow: Boolean) {
+    val control: @Composable () -> Unit = {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                value, style = MaterialTheme.typography.labelLarge, color = LauncherTheme.colors.onSurface, maxLines = 2,
+                textAlign = androidx.compose.ui.text.style.TextAlign.End,
+                modifier = Modifier.padding(start = 12.dp).widthIn(max = 320.dp),
+            )
+            Icon(Icons.Filled.UnfoldMore, null, tint = LauncherTheme.colors.onSurfaceMuted, modifier = Modifier.padding(start = 6.dp).size(22.dp))
+        }
+    }
+    if (narrow) {
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Texts(title, subtitle, icon)
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) { control() }
+        }
+    } else {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Texts(title, subtitle, icon, Modifier.weight(1f))
+            control()
+        }
+    }
+}
+
+/** All options of a [ChoiceRow] in a popup, the chosen one ticked and focused. */
+@Composable
+private fun ChoiceList(title: String, labels: List<String>, selected: Int, icon: (@Composable (Int) -> Unit)?, onPick: (Int) -> Unit, onDismiss: () -> Unit) {
+    val colors = LauncherTheme.colors
+    io.github.thecodingdad.gamelodge.ui.components.Modal(visible = true, onDismiss = onDismiss, title = title, maxWidth = 560.dp) {
+        Column(Modifier.popupHeightIn(520.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            labels.forEachIndexed { i, text ->
+                val on = i == selected
+                io.github.thecodingdad.gamelodge.ui.components.FocusSurface(
+                    onClick = { onPick(i) },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).restoreFocusIf(on),
+                    color = if (on) colors.accent.copy(alpha = 0.22f) else colors.surfaceRaised,
+                    focusScale = 1.02f,
+                ) {
+                    Row(Modifier.align(Alignment.CenterStart).padding(horizontal = 18.dp), verticalAlignment = Alignment.CenterVertically) {
+                        if (icon != null) {
+                            androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides colors.onSurface) { icon(i) }
+                            Spacer(Modifier.width(12.dp))
+                        }
+                        Text(text, style = MaterialTheme.typography.titleMedium, color = colors.onSurface, modifier = Modifier.weight(1f))
+                        if (on) Icon(Icons.Filled.Check, null, tint = colors.accent, modifier = Modifier.size(22.dp))
+                    }
                 }
             }
         }
@@ -440,19 +489,6 @@ private fun Segments(labels: List<String>, selected: Int, icon: (@Composable (In
                 if (text.isNotEmpty()) Text(text, style = MaterialTheme.typography.labelLarge, color = content, maxLines = 1)
             }
         }
-    }
-}
-
-@Composable
-private fun ChoiceArrow(icon: ImageVector, onTap: () -> Unit) {
-    // Keyed on Unit: a new lambda per recomposition would restart the detector mid-tap (the row's
-    // press feedback recomposes), and the tap got lost or went to the row instead.
-    val tap by androidx.compose.runtime.rememberUpdatedState(onTap)
-    Box(
-        Modifier.size(48.dp).clip(RoundedCornerShape(24.dp)).handCursor().pointerInput(Unit) { detectTapGestures { tap() } },
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(icon, null, tint = LauncherTheme.colors.onSurfaceMuted)
     }
 }
 

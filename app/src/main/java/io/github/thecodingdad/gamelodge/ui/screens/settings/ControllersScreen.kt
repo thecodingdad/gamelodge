@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.ui.screens.settings
 
+import androidx.compose.material.icons.filled.Gamepad
 import io.github.thecodingdad.gamelodge.ui.components.popupHeightIn
 import io.github.thecodingdad.gamelodge.ui.components.controllerScroll
 import android.hardware.input.InputManager
@@ -308,15 +309,16 @@ private fun OdinMappingSection() {
         subtitle = stringResource(Res.string.odin_mapping_all_sub),
     )
     blacklist?.forEach { name ->
-        NavRow(
-            name, {
+        RemovableRow(
+            name,
+            stringResource(if (s.odinKeepControllers) Res.string.odin_mapping_remove_auto else Res.string.odin_mapping_remove),
+            androidx.compose.material.icons.Icons.Filled.Gamepad,
+            onRemove = {
                 scope.launch {
                     odin.setBlacklisted(name, false)
                     blacklist = odin.blacklist()
                 }
             },
-            subtitle = stringResource(if (s.odinKeepControllers) Res.string.odin_mapping_remove_auto else Res.string.odin_mapping_remove),
-            icon = androidx.compose.material.icons.Icons.Filled.Delete,
         )
     }
 }
