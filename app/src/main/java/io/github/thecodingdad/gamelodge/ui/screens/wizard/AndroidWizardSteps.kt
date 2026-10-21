@@ -107,11 +107,20 @@ private fun ColumnScope.GuideStep(settings: LauncherSettings) {
         icon = Icons.Filled.Tune, action = stringResource(Res.string.wizard_change), onClick = { editing = ComboAction.QUICK_MENU },
     )
     SectionHeader(stringResource(Res.string.wizard_guide_other_apps))
+    // Only the general list could be opened: say what to look for there.
+    var generalList by remember { mutableStateOf(false) }
     WizardStatusRow(
-        stringResource(Res.string.combo_service), stringResource(if (serviceOn) Res.string.combo_service_on else Res.string.combo_service_hint),
+        stringResource(Res.string.combo_service),
+        stringResource(
+            when {
+                serviceOn -> Res.string.combo_service_on
+                generalList -> Res.string.combo_service_where
+                else -> Res.string.combo_service_hint
+            },
+        ),
         done = serviceOn, icon = Icons.Filled.Accessibility,
         action = stringResource(Res.string.combo_service_enable),
-        onClick = { context.open(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) },
+        onClick = { if (!ComboAccessibilityService.openSettings(context)) generalList = true },
     )
     val action = editing
     ComboDialog(

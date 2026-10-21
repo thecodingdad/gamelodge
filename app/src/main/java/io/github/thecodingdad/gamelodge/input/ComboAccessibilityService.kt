@@ -48,6 +48,27 @@ class ComboAccessibilityService : AccessibilityService() {
             }
         }
 
+        /**
+         * Opens this service's own page in the accessibility settings, where it is switched on,
+         * where Android lets apps do that; otherwise the accessibility list. Returns false in that
+         * case: the user then has to find "GameLodge combos" there (installed / downloaded apps).
+         */
+        fun openSettings(context: Context): Boolean {
+            val component = android.content.ComponentName(context, ComboAccessibilityService::class.java).flattenToString()
+            val details = Intent("android.settings.ACCESSIBILITY_DETAILS_SETTINGS")
+                .putExtra(Intent.EXTRA_COMPONENT_NAME, component)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            if (details.resolveActivity(context.packageManager) != null && runCatching { context.startActivity(details) }.isSuccess) return true
+            // Usually only the system may open that page: the list then, with our entry highlighted
+            // where the settings app supports it.
+            val list = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                .putExtra(":settings:fragment_args_key", component)
+                .putExtra(":settings:show_fragment_args", android.os.Bundle().apply { putString(":settings:fragment_args_key", component) })
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            runCatching { context.startActivity(list) }
+            return false
+        }
+
         fun isEnabled(context: Context): Boolean {
             val enabled = Settings.Secure.getString(context.contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES).orEmpty()
             return enabled.split(':').any { it.endsWith(ComboAccessibilityService::class.java.name) || it.endsWith("/.input.ComboAccessibilityService") }

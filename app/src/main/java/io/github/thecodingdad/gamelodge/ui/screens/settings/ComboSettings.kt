@@ -59,7 +59,7 @@ fun ButtonComboRows(settings: LauncherSettings, update: ((LauncherSettings) -> L
     )
     NavRow(
         stringResource(Res.string.combo_service), {
-            runCatching { context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+            ComboAccessibilityService.openSettings(context)
         },
         subtitle = stringResource(Res.string.combo_service_sub),
         trailing = stringResource(if (serviceOn) Res.string.combo_service_on else Res.string.off),
@@ -69,7 +69,7 @@ fun ButtonComboRows(settings: LauncherSettings, update: ((LauncherSettings) -> L
         Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(stringResource(Res.string.combo_service_hint), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
             LauncherButton(stringResource(Res.string.combo_service_enable), onClick = {
-                runCatching { context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+                ComboAccessibilityService.openSettings(context)
             }, icon = Icons.Filled.Accessibility)
         }
     }

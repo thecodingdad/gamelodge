@@ -22,7 +22,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -107,8 +106,9 @@ class WizardNav internal constructor(
 val LocalWizardNav = staticCompositionLocalOf<WizardNav?> { null }
 
 /** The steps of the current path: new setup, or restore from a backup after pairing. */
-internal fun wizardSteps(platform: PlatformUi, restoring: Boolean): List<WizardStep> =
-    if (!restoring) platform.wizardSteps
+internal fun wizardSteps(platform: PlatformUi, restoring: Boolean, manual: Boolean): List<WizardStep> =
+    // From the settings the device is set up already: no choice between new and backup.
+    if (!restoring) platform.wizardSteps.filter { !(manual && it == WizardStep.BACKUP) }
     else listOf(WizardStep.WELCOME, WizardStep.BACKUP, WizardStep.HOSTS, WizardStep.COMPANION, WizardStep.RESTORE) +
         platform.wizardDeviceSteps + WizardStep.FINISH
 
@@ -122,7 +122,7 @@ fun SetupWizard(vm: LauncherViewModel, manual: Boolean, onDone: () -> Unit) {
     val settings by vm.settings.collectAsState()
     val platform = PlatformUi.current
     val restoring = settings.setupRestore.isNotEmpty()
-    val steps = remember(restoring) { wizardSteps(platform, restoring) }
+    val steps = remember(restoring) { wizardSteps(platform, restoring, manual) }
     val stored = steps.firstOrNull { it.name == settings.setupStep }
     // The step lives here while the wizard runs; it is stored for a restart as well.
     var current by remember { mutableStateOf(stored ?: steps.first()) }
@@ -155,9 +155,8 @@ fun SetupWizard(vm: LauncherViewModel, manual: Boolean, onDone: () -> Unit) {
         )
     }
 
-    // Start = next, Y = skip, B = previous step (never leaves the wizard).
+    // Start = next, B = previous step (never leaves the wizard).
     PadAction(PadButton.START) { next() }
-    PadAction(PadButton.Y, enabled = !current.mandatory && current != WizardStep.FINISH) { next() }
     // Always taken, so B never leaves the wizard (or the app); a step may use it itself.
     BackHandler { if (nav.backKey && index > 0) back() }
 
@@ -263,7 +262,8 @@ private fun StepHeader(info: StepInfo, big: Boolean) {
 private fun BottomBar(step: WizardStep, index: Int, onNext: () -> Unit, onBack: () -> Unit) {
     val colors = LauncherTheme.colors
     val last = step == WizardStep.FINISH
-    // Back, Skip and Next only (no button hints: the pad buttons work all the same).
+    // Back and Next only (no button hints: the pad buttons work all the same; every step can be
+    // left with Next unchanged, so there is no separate Skip).
     Row(
         Modifier.fillMaxWidth().background(colors.surface).padding(horizontal = 24.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -271,7 +271,6 @@ private fun BottomBar(step: WizardStep, index: Int, onNext: () -> Unit, onBack: 
     ) {
         if (index > 0) LauncherButton(stringResource(Res.string.wizard_back), onClick = onBack, icon = Icons.AutoMirrored.Filled.ArrowBack)
         Spacer(Modifier.weight(1f))
-        if (!step.mandatory && !last) LauncherButton(stringResource(Res.string.wizard_skip), onClick = onNext, icon = Icons.Filled.SkipNext)
         LauncherButton(
             stringResource(if (last) Res.string.wizard_finish else Res.string.wizard_next),
             onClick = onNext, primary = true,

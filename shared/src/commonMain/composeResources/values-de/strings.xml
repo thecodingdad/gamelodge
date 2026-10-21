@@ -1241,7 +1241,6 @@
     <string name="pairing_running">Kopplung: PIN %1$s auf dem Host eingeben</string>
     <string name="wizard_progress">Schritt %1$d von %2$d · %3$s</string>
     <string name="wizard_back">Zurück</string>
-    <string name="wizard_skip">Überspringen</string>
     <string name="wizard_next">Weiter</string>
     <string name="wizard_finish">Los geht's</string>
     <string name="wizard_choose">Auswählen</string>
@@ -1269,7 +1268,7 @@
     <string name="wizard_host_role_text">Streamst du von diesem PC auch Spiele auf andere Geräte (Handheld, Tablet, TV)?</string>
     <string name="wizard_controller_title">Controller</string>
     <string name="wizard_controller_text">Welche Taste bestätigt? Xbox-Pads bestätigen mit der unteren Taste, Nintendo-Pads mit der rechten.</string>
-    <string name="wizard_controller_none">Kein Controller verbunden – Touch und Maus funktionieren auch.</string>
+    <string name="wizard_controller_none">Kein Controller verbunden</string>
     <string name="wizard_controller_test">Tastentest</string>
     <string name="wizard_controller_test_hint">Drück Tasten: Sie leuchten hier auf. Leuchtet bei der unteren Taste „A“ (Xbox) bzw. bei der rechten (Nintendo), passt das Layout. B führt auf dieser Seite nicht zurück.</string>
     <string name="wizard_guide_title">Guide-Taste</string>
@@ -1311,7 +1310,7 @@
     <string name="wizard_metadata_keys">Eigene Keys</string>
     <string name="wizard_metadata_sgdb_sub">API-Key: Cover, Hintergründe, Logos</string>
     <string name="wizard_metadata_igdb_sub">Client-ID und Secret: Beschreibungen, Genres, Erscheinungsdaten</string>
-    <string name="wizard_metadata_qr_hint">Die Keys legst du auf den Seiten der Anbieter an – scanne die Codes mit dem Handy:</string>
+    <string name="wizard_metadata_qr_hint">Die Keys legst du auf den Seiten der Anbieter an – scanne einen Code mit dem Handy oder wähle ihn aus, um die Seite hier zu öffnen:</string>
     <string name="wizard_ha_title">Home Assistant</string>
     <string name="wizard_ha_text">Licht, Szenen und deinen PC aus GameLodge steuern. Optional.</string>
     <string name="wizard_ha_connected">Verbunden</string>
@@ -1364,4 +1363,6 @@
     <string name="wizard_emu_detected">Erkannte Emulatoren</string>
     <string name="wizard_add">Hinzufügen</string>
     <string name="wizard_launcher_sub">Die Home-Taste führt dann zu GameLodge. Rückgängig machen geht in Androids Standard-Apps.</string>
+    <string name="wizard_controller_waiting">Verbinde einen Controller, um seine Tastenbelegung zu wählen und zu testen. Ohne Controller bleibt die Standardbelegung – Touch und Maus funktionieren auch.</string>
+    <string name="combo_service_where">Such dort „GameLodge-Tastenkombinationen“ (oft unter „Installierte Apps“ bzw. „Heruntergeladene Apps“) und schalte den Dienst ein.</string>
 </resources>

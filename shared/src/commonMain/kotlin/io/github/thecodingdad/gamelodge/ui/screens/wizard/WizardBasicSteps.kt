@@ -258,13 +258,26 @@ internal fun ColumnScope.RestoreStep(settings: LauncherSettings) {
 @Composable
 internal fun ColumnScope.ControllerStep(settings: LauncherSettings) {
     val nav = LocalNav
-    // B shows in the button test here instead of going back (Back stays on the button below).
-    SideEffect { nav.backKey = false }
     val controllers = rememberControllers()
-    ControllerLayoutDefaultRow(settings, nav.update, initialFocus = true)
+    // B shows in the button test here instead of going back (Back stays on the button below).
+    SideEffect { nav.backKey = controllers.isEmpty() }
+    // Nothing to choose or test without a controller: the defaults stay. Connecting one switches
+    // to the full step.
     if (controllers.isEmpty()) {
-        WizardNote(stringResource(Res.string.wizard_controller_none))
+        Row(
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(LauncherTheme.colors.surface).padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            CircularProgressIndicator(color = LauncherTheme.colors.accent, modifier = Modifier.size(28.dp))
+            Spacer(Modifier.width(18.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(stringResource(Res.string.wizard_controller_none), style = MaterialTheme.typography.titleMedium, color = LauncherTheme.colors.onSurface)
+                Text(stringResource(Res.string.wizard_controller_waiting), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+            }
+        }
+        return
     }
+    ControllerLayoutDefaultRow(settings, nav.update, initialFocus = true)
     controllers.forEach { c ->
         val colors = LauncherTheme.colors
         Column(

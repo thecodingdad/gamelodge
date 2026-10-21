@@ -394,11 +394,17 @@ internal fun ColumnScope.MetadataStep() {
 private const val SGDB_KEY_PAGE = "https://www.steamgriddb.com/profile/preferences/api"
 private const val IGDB_KEY_PAGE = "https://dev.twitch.tv/console/apps"
 
+/** The page as a QR code for the phone; selecting it opens the page here. */
 @Composable
 private fun QrWithCaption(url: String, caption: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        QrCard(url, 120.dp)
-        Text(caption, style = MaterialTheme.typography.labelLarge, color = LauncherTheme.colors.onSurface)
+    io.github.thecodingdad.gamelodge.ui.components.FocusSurface(
+        onClick = { io.github.thecodingdad.gamelodge.ui.PlatformUi.current.openUrl(url) },
+        shape = RoundedCornerShape(14.dp), focusScale = 1.04f,
+    ) {
+        Column(Modifier.padding(10.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            QrCard(url, 120.dp)
+            Text(caption, style = MaterialTheme.typography.labelLarge, color = LauncherTheme.colors.onSurface)
+        }
     }
 }
 
