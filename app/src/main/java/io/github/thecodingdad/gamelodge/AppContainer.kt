@@ -77,7 +77,7 @@ class AppContainer(context: Context) : LauncherContainer {
         LaunchCoordinator(
             hosts, hostActions, { hostPower }, { autoSleep }, profiles, playtime, settings, { ha }, scope,
             io.github.thecodingdad.gamelodge.stream.AndroidLaunchPlatform(this),
-        ).also { it.vpn = vpn }
+        ).also { it.vpn = vpn; it.gameActions.delayed = io.github.thecodingdad.gamelodge.stream.WorkManagerGameActions(appContext) }
     }
     override val hostActions: ArtemisHostActions by lazy { ArtemisHostActions(hosts) }
 

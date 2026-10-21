@@ -47,6 +47,29 @@ data class GameActionSettings(
 }
 
 /**
+ * Runs an action after a delay, also while the app is in the background (Android freezes hidden
+ * apps: the platform uses WorkManager there). [endOfGame] actions are dropped by [cancelEndOfGame].
+ */
+interface DelayedActions {
+    fun schedule(action: String, delaySeconds: Int, endOfGame: Boolean)
+    fun cancelEndOfGame()
+}
+
+/** Waits inside the app (desktop: it keeps running in the background). */
+class CoroutineDelayedActions(private val scope: CoroutineScope, private val run: suspend (String) -> Unit) : DelayedActions {
+    private val pendingEnd = mutableListOf<Job>()
+
+    override fun schedule(action: String, delaySeconds: Int, endOfGame: Boolean) {
+        val job = scope.launch { delay(delaySeconds * 1000L); run(action) }
+        if (endOfGame) synchronized(pendingEnd) { pendingEnd += job }
+    }
+
+    override fun cancelEndOfGame() {
+        synchronized(pendingEnd) { pendingEnd.forEach { it.cancel() }; pendingEnd.clear() }
+    }
+}
+
+/**
  * Runs the game actions: those before a start (waiting where the start should wait) and, once
  * the game ended, those after it. A new start drops end actions still waiting for their delay.
  */
@@ -56,7 +79,9 @@ class GameActionRunner(
     private val settings: suspend () -> GameActionSettings,
     private val scope: CoroutineScope,
 ) {
-    private val pendingEnd = mutableListOf<Job>()
+    /** Where delayed actions wait; the platform may replace it (Android: WorkManager). */
+    var delayed: DelayedActions = CoroutineDelayedActions(scope) { run(it) }
+
     /** The game whose start ran its actions; its end runs the end actions once. */
     @Volatile private var running: String? = null
 
@@ -65,17 +90,18 @@ class GameActionRunner(
      * ([countdown] gets the seconds still to wait). Cancelling the caller cancels the wait.
      */
     suspend fun beforeStart(itemId: String?, countdown: (Int) -> Unit = {}) {
-        synchronized(pendingEnd) { pendingEnd.forEach { it.cancel() }; pendingEnd.clear() }
+        delayed.cancelEndOfGame()
         running = itemId ?: NO_ITEM
         val actions = settings().actionsFor(itemId).filter { it.trigger == GameActionTrigger.BEFORE_START }
         if (actions.isEmpty()) return
         var wait = 0
         actions.forEach { a ->
             if (a.startWaits || a.delaySeconds <= 0) {
-                run(a)
+                run(a.action)
                 if (a.startWaits) wait = maxOf(wait, a.delaySeconds)
             } else {
-                scope.launch { delay(a.delaySeconds * 1000L); run(a) }
+                // After the start the game is in front: the launcher may be frozen meanwhile.
+                delayed.schedule(a.action, a.delaySeconds, endOfGame = false)
             }
         }
         for (left in wait downTo 1) {
@@ -90,14 +116,14 @@ class GameActionRunner(
         running = null
         scope.launch {
             settings().actionsFor(itemId.takeIf { it != NO_ITEM }).filter { it.trigger == GameActionTrigger.AFTER_END }.forEach { a ->
-                if (a.delaySeconds <= 0) run(a)
-                else synchronized(pendingEnd) { pendingEnd += scope.launch { delay(a.delaySeconds * 1000L); run(a) } }
+                if (a.delaySeconds <= 0) run(a.action)
+                else delayed.schedule(a.action, a.delaySeconds, endOfGame = true)
             }
         }
     }
 
-    private suspend fun run(a: GameAction) {
-        if (!runAction(a.action)) Log.w("Game action ${a.action} failed")
+    private suspend fun run(action: String) {
+        if (!runAction(action)) Log.w("Game action $action failed")
     }
 
     private companion object {
