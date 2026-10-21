@@ -75,7 +75,7 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 
 internal fun stepInfo(step: WizardStep): StepInfo = when (step) {
-    WizardStep.WELCOME -> StepInfo(Icons.Filled.Celebration, Res.string.wizard_welcome_title, Res.string.wizard_welcome_text)
+    WizardStep.WELCOME -> StepInfo(Icons.Filled.Celebration, Res.string.wizard_welcome_title, Res.string.wizard_welcome_text, banner = true)
     WizardStep.BACKUP -> StepInfo(Icons.Filled.Restore, Res.string.wizard_backup_title, Res.string.wizard_backup_text)
     WizardStep.HOST_ROLE -> StepInfo(Icons.Filled.Dns, Res.string.wizard_host_role_title, Res.string.wizard_host_role_text)
     WizardStep.CONTROLLER -> StepInfo(Icons.Filled.SportsEsports, Res.string.wizard_controller_title, Res.string.wizard_controller_text)

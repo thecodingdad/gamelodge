@@ -81,7 +81,7 @@ enum class WizardStep(val mandatory: Boolean = false) {
 }
 
 /** What a step shows on the left (landscape) or above its content (portrait). */
-internal class StepInfo(val icon: ImageVector, val title: StringResource, val text: StringResource)
+internal class StepInfo(val icon: ImageVector, val title: StringResource, val text: StringResource, val banner: Boolean = false)
 
 /**
  * Navigation inside the wizard, for the steps: [next] / [back] move on, [autoSkip] leaves a step
@@ -244,9 +244,24 @@ private fun Progress(steps: List<WizardStep>, index: Int, modifier: Modifier) {
 @Composable
 private fun StepHeader(info: StepInfo, big: Boolean) {
     val colors = LauncherTheme.colors
-    val circle = if (big) 96.dp else 56.dp
-    Box(Modifier.size(circle).clip(CircleShape).background(colors.surfaceRaised), contentAlignment = Alignment.Center) {
-        Icon(info.icon, null, tint = colors.accent, modifier = Modifier.size(circle / 2))
+    if (info.banner) {
+        // The GameLodge banner (light lettering) on the dark tile the About page uses too.
+        Box(
+            Modifier.fillMaxWidth().height(if (big) 180.dp else 120.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
+                .background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(androidx.compose.ui.graphics.Color(0xFF1A1E27), androidx.compose.ui.graphics.Color(0xFF0E1015)))),
+            contentAlignment = Alignment.Center,
+        ) {
+            androidx.compose.foundation.Image(
+                org.jetbrains.compose.resources.painterResource(Res.drawable.gamelodge_banner),
+                contentDescription = stringResource(Res.string.launcher_name),
+                modifier = Modifier.fillMaxHeight(),
+            )
+        }
+    } else {
+        val circle = if (big) 96.dp else 56.dp
+        Box(Modifier.size(circle).clip(CircleShape).background(colors.surfaceRaised), contentAlignment = Alignment.Center) {
+            Icon(info.icon, null, tint = colors.accent, modifier = Modifier.size(circle / 2))
+        }
     }
     Text(
         stringResource(info.title),
