@@ -99,6 +99,19 @@ fun Modal(
     }
 }
 
+/**
+ * [content] on its own over the dimmed, blurred screen, without a popup frame (e.g. a tile
+ * preview); B / back closes it.
+ */
+@Composable
+fun Spotlight(visible: Boolean, onDismiss: () -> Unit, content: @Composable ColumnScope.() -> Unit) = Overlay(visible, onDismiss) {
+    AnimatedVisibility(visible, enter = fadeIn(), exit = fadeOut()) {
+        ModalScaffold(onDismiss, alignment = Alignment.Center, scrim = PopupScrim) {
+            Column(Modifier.padding(24.dp).trapFocus(), horizontalAlignment = Alignment.CenterHorizontally) { content() }
+        }
+    }
+}
+
 /** Round back arrow that closes a popup or panel; touch and mouse only (controllers close with B). */
 @Composable
 fun CloseArrow(onClick: () -> Unit, modifier: Modifier = Modifier) {

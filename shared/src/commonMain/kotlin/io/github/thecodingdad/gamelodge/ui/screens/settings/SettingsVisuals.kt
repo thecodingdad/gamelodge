@@ -45,6 +45,7 @@ import io.github.thecodingdad.gamelodge.data.db.ItemKind
 import io.github.thecodingdad.gamelodge.data.settings.AppsStyle
 import io.github.thecodingdad.gamelodge.data.settings.TabLayout
 import io.github.thecodingdad.gamelodge.data.settings.ThemeMode
+import io.github.thecodingdad.gamelodge.resources.*
 import io.github.thecodingdad.gamelodge.ui.components.FocusSurface
 import io.github.thecodingdad.gamelodge.ui.components.restoreFocusIf
 import io.github.thecodingdad.gamelodge.ui.components.widthFactor
@@ -217,66 +218,64 @@ fun AccentSwatchRow(title: String, color: Int, onPick: (Int) -> Unit, onMore: ()
 private fun Color.luminanceValue() = 0.2126f * red + 0.7152f * green + 0.0722f * blue
 
 /**
- * Live preview of a tab's tiles with the current settings: real games of the library, scaled
- * down; it can't be focused or tapped.
+ * One tile of a tab in its real size and look (focused, so zoom and glow show), standing for an
+ * installed game / app: artwork of one from the library (a placeholder while it is empty), shown
+ * as a favourite with play time and progress so every setting can be seen.
  */
 @Composable
-fun TabPreview(layout: TabLayout, apps: Boolean = false, startTab: Boolean = false, height: Dp = 220.dp) {
+fun TilePreviewDialog(layout: TabLayout, apps: Boolean, startTab: Boolean, onDismiss: () -> Unit) {
     val entries by io.github.thecodingdad.gamelodge.LocalContainer.current.library.entries.collectAsState()
-    val sample = androidx.compose.runtime.remember(entries, apps) {
-        entries.filter { (it.item.kind == ItemKind.APP) == apps && !it.item.hidden }
-            .sortedByDescending { it.item.coverUrl != null || it.localTarget != null }.take(12)
-    }
-    val colors = LauncherTheme.colors
-    val scale = 0.5f
-    Box(
-        // As high as the tiles need (at most [height]).
-        Modifier.fillMaxWidth().heightIn(min = 60.dp, max = height).clip(RoundedCornerShape(16.dp)).background(colors.background)
-            .border(1.dp, colors.surfaceRaised, RoundedCornerShape(16.dp))
-            .focusProperties { canFocus = false }
-            // Look, don't touch: taps and drags stop here.
-            .pointerInput(Unit) { awaitPointerEventScope { while (true) awaitPointerEvent(PointerEventPass.Initial).changes.forEach { it.consume() } } },
-    ) {
-        if (sample.isEmpty()) return@Box
+    val placeholder = org.jetbrains.compose.resources.stringResource(
+        if (apps) Res.string.tile_preview_sample_app else Res.string.tile_preview_sample_game,
+    )
+    val sample = androidx.compose.runtime.remember(entries, apps, placeholder) { sampleEntry(entries, apps, placeholder) }
+    // The tile alone over the blurred screen; a tap on it or B closes it.
+    io.github.thecodingdad.gamelodge.ui.components.Spotlight(visible = true, onDismiss = onDismiss) {
         androidx.compose.runtime.CompositionLocalProvider(
             io.github.thecodingdad.gamelodge.ui.theme.LocalLauncherDimens provides io.github.thecodingdad.gamelodge.ui.theme.dimensFor(layout.cardSize),
         ) {
-            Scaled(scale, Modifier.padding(14.dp)) {
-                Row(horizontalArrangement = Arrangement.spacedBy(if (startTab) 16.dp else 18.dp)) {
-                    sample.forEach { e ->
-                        when {
-                            apps && layout.appsStyle == AppsStyle.BANNERS ->
-                                io.github.thecodingdad.gamelodge.ui.components.AppTileCard(e, {}, layout = layout)
-                            apps -> io.github.thecodingdad.gamelodge.ui.components.AppTile(e, {}, layout = layout)
-                            else -> io.github.thecodingdad.gamelodge.ui.components.CoverCard(
-                                e, {}, layout = layout,
-                                width = LauncherTheme.dimens.coverWidth * when {
-                                    !startTab -> layout.format.widthFactor
-                                    layout.format == io.github.thecodingdad.gamelodge.data.settings.TileFormat.PORTRAIT -> 0.82f
-                                    layout.format == io.github.thecodingdad.gamelodge.data.settings.TileFormat.SQUARE -> 1f
-                                    else -> 1.6f / io.github.thecodingdad.gamelodge.ui.components.APP_LANDSCAPE_RATIO * io.github.thecodingdad.gamelodge.ui.components.GAME_LANDSCAPE_RATIO
-                                },
-                            )
-                        }
-                    }
+            val coverWidth = LauncherTheme.dimens.coverWidth
+            Box(Modifier.padding(28.dp), contentAlignment = Alignment.Center) {
+                when {
+                    apps && layout.appsStyle == AppsStyle.BANNERS -> io.github.thecodingdad.gamelodge.ui.components.AppTileCard(sample, onDismiss, layout = layout, width = coverWidth * 1.6f)
+                    apps -> io.github.thecodingdad.gamelodge.ui.components.AppTile(sample, onDismiss, layout = layout)
+                    else -> io.github.thecodingdad.gamelodge.ui.components.CoverCard(
+                        sample, onDismiss, layout = layout,
+                        // As wide as in the tab: the start tab's rows, the library grid's cells.
+                        width = coverWidth * when {
+                            !startTab -> layout.format.widthFactor
+                            layout.format == io.github.thecodingdad.gamelodge.data.settings.TileFormat.PORTRAIT -> 0.82f
+                            layout.format == io.github.thecodingdad.gamelodge.data.settings.TileFormat.SQUARE -> 1f
+                            else -> 1.6f / io.github.thecodingdad.gamelodge.ui.components.APP_LANDSCAPE_RATIO * io.github.thecodingdad.gamelodge.ui.components.GAME_LANDSCAPE_RATIO
+                        },
+                    )
                 }
             }
         }
+        Text(
+            org.jetbrains.compose.resources.stringResource(Res.string.tile_preview_close),
+            style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.75f),
+        )
     }
 }
 
-/** [content] laid out at 1 / [scale] of the room and drawn scaled down to fit it (left aligned, cut at the right). */
-@Composable
-private fun Scaled(scale: Float, modifier: Modifier, content: @Composable () -> Unit) {
-    Layout(content, modifier) { measurables, constraints ->
-        val inner = Constraints(maxHeight = (constraints.maxHeight / scale).toInt())
-        val placeable = measurables.first().measure(inner)
-        layout(constraints.maxWidth, (placeable.height * scale).toInt().coerceAtMost(constraints.maxHeight)) {
-            placeable.placeWithLayer(0, 0) {
-                scaleX = scale
-                scaleY = scale
-                transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0f, 0f)
-            }
-        }
+/** The preview's tile: artwork of a library entry (else none), installed, favourite, played. */
+private fun sampleEntry(entries: List<io.github.thecodingdad.gamelodge.data.db.LibraryEntry>, apps: Boolean, placeholder: String): io.github.thecodingdad.gamelodge.data.db.LibraryEntry {
+    val base = if (apps) {
+        entries.firstOrNull { it.item.kind == ItemKind.APP && !it.item.hidden && it.localTarget != null }
+            ?: entries.firstOrNull { it.item.kind == ItemKind.APP && !it.item.hidden }
+    } else {
+        val games = entries.filter { it.item.kind == ItemKind.GAME && !it.item.hidden && it.item.coverUrl != null }
+        games.firstOrNull { it.item.heroUrl != null && it.item.logoUrl != null } ?: games.firstOrNull()
     }
+    val now = System.currentTimeMillis()
+    val item = (base?.item ?: io.github.thecodingdad.gamelodge.data.db.LibraryItemEntity(
+        id = "preview", title = placeholder, normalizedTitle = placeholder.lowercase(), kind = if (apps) ItemKind.APP else ItemKind.GAME, addedAt = now,
+    )).copy(
+        favorite = true, playtimeSeconds = 12 * 3600L, lastPlayedAt = now - 24 * 3600_000L,
+        igdbId = base?.item?.igdbId ?: -1, timeToBeatIgdbId = base?.item?.igdbId ?: -1, timeToBeatMain = 20 * 3600,
+    )
+    // Installed everywhere it runs.
+    val targets = base?.targets?.map { it.copy(installed = true) }.orEmpty()
+    return io.github.thecodingdad.gamelodge.data.db.LibraryEntry(item, targets)
 }

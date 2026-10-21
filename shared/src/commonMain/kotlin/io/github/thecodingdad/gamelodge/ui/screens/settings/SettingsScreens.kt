@@ -1,6 +1,7 @@
 package io.github.thecodingdad.gamelodge.ui.screens.settings
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
 import io.github.thecodingdad.gamelodge.ui.components.restoreFocusIf
 import io.github.thecodingdad.gamelodge.ui.components.popupHeightIn
 import io.github.thecodingdad.gamelodge.ui.components.controllerScroll
@@ -242,14 +243,24 @@ fun HomeScreenSettings(
 /** The tile settings of one tab, below a live preview of them. */
 @Composable
 private fun TileSettings(layout: TabLayout, onChange: (TabLayout) -> Unit, apps: Boolean = false, startTab: Boolean = false) {
-    TabPreview(layout, apps = apps, startTab = startTab)
+    // One tile in its real size, on request (row or Y): the page keeps its room for the settings.
+    var preview by androidx.compose.runtime.remember { mutableStateOf(false) }
+    io.github.thecodingdad.gamelodge.ui.input.PadAction(io.github.thecodingdad.gamelodge.ui.input.PadButton.Y) { preview = true }
+    io.github.thecodingdad.gamelodge.ui.shell.ScreenHints(
+        listOf(
+            io.github.thecodingdad.gamelodge.ui.components.ButtonHint(io.github.thecodingdad.gamelodge.ui.input.PadButton.A, stringResource(Res.string.hint_select)),
+            io.github.thecodingdad.gamelodge.ui.components.ButtonHint(io.github.thecodingdad.gamelodge.ui.input.PadButton.Y, stringResource(Res.string.hint_preview), onClick = { preview = true }),
+            io.github.thecodingdad.gamelodge.ui.components.ButtonHint(io.github.thecodingdad.gamelodge.ui.input.PadButton.B, stringResource(Res.string.hint_back)),
+        ),
+    )
+    NavRow(stringResource(Res.string.tile_preview_show), { preview = true }, stringResource(Res.string.tile_preview_sub), Icons.Filled.Visibility, initialFocus = true)
+    if (preview) TilePreviewDialog(layout, apps = apps, startTab = startTab) { preview = false }
     if (apps) {
         ChoiceRow(
             stringResource(Res.string.setting_apps_style), AppsStyle.entries, layout.appsStyle,
             label = { stringResource(if (it == AppsStyle.ICONS) Res.string.apps_style_icons else Res.string.apps_style_banners) },
             onSelect = { onChange(layout.copy(appsStyle = it)) },
             optionIcon = { ShapeMark(if (it == AppsStyle.ICONS) 1f else 16f / 9f) },
-            initialFocus = true,
         )
     }
     ChoiceRow(
@@ -264,7 +275,6 @@ private fun TileSettings(layout: TabLayout, onChange: (TabLayout) -> Unit, apps:
             )
         },
         onSelect = { onChange(layout.copy(cardSize = it)) },
-        initialFocus = !apps,
     )
     if (!apps) {
         ChoiceRow(

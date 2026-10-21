@@ -1228,4 +1228,10 @@
     <string name="home_row_remove">Reihe entfernen</string>
     <string name="home_rows_empty">Noch keine Reihen: füge unten die erste hinzu.</string>
     <string name="vpn_see_hosts">Tunnel pro Host, Wartezeit nach dem Aufwecken</string>
+    <string name="hint_preview">Vorschau</string>
+    <string name="tile_preview_show">Vorschau anzeigen</string>
+    <string name="tile_preview_sub">Eine Kachel in echter Größe mit diesen Einstellungen</string>
+    <string name="tile_preview_sample_game">Beispielspiel</string>
+    <string name="tile_preview_sample_app">Beispiel-App</string>
+    <string name="tile_preview_close">B oder Antippen der Kachel schließt die Vorschau</string>
 </resources>

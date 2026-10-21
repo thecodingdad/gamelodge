@@ -99,7 +99,8 @@ fun CoverCard(
             modifier = Modifier.fillMaxWidth().aspectRatio(format.aspectRatio(entry.item.kind == io.github.thecodingdad.gamelodge.data.db.ItemKind.APP)),
         ) { focused ->
             val play = animated && (LocalAnimatedTilesAlways.current || (focused && isControllerMode()))
-            TileImage(entry, format, Modifier.fillMaxSize(), animated = play)
+            // A placeholder names the game only while no title shows elsewhere.
+            TileImage(entry, format, Modifier.fillMaxSize(), animated = play, showTitleOnPlaceholder = layout.title == TileTitle.OFF)
             // Owned but not installed on the host: dimmed, playing it starts the installation.
             if (entry.notInstalled && style.dimNotInstalled) Box(Modifier.fillMaxSize().background(Color(0x99000000)))
             TileOverlay(entry, layout)

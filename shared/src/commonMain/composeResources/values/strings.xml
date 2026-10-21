@@ -1230,4 +1230,10 @@
     <string name="home_row_remove">Remove row</string>
     <string name="home_rows_empty">No rows yet: add the first one below.</string>
     <string name="vpn_see_hosts">Tunnel per host, waiting for a woken host</string>
+    <string name="hint_preview">Preview</string>
+    <string name="tile_preview_show">Show preview</string>
+    <string name="tile_preview_sub">A tile in its real size with these settings</string>
+    <string name="tile_preview_sample_game">Sample game</string>
+    <string name="tile_preview_sample_app">Sample app</string>
+    <string name="tile_preview_close">B or a tap on the tile closes the preview</string>
 </resources>
