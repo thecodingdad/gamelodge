@@ -1319,7 +1319,7 @@
     <string name="wizard_vpn_title">VPN</string>
     <string name="wizard_vpn_text">Mit deinem eigenen WireGuard-Tunnel auch unterwegs streamen. Optional.</string>
     <string name="wizard_finish_title">Fertig</string>
-    <string name="wizard_finish_text">Deine Bibliothek wird gefüllt. Die Einrichtung lässt sich jederzeit unter Einstellungen › Daten erneut starten.</string>
+    <string name="wizard_finish_text">Deine Bibliothek wird gefüllt. Die Einrichtung lässt sich jederzeit unter Einstellungen › System erneut starten.</string>
     <string name="wizard_finish_library">%1$d Spiele · %2$d Apps</string>
     <string name="wizard_finish_loading">Lädt noch – Cover und Details kommen nach und nach.</string>
     <string name="wizard_finish_ready">Alles geladen.</string>

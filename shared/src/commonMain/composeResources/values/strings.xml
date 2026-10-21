@@ -1321,7 +1321,7 @@
     <string name="wizard_vpn_title">VPN</string>
     <string name="wizard_vpn_text">Stream from outside your home with your own WireGuard tunnel. Optional.</string>
     <string name="wizard_finish_title">All set</string>
-    <string name="wizard_finish_text">Your library is being filled. This setup can be run again any time from Settings › Data.</string>
+    <string name="wizard_finish_text">Your library is being filled. This setup can be run again any time from Settings › System.</string>
     <string name="wizard_finish_library">%1$d games · %2$d apps</string>
     <string name="wizard_finish_loading">Still loading – covers and details keep coming in.</string>
     <string name="wizard_finish_ready">Everything is loaded.</string>

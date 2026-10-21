@@ -154,8 +154,9 @@ fun SetupWizard(vm: LauncherViewModel, manual: Boolean, onDone: () -> Unit) {
 
     // Start = next, B = previous step (never leaves the wizard).
     PadAction(PadButton.START) { next() }
-    // Always taken, so B never leaves the wizard (or the app).
-    BackHandler { if (index > 0) back() }
+    // Always taken: B goes a step back. On the first step it leaves only a wizard opened from the
+    // settings (back there, nothing undone); the first setup can't be left that way.
+    BackHandler { if (index > 0) back() else if (manual) onDone() }
 
     CompositionLocalProvider(LocalWizardNav provides nav) {
         WizardFrame(steps, index, nav, settings, onNext = next, onBack = back)

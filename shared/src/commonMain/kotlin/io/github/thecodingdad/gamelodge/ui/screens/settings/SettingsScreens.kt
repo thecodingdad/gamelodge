@@ -1,6 +1,7 @@
 package io.github.thecodingdad.gamelodge.ui.screens.settings
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoFixHigh
 import androidx.compose.material.icons.filled.Visibility
 import io.github.thecodingdad.gamelodge.ui.components.restoreFocusIf
 import io.github.thecodingdad.gamelodge.ui.components.popupHeightIn
@@ -82,6 +83,7 @@ fun SettingsHome(
     open: (SettingsPageId) -> Unit,
     isFirstVisit: Boolean,
     openControllers: () -> Unit = {},
+    openWizard: () -> Unit = {},
     query: String = "",
     onQueryChange: (String) -> Unit = {},
 ) {
@@ -102,6 +104,7 @@ fun SettingsHome(
                 when (target) {
                     is SettingsTarget.Page -> open(target.id)
                     SettingsTarget.Controllers -> openControllers()
+                    SettingsTarget.Wizard -> openWizard()
                     is SettingsTarget.Host -> Unit
                 }
             }
@@ -146,6 +149,7 @@ fun SettingsHome(
         NavRow(stringResource(Res.string.settings_sounds), { open(SettingsPageId.SOUNDS) }, stringResource(Res.string.settings_sounds_sub), Icons.Filled.VolumeUp)
 
         SectionHeader(stringResource(Res.string.settings_group_system))
+        NavRow(stringResource(Res.string.wizard_settings_row), openWizard, stringResource(Res.string.wizard_settings_row_sub), Icons.Filled.AutoFixHigh)
         if (platform.hasPage(SettingsPageId.LAUNCHER)) NavRow(stringResource(Res.string.settings_launcher), { open(SettingsPageId.LAUNCHER) }, stringResource(Res.string.settings_launcher_sub), Icons.Filled.Home)
         if (platform.hasPage(SettingsPageId.STARTUP)) NavRow(stringResource(Res.string.settings_startup), { open(SettingsPageId.STARTUP) }, stringResource(Res.string.settings_startup_sub), Icons.Filled.PowerSettingsNew)
         NavRow(stringResource(Res.string.settings_language), { open(SettingsPageId.LANGUAGE) }, null, Icons.Filled.Language)

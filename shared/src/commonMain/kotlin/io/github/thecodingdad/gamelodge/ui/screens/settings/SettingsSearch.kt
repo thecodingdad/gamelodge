@@ -15,6 +15,8 @@ import org.jetbrains.compose.resources.StringResource
 sealed interface SettingsTarget {
     data class Page(val id: SettingsPageId) : SettingsTarget
     data object Controllers : SettingsTarget
+    /** The setup wizard (Settings › System). */
+    data object Wizard : SettingsTarget
     /** Settings of one streaming host. */
     data class Host(val uuid: String) : SettingsTarget
 }
@@ -49,6 +51,7 @@ private val pageTitles: List<Pair<SettingsTarget, StringResource>> = listOf(
     SettingsTarget.Page(SettingsPageId.HOME_ASSISTANT) to Res.string.settings_home_assistant,
     SettingsTarget.Page(SettingsPageId.CONTROLS) to Res.string.settings_controls,
     SettingsTarget.Controllers to Res.string.settings_controllers,
+    SettingsTarget.Wizard to Res.string.settings_group_system,
     SettingsTarget.Page(SettingsPageId.QUICK_MENU) to Res.string.settings_quick_menu,
     SettingsTarget.Page(SettingsPageId.SOUNDS) to Res.string.settings_sounds,
     SettingsTarget.Page(SettingsPageId.LAUNCHER) to Res.string.settings_launcher,
@@ -174,8 +177,9 @@ private val settingsIndex: List<SearchEntry> = buildList {
     addAll(page(
         SettingsPageId.DATA, Res.string.data_storage, Res.string.data_clear_cache, Res.string.data_orphans, Res.string.data_redownload,
         Res.string.settings_backup, Res.string.backup_folder, Res.string.backup_auto, Res.string.backup_keep, Res.string.backup_with_credentials,
-        Res.string.backup_now, Res.string.backup_restore, Res.string.data_reset, Res.string.wizard_settings_row,
+        Res.string.backup_now, Res.string.backup_restore, Res.string.data_reset,
     ))
+    add(SearchEntry(Res.string.wizard_settings_row, SettingsTarget.Wizard))
 }
 
 /**

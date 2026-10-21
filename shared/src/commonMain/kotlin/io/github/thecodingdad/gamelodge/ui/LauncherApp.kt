@@ -185,14 +185,13 @@ fun LauncherApp(
             if (vm.tab == before) vm.tab = start
         }
     }
-    // A fresh install (or a restart in the middle of it) goes through the setup wizard; from the
-    // settings it can be run again. The stored settings decide, not the defaults before loading.
+    // A fresh install (or a restart in the middle of it) goes through the setup wizard; Settings ›
+    // System runs it again. The stored settings decide, not the defaults before loading.
     LaunchedEffect(Unit) {
         val stored = container.settings.settings.first()
         // Navigating works once the graph is set (the NavHost's first frame).
         nav.currentBackStackEntryFlow.first()
         if (!stored.setupDone) nav.navigate(Routes.wizard(manual = false))
-        vm.wizardRequests.collect { nav.navigate(Routes.wizard(manual = true)) }
     }
     LaunchedEffect(Unit) {
         vm.homePressed.collect {
@@ -279,6 +278,7 @@ fun LauncherApp(
                 when (target) {
                     is io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Page -> nav.navigate(Routes.settings(target.id))
                     io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Controllers -> nav.navigate(Routes.CONTROLLERS)
+                    io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Wizard -> nav.navigate(Routes.wizard(manual = true))
                     is io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Host -> nav.navigate(Routes.host(target.uuid))
                 }
             },
@@ -776,7 +776,7 @@ private fun MainShell(
                         io.github.thecodingdad.gamelodge.ui.shell.ScreenHints(
                             listOf(ButtonHint(PadButton.A, stringResource(Res.string.hint_select)), ButtonHint(PadButton.L1, stringResource(Res.string.hint_tabs), secondButton = PadButton.R1)),
                         )
-                        SettingsHome(open = { nav.navigate(Routes.settings(it)) }, isFirstVisit = true, openControllers = { nav.navigate(Routes.CONTROLLERS) }, query = vm.settingsQuery.value, onQueryChange = { vm.settingsQuery.value = it })
+                        SettingsHome(open = { nav.navigate(Routes.settings(it)) }, isFirstVisit = true, openControllers = { nav.navigate(Routes.CONTROLLERS) }, openWizard = { nav.navigate(Routes.wizard(manual = true)) }, query = vm.settingsQuery.value, onQueryChange = { vm.settingsQuery.value = it })
                     }
                 }
                 }

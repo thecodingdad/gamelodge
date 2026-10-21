@@ -7,7 +7,7 @@ Guides through the most important settings on first start. Decided with the user
 - **Form:** linear wizard, one full-screen step after the other.
 - **When:**
   - First start of a fresh installation (no library, no hosts, no settings written yet; uses `onboardingDone`). Existing installations don't see it after the update.
-  - Manually via the row "Setup wizard" in Settings › Data (near About).
+  - Manually via the row "Setup wizard" in Settings › System.
 - **Mandatory:** language and controller layout (both preset, confirming is enough). Every other step has "Skip". There is no "later" for the whole wizard; it always ends on the finish page.
 - **Changes apply at once** (theme visible live, pairings immediate). Leaving early keeps what was done.
 - **Existing state is shown, not hidden:** a step whose thing is already set up shows it with ✓ (e.g. "Win11VM paired ✓"); "Next" is enough, adding more is possible. This matters for the manual start, which always begins at step 1 with the current values.
