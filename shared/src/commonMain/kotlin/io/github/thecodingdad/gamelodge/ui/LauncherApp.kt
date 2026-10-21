@@ -242,12 +242,13 @@ fun LauncherApp(
     val onTv = io.github.thecodingdad.gamelodge.ui.PlatformUi.current.rememberOnTv()
     // The TV size setting applies on the TV either way (mirrored or running there).
     val uiScale = (if (settings.tvScaleAuto && (external != null || onTv)) settings.tvScale else settings.uiScale) / 100f
-    // Small handhelds: lowered further so a row of covers always fits (see fittedDensity).
+    // Small handhelds: lowered further so a row of covers always fits (see fittedDensity). Measured
+    // with medium cards: larger ones must not shrink the whole interface (the start tab limits them).
     val window = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize
-    val scaledDensity = remember(baseDensity, uiScale, onTv, window, settings.homeLayout.cardSize) {
+    val scaledDensity = remember(baseDensity, uiScale, onTv, window) {
         // On the TV the launcher fills the screen: its width in pixels decides the density.
         val base = if (onTv) window.width / 960f else baseDensity.density
-        val fitted = io.github.thecodingdad.gamelodge.ui.theme.fittedDensity(base * uiScale, window.width, window.height, settings.homeLayout.cardSize)
+        val fitted = io.github.thecodingdad.gamelodge.ui.theme.fittedDensity(base * uiScale, window.width, window.height, io.github.thecodingdad.gamelodge.data.settings.CardSize.MEDIUM)
         androidx.compose.ui.unit.Density(fitted, baseDensity.fontScale)
     }
 
@@ -684,7 +685,16 @@ private fun MainShell(
                     MainTab.APPS -> settings.appsLayout.cardSize
                     else -> settings.homeLayout.cardSize
                 }
-                CompositionLocalProvider(io.github.thecodingdad.gamelodge.ui.theme.LocalLauncherDimens provides io.github.thecodingdad.gamelodge.ui.theme.dimensFor(tabCards)) {
+                // The start tab keeps a full row of cards below its info block: large cards are
+                // limited to what the screen's height allows (the interface itself keeps its size).
+                val tabWindow = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize
+                val tabHeightDp = tabWindow.height / androidx.compose.ui.platform.LocalDensity.current.density
+                val tabDimens = io.github.thecodingdad.gamelodge.ui.theme.dimensFor(tabCards).let { d ->
+                    val fit = ((tabHeightDp - 255f) / 1.5f).dp
+                    val medium = io.github.thecodingdad.gamelodge.ui.theme.dimensFor(io.github.thecodingdad.gamelodge.data.settings.CardSize.MEDIUM).coverWidth
+                    if (current == MainTab.HOME && tabWindow.height > 0 && tabWindow.width > tabWindow.height && d.coverWidth > fit) d.copy(coverWidth = maxOf(fit, medium)) else d
+                }
+                CompositionLocalProvider(io.github.thecodingdad.gamelodge.ui.theme.LocalLauncherDimens provides tabDimens) {
                 when (current) {
                     MainTab.HOME -> {
                         val rows = remember(games, running) { HomeRows.from(games, running) }
