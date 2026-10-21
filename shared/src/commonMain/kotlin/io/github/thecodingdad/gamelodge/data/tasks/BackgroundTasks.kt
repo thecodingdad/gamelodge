@@ -1,8 +1,5 @@
 package io.github.thecodingdad.gamelodge.data.tasks
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,8 +25,16 @@ object BackgroundTasks {
     private val _tasks = MutableStateFlow<List<BackgroundTask>>(emptyList())
     val tasks: StateFlow<List<BackgroundTask>> = _tasks.asStateFlow()
 
-    /** The task list popup is open (status bar spinner, quick menu). */
-    var popupOpen by mutableStateOf(false)
+    /**
+     * The task list popup is open (status bar spinner, quick menu). A flow, not Compose state:
+     * this object is often created by background work, and Compose state created there while the
+     * UI composes for the first time can't be read by it ("created after the snapshot was taken").
+     */
+    private val _popupOpen = MutableStateFlow(false)
+    val popupOpenFlow: StateFlow<Boolean> = _popupOpen.asStateFlow()
+    var popupOpen: Boolean
+        get() = _popupOpen.value
+        set(value) { _popupOpen.value = value }
 
     @Synchronized
     fun set(task: BackgroundTask) {

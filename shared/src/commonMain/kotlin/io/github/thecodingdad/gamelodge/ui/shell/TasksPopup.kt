@@ -68,9 +68,10 @@ fun TasksRow() {
 @Composable
 fun TasksPopup() {
     val tasks by BackgroundTasks.tasks.collectAsState()
+    val popupOpen by BackgroundTasks.popupOpenFlow.collectAsState()
     LaunchedEffect(tasks.isEmpty()) { if (tasks.isEmpty()) BackgroundTasks.popupOpen = false }
     Modal(
-        visible = BackgroundTasks.popupOpen && tasks.isNotEmpty(),
+        visible = popupOpen && tasks.isNotEmpty(),
         onDismiss = { BackgroundTasks.popupOpen = false },
         title = stringResource(Res.string.tasks_title),
         maxWidth = 600.dp,
