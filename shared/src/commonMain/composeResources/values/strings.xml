@@ -1236,4 +1236,5 @@
     <string name="tile_preview_sample_game">Sample game</string>
     <string name="tile_preview_sample_app">Sample app</string>
     <string name="tile_preview_close">B or a tap on the tile closes the preview</string>
+    <string name="section_tile_look">Tile appearance</string>
 </resources>

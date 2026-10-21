@@ -253,6 +253,7 @@ private fun TileSettings(layout: TabLayout, onChange: (TabLayout) -> Unit, apps:
             io.github.thecodingdad.gamelodge.ui.components.ButtonHint(io.github.thecodingdad.gamelodge.ui.input.PadButton.B, stringResource(Res.string.hint_back)),
         ),
     )
+    SectionHeader(stringResource(Res.string.section_tile_look))
     NavRow(stringResource(Res.string.tile_preview_show), { preview = true }, stringResource(Res.string.tile_preview_sub), Icons.Filled.Visibility, initialFocus = true)
     if (preview) TilePreviewDialog(layout, apps = apps, startTab = startTab) { preview = false }
     if (apps) {
