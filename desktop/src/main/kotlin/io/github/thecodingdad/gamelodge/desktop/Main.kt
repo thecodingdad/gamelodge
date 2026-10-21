@@ -62,6 +62,8 @@ fun main(args: Array<String>) {
     // Class cache of a test version (no longer used).
     File(dataDir, "cache/cds").takeIf { it.isDirectory }?.deleteRecursively()
     Log.i("GameLodge ${DesktopPlatformInfo(dataDir).versionName} starting, data in $dataDir")
+    // Guide is the launcher's button while it runs: not the Game Bar's (restored on exit).
+    GameBarButton(File(dataDir, "gamebar-button.restore")).takeOver()
 
     // Games installed here are PC games (IGDB platform choice, suggestions).
     io.github.thecodingdad.gamelodge.data.library.PlatformResolver.localPlatform = io.github.thecodingdad.gamelodge.data.library.PlatformResolver.PC
