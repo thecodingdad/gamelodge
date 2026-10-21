@@ -187,15 +187,16 @@ class Gamepads(private val dispatcher: InputDispatcher) {
         val (y, x) = if (nintendoLayout) s.x to s.y else s.y to s.x
         val (wasY, wasX) = if (nintendoLayout) p.x to p.y else p.y to p.x
 
-        // The setup wizard's button test sees every press (A/B and X/Y after the layout swap).
-        if (dispatcher.pressObserver != null) {
+        // The setup wizard's button test: buttons only light up there, nothing else happens.
+        if (dispatcher.buttonTest != null) {
             listOf(
                 "A" to (wasConfirm to confirm), "B" to (wasBack to back), "X" to (wasX to x), "Y" to (wasY to y),
                 "LB" to (p.lb to s.lb), "RB" to (p.rb to s.rb), "START" to (p.start to s.start), "SELECT" to (p.back to s.back),
                 "L3" to (p.leftStickClick to s.leftStickClick), "R3" to (p.rightStickClick to s.rightStickClick),
                 "LT" to ((p.leftTrigger > 0.5f) to (s.leftTrigger > 0.5f)), "RT" to ((p.rightTrigger > 0.5f) to (s.rightTrigger > 0.5f)),
                 "UP" to (p.dpadUp to s.dpadUp), "DOWN" to (p.dpadDown to s.dpadDown), "LEFT" to (p.dpadLeft to s.dpadLeft), "RIGHT" to (p.dpadRight to s.dpadRight),
-            ).forEach { (name, change) -> if (change.second && !change.first) EventQueue.invokeLater { dispatcher.reportPress(name) } }
+            ).forEach { (name, change) -> if (change.first != change.second) EventQueue.invokeLater { dispatcher.reportTest(name, change.second) } }
+            return
         }
         key(KeyEvent.VK_ENTER, wasConfirm, confirm)
         if (back && !wasBack) onBack()

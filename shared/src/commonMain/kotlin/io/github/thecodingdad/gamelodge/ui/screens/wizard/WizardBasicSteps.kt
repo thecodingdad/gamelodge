@@ -259,25 +259,13 @@ internal fun ColumnScope.RestoreStep(settings: LauncherSettings) {
 internal fun ColumnScope.ControllerStep(settings: LauncherSettings) {
     val nav = LocalNav
     val controllers = rememberControllers()
-    // B shows in the button test here instead of going back (Back stays on the button below).
-    SideEffect { nav.backKey = controllers.isEmpty() }
-    // Nothing to choose or test without a controller: the defaults stay. Connecting one switches
-    // to the full step.
+    var testing by remember { mutableStateOf(false) }
+    // The default of all controllers, also without one connected (it applies once one is).
+    ControllerLayoutDefaultRow(settings, nav.update, initialFocus = true, title = stringResource(Res.string.wizard_controller_default))
     if (controllers.isEmpty()) {
-        Row(
-            Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(LauncherTheme.colors.surface).padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            CircularProgressIndicator(color = LauncherTheme.colors.accent, modifier = Modifier.size(28.dp))
-            Spacer(Modifier.width(18.dp))
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(stringResource(Res.string.wizard_controller_none), style = MaterialTheme.typography.titleMedium, color = LauncherTheme.colors.onSurface)
-                Text(stringResource(Res.string.wizard_controller_waiting), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
-            }
-        }
+        WizardNote(stringResource(Res.string.wizard_controller_waiting))
         return
     }
-    ControllerLayoutDefaultRow(settings, nav.update, initialFocus = true)
     controllers.forEach { c ->
         val colors = LauncherTheme.colors
         Column(
@@ -302,34 +290,57 @@ internal fun ColumnScope.ControllerStep(settings: LauncherSettings) {
             ControllerLayoutOverrideRow(c, settings, nav.update)
         }
     }
-    SectionHeader(stringResource(Res.string.wizard_controller_test))
-    WizardNote(stringResource(Res.string.wizard_controller_test_hint))
-    ButtonTest(settings.layoutFor(ActivePad.key))
+    WizardStatusRow(
+        stringResource(Res.string.wizard_controller_test), stringResource(Res.string.wizard_controller_test_sub), done = false,
+        icon = Icons.Filled.TouchApp, action = stringResource(Res.string.wizard_controller_test_start), onClick = { testing = true },
+    )
+    if (testing) ButtonTestDialog(settings.layoutFor(ActivePad.key)) { testing = false }
 }
 
 /**
- * The buttons of a pad; pressed ones light up for a moment. Face buttons sit where the layout
- * puts them, so a press of the lower button lighting "A" means the layout fits.
+ * The button test: while open, every controller button only lights up here (nothing else
+ * happens, so A, Start or the D-pad can be tried). Holding B for two seconds, "Done" or 30 s
+ * without a press end it. Face buttons sit where the layout puts them, so the lower button
+ * lighting "A" means the layout fits.
  */
 @Composable
-private fun ButtonTest(layout: ButtonLayout) {
+private fun ButtonTestDialog(layout: ButtonLayout, onDone: () -> Unit) {
     val dispatcher = LocalInputDispatcher.current
-    val lit = remember { mutableStateMapOf<String, Long>() }
+    val lit = remember { mutableStateMapOf<String, Boolean>() }
+    var lastPress by remember { mutableStateOf(System.currentTimeMillis()) }
+    var bDownAt by remember { mutableStateOf<Long?>(null) }
+    val done by androidx.compose.runtime.rememberUpdatedState(onDone)
     DisposableEffect(dispatcher) {
-        dispatcher.pressObserver = { name -> lit[name] = System.currentTimeMillis() }
-        onDispose { dispatcher.pressObserver = null }
+        dispatcher.buttonTest = { name, down ->
+            lit[name] = down
+            if (down) lastPress = System.currentTimeMillis()
+            if (name == "B") bDownAt = if (down) System.currentTimeMillis() else null
+        }
+        onDispose { dispatcher.buttonTest = null }
     }
     LaunchedEffect(Unit) {
         while (true) {
             delay(100)
             val now = System.currentTimeMillis()
-            lit.keys.filter { now - (lit[it] ?: 0) > 700 }.forEach { lit.remove(it) }
+            if (bDownAt?.let { now - it >= 2_000 } == true || now - lastPress > 30_000) done()
         }
     }
+    Modal(visible = true, onDismiss = onDone, title = stringResource(Res.string.wizard_controller_test), maxWidth = 760.dp, closeButton = false) {
+        WizardNote(stringResource(Res.string.wizard_controller_test_hint))
+        Spacer(Modifier.height(12.dp))
+        ButtonPad(layout, lit)
+        Spacer(Modifier.height(12.dp))
+        LauncherButton(stringResource(Res.string.action_done), onClick = onDone, primary = true, modifier = Modifier.fillMaxWidth())
+    }
+}
+
+/** The buttons of a pad; held ones light up. */
+@Composable
+private fun ButtonPad(layout: ButtonLayout, lit: Map<String, Boolean>) {
     val colors = LauncherTheme.colors
     @Composable
     fun Key(name: String, label: String = name, size: Dp = 44.dp) {
-        val on = name in lit
+        val on = lit[name] == true
         Box(
             Modifier.size(size).clip(CircleShape).background(if (on) colors.accent else colors.surfaceRaised)
                 .border(1.dp, colors.onSurfaceMuted.copy(alpha = 0.3f), CircleShape),
@@ -340,7 +351,7 @@ private fun ButtonTest(layout: ButtonLayout) {
     }
     @Composable
     fun Pill(name: String, label: String) {
-        val on = name in lit
+        val on = lit[name] == true
         Box(
             Modifier.clip(RoundedCornerShape(12.dp)).background(if (on) colors.accent else colors.surfaceRaised).padding(horizontal = 14.dp, vertical = 8.dp),
         ) { Text(label, style = MaterialTheme.typography.labelLarge, color = if (on) colors.background else colors.onSurface) }

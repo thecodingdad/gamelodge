@@ -1270,9 +1270,8 @@
     <string name="wizard_host_role_text">Do you also stream games from this PC to other devices (handheld, tablet, TV)?</string>
     <string name="wizard_controller_title">Controller</string>
     <string name="wizard_controller_text">Which button confirms? Xbox pads confirm with the lower button, Nintendo pads with the right one.</string>
-    <string name="wizard_controller_none">No controller connected</string>
     <string name="wizard_controller_test">Button test</string>
-    <string name="wizard_controller_test_hint">Press buttons: they light up here. If the lower face button lights up "A" (Xbox) or the right one (Nintendo), the layout fits. B doesn't go back on this page.</string>
+    <string name="wizard_controller_test_hint">Press buttons: they light up and do nothing else. If the lower face button lights up "A" (Xbox) or the right one (Nintendo), the layout fits. To end: hold B for 2 seconds or select Done.</string>
     <string name="wizard_guide_title">Guide button</string>
     <string name="wizard_guide_text">The Xbox/PS button takes you back to GameLodge from games and streams; held, it opens the quick menu.</string>
     <string name="wizard_appearance_title">Appearance</string>
@@ -1328,8 +1327,8 @@
     <string name="wizard_finish_ready">Everything is loaded.</string>
     <string name="wizard_change">Change</string>
     <string name="wizard_allow">Allow</string>
-    <string name="wizard_guide_press">Guide pressed: back to GameLodge</string>
-    <string name="wizard_guide_hold">Guide held: quick menu</string>
+    <string name="wizard_guide_press">Back to GameLodge</string>
+    <string name="wizard_guide_hold">Quick menu</string>
     <string name="wizard_guide_other_apps">In other apps</string>
     <string name="wizard_launcher_set">Set as home app</string>
     <string name="wizard_launcher_set_short">Set</string>
@@ -1344,8 +1343,6 @@
     <string name="wizard_emu_folder_sub">Its subfolders per console are recognised</string>
     <string name="wizard_emu_found">Games found</string>
     <string name="wizard_vpn_import_sub">A WireGuard .conf file</string>
-    <string name="wizard_vpn_home">Home network</string>
-    <string name="wizard_vpn_home_use">Use current network</string>
     <string name="wizard_host_role_yes">Yes, this PC is a streaming host</string>
     <string name="wizard_host_role_yes_sub">Games of this PC go to Vibepollo/Apollo/Sunshine, other devices can pair with GameLodge here</string>
     <string name="wizard_host_role_no">No, only play here</string>
@@ -1365,6 +1362,10 @@
     <string name="wizard_emu_detected">Detected emulators</string>
     <string name="wizard_add">Add</string>
     <string name="wizard_launcher_sub">The home button then leads to GameLodge. You can undo it in Android's default apps.</string>
-    <string name="wizard_controller_waiting">Connect a controller to choose its button layout and test it. Without one, the default layout stays – touch and mouse work too.</string>
+    <string name="wizard_controller_waiting">No controller connected. The default layout applies to every controller you connect later; touch and mouse work too.</string>
     <string name="combo_service_where">Look for "GameLodge combos" there (often under "Installed apps" or "Downloaded apps") and switch it on.</string>
+    <string name="wizard_controller_default">Default button layout</string>
+    <string name="wizard_controller_test_sub">Try the buttons without anything happening</string>
+    <string name="wizard_controller_test_start">Start</string>
+    <string name="wizard_vpn_only_outside_sub">On: your current network becomes your home network – no VPN there</string>
 </resources>

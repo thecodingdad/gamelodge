@@ -1268,9 +1268,8 @@
     <string name="wizard_host_role_text">Streamst du von diesem PC auch Spiele auf andere Geräte (Handheld, Tablet, TV)?</string>
     <string name="wizard_controller_title">Controller</string>
     <string name="wizard_controller_text">Welche Taste bestätigt? Xbox-Pads bestätigen mit der unteren Taste, Nintendo-Pads mit der rechten.</string>
-    <string name="wizard_controller_none">Kein Controller verbunden</string>
     <string name="wizard_controller_test">Tastentest</string>
-    <string name="wizard_controller_test_hint">Drück Tasten: Sie leuchten hier auf. Leuchtet bei der unteren Taste „A“ (Xbox) bzw. bei der rechten (Nintendo), passt das Layout. B führt auf dieser Seite nicht zurück.</string>
+    <string name="wizard_controller_test_hint">Drück Tasten: Sie leuchten auf und lösen nichts aus. Leuchtet bei der unteren Taste „A“ (Xbox) bzw. bei der rechten (Nintendo), passt das Layout. Beenden: B 2 Sekunden halten oder „Fertig“ wählen.</string>
     <string name="wizard_guide_title">Guide-Taste</string>
     <string name="wizard_guide_text">Die Xbox-/PS-Taste bringt dich aus Spielen und Streams zurück zu GameLodge; gedrückt gehalten öffnet sie das Schnellmenü.</string>
     <string name="wizard_appearance_title">Darstellung</string>
@@ -1326,8 +1325,8 @@
     <string name="wizard_finish_ready">Alles geladen.</string>
     <string name="wizard_change">Ändern</string>
     <string name="wizard_allow">Erlauben</string>
-    <string name="wizard_guide_press">Guide drücken: zurück zu GameLodge</string>
-    <string name="wizard_guide_hold">Guide halten: Schnellmenü</string>
+    <string name="wizard_guide_press">Zurück zu GameLodge</string>
+    <string name="wizard_guide_hold">Schnellmenü</string>
     <string name="wizard_guide_other_apps">In anderen Apps</string>
     <string name="wizard_launcher_set">Als Home-App festlegen</string>
     <string name="wizard_launcher_set_short">Festlegen</string>
@@ -1342,8 +1341,6 @@
     <string name="wizard_emu_folder_sub">Unterordner je Konsole werden erkannt</string>
     <string name="wizard_emu_found">Gefundene Spiele</string>
     <string name="wizard_vpn_import_sub">Eine WireGuard-.conf-Datei</string>
-    <string name="wizard_vpn_home">Heimnetz</string>
-    <string name="wizard_vpn_home_use">Aktuelles Netz übernehmen</string>
     <string name="wizard_host_role_yes">Ja, dieser PC ist Streaming-Host</string>
     <string name="wizard_host_role_yes_sub">Spiele dieses PCs kommen zu Vibepollo/Apollo/Sunshine, andere Geräte können sich mit GameLodge hier koppeln</string>
     <string name="wizard_host_role_no">Nein, nur hier spielen</string>
@@ -1363,6 +1360,10 @@
     <string name="wizard_emu_detected">Erkannte Emulatoren</string>
     <string name="wizard_add">Hinzufügen</string>
     <string name="wizard_launcher_sub">Die Home-Taste führt dann zu GameLodge. Rückgängig machen geht in Androids Standard-Apps.</string>
-    <string name="wizard_controller_waiting">Verbinde einen Controller, um seine Tastenbelegung zu wählen und zu testen. Ohne Controller bleibt die Standardbelegung – Touch und Maus funktionieren auch.</string>
+    <string name="wizard_controller_waiting">Kein Controller verbunden. Die Standardbelegung gilt für jeden Controller, den du später verbindest; Touch und Maus funktionieren auch.</string>
     <string name="combo_service_where">Such dort „GameLodge-Tastenkombinationen“ (oft unter „Installierte Apps“ bzw. „Heruntergeladene Apps“) und schalte den Dienst ein.</string>
+    <string name="wizard_controller_default">Standard-Tastenbelegung</string>
+    <string name="wizard_controller_test_sub">Tasten ausprobieren, ohne dass etwas passiert</string>
+    <string name="wizard_controller_test_start">Starten</string>
+    <string name="wizard_vpn_only_outside_sub">An: Dein aktuelles Netz wird zum Heimnetz – dort ohne VPN</string>
 </resources>

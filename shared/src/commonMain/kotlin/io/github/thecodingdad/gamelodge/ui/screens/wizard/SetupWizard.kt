@@ -85,8 +85,7 @@ internal class StepInfo(val icon: ImageVector, val title: StringResource, val te
 
 /**
  * Navigation inside the wizard, for the steps: [next] / [back] move on, [autoSkip] leaves a step
- * that has nothing to offer (in the direction the user was going). [backKey] off lets a step use B
- * itself (the button test).
+ * that has nothing to offer (in the direction the user was going).
  */
 class WizardNav internal constructor(
     val step: WizardStep,
@@ -99,9 +98,7 @@ class WizardNav internal constructor(
     val chooseBackup: (String) -> Unit,
     /** Changes the launcher settings (applies at once). */
     val update: ((LauncherSettings) -> LauncherSettings) -> Unit,
-) {
-    var backKey by mutableStateOf(true)
-}
+)
 
 val LocalWizardNav = staticCompositionLocalOf<WizardNav?> { null }
 
@@ -157,8 +154,8 @@ fun SetupWizard(vm: LauncherViewModel, manual: Boolean, onDone: () -> Unit) {
 
     // Start = next, B = previous step (never leaves the wizard).
     PadAction(PadButton.START) { next() }
-    // Always taken, so B never leaves the wizard (or the app); a step may use it itself.
-    BackHandler { if (nav.backKey && index > 0) back() }
+    // Always taken, so B never leaves the wizard (or the app).
+    BackHandler { if (index > 0) back() }
 
     CompositionLocalProvider(LocalWizardNav provides nav) {
         WizardFrame(steps, index, nav, settings, onNext = next, onBack = back)

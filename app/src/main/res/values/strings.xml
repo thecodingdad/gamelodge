@@ -6,4 +6,6 @@
     <string name="combo_service_label">GameLodge combos</string>
     <string name="combo_service_description">Detects your configured controller button combinations in every app and in the stream (back to GameLodge, quick menu). Only controller buttons are read, nothing on the screen.</string>
     <string name="keep_alive_channel">Background tasks</string>
+    <!-- Artemis' accessibility service: passes keys Android keeps (Esc, Windows key …) of a real keyboard to the stream. -->
+    <string name="keyboard_service_label">GameLodge keyboard in the stream</string>
 </resources>

@@ -38,9 +38,10 @@ fun ControllerLayoutDefaultRow(
     settings: io.github.thecodingdad.gamelodge.data.settings.LauncherSettings,
     update: ((io.github.thecodingdad.gamelodge.data.settings.LauncherSettings) -> io.github.thecodingdad.gamelodge.data.settings.LauncherSettings) -> Unit,
     initialFocus: Boolean = false,
+    title: String? = null,
 ) {
     ChoiceRow(
-        org.jetbrains.compose.resources.stringResource(io.github.thecodingdad.gamelodge.resources.Res.string.setting_button_layout),
+        title ?: org.jetbrains.compose.resources.stringResource(io.github.thecodingdad.gamelodge.resources.Res.string.setting_button_layout),
         io.github.thecodingdad.gamelodge.data.settings.ButtonLayout.entries, settings.buttonLayout,
         label = { layoutLabel(it) },
         onSelect = { v -> update { it.copy(buttonLayout = v) } },

@@ -328,14 +328,16 @@ private fun ColumnScope.VpnStep(settings: LauncherSettings) {
         stringResource(Res.string.vpn_disconnect_after), settings.vpnDisconnectAfterStream, { v -> nav.update { it.copy(vpnDisconnectAfterStream = v) } },
         subtitle = stringResource(Res.string.vpn_disconnect_after_sub),
     )
-    // The network this device is in now counts as home (no VPN needed there).
+    // Only outside home: switching on takes the network this device is in now as home.
     val subnets = remember { vpn.localAddresses().mapNotNull { (ip, bits) -> io.github.thecodingdad.gamelodge.vpn.HomeNetworks.subnetOf(ip, bits) } }
-    val atHome = subnets.isNotEmpty() && subnets.all { it in settings.homeNetworks }
-    WizardStatusRow(
-        stringResource(Res.string.wizard_vpn_home), subnets.joinToString().ifEmpty { stringResource(Res.string.vpn_home_networks_none) },
-        done = atHome, icon = Icons.Filled.Lan, action = stringResource(Res.string.wizard_vpn_home_use),
-        onClick = if (subnets.isEmpty() || atHome) null else ({
-            nav.update { it.copy(homeNetworks = it.homeNetworks + subnets, vpnOnlyOutsideHome = true) }
-        }),
+    SwitchRow(
+        stringResource(Res.string.vpn_only_outside), settings.vpnOnlyOutsideHome,
+        { on ->
+            nav.update { s -> if (on) s.copy(vpnOnlyOutsideHome = true, homeNetworks = s.homeNetworks + subnets) else s.copy(vpnOnlyOutsideHome = false) }
+        },
+        subtitle = if (settings.vpnOnlyOutsideHome && settings.homeNetworks.isNotEmpty()) {
+            stringResource(Res.string.vpn_home_networks) + ": " + settings.homeNetworks.sorted().joinToString(", ")
+        } else stringResource(Res.string.wizard_vpn_only_outside_sub),
+        icon = Icons.Filled.Home,
     )
 }
