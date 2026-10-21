@@ -346,7 +346,7 @@ private fun ButtonPad(layout: ButtonLayout, lit: Map<String, Boolean>) {
                 .border(1.dp, colors.onSurfaceMuted.copy(alpha = 0.3f), CircleShape),
             contentAlignment = Alignment.Center,
         ) {
-            Text(label, style = MaterialTheme.typography.labelLarge, color = if (on) colors.background else colors.onSurface, textAlign = TextAlign.Center)
+            Text(label, style = MaterialTheme.typography.labelLarge, color = if (on) colors.onAccent else colors.onSurface, textAlign = TextAlign.Center)
         }
     }
     @Composable
@@ -354,7 +354,7 @@ private fun ButtonPad(layout: ButtonLayout, lit: Map<String, Boolean>) {
         val on = lit[name] == true
         Box(
             Modifier.clip(RoundedCornerShape(12.dp)).background(if (on) colors.accent else colors.surfaceRaised).padding(horizontal = 14.dp, vertical = 8.dp),
-        ) { Text(label, style = MaterialTheme.typography.labelLarge, color = if (on) colors.background else colors.onSurface) }
+        ) { Text(label, style = MaterialTheme.typography.labelLarge, color = if (on) colors.onAccent else colors.onSurface) }
     }
     // Diamond: top, left, right, bottom.
     val face = if (layout == ButtonLayout.XBOX) listOf("Y", "X", "B", "A") else listOf("X", "Y", "A", "B")
@@ -453,7 +453,7 @@ private fun AppearancePreview() {
             Text(stringResource(Res.string.wizard_appearance_preview), style = MaterialTheme.typography.titleMedium, color = colors.onSurface)
             Text(stringResource(Res.string.wizard_appearance_preview_sub), style = MaterialTheme.typography.bodySmall, color = colors.accentText)
             Box(Modifier.clip(RoundedCornerShape(22.dp)).background(colors.accent).padding(horizontal = 18.dp, vertical = 10.dp)) {
-                Text(stringResource(Res.string.action_play), style = MaterialTheme.typography.labelLarge, color = colors.background)
+                Text(stringResource(Res.string.action_play), style = MaterialTheme.typography.labelLarge, color = colors.onAccent)
             }
         }
     }
