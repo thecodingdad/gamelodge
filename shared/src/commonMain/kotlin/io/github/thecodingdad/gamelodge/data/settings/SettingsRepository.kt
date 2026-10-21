@@ -42,10 +42,17 @@ data class TabLayout(
     val badges: Set<TileBadge> = TileBadge.entries.toSet(),
     /** Apps tab only. */
     val appsStyle: AppsStyle = AppsStyle.ICONS,
+    val corners: TileCorners = TileCorners.SLIGHT,
 ) {
     companion object {
         private val json = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
-        fun decode(text: String?): TabLayout? = text?.let { runCatching { json.decodeFromString<TabLayout>(it) }.getOrNull() }
+        /** [formerCorners]: the corners set for all tabs before; taken by layouts saved without own corners. */
+        fun decode(text: String?, formerCorners: String? = null): TabLayout? = text?.let {
+            runCatching { json.decodeFromString<TabLayout>(it) }.getOrNull()?.let { layout ->
+                val former = formerCorners?.let { name -> TileCorners.entries.firstOrNull { c -> c.name == name } }
+                if (former != null && "\"corners\"" !in text) layout.copy(corners = former) else layout
+            }
+        }
         fun encode(layout: TabLayout): String = json.encodeToString(layout)
     }
 }
@@ -66,8 +73,7 @@ data class LauncherSettings(
     val homeLayout: TabLayout = TabLayout(title = TileTitle.OFF),
     val libraryLayout: TabLayout = TabLayout(),
     val appsLayout: TabLayout = TabLayout(badges = emptySet()),
-    /** Tiles in every tab: corners, focus effect, not installed games dimmed. */
-    val tileCorners: TileCorners = TileCorners.SLIGHT,
+    /** Tiles in every tab: focus effect, not installed games dimmed. */
     val focusZoom: FocusZoom = FocusZoom.LIGHT,
     val focusGlow: Boolean = true,
     val dimNotInstalled: Boolean = true,
@@ -192,6 +198,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val homeLayout = stringPreferencesKey("home_layout")
         val libraryLayout = stringPreferencesKey("library_layout")
         val appsLayout = stringPreferencesKey("apps_layout")
+        /** Before the per tab corners: one setting for all tabs. */
         val tileCorners = stringPreferencesKey("tile_corners")
         val focusZoom = stringPreferencesKey("focus_zoom")
         val focusGlow = booleanPreferencesKey("focus_glow")
@@ -279,12 +286,11 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             accentColor = this[K.accentColor] ?: d.accentColor,
             accentTextColor = this[K.accentTextColor],
             detachedHosts = this[K.detachedHosts] ?: d.detachedHosts,
-            homeLayout = TabLayout.decode(this[K.homeLayout])
-                ?: d.homeLayout.copy(cardSize = enumOr(this[K.cardSize], CardSize.MEDIUM), format = enumOr(this[K.homeTileFormat], TileFormat.PORTRAIT)),
-            libraryLayout = TabLayout.decode(this[K.libraryLayout])
-                ?: d.libraryLayout.copy(cardSize = enumOr(this[K.cardSize], CardSize.MEDIUM), format = enumOr(this[K.libraryTileFormat], TileFormat.PORTRAIT)),
-            appsLayout = TabLayout.decode(this[K.appsLayout]) ?: d.appsLayout.copy(cardSize = enumOr(this[K.cardSize], CardSize.MEDIUM)),
-            tileCorners = enumOr(this[K.tileCorners], d.tileCorners),
+            homeLayout = TabLayout.decode(this[K.homeLayout], this[K.tileCorners])
+                ?: d.homeLayout.copy(corners = enumOr(this[K.tileCorners], TileCorners.SLIGHT), cardSize = enumOr(this[K.cardSize], CardSize.MEDIUM), format = enumOr(this[K.homeTileFormat], TileFormat.PORTRAIT)),
+            libraryLayout = TabLayout.decode(this[K.libraryLayout], this[K.tileCorners])
+                ?: d.libraryLayout.copy(corners = enumOr(this[K.tileCorners], TileCorners.SLIGHT), cardSize = enumOr(this[K.cardSize], CardSize.MEDIUM), format = enumOr(this[K.libraryTileFormat], TileFormat.PORTRAIT)),
+            appsLayout = TabLayout.decode(this[K.appsLayout], this[K.tileCorners]) ?: d.appsLayout.copy(corners = enumOr(this[K.tileCorners], TileCorners.SLIGHT), cardSize = enumOr(this[K.cardSize], CardSize.MEDIUM)),
             focusZoom = enumOr(this[K.focusZoom], d.focusZoom),
             focusGlow = this[K.focusGlow] ?: d.focusGlow,
             dimNotInstalled = this[K.dimNotInstalled] ?: d.dimNotInstalled,
@@ -365,7 +371,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         this[K.homeLayout] = TabLayout.encode(s.homeLayout)
         this[K.libraryLayout] = TabLayout.encode(s.libraryLayout)
         this[K.appsLayout] = TabLayout.encode(s.appsLayout)
-        this[K.tileCorners] = s.tileCorners.name
+        remove(K.tileCorners)
         this[K.focusZoom] = s.focusZoom.name
         this[K.focusGlow] = s.focusGlow
         this[K.dimNotInstalled] = s.dimNotInstalled

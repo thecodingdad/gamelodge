@@ -294,6 +294,33 @@ private fun TileSettings(layout: TabLayout, onChange: (TabLayout) -> Unit, apps:
         )
     }
     ChoiceRow(
+        stringResource(Res.string.setting_tile_corners), TileCorners.entries, layout.corners,
+        label = {
+            stringResource(
+                when (it) {
+                    TileCorners.SHARP -> Res.string.corners_sharp
+                    TileCorners.SLIGHT -> Res.string.corners_slight
+                    TileCorners.ROUND -> Res.string.corners_round
+                },
+            )
+        },
+        onSelect = { onChange(layout.copy(corners = it)) },
+        optionIcon = { c ->
+            Box(
+                Modifier.size(16.dp).border(
+                    2.dp, androidx.compose.material3.LocalContentColor.current,
+                    RoundedCornerShape(
+                        when (c) {
+                            TileCorners.SHARP -> 1.dp
+                            TileCorners.SLIGHT -> 4.dp
+                            TileCorners.ROUND -> 8.dp
+                        },
+                    ),
+                ),
+            )
+        },
+    )
+    ChoiceRow(
         stringResource(Res.string.setting_tile_title), TileTitle.entries, layout.title,
         label = {
             stringResource(
@@ -483,33 +510,6 @@ fun ThemeSettings(
         }
 
         SectionHeader(stringResource(Res.string.section_tiles))
-        ChoiceRow(
-            stringResource(Res.string.setting_tile_corners), TileCorners.entries, settings.tileCorners,
-            label = {
-                stringResource(
-                    when (it) {
-                        TileCorners.SHARP -> Res.string.corners_sharp
-                        TileCorners.SLIGHT -> Res.string.corners_slight
-                        TileCorners.ROUND -> Res.string.corners_round
-                    },
-                )
-            },
-            onSelect = { v -> update { it.copy(tileCorners = v) } },
-            optionIcon = { c ->
-                Box(
-                    Modifier.size(16.dp).border(
-                        2.dp, androidx.compose.material3.LocalContentColor.current,
-                        RoundedCornerShape(
-                            when (c) {
-                                TileCorners.SHARP -> 1.dp
-                                TileCorners.SLIGHT -> 4.dp
-                                TileCorners.ROUND -> 8.dp
-                            },
-                        ),
-                    ),
-                )
-            },
-        )
         ChoiceRow(
             stringResource(Res.string.setting_focus_zoom), FocusZoom.entries, settings.focusZoom,
             label = {

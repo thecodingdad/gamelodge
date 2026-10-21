@@ -968,7 +968,7 @@
     <string name="see_also">Siehe auch</string>
     <string name="settings_search_none">Keine passende Einstellung</string>
     <string name="search_kw_home_screen">Start, Reihen, Startseite, Start-Tab, Kacheln, Größe, Cover</string>
-    <string name="search_kw_theme">Farbe, Dunkel, Hell, Schwarz, OLED, Akzent, Design, Ecken, Fokus, Zoom, Animation</string>
+    <string name="search_kw_theme">Farbe, Dunkel, Hell, Schwarz, OLED, Akzent, Design, Fokus, Zoom, Animation</string>
     <string name="search_kw_display">Bildschirmschoner, TV, Fernseher, Monitor, Navigationsleiste</string>
     <string name="search_kw_filters">Gruppen, Sammlungen, Kategorien, Chips, sortieren</string>
     <string name="search_kw_metadata">Cover, Bilder, Artwork, Beschreibung, IGDB, SteamGridDB, API-Schlüssel, Key, Logo, Hintergrund</string>
@@ -1221,7 +1221,7 @@
     <string name="setting_dim_not_installed_sub">Spiele, die du besitzt, die aber nicht auf dem Host installiert sind</string>
     <string name="setting_accent_color_cover_sub">Genutzt, wo ein Cover keine klare Farbe hat</string>
     <string name="settings_display_sub_desktop">Bildschirmschoner</string>
-    <string name="search_kw_library_view">Kacheln, Cover, Größe, Titel, Abzeichen, Spielzeit, Fortschritt</string>
+    <string name="search_kw_library_view">Kacheln, Cover, Größe, Ecken, Titel, Abzeichen, Spielzeit, Fortschritt</string>
     <string name="search_kw_apps_view">Icons, Banner, Kacheln, Größe</string>
     <string name="badge_source">Quelle</string>
     <string name="home_row_add">Reihe hinzufügen</string>

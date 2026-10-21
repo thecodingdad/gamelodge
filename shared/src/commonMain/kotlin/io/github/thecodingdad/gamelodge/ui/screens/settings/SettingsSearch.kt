@@ -125,7 +125,7 @@ private val settingsIndex: List<SearchEntry> = buildList {
     pageTitles.forEach { (target, title) -> add(SearchEntry(title, target)) }
     // Tile settings of the three tabs (the same titles on each page; the section names the tab).
     for ((id, tab) in listOf(SettingsPageId.HOME_SCREEN to Res.string.settings_home_screen, SettingsPageId.LIBRARY_VIEW to Res.string.settings_library_view, SettingsPageId.APPS_VIEW to Res.string.settings_apps_view)) {
-        addAll(page(id, Res.string.setting_card_size, Res.string.setting_tile_title, Res.string.setting_tile_badges, section = tab))
+        addAll(page(id, Res.string.setting_card_size, Res.string.setting_tile_corners, Res.string.setting_tile_title, Res.string.setting_tile_badges, section = tab))
     }
     addAll(page(SettingsPageId.HOME_SCREEN, Res.string.setting_tile_format, Res.string.setting_tile_info, section = Res.string.settings_home_screen))
     addAll(page(SettingsPageId.LIBRARY_VIEW, Res.string.setting_tile_format, Res.string.setting_tile_info, section = Res.string.settings_library_view))
@@ -134,7 +134,7 @@ private val settingsIndex: List<SearchEntry> = buildList {
     addAll(page(SettingsPageId.LAUNCHER, Res.string.setting_start_tab))
     addAll(page(SettingsPageId.STARTUP, Res.string.setting_start_tab))
     addAll(page(
-        SettingsPageId.THEME, Res.string.setting_theme, Res.string.setting_accent, Res.string.setting_accent_color, Res.string.setting_tile_corners,
+        SettingsPageId.THEME, Res.string.setting_theme, Res.string.setting_accent, Res.string.setting_accent_color,
         Res.string.setting_focus_zoom, Res.string.setting_focus_glow, Res.string.setting_dim_not_installed, Res.string.setting_animated_artwork,
         Res.string.setting_reduce_motion, Res.string.setting_ui_scale,
     ))

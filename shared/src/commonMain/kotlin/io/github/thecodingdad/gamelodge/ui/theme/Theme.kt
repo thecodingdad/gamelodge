@@ -191,7 +191,7 @@ fun LauncherTheme(settings: LauncherSettings, content: @Composable () -> Unit) {
         LocalReduceMotion provides settings.reduceMotion,
         LocalAccentHolder provides accentHolder,
         io.github.thecodingdad.gamelodge.ui.components.LocalTileStyle provides io.github.thecodingdad.gamelodge.ui.components.TileStyle(
-            settings.tileCorners, settings.focusZoom, settings.focusGlow, settings.dimNotInstalled,
+            settings.focusZoom, settings.focusGlow, settings.dimNotInstalled,
         ),
     ) {
         val family = launcherFontFamily()
