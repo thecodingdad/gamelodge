@@ -23,6 +23,7 @@ import kotlin.math.abs
  * buttons and the right stick go to the [InputDispatcher] like on Android.
  *
  * Polls only while the launcher window has the focus: a game or stream in front gets the pads alone.
+ * Only the Guide button is watched always ([onGuide]); it still reaches the game as well.
  */
 class Gamepads(private val dispatcher: InputDispatcher) {
     private val manager = ControllerManager()
@@ -53,6 +54,10 @@ class Gamepads(private val dispatcher: InputDispatcher) {
     fun otherInput() {
         padInUse = false
     }
+
+    /** Guide released after a short press (false) or held for [GUIDE_HOLD_MS] (true); called on the poll thread. */
+    @Volatile var onGuide: (held: Boolean) -> Unit = {}
+    private val guideDownAt = HashMap<Int, Long>() // pad -> press time, -1 once the hold fired
 
     /** Called when B goes down (back sound, like the Android activity plays it). */
     @Volatile var onBack: () -> Unit = {}
@@ -97,13 +102,33 @@ class Gamepads(private val dispatcher: InputDispatcher) {
                         _controllers.value = list
                         lastList = now
                     }
+                    guide(now)
                     if (focused) poll(now) else release()
                 }
             } catch (e: Exception) {
                 // A pad unplugged mid-poll and the like: log it and carry on with the next round.
                 Log.w("Gamepad poll failed", e)
             }
-            Thread.sleep(if (focused) 16 else 250)
+            // In the background often enough to catch a short Guide press.
+            Thread.sleep(if (focused) 16 else 50)
+        }
+    }
+
+    private fun guide(now: Long) {
+        for (i in 0 until manager.numControllers) {
+            val down = runCatching { manager.getState(i) }.getOrNull()?.let { it.isConnected && it.guide } == true
+            val since = guideDownAt[i]
+            when {
+                down && since == null -> guideDownAt[i] = now
+                down && since != null && since >= 0 && now - since >= GUIDE_HOLD_MS -> {
+                    guideDownAt[i] = -1
+                    onGuide(true)
+                }
+                !down && since != null -> {
+                    guideDownAt.remove(i)
+                    if (since >= 0) onGuide(false)
+                }
+            }
         }
     }
 
@@ -266,6 +291,7 @@ class Gamepads(private val dispatcher: InputDispatcher) {
         const val FIRST_REPEAT_MS = 350L
         const val NO_CHAR = '\u0000'
         const val REPEAT_MS = 90L
+        const val GUIDE_HOLD_MS = 600L
         val DIRECTIONS = mapOf("up" to KeyEvent.VK_UP, "down" to KeyEvent.VK_DOWN, "left" to KeyEvent.VK_LEFT, "right" to KeyEvent.VK_RIGHT)
     }
 }

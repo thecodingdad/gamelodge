@@ -23,22 +23,7 @@ class ComboAccessibilityService : AccessibilityService() {
         super.onDestroy()
     }
 
-    override fun onKeyEvent(event: KeyEvent): Boolean = ButtonCombos.handle(event) { action ->
-        when (action) {
-            ComboAction.HOME -> performGlobalAction(GLOBAL_ACTION_HOME)
-            // In the launcher: its own quick menu; anywhere else: the overlay above the app.
-            ComboAction.QUICK_MENU ->
-                if (MainActivity.resumed) {
-                    startActivity(
-                        Intent(this, MainActivity::class.java)
-                            .putExtra(MainActivity.EXTRA_QUICK_MENU, true)
-                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT),
-                    )
-                } else {
-                    QuickMenuActivity.toggle(this)
-                }
-        }
-    }
+    override fun onKeyEvent(event: KeyEvent): Boolean = ButtonCombos.handle(event) { run(this, it) }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) = Unit
     override fun onInterrupt() = Unit
@@ -46,6 +31,22 @@ class ComboAccessibilityService : AccessibilityService() {
     companion object {
         @Volatile var instance: ComboAccessibilityService? = null
             private set
+
+        /**
+         * Runs a combination's action from outside the launcher activity (this service, the stream):
+         * GameLodge comes to the front (in it: to the start tab), the quick menu opens in the
+         * launcher or as the overlay above another app.
+         */
+        fun run(context: Context, action: ComboAction) {
+            val launcher = Intent(context, MainActivity::class.java)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+            when (action) {
+                ComboAction.HOME -> context.startActivity(launcher.putExtra(MainActivity.EXTRA_HOME, true))
+                ComboAction.QUICK_MENU ->
+                    if (MainActivity.resumed) context.startActivity(launcher.putExtra(MainActivity.EXTRA_QUICK_MENU, true))
+                    else QuickMenuActivity.toggle(context)
+            }
+        }
 
         fun isEnabled(context: Context): Boolean {
             val enabled = Settings.Secure.getString(context.contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES).orEmpty()

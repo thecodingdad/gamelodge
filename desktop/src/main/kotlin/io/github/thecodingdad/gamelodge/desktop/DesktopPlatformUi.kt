@@ -145,7 +145,14 @@ class DesktopPlatformUi(
     override fun openUrl(url: String) = BrowserOpener.open(url)
 
     override fun bringToFront() {
-        java.awt.EventQueue.invokeLater { window()?.apply { isVisible = true; toFront(); requestFocus() } }
+        java.awt.EventQueue.invokeLater {
+            window()?.apply {
+                isVisible = true
+                if (isWindows) WindowsForeground.claim(this)
+                toFront()
+                requestFocus()
+            }
+        }
     }
 
     // A PC has no Wi-Fi/Bluetooth/flashlight tiles of its own here; the launcher's tiles remain.

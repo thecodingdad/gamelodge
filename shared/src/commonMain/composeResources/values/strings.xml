@@ -754,17 +754,20 @@
 
     <!-- Button combos -->
     <string name="combo_section">Button combinations</string>
-    <string name="combo_home">Android Home</string>
-    <string name="combo_home_sub">Acts like the Home button</string>
+    <string name="combo_home">Back to GameLodge</string>
+    <string name="combo_home_sub">Brings GameLodge to the front, e.g. from a game or the stream; in GameLodge it goes to the start tab</string>
     <string name="combo_quick_menu">Open quick menu</string>
     <string name="combo_quick_menu_sub">Opens the quick menu</string>
     <string name="combo_service">System-wide (accessibility)</string>
     <string name="combo_service_sub">Enable "GameLodge combos" in the accessibility settings so the combinations also work in other apps and in the stream</string>
     <string name="combo_service_on">On</string>
+    <string name="combo_hold">hold</string>
+    <string name="combo_service_hint">Without the service the combinations only work in GameLodge and in the stream, not in other apps (e.g. Android games).</string>
+    <string name="combo_service_enable">Enable service</string>
     <string name="combo_service_label">GameLodge combos</string>
-    <string name="combo_service_description">Detects your configured controller button combinations in every app and in the stream (Android Home, quick menu). Only controller buttons are read, nothing on the screen.</string>
+    <string name="combo_service_description">Detects your configured controller button combinations in every app and in the stream (back to GameLodge, quick menu). Only controller buttons are read, nothing on the screen.</string>
     <string name="combo_none">Not set</string>
-    <string name="combo_help">Record a single button (e.g. Guide) or a combination (e.g. Select + Start). In the stream only the last pressed button of a combination is held back from the host.</string>
+    <string name="combo_help">Record a single button (e.g. Guide) or a combination (e.g. Select + Start). Keep the buttons held for a moment to record a hold combination. The button that completes a combination is held back from the game.</string>
     <string name="combo_recording_hint">Press buttons…</string>
     <string name="combo_recording_help">Hold the buttons together, then release them. Cancels after 10 seconds.</string>
     <string name="combo_record">Record</string>

@@ -152,6 +152,16 @@ fun main(args: Array<String>) {
     application {
         val vm = remember { LauncherViewModel(container) }
         gamepads.onBack = { feedback.play(UiSound.BACK) }
+        // Guide: back to the launcher (in it: to the start tab), held: the quick menu. Also from a
+        // game or stream in front, which gets the button as well (not intercepted on Windows).
+        gamepads.onGuide = { held ->
+            java.awt.EventQueue.invokeLater {
+                val inFront = windowVisible.value && mainWindow?.isActive == true
+                windowVisible.value = true
+                platformUi.bringToFront()
+                if (held) vm.quickMenuRequests.tryEmit(true) else if (inFront) vm.homePressed.tryEmit(Unit)
+            }
+        }
         // Like Android: touch or a mouse click hides the focus ring, the next key or controller
         // input shows it again (and continues from the touched element).
         var inputModeManager: androidx.compose.ui.input.InputModeManager? = null

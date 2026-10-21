@@ -4,6 +4,6 @@
     <string name="launcher_name" translatable="false">GameLodge</string>
     <string name="quick_menu">Quick menu</string>
     <string name="combo_service_label">GameLodge combos</string>
-    <string name="combo_service_description">Detects your configured controller button combinations in every app and in the stream (Android Home, quick menu). Only controller buttons are read, nothing on the screen.</string>
+    <string name="combo_service_description">Detects your configured controller button combinations in every app and in the stream (back to GameLodge, quick menu). Only controller buttons are read, nothing on the screen.</string>
     <string name="keep_alive_channel">Background tasks</string>
 </resources>

@@ -42,6 +42,14 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
                 }.filterValues { it.isNotEmpty() }
             }
         }
+        // In the stream without the accessibility service (which otherwise sees the buttons first):
+        // combinations work there too and their buttons don't reach the host.
+        com.limelight.binding.input.KeyInterceptor.interceptor = com.limelight.binding.input.KeyInterceptor.Interceptor { activity, event ->
+            io.github.thecodingdad.gamelodge.input.ComboAccessibilityService.instance == null &&
+                io.github.thecodingdad.gamelodge.input.ButtonCombos.handle(event) {
+                    io.github.thecodingdad.gamelodge.input.ComboAccessibilityService.run(activity, it)
+                }
+        }
         container.scope.launch {
             container.settings.settings.collect {
                 io.github.thecodingdad.gamelodge.input.ButtonCombos.combos = mapOf(

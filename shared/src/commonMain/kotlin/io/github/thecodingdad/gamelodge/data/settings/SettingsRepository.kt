@@ -164,9 +164,12 @@ data class LauncherSettings(
     val metadataSources: List<String> = emptyList(),
     /** Desktop: stores whose games are left out of the library ("steam", "epic" …). */
     val disabledGameSources: Set<String> = emptySet(),
-    /** Controller button combinations (key codes) for Android Home and the quick menu; empty = off. */
-    val comboHome: Set<Int> = emptySet(),
-    val comboQuickMenu: Set<Int> = emptySet(),
+    /**
+     * Controller button combinations (Android key codes, [COMBO_HOLD] = held) to bring the launcher
+     * to the front and for the quick menu; empty = off. Default: Guide pressed / Guide held.
+     */
+    val comboHome: Set<Int> = setOf(KEYCODE_GUIDE),
+    val comboQuickMenu: Set<Int> = setOf(KEYCODE_GUIDE, COMBO_HOLD),
     /** Shrink the UI while a TV/monitor is attached (the layout is sized for the handheld). */
     val tvScaleAuto: Boolean = true,
     /** UI size on an external display, percent of the handheld size. */
@@ -261,6 +264,9 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val disabledGameSources = stringSetPreferencesKey("disabled_game_sources")
         val comboHome = stringPreferencesKey("combo_home")
         val comboQuickMenu = stringPreferencesKey("combo_quick_menu")
+        // Set with the first save after the Guide defaults came: an empty combination stored
+        // before only meant "never set" (every save writes all fields).
+        val combosSet = booleanPreferencesKey("combos_set")
         val tvScaleAuto = booleanPreferencesKey("tv_scale_auto")
         val tvScale = intPreferencesKey("tv_scale")
         val tvLauncher = booleanPreferencesKey("tv_launcher")
@@ -350,8 +356,10 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             quickTiles = this[K.quickTiles]?.split(',')?.filter { it.isNotBlank() } ?: d.quickTiles,
             metadataSources = this[K.metadataSources]?.split(',')?.filter { it.isNotBlank() } ?: d.metadataSources,
             disabledGameSources = this[K.disabledGameSources] ?: d.disabledGameSources,
-            comboHome = this[K.comboHome]?.split(',')?.mapNotNull { it.toIntOrNull() }?.toSet() ?: d.comboHome,
-            comboQuickMenu = this[K.comboQuickMenu]?.split(',')?.mapNotNull { it.toIntOrNull() }?.toSet() ?: d.comboQuickMenu,
+            comboHome = this[K.comboHome]?.takeIf { it.isNotEmpty() || this[K.combosSet] == true }
+                ?.split(',')?.mapNotNull { it.toIntOrNull() }?.toSet() ?: d.comboHome,
+            comboQuickMenu = this[K.comboQuickMenu]?.takeIf { it.isNotEmpty() || this[K.combosSet] == true }
+                ?.split(',')?.mapNotNull { it.toIntOrNull() }?.toSet() ?: d.comboQuickMenu,
             tvScaleAuto = this[K.tvScaleAuto] ?: d.tvScaleAuto,
             tvScale = this[K.tvScale] ?: d.tvScale,
             tvLauncher = this[K.tvLauncher] ?: d.tvLauncher,
@@ -435,6 +443,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         this[K.disabledGameSources] = s.disabledGameSources
         this[K.comboHome] = s.comboHome.joinToString(",")
         this[K.comboQuickMenu] = s.comboQuickMenu.joinToString(",")
+        this[K.combosSet] = true
         this[K.tvScaleAuto] = s.tvScaleAuto
         this[K.tvScale] = s.tvScale
         this[K.tvLauncher] = s.tvLauncher
@@ -446,3 +455,9 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
     private inline fun <reified T : Enum<T>> enumOr(value: String?, default: T): T =
         value?.let { v -> enumValues<T>().firstOrNull { it.name == v } } ?: default
 }
+
+/** Android's KEYCODE_BUTTON_MODE: the Guide / Xbox / PS button. */
+const val KEYCODE_GUIDE = 110
+
+/** Marker in a button combination: held instead of pressed. */
+const val COMBO_HOLD = -1

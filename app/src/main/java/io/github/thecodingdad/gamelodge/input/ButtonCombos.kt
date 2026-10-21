@@ -1,5 +1,7 @@
 package io.github.thecodingdad.gamelodge.input
 
+import android.os.Handler
+import android.os.Looper
 import android.view.InputDevice
 import android.view.KeyEvent
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,6 +16,10 @@ enum class ComboAction { HOME, QUICK_MENU }
  * process-wide state so recording in the settings works with either path.
  */
 object ButtonCombos {
+    /** Marker in a combination: the buttons have to be held ([HOLD_MS]) instead of pressed. */
+    const val HOLD = io.github.thecodingdad.gamelodge.data.settings.COMBO_HOLD
+    const val HOLD_MS = 600L
+
     /** Global combinations. */
     @Volatile var combos: Map<ComboAction, Set<Int>> = emptyMap()
 
@@ -31,12 +37,15 @@ object ButtonCombos {
     private var recorder: ((Set<Int>) -> Unit)? = null
     private var recordDescriptor: String? = null
     private val recorded = LinkedHashSet<Int>()
+    private var recordGrewAt = 0L
+    private var recordReleasedAt = 0L
     private val _recordingPreview = MutableStateFlow<Set<Int>>(emptySet())
     val recordingPreview: StateFlow<Set<Int>> = _recordingPreview.asStateFlow()
 
     /** Records the next combination; with [descriptor] only from that controller. */
     fun startRecording(descriptor: String? = null, onDone: (Set<Int>) -> Unit) {
         recorded.clear()
+        recordReleasedAt = 0L
         _recordingPreview.value = emptySet()
         recordDescriptor = descriptor
         recorder = onDone
@@ -50,6 +59,21 @@ object ButtonCombos {
     }
 
     val isRecording: Boolean get() = recorder != null
+
+    // A press that can still become a hold: decided on release or when the hold time is up.
+    private class Pending(val device: Int, val code: Int, val tap: ComboAction?, val hold: ComboAction, val onAction: (ComboAction) -> Unit)
+    private var pending: Pending? = null
+    private val handler by lazy { Handler(Looper.getMainLooper()) }
+    private val holdTimeout = Runnable {
+        val p = synchronized(this) { pending.also { pending = null } } ?: return@Runnable
+        p.onAction(p.hold)
+    }
+
+    private fun cancelPending() {
+        if (pending == null) return
+        pending = null
+        handler.removeCallbacks(holdTimeout)
+    }
 
     private fun isGamepadKey(event: KeyEvent): Boolean =
         KeyEvent.isGamepadButton(event.keyCode) ||
@@ -70,15 +94,25 @@ object ButtonCombos {
                 if (event.repeatCount == 0) held += code
                 if (recorder != null) {
                     // Other controllers are ignored while recording for a specific one.
-                    if (recordsThis) {
-                        recorded += code
+                    if (recordsThis && event.repeatCount == 0 && recorded.add(code)) {
+                        recordGrewAt = event.eventTime
                         _recordingPreview.value = LinkedHashSet(recorded)
                     }
                     return true
                 }
                 if (code in swallowed) return true
                 if (event.repeatCount == 0) {
-                    val hit = combosFor(descriptor).entries.firstOrNull { (_, keys) -> keys.isNotEmpty() && keys == held }
+                    // Another button joined: a pending hold is no longer meant.
+                    cancelPending()
+                    val combos = combosFor(descriptor)
+                    val hit = combos.entries.firstOrNull { (_, keys) -> keys.isNotEmpty() && keys == held }
+                    val holdHit = combos.entries.firstOrNull { (_, keys) -> HOLD in keys && keys.size > 1 && keys - HOLD == held }
+                    if (holdHit != null) {
+                        swallowed += code
+                        pending = Pending(event.deviceId, code, hit?.key, holdHit.key, onAction)
+                        handler.postDelayed(holdTimeout, HOLD_MS)
+                        return true
+                    }
                     if (hit != null) {
                         // Only the completing button is swallowed: the others already reached
                         // the app, so their release has to reach it too (no stuck buttons).
@@ -92,12 +126,20 @@ object ButtonCombos {
             KeyEvent.ACTION_UP -> {
                 held -= code
                 recorder?.let { done ->
+                    if (recordsThis && recordReleasedAt == 0L) recordReleasedAt = event.eventTime
                     if (recordsThis && held.isEmpty() && recorded.isNotEmpty()) {
                         val result = LinkedHashSet(recorded)
+                        // Held still before letting go: a hold combination.
+                        if (recordReleasedAt - recordGrewAt >= HOLD_MS) result += HOLD
                         cancelRecording()
                         done(result)
                     }
                     return true
+                }
+                pending?.takeIf { it.device == event.deviceId && it.code == code }?.let { p ->
+                    // Released before the hold time: a press.
+                    cancelPending()
+                    p.tap?.let(p.onAction)
                 }
                 return swallowed.remove(code)
             }
@@ -108,18 +150,20 @@ object ButtonCombos {
     /** Forgets held buttons, e.g. when the window loses focus and releases may be missed. */
     @Synchronized
     fun reset() {
+        cancelPending()
         down.clear()
         consuming.clear()
     }
 
     /** Combos that would break navigation (A, B or a D-pad direction alone). */
-    fun isBlocked(keys: Set<Int>): Boolean = keys.size == 1 && keys.first() in setOf(
+    fun isBlocked(keys: Set<Int>): Boolean = (keys - HOLD).let { it.size == 1 && it.first() in setOf(
         KeyEvent.KEYCODE_BUTTON_A, KeyEvent.KEYCODE_BUTTON_B,
         KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT,
-    )
+    ) }
 
-    /** "Select + Start" style name of a combo. */
-    fun describe(keys: Set<Int>): String = keys.joinToString(" + ") { name(it) }
+    /** "Select + Start" style name of a combo; a hold combination gets [holdSuffix] ("Guide (hold)"). */
+    fun describe(keys: Set<Int>, holdSuffix: String = "hold"): String =
+        (keys - HOLD).joinToString(" + ") { name(it) } + if (HOLD in keys) " ($holdSuffix)" else ""
 
     fun name(code: Int): String = when (code) {
         KeyEvent.KEYCODE_BUTTON_A -> "A"

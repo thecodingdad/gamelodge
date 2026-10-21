@@ -109,7 +109,9 @@ class MainActivity : ComponentActivity() {
         // Home pressed while we are the home app: back to the start screen.
         // Home while the launcher is shown: to the start tab. Coming back from another app or a
         // stream, the first Home just brings back what was shown before.
-        if (intent.hasCategory(Intent.CATEGORY_HOME) && !returningFromBackground) vm.homePressed.tryEmit(Unit)
+        val home = intent.hasCategory(Intent.CATEGORY_HOME) || intent.getBooleanExtra(EXTRA_HOME, false)
+        intent.removeExtra(EXTRA_HOME)
+        if (home && !returningFromBackground) vm.homePressed.tryEmit(Unit)
         handleQuickMenuExtra(intent)
     }
 
@@ -211,6 +213,9 @@ class MainActivity : ComponentActivity() {
 
     companion object {
         const val EXTRA_QUICK_MENU = "io.github.thecodingdad.gamelodge.QUICK_MENU"
+
+        /** Combination "back to GameLodge": like Home while we are the home app. */
+        const val EXTRA_HOME = "io.github.thecodingdad.gamelodge.HOME"
 
         /** Launcher in the foreground: combinations act inside it instead of as an overlay. */
         @Volatile var resumed = false

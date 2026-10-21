@@ -752,17 +752,20 @@
 
     <!-- Button combos -->
     <string name="combo_section">Tastenkombinationen</string>
-    <string name="combo_home">Android-Home</string>
-    <string name="combo_home_sub">Wirkt wie die Home-Taste</string>
+    <string name="combo_home">Zurück zu GameLodge</string>
+    <string name="combo_home_sub">Holt GameLodge in den Vordergrund, z. B. aus einem Spiel oder dem Stream; in GameLodge geht es zum Start-Tab</string>
     <string name="combo_quick_menu">Schnellmenü öffnen</string>
     <string name="combo_quick_menu_sub">Öffnet das Schnellmenü</string>
     <string name="combo_service">Systemweit (Bedienungshilfe)</string>
     <string name="combo_service_sub">„GameLodge-Tastenkombinationen“ in den Bedienungshilfen aktivieren, damit die Kombinationen auch in anderen Apps und im Stream funktionieren</string>
     <string name="combo_service_on">An</string>
+    <string name="combo_hold">halten</string>
+    <string name="combo_service_hint">Ohne den Dienst funktionieren die Kombinationen nur in GameLodge und im Stream, nicht in anderen Apps (z. B. Android-Spielen).</string>
+    <string name="combo_service_enable">Dienst aktivieren</string>
     <string name="combo_service_label">GameLodge-Tastenkombinationen</string>
-    <string name="combo_service_description">Erkennt deine eingestellten Controller-Tastenkombinationen in jeder App und im Stream (Android-Home, Schnellmenü). Gelesen werden nur Controller-Tasten, nichts vom Bildschirminhalt.</string>
+    <string name="combo_service_description">Erkennt deine eingestellten Controller-Tastenkombinationen in jeder App und im Stream (zurück zu GameLodge, Schnellmenü). Gelesen werden nur Controller-Tasten, nichts vom Bildschirminhalt.</string>
     <string name="combo_none">Nicht belegt</string>
-    <string name="combo_help">Nimm eine einzelne Taste (z. B. Guide) oder eine Kombination (z. B. Select + Start) auf. Im Stream wird nur die zuletzt gedrückte Taste einer Kombination vom Host ferngehalten.</string>
+    <string name="combo_help">Nimm eine einzelne Taste (z. B. Guide) oder eine Kombination (z. B. Select + Start) auf. Hältst du die Tasten einen Moment gedrückt, wird eine Halten-Kombination aufgenommen. Die Taste, die eine Kombination vervollständigt, erreicht das Spiel nicht.</string>
     <string name="combo_recording_hint">Tasten drücken…</string>
     <string name="combo_recording_help">Tasten gemeinsam gedrückt halten, dann loslassen. Bricht nach 10 Sekunden ab.</string>
     <string name="combo_record">Aufnehmen</string>

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Accessibility
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FiberManualRecord
 import androidx.compose.material.icons.filled.Public
@@ -44,18 +45,17 @@ fun ButtonComboRows(settings: LauncherSettings, update: ((LauncherSettings) -> L
     var tick by remember { mutableIntStateOf(0) }
     LifecycleResumeEffect(Unit) { tick++; onPauseOrDispose { } }
     val serviceOn = remember(tick) { ComboAccessibilityService.isEnabled(context) }
-    val off = stringResource(Res.string.off)
 
     SectionHeader(stringResource(Res.string.combo_section))
     NavRow(
         stringResource(Res.string.combo_home), { editing = ComboAction.HOME },
         subtitle = stringResource(Res.string.combo_home_sub),
-        trailing = settings.comboHome.takeIf { it.isNotEmpty() }?.let(ButtonCombos::describe) ?: off,
+        trailing = comboLabel(settings.comboHome),
     )
     NavRow(
         stringResource(Res.string.combo_quick_menu), { editing = ComboAction.QUICK_MENU },
         subtitle = stringResource(Res.string.combo_quick_menu_sub),
-        trailing = settings.comboQuickMenu.takeIf { it.isNotEmpty() }?.let(ButtonCombos::describe) ?: off,
+        trailing = comboLabel(settings.comboQuickMenu),
     )
     NavRow(
         stringResource(Res.string.combo_service), {
@@ -64,6 +64,15 @@ fun ButtonComboRows(settings: LauncherSettings, update: ((LauncherSettings) -> L
         subtitle = stringResource(Res.string.combo_service_sub),
         trailing = stringResource(if (serviceOn) Res.string.combo_service_on else Res.string.off),
     )
+    if (!serviceOn) {
+        // Without the service the combinations only work in GameLodge and its stream.
+        Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(stringResource(Res.string.combo_service_hint), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+            LauncherButton(stringResource(Res.string.combo_service_enable), onClick = {
+                runCatching { context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+            }, icon = Icons.Filled.Accessibility)
+        }
+    }
 
     val action = editing
     ComboDialog(
@@ -126,7 +135,7 @@ fun ComboDialog(
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(
                 when {
-                    recording -> if (preview.isEmpty()) stringResource(Res.string.combo_recording_hint) else ButtonCombos.describe(preview)
+                    recording -> if (preview.isEmpty()) stringResource(Res.string.combo_recording_hint) else ButtonCombos.describe(preview, stringResource(Res.string.combo_hold))
                     current == null -> comboLabel(global, global = true)
                     else -> comboLabel(current)
                 },
@@ -178,6 +187,6 @@ fun ComboDialog(
 /** "LB + RB", "Off", or for a controller following the global one "Global (LB + RB)". */
 @Composable
 fun comboLabel(keys: Set<Int>?, global: Boolean = false): String {
-    val text = if (keys.isNullOrEmpty()) stringResource(Res.string.off) else ButtonCombos.describe(keys)
+    val text = if (keys.isNullOrEmpty()) stringResource(Res.string.off) else ButtonCombos.describe(keys, stringResource(Res.string.combo_hold))
     return if (global) stringResource(Res.string.combo_global_value, text) else text
 }
