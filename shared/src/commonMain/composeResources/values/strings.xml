@@ -465,7 +465,7 @@
     <string name="qm_android_settings">Android settings</string>
     <string name="qm_running_on">%1$s on %2$s</string>
     <string name="qm_resume">Resume</string>
-    <string name="qm_quit_game">Quit game</string>
+    <string name="qm_quit_game">Quit</string>
 
     <!-- Backup -->
     <string name="backup_intro">Saves settings, profiles, favourites, filters, corrections and Home Assistant entities, without pairings.</string>

@@ -463,7 +463,7 @@
     <string name="qm_android_settings">Android-Einstellungen</string>
     <string name="qm_running_on">%1$s auf %2$s</string>
     <string name="qm_resume">Fortsetzen</string>
-    <string name="qm_quit_game">Spiel beenden</string>
+    <string name="qm_quit_game">Beenden</string>
 
     <!-- Backup -->
     <string name="backup_intro">Sichert Einstellungen, Profile, Favoriten, Filter, Korrekturen und Home-Assistant-Entitäten, ohne Kopplungen.</string>

@@ -106,20 +106,26 @@ fun HoldToConfirmButton(
     val focused by interaction.collectIsFocusedAsState()
     val controllerMode = isControllerMode()
 
+    // Done while still held: the bar stays full and repeated key-downs (held button) don't start
+    // it again until the button is released.
+    val confirmed = remember { booleanArrayOf(false) }
+
     fun start() {
-        if (!enabled || jobHolder[0]?.isActive == true) return
+        if (!enabled || confirmed[0] || jobHolder[0]?.isActive == true) return
         jobHolder[0] = scope.launch {
             progress.snapTo(0f)
             progress.animateTo(1f, tween(holdMillis, easing = LinearEasing))
+            confirmed[0] = true
             feedback?.play(UiSound.CONFIRM)
             onConfirmed()
-            progress.snapTo(0f)
         }
     }
 
     fun cancel() {
+        val done = confirmed[0]
+        confirmed[0] = false
         jobHolder[0]?.cancel()
-        scope.launch { progress.animateTo(0f, tween(150)) }
+        scope.launch { if (done) progress.snapTo(0f) else progress.animateTo(0f, tween(150)) }
     }
 
     Box(
