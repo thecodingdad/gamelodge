@@ -13,8 +13,8 @@ RCEDIT_URL=https://github.com/electron/rcedit/releases/download/v2.0.0/rcedit-x6
 RCEDIT_SHA256=3E7801DB1A5EDBEC91B49A24A094AAD776CB4515488EA5A4CA2289C400EADE2A
 version=$(sed -n 's/^launcher.versionName=//p' gradle.properties)
 
-./gradlew -q --offline :desktop:downloadWindowsJre
-jre=$(sed -n 's/^val windowsJreZip = gradle.gradleUserHomeDir.resolve("\(.*\)")$/\1/p' desktop/build.gradle.kts)
+./gradlew -q --offline :desktop:downloadWindowsJdk
+jre=$(sed -n 's/^val windowsJdkZip = gradle.gradleUserHomeDir.resolve("\(.*\)")$/\1/p' desktop/build.gradle.kts)
 jre="${GRADLE_USER_HOME:-$HOME/.gradle}/$jre"
 work=$(mktemp -d)
 unzip -q -j "$jre" '*/bin/javaw.exe' -d "$work"

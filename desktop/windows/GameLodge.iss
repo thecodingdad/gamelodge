@@ -65,6 +65,8 @@ Source: "icon.ico"; DestDir: "{app}"; Flags: ignoreversion
 ; Jars of an older version (names carry versions): replaced as a whole.
 Type: filesandordirs; Name: "{app}\lib"
 Type: filesandordirs; Name: "{app}\runtime"
+; The streaming client too (files dropped between versions would stay otherwise).
+Type: filesandordirs; Name: "{app}\moonlight"
 
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\GameLodge.exe"; WorkingDir: "{app}"; IconFilename: "{app}\icon.ico"; AppUserModelID: "thecodingdad.GameLodge"
