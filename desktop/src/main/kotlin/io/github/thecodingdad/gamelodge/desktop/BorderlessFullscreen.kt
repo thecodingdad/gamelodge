@@ -37,6 +37,13 @@ object BorderlessFullscreen {
         active = true
     }
 
+    /** Full screen again on a new window (it was on the one this replaces). */
+    fun reapply(window: Frame) {
+        if (!active) return
+        active = false
+        enter(window)
+    }
+
     fun exit(window: Frame) {
         if (!isWindows || !active) return
         val hwnd = WinDef.HWND(Native.getComponentPointer(window))

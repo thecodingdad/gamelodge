@@ -4,6 +4,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.input.key.Key
@@ -245,6 +246,22 @@ fun main(args: Array<String>) {
                 }
             },
         ) {
+        // After sleep or hibernation Windows may hand the GPU a new device, and the old window then
+        // keeps handling input but never shows a new frame. A new window starts with a fresh one
+        // (the app's state lives outside; the page shown starts over).
+        var windowGeneration by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+        LaunchedEffect(Unit) {
+            while (true) {
+                val before = System.currentTimeMillis()
+                kotlinx.coroutines.delay(RESUME_CHECK_MS)
+                val gap = System.currentTimeMillis() - before - RESUME_CHECK_MS
+                if (gap > RESUME_GAP_MS) {
+                    Log.i("System resumed after ${gap / 1000} s: new window")
+                    windowGeneration++
+                }
+            }
+        }
+        key(windowGeneration) {
         Window(
             onCloseRequest = { if (startup.settings.value.closeToTray) windowVisible.value = false else exitApplication() },
             visible = visible,
@@ -284,7 +301,10 @@ fun main(args: Array<String>) {
                 mainWindow = window
                 gamepads.start(window)
                 TaskbarIdentity.applyToWindow(window)
-                if (isWindows && startup.settings.value.startFullscreen) {
+                if (windowGeneration == 0) Log.i("Window renderer: ${window.renderApi}")
+                if (isWindows && windowGeneration > 0) {
+                    BorderlessFullscreen.reapply(window)
+                } else if (isWindows && startup.settings.value.startFullscreen) {
                     BorderlessFullscreen.enter(window)
                     windowControls.fullscreen.value = true
                 }
@@ -327,8 +347,13 @@ fun main(args: Array<String>) {
             }
         }
         }
+        }
     }
 }
+
+/** How often the window checks for a resume from sleep, and the clock jump that means one. */
+private const val RESUME_CHECK_MS = 5_000L
+private const val RESUME_GAP_MS = 30_000L
 
 /** Unhandled arrow keys move the focus in their direction. */
 internal fun arrowFocus(e: androidx.compose.ui.input.key.KeyEvent, focusManager: androidx.compose.ui.focus.FocusManager): Boolean {
