@@ -25,7 +25,10 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            // Same key as the debug builds: installs over them without losing data or pairings.
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 
@@ -64,6 +67,8 @@ dependencies {
     implementation(project(":shared"))
 
     implementation(libs.androidx.core.ktx)
+    // Applies the startup profiles the AndroidX/Compose libraries ship (faster, lighter cold start).
+    implementation(libs.androidx.profileinstaller)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
