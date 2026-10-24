@@ -24,6 +24,17 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
         super.onCreate()
         registerActivityLifecycleCallbacks(CurrentActivity)
         container = AppContainer(this)
+        io.github.thecodingdad.gamelodge.stream.ProfileStore.resetRenderMode(this)
+        // Right after boot the system is busy (on the Odin the low-memory killer then stops the
+        // heaviest foreground app): the start tasks wait a moment, and run one after the other.
+        if (android.os.SystemClock.elapsedRealtime() < BOOT_WINDOW_MS) {
+            io.github.thecodingdad.gamelodge.util.StartupSequence.holdFor(BOOT_PAUSE_MS)
+        }
+        io.github.thecodingdad.gamelodge.data.artwork.ArtworkFiles.init(filesDir)
+        io.github.thecodingdad.gamelodge.ui.components.ArtworkPlatform.current = io.github.thecodingdad.gamelodge.ui.components.AndroidArtwork(this)
+        io.github.thecodingdad.gamelodge.ui.PlatformUi.current = io.github.thecodingdad.gamelodge.ui.AndroidPlatformUi(this)
+        // Artwork first in line: missing covers are what one notices.
+        container.artwork.start()
         container.hosts.bind()
         container.library.start()
         container.emulation.start()
@@ -72,10 +83,6 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
             .forEach { container.secrets.put(it, null) }
         container.servers.start()
         container.metadata.start()
-        io.github.thecodingdad.gamelodge.data.artwork.ArtworkFiles.init(filesDir)
-        io.github.thecodingdad.gamelodge.ui.components.ArtworkPlatform.current = io.github.thecodingdad.gamelodge.ui.components.AndroidArtwork(this)
-        io.github.thecodingdad.gamelodge.ui.PlatformUi.current = io.github.thecodingdad.gamelodge.ui.AndroidPlatformUi(this)
-        container.artwork.start()
         // Pairing waits for a PIN typed in another app: a short foreground service keeps us awake.
         io.github.thecodingdad.gamelodge.util.BackgroundHold.start = { tag, text ->
             io.github.thecodingdad.gamelodge.system.KeepAliveService.hold(this, tag, text)
@@ -84,6 +91,11 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
             .watch(container.scope, container.settings.settings.map { it.odinKeepControllers })
         // Host polling is driven by MainActivity's lifecycle: Artemis' stream activity runs in
         // this process too, and polling must not compete with an active stream.
+    }
+
+    private companion object {
+        const val BOOT_WINDOW_MS = 3 * 60_000L
+        const val BOOT_PAUSE_MS = 10_000L
     }
 
     /** Coil loader with animated WebP/GIF support, sharing the app's HTTP client. */

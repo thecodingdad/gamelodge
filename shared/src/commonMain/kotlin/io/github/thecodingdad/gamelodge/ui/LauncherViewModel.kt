@@ -39,7 +39,7 @@ class LauncherViewModel(private val c: LauncherContainer) : ViewModel() {
     init {
         // One search for hosts after start (new or moved hosts); the hosts screen searches while open.
         viewModelScope.launch {
-            io.github.thecodingdad.gamelodge.data.remote.HostDiscovery.hold(c.hosts, "startup", true)
+            io.github.thecodingdad.gamelodge.util.StartupSequence.turn { io.github.thecodingdad.gamelodge.data.remote.HostDiscovery.hold(c.hosts, "startup", true) }
             kotlinx.coroutines.delay(STARTUP_DISCOVERY_MS)
             io.github.thecodingdad.gamelodge.data.remote.HostDiscovery.hold(c.hosts, "startup", false)
         }

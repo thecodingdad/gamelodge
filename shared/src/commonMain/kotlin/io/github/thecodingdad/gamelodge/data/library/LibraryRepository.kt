@@ -23,6 +23,7 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectIndexed
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -81,7 +82,7 @@ class LibraryRepository(
             localApps.packageChanges()
                 .onStart { emit(Unit) }
                 .debounce(500)
-                .collect { syncLocal() }
+                .collectIndexed { i, _ -> if (i == 0) io.github.thecodingdad.gamelodge.util.StartupSequence.turn { syncLocal() } else syncLocal() }
         }
         scope.launch(Dispatchers.IO) {
             var previous = emptyMap<String, List<RemoteApp>>()

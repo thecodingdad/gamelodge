@@ -120,10 +120,11 @@ fun main(args: Array<String>) {
     container.onGameEnded = { platformUi.bringToFront() }
     // Started beside the window's first composition (their first use loads classes and opens the database).
     container.scope.launch(kotlinx.coroutines.Dispatchers.Default) {
+        // One after the other (StartupSequence), artwork first: missing covers are what one notices.
+        container.artwork.start()
         container.library.start()
         container.servers.start()
         container.metadata.start()
-        container.artwork.start()
     }
     // Streaming hosts are polled while the window is shown.
     container.scope.launch { windowVisible.collect { if (it) container.hosts.startPolling() else container.hosts.stopPolling() } }

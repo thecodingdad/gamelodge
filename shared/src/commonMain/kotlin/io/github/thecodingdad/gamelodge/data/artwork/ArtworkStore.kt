@@ -79,6 +79,8 @@ object ArtworkFiles {
     /** An animated image: the stored file, the network only when allowed right now, else nothing. */
     fun animatedModel(url: String?): Any? {
         url ?: return null
+        // Right after boot animations wait for the start pause (read here, so they start with it).
+        if (!io.github.thecodingdad.gamelodge.util.StartupSequence.settled.value) return null
         if (url.startsWith("/")) return File(url)
         if (!url.startsWith("http")) return url
         version.intValue
@@ -126,11 +128,13 @@ class ArtworkStore(
         }.distinctUntilChanged()
         val prefs = settings.settings.map { it.animatedArtwork to it.animatedOnMobileData }.distinctUntilChanged()
         scope.launch(Dispatchers.IO) {
+            var first = true
             combine(wanted, prefs, network.metered(), ArtworkFiles.generation) { w, (animated, mobile), metered, _ -> Triple(w, animated, metered && !mobile) }
                 .debounce(3_000)
                 .collectLatest { (w, animated, holdBack) ->
                     ArtworkFiles.animatedOnline = animated && !holdBack
-                    runCatching { sync(w, animated, holdBack) }.onFailure { Log.w("Artwork download failed", it) }
+                    val download = suspend { runCatching { sync(w, animated, holdBack) }.onFailure { Log.w("Artwork download failed", it) } }
+                    if (first) { first = false; io.github.thecodingdad.gamelodge.util.StartupSequence.turn { download() } } else download()
                 }
         }
     }

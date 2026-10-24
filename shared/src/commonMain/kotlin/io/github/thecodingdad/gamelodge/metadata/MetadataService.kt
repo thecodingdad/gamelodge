@@ -21,6 +21,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectIndexed
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -233,16 +234,20 @@ class MetadataService(
             dao.observeAll()
                 .map { list -> list.count { it.item.kind == ItemKind.GAME && it.item.metadataState == MetadataState.NONE } }
                 .debounce(2_000)
-                .collect { pending -> if (pending > 0) refreshPending() }
+                .collectIndexed { i, pending ->
+                    if (pending > 0) { if (i == 0) io.github.thecodingdad.gamelodge.util.StartupSequence.turn { refreshPending() } else refreshPending() }
+                }
         }
         scope.launch(Dispatchers.IO) {
             delay(10_000)
-            runCatching { reevaluatePlatforms() }.onFailure { Log.w("Platform re-evaluation failed", it) }
-            runCatching { rematchUnofficial() }.onFailure { Log.w("Re-matching mods failed", it) }
-            runCatching { backfillPlatforms() }.onFailure { Log.w("Platform backfill failed", it) }
-            runCatching { backfillDetails() }.onFailure { Log.w("Metadata details backfill failed", it) }
-            runCatching { refreshTimesToBeat() }.onFailure { Log.w("Time to beat lookup failed", it) }
-            runCatching { fillArtworkGaps() }.onFailure { Log.w("Artwork gap fill failed", it) }
+            io.github.thecodingdad.gamelodge.util.StartupSequence.turn {
+                runCatching { reevaluatePlatforms() }.onFailure { Log.w("Platform re-evaluation failed", it) }
+                runCatching { rematchUnofficial() }.onFailure { Log.w("Re-matching mods failed", it) }
+                runCatching { backfillPlatforms() }.onFailure { Log.w("Platform backfill failed", it) }
+                runCatching { backfillDetails() }.onFailure { Log.w("Metadata details backfill failed", it) }
+                runCatching { refreshTimesToBeat() }.onFailure { Log.w("Time to beat lookup failed", it) }
+                runCatching { fillArtworkGaps() }.onFailure { Log.w("Artwork gap fill failed", it) }
+            }
             runCatching { backfillAnimated() }.onFailure { Log.w("Animated artwork backfill failed", it) }
             runCatching { backfillTiles() }.onFailure { Log.w("Tile backfill failed", it) }
             runCatching { dropAppMetadata() }.onFailure { Log.w("App metadata cleanup failed", it) }

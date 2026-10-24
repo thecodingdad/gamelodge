@@ -42,9 +42,10 @@ class ServerRepository(
 
     fun start() {
         scope.launch(Dispatchers.IO) {
+            io.github.thecodingdad.gamelodge.util.StartupSequence.turn { refreshAll() }
             while (true) {
-                refreshAll()
                 delay(10 * 60_000L)
+                refreshAll()
             }
         }
     }

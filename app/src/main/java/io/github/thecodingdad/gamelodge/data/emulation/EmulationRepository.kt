@@ -46,7 +46,7 @@ class EmulationRepository(
     val unreadable: StateFlow<List<RomFolder>> = _unreadable.asStateFlow()
 
     fun start() {
-        scope.launch { rescan() }
+        scope.launch { io.github.thecodingdad.gamelodge.util.StartupSequence.turn { rescan() } }
         // Folders added, removed or reassigned: scan again.
         scope.launch {
             settings.settings.map { EmulationConfig.decode(it.emulation).folders }.distinctUntilChanged().drop(1).collect { rescan() }
