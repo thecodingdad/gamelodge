@@ -39,6 +39,11 @@ android {
         }
     }
 
+    // The 3D renderer's depth model stays out with it (Android's default patterns plus *.tflite).
+    androidResources {
+        ignoreAssetsPattern = "!.svn:!.git:!.ds_store:!*.scc:.*:<dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~:!*.tflite"
+    }
+
     buildFeatures {
         buildConfig = true
         resValues = true
@@ -47,7 +52,13 @@ android {
     sourceSets {
         getByName("main") {
             manifest.srcFile(File(artemisMain, "AndroidManifest.xml"))
-            java.setSrcDirs(listOf(File(artemisMain, "java")))
+            // Artemis' AI 3D renderer is replaced by a stand-in (src/main/java), without its
+            // OpenCV/LiteRT libraries and depth model.
+            java.setSrcDirs(listOf(File(artemisMain, "java"), file("src/main/java")))
+            val replaced = setOf("com/limelight/utils/Stereo3DRenderer.java", "com/limelight/utils/ReflectivePaddingInt8Minimal.java")
+            (java as com.android.build.gradle.api.AndroidSourceDirectorySet).filter.exclude { element ->
+                element.relativePath.pathString in replaced && element.file.startsWith(artemisMain)
+            }
             res.setSrcDirs(listOf(File(artemisMain, "res")))
             assets.setSrcDirs(listOf(File(artemisMain, "assets")))
         }
@@ -91,7 +102,4 @@ dependencies {
     implementation("com.google.android.material:material:1.13.0")
     implementation("com.github.ByteHamster:SearchPreference:v2.5.1")
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
-    implementation("com.google.ai.edge.litert:litert:1.4.0")
-    implementation("com.google.ai.edge.litert:litert-gpu:1.4.0")
-    implementation("org.opencv:opencv:4.12.0")
 }

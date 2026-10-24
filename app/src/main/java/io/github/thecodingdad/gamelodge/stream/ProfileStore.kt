@@ -50,6 +50,15 @@ class ProfileStore(private val context: Context, val uuid: UUID?) : ProfileValue
             return profile.uuid
         }
 
+        /** Back to 2D wherever Artemis' AI 3D render mode was chosen (GameLodge leaves it out). */
+        fun resetRenderMode(context: Context) {
+            val key = StreamSettingsSchema.RENDER_MODE_KEY
+            if ((ProfileStore(context, null).getString(key, "0") ?: "0") != "0") ProfileStore(context, null).set(key, "0")
+            ProfilesManager.getInstance().profiles
+                .filter { (it.options?.get(key)?.toString() ?: "0") != "0" }
+                .forEach { ProfileStore(context, it.uuid).set(key, "0") }
+        }
+
         fun rename(uuid: UUID, name: String) {
             val manager = ProfilesManager.getInstance()
             manager.profiles.firstOrNull { it.uuid == uuid }?.let {

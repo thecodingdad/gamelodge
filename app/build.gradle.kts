@@ -16,14 +16,15 @@ android {
         versionCode = providers.gradleProperty("launcher.versionCode").get().toInt()
         versionName = providers.gradleProperty("launcher.versionName").get()
 
-        // arm64 for devices, x86_64 for the emulator; drops prebuilt 32-bit libs of OpenCV/LiteRT
-        ndk {
-            abiFilters += listOf("arm64-v8a", "x86_64")
-        }
     }
 
     buildTypes {
+        // arm64 for devices; debug builds also x86_64 for the emulator.
+        debug {
+            ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
+        }
         release {
+            ndk { abiFilters += listOf("arm64-v8a") }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")

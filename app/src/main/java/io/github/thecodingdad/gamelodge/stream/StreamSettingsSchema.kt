@@ -14,7 +14,14 @@ object StreamSettingsSchema {
 
     /** Categories that configure Artemis' own UI, irrelevant inside the launcher. */
     private val skippedCategories = setOf("category_ui_settings")
-    private val skippedKeys = setOf("list_languages", "checkbox_small_icon_mode")
+    private val skippedKeys = setOf(
+        "list_languages", "checkbox_small_icon_mode",
+        // Artemis' AI 3D render mode isn't part of GameLodge (see moonlight-core's Stereo3DRenderer).
+        RENDER_MODE_KEY, "parallax_depth", "convergence_ratio", "balance_shift",
+    )
+
+    /** Artemis' render mode; anything but 2D ("0") would ask for the 3D renderer. */
+    const val RENDER_MODE_KEY = "render_mode_list"
 
     @Volatile private var cached: List<StreamOptionCategory>? = null
 
