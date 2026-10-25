@@ -27,6 +27,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.graphicsLayer
+import io.github.thecodingdad.gamelodge.ui.theme.LocalReduceMotion
 import androidx.compose.foundation.layout.Column
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -105,6 +107,16 @@ fun HoldToConfirmButton(
     val interaction = remember { MutableInteractionSource() }
     val focused by interaction.collectIsFocusedAsState()
     val controllerMode = isControllerMode()
+    val reduceMotion = LocalReduceMotion.current
+    // Like every other button: focus sound/vibration and a slight zoom with the controller.
+    androidx.compose.runtime.LaunchedEffect(focused) {
+        if (focused && controllerMode) feedback?.play(UiSound.FOCUS)
+    }
+    val scale by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = if (focused && controllerMode && !reduceMotion) 1.06f else 1f,
+        animationSpec = androidx.compose.animation.core.spring(dampingRatio = 0.7f, stiffness = 500f),
+        label = "holdFocusScale",
+    )
 
     // Done while still held: the bar stays full and repeated key-downs (held button) don't start
     // it again until the button is released.
@@ -130,6 +142,10 @@ fun HoldToConfirmButton(
 
     Box(
         modifier = modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
             .then(if (row) Modifier.fillMaxWidth().heightIn(min = 68.dp) else Modifier.heightIn(min = 52.dp))
             .then(if (enabled) Modifier else Modifier.alpha(0.45f))
             .clip(shape)

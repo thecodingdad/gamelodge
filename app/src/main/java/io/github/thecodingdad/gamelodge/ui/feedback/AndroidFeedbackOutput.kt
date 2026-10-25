@@ -14,8 +14,10 @@ class AndroidFeedbackOutput(context: Context) : FeedbackOutput {
     private val pool = SoundPool.Builder()
         .setMaxStreams(4)
         .setAudioAttributes(
+            // Game usage plays on the media volume (the volume keys and the quick menu slider),
+            // not on the system/notification one.
             AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
+                .setUsage(AudioAttributes.USAGE_GAME)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                 .build(),
         )

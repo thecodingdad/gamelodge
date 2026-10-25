@@ -20,13 +20,6 @@ class AndroidStreamControls(private val launcher: LaunchCoordinator) : StreamCon
         awaitClose { if (StreamControl.perfListener === listener) StreamControl.perfListener = null }
     }
 
-    override val keyboard: Boolean get() = game != null
-
-    // After the menu has closed, so the keyboard opens on the stream window.
-    override fun showKeyboard() {
-        main.postDelayed({ game?.toggleKeyboard() }, MENU_CLOSE_MS)
-    }
-
     override fun serverCommands(): List<String> = game?.serverCmds.orEmpty()
 
     override fun runServerCommand(index: Int) {
@@ -44,9 +37,5 @@ class AndroidStreamControls(private val launcher: LaunchCoordinator) : StreamCon
         if (launcher.activeStream.value?.hostUuid != host.uuid) return false
         main.post { g.quitWithoutConfirmation() }
         return true
-    }
-
-    private companion object {
-        const val MENU_CLOSE_MS = 350L
     }
 }

@@ -11,10 +11,6 @@ interface StreamControls {
     /** Live performance text while collected; null when the client doesn't share it. */
     fun stats(): Flow<String>? = null
 
-    /** The client can bring up an on-screen keyboard in the stream. */
-    val keyboard: Boolean get() = false
-    fun showKeyboard() {}
-
     /** Commands the host offers (Apollo), sent through the stream. */
     fun serverCommands(): List<String> = emptyList()
     fun runServerCommand(index: Int) {}

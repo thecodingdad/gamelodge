@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.PlayCircle
@@ -288,23 +287,38 @@ private fun StreamControlsSection(controls: io.github.thecodingdad.gamelodge.str
     val commands = remember { controls.serverCommands() }
     io.github.thecodingdad.gamelodge.ui.components.ButtonRow(spacing = 10.dp) {
         LauncherButton(stringResource(Res.string.qm_disconnect), { controls.disconnect(); onLeave() }, icon = Icons.Filled.LinkOff)
-        if (controls.keyboard) LauncherButton(stringResource(Res.string.qm_keyboard), { onLeave(); controls.showKeyboard() }, icon = Icons.Filled.Keyboard)
     }
     // Live while this tab shows (the client computes them only then).
     val statsFlow = remember { controls.stats() }
     if (statsFlow != null) {
         val stats by statsFlow.collectAsState(null)
         Text(stringResource(Res.string.qm_stats), style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceMuted)
-        Text(
-            stats ?: stringResource(Res.string.qm_stats_waiting),
-            style = MaterialTheme.typography.bodySmall.copy(fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace),
-            color = colors.onSurface,
-            modifier = Modifier.fillMaxWidth().clip(androidx.compose.foundation.shape.RoundedCornerShape(10.dp))
-                .background(colors.background.copy(alpha = 0.5f)).padding(10.dp),
-        )
+        val text = stats
+        if (text == null) {
+            Text(stringResource(Res.string.qm_stats_waiting), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceMuted)
+        } else {
+            // "Label: value" lines of the client as label and value; anything else as it is.
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                text.lines().map { it.trim() }.filter { it.isNotEmpty() }.forEach { line ->
+                    val label = line.substringBefore(':', "")
+                    if (label.isNotEmpty()) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Text(label, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceMuted, modifier = Modifier.weight(1f))
+                            Text(
+                                line.substringAfter(':').trim(), style = MaterialTheme.typography.bodyMedium, color = colors.onSurface,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.End, modifier = Modifier.weight(1f),
+                            )
+                        }
+                    } else {
+                        Text(line, style = MaterialTheme.typography.bodyMedium, color = colors.onSurface)
+                    }
+                }
+            }
+        }
     }
     if (commands.isNotEmpty()) {
         Text(stringResource(Res.string.qm_server_commands), style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceMuted)
+        Text(stringResource(Res.string.qm_server_commands_sub), style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceMuted)
         commands.forEachIndexed { i, command ->
             LauncherButton(command, { controls.runServerCommand(i) }, Modifier.fillMaxWidth(), Icons.Filled.Terminal)
         }

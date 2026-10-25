@@ -28,18 +28,6 @@ class DesktopStreamControls(private val hostActions: HostActions, private val ho
         }
     }
 
-    // Windows' own on-screen keyboard (types into the stream window, which has the focus again).
-    override val keyboard: Boolean get() = running != null
-
-    override fun showKeyboard() {
-        val r = running ?: return
-        Thread({
-            Thread.sleep(MENU_CLOSE_MS)
-            io.github.thecodingdad.gamelodge.desktop.games.GameWindow.focus(setOf(r.process.pid()) + r.process.descendants().map { it.pid() }.toList())
-            runCatching { ProcessBuilder("cmd", "/c", "start", "", "osk.exe").start() }
-        }, "keyboard").start()
-    }
-
     override fun serverCommands(): List<String> = running?.let { hosts.hosts.value[it.hostUuid]?.serverCommands }.orEmpty()
 
     override fun runServerCommand(index: Int) {
@@ -72,6 +60,5 @@ class DesktopStreamControls(private val hostActions: HostActions, private val ho
 
     private companion object {
         const val GRACE_SECONDS = 10L
-        const val MENU_CLOSE_MS = 400L
     }
 }

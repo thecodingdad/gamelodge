@@ -471,10 +471,10 @@
     <string name="qm_running_on_host">Running on %1$s</string>
     <string name="qm_running_here">Running on this PC</string>
     <string name="qm_disconnect">Disconnect</string>
-    <string name="qm_keyboard">Keyboard</string>
     <string name="qm_stats">Performance</string>
     <string name="qm_stats_waiting">Waiting for the first values…</string>
     <string name="qm_server_commands">Server commands</string>
+    <string name="qm_server_commands_sub">Commands set up on the host in Apollo (Configuration → Server commands); they run on the host.</string>
     <string name="hosts_none_paired">No paired hosts yet. Pair one under Settings → Hosts.</string>
 
     <!-- Backup -->
