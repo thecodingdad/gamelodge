@@ -189,8 +189,6 @@ data class LauncherSettings(
     val comboQuickMenu: Set<Int> = setOf(KEYCODE_GUIDE, COMBO_HOLD),
     /** Mouse emulation on / off (in the stream: the client's; elsewhere GameLodge's own). */
     val comboMouse: Set<Int> = setOf(KEYCODE_START, COMBO_HOLD),
-    /** Leaves the running stream (the game keeps running on the host). */
-    val comboDisconnect: Set<Int> = setOf(KEYCODE_START, KEYCODE_SELECT, KEYCODE_L1, KEYCODE_R1),
     /** Performance overlay in the stream on / off. */
     val comboStats: Set<Int> = setOf(KEYCODE_SELECT, KEYCODE_L1, KEYCODE_R1, KEYCODE_X),
     /** Mouse emulation: pointer speed in percent of the default. */
@@ -304,7 +302,6 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val comboMouse = stringPreferencesKey("combo_mouse")
         val mouseSpeed = intPreferencesKey("mouse_speed")
         val mouseAcceleration = stringPreferencesKey("mouse_acceleration")
-        val comboDisconnect = stringPreferencesKey("combo_disconnect")
         val comboStats = stringPreferencesKey("combo_stats")
         // Set with the first save after the Guide defaults came: an empty combination stored
         // before only meant "never set" (every save writes all fields).
@@ -417,7 +414,6 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             // Empty = off; never saved = the default, unless the quick menu already took it.
             comboMouse = this[K.comboMouse]?.let(::comboKeys)
                 ?: d.comboMouse.takeIf { this[K.comboQuickMenu]?.let(::comboKeys) != it }.orEmpty(),
-            comboDisconnect = this[K.comboDisconnect]?.let(::comboKeys) ?: d.comboDisconnect,
             mouseSpeed = this[K.mouseSpeed] ?: d.mouseSpeed,
             mouseAcceleration = enumOr(this[K.mouseAcceleration], d.mouseAcceleration),
             comboStats = this[K.comboStats]?.let(::comboKeys) ?: d.comboStats,
@@ -514,7 +510,6 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         this[K.comboQuickMenu] = s.comboQuickMenu.joinToString(",")
         this[K.combosSet] = true
         this[K.comboMouse] = s.comboMouse.joinToString(",")
-        this[K.comboDisconnect] = s.comboDisconnect.joinToString(",")
         this[K.comboStats] = s.comboStats.joinToString(",")
         this[K.mouseSpeed] = s.mouseSpeed
         this[K.mouseAcceleration] = s.mouseAcceleration.name
@@ -560,7 +555,6 @@ fun LauncherSettings.combo(action: io.github.thecodingdad.gamelodge.input.ComboA
     io.github.thecodingdad.gamelodge.input.ComboAction.HOME -> comboHome
     io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU -> comboQuickMenu
     io.github.thecodingdad.gamelodge.input.ComboAction.MOUSE -> comboMouse
-    io.github.thecodingdad.gamelodge.input.ComboAction.DISCONNECT -> comboDisconnect
     io.github.thecodingdad.gamelodge.input.ComboAction.STATS -> comboStats
 }
 
@@ -569,6 +563,5 @@ fun LauncherSettings.withCombo(action: io.github.thecodingdad.gamelodge.input.Co
     io.github.thecodingdad.gamelodge.input.ComboAction.HOME -> copy(comboHome = keys)
     io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU -> copy(comboQuickMenu = keys)
     io.github.thecodingdad.gamelodge.input.ComboAction.MOUSE -> copy(comboMouse = keys)
-    io.github.thecodingdad.gamelodge.input.ComboAction.DISCONNECT -> copy(comboDisconnect = keys)
     io.github.thecodingdad.gamelodge.input.ComboAction.STATS -> copy(comboStats = keys)
 }

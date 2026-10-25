@@ -22,7 +22,6 @@ data class ControllerSettings(
     val comboHome: List<Int>? = null,
     val comboQuickMenu: List<Int>? = null,
     val comboMouse: List<Int>? = null,
-    val comboDisconnect: List<Int>? = null,
     val comboStats: List<Int>? = null,
     /** The combinations' buttons reach the app as well: null = global. */
     val comboForward: Boolean? = null,
@@ -34,7 +33,6 @@ data class ControllerSettings(
         io.github.thecodingdad.gamelodge.input.ComboAction.HOME -> comboHome
         io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU -> comboQuickMenu
         io.github.thecodingdad.gamelodge.input.ComboAction.MOUSE -> comboMouse
-        io.github.thecodingdad.gamelodge.input.ComboAction.DISCONNECT -> comboDisconnect
         io.github.thecodingdad.gamelodge.input.ComboAction.STATS -> comboStats
     }
 
@@ -42,7 +40,6 @@ data class ControllerSettings(
         io.github.thecodingdad.gamelodge.input.ComboAction.HOME -> copy(comboHome = keys)
         io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU -> copy(comboQuickMenu = keys)
         io.github.thecodingdad.gamelodge.input.ComboAction.MOUSE -> copy(comboMouse = keys)
-        io.github.thecodingdad.gamelodge.input.ComboAction.DISCONNECT -> copy(comboDisconnect = keys)
         io.github.thecodingdad.gamelodge.input.ComboAction.STATS -> copy(comboStats = keys)
     }
 }

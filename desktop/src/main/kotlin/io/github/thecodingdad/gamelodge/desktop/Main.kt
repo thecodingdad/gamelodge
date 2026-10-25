@@ -205,13 +205,15 @@ fun main(args: Array<String>) {
             when (action) {
                 io.github.thecodingdad.gamelodge.input.ComboAction.HOME,
                 io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU -> java.awt.EventQueue.invokeLater {
+                    // Home leaves a running stream like on Android (the game keeps running on the
+                    // host; resuming reconnects quickly) instead of leaving it behind with its sound.
+                    if (action == io.github.thecodingdad.gamelodge.input.ComboAction.HOME) streams.disconnect()
                     val inFront = windowVisible.value && mainWindow?.isActive == true
                     windowVisible.value = true
                     platformUi.bringToFront()
                     if (action == io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU) vm.quickMenuRequests.tryEmit(true)
                     else if (inFront) vm.homePressed.tryEmit(Unit)
                 }
-                io.github.thecodingdad.gamelodge.input.ComboAction.DISCONNECT -> streams.disconnect()
                 io.github.thecodingdad.gamelodge.input.ComboAction.STATS -> streams.toggleOverlay()
                 // One state for both: GameLodge's pointer and the stream's mouse follow it.
                 io.github.thecodingdad.gamelodge.input.ComboAction.MOUSE -> {

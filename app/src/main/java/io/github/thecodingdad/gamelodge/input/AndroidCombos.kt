@@ -70,7 +70,6 @@ object AndroidCombos {
                     QuickMenuActivity.toggle(context)
                 }
             }
-            ComboAction.DISCONNECT -> streams.disconnect()
             ComboAction.STATS -> streams.toggleOverlay()
             ComboAction.MOUSE -> main.post { PointerMode.toggle(context) }
         }

@@ -37,7 +37,6 @@ fun comboTitle(action: ComboAction): StringResource = when (action) {
     ComboAction.HOME -> Res.string.combo_home
     ComboAction.QUICK_MENU -> Res.string.combo_quick_menu
     ComboAction.MOUSE -> Res.string.combo_mouse
-    ComboAction.DISCONNECT -> Res.string.combo_disconnect
     ComboAction.STATS -> Res.string.combo_stats
 }
 
@@ -45,7 +44,6 @@ fun comboSubtitle(action: ComboAction): StringResource = when (action) {
     ComboAction.HOME -> Res.string.combo_home_sub
     ComboAction.QUICK_MENU -> Res.string.combo_quick_menu_sub
     ComboAction.MOUSE -> Res.string.combo_mouse_sub
-    ComboAction.DISCONNECT -> Res.string.combo_disconnect_sub
     ComboAction.STATS -> Res.string.combo_stats_sub
 }
 

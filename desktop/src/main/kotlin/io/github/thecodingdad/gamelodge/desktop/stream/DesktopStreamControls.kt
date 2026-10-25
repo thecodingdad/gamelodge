@@ -5,9 +5,6 @@ import io.github.thecodingdad.gamelodge.data.remote.HostRepository
 import io.github.thecodingdad.gamelodge.data.remote.HostState
 import io.github.thecodingdad.gamelodge.stream.StreamControls
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 
@@ -18,15 +15,6 @@ import java.util.concurrent.TimeUnit
 class DesktopStreamControls(private val hostActions: HostActions, private val hosts: HostRepository) : StreamControls {
     private val client get() = MoonlightQt.locate()
     private val running get() = client.running?.takeIf { it.process.isAlive }
-
-    override fun stats(): Flow<String> = flow {
-        running?.send("stats on")
-        try {
-            emitAll(client.stats)
-        } finally {
-            running?.send("stats off")
-        }
-    }
 
     override fun serverCommands(): List<String> = running?.let { hosts.hosts.value[it.hostUuid]?.serverCommands }.orEmpty()
 

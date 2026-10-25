@@ -471,8 +471,7 @@
     <string name="qm_running_on_host">Läuft auf %1$s</string>
     <string name="qm_running_here">Läuft auf diesem PC</string>
     <string name="qm_disconnect">Trennen</string>
-    <string name="qm_stats">Leistung</string>
-    <string name="qm_stats_waiting">Warte auf die ersten Werte …</string>
+    <string name="qm_overlay">Leistungsanzeige</string>
     <string name="qm_server_commands">Server-Befehle</string>
     <string name="qm_server_commands_sub">Auf dem Host in Apollo eingerichtete Befehle (Konfiguration → Server-Befehle); sie laufen auf dem Host.</string>
     <string name="hosts_none_paired">Noch keine gekoppelten Hosts. Koppeln unter Einstellungen → Hosts.</string>
@@ -772,8 +771,6 @@
     <string name="combo_quick_menu">Schnellmenü öffnen</string>
     <string name="combo_mouse">Maus-Emulation</string>
     <string name="combo_mouse_sub">Der Controller steuert einen Mauszeiger, im Stream die Maus des Hosts</string>
-    <string name="combo_disconnect">Stream verlassen</string>
-    <string name="combo_disconnect_sub">Beendet den Stream, das Spiel läuft auf dem Host weiter</string>
     <string name="combo_stats">Leistungsanzeige</string>
     <string name="combo_stats_sub">Blendet die Leistungswerte des Streams ein oder aus</string>
     <string name="mouse_on">Maus-Emulation an</string>

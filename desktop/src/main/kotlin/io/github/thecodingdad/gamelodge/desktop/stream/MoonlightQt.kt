@@ -28,7 +28,7 @@ class MoonlightQt(val dir: File) {
      */
     /** The running stream: host uuid, app id and Moonlight-Qt's process. */
     data class Running(val hostUuid: String, val appId: Int, val process: Process) {
-        /** A line for Moonlight-Qt's launcher control channel (quit, disconnect, stats on|off, servercmd N). */
+        /** A line for Moonlight-Qt's launcher control channel (quit, disconnect, servercmd N, mouse on|off, overlay …). */
         @Synchronized
         fun send(command: String): Boolean = runCatching {
             process.outputStream.write("$command\n".toByteArray())
@@ -36,8 +36,6 @@ class MoonlightQt(val dir: File) {
         }.isSuccess
     }
 
-    /** Performance text of the running stream while "stats on" was sent (about once a second). */
-    val stats = kotlinx.coroutines.flow.MutableSharedFlow<String>(extraBufferCapacity = 4, onBufferOverflow = kotlinx.coroutines.channels.BufferOverflow.DROP_OLDEST)
 
     @Volatile var running: Running? = null
         private set
@@ -63,10 +61,8 @@ class MoonlightQt(val dir: File) {
         var appRunning = false
         File(dir, "stream.log").printWriter().use { log ->
             process.inputStream.bufferedReader().forEachLine { line ->
-                if ("LAUNCHER-STATS: " !in line) {
-                    log.println(line)
-                    log.flush()
-                }
+                log.println(line)
+                log.flush()
                 val marker = line.substringAfter("LAUNCHER-", "")
                 when {
                     marker == "STREAMING" && !reported -> {
@@ -75,7 +71,6 @@ class MoonlightQt(val dir: File) {
                     }
                     marker.startsWith("ERROR: ") -> error = marker.removePrefix("ERROR: ").trim()
                     marker.startsWith("APP-RUNNING: ") -> appRunning = true
-                    marker.startsWith("STATS: ") -> stats.tryEmit(marker.removePrefix("STATS: ").replace("\\n", "\n").trim())
                 }
             }
         }

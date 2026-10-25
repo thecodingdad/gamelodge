@@ -10,6 +10,8 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Icon
 import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.Terminal
+import androidx.compose.material.icons.filled.Speed
+import io.github.thecodingdad.gamelodge.ui.components.popupHeightIn
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.foundation.layout.height
@@ -313,44 +315,27 @@ private fun RunningCard(session: RunningSession, initialFocus: Boolean, onResume
 /** Controls of the stream this launcher runs, as far as its client offers them. */
 @Composable
 private fun StreamControlsSection(controls: io.github.thecodingdad.gamelodge.stream.StreamControls, onLeave: () -> Unit) {
-    val colors = LauncherTheme.colors
     val commands = remember { controls.serverCommands() }
+    var commandList by remember { mutableStateOf(false) }
     io.github.thecodingdad.gamelodge.ui.components.ButtonRow(spacing = 10.dp) {
         LauncherButton(stringResource(Res.string.qm_disconnect), { controls.disconnect(); onLeave() }, icon = Icons.Filled.LinkOff)
-    }
-    // Live while this tab shows (the client computes them only then).
-    val statsFlow = remember { controls.stats() }
-    if (statsFlow != null) {
-        val stats by statsFlow.collectAsState(null)
-        Text(stringResource(Res.string.qm_stats), style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceMuted)
-        val text = stats
-        if (text == null) {
-            Text(stringResource(Res.string.qm_stats_waiting), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceMuted)
-        } else {
-            // "Label: value" lines of the client as label and value; anything else as it is.
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                text.lines().map { it.trim() }.filter { it.isNotEmpty() }.forEach { line ->
-                    val label = line.substringBefore(':', "")
-                    if (label.isNotEmpty()) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            Text(label, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceMuted, modifier = Modifier.weight(1f))
-                            Text(
-                                line.substringAfter(':').trim(), style = MaterialTheme.typography.bodyMedium, color = colors.onSurface,
-                                textAlign = androidx.compose.ui.text.style.TextAlign.End, modifier = Modifier.weight(1f),
-                            )
-                        }
-                    } else {
-                        Text(line, style = MaterialTheme.typography.bodyMedium, color = colors.onSurface)
-                    }
-                }
-            }
+        // The stream's own performance overlay (shown in the stream, not here).
+        LauncherButton(stringResource(Res.string.qm_overlay), { controls.toggleOverlay() }, icon = Icons.Filled.Speed)
+        if (commands.isNotEmpty()) {
+            LauncherButton(stringResource(Res.string.qm_server_commands), { commandList = true }, icon = Icons.Filled.Terminal)
         }
     }
-    if (commands.isNotEmpty()) {
-        Text(stringResource(Res.string.qm_server_commands), style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceMuted)
-        Text(stringResource(Res.string.qm_server_commands_sub), style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceMuted)
-        commands.forEachIndexed { i, command ->
-            LauncherButton(command, { controls.runServerCommand(i) }, Modifier.fillMaxWidth(), Icons.Filled.Terminal)
+    io.github.thecodingdad.gamelodge.ui.components.Modal(
+        visible = commandList, onDismiss = { commandList = false }, title = stringResource(Res.string.qm_server_commands),
+    ) {
+        Column(
+            Modifier.popupHeightIn(520.dp).controllerScroll(),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(stringResource(Res.string.qm_server_commands_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+            commands.forEachIndexed { i, command ->
+                LauncherButton(command, { controls.runServerCommand(i); commandList = false }, Modifier.fillMaxWidth(), Icons.Filled.Terminal)
+            }
         }
     }
 }

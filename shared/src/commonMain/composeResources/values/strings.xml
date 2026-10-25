@@ -473,8 +473,7 @@
     <string name="qm_running_on_host">Running on %1$s</string>
     <string name="qm_running_here">Running on this PC</string>
     <string name="qm_disconnect">Disconnect</string>
-    <string name="qm_stats">Performance</string>
-    <string name="qm_stats_waiting">Waiting for the first values…</string>
+    <string name="qm_overlay">Performance overlay</string>
     <string name="qm_server_commands">Server commands</string>
     <string name="qm_server_commands_sub">Commands set up on the host in Apollo (Configuration → Server commands); they run on the host.</string>
     <string name="hosts_none_paired">No paired hosts yet. Pair one under Settings → Hosts.</string>
@@ -774,8 +773,6 @@
     <string name="combo_quick_menu">Open quick menu</string>
     <string name="combo_mouse">Mouse emulation</string>
     <string name="combo_mouse_sub">The controller moves a mouse pointer; in the stream the host’s mouse</string>
-    <string name="combo_disconnect">Leave the stream</string>
-    <string name="combo_disconnect_sub">Ends the stream; the game keeps running on the host</string>
     <string name="combo_stats">Performance overlay</string>
     <string name="combo_stats_sub">Shows or hides the stream’s performance figures</string>
     <string name="mouse_on">Mouse emulation on</string>
