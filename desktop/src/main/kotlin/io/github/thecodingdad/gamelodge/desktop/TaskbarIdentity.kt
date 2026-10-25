@@ -21,12 +21,15 @@ import java.io.File
 object TaskbarIdentity {
     const val APP_ID = "thecodingdad.GameLodge"
 
-    /** Before the first window: the process belongs to the app's id. */
-    fun applyToProcess() {
+    /** The runner's own id: its splash is a separate taskbar button, neither java nor the launcher. */
+    const val RUNNER_ID = "thecodingdad.GameLodge.Runner"
+
+    /** Before the first window: the process belongs to the app's id ([id]: the runner's). */
+    fun applyToProcess(id: String = APP_ID) {
         if (!isWindows) return
         runCatching {
             val shell = NativeLibrary.getInstance("shell32")
-            shell.getFunction("SetCurrentProcessExplicitAppUserModelID").invokeInt(arrayOf(WString(APP_ID)))
+            shell.getFunction("SetCurrentProcessExplicitAppUserModelID").invokeInt(arrayOf(WString(id)))
         }.onFailure { Log.w("App id not set", it) }
     }
 

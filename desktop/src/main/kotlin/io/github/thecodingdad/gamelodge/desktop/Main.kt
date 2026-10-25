@@ -53,7 +53,10 @@ import java.io.File
 
 fun main(args: Array<String>) {
     // The streaming host starts synced games through the launcher: no window then.
-    if (args.firstOrNull() == Runner.ARG) kotlin.system.exitProcess(Runner.run(args.getOrNull(1)))
+    if (args.firstOrNull() == Runner.ARG) {
+        TaskbarIdentity.applyToProcess(TaskbarIdentity.RUNNER_ID)
+        kotlin.system.exitProcess(Runner.run(args.getOrNull(1)))
+    }
     // Started again while running (e.g. from the tray): the running one shows its window.
     val windowVisible = kotlinx.coroutines.flow.MutableStateFlow(true)
     var bringToFront: () -> Unit = {}

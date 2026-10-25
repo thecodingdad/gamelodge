@@ -130,6 +130,7 @@ class GameSplash private constructor(private val frame: JFrame, private val pane
                 val panel = SplashPanel(art?.title ?: title, hero, logo).also { it.status = status }
                 val frame = JFrame(art?.title ?: title).apply {
                     isUndecorated = true
+                    iconImages = runnerIcons()
                     contentPane = panel
                     bounds = GraphicsEnvironment.getLocalGraphicsEnvironment().defaultScreenDevice.defaultConfiguration.bounds
                     isVisible = true
@@ -139,6 +140,41 @@ class GameSplash private constructor(private val frame: JFrame, private val pane
             }
             splash
         }.onFailure { Log.w("Splash failed", it) }.getOrNull()
+
+        /**
+         * The app icon with a play badge in the corner: the splash's taskbar button looks like
+         * GameLodge but can be told from the launcher's.
+         */
+        internal fun runnerIcons(): List<BufferedImage> {
+            val base = runCatching { GameSplash::class.java.getResourceAsStream("/icon.png")?.use { javax.imageio.ImageIO.read(it) } }.getOrNull()
+                ?: return emptyList()
+            return listOf(16, 24, 32, 48, 64, 128, 256).map { size ->
+                BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB).also { image ->
+                    val g = image.createGraphics()
+                    g.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON)
+                    g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_BICUBIC)
+                    g.drawImage(base, 0, 0, size, size, null)
+                    // Badge: a light ring around a dark disc with a play triangle, bottom right.
+                    val d = size * 0.56f
+                    val x = size - d
+                    val y = size - d
+                    g.color = java.awt.Color(0xF5, 0xF5, 0xF5)
+                    g.fill(java.awt.geom.Ellipse2D.Float(x, y, d, d))
+                    val ring = d * 0.1f
+                    g.color = java.awt.Color(0x16, 0x8A, 0x4A)
+                    g.fill(java.awt.geom.Ellipse2D.Float(x + ring, y + ring, d - 2 * ring, d - 2 * ring))
+                    g.color = java.awt.Color.WHITE
+                    val cx = x + d / 2
+                    val cy = y + d / 2
+                    val t = d * 0.22f
+                    g.fill(java.awt.Polygon(
+                        intArrayOf((cx - t * 0.7f).toInt(), (cx - t * 0.7f).toInt(), (cx + t * 1.1f).toInt()),
+                        intArrayOf((cy - t).toInt(), (cy + t).toInt(), cy.toInt()), 3,
+                    ))
+                    g.dispose()
+                }
+            }
+        }
 
         /** Any stored image (also WebP) via Skia, the first frame of animated ones. */
         internal fun decode(path: String?): BufferedImage? {

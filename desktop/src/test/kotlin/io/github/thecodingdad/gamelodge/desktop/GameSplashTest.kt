@@ -46,4 +46,15 @@ class GameSplashTest {
         val panel = GameSplash.SplashPanel("Game", hero, logo).also { it.status = "Starting…" }
         assertTrue("the artwork fills the screen", litPixels(render(panel, "splash-art")) > 10_000)
     }
+
+    @Test
+    fun runnerIconHasBadge() {
+        val icons = GameSplash.runnerIcons()
+        assertTrue("icons in several sizes", icons.size >= 5)
+        val big = icons.last()
+        File("build/render").apply { mkdirs() }.resolve("runner-icon.png").let { ImageIO.write(big, "png", it) }
+        // The badge's white play triangle sits in the bottom right quarter.
+        val c = big.width * 0.72
+        assertTrue("badge drawn", (big.getRGB(c.toInt(), c.toInt()) and 0xffffff) == 0xffffff)
+    }
 }
