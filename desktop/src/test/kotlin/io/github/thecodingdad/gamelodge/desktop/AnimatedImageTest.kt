@@ -48,7 +48,8 @@ class AnimatedImageTest {
         val image = decoder.decode()!!.image
         assertEquals(1, image.width)
         val first = pixel(image)
-        assertEquals(0xFFFF0000.toInt(), first)
+        // Zero channels come lifted by one level (Intel Direct3D workaround in AnimatedImage).
+        assertEquals(0xFFFF0101.toInt(), first)
         // The next frame is decoded in the background after the first one's 100 ms.
         var second = first
         val until = System.currentTimeMillis() + 2_000
@@ -56,7 +57,7 @@ class AnimatedImageTest {
             Thread.sleep(30)
             second = pixel(image)
         }
-        assertEquals(0xFF0000FF.toInt(), second)
+        assertEquals(0xFF0101FF.toInt(), second)
         assertNotEquals(first, second)
     }
 

@@ -18,10 +18,12 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import okio.ByteString.Companion.encodeUtf8
 import org.jetbrains.skia.Bitmap
+import org.jetbrains.skia.BlendMode
 import org.jetbrains.skia.Canvas
 import org.jetbrains.skia.Codec
 import org.jetbrains.skia.Data
 import org.jetbrains.skia.Image
+import org.jetbrains.skia.Paint
 import org.jetbrains.skia.Rect
 import org.jetbrains.skia.SamplingMode
 import org.jetbrains.skia.Surface
@@ -146,16 +148,21 @@ private class AnimatedImage(private val codec: Codec, override val width: Int, o
 
     private fun scaled(full: Bitmap): Image {
         val source = Image.makeFromBitmap(full)
-        if (width == codec.width && height == codec.height) return source
         val surface = Surface.makeRasterN32Premul(width, height)
         surface.canvas.drawImageRect(
             source, Rect.makeWH(codec.width.toFloat(), codec.height.toFloat()), Rect.makeWH(width.toFloat(), height.toFloat()),
             SamplingMode.LINEAR, null, true,
         )
+        // Intel Iris Xe under Direct3D 12 leaves uniform blocks unwritten when a new texture is
+        // uploaded (every frame here): pure black areas flickered with stale GPU memory. Lifting
+        // every zero channel by one level (invisible) leaves no such block.
+        surface.canvas.drawPaint(blackLift)
         return surface.makeImageSnapshot().also { source.close(); surface.close() }
     }
 
     private companion object {
+        val blackLift = Paint().apply { color = 0xFF010101.toInt(); blendMode = BlendMode.LIGHTEN }
+
         /** Browsers treat shorter GIF frame times as 100 ms; 20 ms keeps fast animations smooth. */
         const val MIN_FRAME_MS = 20
         const val IDLE_NS = 1_000_000_000L
