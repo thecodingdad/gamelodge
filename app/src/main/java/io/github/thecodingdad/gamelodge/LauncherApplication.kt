@@ -1,5 +1,7 @@
 package io.github.thecodingdad.gamelodge
 
+import io.github.thecodingdad.gamelodge.data.settings.combo
+import io.github.thecodingdad.gamelodge.input.handle
 import android.content.Context
 import coil3.ImageLoader
 import coil3.PlatformContext
@@ -53,26 +55,22 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
                 }.filterValues { it.isNotEmpty() }
             }
         }
-        // A short press held back by a hold combination goes to GameLodge's window in front (in
-        // another app it can't: no app may inject keys there).
-        io.github.thecodingdad.gamelodge.input.ButtonCombos.replay = { event ->
-            CurrentActivity.resumed()?.dispatchKeyEvent(event) != null
-        }
+        io.github.thecodingdad.gamelodge.input.AndroidCombos.installReplay()
         // In the stream without the accessibility service (which otherwise sees the buttons first):
         // combinations work there too and their buttons don't reach the host.
         com.limelight.binding.input.KeyInterceptor.interceptor = com.limelight.binding.input.KeyInterceptor.Interceptor { activity, event ->
             io.github.thecodingdad.gamelodge.input.ComboAccessibilityService.instance == null &&
-                io.github.thecodingdad.gamelodge.input.ButtonCombos.handle(event) {
-                    io.github.thecodingdad.gamelodge.input.ComboAccessibilityService.run(activity, it)
+                io.github.thecodingdad.gamelodge.input.ButtonCombos.handle(event) { action, controller ->
+                    io.github.thecodingdad.gamelodge.input.AndroidCombos.run(activity, action, controller)
                 }
         }
         container.scope.launch {
             container.settings.settings.collect {
                 io.github.thecodingdad.gamelodge.input.ButtonCombos.forward = it.comboForward
-                io.github.thecodingdad.gamelodge.input.ButtonCombos.combos = mapOf(
-                    io.github.thecodingdad.gamelodge.input.ComboAction.HOME to it.comboHome,
-                    io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU to it.comboQuickMenu,
-                )
+                io.github.thecodingdad.gamelodge.input.ButtonCombos.combos =
+                    io.github.thecodingdad.gamelodge.input.ComboAction.entries.associateWith { a -> it.combo(a) }
+                // Mouse, leaving the stream and its overlay are GameLodge's combinations now.
+                com.limelight.StreamControl.builtInCombos = false
             }
         }
         container.scope.launch(kotlinx.coroutines.Dispatchers.Main) {

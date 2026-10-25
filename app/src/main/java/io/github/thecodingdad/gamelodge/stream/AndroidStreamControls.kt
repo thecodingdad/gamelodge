@@ -32,6 +32,12 @@ class AndroidStreamControls(private val launcher: LaunchCoordinator) : StreamCon
         main.post { g.disconnect() }
     }
 
+    override fun inFront(): Boolean = game.let { it != null && io.github.thecodingdad.gamelodge.CurrentActivity.resumed() === it }
+
+    override fun toggleMouse(controller: Int): Boolean = inFront() && StreamControl.toggleMouseEmulation(controller)
+
+    override fun toggleOverlay(): Boolean = game != null && StreamControl.togglePerformanceOverlay()
+
     override suspend fun quit(host: HostState): Boolean {
         val g = game ?: return false
         if (launcher.activeStream.value?.hostUuid != host.uuid) return false

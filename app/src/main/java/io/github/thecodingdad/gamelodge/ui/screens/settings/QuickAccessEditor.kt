@@ -130,24 +130,11 @@ fun QuickMenuSettingsTab() {
     fun update(transform: (LauncherSettings) -> LauncherSettings) { scope.launch { c.settings.update(transform) } }
     val context = androidx.compose.ui.platform.LocalContext.current
 
-    var editing by remember { mutableStateOf(false) }
-    NavRow(
-        stringResource(Res.string.combo_quick_menu), { editing = true },
-        subtitle = stringResource(Res.string.combo_quick_menu_sub),
-        trailing = comboLabel(settings.comboQuickMenu), initialFocus = true,
-    )
+    ComboActionRows(settings, ::update, listOf(io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU), firstFocus = true)
     SwitchRow(
         stringResource(Res.string.combo_forward), settings.comboForward, { on -> update { it.copy(comboForward = on) } },
         subtitle = stringResource(Res.string.combo_forward_sub),
     )
-    ComboDialog(
-        action = if (editing) io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU else null,
-        current = settings.comboQuickMenu,
-        other = settings.comboHome,
-        onSave = { keys -> update { it.copy(comboQuickMenu = keys.orEmpty()) } },
-        onDismiss = { editing = false },
-    )
-
     // Opening the menu by touch while another app is in front.
     SectionHeader(stringResource(Res.string.qm_touch_section))
     var tick by remember { androidx.compose.runtime.mutableIntStateOf(0) }

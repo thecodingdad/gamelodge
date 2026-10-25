@@ -18,6 +18,15 @@ interface StreamControls {
     /** Leaves the stream; the game keeps running on the host. */
     fun disconnect() {}
 
+    /** The stream is the app in front (its window has the controllers). */
+    fun inFront(): Boolean = false
+
+    /** Mouse emulation of [controller] in the stream on / off; false when no stream took it. */
+    fun toggleMouse(controller: Int): Boolean = false
+
+    /** The stream's performance overlay on / off; false without a stream. */
+    fun toggleOverlay(): Boolean = false
+
     /**
      * Ends the stream and the game on [host] the way the client's own "quit" does (no "connection
      * ended" error). False when no stream of this launcher runs there.

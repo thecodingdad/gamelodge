@@ -221,7 +221,8 @@ private fun ControllerOverrideRows(c: ControllerInfo) {
     ComboDialog(
         action = action,
         current = if (isHome) home else menu,
-        other = (if (isHome) menu ?: globalMenu else home ?: globalHome),
+        others = listOf(if (isHome) menu ?: globalMenu else home ?: globalHome) +
+            listOfNotNull(launcherSettings).flatMap { ls -> listOf(ls.comboMouse, ls.comboDisconnect, ls.comboStats) },
         global = if (isHome) globalHome else globalMenu,
         descriptor = c.descriptor,
         onSave = { keys ->

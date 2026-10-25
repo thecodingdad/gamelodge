@@ -185,6 +185,12 @@ data class LauncherSettings(
      */
     val comboHome: Set<Int> = setOf(KEYCODE_GUIDE),
     val comboQuickMenu: Set<Int> = setOf(KEYCODE_GUIDE, COMBO_HOLD),
+    /** Mouse emulation on / off (in the stream: the client's; elsewhere GameLodge's own). */
+    val comboMouse: Set<Int> = setOf(KEYCODE_START, COMBO_HOLD),
+    /** Leaves the running stream (the game keeps running on the host). */
+    val comboDisconnect: Set<Int> = setOf(KEYCODE_START, KEYCODE_SELECT, KEYCODE_L1, KEYCODE_R1),
+    /** Performance overlay in the stream on / off. */
+    val comboStats: Set<Int> = setOf(KEYCODE_SELECT, KEYCODE_L1, KEYCODE_R1, KEYCODE_X),
     /** The combinations' buttons reach the game / app as well. */
     val comboForward: Boolean = false,
     /** Shrink the UI while a TV/monitor is attached (the layout is sized for the handheld). */
@@ -288,6 +294,9 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val comboHome = stringPreferencesKey("combo_home")
         val comboQuickMenu = stringPreferencesKey("combo_quick_menu")
         val comboForward = booleanPreferencesKey("combo_forward")
+        val comboMouse = stringPreferencesKey("combo_mouse")
+        val comboDisconnect = stringPreferencesKey("combo_disconnect")
+        val comboStats = stringPreferencesKey("combo_stats")
         // Set with the first save after the Guide defaults came: an empty combination stored
         // before only meant "never set" (every save writes all fields).
         val combosSet = booleanPreferencesKey("combos_set")
@@ -393,6 +402,11 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
                 ?.split(',')?.mapNotNull { it.toIntOrNull() }?.toSet() ?: d.comboHome,
             comboQuickMenu = this[K.comboQuickMenu]?.takeIf { it.isNotEmpty() || this[K.combosSet] == true }
                 ?.split(',')?.mapNotNull { it.toIntOrNull() }?.toSet() ?: d.comboQuickMenu,
+            // Empty = off; never saved = the default, unless the quick menu already took it.
+            comboMouse = this[K.comboMouse]?.let(::comboKeys)
+                ?: d.comboMouse.takeIf { this[K.comboQuickMenu]?.let(::comboKeys) != it }.orEmpty(),
+            comboDisconnect = this[K.comboDisconnect]?.let(::comboKeys) ?: d.comboDisconnect,
+            comboStats = this[K.comboStats]?.let(::comboKeys) ?: d.comboStats,
             tvScaleAuto = this[K.tvScaleAuto] ?: d.tvScaleAuto,
             tvScale = this[K.tvScale] ?: d.tvScale,
             tvLauncher = this[K.tvLauncher] ?: d.tvLauncher,
@@ -484,6 +498,9 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         this[K.comboHome] = s.comboHome.joinToString(",")
         this[K.comboQuickMenu] = s.comboQuickMenu.joinToString(",")
         this[K.combosSet] = true
+        this[K.comboMouse] = s.comboMouse.joinToString(",")
+        this[K.comboDisconnect] = s.comboDisconnect.joinToString(",")
+        this[K.comboStats] = s.comboStats.joinToString(",")
         this[K.tvScaleAuto] = s.tvScaleAuto
         this[K.tvScale] = s.tvScale
         this[K.tvLauncher] = s.tvLauncher
@@ -501,3 +518,29 @@ const val KEYCODE_GUIDE = 110
 
 /** Marker in a button combination: held instead of pressed. */
 const val COMBO_HOLD = -1
+
+const val KEYCODE_X = 99
+const val KEYCODE_L1 = 102
+const val KEYCODE_R1 = 103
+const val KEYCODE_START = 108
+const val KEYCODE_SELECT = 109
+
+private fun comboKeys(text: String): Set<Int> = text.split(',').mapNotNull { it.toIntOrNull() }.toSet()
+
+/** The combination of [action] in these settings. */
+fun LauncherSettings.combo(action: io.github.thecodingdad.gamelodge.input.ComboAction): Set<Int> = when (action) {
+    io.github.thecodingdad.gamelodge.input.ComboAction.HOME -> comboHome
+    io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU -> comboQuickMenu
+    io.github.thecodingdad.gamelodge.input.ComboAction.MOUSE -> comboMouse
+    io.github.thecodingdad.gamelodge.input.ComboAction.DISCONNECT -> comboDisconnect
+    io.github.thecodingdad.gamelodge.input.ComboAction.STATS -> comboStats
+}
+
+/** These settings with [keys] as the combination of [action]. */
+fun LauncherSettings.withCombo(action: io.github.thecodingdad.gamelodge.input.ComboAction, keys: Set<Int>): LauncherSettings = when (action) {
+    io.github.thecodingdad.gamelodge.input.ComboAction.HOME -> copy(comboHome = keys)
+    io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU -> copy(comboQuickMenu = keys)
+    io.github.thecodingdad.gamelodge.input.ComboAction.MOUSE -> copy(comboMouse = keys)
+    io.github.thecodingdad.gamelodge.input.ComboAction.DISCONNECT -> copy(comboDisconnect = keys)
+    io.github.thecodingdad.gamelodge.input.ComboAction.STATS -> copy(comboStats = keys)
+}

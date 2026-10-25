@@ -19,6 +19,8 @@ object CurrentActivity : Application.ActivityLifecycleCallbacks {
     override fun onActivityResumed(activity: Activity) {
         current = WeakReference(activity)
         resumed = WeakReference(activity)
+        // The stream has its own mouse: GameLodge's pointer goes away when it comes to the front.
+        if (activity is com.limelight.Game) io.github.thecodingdad.gamelodge.input.PointerMode.stop()
     }
 
     override fun onActivityPaused(activity: Activity) {

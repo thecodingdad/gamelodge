@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.ui.screens.wizard
 
+import io.github.thecodingdad.gamelodge.data.settings.combo
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -136,13 +137,13 @@ private fun ColumnScope.GuideStep(settings: LauncherSettings) {
     ComboDialog(
         action = action,
         current = if (action == ComboAction.QUICK_MENU) settings.comboQuickMenu else settings.comboHome,
-        other = if (action == ComboAction.QUICK_MENU) settings.comboHome else settings.comboQuickMenu,
+        others = ComboAction.entries.filter { it != action }.map { settings.combo(it) },
         onSave = { keys ->
             val k = keys.orEmpty()
             when (action) {
                 ComboAction.HOME -> nav.update { it.copy(comboHome = k) }
                 ComboAction.QUICK_MENU -> nav.update { it.copy(comboQuickMenu = k) }
-                null -> Unit
+                else -> Unit
             }
         },
         onDismiss = { editing = null },

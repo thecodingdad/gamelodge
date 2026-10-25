@@ -1,13 +1,9 @@
 package io.github.thecodingdad.gamelodge.ui.screens.settings
 
-import android.content.Intent
-import android.provider.Settings
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Accessibility
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FiberManualRecord
 import androidx.compose.material.icons.filled.Public
@@ -18,98 +14,63 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.LifecycleResumeEffect
 import io.github.thecodingdad.gamelodge.data.settings.LauncherSettings
+import io.github.thecodingdad.gamelodge.data.settings.combo
+import io.github.thecodingdad.gamelodge.data.settings.withCombo
 import io.github.thecodingdad.gamelodge.input.ButtonCombos
-import io.github.thecodingdad.gamelodge.input.ComboAccessibilityService
 import io.github.thecodingdad.gamelodge.input.ComboAction
+import io.github.thecodingdad.gamelodge.resources.*
 import io.github.thecodingdad.gamelodge.ui.components.ButtonRow
 import io.github.thecodingdad.gamelodge.ui.components.LauncherButton
 import io.github.thecodingdad.gamelodge.ui.components.Modal
 import io.github.thecodingdad.gamelodge.ui.theme.LauncherTheme
 import kotlinx.coroutines.delay
-import io.github.thecodingdad.gamelodge.resources.*
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.stringResource
 
-/** Rows for the Home / quick menu button combinations plus the optional system-wide service. */
+fun comboTitle(action: ComboAction): StringResource = when (action) {
+    ComboAction.HOME -> Res.string.combo_home
+    ComboAction.QUICK_MENU -> Res.string.combo_quick_menu
+    ComboAction.MOUSE -> Res.string.combo_mouse
+    ComboAction.DISCONNECT -> Res.string.combo_disconnect
+    ComboAction.STATS -> Res.string.combo_stats
+}
+
+fun comboSubtitle(action: ComboAction): StringResource = when (action) {
+    ComboAction.HOME -> Res.string.combo_home_sub
+    ComboAction.QUICK_MENU -> Res.string.combo_quick_menu_sub
+    ComboAction.MOUSE -> Res.string.combo_mouse_sub
+    ComboAction.DISCONNECT -> Res.string.combo_disconnect_sub
+    ComboAction.STATS -> Res.string.combo_stats_sub
+}
+
+/** One row per [actions] with its combination, each editable in the record dialog. */
 @Composable
-fun ButtonComboRows(settings: LauncherSettings, update: ((LauncherSettings) -> LauncherSettings) -> Unit) {
-    val context = LocalContext.current
+fun ComboActionRows(
+    settings: LauncherSettings,
+    update: ((LauncherSettings) -> LauncherSettings) -> Unit,
+    actions: List<ComboAction> = ComboAction.entries,
+    firstFocus: Boolean = false,
+) {
     var editing by remember { mutableStateOf<ComboAction?>(null) }
-    var tick by remember { mutableIntStateOf(0) }
-    LifecycleResumeEffect(Unit) { tick++; onPauseOrDispose { } }
-    val serviceOn = remember(tick) { ComboAccessibilityService.isEnabled(context) }
-    val restricted = remember(tick) { ComboAccessibilityService.isRestricted(context) }
-
-    SectionHeader(stringResource(Res.string.combo_section))
-    NavRow(
-        stringResource(Res.string.combo_home), { editing = ComboAction.HOME },
-        subtitle = stringResource(Res.string.combo_home_sub),
-        trailing = comboLabel(settings.comboHome),
-    )
-    NavRow(
-        stringResource(Res.string.combo_quick_menu), { editing = ComboAction.QUICK_MENU },
-        subtitle = stringResource(Res.string.combo_quick_menu_sub),
-        trailing = comboLabel(settings.comboQuickMenu),
-    )
-    SwitchRow(
-        stringResource(Res.string.combo_forward), settings.comboForward, { on -> update { it.copy(comboForward = on) } },
-        subtitle = stringResource(Res.string.combo_forward_sub),
-    )
-    // Only the general list could be opened: say what to look for there.
-    var generalList by remember { mutableStateOf(false) }
-    NavRow(
-        stringResource(Res.string.combo_service), {
-            if (!ComboAccessibilityService.openSettings(context)) generalList = true
-        },
-        subtitle = stringResource(Res.string.combo_service_sub),
-        trailing = stringResource(if (serviceOn) Res.string.combo_service_on else Res.string.off),
-    )
-    if (!serviceOn) {
-        // Without the service the combinations only work in GameLodge and its stream.
-        Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(stringResource(Res.string.combo_service_hint), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
-            if (generalList) Text(stringResource(Res.string.combo_service_where), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
-            if (restricted) Text(stringResource(Res.string.combo_service_restricted), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
-            io.github.thecodingdad.gamelodge.ui.components.ButtonRow {
-                LauncherButton(stringResource(Res.string.combo_service_enable), onClick = {
-                    if (!ComboAccessibilityService.openSettings(context)) generalList = true
-                }, icon = Icons.Filled.Accessibility)
-                if (restricted) LauncherButton(stringResource(Res.string.combo_service_app_info), onClick = {
-                    ComboAccessibilityService.openAppInfo(context)
-                }, icon = Icons.Filled.Info)
-            }
-        }
+    actions.forEachIndexed { i, action ->
+        NavRow(
+            stringResource(comboTitle(action)), { editing = action },
+            subtitle = stringResource(comboSubtitle(action)),
+            trailing = comboLabel(settings.combo(action)), initialFocus = firstFocus && i == 0,
+        )
     }
-
     val action = editing
     ComboDialog(
         action = action,
-        current = when (action) {
-            ComboAction.HOME -> settings.comboHome
-            ComboAction.QUICK_MENU -> settings.comboQuickMenu
-            null -> emptySet()
-        },
-        other = when (action) {
-            ComboAction.HOME -> settings.comboQuickMenu
-            ComboAction.QUICK_MENU -> settings.comboHome
-            null -> emptySet()
-        },
-        onSave = { keys ->
-            val k = keys.orEmpty()
-            when (action) {
-                ComboAction.HOME -> update { it.copy(comboHome = k) }
-                ComboAction.QUICK_MENU -> update { it.copy(comboQuickMenu = k) }
-                null -> Unit
-            }
-        },
+        current = action?.let { settings.combo(it) }.orEmpty(),
+        others = ComboAction.entries.filter { it != action }.map { settings.combo(it) },
+        onSave = { keys -> action?.let { a -> update { it.withCombo(a, keys.orEmpty()) } } },
         onDismiss = { editing = null },
     )
 }
@@ -123,7 +84,7 @@ fun ButtonComboRows(settings: LauncherSettings, update: ((LauncherSettings) -> L
 fun ComboDialog(
     action: ComboAction?,
     current: Set<Int>?,
-    other: Set<Int>,
+    others: Collection<Set<Int>>,
     onSave: (Set<Int>?) -> Unit,
     onDismiss: () -> Unit,
     descriptor: String? = null,
@@ -141,10 +102,7 @@ fun ComboDialog(
         }
     }
     DisposableEffect(action) { onDispose { ButtonCombos.cancelRecording(); recording = false; error = null } }
-    val title = when (action) {
-        ComboAction.QUICK_MENU -> stringResource(Res.string.combo_quick_menu)
-        else -> stringResource(Res.string.combo_home)
-    }
+    val title = action?.let { stringResource(comboTitle(it)) }.orEmpty()
     val perController = descriptor != null
     Modal(visible = action != null, onDismiss = { if (!recording) onDismiss() }, title = title, maxWidth = 640.dp, closeButton = false) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -177,7 +135,7 @@ fun ComboDialog(
                             recording = false
                             error = when {
                                 ButtonCombos.isBlocked(keys) -> Res.string.combo_error_blocked
-                                keys == other -> Res.string.combo_error_duplicate
+                                (keys - ButtonCombos.HOLD).isNotEmpty() && keys in others -> Res.string.combo_error_duplicate
                                 else -> null
                             }
                             if (error == null) onSave(keys)

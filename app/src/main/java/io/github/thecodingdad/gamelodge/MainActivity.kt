@@ -23,6 +23,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import io.github.thecodingdad.gamelodge.data.settings.ButtonLayout
 import io.github.thecodingdad.gamelodge.input.ButtonCombos
+import io.github.thecodingdad.gamelodge.input.handle
 import io.github.thecodingdad.gamelodge.input.ComboAccessibilityService
 import io.github.thecodingdad.gamelodge.input.ComboAction
 import io.github.thecodingdad.gamelodge.system.LauncherMode
@@ -193,10 +194,11 @@ class MainActivity : ComponentActivity() {
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         // Button combinations; the accessibility service handles them already when enabled.
         if (ComboAccessibilityService.instance == null || ButtonCombos.isRecording) {
-            val consumed = ButtonCombos.handle(event) { action ->
+            val consumed = ButtonCombos.handle(event) { action, controller ->
                 when (action) {
                     ComboAction.HOME -> vm.homePressed.tryEmit(Unit)
                     ComboAction.QUICK_MENU -> vm.quickMenuRequests.tryEmit(false)
+                    else -> io.github.thecodingdad.gamelodge.input.AndroidCombos.run(this, action, controller)
                 }
             }
             if (consumed) return true

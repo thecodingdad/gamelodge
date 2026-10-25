@@ -6,8 +6,6 @@ import android.content.Intent
 import android.provider.Settings
 import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
-import io.github.thecodingdad.gamelodge.MainActivity
-import io.github.thecodingdad.gamelodge.QuickMenuActivity
 
 /**
  * Optional system-wide button combinations: filters controller key events in every app (also
@@ -23,7 +21,7 @@ class ComboAccessibilityService : AccessibilityService() {
         super.onDestroy()
     }
 
-    override fun onKeyEvent(event: KeyEvent): Boolean = ButtonCombos.handle(event) { run(this, it) }
+    override fun onKeyEvent(event: KeyEvent): Boolean = ButtonCombos.handle(event) { action, controller -> AndroidCombos.run(this, action, controller) }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) = Unit
     override fun onInterrupt() = Unit
@@ -31,22 +29,6 @@ class ComboAccessibilityService : AccessibilityService() {
     companion object {
         @Volatile var instance: ComboAccessibilityService? = null
             private set
-
-        /**
-         * Runs a combination's action from outside the launcher activity (this service, the stream):
-         * GameLodge comes to the front (in it: to the start tab), the quick menu opens in the
-         * launcher or as the overlay above another app.
-         */
-        fun run(context: Context, action: ComboAction) {
-            val launcher = Intent(context, MainActivity::class.java)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-            when (action) {
-                ComboAction.HOME -> context.startActivity(launcher.putExtra(MainActivity.EXTRA_HOME, true))
-                ComboAction.QUICK_MENU ->
-                    if (MainActivity.resumed) context.startActivity(launcher.putExtra(MainActivity.EXTRA_QUICK_MENU, true))
-                    else QuickMenuActivity.toggle(context)
-            }
-        }
 
         /**
          * Opens this service's own page in the accessibility settings, where it is switched on,
