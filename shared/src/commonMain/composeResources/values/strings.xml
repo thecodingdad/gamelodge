@@ -186,6 +186,7 @@
     <!-- Controls -->
     <string name="setting_button_layout">Button layout</string>
     <string name="setting_button_layout_sub">Nintendo swaps confirm/back (A/B) and X/Y</string>
+    <string name="controllers_stream_defaults">In the stream (all controllers, every profile)</string>
     <string name="game_controller_settings">Controller settings</string>
     <string name="game_mouse">Mouse emulation at start</string>
     <string name="game_mouse_sub">On: the stream starts with the controller as a mouse, e.g. for point-and-click games</string>

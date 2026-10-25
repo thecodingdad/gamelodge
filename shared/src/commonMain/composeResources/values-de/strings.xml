@@ -184,6 +184,7 @@
     <!-- Controls -->
     <string name="setting_button_layout">Tastenbelegung</string>
     <string name="setting_button_layout_sub">Nintendo tauscht Bestätigen/Zurück (A/B) und X/Y</string>
+    <string name="controllers_stream_defaults">Im Stream (alle Controller, jedes Profil)</string>
     <string name="game_controller_settings">Controller-Einstellungen</string>
     <string name="game_mouse">Maus-Emulation beim Start</string>
     <string name="game_mouse_sub">An: Der Stream startet mit dem Controller als Maus, z. B. für Point-and-Click-Spiele</string>

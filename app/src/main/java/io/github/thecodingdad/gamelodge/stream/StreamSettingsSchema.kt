@@ -112,7 +112,18 @@ object StreamSettingsSchema {
     /** The options shown first in the profile editor ("the important ones"). */
     val essentialKeys = listOf(
         "list_resolution", "list_fps", "seekbar_bitrate_kbps", "video_format", "checkbox_enable_hdr",
-        "checkbox_use_virtual_display", "frame_pacing", "list_audio_config",
-        "checkbox_multi_controller", "checkbox_enable_rumble", "checkbox_enable_perf_overlay",
+        "checkbox_use_virtual_display", "frame_pacing", "list_audio_config", "checkbox_enable_perf_overlay",
     )
+
+    /**
+     * The controller options: they depend on the device and its controllers, not on the stream's
+     * quality, so they live in the controller settings for every profile (the base settings).
+     */
+    const val GAMEPAD_CATEGORY = "category_gamepad_settings"
+
+    /** Profile editor: everything but the controller options. */
+    fun profileSchema(context: Context): List<StreamOptionCategory> = load(context).filter { it.key != GAMEPAD_CATEGORY }
+
+    /** Controller settings: the controller options alone. */
+    fun gamepadOptions(context: Context): List<StreamOption> = load(context).firstOrNull { it.key == GAMEPAD_CATEGORY }?.options.orEmpty()
 }

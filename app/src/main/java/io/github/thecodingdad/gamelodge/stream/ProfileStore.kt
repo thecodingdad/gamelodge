@@ -50,6 +50,26 @@ class ProfileStore(private val context: Context, val uuid: UUID?) : ProfileValue
             return profile.uuid
         }
 
+        /**
+         * Options that now hold for every profile ([keys], the controller options): the active
+         * profile's values become the base settings, the profiles drop their own. Once per key set.
+         */
+        fun moveToBase(context: Context, keys: Collection<String>) {
+            val prefs = context.getSharedPreferences("gamelodge_migrations", Context.MODE_PRIVATE)
+            if (prefs.getBoolean("profile_gamepad_to_base", false)) return
+            val manager = ProfilesManager.getInstance()
+            val base = ProfileStore(context, null)
+            manager.active?.options?.forEach { (key, value) -> if (key in keys && value != null) base.set(key, value) }
+            manager.profiles.forEach { p ->
+                val options = p.options ?: return@forEach
+                if (options.keys.none { it in keys }) return@forEach
+                p.options = HashMap(options).apply { keys.forEach { remove(it) } }
+                p.modifiedUtc = System.currentTimeMillis()
+                manager.update(p)
+            }
+            prefs.edit().putBoolean("profile_gamepad_to_base", true).apply()
+        }
+
         /** Back to 2D wherever Artemis' AI 3D render mode was chosen (GameLodge leaves it out). */
         fun resetRenderMode(context: Context) {
             val key = StreamSettingsSchema.RENDER_MODE_KEY
@@ -79,7 +99,7 @@ class ProfileStore(private val context: Context, val uuid: UUID?) : ProfileValue
 /** Artemis' profiles for the shared profile screens. */
 class AndroidProfileEditing(private val context: Context) : ProfileEditing {
     @androidx.compose.runtime.Composable
-    override fun rememberSchema(): List<StreamOptionCategory> = androidx.compose.runtime.remember { StreamSettingsSchema.load(context) }
+    override fun rememberSchema(): List<StreamOptionCategory> = androidx.compose.runtime.remember { StreamSettingsSchema.profileSchema(context) }
 
     override val essentialKeys get() = StreamSettingsSchema.essentialKeys
 

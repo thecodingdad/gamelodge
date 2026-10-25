@@ -129,6 +129,16 @@ fun ControllersScreen() {
         Text(stringResource(Res.string.controllers_defaults_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
         ControllerLayoutDefaultRow(settings, update, initialFocus = controllers.isEmpty())
         ButtonComboRows(settings, update)
+        // The stream's controller options, the same for every profile (single controllers and
+        // single games can still differ in their own settings).
+        SectionHeader(stringResource(Res.string.controllers_stream_defaults))
+        val editing = remember { io.github.thecodingdad.gamelodge.stream.AndroidProfileEditing(context) }
+        val base = remember { io.github.thecodingdad.gamelodge.stream.ProfileStore(context, null) }
+        val options = remember { io.github.thecodingdad.gamelodge.stream.StreamSettingsSchema.gamepadOptions(context) }
+        var revision by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+        options.forEach { option ->
+            io.github.thecodingdad.gamelodge.ui.screens.profiles.OptionRow(option, base, revision, false, editing) { revision++ }
+        }
         OdinMappingSection()
         SeeAlso(
             SeeAlsoLink(stringResource(Res.string.settings_sounds), SettingsTarget.Page(SettingsPageId.SOUNDS)),

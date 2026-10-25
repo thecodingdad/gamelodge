@@ -27,6 +27,9 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
         registerActivityLifecycleCallbacks(CurrentActivity)
         container = AppContainer(this)
         io.github.thecodingdad.gamelodge.stream.ProfileStore.resetRenderMode(this)
+        io.github.thecodingdad.gamelodge.stream.ProfileStore.moveToBase(
+            this, io.github.thecodingdad.gamelodge.stream.StreamSettingsSchema.gamepadOptions(this).map { it.key },
+        )
         // Right after boot the system is busy (on the Odin the low-memory killer then stops the
         // heaviest foreground app): the start tasks wait a moment, and run one after the other.
         if (android.os.SystemClock.elapsedRealtime() < BOOT_WINDOW_MS) {
@@ -59,6 +62,8 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
             }
         }
         io.github.thecodingdad.gamelodge.input.AndroidCombos.installReplay()
+        // Back in the stream (and Artemis' other ways to its game menu) opens GameLodge's quick menu.
+        com.limelight.StreamControl.menuAction = Runnable { io.github.thecodingdad.gamelodge.QuickMenuActivity.toggle(this) }
         // A game that wants the mouse emulation on (or off) gets it when its stream starts.
         container.scope.launch {
             container.launcher.activeStream.map { it?.entry?.item?.id }.distinctUntilChanged().collect { id ->
