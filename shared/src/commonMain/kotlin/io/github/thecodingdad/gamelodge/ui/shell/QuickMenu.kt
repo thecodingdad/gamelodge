@@ -300,19 +300,12 @@ private fun RunningCard(session: RunningSession, initialFocus: Boolean, onResume
         where = stringResource(Res.string.qm_running_on_host, session.host.name),
         onResume = onResume.takeIf { canResume },
         initialFocus = initialFocus,
-        quitting = "host:${session.host.uuid}" in quitting,
+        quitting = io.github.thecodingdad.gamelodge.stream.Quitting.hostKey(session.host) in quitting,
         onQuit = {
-            val uuid = session.host.uuid
             // The menu stays open until the game is gone (its card then disappears); for our own
             // stream the launcher comes back to the front afterwards.
-            io.github.thecodingdad.gamelodge.stream.Quitting.start(
-                c.scope, "host:$uuid", session.appName.ifBlank { session.entry?.item?.title ?: session.host.name },
-                quit = {
-                    // Our own stream ends through its client (no "connection ended" error there).
-                    if (!c.streamControls.quit(session.host)) c.hostActions.quitApp(session.host)
-                },
-                running = { c.hosts.hosts.value[uuid]?.isStreaming == true || c.launcher.activeStream.value?.hostUuid == uuid },
-                refresh = { c.hosts.invalidate(uuid) },
+            io.github.thecodingdad.gamelodge.stream.Quitting.quitHost(
+                c, session.host, session.appName.ifBlank { session.entry?.item?.title ?: session.host.name },
                 onDone = { if (own) onQuit() },
             )
         },

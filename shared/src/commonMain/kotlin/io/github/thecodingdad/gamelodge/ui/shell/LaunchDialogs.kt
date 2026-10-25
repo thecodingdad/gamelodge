@@ -493,19 +493,23 @@ private fun RunningSessionActions(
     androidx.compose.runtime.LaunchedEffect(session.host.uuid) { config = c.hostPower.config(session.host.uuid) }
 
     Text(stringResource(Res.string.qm_running_on, session.appName, session.host.name), style = MaterialTheme.typography.labelLarge, color = LauncherTheme.colors.accent)
-    LauncherButton(stringResource(Res.string.qm_resume), onResume, Modifier.fillMaxWidth(), Icons.Filled.PlayArrow, primary = true)
-    HoldToConfirmButton(
-        stringResource(Res.string.qm_quit_game),
-        onConfirmed = {
-            scope.launch {
-                c.hostActions.quitApp(session.host)
-                c.hosts.invalidate(session.host.uuid)
-                onDone()
-            }
-        },
-        modifier = Modifier.fillMaxWidth(),
-        icon = Icons.Filled.StopCircle,
-    )
+    val quitting by io.github.thecodingdad.gamelodge.stream.Quitting.keys.collectAsState()
+    val busy = io.github.thecodingdad.gamelodge.stream.Quitting.hostKey(session.host) in quitting
+    LauncherButton(stringResource(Res.string.qm_resume), onResume, Modifier.fillMaxWidth(), Icons.Filled.PlayArrow, primary = true, enabled = !busy)
+    if (busy) {
+        LauncherButton(stringResource(Res.string.qm_quitting), {}, Modifier.fillMaxWidth(), busy = true)
+    } else {
+        HoldToConfirmButton(
+            stringResource(Res.string.qm_quit_game),
+            onConfirmed = {
+                io.github.thecodingdad.gamelodge.stream.Quitting.quitHost(
+                    c, session.host, session.appName.ifBlank { session.host.name }, onDone = onDone,
+                )
+            },
+            modifier = Modifier.fillMaxWidth(),
+            icon = Icons.Filled.StopCircle,
+        )
+    }
     config?.let { cfg ->
         if (cfg.haSleepEntity != null) HoldToConfirmButton(stringResource(Res.string.power_sleep), { scope.launch { c.hostPower.power(cfg.hostUuid, io.github.thecodingdad.gamelodge.stream.PowerAction.SLEEP); onDone() } }, Modifier.fillMaxWidth(), Icons.Filled.Bedtime)
         if (cfg.haShutdownEntity != null) HoldToConfirmButton(stringResource(Res.string.power_shutdown), { scope.launch { c.hostPower.power(cfg.hostUuid, io.github.thecodingdad.gamelodge.stream.PowerAction.SHUTDOWN); onDone() } }, Modifier.fillMaxWidth(), Icons.Filled.PowerSettingsNew)

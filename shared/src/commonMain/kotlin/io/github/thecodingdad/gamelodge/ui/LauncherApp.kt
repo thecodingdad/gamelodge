@@ -335,7 +335,7 @@ fun LauncherApp(
                                 val detailActive by vm.activeProfile.collectAsState()
                                 val detailRunning by vm.runningSessions.collectAsState()
                                 val runningSession = detailRunning.firstOrNull { it.entry?.item?.id == e.item.id }
-                                val detailScope = androidx.compose.runtime.rememberCoroutineScope()
+                                val detailQuitting by io.github.thecodingdad.gamelodge.stream.Quitting.keys.collectAsState()
                                 DetailScreen(
                                     e, sessions, settings.animatedArtwork, onFavorite = { vm.setFavorite(e, it) }, onPlatform = { platformFor = e },
                                     running = runningSession != null,
@@ -345,11 +345,9 @@ fun LauncherApp(
                                     },
                                     onQuit = {
                                         val s = runningSession ?: return@DetailScreen
-                                        detailScope.launch {
-                                            container.hostActions.quitApp(s.host)
-                                            container.hosts.invalidate(s.host.uuid)
-                                        }
+                                        io.github.thecodingdad.gamelodge.stream.Quitting.quitHost(container, s.host, e.item.title)
                                     },
+                                    quitting = runningSession?.let { io.github.thecodingdad.gamelodge.stream.Quitting.hostKey(it.host) in detailQuitting } == true,
                                     profiles = detailProfiles, activeProfile = detailActive, onProfile = vm::setActiveProfile,
                                     onEditProfiles = { nav.navigate(Routes.settings(SettingsPageId.PROFILES)) },
                                     onBrowse = onBrowse,

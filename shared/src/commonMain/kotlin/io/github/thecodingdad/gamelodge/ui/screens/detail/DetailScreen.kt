@@ -89,6 +89,8 @@ fun DetailScreen(
     running: Boolean = false,
     onResume: () -> Unit = {},
     onQuit: () -> Unit = {},
+    /** The running game is being quit: a spinner on its quit button meanwhile. */
+    quitting: Boolean = false,
     extraActions: @Composable () -> Unit = {},
 ) {
     val actions = LocalEntryActions.current
@@ -176,9 +178,12 @@ fun DetailScreen(
                         onClick = { if (running) onResume() else actions.play(entry) },
                         icon = if (entry.notInstalled && !running) Icons.Filled.Download else Icons.Filled.PlayArrow, primary = true,
                         modifier = Modifier.focusWhenActive(active),
+                        enabled = !(running && quitting),
                     )
                     // Quitting ends the game on the host: held, like everywhere else.
-                    if (running) {
+                    if (running && quitting) {
+                        LauncherButton(stringResource(Res.string.qm_quitting), onClick = {}, busy = true)
+                    } else if (running) {
                         io.github.thecodingdad.gamelodge.ui.components.HoldToConfirmButton(
                             stringResource(Res.string.qm_quit_game), onConfirmed = onQuit, icon = Icons.Filled.StopCircle,
                         )

@@ -59,6 +59,28 @@ object Quitting {
         }
     }
 
+    fun hostKey(host: io.github.thecodingdad.gamelodge.data.remote.HostState) = "host:${host.uuid}"
+
+    /**
+     * Quits the game running on [host] ([title] for the task): our own stream through its client
+     * (no "connection ended" error there), otherwise through the host.
+     */
+    fun quitHost(
+        c: io.github.thecodingdad.gamelodge.LauncherContainer,
+        host: io.github.thecodingdad.gamelodge.data.remote.HostState,
+        title: String,
+        onDone: () -> Unit = {},
+    ) {
+        val uuid = host.uuid
+        start(
+            c.scope, hostKey(host), title,
+            quit = { if (!c.streamControls.quit(host)) c.hostActions.quitApp(host) },
+            running = { c.hosts.hosts.value[uuid]?.isStreaming == true || c.launcher.activeStream.value?.hostUuid == uuid },
+            refresh = { c.hosts.invalidate(uuid) },
+            onDone = onDone,
+        )
+    }
+
     private const val TIMEOUT_MS = 20_000L
     private const val REFRESH_MS = 2_000L
     private const val POLL_MS = 300L
