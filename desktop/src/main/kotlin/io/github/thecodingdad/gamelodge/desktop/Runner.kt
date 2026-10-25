@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.desktop
 
+import io.github.thecodingdad.gamelodge.resources.*
 import io.github.thecodingdad.gamelodge.desktop.games.GameCloser
 import io.github.thecodingdad.gamelodge.desktop.games.GameLauncher
 import io.github.thecodingdad.gamelodge.desktop.games.PcLibrary
@@ -37,6 +38,12 @@ object Runner {
                     val http = OkHttpClient()
                     GameLauncher.install(entry) { PcLibrary.installedNow(entry, http) }
                 } else {
+                    // The game's artwork instead of the desktop while it loads and ends; without an
+                    // answer from the launcher at least its title.
+                    val title = spec.name?.takeIf { it.isNotBlank() } ?: entry.name
+                    val status = org.jetbrains.compose.resources.getString(Res.string.splash_starting)
+                    val splash = io.github.thecodingdad.gamelodge.desktop.host.GameSplash.show(title, SingleInstance.artwork(entry.id), status)
+                    splash?.watch { GameLauncher.gameProcesses() }
                     // The running launcher's game actions (if switched on for host starts).
                     SingleInstance.reportGameStart(entry.id)
                     // The host ends the app: close the game first (like Alt+F4, hard only when it
@@ -51,6 +58,7 @@ object Runner {
                         GameLauncher.play(entry)
                     } finally {
                         SingleInstance.reportGameEnd(entry.id)
+                        splash?.close()
                     }
                 }
             }

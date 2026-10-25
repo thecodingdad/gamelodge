@@ -191,6 +191,7 @@
     <string name="qt_to_fullscreen">Vollbild</string>
     <string name="qt_quit">Launcher beenden</string>
     <string name="window_to_tray">In den Tray schließen</string>
+    <string name="splash_starting">Wird gestartet …</string>
     <string name="startup_window">Fenster</string>
     <string name="startup_start">Start</string>
     <string name="startup_fullscreen">Im Vollbild starten</string>

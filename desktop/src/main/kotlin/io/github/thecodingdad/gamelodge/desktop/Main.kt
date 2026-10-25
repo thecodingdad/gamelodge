@@ -91,6 +91,17 @@ fun main(args: Array<String>) {
             if (started) hostGameActions.beforeStart(itemId) else hostGameActions.ended()
         }
     }
+    // The runner's splash on the streaming host: the game's artwork files, if stored here.
+    SingleInstance.onArtwork = { entryId ->
+        val target = container.database.libraryDao().getTarget(io.github.thecodingdad.gamelodge.data.library.SourceEntry.localId(entryId))
+        target?.let { container.database.libraryDao().getItem(it.itemId) }?.let { item ->
+            fun file(url: String?) = (ArtworkFiles.model(url) as? File)?.takeIf { it.isFile }?.path
+            kotlinx.serialization.json.Json.encodeToString(
+                SplashArt.serializer(),
+                SplashArt(item.title, hero = file(item.heroUrl), logo = file(item.logoUrl), cover = file(item.coverUrl)),
+            )
+        }
+    }
     val startup = Startup(dataDir).also { it.start() }
     // Started with Windows and the tray on: no window until the user opens it.
     if (Startup.AUTOSTART_ARG in args && startup.settings.value.closeToTray) windowVisible.value = false

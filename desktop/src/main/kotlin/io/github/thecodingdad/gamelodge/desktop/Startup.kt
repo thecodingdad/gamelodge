@@ -92,9 +92,13 @@ object SingleInstance {
     private const val GAME_START = "game-start "
     private const val GAME_END = "game-end "
     private const val GO = "go"
+    private const val ARTWORK = "artwork "
 
     /** Called for game starts/ends reported by the streaming host's runner (entry id, started). */
     @Volatile var onHostGame: suspend (String, Boolean) -> Unit = { _, _ -> }
+
+    /** The runner's splash asks for an entry's artwork: one line of [SplashArt] JSON, or null. */
+    @Volatile var onArtwork: suspend (String) -> String? = { null }
 
     /** True: this is the first instance, [onShow] runs when another start asks for the window. False: told the running one. */
     fun claim(onShow: () -> Unit): Boolean {
@@ -121,6 +125,10 @@ object SingleInstance {
                                 runCatching { s.getOutputStream().write("$GO\n".toByteArray()) }
                             }
                             line.startsWith(GAME_END) -> runCatching { kotlinx.coroutines.runBlocking { onHostGame(line.removePrefix(GAME_END), false) } }
+                            line.startsWith(ARTWORK) -> runCatching {
+                                val answer = kotlinx.coroutines.runBlocking { onArtwork(line.removePrefix(ARTWORK)) }.orEmpty()
+                                s.getOutputStream().write("$answer\n".toByteArray())
+                            }
                         }
                     }
                 }
@@ -143,8 +151,21 @@ object SingleInstance {
         }
     }
 
+    /** The runner's splash asks the running launcher for the entry's artwork (null: no launcher or none). */
+    fun artwork(entryId: String): SplashArt? = runCatching {
+        Socket(InetAddress.getLoopbackAddress(), PORT).use { s ->
+            s.soTimeout = 3000
+            s.getOutputStream().write("$ARTWORK$entryId\n".toByteArray())
+            s.getInputStream().bufferedReader().readLine()?.takeIf { it.isNotBlank() }?.let { Json.decodeFromString<SplashArt>(it) }
+        }
+    }.getOrNull()
+
     /** The runner reports that the game ended. */
     fun reportGameEnd(entryId: String) {
         runCatching { Socket(InetAddress.getLoopbackAddress(), PORT).use { it.getOutputStream().write("$GAME_END$entryId\n".toByteArray()) } }
     }
 }
+
+/** Local artwork files of a game for the runner's splash. */
+@Serializable
+data class SplashArt(val title: String, val hero: String? = null, val logo: String? = null, val cover: String? = null)

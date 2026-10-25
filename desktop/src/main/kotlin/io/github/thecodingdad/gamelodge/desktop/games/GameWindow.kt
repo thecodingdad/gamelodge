@@ -11,8 +11,11 @@ import io.github.thecodingdad.gamelodge.desktop.isWindows
 /** The main window of a running game. */
 object GameWindow {
     /** Brings the largest visible top-level window of [pids] to the front; false when there is none. */
-    fun focus(pids: Set<Long>): Boolean {
-        if (!isWindows || pids.isEmpty()) return false
+    fun focus(pids: Set<Long>): Boolean = mainWindow(pids)?.let { WindowsForeground.claim(it) } != null
+
+    /** The largest visible own top-level window of [pids], if any. */
+    fun mainWindow(pids: Set<Long>): WinDef.HWND? {
+        if (!isWindows || pids.isEmpty()) return null
         val user32 = User32.INSTANCE
         var best: WinDef.HWND? = null
         var bestArea = 0L
@@ -31,7 +34,7 @@ object GameWindow {
             }
             true
         }, null)
-        return best?.let { WindowsForeground.claim(it) } != null
+        return best
     }
 
     /**
