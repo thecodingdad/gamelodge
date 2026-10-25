@@ -13,6 +13,8 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.focusGroup
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.input.key.type
 import io.github.thecodingdad.gamelodge.ui.input.stickScrollFocus
 import kotlinx.coroutines.launch
@@ -58,6 +60,19 @@ fun Modifier.controllerScroll(state: ScrollState = androidx.compose.foundation.r
             true
         }
         .stickScrollFocus(state)
+        // Focus leaving the area (e.g. down to a wizard's button bar below it) while content is
+        // still hidden in that direction: the content scrolls to its end first, the next press leaves.
+        .focusProperties {
+            onExit = {
+                val down = requestedFocusDirection == androidx.compose.ui.focus.FocusDirection.Down
+                val up = requestedFocusDirection == androidx.compose.ui.focus.FocusDirection.Up
+                if (down && state.canScrollForward || up && state.canScrollBackward) {
+                    cancelFocusChange()
+                    scope.launch { state.animateScrollTo(if (down) state.maxValue else 0) }
+                }
+            }
+        }
+        .focusGroup()
         .fadingEdges(state)
         .verticalScroll(state)
 }
