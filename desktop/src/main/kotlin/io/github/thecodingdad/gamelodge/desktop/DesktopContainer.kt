@@ -169,7 +169,7 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
     }
     override val hostPower: HostPower by lazy { HostPower(database.hostConfigDao(), hosts, hostActions, ha) }
     override val streamControls: io.github.thecodingdad.gamelodge.stream.StreamControls by lazy {
-        io.github.thecodingdad.gamelodge.desktop.stream.DesktopStreamControls(desktopHosts)
+        io.github.thecodingdad.gamelodge.desktop.stream.DesktopStreamControls(desktopHosts, desktopHosts)
     }
 
     override val launcher: LaunchCoordinator by lazy {

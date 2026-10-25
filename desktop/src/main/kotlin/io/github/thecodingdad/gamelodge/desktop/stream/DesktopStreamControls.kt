@@ -1,31 +1,77 @@
 package io.github.thecodingdad.gamelodge.desktop.stream
 
 import io.github.thecodingdad.gamelodge.data.remote.HostActions
+import io.github.thecodingdad.gamelodge.data.remote.HostRepository
 import io.github.thecodingdad.gamelodge.data.remote.HostState
 import io.github.thecodingdad.gamelodge.stream.StreamControls
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 
-/** The stream runs in Moonlight-Qt, a process of its own: steered from outside. */
-class DesktopStreamControls(private val hostActions: HostActions) : StreamControls {
-    private val running get() = MoonlightQt.locate().running?.takeIf { it.process.isAlive }
+/**
+ * The stream runs in Moonlight-Qt: steered through its launcher control channel (stdin), with
+ * ending the process as the fallback.
+ */
+class DesktopStreamControls(private val hostActions: HostActions, private val hosts: HostRepository) : StreamControls {
+    private val client get() = MoonlightQt.locate()
+    private val running get() = client.running?.takeIf { it.process.isAlive }
 
-    override fun disconnect() {
-        running?.process?.let(::end)
+    override fun stats(): Flow<String> = flow {
+        running?.send("stats on")
+        try {
+            emitAll(client.stats)
+        } finally {
+            running?.send("stats off")
+        }
     }
 
-    /** Moonlight-Qt goes first, so it can't report the ended app as a broken connection. */
+    // Windows' own on-screen keyboard (types into the stream window, which has the focus again).
+    override val keyboard: Boolean get() = running != null
+
+    override fun showKeyboard() {
+        val r = running ?: return
+        Thread({
+            Thread.sleep(MENU_CLOSE_MS)
+            io.github.thecodingdad.gamelodge.desktop.games.GameWindow.focus(setOf(r.process.pid()) + r.process.descendants().map { it.pid() }.toList())
+            runCatching { ProcessBuilder("cmd", "/c", "start", "", "osk.exe").start() }
+        }, "keyboard").start()
+    }
+
+    override fun serverCommands(): List<String> = running?.let { hosts.hosts.value[it.hostUuid]?.serverCommands }.orEmpty()
+
+    override fun runServerCommand(index: Int) {
+        running?.send("servercmd $index")
+    }
+
+    override fun disconnect() {
+        val r = running ?: return
+        Thread({
+            if (!r.send("disconnect") || !r.process.waitFor(GRACE_SECONDS, TimeUnit.SECONDS)) end(r.process)
+        }, "disconnect").start()
+    }
+
+    /** Moonlight-Qt quits the app itself (as its own "quit" does): no "connection ended" error. */
     override suspend fun quit(host: HostState): Boolean = withContext(Dispatchers.IO) {
         val r = running?.takeIf { it.hostUuid == host.uuid } ?: return@withContext false
-        end(r.process)
-        r.process.waitFor(3, TimeUnit.SECONDS)
-        hostActions.quitApp(host)
+        if (!r.send("quit") || !r.process.waitFor(GRACE_SECONDS, TimeUnit.SECONDS)) {
+            // An older Moonlight-Qt without the channel: close it first, then quit the app here.
+            end(r.process)
+            r.process.waitFor(3, TimeUnit.SECONDS)
+            hostActions.quitApp(host)
+        }
         true
     }
 
     private fun end(process: Process) {
         process.descendants().forEach { it.destroy() }
         process.destroy()
+    }
+
+    private companion object {
+        const val GRACE_SECONDS = 10L
+        const val MENU_CLOSE_MS = 400L
     }
 }
