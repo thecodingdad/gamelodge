@@ -67,6 +67,8 @@ import androidx.compose.ui.platform.LocalContext
 @Composable
 fun AndroidSystemControls(visible: Boolean) {
     val context = LocalContext.current
+    val settings by io.github.thecodingdad.gamelodge.LocalContainer.current.settings.settings
+        .collectAsState(io.github.thecodingdad.gamelodge.data.settings.LauncherSettings())
     val audio = remember { context.getSystemService(AudioManager::class.java) }
     val maxVolume = remember { audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC) }
     var volume by remember(visible) { mutableIntStateOf(audio.getStreamVolume(AudioManager.STREAM_MUSIC)) }
@@ -93,18 +95,18 @@ fun AndroidSystemControls(visible: Boolean) {
             context.contentResolver.unregisterContentObserver(brightnessObserver)
         }
     }
-        if (!canWriteSettings) {
+        if (settings.quickShowBrightness && !canWriteSettings) {
             LauncherButton(stringResource(Res.string.qm_brightness_permission), icon = Icons.Filled.BrightnessMedium, onClick = {
                 context.startActivity(Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:${context.packageName}")))
             })
         }
 
-        SliderRow(
+        if (settings.quickShowVolume) SliderRow(
             stringResource(Res.string.qm_volume), volume, 0..maxVolume, 1,
             onChange = { v -> volume = v; audio.setStreamVolume(AudioManager.STREAM_MUSIC, v, 0) },
             valueLabel = { "${it * 100 / maxVolume.coerceAtLeast(1)} %" }, icon = Icons.Filled.VolumeUp,
         )
-        if (canWriteSettings) {
+        if (settings.quickShowBrightness && canWriteSettings) {
             SliderRow(
                 stringResource(Res.string.qm_brightness), brightness, 1..255, 8,
                 onChange = { v ->

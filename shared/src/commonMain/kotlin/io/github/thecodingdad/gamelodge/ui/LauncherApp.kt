@@ -295,10 +295,11 @@ fun LauncherApp(
             ) {
             Box(Modifier.fillMaxSize().background(LauncherTheme.colors.background)) {
                 // The launcher behind any popup or panel is blurred (Android 12+; older versions just dim).
-                val backdropBlur by androidx.compose.animation.core.animateDpAsState(if (io.github.thecodingdad.gamelodge.ui.components.OverlayHost.anyVisible) 14.dp else 0.dp, label = "backdropBlur")
+                val backdropActive = io.github.thecodingdad.gamelodge.ui.components.OverlayHost.anyVisible
+                val backdropBlur by androidx.compose.animation.core.animateDpAsState(if (backdropActive) 14.dp else 0.dp, label = "backdropBlur")
                 val currentEntry by nav.currentBackStackEntryAsState()
                 CompositionLocalProvider(io.github.thecodingdad.gamelodge.ui.shell.LocalCurrentNavEntry provides currentEntry) {
-                NavHost(nav, startDestination = Routes.MAIN, modifier = Modifier.blur(backdropBlur)) {
+                NavHost(nav, startDestination = Routes.MAIN, modifier = io.github.thecodingdad.gamelodge.ui.PlatformUi.current.backdropBlur(backdropActive, backdropBlur)) {
                     composable(Routes.MAIN) {
                         MainShell(
                             vm, nav, openStats = { nav.navigate(Routes.STATS) },

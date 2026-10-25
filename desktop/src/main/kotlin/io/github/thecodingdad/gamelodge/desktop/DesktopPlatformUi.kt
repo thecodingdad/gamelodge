@@ -219,6 +219,9 @@ class DesktopPlatformUi(
     @Composable
     override fun SystemControls(visible: Boolean) = Unit
 
+    @Composable
+    override fun backdropBlur(active: Boolean, radius: androidx.compose.ui.unit.Dp): Modifier = snapshotBlur(active, radius, 14.dp)
+
     override fun appLabel(packageName: String) = packageName
 
     @Composable
@@ -291,7 +294,7 @@ class DesktopPlatformUi(
             }
             SettingsPageId.HOST_ROLE -> host()?.let { HostRolePage(it) }
             SettingsPageId.STREAMING_HOST -> host()?.let { h -> h.sync?.let { StreamingHostPage(h.role, it, h.secrets) } }
-            SettingsPageId.STARTUP -> startup?.let { StartupPage(it, windowControls) }
+            SettingsPageId.STARTUP -> startup?.let { StartupPage(it) }
             SettingsPageId.PROFILES -> profiles?.let { store ->
                 val all by vm.profiles.collectAsState()
                 val active by vm.activeProfile.collectAsState()

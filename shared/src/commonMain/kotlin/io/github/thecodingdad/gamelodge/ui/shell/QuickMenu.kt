@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.Icon
 import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.PlayCircle
@@ -114,6 +116,9 @@ fun QuickMenu(
         Row(Modifier.weight(1f).fillMaxWidth()) {
             QuickRail(tabs, tab, onDismiss) { tab = it }
             Column(Modifier.weight(1f).fillMaxHeight()) {
+                var editing by remember(visible) { mutableStateOf(false) }
+                if (platform.hasQuickAccessEditor) platform.QuickAccessEditor(editing) { editing = false }
+                Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     stringResource(
                         when (tab) {
@@ -125,8 +130,12 @@ fun QuickMenu(
                         },
                     ),
                     style = MaterialTheme.typography.titleLarge, color = LauncherTheme.colors.onSurface,
-                    modifier = Modifier.padding(start = 18.dp, top = 18.dp, bottom = 6.dp),
+                    modifier = Modifier.weight(1f).padding(start = 18.dp, top = 18.dp, bottom = 6.dp),
                 )
+                if (tab == QuickMenuTab.QUICK && platform.hasQuickAccessEditor) {
+                    EditButton(Modifier.padding(top = 12.dp, end = 14.dp)) { editing = true }
+                }
+                }
                 // Each tab its own scroll position and focus start.
                 androidx.compose.runtime.key(tab) {
                     Column(
@@ -178,6 +187,22 @@ fun QuickMenu(
                 io.github.thecodingdad.gamelodge.ui.components.ButtonHint(io.github.thecodingdad.gamelodge.ui.input.PadButton.B, stringResource(Res.string.hint_back), onDismiss),
             ),
             inPopup = true,
+        )
+    }
+}
+
+/** Small pencil next to the tab title (reachable with the D-pad from the first row). */
+@Composable
+private fun EditButton(modifier: Modifier, onClick: () -> Unit) {
+    val colors = LauncherTheme.colors
+    io.github.thecodingdad.gamelodge.ui.components.FocusSurface(
+        onClick = onClick, modifier = modifier,
+        shape = androidx.compose.foundation.shape.CircleShape,
+        color = androidx.compose.ui.graphics.Color.Transparent,
+    ) {
+        Icon(
+            Icons.Filled.Edit, stringResource(Res.string.qm_edit), tint = colors.onSurfaceMuted,
+            modifier = Modifier.padding(10.dp).size(22.dp),
         )
     }
 }

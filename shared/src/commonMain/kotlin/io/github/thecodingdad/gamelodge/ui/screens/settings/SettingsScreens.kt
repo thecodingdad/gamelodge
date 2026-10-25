@@ -76,7 +76,7 @@ import io.github.thecodingdad.gamelodge.data.settings.LauncherSettings
 import io.github.thecodingdad.gamelodge.data.settings.ThemeMode
 import io.github.thecodingdad.gamelodge.resources.*
 
-enum class SettingsPageId { GAME_SOURCES, HOST_ROLE, STREAMING_HOST, STARTUP, HOSTS, PROFILES, HOME_SCREEN, LIBRARY_VIEW, APPS_VIEW, THEME, DISPLAY, FILTERS, APP_FILTERS, QUICK_MENU, CONTROLS, SOUNDS, METADATA, USAGE, EMULATORS, HOME_ASSISTANT, VPN, LAUNCHER, DATA, LANGUAGE, ABOUT, LICENSES }
+enum class SettingsPageId { GAME_SOURCES, HOST_ROLE, STREAMING_HOST, STARTUP, HOSTS, PROFILES, HOME_SCREEN, LIBRARY_VIEW, APPS_VIEW, THEME, DISPLAY, FILTERS, APP_FILTERS, CONTROLS, SOUNDS, METADATA, USAGE, EMULATORS, HOME_ASSISTANT, VPN, LAUNCHER, DATA, LANGUAGE, ABOUT, LICENSES }
 
 @Composable
 fun SettingsHome(
@@ -145,7 +145,6 @@ fun SettingsHome(
         SectionHeader(stringResource(Res.string.settings_group_controls))
         NavRow(stringResource(Res.string.settings_controls), { open(SettingsPageId.CONTROLS) }, stringResource(Res.string.settings_controls_sub), Icons.Filled.SportsEsports)
         NavRow(stringResource(Res.string.settings_controllers), openControllers, stringResource(Res.string.settings_controllers_sub), Icons.Filled.Gamepad)
-        if (platform.hasPage(SettingsPageId.QUICK_MENU)) NavRow(stringResource(Res.string.settings_quick_menu), { open(SettingsPageId.QUICK_MENU) }, stringResource(Res.string.settings_quick_menu_sub), Icons.Filled.Dashboard)
         NavRow(stringResource(Res.string.settings_sounds), { open(SettingsPageId.SOUNDS) }, stringResource(Res.string.settings_sounds_sub), Icons.Filled.VolumeUp)
 
         SectionHeader(stringResource(Res.string.settings_group_system))

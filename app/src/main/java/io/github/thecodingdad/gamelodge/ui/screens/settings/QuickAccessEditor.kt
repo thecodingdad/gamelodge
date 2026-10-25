@@ -36,7 +36,9 @@ import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.thecodingdad.gamelodge.R
 import io.github.thecodingdad.gamelodge.data.settings.LauncherSettings
-import io.github.thecodingdad.gamelodge.ui.LauncherViewModel
+import kotlinx.coroutines.launch
+import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.filled.BrightnessMedium
 import io.github.thecodingdad.gamelodge.ui.components.ButtonRow
 import io.github.thecodingdad.gamelodge.ui.components.LauncherButton
 import io.github.thecodingdad.gamelodge.ui.components.Modal
@@ -47,62 +49,85 @@ import io.github.thecodingdad.gamelodge.ui.shell.quickTileName
 import io.github.thecodingdad.gamelodge.ui.theme.LauncherTheme
 import io.github.thecodingdad.gamelodge.resources.*
 
-/** Which tiles the quick menu shows and in which order; app shortcuts included. */
+/**
+ * Popup behind the edit button of the quick menu's quick access tab: which tiles show and in
+ * which order (app shortcuts included), which device controls show, and opening by touch.
+ */
 @Composable
-fun QuickMenuSettings(vm: LauncherViewModel, settings: LauncherSettings, update: ((LauncherSettings) -> LauncherSettings) -> Unit) {
+fun QuickAccessEditor(visible: Boolean, onDismiss: () -> Unit) {
+    val c = io.github.thecodingdad.gamelodge.LocalContainer.current
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    val settings by c.settings.settings.collectAsState(LauncherSettings())
+    fun update(transform: (LauncherSettings) -> LauncherSettings) { scope.launch { c.settings.update(transform) } }
     val tiles = settings.quickTiles
-    var adding by remember { mutableStateOf(false) }
+    var adding by remember(visible) { mutableStateOf(false) }
     fun save(list: List<String>) = update { it.copy(quickTiles = list) }
+    val context = androidx.compose.ui.platform.LocalContext.current
 
-    SettingsPage(stringResource(Res.string.settings_quick_menu)) {
-        Text(stringResource(Res.string.qt_settings_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
-        val tileContext = androidx.compose.ui.platform.LocalContext.current
-        val unavailable = remember(tiles) { tiles.filterNot { QuickTile.isAvailable(it) }.toSet() }
-        // Order by dragging the handle (controller: A on the handle, then up/down), like the filters.
-        ReorderableList(tiles, id = { it }, onReorder = ::save) { index, id ->
-            TileRow(id, unavailable = id in unavailable, initialFocus = index == 0, onRemove = { save(tiles - id) })
-        }
-        ButtonRow {
-            LauncherButton(stringResource(Res.string.qt_add), modifier = Modifier.searchHighlight(stringResource(Res.string.qt_add), androidx.compose.foundation.shape.RoundedCornerShape(26.dp)), icon = Icons.Filled.Add, onClick = { adding = true })
-            LauncherButton(stringResource(Res.string.qt_reset), icon = Icons.Filled.Restore, onClick = { save(QuickTile.defaults) })
-        }
+    Modal(visible = visible, onDismiss = onDismiss, title = stringResource(Res.string.qm_edit), maxWidth = 760.dp) {
+        Column(Modifier.popupHeightIn(640.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            SectionHeader(stringResource(Res.string.qm_tiles_section))
+            Text(stringResource(Res.string.qt_settings_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+            val unavailable = remember(tiles) { tiles.filterNot { QuickTile.isAvailable(it) }.toSet() }
+            // Order by dragging the handle (controller: A on the handle, then up/down), like the filters.
+            ReorderableList(tiles, id = { it }, onReorder = ::save) { index, id ->
+                TileRow(id, unavailable = id in unavailable, initialFocus = index == 0, onRemove = { save(tiles - id) })
+            }
+            ButtonRow {
+                LauncherButton(
+                    stringResource(Res.string.qt_add), icon = Icons.Filled.Add, onClick = { adding = true },
+                    modifier = Modifier.restoreFocusIf(tiles.isEmpty()),
+                )
+                LauncherButton(stringResource(Res.string.qt_reset), icon = Icons.Filled.Restore, onClick = { save(QuickTile.defaults) })
+            }
 
-        // Opening the menu by touch while another app is in front.
-        SectionHeader(stringResource(Res.string.qm_touch_section))
-        var tick by remember { androidx.compose.runtime.mutableIntStateOf(0) }
-        androidx.lifecycle.compose.LifecycleResumeEffect(Unit) { tick++; onPauseOrDispose { } }
-        val canOverlay = remember(tick) { android.provider.Settings.canDrawOverlays(tileContext) }
-        SwitchRow(
-            stringResource(Res.string.qm_edge_handle), settings.quickMenuEdgeHandle,
-            { on ->
-                update { it.copy(quickMenuEdgeHandle = on) }
-                if (on && !canOverlay) {
-                    runCatching {
-                        tileContext.startActivity(
-                            android.content.Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION, android.net.Uri.parse("package:${tileContext.packageName}")),
-                        )
-                    }
-                }
-            },
-            subtitle = stringResource(if (settings.quickMenuEdgeHandle && !canOverlay) Res.string.qm_edge_handle_permission else Res.string.qm_edge_handle_sub),
-        )
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-            NavRow(
-                stringResource(Res.string.qm_tile_add), { requestQuickMenuTile(tileContext) },
-                subtitle = stringResource(Res.string.qm_tile_sub), icon = Icons.Filled.Add,
+            SectionHeader(stringResource(Res.string.qm_show_section))
+            SwitchRow(
+                stringResource(Res.string.qm_volume), settings.quickShowVolume, { on -> update { it.copy(quickShowVolume = on) } },
+                icon = Icons.Filled.VolumeUp,
             )
-        } else {
-            Text(stringResource(Res.string.qm_tile_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+            SwitchRow(
+                stringResource(Res.string.qm_brightness), settings.quickShowBrightness, { on -> update { it.copy(quickShowBrightness = on) } },
+                icon = Icons.Filled.BrightnessMedium,
+            )
+
+            // Opening the menu by touch while another app is in front.
+            SectionHeader(stringResource(Res.string.qm_touch_section))
+            var tick by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+            androidx.lifecycle.compose.LifecycleResumeEffect(Unit) { tick++; onPauseOrDispose { } }
+            val canOverlay = remember(tick) { android.provider.Settings.canDrawOverlays(context) }
+            SwitchRow(
+                stringResource(Res.string.qm_edge_handle), settings.quickMenuEdgeHandle,
+                { on ->
+                    update { it.copy(quickMenuEdgeHandle = on) }
+                    if (on && !canOverlay) {
+                        runCatching {
+                            context.startActivity(
+                                android.content.Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION, android.net.Uri.parse("package:${context.packageName}"))
+                                    .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK),
+                            )
+                        }
+                    }
+                },
+                subtitle = stringResource(if (settings.quickMenuEdgeHandle && !canOverlay) Res.string.qm_edge_handle_permission else Res.string.qm_edge_handle_sub),
+            )
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                NavRow(
+                    stringResource(Res.string.qm_tile_add), { requestQuickMenuTile(context) },
+                    subtitle = stringResource(Res.string.qm_tile_sub), icon = Icons.Filled.Add,
+                )
+            } else {
+                Text(stringResource(Res.string.qm_tile_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+            }
         }
-        SeeAlso(SeeAlsoLink(stringResource(Res.string.settings_controls), SettingsTarget.Page(SettingsPageId.CONTROLS)), SeeAlsoLink(stringResource(Res.string.settings_controllers), SettingsTarget.Controllers))
     }
 
     // Picker: system tiles by group, then installed apps as shortcuts.
-    val entries by vm.allEntries.collectAsState()
+    if (!visible) return
+    val entries by c.library.allEntries.collectAsState(emptyList())
     val apps = remember(entries) {
         entries.mapNotNull { e -> e.localTarget?.packageName?.let { it to e.item.title } }.distinctBy { it.first }.sortedBy { it.second.lowercase() }
     }
-    val context = androidx.compose.ui.platform.LocalContext.current
     // Only tiles the device has the hardware for.
     val available = remember { QuickTile.groups.flatMap { it.second }.filter { QuickTile.isAvailable(it) }.toSet() }
     Modal(visible = adding, onDismiss = { adding = false }, title = stringResource(Res.string.qt_add), maxWidth = 760.dp) {

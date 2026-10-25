@@ -123,6 +123,7 @@ fun HostCard(
         }
         // Auto sleep after a stream, editable right here (same options as in the host settings).
         config?.let { cfg ->
+            Spacer(Modifier.height(12.dp))
             io.github.thecodingdad.gamelodge.ui.screens.settings.ChoiceRow(
                 stringResource(Res.string.host_auto_sleep), listOf<Int?>(null, 5, 10, 15, 30, 60), cfg.autoSleepMinutes,
                 label = { it?.let { m -> stringResource(Res.string.minutes_short, m) } ?: stringResource(Res.string.off) },

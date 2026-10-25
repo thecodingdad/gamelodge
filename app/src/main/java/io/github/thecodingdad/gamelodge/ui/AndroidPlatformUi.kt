@@ -77,6 +77,12 @@ class AndroidPlatformUi(private val context: Context) : PlatformUi {
     @Composable
     override fun SystemControls(visible: Boolean) = io.github.thecodingdad.gamelodge.ui.shell.AndroidSystemControls(visible)
 
+    override val hasQuickAccessEditor get() = true
+
+    @Composable
+    override fun QuickAccessEditor(visible: Boolean, onDismiss: () -> Unit) =
+        io.github.thecodingdad.gamelodge.ui.screens.settings.QuickAccessEditor(visible, onDismiss)
+
     override fun appLabel(packageName: String): String = io.github.thecodingdad.gamelodge.ui.shell.androidAppLabel(context, packageName)
 
     @Composable
@@ -129,7 +135,6 @@ class AndroidPlatformUi(private val context: Context) : PlatformUi {
         when (id) {
             SettingsPageId.USAGE -> io.github.thecodingdad.gamelodge.ui.screens.settings.UsageSettings(openStats)
             SettingsPageId.EMULATORS -> io.github.thecodingdad.gamelodge.ui.screens.settings.EmulatorSettings(vm)
-            SettingsPageId.QUICK_MENU -> io.github.thecodingdad.gamelodge.ui.screens.settings.QuickMenuSettings(vm, settings, vm::updateSettings)
             SettingsPageId.PROFILES -> {
                 val profiles by vm.profiles.collectAsState()
                 val active by vm.activeProfile.collectAsState()
@@ -178,7 +183,7 @@ class AndroidPlatformUi(private val context: Context) : PlatformUi {
 
     private companion object {
         val PAGES = setOf(
-            SettingsPageId.USAGE, SettingsPageId.EMULATORS, SettingsPageId.QUICK_MENU, SettingsPageId.PROFILES,
+            SettingsPageId.USAGE, SettingsPageId.EMULATORS, SettingsPageId.PROFILES,
             SettingsPageId.LAUNCHER, SettingsPageId.VPN,
         )
     }

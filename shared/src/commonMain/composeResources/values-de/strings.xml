@@ -758,8 +758,7 @@
     <string name="qt_sound_silent">Lautlos</string>
     <string name="qt_dnd">Nicht stören</string>
     <string name="settings_quick_menu">Schnellmenü</string>
-    <string name="settings_quick_menu_sub">Kacheln, Reihenfolge, App-Verknüpfungen</string>
-    <string name="qt_settings_help">Die Kacheln erscheinen in dieser Reihenfolge im Schnellmenü (Y) unter „Schnelleinstellungen“. Am Griff ziehen zum Verschieben.</string>
+    <string name="qt_settings_help">Am Griff ziehen, um die Reihenfolge zu ändern.</string>
     <string name="qt_add">Kachel hinzufügen</string>
     <string name="qt_remove">Entfernen</string>
     <string name="qt_reset">Standard wiederherstellen</string>
@@ -955,6 +954,9 @@
     <string name="usage_access_off">Nicht erlaubt: Der Launcher misst nur Starts aus sich selbst. Auswählen zum Erlauben</string>
 
     <!-- Quick menu -->
+    <string name="qm_edit">Schnellzugriff bearbeiten</string>
+    <string name="qm_tiles_section">Kacheln</string>
+    <string name="qm_show_section">Gerätesteuerung</string>
     <string name="qm_touch_section">Per Touch in anderen Apps öffnen</string>
     <string name="qm_edge_handle">Griff am rechten Rand</string>
     <string name="qm_edge_handle_sub">Schmaler Balken am rechten Bildschirmrand über allen Apps; antippen öffnet das Schnellmenü</string>
@@ -1002,7 +1004,6 @@
     <string name="search_kw_home_assistant">HA, Smart Home, Licht, Schalter, Entität, Aufwecken, Herunterfahren, Favoriten</string>
     <string name="search_kw_controls">Tasten, Belegung, Hinweise, Direktstart, Tastenkombination</string>
     <string name="search_kw_controllers">Gamepad, Xbox, PlayStation, Nintendo, Spieler, Belegung, Rumble, Vibration</string>
-    <string name="search_kw_quick_menu">Helligkeit, Lautstärke, WLAN, Bluetooth, Kacheln, Schnellzugriff</string>
     <string name="search_kw_sounds">Ton, Lautstärke, Audio, Klick, Haptik, Rumble, Vibration</string>
     <string name="search_kw_launcher">Home-App, Standard-Launcher, Android-Startbildschirm</string>
     <string name="search_kw_startup">Autostart, Vollbild, Tray, Taskleiste, Windows, Fenster</string>

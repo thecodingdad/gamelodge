@@ -52,7 +52,6 @@ private val pageTitles: List<Pair<SettingsTarget, StringResource>> = listOf(
     SettingsTarget.Page(SettingsPageId.CONTROLS) to Res.string.settings_controls,
     SettingsTarget.Controllers to Res.string.settings_controllers,
     SettingsTarget.Wizard to Res.string.settings_group_system,
-    SettingsTarget.Page(SettingsPageId.QUICK_MENU) to Res.string.settings_quick_menu,
     SettingsTarget.Page(SettingsPageId.SOUNDS) to Res.string.settings_sounds,
     SettingsTarget.Page(SettingsPageId.LAUNCHER) to Res.string.settings_launcher,
     SettingsTarget.Page(SettingsPageId.LANGUAGE) to Res.string.settings_language,
@@ -81,7 +80,6 @@ private val pageKeywords: Map<SettingsTarget, StringResource> = mapOf(
     SettingsTarget.Page(SettingsPageId.HOME_ASSISTANT) to Res.string.search_kw_home_assistant,
     SettingsTarget.Page(SettingsPageId.CONTROLS) to Res.string.search_kw_controls,
     SettingsTarget.Controllers to Res.string.search_kw_controllers,
-    SettingsTarget.Page(SettingsPageId.QUICK_MENU) to Res.string.search_kw_quick_menu,
     SettingsTarget.Page(SettingsPageId.SOUNDS) to Res.string.search_kw_sounds,
     SettingsTarget.Page(SettingsPageId.LAUNCHER) to Res.string.search_kw_launcher,
     SettingsTarget.Page(SettingsPageId.STARTUP) to Res.string.search_kw_startup,
@@ -118,7 +116,7 @@ internal fun searchScore(q: String, title: String, keywords: List<String>, conte
 
 /** Pages only some platforms have (shown in the search only where they exist). */
 private val platformPages = setOf(
-    SettingsPageId.USAGE, SettingsPageId.EMULATORS, SettingsPageId.PROFILES, SettingsPageId.VPN, SettingsPageId.QUICK_MENU,
+    SettingsPageId.USAGE, SettingsPageId.EMULATORS, SettingsPageId.PROFILES, SettingsPageId.VPN,
     SettingsPageId.LAUNCHER, SettingsPageId.GAME_SOURCES, SettingsPageId.HOST_ROLE, SettingsPageId.STREAMING_HOST, SettingsPageId.STARTUP,
 )
 
@@ -162,11 +160,6 @@ private val settingsIndex: List<SearchEntry> = buildList {
         .forEach { add(SearchEntry(it, SettingsTarget.Controllers)) }
     listOf(Res.string.combo_section, Res.string.combo_home, Res.string.combo_quick_menu, Res.string.combo_service)
         .forEach { add(SearchEntry(it, SettingsTarget.Controllers, Res.string.combo_section, combos = true)) }
-    addAll(page(SettingsPageId.QUICK_MENU, Res.string.qt_add))
-    addAll(page(
-        SettingsPageId.QUICK_MENU, Res.string.qm_touch_section, Res.string.qm_edge_handle, Res.string.qm_tile_add,
-        section = Res.string.qm_touch_section,
-    ))
     addAll(page(
         SettingsPageId.SOUNDS, Res.string.setting_ui_sounds, Res.string.setting_ui_volume, Res.string.setting_sound_style,
         Res.string.setting_sound_pitch, Res.string.sounds_events, Res.string.setting_haptics, Res.string.setting_haptic_strength,

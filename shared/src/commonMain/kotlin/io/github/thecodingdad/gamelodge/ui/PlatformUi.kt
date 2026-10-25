@@ -1,5 +1,7 @@
 package io.github.thecodingdad.gamelodge.ui
 
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.runtime.Composable
 import io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerInfo
 import io.github.thecodingdad.gamelodge.ui.shell.SystemStatus
@@ -58,6 +60,17 @@ interface PlatformUi {
     /** Volume, brightness and similar device controls in the quick menu. */
     @Composable
     fun SystemControls(visible: Boolean)
+
+    /** Blurs the launcher behind popups and panels ([active] while one is open, [radius] animates). */
+    @Composable
+    fun backdropBlur(active: Boolean, radius: androidx.compose.ui.unit.Dp): Modifier = Modifier.blur(radius)
+
+    /** The quick access tab has an edit button that opens [QuickAccessEditor]. */
+    val hasQuickAccessEditor: Boolean get() = false
+
+    /** Popup to arrange the quick access tab (tiles, which device controls show). */
+    @Composable
+    fun QuickAccessEditor(visible: Boolean, onDismiss: () -> Unit) = Unit
 
     /** Extra buttons at the right end of the status bar (desktop: full screen, close). */
     @Composable

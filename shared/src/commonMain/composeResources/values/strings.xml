@@ -760,8 +760,7 @@
     <string name="qt_sound_silent">Silent</string>
     <string name="qt_dnd">Do not disturb</string>
     <string name="settings_quick_menu">Quick menu</string>
-    <string name="settings_quick_menu_sub">Tiles, order, app shortcuts</string>
-    <string name="qt_settings_help">The tiles appear in this order in the quick menu (Y) under “Quick settings”. Drag the handle to move a tile.</string>
+    <string name="qt_settings_help">Drag the handle to change the order.</string>
     <string name="qt_add">Add tile</string>
     <string name="qt_remove">Remove</string>
     <string name="qt_reset">Reset to defaults</string>
@@ -957,6 +956,9 @@
     <string name="usage_access_off">Not allowed: the launcher only measures starts from itself. Select to allow</string>
 
     <!-- Quick menu -->
+    <string name="qm_edit">Edit quick access</string>
+    <string name="qm_tiles_section">Tiles</string>
+    <string name="qm_show_section">Device controls</string>
     <string name="qm_touch_section">Open by touch in other apps</string>
     <string name="qm_edge_handle">Handle at the right edge</string>
     <string name="qm_edge_handle_sub">A narrow bar at the right screen edge above every app; tap it to open the quick menu</string>
@@ -1004,7 +1006,6 @@
     <string name="search_kw_home_assistant">HA, smart home, light, switch, entity, wake, shut down, favourites</string>
     <string name="search_kw_controls">buttons, layout, hints, direct start, button combination</string>
     <string name="search_kw_controllers">gamepad, Xbox, PlayStation, Nintendo, player, layout, rumble, vibration</string>
-    <string name="search_kw_quick_menu">brightness, volume, Wi-Fi, Bluetooth, tiles, quick access</string>
     <string name="search_kw_sounds">sound, volume, audio, click, haptics, rumble, vibration</string>
     <string name="search_kw_launcher">home app, default launcher, Android home</string>
     <string name="search_kw_startup">autostart, full screen, tray, taskbar, Windows, window</string>
