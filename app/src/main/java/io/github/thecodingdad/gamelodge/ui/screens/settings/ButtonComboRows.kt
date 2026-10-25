@@ -49,6 +49,7 @@ fun ButtonComboRows(settings: LauncherSettings, update: ((LauncherSettings) -> L
 
     SectionHeader(stringResource(Res.string.combo_section))
     ComboActionRows(settings, update)
+    MouseSettingsRows(settings, update)
     SwitchRow(
         stringResource(Res.string.combo_forward), settings.comboForward, { on -> update { it.copy(comboForward = on) } },
         subtitle = stringResource(Res.string.combo_forward_sub),

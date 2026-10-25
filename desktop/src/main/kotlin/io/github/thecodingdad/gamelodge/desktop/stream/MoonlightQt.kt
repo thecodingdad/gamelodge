@@ -51,6 +51,11 @@ class MoonlightQt(val dir: File) {
         Log.i("Streaming app $appId of ${host.name}")
         val builder = ProcessBuilder(command).directory(dir).redirectErrorStream(true)
         builder.environment()["MOONLIGHT_LAUNCHER_MODE"] = "1"
+        // The stream starts with GameLodge's mouse emulation state and speed.
+        val pointer = io.github.thecodingdad.gamelodge.desktop.WindowsPointer
+        builder.environment()["MOONLIGHT_LAUNCHER_MOUSE"] = if (pointer.enabled) "1" else "0"
+        builder.environment()["MOONLIGHT_LAUNCHER_MOUSE_SPEED"] = pointer.streamSpeed.toString()
+        builder.environment()["MOONLIGHT_LAUNCHER_MOUSE_EXPONENT"] = pointer.exponent.toString()
         val process = builder.start()
         running = Running(host.uuid, appId, process)
         var reported = false

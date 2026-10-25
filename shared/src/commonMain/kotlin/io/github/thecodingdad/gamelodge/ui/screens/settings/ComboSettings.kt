@@ -49,6 +49,29 @@ fun comboSubtitle(action: ComboAction): StringResource = when (action) {
     ComboAction.STATS -> Res.string.combo_stats_sub
 }
 
+/** Pointer speed and curve of the mouse emulation (GameLodge's own pointer and the stream's). */
+@Composable
+fun MouseSettingsRows(settings: LauncherSettings, update: ((LauncherSettings) -> LauncherSettings) -> Unit) {
+    SliderRow(
+        stringResource(Res.string.mouse_speed), settings.mouseSpeed, 25..300, 25,
+        onChange = { v -> update { it.copy(mouseSpeed = v) } }, valueLabel = { "$it %" },
+    )
+    ChoiceRow(
+        stringResource(Res.string.mouse_acceleration), io.github.thecodingdad.gamelodge.data.settings.MouseAcceleration.entries, settings.mouseAcceleration,
+        label = {
+            stringResource(
+                when (it) {
+                    io.github.thecodingdad.gamelodge.data.settings.MouseAcceleration.LOW -> Res.string.mouse_accel_low
+                    io.github.thecodingdad.gamelodge.data.settings.MouseAcceleration.MEDIUM -> Res.string.mouse_accel_medium
+                    io.github.thecodingdad.gamelodge.data.settings.MouseAcceleration.HIGH -> Res.string.mouse_accel_high
+                },
+            )
+        },
+        onSelect = { v -> update { it.copy(mouseAcceleration = v) } },
+        subtitle = stringResource(Res.string.mouse_acceleration_sub),
+    )
+}
+
 /** One row per [actions] with its combination, each editable in the record dialog. */
 @Composable
 fun ComboActionRows(

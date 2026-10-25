@@ -72,15 +72,7 @@ object AndroidCombos {
             }
             ComboAction.DISCONNECT -> streams.disconnect()
             ComboAction.STATS -> streams.toggleOverlay()
-            ComboAction.MOUSE -> main.post {
-                // The stream in front has its own mouse; GameLodge's pointer never covers it.
-                if (streams.inFront()) {
-                    PointerMode.stop()
-                    streams.toggleMouse(controller)
-                } else {
-                    PointerMode.toggle(context)
-                }
-            }
+            ComboAction.MOUSE -> main.post { PointerMode.toggle(context) }
         }
     }
 

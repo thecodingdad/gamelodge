@@ -8,13 +8,19 @@ import kotlin.math.abs
 import kotlin.math.sign
 
 /**
- * GameLodge's own mouse emulation on the PC (outside the stream): the controllers move the Windows
- * pointer in every program. Same buttons as Moonlight's: A left, B right, X middle click, LB / RB
- * back / forward, right stick and D-pad scroll. Fed by the gamepad poller while [active].
+ * GameLodge's mouse emulation on the PC. One state for everything ([enabled]): in the stream it's
+ * Moonlight-Qt's mouse, elsewhere the controllers move the Windows pointer in every program. Same
+ * buttons as Moonlight's: A left, B right, X middle click, LB / RB back / forward, right stick and
+ * D-pad scroll. Fed by the gamepad poller while on and no stream is in front.
  */
 object WindowsPointer {
-    @Volatile var active = false
+    @Volatile var enabled = false
         private set
+
+    /** Speed factor (1 = default), curve exponent and the stream's speed (host pixels per second). */
+    @Volatile var speed = 1f
+    @Volatile var exponent = 2.4f
+    @Volatile var streamSpeed = 1200f
 
     /** Called when it's switched on or off (a short notice). */
     @Volatile var onChange: (Boolean) -> Unit = {}
@@ -30,17 +36,20 @@ object WindowsPointer {
 
     @Synchronized
     fun toggle() {
-        active = !active
-        if (!active) {
-            // Nothing stays pressed when it goes off mid-click.
-            held.values.forEach { h ->
-                if (h.a) button(MOUSEEVENTF_LEFTUP)
-                if (h.b) button(MOUSEEVENTF_RIGHTUP)
-                if (h.x) button(MOUSEEVENTF_MIDDLEUP)
-            }
-            held.clear()
+        enabled = !enabled
+        if (!enabled) pause()
+        onChange(enabled)
+    }
+
+    /** Lets go of everything (switched off, or a stream came to the front mid-click). */
+    @Synchronized
+    fun pause() {
+        held.values.forEach { h ->
+            if (h.a) button(MOUSEEVENTF_LEFTUP)
+            if (h.b) button(MOUSEEVENTF_RIGHTUP)
+            if (h.x) button(MOUSEEVENTF_MIDDLEUP)
         }
-        onChange(active)
+        held.clear()
     }
 
     @Synchronized
@@ -49,13 +58,17 @@ object WindowsPointer {
         a: Boolean, b: Boolean, x: Boolean, lb: Boolean, rb: Boolean,
         up: Boolean, down: Boolean, left: Boolean, right: Boolean, now: Long,
     ) {
-        if (!active) return
+        if (!enabled) return
         val h = held.getOrPut(pad) { Held() }
         val dt = if (h.last == 0L) 0f else ((now - h.last) / 1000f).coerceAtMost(0.05f)
         h.last = now
-        val speed = SPEED * dpiScale()
-        restX += curve(deadzone(lx)) * speed * dt
-        restY += curve(deadzone(ly)) * speed * dt
+        // Along the stick's direction; slow near the centre, full speed at the edge.
+        val magnitude = kotlin.math.hypot(lx, ly).coerceAtMost(1f)
+        if (magnitude >= DEADZONE) {
+            val step = SPEED * dpiScale() * speed * Math.pow(magnitude.toDouble(), exponent.toDouble()).toFloat() * dt / magnitude
+            restX += lx * step
+            restY += ly * step
+        }
         val dx = restX.toInt()
         val dy = restY.toInt()
         if (dx != 0 || dy != 0) {
@@ -78,8 +91,6 @@ object WindowsPointer {
             nextScroll = now + (SCROLL_SLOW_MS - (SCROLL_SLOW_MS - SCROLL_FAST_MS) * strength).toLong()
         }
     }
-
-    private fun curve(v: Float) = v * v * v.sign
 
     private fun deadzone(v: Float) = if (abs(v) < DEADZONE) 0f else v
 

@@ -162,6 +162,11 @@ fun main(args: Array<String>) {
             gamepads.nintendoLayout = it.buttonLayout == ButtonLayout.NINTENDO
             gamepads.layoutOverrides = it.controllerLayouts.mapValues { (_, l) -> l == ButtonLayout.NINTENDO }
             io.github.thecodingdad.gamelodge.input.ButtonCombos.forward = it.comboForward
+            WindowsPointer.speed = it.mouseSpeed / 100f
+            WindowsPointer.exponent = it.mouseAcceleration.exponent
+            WindowsPointer.streamSpeed = STREAM_MOUSE_SPEED * it.mouseSpeed / 100f
+            (container.streamControls as? io.github.thecodingdad.gamelodge.desktop.stream.DesktopStreamControls)
+                ?.setMouseSpeed(WindowsPointer.streamSpeed, WindowsPointer.exponent)
             io.github.thecodingdad.gamelodge.input.ButtonCombos.combos =
                 io.github.thecodingdad.gamelodge.input.ComboAction.entries.associateWith { a -> it.combo(a) }
             val emulation = io.github.thecodingdad.gamelodge.desktop.emulation.PcEmulation.decode(it.pcEmulation)
@@ -186,6 +191,7 @@ fun main(args: Array<String>) {
         // Button combinations, also from a game or stream in front (which gets the buttons as
         // well: Windows doesn't let them be intercepted).
         WindowsPointer.onChange = { PointerNotice.show(it) }
+        gamepads.streamInFront = { container.streamControls.inFront() }
         gamepads.onCombo = combo@{ action, _ ->
             // Streamed to: the buttons came from the client, whose own launcher handles them. A paired
             // launcher says so (any app); for others the host's games run through a runner.
@@ -202,14 +208,11 @@ fun main(args: Array<String>) {
                 }
                 io.github.thecodingdad.gamelodge.input.ComboAction.DISCONNECT -> streams.disconnect()
                 io.github.thecodingdad.gamelodge.input.ComboAction.STATS -> streams.toggleOverlay()
-                // The stream in front has its own mouse; GameLodge's pointer is off meanwhile.
-                io.github.thecodingdad.gamelodge.input.ComboAction.MOUSE ->
-                    if (streams.inFront()) {
-                        if (WindowsPointer.active) WindowsPointer.toggle()
-                        streams.toggleMouse(0)
-                    } else {
-                        WindowsPointer.toggle()
-                    }
+                // One state for both: GameLodge's pointer and the stream's mouse follow it.
+                io.github.thecodingdad.gamelodge.input.ComboAction.MOUSE -> {
+                    WindowsPointer.toggle()
+                    streams.setMouse(WindowsPointer.enabled)
+                }
             }
         }
         // Like Android: touch or a mouse click hides the focus ring, the next key or controller
@@ -387,6 +390,9 @@ fun main(args: Array<String>) {
 /** How often the window checks for a resume from sleep, and the clock jump that means one. */
 private const val RESUME_CHECK_MS = 5_000L
 private const val RESUME_GAP_MS = 30_000L
+
+/** Host pixels per second of the stream's mouse at full stick deflection and 100 % speed. */
+private const val STREAM_MOUSE_SPEED = 1200f
 
 /** Unhandled arrow keys move the focus in their direction. */
 internal fun arrowFocus(e: androidx.compose.ui.input.key.KeyEvent, focusManager: androidx.compose.ui.focus.FocusManager): Boolean {

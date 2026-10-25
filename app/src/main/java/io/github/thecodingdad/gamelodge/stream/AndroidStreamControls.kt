@@ -34,8 +34,6 @@ class AndroidStreamControls(private val launcher: LaunchCoordinator) : StreamCon
 
     override fun inFront(): Boolean = game.let { it != null && io.github.thecodingdad.gamelodge.CurrentActivity.resumed() === it }
 
-    override fun toggleMouse(controller: Int): Boolean = inFront() && StreamControl.toggleMouseEmulation(controller)
-
     override fun toggleOverlay(): Boolean = game != null && StreamControl.togglePerformanceOverlay()
 
     override suspend fun quit(host: HostState): Boolean {

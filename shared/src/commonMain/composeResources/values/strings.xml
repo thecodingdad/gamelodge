@@ -780,6 +780,12 @@
     <string name="combo_stats_sub">Shows or hides the stream’s performance figures</string>
     <string name="mouse_on">Mouse emulation on</string>
     <string name="mouse_off">Mouse emulation off</string>
+    <string name="mouse_speed">Mouse speed</string>
+    <string name="mouse_acceleration">Acceleration</string>
+    <string name="mouse_acceleration_sub">Higher: slower with the stick slightly moved, for precise aiming; full speed stays</string>
+    <string name="mouse_accel_low">Low</string>
+    <string name="mouse_accel_medium">Medium</string>
+    <string name="mouse_accel_high">High</string>
     <string name="combo_forward">Pass the buttons on</string>
     <string name="combo_forward_sub">The combinations’ buttons also reach the game, stream or app (in every app with the system-wide service). Off: they only run the action; a short press of a hold combination still reaches GameLodge and its stream.</string>
     <string name="combo_quick_menu_sub">Opens the quick menu</string>

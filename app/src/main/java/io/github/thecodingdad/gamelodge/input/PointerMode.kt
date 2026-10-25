@@ -20,26 +20,50 @@ import kotlin.math.abs
 import kotlin.math.sign
 
 /**
- * GameLodge's own mouse emulation outside the stream: a pointer above every app, moved with the
- * left stick. A taps, X long-presses, B goes back, the right stick and the D-pad scroll. Taps and
- * swipes are gestures of the accessibility service (Android only lets services inject them); the
- * pointer window takes the controller's input while it's on, so the app below doesn't see it.
+ * GameLodge's mouse emulation. One state for everything: in the stream it's the stream's mouse
+ * (Artemis), elsewhere a pointer above every app, moved with the left stick. A taps, X
+ * long-presses, B goes back, the right stick and the D-pad scroll. Taps and swipes are gestures of
+ * the accessibility service (Android only lets services inject them); the pointer window takes the
+ * controller's input while it's on, so the app below doesn't see it. Over GameLodge's own windows
+ * the pointer hovers like a mouse.
  */
 object PointerMode {
     private var view: PointerView? = null
+    private val main = android.os.Handler(android.os.Looper.getMainLooper())
 
-    val active: Boolean get() = view != null
+    /** Mouse emulation is on (stream or pointer, whichever is in front). */
+    @Volatile var enabled = false
+        private set
 
+    /** Pointer speed factor (1 = default) and curve exponent, from the settings. */
+    @Volatile var speed = 1f
+    @Volatile var exponent = 2.4f
+
+    private val streamInFront: Boolean get() = io.github.thecodingdad.gamelodge.CurrentActivity.resumed() is com.limelight.Game
+
+    /** Switches the mouse emulation; [context] shows the notice. */
     fun toggle(context: Context) {
-        if (view != null) stop(context) else start(context)
-    }
-
-    private fun start(context: Context) {
-        val service = ComboAccessibilityService.instance
-        if (service == null) {
+        val on = !enabled
+        if (on && !streamInFront && ComboAccessibilityService.instance == null) {
             Toast.makeText(context, R.string.pointer_needs_service, Toast.LENGTH_LONG).show()
             return
         }
+        enabled = on
+        com.limelight.StreamControl.setMouseEmulation(on)
+        sync()
+        Toast.makeText(context, if (on) R.string.pointer_on else R.string.pointer_off, Toast.LENGTH_SHORT).show()
+    }
+
+    /** Shows the pointer while the emulation is on and no stream is in front (that has its own). */
+    fun sync() {
+        main.post {
+            if (enabled && !streamInFront) start() else stop()
+        }
+    }
+
+    private fun start() {
+        if (view != null) return
+        val service = ComboAccessibilityService.instance ?: return
         val wm = service.getSystemService(WindowManager::class.java)
         val pointer = PointerView(service)
         val params = WindowManager.LayoutParams(
@@ -56,15 +80,13 @@ object PointerMode {
         runCatching { wm.addView(pointer, params) }.onFailure { return }
         pointer.requestFocus()
         view = pointer
-        Toast.makeText(context, R.string.pointer_on, Toast.LENGTH_SHORT).show()
     }
 
-    fun stop(context: Context? = null) {
+    private fun stop() {
         val pointer = view ?: return
         view = null
         pointer.release()
         runCatching { pointer.context.getSystemService(WindowManager::class.java).removeView(pointer) }
-        context?.let { Toast.makeText(it, R.string.pointer_off, Toast.LENGTH_SHORT).show() }
     }
 
     private class PointerView(private val service: AccessibilityService) : View(service), Choreographer.FrameCallback {
@@ -97,6 +119,31 @@ object PointerMode {
         fun release() {
             released = true
             Choreographer.getInstance().removeFrameCallback(this)
+            hover(MotionEvent.ACTION_HOVER_EXIT)
+        }
+
+        private var hoverTarget: android.app.Activity? = null
+
+        /** Mouse hover over GameLodge's own windows (other apps can't be given hover events). */
+        private fun hover(action: Int) {
+            val activity = io.github.thecodingdad.gamelodge.CurrentActivity.resumed()?.takeIf { it !is com.limelight.Game }
+            if (activity !== hoverTarget) {
+                hoverTarget?.let { send(it, MotionEvent.ACTION_HOVER_EXIT) }
+                hoverTarget = activity
+                if (action != MotionEvent.ACTION_HOVER_EXIT) activity?.let { send(it, MotionEvent.ACTION_HOVER_ENTER) }
+            }
+            activity?.let { send(it, action) }
+            if (action == MotionEvent.ACTION_HOVER_EXIT) hoverTarget = null
+        }
+
+        private fun send(activity: android.app.Activity, action: Int) {
+            val origin = IntArray(2).also { activity.window.decorView.getLocationOnScreen(it) }
+            val now = android.os.SystemClock.uptimeMillis()
+            val properties = arrayOf(MotionEvent.PointerProperties().apply { id = 0; toolType = MotionEvent.TOOL_TYPE_MOUSE })
+            val coords = arrayOf(MotionEvent.PointerCoords().apply { this.x = x - origin[0]; this.y = y - origin[1] })
+            val event = MotionEvent.obtain(now, now, action, 1, properties, coords, 0, 0, 1f, 1f, 0, 0, InputDevice.SOURCE_MOUSE, 0)
+            runCatching { activity.dispatchGenericMotionEvent(event) }
+            event.recycle()
         }
 
         override fun onDraw(canvas: Canvas) {
@@ -115,16 +162,17 @@ object PointerMode {
             if (moveX != 0f || moveY != 0f) {
                 val w = resources.displayMetrics.widthPixels.toFloat()
                 val h = resources.displayMetrics.heightPixels.toFloat()
-                x = (x + curve(moveX) * SPEED_DP * density * dt).coerceIn(0f, w - 1)
-                y = (y + curve(moveY) * SPEED_DP * density * dt).coerceIn(0f, h - 1)
+                // Along the stick's direction; slow near the centre, full speed at the edge.
+                val magnitude = kotlin.math.hypot(moveX, moveY).coerceAtMost(1f)
+                val step = SPEED_DP * density * speed * Math.pow(magnitude.toDouble(), exponent.toDouble()).toFloat() * dt / magnitude
+                x = (x + moveX * step).coerceIn(0f, w - 1)
+                y = (y + moveY * step).coerceIn(0f, h - 1)
                 invalidate()
+                hover(MotionEvent.ACTION_HOVER_MOVE)
             }
             if (!scrolling && (abs(scrollX) > 0.3f || abs(scrollY) > 0.3f)) scroll(scrollX, scrollY)
             Choreographer.getInstance().postFrameCallback(this)
         }
-
-        /** Fine control near the centre, full speed at the edge. */
-        private fun curve(v: Float): Float = v * v * v.sign
 
         private fun deadzone(v: Float) = if (abs(v) < DEADZONE) 0f else v
 

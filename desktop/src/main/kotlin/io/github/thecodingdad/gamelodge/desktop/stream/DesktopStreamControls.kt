@@ -53,7 +53,12 @@ class DesktopStreamControls(private val hostActions: HostActions, private val ho
         }.getOrDefault(false)
     }
 
-    override fun toggleMouse(controller: Int): Boolean = inFront() && running?.send("mouse") == true
+    override fun setMouse(on: Boolean): Boolean = running?.send(if (on) "mouse on" else "mouse off") == true
+
+    /** Speed changes reach a running stream at once. */
+    fun setMouseSpeed(speed: Float, exponent: Float) {
+        running?.send("mouse speed $speed $exponent")
+    }
 
     override fun toggleOverlay(): Boolean = running?.send("overlay") == true
 

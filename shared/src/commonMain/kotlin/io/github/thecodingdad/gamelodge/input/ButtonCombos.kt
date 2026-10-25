@@ -73,6 +73,7 @@ object ButtonCombos {
     private val recorded = LinkedHashSet<Int>()
     private var recordGrewAt = 0L
     private var recordReleasedAt = 0L
+    private var recordHoldTimer: ScheduledFuture<*>? = null
     private val _recordingPreview = MutableStateFlow<Set<Int>>(emptySet())
     val recordingPreview: StateFlow<Set<Int>> = _recordingPreview.asStateFlow()
 
@@ -88,6 +89,8 @@ object ButtonCombos {
 
     @Synchronized
     fun cancelRecording() {
+        recordHoldTimer?.cancel(false)
+        recordHoldTimer = null
         recorder = null
         recordDescriptor = null
         recorded.clear()
@@ -132,6 +135,16 @@ object ButtonCombos {
                 if (recordsThis && repeat == 0 && recorded.add(code)) {
                     recordGrewAt = time
                     _recordingPreview.value = LinkedHashSet(recorded)
+                    // Held on without a change: shown as a hold already before letting go.
+                    recordHoldTimer?.cancel(false)
+                    val grew = recordGrewAt
+                    recordHoldTimer = timer.schedule({
+                        synchronized(this) {
+                            if (recorder != null && recordGrewAt == grew && recordReleasedAt == 0L) {
+                                _recordingPreview.value = LinkedHashSet(recorded) + HOLD
+                            }
+                        }
+                    }, HOLD_MS, TimeUnit.MILLISECONDS)
                 }
                 return true
             }
@@ -165,7 +178,10 @@ object ButtonCombos {
         }
         held -= code
         recorder?.let { done ->
-            if (recordsThis && recordReleasedAt == 0L) recordReleasedAt = time
+            if (recordsThis && recordReleasedAt == 0L) {
+                recordReleasedAt = time
+                recordHoldTimer?.cancel(false)
+            }
             if (recordsThis && held.isEmpty() && recorded.isNotEmpty()) {
                 val result = LinkedHashSet(recorded)
                 // Held still before letting go: a hold combination.

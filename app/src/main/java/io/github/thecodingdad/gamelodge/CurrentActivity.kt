@@ -20,11 +20,13 @@ object CurrentActivity : Application.ActivityLifecycleCallbacks {
         current = WeakReference(activity)
         resumed = WeakReference(activity)
         // The stream has its own mouse: GameLodge's pointer goes away when it comes to the front.
-        if (activity is com.limelight.Game) io.github.thecodingdad.gamelodge.input.PointerMode.stop()
+        if (activity is com.limelight.Game) io.github.thecodingdad.gamelodge.input.PointerMode.sync()
     }
 
     override fun onActivityPaused(activity: Activity) {
         if (resumed.get() === activity) resumed.clear()
+        // ... and comes back when the stream leaves the front (if the emulation is still on).
+        if (activity is com.limelight.Game) io.github.thecodingdad.gamelodge.input.PointerMode.sync()
     }
     override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
         // A new launcher window counts at once (a launch may come before its first resume).

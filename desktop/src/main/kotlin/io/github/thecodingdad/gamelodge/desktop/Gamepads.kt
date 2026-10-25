@@ -62,6 +62,11 @@ class Gamepads(private val dispatcher: InputDispatcher) {
 
     /** A button combination of pad [Int] fired; called on the poll or combo thread. */
     @Volatile var onCombo: (ComboAction, Int) -> Unit = { _, _ -> }
+
+    /** The stream is in front (it has its own mouse emulation then); asked twice a second at most. */
+    @Volatile var streamInFront: () -> Boolean = { false }
+    private var streamCheckedAt = 0L
+    private var streamFront = false
     private val comboKeys = HashMap<Int, Set<Int>>() // pad -> buttons down (Android key codes)
     private val hidden = HashMap<Int, MutableSet<Int>>() // pad -> buttons a combination took
 
@@ -111,7 +116,13 @@ class Gamepads(private val dispatcher: InputDispatcher) {
                         lastList = now
                     }
                     combos(now)
-                    if (WindowsPointer.active) {
+                    if (WindowsPointer.enabled && now - streamCheckedAt > 500) {
+                        streamCheckedAt = now
+                        val front = streamInFront()
+                        if (front && !streamFront) WindowsPointer.pause()
+                        streamFront = front
+                    }
+                    if (WindowsPointer.enabled && !streamFront) {
                         release()
                         pointer(now)
                     } else if (focused) {
@@ -125,7 +136,7 @@ class Gamepads(private val dispatcher: InputDispatcher) {
                 Log.w("Gamepad poll failed", e)
             }
             // In the background often enough to catch a short Guide press.
-            Thread.sleep(if (focused || WindowsPointer.active) 16 else 50)
+            Thread.sleep(if (focused || WindowsPointer.enabled) 16 else 50)
         }
     }
 

@@ -191,6 +191,10 @@ data class LauncherSettings(
     val comboDisconnect: Set<Int> = setOf(KEYCODE_START, KEYCODE_SELECT, KEYCODE_L1, KEYCODE_R1),
     /** Performance overlay in the stream on / off. */
     val comboStats: Set<Int> = setOf(KEYCODE_SELECT, KEYCODE_L1, KEYCODE_R1, KEYCODE_X),
+    /** Mouse emulation: pointer speed in percent of the default. */
+    val mouseSpeed: Int = 100,
+    /** Mouse emulation: how much slower the pointer is with the stick only slightly moved. */
+    val mouseAcceleration: MouseAcceleration = MouseAcceleration.MEDIUM,
     /** The combinations' buttons reach the game / app as well. */
     val comboForward: Boolean = false,
     /** Shrink the UI while a TV/monitor is attached (the layout is sized for the handheld). */
@@ -295,6 +299,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val comboQuickMenu = stringPreferencesKey("combo_quick_menu")
         val comboForward = booleanPreferencesKey("combo_forward")
         val comboMouse = stringPreferencesKey("combo_mouse")
+        val mouseSpeed = intPreferencesKey("mouse_speed")
+        val mouseAcceleration = stringPreferencesKey("mouse_acceleration")
         val comboDisconnect = stringPreferencesKey("combo_disconnect")
         val comboStats = stringPreferencesKey("combo_stats")
         // Set with the first save after the Guide defaults came: an empty combination stored
@@ -406,6 +412,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             comboMouse = this[K.comboMouse]?.let(::comboKeys)
                 ?: d.comboMouse.takeIf { this[K.comboQuickMenu]?.let(::comboKeys) != it }.orEmpty(),
             comboDisconnect = this[K.comboDisconnect]?.let(::comboKeys) ?: d.comboDisconnect,
+            mouseSpeed = this[K.mouseSpeed] ?: d.mouseSpeed,
+            mouseAcceleration = enumOr(this[K.mouseAcceleration], d.mouseAcceleration),
             comboStats = this[K.comboStats]?.let(::comboKeys) ?: d.comboStats,
             tvScaleAuto = this[K.tvScaleAuto] ?: d.tvScaleAuto,
             tvScale = this[K.tvScale] ?: d.tvScale,
@@ -501,6 +509,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         this[K.comboMouse] = s.comboMouse.joinToString(",")
         this[K.comboDisconnect] = s.comboDisconnect.joinToString(",")
         this[K.comboStats] = s.comboStats.joinToString(",")
+        this[K.mouseSpeed] = s.mouseSpeed
+        this[K.mouseAcceleration] = s.mouseAcceleration.name
         this[K.tvScaleAuto] = s.tvScaleAuto
         this[K.tvScale] = s.tvScale
         this[K.tvLauncher] = s.tvLauncher
@@ -518,6 +528,9 @@ const val KEYCODE_GUIDE = 110
 
 /** Marker in a button combination: held instead of pressed. */
 const val COMBO_HOLD = -1
+
+/** Mouse emulation curve: the exponent on the stick deflection (higher = finer near the centre). */
+enum class MouseAcceleration(val exponent: Float) { LOW(1.6f), MEDIUM(2.4f), HIGH(3.2f) }
 
 const val KEYCODE_X = 99
 const val KEYCODE_L1 = 102

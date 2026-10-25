@@ -67,6 +67,10 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
         container.scope.launch {
             container.settings.settings.collect {
                 io.github.thecodingdad.gamelodge.input.ButtonCombos.forward = it.comboForward
+                io.github.thecodingdad.gamelodge.input.PointerMode.speed = it.mouseSpeed / 100f
+                io.github.thecodingdad.gamelodge.input.PointerMode.exponent = it.mouseAcceleration.exponent
+                com.limelight.StreamControl.mouseSpeed = STREAM_MOUSE_SPEED * it.mouseSpeed / 100f
+                com.limelight.StreamControl.mouseExponent = it.mouseAcceleration.exponent
                 io.github.thecodingdad.gamelodge.input.ButtonCombos.combos =
                     io.github.thecodingdad.gamelodge.input.ComboAction.entries.associateWith { a -> it.combo(a) }
                 // Mouse, leaving the stream and its overlay are GameLodge's combinations now.
@@ -112,6 +116,9 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
             .crossfade(true)
             .build()
 }
+
+/** Host pixels per second of the stream's mouse at full stick deflection and 100 % speed. */
+private const val STREAM_MOUSE_SPEED = 1200f
 
 val Context.container: AppContainer
     get() = (applicationContext as LauncherApplication).container

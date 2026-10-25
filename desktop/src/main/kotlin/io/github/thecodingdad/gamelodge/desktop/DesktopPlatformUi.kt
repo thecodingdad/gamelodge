@@ -232,6 +232,7 @@ class DesktopPlatformUi(
             settings, update, listOf(io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU, io.github.thecodingdad.gamelodge.input.ComboAction.MOUSE),
             firstFocus = true,
         )
+        io.github.thecodingdad.gamelodge.ui.screens.settings.MouseSettingsRows(settings, update)
     }
 
     @Composable
@@ -351,6 +352,7 @@ class DesktopPlatformUi(
                 ControllerLayoutDefaultRow(settings, update, initialFocus = controllers.isEmpty())
                 SectionHeader(stringResource(Res.string.combo_section))
                 io.github.thecodingdad.gamelodge.ui.screens.settings.ComboActionRows(settings, update)
+                io.github.thecodingdad.gamelodge.ui.screens.settings.MouseSettingsRows(settings, update)
             }
             SeeAlso(
                 SeeAlsoLink(stringResource(Res.string.settings_sounds), SettingsTarget.Page(SettingsPageId.SOUNDS)),

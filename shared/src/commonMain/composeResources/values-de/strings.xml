@@ -778,6 +778,12 @@
     <string name="combo_stats_sub">Blendet die Leistungswerte des Streams ein oder aus</string>
     <string name="mouse_on">Maus-Emulation an</string>
     <string name="mouse_off">Maus-Emulation aus</string>
+    <string name="mouse_speed">Maus-Geschwindigkeit</string>
+    <string name="mouse_acceleration">Beschleunigung</string>
+    <string name="mouse_acceleration_sub">Höher: langsamer bei leichtem Ausschlag, für präzises Zielen; die Höchstgeschwindigkeit bleibt</string>
+    <string name="mouse_accel_low">Gering</string>
+    <string name="mouse_accel_medium">Mittel</string>
+    <string name="mouse_accel_high">Stark</string>
     <string name="combo_forward">Tasten weiterleiten</string>
     <string name="combo_forward_sub">Die Tasten der Kombinationen kommen zusätzlich beim Spiel, Stream oder der App an (mit dem systemweiten Dienst in jeder App). Aus: sie lösen nur die Aktion aus; ein kurzer Druck einer Halte-Kombination kommt in GameLodge und im Stream trotzdem an.</string>
     <string name="combo_quick_menu_sub">Öffnet das Schnellmenü</string>

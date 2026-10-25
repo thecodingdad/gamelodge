@@ -21,8 +21,8 @@ interface StreamControls {
     /** The stream is the app in front (its window has the controllers). */
     fun inFront(): Boolean = false
 
-    /** Mouse emulation of [controller] in the stream on / off; false when no stream took it. */
-    fun toggleMouse(controller: Int): Boolean = false
+    /** Mouse emulation of the stream's controllers on / off; false without a stream. */
+    fun setMouse(on: Boolean): Boolean = false
 
     /** The stream's performance overlay on / off; false without a stream. */
     fun toggleOverlay(): Boolean = false
