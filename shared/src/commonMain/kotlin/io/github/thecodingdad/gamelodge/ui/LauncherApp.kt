@@ -553,9 +553,7 @@ fun LauncherApp(
                     onContinueDespiteNetwork = { w, profile -> vm.launch(w.entry, w.target, profile, skipNetworkCheck = true) },
                     onCancel = vm::cancelLaunch,
                 )
-                // Y opens the quick menu everywhere (holding Select does too): system controls,
-                // controllers, hosts, VPN, stream profile and the Home Assistant tiles.
-                PadAction(PadButton.Y) { quickMenu = !quickMenu }
+                // Holding Select opens the quick menu everywhere (besides the button combination).
                 PadAction(PadButton.SELECT_HOLD) { quickMenu = !quickMenu }
                 val running by vm.runningSessions.collectAsState()
                 QuickMenu(
@@ -736,7 +734,6 @@ private fun MainShell(
                             listOf(
                                 ButtonHint(PadButton.A, stringResource(entryActions.openLabel(homeFocused))),
                                 ButtonHint(PadButton.X, stringResource(Res.string.hint_options)),
-                                ButtonHint(PadButton.Y, stringResource(Res.string.quick_menu)),
                                 ButtonHint(PadButton.L1, stringResource(Res.string.hint_tabs), secondButton = PadButton.R1),
                             ),
                         )

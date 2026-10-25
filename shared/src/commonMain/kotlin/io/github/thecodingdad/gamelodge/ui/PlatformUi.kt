@@ -65,6 +65,13 @@ interface PlatformUi {
     @Composable
     fun backdropBlur(active: Boolean, radius: androidx.compose.ui.unit.Dp): Modifier = Modifier.blur(radius)
 
+    /** The quick menu has a settings tab ([QuickMenuSettingsTab]): how to open it and the like. */
+    val hasQuickMenuSettings: Boolean get() = false
+
+    /** Content of the quick menu's settings tab. */
+    @Composable
+    fun QuickMenuSettingsTab() = Unit
+
     /** The quick access tab has an edit button that opens [QuickAccessEditor]. */
     val hasQuickAccessEditor: Boolean get() = false
 

@@ -79,6 +79,11 @@ class AndroidPlatformUi(private val context: Context) : PlatformUi {
 
     override val hasQuickAccessEditor get() = true
 
+    override val hasQuickMenuSettings get() = true
+
+    @Composable
+    override fun QuickMenuSettingsTab() = io.github.thecodingdad.gamelodge.ui.screens.settings.QuickMenuSettingsTab()
+
     @Composable
     override fun QuickAccessEditor(visible: Boolean, onDismiss: () -> Unit) =
         io.github.thecodingdad.gamelodge.ui.screens.settings.QuickAccessEditor(visible, onDismiss)

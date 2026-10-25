@@ -173,6 +173,8 @@ data class LauncherSettings(
     val quickShowVolume: Boolean = true,
     /** Brightness slider in the quick menu's quick access tab. */
     val quickShowBrightness: Boolean = true,
+    /** PC: audio output picker in the quick access tab. */
+    val quickShowAudioOutput: Boolean = true,
     /** Order of the metadata sources and which are off (see MetadataSources). */
     val metadataSources: List<String> = emptyList(),
     /** Desktop: stores whose games are left out of the library ("steam", "epic" …). */
@@ -278,6 +280,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val quickTiles = stringPreferencesKey("quick_tiles")
         val quickShowVolume = booleanPreferencesKey("quick_show_volume")
         val quickShowBrightness = booleanPreferencesKey("quick_show_brightness")
+        val quickShowAudioOutput = booleanPreferencesKey("quick_show_audio_output")
         val metadataSources = stringPreferencesKey("metadata_sources")
         val disabledGameSources = stringSetPreferencesKey("disabled_game_sources")
         val comboHome = stringPreferencesKey("combo_home")
@@ -379,6 +382,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             quickTiles = this[K.quickTiles]?.split(',')?.filter { it.isNotBlank() && it != "controllers" && it != "hosts" } ?: d.quickTiles,
             quickShowVolume = this[K.quickShowVolume] ?: d.quickShowVolume,
             quickShowBrightness = this[K.quickShowBrightness] ?: d.quickShowBrightness,
+            quickShowAudioOutput = this[K.quickShowAudioOutput] ?: d.quickShowAudioOutput,
             metadataSources = this[K.metadataSources]?.split(',')?.filter { it.isNotBlank() } ?: d.metadataSources,
             disabledGameSources = this[K.disabledGameSources] ?: d.disabledGameSources,
             comboHome = this[K.comboHome]?.takeIf { it.isNotEmpty() || this[K.combosSet] == true }
@@ -469,6 +473,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         this[K.quickTiles] = s.quickTiles.joinToString(",")
         this[K.quickShowVolume] = s.quickShowVolume
         this[K.quickShowBrightness] = s.quickShowBrightness
+        this[K.quickShowAudioOutput] = s.quickShowAudioOutput
         this[K.metadataSources] = s.metadataSources.joinToString(",")
         this[K.disabledGameSources] = s.disabledGameSources
         this[K.comboHome] = s.comboHome.joinToString(",")

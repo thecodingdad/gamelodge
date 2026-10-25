@@ -319,7 +319,7 @@
     <string name="ha_connecting">Verbinde …</string>
     <string name="ha_connected">Verbunden</string>
     <string name="ha_auth_failed">Anmeldung abgelaufen – bitte neu anmelden</string>
-    <string name="ha_panel_empty">Füge Home-Assistant-Entitäten als Kacheln hinzu, um sie überall mit Y zu steuern.</string>
+    <string name="ha_panel_empty">Füge Home-Assistant-Entitäten als Kacheln hinzu, um sie überall aus dem Schnellmenü zu steuern.</string>
     <string name="ha_setup">Einrichten</string>
     <string name="ha_hint_toggle">Schalten · ◀▶ einstellen</string>
     <string name="ha_status">Status</string>
@@ -333,7 +333,7 @@
     <string name="ha_login_phone_hint">Scanne den Code mit dem Smartphone und melde dich dort an. Das Smartphone muss im selben Netzwerk sein wie dieses Gerät.</string>
     <string name="ha_login_phone_waiting">Warte auf die Anmeldung …</string>
     <string name="ha_tiles">Entitäten-Favoriten</string>
-    <string name="ha_entities_intro">Diese Entitäten steuerst du von überall im Home-Assistant-Panel (Y) und, wenn eingeschaltet, als Reihe auf dem Startbildschirm.</string>
+    <string name="ha_entities_intro">Diese Entitäten steuerst du von überall im Home-Assistant-Tab des Schnellmenüs und, wenn eingeschaltet, als Reihe auf dem Startbildschirm.</string>
     <string name="ha_add_tile">Entität hinzufügen</string>
     <string name="ha_events_help">Für Automationen sendet der Launcher die Events moonlight_launcher_stream_started und moonlight_launcher_stream_stopped (mit Spiel, Host und Profil).</string>
 
@@ -957,6 +957,8 @@
     <string name="qm_edit">Schnellzugriff bearbeiten</string>
     <string name="qm_tiles_section">Kacheln</string>
     <string name="qm_show_section">Gerätesteuerung</string>
+    <string name="qm_audio_output">Audio-Ausgabe</string>
+    <string name="qm_brightness_unsupported">Dieser Bildschirm lässt sich von Windows aus nicht dimmen</string>
     <string name="qm_touch_section">Per Touch in anderen Apps öffnen</string>
     <string name="qm_edge_handle">Griff am rechten Rand</string>
     <string name="qm_edge_handle_sub">Schmaler Balken am rechten Bildschirmrand über allen Apps; antippen öffnet das Schnellmenü</string>

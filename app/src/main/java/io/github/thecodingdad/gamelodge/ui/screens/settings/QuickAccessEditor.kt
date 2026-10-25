@@ -51,7 +51,7 @@ import io.github.thecodingdad.gamelodge.resources.*
 
 /**
  * Popup behind the edit button of the quick menu's quick access tab: which tiles show and in
- * which order (app shortcuts included), which device controls show, and opening by touch.
+ * which order (app shortcuts included) and which device controls show.
  */
 @Composable
 fun QuickAccessEditor(visible: Boolean, onDismiss: () -> Unit) {
@@ -90,35 +90,6 @@ fun QuickAccessEditor(visible: Boolean, onDismiss: () -> Unit) {
                 stringResource(Res.string.qm_brightness), settings.quickShowBrightness, { on -> update { it.copy(quickShowBrightness = on) } },
                 icon = Icons.Filled.BrightnessMedium,
             )
-
-            // Opening the menu by touch while another app is in front.
-            SectionHeader(stringResource(Res.string.qm_touch_section))
-            var tick by remember { androidx.compose.runtime.mutableIntStateOf(0) }
-            androidx.lifecycle.compose.LifecycleResumeEffect(Unit) { tick++; onPauseOrDispose { } }
-            val canOverlay = remember(tick) { android.provider.Settings.canDrawOverlays(context) }
-            SwitchRow(
-                stringResource(Res.string.qm_edge_handle), settings.quickMenuEdgeHandle,
-                { on ->
-                    update { it.copy(quickMenuEdgeHandle = on) }
-                    if (on && !canOverlay) {
-                        runCatching {
-                            context.startActivity(
-                                android.content.Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION, android.net.Uri.parse("package:${context.packageName}"))
-                                    .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK),
-                            )
-                        }
-                    }
-                },
-                subtitle = stringResource(if (settings.quickMenuEdgeHandle && !canOverlay) Res.string.qm_edge_handle_permission else Res.string.qm_edge_handle_sub),
-            )
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-                NavRow(
-                    stringResource(Res.string.qm_tile_add), { requestQuickMenuTile(context) },
-                    subtitle = stringResource(Res.string.qm_tile_sub), icon = Icons.Filled.Add,
-                )
-            } else {
-                Text(stringResource(Res.string.qm_tile_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
-            }
         }
     }
 
@@ -147,6 +118,59 @@ fun QuickAccessEditor(visible: Boolean, onDismiss: () -> Unit) {
                 }
             }
         }
+    }
+}
+
+/** The quick menu's settings tab: the button combination that opens it and opening it by touch. */
+@Composable
+fun QuickMenuSettingsTab() {
+    val c = io.github.thecodingdad.gamelodge.LocalContainer.current
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    val settings by c.settings.settings.collectAsState(LauncherSettings())
+    fun update(transform: (LauncherSettings) -> LauncherSettings) { scope.launch { c.settings.update(transform) } }
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    var editing by remember { mutableStateOf(false) }
+    NavRow(
+        stringResource(Res.string.combo_quick_menu), { editing = true },
+        subtitle = stringResource(Res.string.combo_quick_menu_sub),
+        trailing = comboLabel(settings.comboQuickMenu), initialFocus = true,
+    )
+    ComboDialog(
+        action = if (editing) io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU else null,
+        current = settings.comboQuickMenu,
+        other = settings.comboHome,
+        onSave = { keys -> update { it.copy(comboQuickMenu = keys.orEmpty()) } },
+        onDismiss = { editing = false },
+    )
+
+    // Opening the menu by touch while another app is in front.
+    SectionHeader(stringResource(Res.string.qm_touch_section))
+    var tick by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+    androidx.lifecycle.compose.LifecycleResumeEffect(Unit) { tick++; onPauseOrDispose { } }
+    val canOverlay = remember(tick) { android.provider.Settings.canDrawOverlays(context) }
+    SwitchRow(
+        stringResource(Res.string.qm_edge_handle), settings.quickMenuEdgeHandle,
+        { on ->
+            update { it.copy(quickMenuEdgeHandle = on) }
+            if (on && !canOverlay) {
+                runCatching {
+                    context.startActivity(
+                        android.content.Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION, android.net.Uri.parse("package:${context.packageName}"))
+                            .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK),
+                    )
+                }
+            }
+        },
+        subtitle = stringResource(if (settings.quickMenuEdgeHandle && !canOverlay) Res.string.qm_edge_handle_permission else Res.string.qm_edge_handle_sub),
+    )
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+        NavRow(
+            stringResource(Res.string.qm_tile_add), { requestQuickMenuTile(context) },
+            subtitle = stringResource(Res.string.qm_tile_sub), icon = Icons.Filled.Add,
+        )
+    } else {
+        Text(stringResource(Res.string.qm_tile_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
     }
 }
 

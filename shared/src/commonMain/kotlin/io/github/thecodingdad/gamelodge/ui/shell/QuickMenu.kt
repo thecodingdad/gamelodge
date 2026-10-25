@@ -78,6 +78,7 @@ enum class QuickMenuTab(val icon: androidx.compose.ui.graphics.vector.ImageVecto
     HOSTS(Icons.Filled.Computer),
     CONTROLLERS(Icons.Filled.SportsEsports),
     HOME_ASSISTANT(Icons.Filled.Home),
+    SETTINGS(Icons.Filled.Settings),
 }
 
 /**
@@ -104,7 +105,9 @@ fun QuickMenu(
 
     SidePanel(visible = visible, onDismiss = onDismiss, width = 600.dp) {
         val hasRunning = running.isNotEmpty() || local != null
-        val tabs = remember(hasRunning) { QuickMenuTab.entries.filter { it != QuickMenuTab.RUNNING || hasRunning } }
+        val tabs = remember(hasRunning) { QuickMenuTab.entries.filter {
+            (it != QuickMenuTab.RUNNING || hasRunning) && (it != QuickMenuTab.SETTINGS || platform.hasQuickMenuSettings)
+        } }
         var tab by remember(visible, requestedTab) {
             mutableStateOf(requestedTab ?: if (hasRunning) QuickMenuTab.RUNNING else QuickMenuTab.QUICK)
         }
@@ -127,6 +130,7 @@ fun QuickMenu(
                             QuickMenuTab.HOSTS -> Res.string.settings_hosts
                             QuickMenuTab.CONTROLLERS -> Res.string.settings_controllers
                             QuickMenuTab.HOME_ASSISTANT -> Res.string.settings_home_assistant
+                            QuickMenuTab.SETTINGS -> Res.string.tab_settings
                         },
                     ),
                     style = MaterialTheme.typography.titleLarge, color = LauncherTheme.colors.onSurface,
@@ -171,6 +175,7 @@ fun QuickMenu(
                             QuickMenuTab.HOSTS -> HostsTab(running, openHostSettings)
                             QuickMenuTab.CONTROLLERS -> ControllersTab(openControllerSettings)
                             QuickMenuTab.HOME_ASSISTANT -> HomeAssistantSection(openHaSettings)
+                            QuickMenuTab.SETTINGS -> platform.QuickMenuSettingsTab()
                         }
                     }
                 }

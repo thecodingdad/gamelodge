@@ -163,7 +163,6 @@ class QuickMenuActivity : ComponentActivity() {
                         LocalShowHintBar provides (settings.showHintBar && controllers.isNotEmpty()),
                     ) {
                         val running by vm.runningSessions.collectAsState()
-                        PadAction(PadButton.Y) { menuOpen = false }
                         PadAction(PadButton.SELECT_HOLD) { menuOpen = false }
                         QuickMenu(
                             visible = menuOpen,

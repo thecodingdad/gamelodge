@@ -217,7 +217,14 @@ class DesktopPlatformUi(
     override fun quickTileAvailable(id: String) = id in LAUNCHER_TILES
 
     @Composable
-    override fun SystemControls(visible: Boolean) = Unit
+    override fun SystemControls(visible: Boolean) = DesktopSystemControls(visible)
+
+    override val hasSystemControls get() = true
+
+    override val hasQuickAccessEditor get() = true
+
+    @Composable
+    override fun QuickAccessEditor(visible: Boolean, onDismiss: () -> Unit) = DesktopQuickAccessEditor(visible, onDismiss)
 
     @Composable
     override fun backdropBlur(active: Boolean, radius: androidx.compose.ui.unit.Dp): Modifier = snapshotBlur(active, radius, 14.dp)

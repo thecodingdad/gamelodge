@@ -321,7 +321,7 @@
     <string name="ha_connecting">Connecting…</string>
     <string name="ha_connected">Connected</string>
     <string name="ha_auth_failed">Login expired – please sign in again</string>
-    <string name="ha_panel_empty">Add Home Assistant entities as tiles to control them from anywhere with Y.</string>
+    <string name="ha_panel_empty">Add Home Assistant entities as tiles to control them from anywhere in the quick menu.</string>
     <string name="ha_setup">Set up</string>
     <string name="ha_hint_toggle">Switch · ◀▶ adjust</string>
     <string name="ha_status">Status</string>
@@ -335,7 +335,7 @@
     <string name="ha_login_phone_hint">Scan the code with your phone and sign in there. The phone has to be in the same network as this device.</string>
     <string name="ha_login_phone_waiting">Waiting for the sign-in…</string>
     <string name="ha_tiles">Entity favourites</string>
-    <string name="ha_entities_intro">Control these entities from anywhere in the Home Assistant panel (Y) and, when switched on, as a row on the home screen.</string>
+    <string name="ha_entities_intro">Control these entities from anywhere in the quick menu’s Home Assistant tab and, when switched on, as a row on the home screen.</string>
     <string name="ha_add_tile">Add entity</string>
     <string name="ha_events_help">For automations the launcher fires the events moonlight_launcher_stream_started and moonlight_launcher_stream_stopped (with game, host and profile).</string>
 
@@ -959,6 +959,8 @@
     <string name="qm_edit">Edit quick access</string>
     <string name="qm_tiles_section">Tiles</string>
     <string name="qm_show_section">Device controls</string>
+    <string name="qm_audio_output">Audio output</string>
+    <string name="qm_brightness_unsupported">This display can’t be dimmed from Windows</string>
     <string name="qm_touch_section">Open by touch in other apps</string>
     <string name="qm_edge_handle">Handle at the right edge</string>
     <string name="qm_edge_handle_sub">A narrow bar at the right screen edge above every app; tap it to open the quick menu</string>
