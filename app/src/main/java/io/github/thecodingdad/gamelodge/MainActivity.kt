@@ -215,7 +215,8 @@ class MainActivity : ComponentActivity() {
             feedback.play(io.github.thecodingdad.gamelodge.ui.feedback.UiSound.BACK)
         }
         if (dispatcher.dispatch(e)) return true
-        return super.dispatchKeyEvent(e)
+        // Unhandled, Android swaps X / Y for a fallback key (Y = confirm on some pads): they stay without effect.
+        return super.dispatchKeyEvent(e) || io.github.thecodingdad.gamelodge.ui.input.AndroidPad.noFallback(e.keyCode)
     }
 
     companion object {

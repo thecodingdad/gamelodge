@@ -59,7 +59,7 @@ fun ButtonHintBar(hints: List<ButtonHint>, modifier: Modifier = Modifier, hideWh
         horizontalArrangement = Arrangement.spacedBy(if (compact) 12.dp else 22.dp, Alignment.End),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        hints.forEach { hint ->
+        abOrder(hints).forEach { hint ->
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
@@ -124,4 +124,13 @@ private fun glyphFor(button: PadButton, layout: ButtonLayout): Pair<String, Colo
         // Right stick: a round "R", like the face buttons.
         PadButton.RS_LEFT, PadButton.RS_RIGHT, PadButton.RS_UP, PadButton.RS_DOWN -> "R" to shoulder
     }
+}
+
+/** B always right after A (whatever order a screen lists them in), the rest keeps its order. */
+internal fun abOrder(hints: List<ButtonHint>): List<ButtonHint> {
+    val a = hints.indexOfFirst { it.button == io.github.thecodingdad.gamelodge.ui.input.PadButton.A }
+    val b = hints.indexOfFirst { it.button == io.github.thecodingdad.gamelodge.ui.input.PadButton.B }
+    if (a < 0 || b < 0 || b == a + 1) return hints
+    val rest = hints.toMutableList().apply { removeAt(b) }
+    return rest.apply { add(rest.indexOf(hints[a]) + 1, hints[b]) }
 }

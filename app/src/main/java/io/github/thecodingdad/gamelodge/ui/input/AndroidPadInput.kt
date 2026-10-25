@@ -27,6 +27,9 @@ object AndroidPad {
      * Nintendo layout: the confirm button sits where Xbox has B. Swapping key codes before
      * dispatch makes the rest of the app layout-agnostic.
      */
+    /** Buttons whose unhandled presses mustn't turn into Android's fallback keys (confirm / back). */
+    fun noFallback(keyCode: Int): Boolean = keyCode == KeyEvent.KEYCODE_BUTTON_X || keyCode == KeyEvent.KEYCODE_BUTTON_Y
+
     /** Name of a controller button for the button test (D-pad only from controllers, not keyboards). */
     fun testName(event: KeyEvent): String? = when (event.keyCode) {
         KeyEvent.KEYCODE_BUTTON_A -> "A"
