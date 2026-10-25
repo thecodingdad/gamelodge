@@ -770,6 +770,8 @@
     <string name="combo_home">Zurück zu GameLodge</string>
     <string name="combo_home_sub">Holt GameLodge in den Vordergrund, z. B. aus einem Spiel oder dem Stream; in GameLodge geht es zum Start-Tab</string>
     <string name="combo_quick_menu">Schnellmenü öffnen</string>
+    <string name="combo_forward">Tasten weiterleiten</string>
+    <string name="combo_forward_sub">Die Tasten der Kombinationen kommen zusätzlich beim Spiel, Stream oder der App an (mit dem systemweiten Dienst in jeder App). Aus: sie lösen nur die Aktion aus; ein kurzer Druck einer Halte-Kombination kommt in GameLodge und im Stream trotzdem an.</string>
     <string name="combo_quick_menu_sub">Öffnet das Schnellmenü</string>
     <string name="combo_service">Systemweit (Bedienungshilfe)</string>
     <string name="combo_service_sub">„GameLodge-Tastenkombinationen“ in den Bedienungshilfen aktivieren, damit die Kombinationen auch in anderen Apps und im Stream funktionieren</string>

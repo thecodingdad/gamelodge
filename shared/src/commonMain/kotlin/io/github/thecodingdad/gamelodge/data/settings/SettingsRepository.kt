@@ -185,6 +185,8 @@ data class LauncherSettings(
      */
     val comboHome: Set<Int> = setOf(KEYCODE_GUIDE),
     val comboQuickMenu: Set<Int> = setOf(KEYCODE_GUIDE, COMBO_HOLD),
+    /** The combinations' buttons reach the game / app as well. */
+    val comboForward: Boolean = false,
     /** Shrink the UI while a TV/monitor is attached (the layout is sized for the handheld). */
     val tvScaleAuto: Boolean = true,
     /** UI size on an external display, percent of the handheld size. */
@@ -285,6 +287,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val disabledGameSources = stringSetPreferencesKey("disabled_game_sources")
         val comboHome = stringPreferencesKey("combo_home")
         val comboQuickMenu = stringPreferencesKey("combo_quick_menu")
+        val comboForward = booleanPreferencesKey("combo_forward")
         // Set with the first save after the Guide defaults came: an empty combination stored
         // before only meant "never set" (every save writes all fields).
         val combosSet = booleanPreferencesKey("combos_set")
@@ -380,6 +383,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             odinKeepControllers = this[K.odinKeepControllers] ?: d.odinKeepControllers,
             // Controllers and hosts were tiles once; they are tabs of the quick menu now.
             quickTiles = this[K.quickTiles]?.split(',')?.filter { it.isNotBlank() && it != "controllers" && it != "hosts" } ?: d.quickTiles,
+            comboForward = this[K.comboForward] ?: d.comboForward,
             quickShowVolume = this[K.quickShowVolume] ?: d.quickShowVolume,
             quickShowBrightness = this[K.quickShowBrightness] ?: d.quickShowBrightness,
             quickShowAudioOutput = this[K.quickShowAudioOutput] ?: d.quickShowAudioOutput,
@@ -472,6 +476,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         this[K.odinKeepControllers] = s.odinKeepControllers
         this[K.quickTiles] = s.quickTiles.joinToString(",")
         this[K.quickShowVolume] = s.quickShowVolume
+        this[K.comboForward] = s.comboForward
         this[K.quickShowBrightness] = s.quickShowBrightness
         this[K.quickShowAudioOutput] = s.quickShowAudioOutput
         this[K.metadataSources] = s.metadataSources.joinToString(",")

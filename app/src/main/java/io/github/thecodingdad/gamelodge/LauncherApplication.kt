@@ -53,6 +53,11 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
                 }.filterValues { it.isNotEmpty() }
             }
         }
+        // A short press held back by a hold combination goes to GameLodge's window in front (in
+        // another app it can't: no app may inject keys there).
+        io.github.thecodingdad.gamelodge.input.ButtonCombos.replay = { event ->
+            CurrentActivity.resumed()?.dispatchKeyEvent(event) != null
+        }
         // In the stream without the accessibility service (which otherwise sees the buttons first):
         // combinations work there too and their buttons don't reach the host.
         com.limelight.binding.input.KeyInterceptor.interceptor = com.limelight.binding.input.KeyInterceptor.Interceptor { activity, event ->
@@ -63,6 +68,7 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
         }
         container.scope.launch {
             container.settings.settings.collect {
+                io.github.thecodingdad.gamelodge.input.ButtonCombos.forward = it.comboForward
                 io.github.thecodingdad.gamelodge.input.ButtonCombos.combos = mapOf(
                     io.github.thecodingdad.gamelodge.input.ComboAction.HOME to it.comboHome,
                     io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU to it.comboQuickMenu,

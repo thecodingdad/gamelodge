@@ -136,6 +136,10 @@ fun QuickMenuSettingsTab() {
         subtitle = stringResource(Res.string.combo_quick_menu_sub),
         trailing = comboLabel(settings.comboQuickMenu), initialFocus = true,
     )
+    SwitchRow(
+        stringResource(Res.string.combo_forward), settings.comboForward, { on -> update { it.copy(comboForward = on) } },
+        subtitle = stringResource(Res.string.combo_forward_sub),
+    )
     ComboDialog(
         action = if (editing) io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU else null,
         current = settings.comboQuickMenu,

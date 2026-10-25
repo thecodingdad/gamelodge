@@ -772,6 +772,8 @@
     <string name="combo_home">Back to GameLodge</string>
     <string name="combo_home_sub">Brings GameLodge to the front, e.g. from a game or the stream; in GameLodge it goes to the start tab</string>
     <string name="combo_quick_menu">Open quick menu</string>
+    <string name="combo_forward">Pass the buttons on</string>
+    <string name="combo_forward_sub">The combinations’ buttons also reach the game, stream or app (in every app with the system-wide service). Off: they only run the action; a short press of a hold combination still reaches GameLodge and its stream.</string>
     <string name="combo_quick_menu_sub">Opens the quick menu</string>
     <string name="combo_service">System-wide (accessibility)</string>
     <string name="combo_service_sub">Enable "GameLodge combos" in the accessibility settings so the combinations also work in other apps and in the stream</string>

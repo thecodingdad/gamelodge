@@ -59,6 +59,10 @@ fun ButtonComboRows(settings: LauncherSettings, update: ((LauncherSettings) -> L
         subtitle = stringResource(Res.string.combo_quick_menu_sub),
         trailing = comboLabel(settings.comboQuickMenu),
     )
+    SwitchRow(
+        stringResource(Res.string.combo_forward), settings.comboForward, { on -> update { it.copy(comboForward = on) } },
+        subtitle = stringResource(Res.string.combo_forward_sub),
+    )
     // Only the general list could be opened: say what to look for there.
     var generalList by remember { mutableStateOf(false) }
     NavRow(

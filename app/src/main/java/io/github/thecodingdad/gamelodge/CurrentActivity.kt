@@ -9,13 +9,21 @@ import java.lang.ref.WeakReference
 object CurrentActivity : Application.ActivityLifecycleCallbacks {
     private var current = WeakReference<Activity>(null)
 
+    private var resumed = WeakReference<Activity>(null)
+
     fun get(): Activity? = current.get()
+
+    /** The GameLodge window in front right now (main window, quick menu or stream), null behind another app. */
+    fun resumed(): Activity? = resumed.get()
 
     override fun onActivityResumed(activity: Activity) {
         current = WeakReference(activity)
+        resumed = WeakReference(activity)
     }
 
-    override fun onActivityPaused(activity: Activity) = Unit
+    override fun onActivityPaused(activity: Activity) {
+        if (resumed.get() === activity) resumed.clear()
+    }
     override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
         // A new launcher window counts at once (a launch may come before its first resume).
         current = WeakReference(activity)

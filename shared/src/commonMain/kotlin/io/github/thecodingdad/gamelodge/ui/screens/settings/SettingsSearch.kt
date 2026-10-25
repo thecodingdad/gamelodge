@@ -158,7 +158,7 @@ private val settingsIndex: List<SearchEntry> = buildList {
     addAll(page(SettingsPageId.CONTROLS, Res.string.setting_hint_bar, Res.string.setting_games_direct_start))
     listOf(Res.string.controllers_connected, Res.string.controllers_defaults, Res.string.setting_button_layout, Res.string.odin_mapping_section)
         .forEach { add(SearchEntry(it, SettingsTarget.Controllers)) }
-    listOf(Res.string.combo_section, Res.string.combo_home, Res.string.combo_quick_menu, Res.string.combo_service)
+    listOf(Res.string.combo_section, Res.string.combo_home, Res.string.combo_quick_menu, Res.string.combo_forward, Res.string.combo_service)
         .forEach { add(SearchEntry(it, SettingsTarget.Controllers, Res.string.combo_section, combos = true)) }
     addAll(page(
         SettingsPageId.SOUNDS, Res.string.setting_ui_sounds, Res.string.setting_ui_volume, Res.string.setting_sound_style,

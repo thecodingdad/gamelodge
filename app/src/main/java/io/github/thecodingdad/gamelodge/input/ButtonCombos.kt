@@ -26,6 +26,16 @@ object ButtonCombos {
     /** Per-controller replacements by device descriptor (an empty set switches the action off). */
     @Volatile var overrides: Map<String, Map<ComboAction, Set<Int>>> = emptyMap()
 
+    /** The combinations' buttons reach the app / stream as well (the action runs in addition). */
+    @Volatile var forward = false
+
+    /**
+     * Hands a swallowed short press of a hold combination back to the app in front, where that
+     * is possible (GameLodge's own windows and its stream; returns false elsewhere).
+     */
+    @Volatile var replay: ((KeyEvent) -> Boolean)? = null
+    private var replaying = false
+
     fun combosFor(descriptor: String?): Map<ComboAction, Set<Int>> =
         descriptor?.let { overrides[it] }?.let { combos + it } ?: combos
 
@@ -61,7 +71,10 @@ object ButtonCombos {
     val isRecording: Boolean get() = recorder != null
 
     // A press that can still become a hold: decided on release or when the hold time is up.
-    private class Pending(val device: Int, val code: Int, val tap: ComboAction?, val hold: ComboAction, val onAction: (ComboAction) -> Unit)
+    private class Pending(val press: KeyEvent, val tap: ComboAction?, val hold: ComboAction, val onAction: (ComboAction) -> Unit) {
+        val device get() = press.deviceId
+        val code get() = press.keyCode
+    }
     private var pending: Pending? = null
     private val handler by lazy { Handler(Looper.getMainLooper()) }
     private val holdTimeout = Runnable {
@@ -83,7 +96,7 @@ object ButtonCombos {
     /** Returns true when the event belongs to a combo (or recording) and must not reach the app. */
     @Synchronized
     fun handle(event: KeyEvent, onAction: (ComboAction) -> Unit): Boolean {
-        if (!isGamepadKey(event)) return false
+        if (replaying || !isGamepadKey(event)) return false
         val code = event.keyCode
         val held = down.getOrPut(event.deviceId) { LinkedHashSet() }
         val swallowed = consuming.getOrPut(event.deviceId) { HashSet() }
@@ -108,16 +121,18 @@ object ButtonCombos {
                     val hit = combos.entries.firstOrNull { (_, keys) -> keys.isNotEmpty() && keys == held }
                     val holdHit = combos.entries.firstOrNull { (_, keys) -> HOLD in keys && keys.size > 1 && keys - HOLD == held }
                     if (holdHit != null) {
-                        swallowed += code
-                        pending = Pending(event.deviceId, code, hit?.key, holdHit.key, onAction)
+                        pending = Pending(KeyEvent(event), hit?.key, holdHit.key, onAction)
                         handler.postDelayed(holdTimeout, HOLD_MS)
+                        if (forward) return false
+                        swallowed += code
                         return true
                     }
                     if (hit != null) {
+                        onAction(hit.key)
+                        if (forward) return false
                         // Only the completing button is swallowed: the others already reached
                         // the app, so their release has to reach it too (no stuck buttons).
                         swallowed += code
-                        onAction(hit.key)
                         return true
                     }
                 }
@@ -137,15 +152,36 @@ object ButtonCombos {
                     return true
                 }
                 pending?.takeIf { it.device == event.deviceId && it.code == code }?.let { p ->
-                    // Released before the hold time: a press.
+                    // Released before the hold time: a press. Without its own action the app gets
+                    // it after all (it was held back in case it became a hold).
                     cancelPending()
                     p.tap?.let(p.onAction)
+                    if (p.tap == null && code in swallowed) {
+                        swallowed.remove(code)
+                        replayPress(p.press, event)
+                        return true
+                    }
                 }
                 return swallowed.remove(code)
             }
         }
         return false
     }
+
+    /** Sends [press] and, a moment later, [release] to the app (a zero-length press gets lost in games). */
+    private fun replayPress(press: KeyEvent, release: KeyEvent) {
+        val send = replay ?: return
+        val now = android.os.SystemClock.uptimeMillis()
+        fun deliver(e: KeyEvent) {
+            synchronized(this) { replaying = true }
+            try { send(e) } finally { synchronized(this) { replaying = false } }
+        }
+        val down = KeyEvent.changeTimeRepeat(press, now, 0)
+        handler.post { deliver(down) }
+        handler.postDelayed({ deliver(KeyEvent(now, now + REPLAY_MS, KeyEvent.ACTION_UP, release.keyCode, 0, release.metaState, release.deviceId, release.scanCode, release.flags, release.source)) }, REPLAY_MS)
+    }
+
+    private const val REPLAY_MS = 60L
 
     /** Forgets held buttons, e.g. when the window loses focus and releases may be missed. */
     @Synchronized
