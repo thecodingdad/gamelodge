@@ -289,6 +289,8 @@
     <string name="profile_rename">Rename</string>
     <string name="profile_delete">Delete</string>
     <string name="profile_essentials">Most important</string>
+    <string name="profile_advanced">More settings</string>
+    <string name="profile_advanced_sub">Rarely changed, grouped by topic</string>
     <string name="launcher_intro">Use GameLodge as your home screen. You can switch back at any time; the app keeps working as a normal app too.</string>
     <string name="launcher_enable">Use as home screen</string>
     <string name="launcher_enable_sub">Shows whether the launcher is the default home app; turning it on opens Android's choice</string>

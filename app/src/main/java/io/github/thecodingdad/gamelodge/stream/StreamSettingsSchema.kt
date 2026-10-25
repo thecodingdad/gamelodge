@@ -13,11 +13,16 @@ object StreamSettingsSchema {
     private const val SEEKBAR = "http://schemas.moonlight-stream.com/apk/res/seekbar"
 
     /** Categories that configure Artemis' own UI, irrelevant inside the launcher. */
-    private val skippedCategories = setOf("category_ui_settings")
+    // Artemis' UI settings, and its misc page (updates, debug info, key imports): GameLodge's own.
+    private val skippedCategories = setOf("category_ui_settings", "category_settings_misc")
     private val skippedKeys = setOf(
         "list_languages", "checkbox_small_icon_mode",
         // Artemis' AI 3D render mode isn't part of GameLodge (see moonlight-core's Stereo3DRenderer).
         RENDER_MODE_KEY, "parallax_depth", "convergence_ratio", "balance_shift",
+        // The quick menu replaces the overlay's own quick options; logging and its dashboard are
+        // developer tools; Home and the quick menu come from GameLodge's button combinations.
+        "checkbox_enable_perf_overlay_lite_dialog", "checkbox_enable_perf_logging", "share_performance_logs",
+        "option_view_shared_pref_logs", "checkbox_back_as_guide", "checkbox_back_as_meta",
     )
 
     /** Artemis' render mode; anything but 2D ("0") would ask for the 3D renderer. */

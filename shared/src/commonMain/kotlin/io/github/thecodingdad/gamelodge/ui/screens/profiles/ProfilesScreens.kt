@@ -7,6 +7,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -111,11 +113,21 @@ fun ProfileEditor(editing: ProfileEditing, uuid: UUID?, name: String, onDeleted:
         }
         SectionHeader(stringResource(Res.string.profile_essentials))
         essentials.forEachIndexed { i, option -> OptionRow(option, store, revision, i == 0 && uuid == null, editing) { revision++ } }
-        schema.forEach { category ->
-            val rest = category.options.filter { it.key !in editing.essentialKeys }
-            if (rest.isEmpty()) return@forEach
-            SectionHeader(category.title)
-            rest.forEach { option -> OptionRow(option, store, revision, false, editing) { revision++ } }
+        // Everything else is rarely changed: folded away, grouped by topic.
+        val groups = schema.mapNotNull { category ->
+            category.options.filter { it.key !in editing.essentialKeys }.takeIf { it.isNotEmpty() }?.let { category.title to it }
+        }
+        if (groups.isNotEmpty()) {
+            var advanced by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(false) }
+            io.github.thecodingdad.gamelodge.ui.screens.settings.NavRow(
+                stringResource(Res.string.profile_advanced), { advanced = !advanced },
+                subtitle = stringResource(Res.string.profile_advanced_sub),
+                icon = if (advanced) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+            )
+            if (advanced) groups.forEach { (title, options) ->
+                SectionHeader(title)
+                options.forEach { option -> OptionRow(option, store, revision, false, editing) { revision++ } }
+            }
         }
     }
 }
