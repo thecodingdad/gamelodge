@@ -203,34 +203,16 @@ private fun ControllerOverrideRows(c: ControllerInfo) {
         ControllerLayoutOverrideRow(c, ls) { t -> scope.launch { settingsRepo.update(t) } }
     }
     // Button combinations of this controller (e.g. Guide on an Xbox pad, Select + Start elsewhere).
-    val globalHome = launcherSettings?.comboHome.orEmpty()
-    val globalMenu = launcherSettings?.comboQuickMenu.orEmpty()
-    var editing by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<io.github.thecodingdad.gamelodge.input.ComboAction?>(null) }
-    val home = s.comboHome?.toSet()
-    val menu = s.comboQuickMenu?.toSet()
-    NavRow(
-        stringResource(Res.string.combo_home), { editing = io.github.thecodingdad.gamelodge.input.ComboAction.HOME },
-        trailing = if (home == null) comboLabel(globalHome, global = true) else comboLabel(home),
-    )
-    NavRow(
-        stringResource(Res.string.combo_quick_menu), { editing = io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU },
-        trailing = if (menu == null) comboLabel(globalMenu, global = true) else comboLabel(menu),
-    )
-    val action = editing
-    val isHome = action == io.github.thecodingdad.gamelodge.input.ComboAction.HOME
-    ComboDialog(
-        action = action,
-        current = if (isHome) home else menu,
-        others = listOf(if (isHome) menu ?: globalMenu else home ?: globalHome) +
-            listOfNotNull(launcherSettings).flatMap { ls -> listOf(ls.comboMouse, ls.comboDisconnect, ls.comboStats) },
-        global = if (isHome) globalHome else globalMenu,
-        descriptor = c.descriptor,
-        onSave = { keys ->
-            val list = keys?.toList()
-            save { if (isHome) it.copy(comboHome = list) else it.copy(comboQuickMenu = list) }
-        },
-        onDismiss = { editing = null },
-    )
+    launcherSettings?.let { ls ->
+        ControllerComboRows(
+            global = ls,
+            combo = { a -> s.combo(a)?.toSet() },
+            forward = s.comboForward,
+            descriptor = c.descriptor,
+            onCombo = { a, keys -> save { it.withCombo(a, keys?.toList()) } },
+            onForward = { v -> save { it.copy(comboForward = v) } },
+        )
+    }
 
     SectionHeader(stringResource(Res.string.controller_stream_section))
     Text(stringResource(Res.string.controller_overrides_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)

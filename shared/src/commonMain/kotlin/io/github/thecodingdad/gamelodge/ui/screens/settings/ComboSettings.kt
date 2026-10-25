@@ -49,6 +49,56 @@ fun comboSubtitle(action: ComboAction): StringResource = when (action) {
     ComboAction.STATS -> Res.string.combo_stats_sub
 }
 
+/**
+ * One controller's combinations and pass-through, each either its own or the global one ([global]).
+ * [combo] gives the controller's own combination (null = global), [descriptor] limits recording to it.
+ */
+@Composable
+fun ControllerComboRows(
+    global: LauncherSettings,
+    combo: (ComboAction) -> Set<Int>?,
+    forward: Boolean?,
+    descriptor: String,
+    onCombo: (ComboAction, Set<Int>?) -> Unit,
+    onForward: (Boolean?) -> Unit,
+    showForward: Boolean = true,
+) {
+    var editing by remember { mutableStateOf<ComboAction?>(null) }
+    fun effective(a: ComboAction) = combo(a) ?: global.combo(a)
+    ComboAction.entries.forEach { action ->
+        val own = combo(action)
+        NavRow(
+            stringResource(comboTitle(action)), { editing = action },
+            trailing = if (own == null) comboLabel(global.combo(action), global = true) else comboLabel(own),
+        )
+    }
+    if (showForward) {
+        val on = stringResource(Res.string.ha_on)
+        val off = stringResource(Res.string.ha_off)
+        ChoiceRow(
+            stringResource(Res.string.combo_forward), listOf<Boolean?>(null, true, false), forward,
+            label = { v ->
+                when (v) {
+                    null -> stringResource(Res.string.combo_global_value, if (global.comboForward) on else off)
+                    true -> on
+                    false -> off
+                }
+            },
+            onSelect = onForward,
+        )
+    }
+    val action = editing
+    ComboDialog(
+        action = action,
+        current = action?.let { combo(it) },
+        others = ComboAction.entries.filter { it != action }.map { effective(it) },
+        global = action?.let { global.combo(it) }.orEmpty(),
+        descriptor = descriptor,
+        onSave = { keys -> action?.let { onCombo(it, keys) } },
+        onDismiss = { editing = null },
+    )
+}
+
 /** Pointer speed and curve of the mouse emulation (GameLodge's own pointer and the stream's). */
 @Composable
 fun MouseSettingsRows(settings: LauncherSettings, update: ((LauncherSettings) -> LauncherSettings) -> Unit) {

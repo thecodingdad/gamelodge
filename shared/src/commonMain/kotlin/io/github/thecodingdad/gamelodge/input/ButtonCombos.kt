@@ -51,6 +51,11 @@ object ButtonCombos {
     /** The combinations' buttons reach the app / stream as well (the action runs in addition). */
     @Volatile var forward = false
 
+    /** Per-controller replacement of [forward] by device descriptor. */
+    @Volatile var forwardOverrides: Map<String, Boolean> = emptyMap()
+
+    fun forwardFor(descriptor: String?): Boolean = descriptor?.let { forwardOverrides[it] } ?: forward
+
     /**
      * Hands a short press held back by a hold combination to the app after all: the platform's
      * press and release events (as given to [handle]). Where that isn't possible it stays unset.
@@ -162,13 +167,13 @@ object ButtonCombos {
                     val fire = synchronized(this) { pending?.takeIf { it === p }?.also { pending = null } }
                     fire?.onAction?.invoke(fire.hold, fire.device)
                 }, HOLD_MS, TimeUnit.MILLISECONDS)
-                if (forward) return false
+                if (forwardFor(descriptor)) return false
                 swallowed += code
                 return true
             }
             if (hit != null) {
                 onAction(hit.key, device)
-                if (forward) return false
+                if (forwardFor(descriptor)) return false
                 // Only the completing button is swallowed: the others already reached the app,
                 // so their release has to reach it too (no stuck buttons).
                 swallowed += code

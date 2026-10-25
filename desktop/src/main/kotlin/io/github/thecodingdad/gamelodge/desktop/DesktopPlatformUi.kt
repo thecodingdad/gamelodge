@@ -133,6 +133,21 @@ class DesktopPlatformUi(
             settingsState()?.let { (settings, update) ->
                 SectionHeader(stringResource(Res.string.controller_launcher_section))
                 ControllerLayoutOverrideRow(c, settings, update)
+                // Own combinations of this controller (by name, like its layout). The game always
+                // gets the buttons on Windows, so there's no pass-through choice here.
+                val own = settings.controllerCombos[c.key] ?: io.github.thecodingdad.gamelodge.data.settings.PadCombos()
+                fun save(pad: io.github.thecodingdad.gamelodge.data.settings.PadCombos) = update { s ->
+                    s.copy(controllerCombos = if (pad.isEmpty) s.controllerCombos - c.key else s.controllerCombos + (c.key to pad))
+                }
+                io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerComboRows(
+                    global = settings,
+                    combo = { a -> own.combos[a.name]?.toSet() },
+                    forward = own.forward,
+                    descriptor = c.key,
+                    onCombo = { a, keys -> save(own.copy(combos = if (keys == null) own.combos - a.name else own.combos + (a.name to keys.toList()))) },
+                    onForward = { v -> save(own.copy(forward = v)) },
+                    showForward = false,
+                )
             }
             if (c.canVibrate) {
                 LauncherButton(

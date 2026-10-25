@@ -169,6 +169,11 @@ fun main(args: Array<String>) {
                 ?.setMouseSpeed(WindowsPointer.streamSpeed, WindowsPointer.exponent)
             io.github.thecodingdad.gamelodge.input.ButtonCombos.combos =
                 io.github.thecodingdad.gamelodge.input.ComboAction.entries.associateWith { a -> it.combo(a) }
+            io.github.thecodingdad.gamelodge.input.ButtonCombos.overrides = it.controllerCombos.mapValues { (_, pad) ->
+                pad.combos.mapNotNull { (name, keys) ->
+                    io.github.thecodingdad.gamelodge.input.ComboAction.entries.firstOrNull { a -> a.name == name }?.let { a -> a to keys.toSet() }
+                }.toMap()
+            }.filterValues { m -> m.isNotEmpty() }
             val emulation = io.github.thecodingdad.gamelodge.desktop.emulation.PcEmulation.decode(it.pcEmulation)
             val custom = io.github.thecodingdad.gamelodge.desktop.games.CustomGame.decode(it.pcCustomGames)
             val overrides = io.github.thecodingdad.gamelodge.desktop.games.LaunchOverride.decode(it.pcLaunchOverrides)

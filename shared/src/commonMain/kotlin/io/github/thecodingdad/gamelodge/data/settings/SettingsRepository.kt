@@ -95,6 +95,8 @@ data class LauncherSettings(
     val buttonLayout: ButtonLayout = ButtonLayout.XBOX,
     /** Controllers with their own layout ([io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerInfo.key] → layout). */
     val controllerLayouts: Map<String, ButtonLayout> = emptyMap(),
+    /** PC: button combinations of single controllers by name (Android keeps them per device). */
+    val controllerCombos: Map<String, PadCombos> = emptyMap(),
     val uiSounds: Boolean = true,
     val uiSoundVolume: Int = 60,
     val haptics: Boolean = true,
@@ -244,6 +246,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val homeRowOrder = stringPreferencesKey("home_row_order")
         val buttonLayout = stringPreferencesKey("button_layout")
         val controllerLayouts = stringPreferencesKey("controller_layouts")
+        val controllerCombos = stringPreferencesKey("controller_combos")
         val uiSounds = booleanPreferencesKey("ui_sounds")
         val uiSoundVolume = intPreferencesKey("ui_sound_volume")
         val haptics = booleanPreferencesKey("haptics")
@@ -350,6 +353,9 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             homeRowOrder = this[K.homeRowOrder]?.split(',')?.filter { it.isNotEmpty() } ?: d.homeRowOrder,
             buttonLayout = enumOr(this[K.buttonLayout], d.buttonLayout),
             // "key\tLAYOUT" lines (controller names may hold any character but tabs and line breaks).
+            controllerCombos = this[K.controllerCombos]?.let { text ->
+                runCatching { padCombosJson.decodeFromString<Map<String, PadCombos>>(text) }.getOrNull()
+            } ?: d.controllerCombos,
             controllerLayouts = this[K.controllerLayouts]?.lines()?.mapNotNull { line ->
                 val key = line.substringBeforeLast('\t', "").takeIf { it.isNotEmpty() } ?: return@mapNotNull null
                 runCatching { ButtonLayout.valueOf(line.substringAfterLast('\t')) }.getOrNull()?.let { key to it }
@@ -451,6 +457,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         this[K.showHaRowOnHome] = s.showHaRowOnHome
         this[K.homeRowOrder] = s.homeRowOrder.joinToString(",")
         this[K.buttonLayout] = s.buttonLayout.name
+        this[K.controllerCombos] = padCombosJson.encodeToString(s.controllerCombos)
         this[K.controllerLayouts] = s.controllerLayouts.entries.joinToString("\n") { "${it.key}\t${it.value.name}" }
         this[K.uiSounds] = s.uiSounds
         this[K.uiSoundVolume] = s.uiSoundVolume
@@ -528,6 +535,14 @@ const val KEYCODE_GUIDE = 110
 
 /** Marker in a button combination: held instead of pressed. */
 const val COMBO_HOLD = -1
+
+/** One controller's own button combinations (action name -> keys, empty = off) and pass-through. */
+@kotlinx.serialization.Serializable
+data class PadCombos(val combos: Map<String, List<Int>> = emptyMap(), val forward: Boolean? = null) {
+    val isEmpty: Boolean get() = combos.isEmpty() && forward == null
+}
+
+private val padCombosJson = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
 
 /** Mouse emulation curve: the exponent on the stick deflection (higher = finer near the centre). */
 enum class MouseAcceleration(val exponent: Float) { LOW(1.6f), MEDIUM(2.4f), HIGH(3.2f) }

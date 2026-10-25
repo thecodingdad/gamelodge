@@ -48,11 +48,11 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
         container.scope.launch {
             container.controllerSettings.all.collect { all ->
                 io.github.thecodingdad.gamelodge.input.ButtonCombos.overrides = all.mapValues { (_, s) ->
-                    buildMap {
-                        s.comboHome?.let { put(io.github.thecodingdad.gamelodge.input.ComboAction.HOME, it.toSet()) }
-                        s.comboQuickMenu?.let { put(io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU, it.toSet()) }
-                    }
+                    io.github.thecodingdad.gamelodge.input.ComboAction.entries
+                        .mapNotNull { a -> s.combo(a)?.let { a to it.toSet() } }.toMap()
                 }.filterValues { it.isNotEmpty() }
+                io.github.thecodingdad.gamelodge.input.ButtonCombos.forwardOverrides =
+                    all.mapNotNull { (descriptor, s) -> s.comboForward?.let { descriptor to it } }.toMap()
             }
         }
         io.github.thecodingdad.gamelodge.input.AndroidCombos.installReplay()

@@ -21,8 +21,30 @@ data class ControllerSettings(
     /** Button combinations (key codes) of this controller: null = global, empty = off. */
     val comboHome: List<Int>? = null,
     val comboQuickMenu: List<Int>? = null,
+    val comboMouse: List<Int>? = null,
+    val comboDisconnect: List<Int>? = null,
+    val comboStats: List<Int>? = null,
+    /** The combinations' buttons reach the app as well: null = global. */
+    val comboForward: Boolean? = null,
 ) {
     val isEmpty: Boolean get() = this == ControllerSettings()
+
+    /** This controller's combination of [action]: null = the global one. */
+    fun combo(action: io.github.thecodingdad.gamelodge.input.ComboAction): List<Int>? = when (action) {
+        io.github.thecodingdad.gamelodge.input.ComboAction.HOME -> comboHome
+        io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU -> comboQuickMenu
+        io.github.thecodingdad.gamelodge.input.ComboAction.MOUSE -> comboMouse
+        io.github.thecodingdad.gamelodge.input.ComboAction.DISCONNECT -> comboDisconnect
+        io.github.thecodingdad.gamelodge.input.ComboAction.STATS -> comboStats
+    }
+
+    fun withCombo(action: io.github.thecodingdad.gamelodge.input.ComboAction, keys: List<Int>?): ControllerSettings = when (action) {
+        io.github.thecodingdad.gamelodge.input.ComboAction.HOME -> copy(comboHome = keys)
+        io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU -> copy(comboQuickMenu = keys)
+        io.github.thecodingdad.gamelodge.input.ComboAction.MOUSE -> copy(comboMouse = keys)
+        io.github.thecodingdad.gamelodge.input.ComboAction.DISCONNECT -> copy(comboDisconnect = keys)
+        io.github.thecodingdad.gamelodge.input.ComboAction.STATS -> copy(comboStats = keys)
+    }
 }
 
 /**
