@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Accessibility
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FiberManualRecord
 import androidx.compose.material.icons.filled.Public
@@ -45,6 +46,7 @@ fun ButtonComboRows(settings: LauncherSettings, update: ((LauncherSettings) -> L
     var tick by remember { mutableIntStateOf(0) }
     LifecycleResumeEffect(Unit) { tick++; onPauseOrDispose { } }
     val serviceOn = remember(tick) { ComboAccessibilityService.isEnabled(context) }
+    val restricted = remember(tick) { ComboAccessibilityService.isRestricted(context) }
 
     SectionHeader(stringResource(Res.string.combo_section))
     NavRow(
@@ -57,9 +59,11 @@ fun ButtonComboRows(settings: LauncherSettings, update: ((LauncherSettings) -> L
         subtitle = stringResource(Res.string.combo_quick_menu_sub),
         trailing = comboLabel(settings.comboQuickMenu),
     )
+    // Only the general list could be opened: say what to look for there.
+    var generalList by remember { mutableStateOf(false) }
     NavRow(
         stringResource(Res.string.combo_service), {
-            ComboAccessibilityService.openSettings(context)
+            if (!ComboAccessibilityService.openSettings(context)) generalList = true
         },
         subtitle = stringResource(Res.string.combo_service_sub),
         trailing = stringResource(if (serviceOn) Res.string.combo_service_on else Res.string.off),
@@ -68,9 +72,16 @@ fun ButtonComboRows(settings: LauncherSettings, update: ((LauncherSettings) -> L
         // Without the service the combinations only work in GameLodge and its stream.
         Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(stringResource(Res.string.combo_service_hint), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
-            LauncherButton(stringResource(Res.string.combo_service_enable), onClick = {
-                ComboAccessibilityService.openSettings(context)
-            }, icon = Icons.Filled.Accessibility)
+            if (generalList) Text(stringResource(Res.string.combo_service_where), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+            if (restricted) Text(stringResource(Res.string.combo_service_restricted), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+            io.github.thecodingdad.gamelodge.ui.components.ButtonRow {
+                LauncherButton(stringResource(Res.string.combo_service_enable), onClick = {
+                    if (!ComboAccessibilityService.openSettings(context)) generalList = true
+                }, icon = Icons.Filled.Accessibility)
+                if (restricted) LauncherButton(stringResource(Res.string.combo_service_app_info), onClick = {
+                    ComboAccessibilityService.openAppInfo(context)
+                }, icon = Icons.Filled.Info)
+            }
         }
     }
 

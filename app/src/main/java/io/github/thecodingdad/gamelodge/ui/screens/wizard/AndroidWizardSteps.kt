@@ -122,6 +122,16 @@ private fun ColumnScope.GuideStep(settings: LauncherSettings) {
         action = stringResource(Res.string.combo_service_enable),
         onClick = { if (!ComboAccessibilityService.openSettings(context)) generalList = true },
     )
+    // Installed outside an app store: Android greys the service out until restricted settings are allowed.
+    val restricted = remember(tick) { ComboAccessibilityService.isRestricted(context) }
+    if (!serviceOn && restricted) {
+        WizardStatusRow(
+            stringResource(Res.string.combo_service_restricted_title), stringResource(Res.string.combo_service_restricted),
+            done = false, icon = Icons.Filled.Info,
+            action = stringResource(Res.string.combo_service_app_info),
+            onClick = { ComboAccessibilityService.openAppInfo(context) },
+        )
+    }
     val action = editing
     ComboDialog(
         action = action,

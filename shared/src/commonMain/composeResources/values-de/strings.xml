@@ -1366,6 +1366,9 @@
     <string name="wizard_launcher_sub">Die Home-Taste führt dann zu GameLodge. Rückgängig machen geht in Androids Standard-Apps.</string>
     <string name="wizard_controller_waiting">Kein Controller verbunden. Die Standardbelegung gilt für jeden Controller, den du später verbindest; Touch und Maus funktionieren auch.</string>
     <string name="combo_service_where">Such dort „GameLodge-Tastenkombinationen“ (oft unter „Installierte Apps“ bzw. „Heruntergeladene Apps“) und schalte den Dienst ein.</string>
+    <string name="combo_service_restricted_title">Eingeschränkte Einstellungen zulassen</string>
+    <string name="combo_service_restricted">Android sperrt die Bedienungshilfe für Apps, die nicht aus einem App-Store installiert wurden (der Dienst ist dann ausgegraut). So gibst du sie frei: einmal auf den ausgegrauten Dienst tippen, dann in den App-Infos von GameLodge oben rechts das Menü (⋮) öffnen und „Eingeschränkte Einstellungen zulassen“ wählen. Danach den Dienst aktivieren.</string>
+    <string name="combo_service_app_info">App-Infos öffnen</string>
     <string name="wizard_controller_default">Standard-Tastenbelegung</string>
     <string name="wizard_controller_test_sub">Tasten ausprobieren, ohne dass etwas passiert</string>
     <string name="wizard_controller_test_start">Starten</string>

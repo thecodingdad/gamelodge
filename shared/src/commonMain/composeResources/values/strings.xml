@@ -1368,6 +1368,9 @@
     <string name="wizard_launcher_sub">The home button then leads to GameLodge. You can undo it in Android's default apps.</string>
     <string name="wizard_controller_waiting">No controller connected. The default layout applies to every controller you connect later; touch and mouse work too.</string>
     <string name="combo_service_where">Look for "GameLodge combos" there (often under "Installed apps" or "Downloaded apps") and switch it on.</string>
+    <string name="combo_service_restricted_title">Allow restricted settings</string>
+    <string name="combo_service_restricted">Android blocks accessibility services of apps not installed from an app store (the service is greyed out). To allow it: tap the greyed-out service once, then in GameLodge's app info open the menu (⋮) at the top right and choose “Allow restricted settings”. Then enable the service.</string>
+    <string name="combo_service_app_info">Open app info</string>
     <string name="wizard_controller_default">Default button layout</string>
     <string name="wizard_controller_test_sub">Try the buttons without anything happening</string>
     <string name="wizard_controller_test_start">Start</string>

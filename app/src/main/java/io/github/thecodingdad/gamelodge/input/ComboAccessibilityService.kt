@@ -69,6 +69,28 @@ class ComboAccessibilityService : AccessibilityService() {
             return false
         }
 
+        /**
+         * Android 13+ blocks accessibility services of apps not installed from an app store (the
+         * service shows greyed out) until "Allow restricted settings" is chosen in the app info.
+         */
+        fun isRestricted(context: Context): Boolean {
+            if (android.os.Build.VERSION.SDK_INT < 33) return false
+            val appOps = context.getSystemService(android.app.AppOpsManager::class.java) ?: return false
+            return runCatching {
+                appOps.unsafeCheckOpNoThrow(OP_RESTRICTED_SETTINGS, android.os.Process.myUid(), context.packageName) !=
+                    android.app.AppOpsManager.MODE_ALLOWED
+            }.getOrDefault(false)
+        }
+
+        /** GameLodge's app info, where its menu (⋮) holds "Allow restricted settings". */
+        fun openAppInfo(context: Context) {
+            val info = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, android.net.Uri.fromParts("package", context.packageName, null))
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            runCatching { context.startActivity(info) }
+        }
+
+        private const val OP_RESTRICTED_SETTINGS = "android:access_restricted_settings"
+
         fun isEnabled(context: Context): Boolean {
             val enabled = Settings.Secure.getString(context.contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES).orEmpty()
             return enabled.split(':').any { it.endsWith(ComboAccessibilityService::class.java.name) || it.endsWith("/.input.ComboAccessibilityService") }
