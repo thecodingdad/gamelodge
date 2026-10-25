@@ -120,7 +120,6 @@ private fun glyphFor(button: PadButton, layout: ButtonLayout): Pair<String, Colo
         PadButton.R2 -> "RT" to shoulder
         PadButton.START -> "☰" to shoulder
         PadButton.SELECT -> "⧉" to shoulder
-        PadButton.SELECT_HOLD -> "⧉" to shoulder
         // Right stick: a round "R", like the face buttons.
         PadButton.RS_LEFT, PadButton.RS_RIGHT, PadButton.RS_UP, PadButton.RS_DOWN -> "R" to shoulder
     }

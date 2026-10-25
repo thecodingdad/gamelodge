@@ -78,8 +78,6 @@ class Gamepads(private val dispatcher: InputDispatcher) {
     private var lastUsed = 0
     private val previous = HashMap<Int, Pad>()
     private val held = HashMap<String, Long>() // repeating key -> next repeat time
-    private var selectDownAt = 0L
-    private var selectRepeats = 0
 
     fun start(window: Window) {
         this.window = window
@@ -311,7 +309,7 @@ class Gamepads(private val dispatcher: InputDispatcher) {
         button(PadButton.L1, p.lb, s.lb, now)
         button(PadButton.R1, p.rb, s.rb, now)
         button(PadButton.START, p.start, s.start, now)
-        select(p.back, s.back, now)
+        button(PadButton.SELECT, p.back, s.back, now)
         // Same orientation as Android's axes (down positive). Only on change: 60 calls a second
         // on the UI thread for a resting stick cost frames for nothing.
         if (p.leftTrigger != s.leftTrigger || p.rightTrigger != s.rightTrigger || p.rightStickX != s.rightStickX || p.rightStickY != s.rightStickY) {
@@ -323,22 +321,6 @@ class Gamepads(private val dispatcher: InputDispatcher) {
         if (was == now) return
         val phase = if (now) InputDispatcher.KeyPhase.DOWN else InputDispatcher.KeyPhase.UP
         EventQueue.invokeLater { dispatcher.dispatchButton(button, phase, 0, time) }
-    }
-
-    /** Select: held long it opens the quick menu (the dispatcher counts repeats like Android's key repeat). */
-    private fun select(was: Boolean, now: Boolean, time: Long) {
-        when {
-            now && !was -> {
-                selectDownAt = time
-                selectRepeats = 0
-                EventQueue.invokeLater { dispatcher.dispatchButton(PadButton.SELECT, InputDispatcher.KeyPhase.DOWN, 0, time) }
-            }
-            now && was && time - selectDownAt > (selectRepeats + 1) * 50L -> {
-                val repeat = ++selectRepeats
-                EventQueue.invokeLater { dispatcher.dispatchButton(PadButton.SELECT, InputDispatcher.KeyPhase.DOWN, repeat, time) }
-            }
-            !now && was -> EventQueue.invokeLater { dispatcher.dispatchButton(PadButton.SELECT, InputDispatcher.KeyPhase.UP, 0, time) }
-        }
     }
 
     private fun direction(name: String, was: Boolean, now: Boolean, code: Int, time: Long) {

@@ -551,8 +551,6 @@ fun LauncherApp(
                     onContinueDespiteNetwork = { w, profile -> vm.launch(w.entry, w.target, profile, skipNetworkCheck = true) },
                     onCancel = vm::cancelLaunch,
                 )
-                // Holding Select opens the quick menu everywhere (besides the button combination).
-                PadAction(PadButton.SELECT_HOLD) { quickMenu = !quickMenu }
                 val running by vm.runningSessions.collectAsState()
                 QuickMenu(
                     visible = quickMenu,

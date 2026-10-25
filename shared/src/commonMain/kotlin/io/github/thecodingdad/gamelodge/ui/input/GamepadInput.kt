@@ -12,7 +12,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import kotlinx.coroutines.launch
 
 enum class PadButton {
-    A, B, X, Y, L1, R1, L2, R2, START, SELECT, SELECT_HOLD,
+    A, B, X, Y, L1, R1, L2, R2, START, SELECT,
     /** Right stick pushed in a direction (repeats while held); used for values like brightness. */
     RS_LEFT, RS_RIGHT, RS_UP, RS_DOWN,
 }
@@ -37,8 +37,6 @@ class InputDispatcher {
     private val mainScope = kotlinx.coroutines.MainScope()
     private var stickDirection: PadButton? = null
     private var stickRepeat: kotlinx.coroutines.Job? = null
-    private var selectDownAt = 0L
-    private var selectHoldFired = false
 
     // Right stick up/down scrolls the screen's (single) vertical scroll area like a swipe;
     // left/right stay direction buttons (paging details, dimming lights).
@@ -164,30 +162,13 @@ class InputDispatcher {
         return fire(button)
     }
 
-    /** Select: short press and hold are separate actions (hold opens the quick menu). */
+    /** Select acts when it is released (the quick menu only opens with its configured combination). */
     private fun dispatchSelect(phase: KeyPhase, repeatCount: Int, eventTime: Long): Boolean {
-        when (phase) {
-            KeyPhase.DOWN -> {
-                if (repeatCount == 0) {
-                    selectDownAt = eventTime
-                    selectHoldFired = false
-                } else if (!selectHoldFired && eventTime - selectDownAt >= HOLD_MS) {
-                    selectHoldFired = fire(PadButton.SELECT_HOLD)
-                }
-            }
-            KeyPhase.UP -> {
-                val held = eventTime - selectDownAt
-                if (!selectHoldFired) {
-                    if (held >= HOLD_MS) fire(PadButton.SELECT_HOLD) else fire(PadButton.SELECT)
-                }
-            }
-            KeyPhase.OTHER -> Unit
-        }
+        if (phase == KeyPhase.UP) fire(PadButton.SELECT)
         return true
     }
 
     companion object {
-        const val HOLD_MS = 450L
         const val TRIGGER_DEDUP_MS = 250L
         const val STICK_PRESS = 0.6f
         const val SCROLL_DEAD_ZONE = 0.15f
