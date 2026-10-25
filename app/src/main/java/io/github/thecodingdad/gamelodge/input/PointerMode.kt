@@ -54,6 +54,14 @@ object PointerMode {
         Toast.makeText(context, if (on) R.string.pointer_on else R.string.pointer_off, Toast.LENGTH_SHORT).show()
     }
 
+    /** Sets the emulation without a notice (a game that starts with the mouse, or without). */
+    fun set(on: Boolean) {
+        if (on == enabled) return
+        enabled = on
+        com.limelight.StreamControl.setMouseEmulation(on)
+        sync()
+    }
+
     /** Shows the pointer while the emulation is on and no stream is in front (that has its own). */
     fun sync() {
         main.post {

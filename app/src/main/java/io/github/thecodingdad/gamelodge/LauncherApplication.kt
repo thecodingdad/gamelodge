@@ -59,6 +59,13 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
             }
         }
         io.github.thecodingdad.gamelodge.input.AndroidCombos.installReplay()
+        // A game that wants the mouse emulation on (or off) gets it when its stream starts.
+        container.scope.launch {
+            container.launcher.activeStream.map { it?.entry?.item?.id }.distinctUntilChanged().collect { id ->
+                val wanted = id?.let { currentSettings.gamePads[it]?.mouse } ?: return@collect
+                io.github.thecodingdad.gamelodge.input.PointerMode.set(wanted)
+            }
+        }
         // In the stream without the accessibility service (which otherwise sees the buttons first):
         // combinations work there too and their buttons don't reach the host.
         com.limelight.binding.input.KeyInterceptor.interceptor = com.limelight.binding.input.KeyInterceptor.Interceptor { activity, event ->

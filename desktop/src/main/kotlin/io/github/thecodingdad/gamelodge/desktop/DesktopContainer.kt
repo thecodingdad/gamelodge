@@ -181,7 +181,10 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
                 // Face buttons follow the launcher's layout (the game's own, else the default of
                 // all controllers: Moonlight-Qt swaps them for every pad alike).
                 val s = settings.settings.first()
-                val nintendo = (s.gameLayouts[entry.item.id] ?: s.buttonLayout) == io.github.thecodingdad.gamelodge.data.settings.ButtonLayout.NINTENDO
+                val pad = s.gamePads[entry.item.id]
+                // A game that wants the mouse emulation on (or off) starts with it (one state with the launcher's).
+                pad?.mouse?.let { io.github.thecodingdad.gamelodge.desktop.WindowsPointer.set(it) }
+                val nintendo = (pad?.layout ?: s.buttonLayout) == io.github.thecodingdad.gamelodge.data.settings.ButtonLayout.NINTENDO
                 profiles.activeOptions() + if (nintendo) "--swap-gamepad-buttons" else "--no-swap-gamepad-buttons"
             },
             onStreamEnded = {

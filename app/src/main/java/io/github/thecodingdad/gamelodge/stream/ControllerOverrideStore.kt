@@ -76,14 +76,19 @@ class ControllerOverrideStore(context: Context) {
         ControllerOverrides.setProvider { descriptor ->
             val s = _all.value[descriptor] ?: ControllerSettings()
             val settings = launcher()
-            val layout = game()?.let { settings.gameLayouts[it] }
-                ?: settings.layoutFor(descriptor)
+            // The streamed game's own settings win over the controller's.
+            val pad = game()?.let { settings.gamePads[it] }
+            val layout = pad?.layout ?: settings.layoutFor(descriptor)
             ControllerOverrides.Override().apply {
                 flipFaceButtons = layout == io.github.thecodingdad.gamelodge.data.settings.ButtonLayout.NINTENDO
                 deadzonePercent = s.deadzonePercent
-                rumblePercent = s.rumblePercent
-                touchpadAsMouse = s.touchpadAsMouse
-                motionSensors = s.motionSensors
+                rumblePercent = when (pad?.rumble) {
+                    false -> 0
+                    true -> s.rumblePercent?.takeIf { it > 0 } ?: 100
+                    null -> s.rumblePercent
+                }
+                touchpadAsMouse = pad?.touchpadMouse ?: s.touchpadAsMouse
+                motionSensors = pad?.motion ?: s.motionSensors
                 playerSlot = s.playerSlot
             }
         }

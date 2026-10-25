@@ -184,6 +184,13 @@
     <!-- Controls -->
     <string name="setting_button_layout">Tastenbelegung</string>
     <string name="setting_button_layout_sub">Nintendo tauscht Bestätigen/Zurück (A/B) und X/Y</string>
+    <string name="game_controller_settings">Controller-Einstellungen</string>
+    <string name="game_mouse">Maus-Emulation beim Start</string>
+    <string name="game_mouse_sub">An: Der Stream startet mit dem Controller als Maus, z. B. für Point-and-Click-Spiele</string>
+    <string name="game_rumble">Vibration</string>
+    <string name="game_motion">Bewegungssensoren</string>
+    <string name="game_motion_sub">Gyro-Zielen und Bewegungssteuerung, wo das Spiel es unterstützt</string>
+    <string name="game_touchpad">Touchpad als Maus</string>
     <string name="game_layout">Tastenbelegung im Stream</string>
     <string name="game_layout_controllers">Wie Controller</string>
     <string name="game_layout_sub">Nintendo tauscht A/B und X/Y für dieses Spiel</string>

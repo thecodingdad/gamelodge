@@ -314,6 +314,8 @@ fun EntryContextMenu(
     /** Opened from the game's own detail page: its buttons already cover play and favorite. */
     inDetail: Boolean = false,
 ) {
+    var controllerSettingsFor by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<io.github.thecodingdad.gamelodge.data.db.LibraryItemEntity?>(null) }
+    GameControllerDialog(controllerSettingsFor) { controllerSettingsFor = null }
     Modal(
         visible = entry != null || session != null, onDismiss = onDismiss,
         title = entry?.item?.title ?: session?.appName, maxWidth = 520.dp,
@@ -366,8 +368,10 @@ fun EntryContextMenu(
             } else {
                 LauncherButton(stringResource(Res.string.action_mark_game), act { onKind(e, ItemKind.GAME) }, Modifier.fillMaxWidth(), Icons.Filled.SportsEsports)
             }
-            // Streamed games: their own button layout (a Nintendo game wants confirm on the right).
-            if (e.item.kind == ItemKind.GAME && e.remoteTargets.isNotEmpty()) GameLayoutRow(e.item.id)
+            // Streamed games: their own controller settings (e.g. a Nintendo game wants confirm on the right).
+            if (e.item.kind == ItemKind.GAME && e.remoteTargets.isNotEmpty()) {
+                LauncherButton(stringResource(Res.string.game_controller_settings), { controllerSettingsFor = e.item }, Modifier.fillMaxWidth(), Icons.Filled.SportsEsports)
+            }
             if (e.romTargets.isNotEmpty()) {
                 LauncherButton(stringResource(Res.string.action_emulator), act { onEmulator(e) }, Modifier.fillMaxWidth(), Icons.Filled.SportsEsports)
             }
@@ -383,32 +387,60 @@ fun EntryContextMenu(
     }
 }
 
-/** The button layout of one game's stream: the controllers' own, or fixed Xbox / Nintendo. */
+/**
+ * Controller settings of one streamed game (opened from its menu): what differs from the
+ * controllers' own for this game. Rumble, motion and touchpad only where the client takes them.
+ */
 @Composable
-private fun GameLayoutRow(itemId: String) {
+private fun GameControllerDialog(item: io.github.thecodingdad.gamelodge.data.db.LibraryItemEntity?, onDismiss: () -> Unit) {
     val c = io.github.thecodingdad.gamelodge.LocalContainer.current
     val settings by c.settings.settings.collectAsState(null)
-    val s = settings ?: return
     val scope = androidx.compose.runtime.rememberCoroutineScope()
-    io.github.thecodingdad.gamelodge.ui.screens.settings.ChoiceRow(
-        stringResource(Res.string.game_layout), listOf(null) + io.github.thecodingdad.gamelodge.data.settings.ButtonLayout.entries,
-        s.gameLayouts[itemId],
-        label = {
-            stringResource(
-                when (it) {
-                    null -> Res.string.game_layout_controllers
-                    io.github.thecodingdad.gamelodge.data.settings.ButtonLayout.XBOX -> Res.string.button_layout_xbox
-                    io.github.thecodingdad.gamelodge.data.settings.ButtonLayout.NINTENDO -> Res.string.button_layout_nintendo
-                },
-            )
-        },
-        onSelect = { layout ->
+    val platform = io.github.thecodingdad.gamelodge.ui.PlatformUi.current
+    Modal(visible = item != null, onDismiss = onDismiss, title = stringResource(Res.string.game_controller_settings), maxWidth = 620.dp) {
+        val i = item ?: return@Modal
+        val s = settings ?: return@Modal
+        val pad = s.gamePads[i.id] ?: io.github.thecodingdad.gamelodge.data.settings.GamePadSettings()
+        fun save(t: (io.github.thecodingdad.gamelodge.data.settings.GamePadSettings) -> io.github.thecodingdad.gamelodge.data.settings.GamePadSettings) {
+            val updated = t(pad)
             scope.launch {
-                c.settings.update { st -> st.copy(gameLayouts = if (layout == null) st.gameLayouts - itemId else st.gameLayouts + (itemId to layout)) }
+                c.settings.update { st -> st.copy(gamePads = if (updated.isEmpty) st.gamePads - i.id else st.gamePads + (i.id to updated)) }
             }
-        },
-        subtitle = stringResource(Res.string.game_layout_sub),
-    )
+        }
+        val like = stringResource(Res.string.game_layout_controllers)
+        val on = stringResource(Res.string.ha_on)
+        val off = stringResource(Res.string.ha_off)
+        @Composable
+        fun tri(title: String, value: Boolean?, subtitle: String? = null, set: (Boolean?) -> Unit) =
+            io.github.thecodingdad.gamelodge.ui.screens.settings.ChoiceRow(
+                title, listOf(null, true, false), value,
+                label = { v -> when (v) { null -> like; true -> on; false -> off } },
+                onSelect = set, subtitle = subtitle,
+            )
+        Column(Modifier.popupHeightIn(560.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(i.title, style = MaterialTheme.typography.bodyMedium, color = io.github.thecodingdad.gamelodge.ui.theme.LauncherTheme.colors.onSurfaceMuted)
+            io.github.thecodingdad.gamelodge.ui.screens.settings.ChoiceRow(
+                stringResource(Res.string.game_layout), listOf(null) + io.github.thecodingdad.gamelodge.data.settings.ButtonLayout.entries, pad.layout,
+                label = {
+                    stringResource(
+                        when (it) {
+                            null -> Res.string.game_layout_controllers
+                            io.github.thecodingdad.gamelodge.data.settings.ButtonLayout.XBOX -> Res.string.button_layout_xbox
+                            io.github.thecodingdad.gamelodge.data.settings.ButtonLayout.NINTENDO -> Res.string.button_layout_nintendo
+                        },
+                    )
+                },
+                onSelect = { v -> save { it.copy(layout = v) } },
+                subtitle = stringResource(Res.string.game_layout_sub),
+            )
+            tri(stringResource(Res.string.game_mouse), pad.mouse, stringResource(Res.string.game_mouse_sub)) { v -> save { it.copy(mouse = v) } }
+            if (platform.hasGamePadExtras) {
+                tri(stringResource(Res.string.game_rumble), pad.rumble) { v -> save { it.copy(rumble = v) } }
+                tri(stringResource(Res.string.game_motion), pad.motion, stringResource(Res.string.game_motion_sub)) { v -> save { it.copy(motion = v) } }
+                tri(stringResource(Res.string.game_touchpad), pad.touchpadMouse) { v -> save { it.copy(touchpadMouse = v) } }
+            }
+        }
+    }
 }
 
 /**

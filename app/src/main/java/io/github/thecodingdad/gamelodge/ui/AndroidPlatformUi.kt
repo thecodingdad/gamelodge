@@ -81,6 +81,8 @@ class AndroidPlatformUi(private val context: Context) : PlatformUi {
 
     override val hasQuickMenuSettings get() = true
 
+    override val hasGamePadExtras get() = true
+
     @Composable
     override fun QuickMenuSettingsTab() = io.github.thecodingdad.gamelodge.ui.screens.settings.QuickMenuSettingsTab()
 

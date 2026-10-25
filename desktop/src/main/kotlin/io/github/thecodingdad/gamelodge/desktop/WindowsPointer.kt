@@ -41,6 +41,14 @@ object WindowsPointer {
         onChange(enabled)
     }
 
+    /** Sets the emulation without a notice (a game that starts with the mouse, or without). */
+    @Synchronized
+    fun set(on: Boolean) {
+        if (on == enabled) return
+        enabled = on
+        if (!on) pause()
+    }
+
     /** Lets go of everything (switched off, or a stream came to the front mid-click). */
     @Synchronized
     fun pause() {

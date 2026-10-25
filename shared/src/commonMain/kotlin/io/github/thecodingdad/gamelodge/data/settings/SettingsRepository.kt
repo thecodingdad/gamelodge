@@ -95,8 +95,8 @@ data class LauncherSettings(
     val buttonLayout: ButtonLayout = ButtonLayout.XBOX,
     /** Controllers with their own layout ([io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerInfo.key] → layout). */
     val controllerLayouts: Map<String, ButtonLayout> = emptyMap(),
-    /** Games whose stream uses another button layout than the controllers' (library item id). */
-    val gameLayouts: Map<String, ButtonLayout> = emptyMap(),
+    /** Controller settings of single streamed games (library item id); unset parts follow the controllers. */
+    val gamePads: Map<String, GamePadSettings> = emptyMap(),
     /** PC: button combinations of single controllers by name (Android keeps them per device). */
     val controllerCombos: Map<String, PadCombos> = emptyMap(),
     val uiSounds: Boolean = true,
@@ -246,7 +246,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val homeRowOrder = stringPreferencesKey("home_row_order")
         val buttonLayout = stringPreferencesKey("button_layout")
         val controllerLayouts = stringPreferencesKey("controller_layouts")
-        val gameLayouts = stringPreferencesKey("game_layouts")
+        val gamePads = stringPreferencesKey("game_pads")
         val controllerCombos = stringPreferencesKey("controller_combos")
         val uiSounds = booleanPreferencesKey("ui_sounds")
         val uiSoundVolume = intPreferencesKey("ui_sound_volume")
@@ -360,10 +360,9 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
                 val key = line.substringBeforeLast('\t', "").takeIf { it.isNotEmpty() } ?: return@mapNotNull null
                 runCatching { ButtonLayout.valueOf(line.substringAfterLast('\t')) }.getOrNull()?.let { key to it }
             }?.toMap() ?: d.controllerLayouts,
-            gameLayouts = this[K.gameLayouts]?.lines()?.mapNotNull { line ->
-                val key = line.substringBeforeLast('\t', "").takeIf { it.isNotEmpty() } ?: return@mapNotNull null
-                runCatching { ButtonLayout.valueOf(line.substringAfterLast('\t')) }.getOrNull()?.let { key to it }
-            }?.toMap() ?: d.gameLayouts,
+            gamePads = this[K.gamePads]?.let { text ->
+                runCatching { padCombosJson.decodeFromString<Map<String, GamePadSettings>>(text) }.getOrNull()
+            } ?: d.gamePads,
             uiSounds = this[K.uiSounds] ?: d.uiSounds,
             uiSoundVolume = this[K.uiSoundVolume] ?: d.uiSoundVolume,
             haptics = this[K.haptics] ?: d.haptics,
@@ -461,7 +460,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         this[K.homeRowOrder] = s.homeRowOrder.joinToString(",")
         this[K.buttonLayout] = s.buttonLayout.name
         this[K.controllerCombos] = padCombosJson.encodeToString(s.controllerCombos)
-        this[K.gameLayouts] = s.gameLayouts.entries.joinToString("\n") { "${it.key}\t${it.value.name}" }
+        this[K.gamePads] = padCombosJson.encodeToString(s.gamePads)
         this[K.controllerLayouts] = s.controllerLayouts.entries.joinToString("\n") { "${it.key}\t${it.value.name}" }
         this[K.uiSounds] = s.uiSounds
         this[K.uiSoundVolume] = s.uiSoundVolume
@@ -538,6 +537,21 @@ const val KEYCODE_GUIDE = 110
 
 /** Marker in a button combination: held instead of pressed. */
 const val COMBO_HOLD = -1
+
+/**
+ * One game's controller settings in the stream (null = like the controllers): button layout,
+ * mouse emulation when the stream starts, rumble, motion sensors and the touchpad as a mouse.
+ */
+@kotlinx.serialization.Serializable
+data class GamePadSettings(
+    val layout: ButtonLayout? = null,
+    val mouse: Boolean? = null,
+    val rumble: Boolean? = null,
+    val motion: Boolean? = null,
+    val touchpadMouse: Boolean? = null,
+) {
+    val isEmpty: Boolean get() = this == GamePadSettings()
+}
 
 /** One controller's own button combinations (action name -> keys, empty = off) and pass-through. */
 @kotlinx.serialization.Serializable

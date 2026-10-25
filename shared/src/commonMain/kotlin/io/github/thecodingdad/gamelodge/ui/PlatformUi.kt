@@ -65,6 +65,9 @@ interface PlatformUi {
     @Composable
     fun backdropBlur(active: Boolean, radius: androidx.compose.ui.unit.Dp): Modifier = Modifier.blur(radius)
 
+    /** Per game also rumble, motion sensors and touchpad as mouse (the streaming client takes them). */
+    val hasGamePadExtras: Boolean get() = false
+
     /** The quick menu has a settings tab ([QuickMenuSettingsTab]): how to open it and the like. */
     val hasQuickMenuSettings: Boolean get() = false
 
