@@ -1,7 +1,5 @@
 package io.github.thecodingdad.gamelodge.ui.shell
 
-import io.github.thecodingdad.gamelodge.ui.components.popupHeightIn
-import io.github.thecodingdad.gamelodge.ui.components.controllerScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -36,7 +34,9 @@ import io.github.thecodingdad.gamelodge.data.remote.HostStatus
 import io.github.thecodingdad.gamelodge.stream.PowerAction
 import io.github.thecodingdad.gamelodge.ui.components.HoldToConfirmButton
 import io.github.thecodingdad.gamelodge.ui.components.LauncherButton
-import io.github.thecodingdad.gamelodge.ui.components.Modal
+import io.github.thecodingdad.gamelodge.ui.components.restoreFocusIf
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.background
 import io.github.thecodingdad.gamelodge.ui.components.StatusDot
 import io.github.thecodingdad.gamelodge.ui.components.FocusSurface
 import androidx.compose.ui.graphics.Color
@@ -45,61 +45,81 @@ import io.github.thecodingdad.gamelodge.ui.theme.LauncherTheme
 import kotlinx.coroutines.launch
 import io.github.thecodingdad.gamelodge.resources.*
 
-/** Small popup from the status bar's host icon: state, address, running game, quick actions. */
+/** One host in the quick menu's hosts tab: state, address, auto sleep, wake and power actions. */
 @Composable
-fun HostInfoPopup(
-    host: HostState?,
+fun HostCard(
+    host: HostState,
     runningGame: String?,
-    onDismiss: () -> Unit,
     openSettings: (HostState) -> Unit,
+    initialFocus: Boolean,
 ) {
     val c = io.github.thecodingdad.gamelodge.LocalContainer.current
     val scope = rememberCoroutineScope()
     var config by remember { mutableStateOf<HostConfigEntity?>(null) }
     var message by remember { mutableStateOf<String?>(null) }
-    LaunchedEffect(host?.uuid) {
+    LaunchedEffect(host.uuid) {
         message = null
-        config = host?.let { c.hostPower.config(it.uuid) }
+        config = c.hostPower.config(host.uuid)
     }
     val wakeSent = stringResource(Res.string.host_wake_sent)
-    Modal(visible = host != null, onDismiss = onDismiss, title = host?.name, maxWidth = 560.dp) {
-        val h = host ?: return@Modal
-        val colors = LauncherTheme.colors
-        Column(Modifier.popupHeightIn(600.dp).controllerScroll()) {
+    val h = host
+    val colors = LauncherTheme.colors
+    Column(
+        Modifier.fillMaxWidth().clip(androidx.compose.foundation.shape.RoundedCornerShape(LauncherTheme.dimens.cornerRadius))
+            .background(colors.surfaceRaised).padding(14.dp),
+    ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            StatusDot(
-                when {
-                    h.isStreaming -> colors.accent
-                    h.status == HostStatus.ONLINE -> colors.success
-                    h.status == HostStatus.OFFLINE -> colors.danger
-                    else -> colors.onSurfaceMuted
-                },
-            )
-            Text(
-                when {
-                    h.isStreaming -> stringResource(Res.string.host_state_streaming, runningGame ?: "?")
-                    h.status == HostStatus.ONLINE -> stringResource(Res.string.host_state_online)
-                    h.status == HostStatus.OFFLINE -> stringResource(Res.string.host_state_offline)
-                    else -> stringResource(Res.string.host_state_unknown)
-                },
-                style = MaterialTheme.typography.titleMedium, color = colors.onSurface,
-                maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f, fill = false),
-            )
-        }
-        h.address?.let {
-            Text(it, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceMuted, modifier = Modifier.padding(start = 22.dp, top = 2.dp))
-        }
-        Spacer(Modifier.height(14.dp))
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            // Pairing is only known once the host answered.
-            // Only worth a line when something is wrong.
-            if (h.status == HostStatus.ONLINE && !h.paired) {
-                InfoRow(stringResource(Res.string.host_info_paired), stringResource(Res.string.no))
+            StatusDot(hostTint(listOf(h), HostStreamingColor, colors.success, colors.danger, colors.onSurfaceMuted))
+            Column(Modifier.weight(1f)) {
+                Text(h.name, style = MaterialTheme.typography.titleMedium, color = colors.onSurface, maxLines = 1)
+                Text(
+                    when {
+                        h.isStreaming -> stringResource(Res.string.host_state_streaming, runningGame ?: "?")
+                        h.status == HostStatus.ONLINE -> stringResource(Res.string.host_state_online)
+                        h.status == HostStatus.OFFLINE -> stringResource(Res.string.host_state_offline)
+                        else -> stringResource(Res.string.host_state_unknown)
+                    } + (h.address?.let { "  ·  $it" } ?: ""),
+                    style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceMuted,
+                    maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                )
             }
-            if (h.missingPermissions.isNotEmpty()) {
-                InfoRow(stringResource(Res.string.host_info_permissions), stringResource(Res.string.host_info_permissions_missing))
+        }
+        // Only worth a line when something is wrong (pairing is only known once the host answered).
+        if (h.status == HostStatus.ONLINE && !h.paired) {
+            InfoRow(stringResource(Res.string.host_info_paired), stringResource(Res.string.no))
+        }
+        if (h.missingPermissions.isNotEmpty()) {
+            InfoRow(stringResource(Res.string.host_info_permissions), stringResource(Res.string.host_info_permissions_missing))
+        }
+        Spacer(Modifier.height(12.dp))
+        io.github.thecodingdad.gamelodge.ui.components.ButtonRow(spacing = 10.dp) {
+            if (h.status != HostStatus.ONLINE) {
+                LauncherButton(
+                    stringResource(Res.string.host_wake), icon = Icons.Filled.WbSunny, primary = true,
+                    modifier = Modifier.restoreFocusIf(initialFocus),
+                    onClick = { scope.launch { c.hostPower.wake(h.uuid); message = wakeSent } },
+                )
+            } else {
+                config?.let { cfg ->
+                    if (cfg.haSleepEntity != null) {
+                        HoldToConfirmButton(
+                            stringResource(Res.string.power_sleep), { scope.launch { c.hostPower.power(h.uuid, PowerAction.SLEEP) } },
+                            Modifier.restoreFocusIf(initialFocus), Icons.Filled.Bedtime,
+                        )
+                    }
+                    if (cfg.haShutdownEntity != null) {
+                        HoldToConfirmButton(
+                            stringResource(Res.string.power_shutdown), { scope.launch { c.hostPower.power(h.uuid, PowerAction.SHUTDOWN) } },
+                            icon = Icons.Filled.PowerSettingsNew,
+                        )
+                    }
+                }
             }
+            LauncherButton(
+                stringResource(Res.string.host_settings), icon = Icons.Filled.Settings,
+                modifier = Modifier.restoreFocusIf(initialFocus && h.status == HostStatus.ONLINE && config?.haSleepEntity == null),
+                onClick = { openSettings(h) },
+            )
         }
         // Auto sleep after a stream, editable right here (same options as in the host settings).
         config?.let { cfg ->
@@ -114,41 +134,10 @@ fun HostInfoPopup(
                 icon = Icons.Filled.Bedtime,
             )
         }
-        Spacer(Modifier.height(18.dp))
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            if (h.status != HostStatus.ONLINE) {
-                LauncherButton(
-                    stringResource(Res.string.host_wake), icon = Icons.Filled.WbSunny, primary = true, modifier = Modifier.fillMaxWidth(),
-                    onClick = { scope.launch { c.hostPower.wake(h.uuid); message = wakeSent } },
-                )
-            } else {
-                config?.let { cfg ->
-                    if (cfg.haSleepEntity != null) {
-                        HoldToConfirmButton(
-                            stringResource(Res.string.power_sleep), { scope.launch { c.hostPower.power(h.uuid, PowerAction.SLEEP); onDismiss() } },
-                            Modifier.fillMaxWidth(), Icons.Filled.Bedtime,
-                        )
-                    }
-                    if (cfg.haShutdownEntity != null) {
-                        HoldToConfirmButton(
-                            stringResource(Res.string.power_shutdown), { scope.launch { c.hostPower.power(h.uuid, PowerAction.SHUTDOWN); onDismiss() } },
-                            Modifier.fillMaxWidth(), Icons.Filled.PowerSettingsNew,
-                        )
-                    }
-                }
-            }
-            LauncherButton(
-                stringResource(Res.string.host_settings), icon = Icons.Filled.Settings, modifier = Modifier.fillMaxWidth(),
-                onClick = { onDismiss(); openSettings(h) },
-            )
-            message?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceMuted) }
-        }
-        }
+        message?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceMuted) }
     }
 }
 
-/** [HostInfoPopup] target meaning "all hosts": the list of them. */
-const val ALL_HOSTS = "*"
 
 /** From two hosts on, the status bar and the quick menu show one combined icon for all of them. */
 fun showHostsCombined(hosts: Collection<HostState>): Boolean = hosts.size >= 2
@@ -162,44 +151,4 @@ fun hostTint(hosts: Collection<HostState>, streaming: Color, online: Color, offl
     hosts.any { it.status == HostStatus.ONLINE } -> online
     hosts.isNotEmpty() && hosts.all { it.status == HostStatus.OFFLINE } -> offline
     else -> unknown
-}
-
-/** Every host with its state; selecting one opens its [HostInfoPopup]. */
-@Composable
-fun HostListPopup(
-    visible: Boolean,
-    hosts: Collection<HostState>,
-    runningGame: (String) -> String?,
-    onSelect: (String) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    Modal(visible = visible, onDismiss = onDismiss, title = stringResource(Res.string.settings_hosts), maxWidth = 560.dp) {
-        val colors = LauncherTheme.colors
-        Column(Modifier.popupHeightIn(600.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            hosts.filter { it.paired }.sortedBy { it.name.lowercase() }.forEach { h ->
-                FocusSurface(onClick = { onSelect(h.uuid) }, modifier = Modifier.fillMaxWidth()) {
-                    Row(
-                        Modifier.padding(horizontal = 18.dp, vertical = 14.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        StatusDot(hostTint(listOf(h), HostStreamingColor, colors.success, colors.danger, colors.onSurfaceMuted))
-                        Column(Modifier.weight(1f)) {
-                            Text(h.name, style = MaterialTheme.typography.titleMedium, color = colors.onSurface, maxLines = 1)
-                            Text(
-                                when {
-                                    h.isStreaming -> stringResource(Res.string.host_state_streaming, runningGame(h.uuid) ?: "?")
-                                    h.status == HostStatus.ONLINE -> stringResource(Res.string.host_state_online)
-                                    h.status == HostStatus.OFFLINE -> stringResource(Res.string.host_state_offline)
-                                    else -> stringResource(Res.string.host_state_unknown)
-                                },
-                                style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceMuted, maxLines = 1,
-                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
 }

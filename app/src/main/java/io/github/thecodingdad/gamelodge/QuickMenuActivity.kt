@@ -49,9 +49,7 @@ import io.github.thecodingdad.gamelodge.ui.input.LocalInputDispatcher
 import io.github.thecodingdad.gamelodge.ui.input.PadAction
 import io.github.thecodingdad.gamelodge.ui.input.PadButton
 import io.github.thecodingdad.gamelodge.ui.screens.settings.rememberControllers
-import io.github.thecodingdad.gamelodge.ui.shell.ControllerPopup
 import io.github.thecodingdad.gamelodge.ui.shell.HintHolder
-import io.github.thecodingdad.gamelodge.ui.shell.HostInfoPopup
 import io.github.thecodingdad.gamelodge.ui.shell.LocalHintHolder
 import io.github.thecodingdad.gamelodge.ui.shell.QuickMenu
 import io.github.thecodingdad.gamelodge.ui.theme.LauncherTheme
@@ -164,10 +162,7 @@ class QuickMenuActivity : ComponentActivity() {
                         LocalCompactWidth provides (maxWidth < 720.dp),
                         LocalShowHintBar provides (settings.showHintBar && controllers.isNotEmpty()),
                     ) {
-                        val hosts by vm.hosts.collectAsState()
                         val running by vm.runningSessions.collectAsState()
-                        var hostInfoFor by remember { mutableStateOf<String?>(null) }
-                        var controllerPopup by remember { mutableStateOf(false) }
                         PadAction(PadButton.Y) { menuOpen = false }
                         PadAction(PadButton.SELECT_HOLD) { menuOpen = false }
                         QuickMenu(
@@ -179,27 +174,9 @@ class QuickMenuActivity : ComponentActivity() {
                                 val target = entry?.remoteTargets?.firstOrNull { it.hostUuid == session.host.uuid && it.appId == session.host.runningAppId }
                                 if (entry != null && target != null) vm.launch(entry, target)
                             },
-                            onHost = { hostInfoFor = it },
-                            onControllers = { controllerPopup = true },
+                            openHostSettings = { openLauncher() },
+                            openControllerSettings = ::openLauncher,
                             openHaSettings = ::openLauncher,
-                        )
-                        ControllerPopup(
-                            visible = controllerPopup, controllers = controllers,
-                            onOpenSettings = ::openLauncher,
-                            onDismiss = { controllerPopup = false },
-                        )
-                        io.github.thecodingdad.gamelodge.ui.shell.HostListPopup(
-                            visible = hostInfoFor == io.github.thecodingdad.gamelodge.ui.shell.ALL_HOSTS,
-                            hosts = hosts.values,
-                            runningGame = { uuid -> running.firstOrNull { it.host.uuid == uuid }?.appName },
-                            onSelect = { hostInfoFor = it },
-                            onDismiss = { hostInfoFor = null },
-                        )
-                        HostInfoPopup(
-                            host = hostInfoFor?.let { hosts[it] },
-                            runningGame = running.firstOrNull { it.host.uuid == hostInfoFor }?.appName,
-                            onDismiss = { hostInfoFor = null },
-                            openSettings = { openLauncher() },
                         )
                         ControllerKeyboardHost(keyboard)
                         OverlayOutlet()

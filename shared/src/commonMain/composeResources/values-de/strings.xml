@@ -468,6 +468,12 @@
     <string name="qm_section_quick">Schnellzugriff</string>
     <string name="qm_running_on_host">Läuft auf %1$s</string>
     <string name="qm_running_here">Läuft auf diesem PC</string>
+    <string name="qm_disconnect">Trennen</string>
+    <string name="qm_keyboard">Tastatur</string>
+    <string name="qm_stats">Leistung</string>
+    <string name="qm_stats_waiting">Warte auf die ersten Werte …</string>
+    <string name="qm_server_commands">Server-Befehle</string>
+    <string name="hosts_none_paired">Noch keine gekoppelten Hosts. Koppeln unter Einstellungen → Hosts.</string>
 
     <!-- Backup -->
     <string name="backup_intro">Sichert Einstellungen, Profile, Favoriten, Filter, Korrekturen und Home-Assistant-Entitäten, ohne Kopplungen.</string>
@@ -1068,7 +1074,6 @@
     <string name="about_source_esde">Startbefehle der Emulatoren (MIT-Lizenz)</string>
 
     <!-- Quick tiles -->
-    <string name="qt_hosts_count">%1$d Hosts</string>
 
     <!-- Companion & metadata server -->
     <string name="servers_not_paired">Nicht gekoppelt</string>

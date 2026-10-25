@@ -357,7 +357,7 @@ class DesktopPlatformUi(
     }
 
     companion object {
-        private val LAUNCHER_TILES = setOf(QuickTile.CONTROLLERS, QuickTile.HOSTS, QuickTile.VPN)
+        private val LAUNCHER_TILES = setOf(QuickTile.VPN)
         private val IMAGE_TYPES = setOf("png", "jpg", "jpeg", "webp", "gif", "bmp")
         private val systemLocale: Locale = Locale.getDefault()
 

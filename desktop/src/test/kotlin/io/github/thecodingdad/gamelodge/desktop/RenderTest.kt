@@ -449,13 +449,13 @@ class RenderTest {
             ImageComposeScene(800, 600, Density(1f)) {
                 CompositionLocalProvider(LocalContainer provides container) {
                     io.github.thecodingdad.gamelodge.ui.theme.LauncherTheme(io.github.thecodingdad.gamelodge.data.settings.LauncherSettings()) {
-                        labels = io.github.thecodingdad.gamelodge.ui.shell.rememberQuickTiles(listOf("controllers", "wifi"), {}, {}).map { it.key }
+                        labels = io.github.thecodingdad.gamelodge.ui.shell.rememberQuickTiles(listOf("controllers", "wifi")).map { it.key }
                     }
                 }
             }
         }
         ui { scene.render(0); scene.close() }
-        // Full screen and close are status bar icons now, not tiles.
-        org.junit.Assert.assertEquals(listOf("controllers"), labels)
+        // Full screen and close are status bar icons, controllers a tab of the quick menu: no tiles.
+        org.junit.Assert.assertEquals(emptyList<String>(), labels)
     }
 }

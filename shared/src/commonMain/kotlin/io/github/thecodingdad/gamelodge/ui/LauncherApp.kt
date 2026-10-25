@@ -172,9 +172,13 @@ fun LauncherApp(
     }
     entryActions.directStart = settings.gamesDirectStart
 
-    var hostInfoFor by remember { mutableStateOf<String?>(null) }
-    var controllerPopup by remember { mutableStateOf(false) }
     var quickMenu by remember { mutableStateOf(false) }
+    // The tab the quick menu opens on (status bar host / controller icons), null: its default.
+    var quickMenuTab by remember { mutableStateOf<io.github.thecodingdad.gamelodge.ui.shell.QuickMenuTab?>(null) }
+    fun openQuickMenu(tab: io.github.thecodingdad.gamelodge.ui.shell.QuickMenuTab) {
+        quickMenuTab = tab
+        quickMenu = true
+    }
     // After start: the configured start tab (read from storage, not the not-yet-loaded default).
     LaunchedEffect(Unit) {
         if (!vm.startTabApplied) {
@@ -210,8 +214,6 @@ fun LauncherApp(
                 vm.focusKeys.remove(MainTab.HOME.name)
                 vm.homeResets.intValue++
             }
-            hostInfoFor = null
-            controllerPopup = false
             entryActions.pick = null
             entryActions.closeContext()
             keyboard.close()
@@ -300,7 +302,7 @@ fun LauncherApp(
                     composable(Routes.MAIN) {
                         MainShell(
                             vm, nav, openStats = { nav.navigate(Routes.STATS) },
-                            onHostInfo = { hostInfoFor = it }, onControllers = { controllerPopup = true },
+                            onHostInfo = { openQuickMenu(io.github.thecodingdad.gamelodge.ui.shell.QuickMenuTab.HOSTS) }, onControllers = { openQuickMenu(io.github.thecodingdad.gamelodge.ui.shell.QuickMenuTab.CONTROLLERS) },
                         )
                     }
                     composable(Routes.DETAIL) { backStack ->
@@ -362,7 +364,7 @@ fun LauncherApp(
                         val detailBg = LauncherTheme.colors.background
                         ShellTopBar(
                             selected = -1, onSelect = {}, hosts = detailHosts.values.sortedBy { it.name },
-                            controllerCount = detailControllers.size, onHostInfo = { hostInfoFor = it }, onControllers = { controllerPopup = true },
+                            controllerCount = detailControllers.size, onHostInfo = { openQuickMenu(io.github.thecodingdad.gamelodge.ui.shell.QuickMenuTab.HOSTS) }, onControllers = { openQuickMenu(io.github.thecodingdad.gamelodge.ui.shell.QuickMenuTab.CONTROLLERS) },
                             onClock = { vm.quickMenuTouch.tryEmit(Unit) },
                             onBack = { nav.popBackStack() },
                             modifier = Modifier.align(Alignment.TopCenter)
@@ -378,7 +380,7 @@ fun LauncherApp(
                             tabCrumb(vm, nav, MainTab.SETTINGS),
                             if (page == SettingsPageId.LICENSES) pageCrumb(vm, nav, Res.string.settings_about, SettingsPageId.ABOUT) else null,
                         )
-                        SubpageFrame(vm, nav, hints, MainTab.SETTINGS, crumbs, { hostInfoFor = it }, { controllerPopup = true }) {
+                        SubpageFrame(vm, nav, hints, MainTab.SETTINGS, crumbs, { openQuickMenu(io.github.thecodingdad.gamelodge.ui.shell.QuickMenuTab.HOSTS) }, { openQuickMenu(io.github.thecodingdad.gamelodge.ui.shell.QuickMenuTab.CONTROLLERS) }) {
                             SettingsPageContent(
                                 page, vm,
                                 openReview = { nav.navigate(Routes.REVIEW) },
@@ -395,7 +397,7 @@ fun LauncherApp(
                         SubpageFrame(
                             vm, nav, hints, MainTab.SETTINGS,
                             listOf(tabCrumb(vm, nav, MainTab.SETTINGS), pageCrumb(vm, nav, Res.string.settings_hosts, SettingsPageId.HOSTS)),
-                            { hostInfoFor = it }, { controllerPopup = true },
+                            { openQuickMenu(io.github.thecodingdad.gamelodge.ui.shell.QuickMenuTab.HOSTS) }, { openQuickMenu(io.github.thecodingdad.gamelodge.ui.shell.QuickMenuTab.CONTROLLERS) },
                         ) { hosts[uuid]?.let { HostConfigScreen(it, openHaSettings = { nav.navigate(Routes.settings(SettingsPageId.HOME_ASSISTANT)) }) } }
                     }
                     composable(Routes.WIZARD) { backStack ->
@@ -406,14 +408,14 @@ fun LauncherApp(
                         }
                     }
                     composable(Routes.CONTROLLERS) {
-                        SubpageFrame(vm, nav, hints, MainTab.SETTINGS, listOf(tabCrumb(vm, nav, MainTab.SETTINGS)), { hostInfoFor = it }, { controllerPopup = true }) {
+                        SubpageFrame(vm, nav, hints, MainTab.SETTINGS, listOf(tabCrumb(vm, nav, MainTab.SETTINGS)), { openQuickMenu(io.github.thecodingdad.gamelodge.ui.shell.QuickMenuTab.HOSTS) }, { openQuickMenu(io.github.thecodingdad.gamelodge.ui.shell.QuickMenuTab.CONTROLLERS) }) {
                             io.github.thecodingdad.gamelodge.ui.PlatformUi.current.ControllersScreen()
                         }
                     }
                     composable(Routes.STATS) {
                         val all by vm.allEntries.collectAsState()
                         val sessions by vm.finishedSessions.collectAsState()
-                        SubpageFrame(vm, nav, hints, MainTab.LIBRARY, listOf(tabCrumb(vm, nav, MainTab.LIBRARY)), { hostInfoFor = it }, { controllerPopup = true }) {
+                        SubpageFrame(vm, nav, hints, MainTab.LIBRARY, listOf(tabCrumb(vm, nav, MainTab.LIBRARY)), { openQuickMenu(io.github.thecodingdad.gamelodge.ui.shell.QuickMenuTab.HOSTS) }, { openQuickMenu(io.github.thecodingdad.gamelodge.ui.shell.QuickMenuTab.CONTROLLERS) }) {
                             StatsScreen(all, sessions)
                         }
                     }
@@ -425,7 +427,7 @@ fun LauncherApp(
                         SubpageFrame(
                             vm, nav, hints, MainTab.SETTINGS,
                             listOf(tabCrumb(vm, nav, MainTab.SETTINGS), pageCrumb(vm, nav, Res.string.settings_profiles, SettingsPageId.PROFILES)),
-                            { hostInfoFor = it }, { controllerPopup = true },
+                            { openQuickMenu(io.github.thecodingdad.gamelodge.ui.shell.QuickMenuTab.HOSTS) }, { openQuickMenu(io.github.thecodingdad.gamelodge.ui.shell.QuickMenuTab.CONTROLLERS) },
                         ) { io.github.thecodingdad.gamelodge.ui.PlatformUi.current.ProfileEditor(uuid, name, onDeleted = { nav.popBackStack() }) }
                     }
                     composable(Routes.REVIEW) {
@@ -434,7 +436,7 @@ fun LauncherApp(
                         SubpageFrame(
                             vm, nav, hints, MainTab.SETTINGS,
                             listOf(tabCrumb(vm, nav, MainTab.SETTINGS), pageCrumb(vm, nav, Res.string.settings_metadata, SettingsPageId.METADATA)),
-                            { hostInfoFor = it }, { controllerPopup = true },
+                            { openQuickMenu(io.github.thecodingdad.gamelodge.ui.shell.QuickMenuTab.HOSTS) }, { openQuickMenu(io.github.thecodingdad.gamelodge.ui.shell.QuickMenuTab.CONTROLLERS) },
                         ) { ReviewScreen(review) }
                     }
                 }
@@ -557,39 +559,19 @@ fun LauncherApp(
                 val running by vm.runningSessions.collectAsState()
                 QuickMenu(
                     visible = quickMenu,
-                    onDismiss = { quickMenu = false },
+                    onDismiss = { quickMenu = false; quickMenuTab = null },
                     running = running,
+                    requestedTab = quickMenuTab,
                     onResume = { session ->
                         val entry = session.entry
                         val target = entry?.remoteTargets?.firstOrNull { it.hostUuid == session.host.uuid && it.appId == session.host.runningAppId }
                         if (entry != null && target != null) vm.launch(entry, target)
                     },
-                    onHost = { hostInfoFor = it },
-                    onControllers = { controllerPopup = true },
+                    openHostSettings = { quickMenu = false; nav.navigate(Routes.host(it.uuid)) },
+                    openControllerSettings = { quickMenu = false; nav.navigate(Routes.CONTROLLERS) },
                     openHaSettings = { quickMenu = false; nav.navigate(Routes.settings(SettingsPageId.HOME_ASSISTANT)) },
                 )
-                // Popups from the status bar and the quick menu, above everything else.
-                val controllers = io.github.thecodingdad.gamelodge.ui.screens.settings.rememberControllers()
-                val hostsGlobal by vm.hosts.collectAsState()
-        io.github.thecodingdad.gamelodge.ui.shell.ControllerPopup(
-            visible = controllerPopup, controllers = controllers,
-            onOpenSettings = { nav.navigate(Routes.CONTROLLERS) },
-            onDismiss = { controllerPopup = false },
-        )
         io.github.thecodingdad.gamelodge.ui.shell.TasksPopup()
-        io.github.thecodingdad.gamelodge.ui.shell.HostListPopup(
-            visible = hostInfoFor == io.github.thecodingdad.gamelodge.ui.shell.ALL_HOSTS,
-            hosts = hostsGlobal.values,
-            runningGame = { uuid -> running.firstOrNull { it.host.uuid == uuid }?.appName },
-            onSelect = { hostInfoFor = it },
-            onDismiss = { hostInfoFor = null },
-        )
-        io.github.thecodingdad.gamelodge.ui.shell.HostInfoPopup(
-            host = hostInfoFor?.let { hostsGlobal[it] },
-            runningGame = running.firstOrNull { it.host.uuid == hostInfoFor }?.appName,
-            onDismiss = { hostInfoFor = null },
-            openSettings = { nav.navigate(Routes.host(it.uuid)) },
-        )
                 ControllerKeyboardHost(keyboard)
                 // Every popup and panel is drawn here, above the (blurred) launcher.
                 io.github.thecodingdad.gamelodge.ui.components.OverlayOutlet()
@@ -862,7 +844,7 @@ private fun ShellTopBar(
                 hosts,
                 modifier = Modifier.padding(end = endShift),
                 onHostClick = { onHostInfo(it.uuid) },
-                onHostsClick = { onHostInfo(io.github.thecodingdad.gamelodge.ui.shell.ALL_HOSTS) },
+                onHostsClick = { onHostInfo("") },
                 controllerCount = controllerCount,
                 onControllerClick = onControllers,
                 onClockClick = onClock,

@@ -45,6 +45,10 @@ interface LauncherContainer {
     val ha: HaRepository
     val haAuth: HaAuth
     val launcher: LaunchCoordinator
+
+    /** Steering the running stream from the quick menu (what the streaming client allows). */
+    val streamControls: io.github.thecodingdad.gamelodge.stream.StreamControls
+        get() = io.github.thecodingdad.gamelodge.stream.NoStreamControls
     val profiles: StreamProfiles
     val emulators: Emulators
     /** [io.github.thecodingdad.gamelodge.vpn.NoVpn] where the launcher brings no VPN of its own. */

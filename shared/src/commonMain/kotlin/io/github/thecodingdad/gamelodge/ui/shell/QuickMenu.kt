@@ -6,6 +6,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Keyboard
+import androidx.compose.material.icons.filled.LinkOff
+import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.foundation.layout.height
@@ -68,16 +71,19 @@ import kotlinx.coroutines.withContext
 import io.github.thecodingdad.gamelodge.resources.*
 
 /** Tabs of the quick menu, in order; the rail on the left switches between them. */
-private enum class QuickTab(val icon: androidx.compose.ui.graphics.vector.ImageVector) {
+enum class QuickMenuTab(val icon: androidx.compose.ui.graphics.vector.ImageVector) {
     RUNNING(Icons.Filled.PlayCircle),
     QUICK(Icons.Filled.Tune),
+    HOSTS(Icons.Filled.Computer),
+    CONTROLLERS(Icons.Filled.SportsEsports),
     HOME_ASSISTANT(Icons.Filled.Home),
 }
 
 /**
- * Y or Select (hold) anywhere in the launcher: what is running (resume, quit), quick access
- * (toggles, volume, brightness) and Home Assistant as tabs. The rail on the left switches them by
- * touch or mouse, LB/RB with a controller.
+ * Y or Select (hold) anywhere in the launcher, or the status bar's host and controller icons: what
+ * is running (resume, quit, stream controls), quick access (toggles, volume, brightness), hosts,
+ * controllers and Home Assistant as tabs. The rail on the left switches them by touch or mouse,
+ * LB/RB with a controller.
  */
 @Composable
 fun QuickMenu(
@@ -85,8 +91,10 @@ fun QuickMenu(
     onDismiss: () -> Unit,
     running: List<RunningSession>,
     onResume: (RunningSession) -> Unit,
-    onHost: (String) -> Unit = {},
-    onControllers: () -> Unit = {},
+    /** Opens on this tab (status bar icons); null: what is running, else quick access. */
+    requestedTab: QuickMenuTab? = null,
+    openHostSettings: (io.github.thecodingdad.gamelodge.data.remote.HostState) -> Unit = {},
+    openControllerSettings: () -> Unit = {},
     openHaSettings: () -> Unit = {},
 ) {
     val c = io.github.thecodingdad.gamelodge.LocalContainer.current
@@ -95,10 +103,11 @@ fun QuickMenu(
 
     SidePanel(visible = visible, onDismiss = onDismiss, width = 600.dp) {
         val hasRunning = running.isNotEmpty() || local != null
-        val tabs = remember(hasRunning) { QuickTab.entries.filter { it != QuickTab.RUNNING || hasRunning } }
-        // Opens on what is running, else on quick access.
-        var tab by remember(visible) { mutableStateOf(if (hasRunning) QuickTab.RUNNING else QuickTab.QUICK) }
-        if (tab !in tabs) tab = QuickTab.QUICK
+        val tabs = remember(hasRunning) { QuickMenuTab.entries.filter { it != QuickMenuTab.RUNNING || hasRunning } }
+        var tab by remember(visible, requestedTab) {
+            mutableStateOf(requestedTab ?: if (hasRunning) QuickMenuTab.RUNNING else QuickMenuTab.QUICK)
+        }
+        if (tab !in tabs) tab = QuickMenuTab.QUICK
         fun step(delta: Int) { tab = tabs[(tabs.indexOf(tab) + delta).coerceIn(0, tabs.lastIndex)] }
         io.github.thecodingdad.gamelodge.ui.input.PadAction(io.github.thecodingdad.gamelodge.ui.input.PadButton.L1) { step(-1) }
         io.github.thecodingdad.gamelodge.ui.input.PadAction(io.github.thecodingdad.gamelodge.ui.input.PadButton.R1) { step(1) }
@@ -109,9 +118,11 @@ fun QuickMenu(
                 Text(
                     stringResource(
                         when (tab) {
-                            QuickTab.RUNNING -> Res.string.qm_section_running
-                            QuickTab.QUICK -> Res.string.qm_section_quick
-                            QuickTab.HOME_ASSISTANT -> Res.string.settings_home_assistant
+                            QuickMenuTab.RUNNING -> Res.string.qm_section_running
+                            QuickMenuTab.QUICK -> Res.string.qm_section_quick
+                            QuickMenuTab.HOSTS -> Res.string.settings_hosts
+                            QuickMenuTab.CONTROLLERS -> Res.string.settings_controllers
+                            QuickMenuTab.HOME_ASSISTANT -> Res.string.settings_home_assistant
                         },
                     ),
                     style = MaterialTheme.typography.titleLarge, color = LauncherTheme.colors.onSurface,
@@ -125,26 +136,33 @@ fun QuickMenu(
                         verticalArrangement = Arrangement.spacedBy(14.dp),
                     ) {
                         when (tab) {
-                            QuickTab.RUNNING -> {
+                            QuickMenuTab.RUNNING -> {
                                 local?.let { LocalRunningCard(it, onDismiss) }
                                 running.forEachIndexed { i, session ->
-                                    RunningCard(session, initialFocus = local == null && i == 0, onResume = { onResume(session); onDismiss() })
+                                    RunningCard(
+                                        session, initialFocus = local == null && i == 0,
+                                        onResume = { onResume(session); onDismiss() },
+                                        onQuit = {
+                                            onDismiss()
+                                            io.github.thecodingdad.gamelodge.ui.PlatformUi.current.bringToFront()
+                                        },
+                                    )
                                 }
                             }
-                            QuickTab.QUICK -> {
+                            QuickMenuTab.QUICK -> {
                                 // Running background work (the status bar spinner is touch only).
                                 TasksRow()
                                 val settings by c.settings.settings.collectAsState(io.github.thecodingdad.gamelodge.data.settings.LauncherSettings())
                                 val navigate = io.github.thecodingdad.gamelodge.ui.screens.settings.LocalSettingsNavigator.current
-                                QuickToggles(rememberQuickTiles(settings.quickTiles, onHost = onHost, onControllers = onControllers)) { target ->
-                                    onDismiss(); navigate(target, null)
-                                }
+                                QuickToggles(rememberQuickTiles(settings.quickTiles)) { target -> onDismiss(); navigate(target, null) }
                                 if (platform.hasSystemControls) {
                                     androidx.compose.foundation.layout.Spacer(Modifier.height(4.dp))
                                     platform.SystemControls(visible)
                                 }
                             }
-                            QuickTab.HOME_ASSISTANT -> HomeAssistantSection(openHaSettings)
+                            QuickMenuTab.HOSTS -> HostsTab(running, openHostSettings)
+                            QuickMenuTab.CONTROLLERS -> ControllersTab(openControllerSettings)
+                            QuickMenuTab.HOME_ASSISTANT -> HomeAssistantSection(openHaSettings)
                         }
                     }
                 }
@@ -165,12 +183,51 @@ fun QuickMenu(
     }
 }
 
+/** Paired hosts with their state, wake and power actions. */
+@Composable
+private fun HostsTab(running: List<RunningSession>, openSettings: (io.github.thecodingdad.gamelodge.data.remote.HostState) -> Unit) {
+    val c = io.github.thecodingdad.gamelodge.LocalContainer.current
+    val all by c.hosts.hosts.collectAsState()
+    val paired = remember(all) { all.values.filter { it.paired }.sortedBy { it.name.lowercase() } }
+    if (paired.isEmpty()) {
+        Text(stringResource(Res.string.hosts_none_paired), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+    }
+    paired.forEachIndexed { i, host ->
+        HostCard(host, running.firstOrNull { it.host.uuid == host.uuid }?.appName, openSettings, initialFocus = i == 0)
+    }
+}
+
+/** Connected controllers (battery, details with rumble test) and the way to their settings. */
+@Composable
+private fun ControllersTab(openSettings: () -> Unit) {
+    val colors = LauncherTheme.colors
+    val controllers = io.github.thecodingdad.gamelodge.ui.screens.settings.rememberControllers()
+    var selected by remember { mutableStateOf<io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerInfo?>(null) }
+    io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerDetailDialog(selected, onDismiss = { selected = null })
+    Text(stringResource(Res.string.controller_popup_sub), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceMuted)
+    if (controllers.isEmpty()) Text(stringResource(Res.string.controllers_none), color = colors.onSurface)
+    controllers.forEachIndexed { i, controller ->
+        val details = listOfNotNull(
+            stringResource(if (controller.external) Res.string.controller_external else Res.string.controller_builtin),
+            controller.batteryPercent?.let { stringResource(Res.string.controller_battery, it) },
+        ).joinToString("  ·  ")
+        io.github.thecodingdad.gamelodge.ui.screens.settings.NavRow(
+            controller.name, { selected = controller }, subtitle = details, icon = Icons.Filled.SportsEsports,
+            initialFocus = i == 0,
+        )
+    }
+    LauncherButton(
+        stringResource(Res.string.controller_popup_settings), onClick = openSettings, icon = Icons.Filled.Settings,
+        modifier = Modifier.restoreFocusIf(controllers.isEmpty()),
+    )
+}
+
 /** Tab icons on the left edge of the panel; touch and mouse switch, LB/RB with a controller. */
 @Composable
-private fun QuickRail(tabs: List<QuickTab>, current: QuickTab, onDismiss: () -> Unit, onSelect: (QuickTab) -> Unit) {
+private fun QuickRail(tabs: List<QuickMenuTab>, current: QuickMenuTab, onDismiss: () -> Unit, onSelect: (QuickMenuTab) -> Unit) {
     val colors = LauncherTheme.colors
     Column(
-        Modifier.fillMaxHeight().width(72.dp).background(colors.background.copy(alpha = 0.45f)).padding(vertical = 14.dp),
+        Modifier.fillMaxHeight().width(72.dp).padding(vertical = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
@@ -195,11 +252,16 @@ private fun QuickRail(tabs: List<QuickTab>, current: QuickTab, onDismiss: () -> 
     }
 }
 
-/** A game or app running on a host: resume the stream or quit it there (held). */
+/**
+ * A game or app running on a host: resume the stream or quit it there (held). The stream this
+ * launcher runs gets its controls as well: performance, keyboard, server commands, disconnect.
+ */
 @Composable
-private fun RunningCard(session: RunningSession, initialFocus: Boolean, onResume: () -> Unit) {
+private fun RunningCard(session: RunningSession, initialFocus: Boolean, onResume: () -> Unit, onQuit: () -> Unit) {
     val c = io.github.thecodingdad.gamelodge.LocalContainer.current
     val scope = rememberCoroutineScope()
+    val active by c.launcher.activeStream.collectAsState()
+    val own = active?.hostUuid == session.host.uuid
     val canResume = session.entry?.remoteTargets?.any { it.hostUuid == session.host.uuid && it.appId == session.host.runningAppId } == true
     RunningCardLayout(
         entry = session.entry,
@@ -209,11 +271,44 @@ private fun RunningCard(session: RunningSession, initialFocus: Boolean, onResume
         initialFocus = initialFocus,
         onQuit = {
             scope.launch {
-                c.hostActions.quitApp(session.host)
+                // Our own stream ends through its client (no "connection ended" error there).
+                if (!c.streamControls.quit(session.host)) c.hostActions.quitApp(session.host)
                 c.hosts.invalidate(session.host.uuid)
             }
+            onQuit()
         },
+        extra = if (own) { { StreamControlsSection(c.streamControls, onQuit) } } else null,
     )
+}
+
+/** Controls of the stream this launcher runs, as far as its client offers them. */
+@Composable
+private fun StreamControlsSection(controls: io.github.thecodingdad.gamelodge.stream.StreamControls, onLeave: () -> Unit) {
+    val colors = LauncherTheme.colors
+    val commands = remember { controls.serverCommands() }
+    io.github.thecodingdad.gamelodge.ui.components.ButtonRow(spacing = 10.dp) {
+        LauncherButton(stringResource(Res.string.qm_disconnect), { controls.disconnect(); onLeave() }, icon = Icons.Filled.LinkOff)
+        if (controls.keyboard) LauncherButton(stringResource(Res.string.qm_keyboard), { onLeave(); controls.showKeyboard() }, icon = Icons.Filled.Keyboard)
+    }
+    // Live while this tab shows (the client computes them only then).
+    val statsFlow = remember { controls.stats() }
+    if (statsFlow != null) {
+        val stats by statsFlow.collectAsState(null)
+        Text(stringResource(Res.string.qm_stats), style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceMuted)
+        Text(
+            stats ?: stringResource(Res.string.qm_stats_waiting),
+            style = MaterialTheme.typography.bodySmall.copy(fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace),
+            color = colors.onSurface,
+            modifier = Modifier.fillMaxWidth().clip(androidx.compose.foundation.shape.RoundedCornerShape(10.dp))
+                .background(colors.background.copy(alpha = 0.5f)).padding(10.dp),
+        )
+    }
+    if (commands.isNotEmpty()) {
+        Text(stringResource(Res.string.qm_server_commands), style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceMuted)
+        commands.forEachIndexed { i, command ->
+            LauncherButton(command, { controls.runServerCommand(i) }, Modifier.fillMaxWidth(), Icons.Filled.Terminal)
+        }
+    }
 }
 
 /** A game the launcher started on this PC. */
@@ -226,7 +321,11 @@ private fun LocalRunningCard(session: io.github.thecodingdad.gamelodge.stream.Lo
         where = stringResource(Res.string.qm_running_here),
         onResume = { session.resume(); onDismiss() },
         initialFocus = true,
-        onQuit = { scope.launch { session.quit() } },
+        onQuit = {
+            scope.launch { session.quit() }
+            onDismiss()
+            io.github.thecodingdad.gamelodge.ui.PlatformUi.current.bringToFront()
+        },
     )
 }
 
@@ -238,6 +337,7 @@ private fun RunningCardLayout(
     onResume: (() -> Unit)?,
     initialFocus: Boolean,
     onQuit: () -> Unit,
+    extra: (@Composable () -> Unit)? = null,
 ) {
     val colors = LauncherTheme.colors
     Column(
@@ -264,6 +364,7 @@ private fun RunningCardLayout(
                 modifier = Modifier.restoreFocusIf(initialFocus && onResume == null),
             )
         }
+        extra?.invoke()
     }
 }
 

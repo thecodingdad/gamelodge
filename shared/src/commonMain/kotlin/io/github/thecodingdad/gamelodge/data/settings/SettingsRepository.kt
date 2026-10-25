@@ -168,7 +168,7 @@ data class LauncherSettings(
     /** AYN Odin: put every external controller on Odin Mapping's blacklist (keeps battery/rumble). */
     val odinKeepControllers: Boolean = true,
     /** Tiles in the quick menu, in order (see QuickTile ids; apps as "app:<package>"). */
-    val quickTiles: List<String> = listOf("controllers", "hosts", "vpn", "wifi", "bluetooth", "airplane"),
+    val quickTiles: List<String> = listOf("vpn", "wifi", "bluetooth", "airplane"),
     /** Order of the metadata sources and which are off (see MetadataSources). */
     val metadataSources: List<String> = emptyList(),
     /** Desktop: stores whose games are left out of the library ("steam", "epic" …). */
@@ -369,7 +369,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             gameActions = this[K.gameActions] ?: d.gameActions,
             platformRule = this[K.platformRule] ?: d.platformRule,
             odinKeepControllers = this[K.odinKeepControllers] ?: d.odinKeepControllers,
-            quickTiles = this[K.quickTiles]?.split(',')?.filter { it.isNotBlank() } ?: d.quickTiles,
+            // Controllers and hosts were tiles once; they are tabs of the quick menu now.
+            quickTiles = this[K.quickTiles]?.split(',')?.filter { it.isNotBlank() && it != "controllers" && it != "hosts" } ?: d.quickTiles,
             metadataSources = this[K.metadataSources]?.split(',')?.filter { it.isNotBlank() } ?: d.metadataSources,
             disabledGameSources = this[K.disabledGameSources] ?: d.disabledGameSources,
             comboHome = this[K.comboHome]?.takeIf { it.isNotEmpty() || this[K.combosSet] == true }

@@ -168,6 +168,10 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
         HaRepository(HaClient(wsHttp, haAuth, { haAuth.baseUrl }, scope), haAuth, database)
     }
     override val hostPower: HostPower by lazy { HostPower(database.hostConfigDao(), hosts, hostActions, ha) }
+    override val streamControls: io.github.thecodingdad.gamelodge.stream.StreamControls by lazy {
+        io.github.thecodingdad.gamelodge.desktop.stream.DesktopStreamControls(desktopHosts)
+    }
+
     override val launcher: LaunchCoordinator by lazy {
         LaunchCoordinator(hosts, hostActions, { hostPower }, { NoAutoSleep }, profiles, playtime, settings, { ha }, scope, DesktopLaunches(
             pcLibrary, playtime, scope, { launcher.gameActions.ended(); onGameEnded() }, desktopHosts,
