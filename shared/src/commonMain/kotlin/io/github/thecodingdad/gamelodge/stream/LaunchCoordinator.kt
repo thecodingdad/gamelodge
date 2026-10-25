@@ -122,10 +122,19 @@ class LaunchCoordinator(
         gameActions.beforeStart(entry.item.id) { left -> _state.value = LaunchState.Working(entry, LaunchStep.RUNNING_ACTIONS, left) }
     }
 
+    /** The stream this launcher started and that runs right now (until the launcher is back). */
+    data class ActiveStream(val entry: LibraryEntry, val hostUuid: String, val appId: Int)
+
+    private val _activeStream = kotlinx.coroutines.flow.MutableStateFlow<ActiveStream?>(null)
+
+    /**
+     * Known without asking the host: its polling pauses during the stream, so the quick menu over
+     * the stream finds the running game here.
+     */
+    val activeStream: kotlinx.coroutines.flow.StateFlow<ActiveStream?> = _activeStream
+
     /** Game whose stream is being started; shown by the stream window while it connects. */
-    @Volatile
-    var streamingEntry: LibraryEntry? = null
-        private set
+    val streamingEntry: LibraryEntry? get() = _activeStream.value?.entry
 
     fun dismiss() {
         _state.value = LaunchState.Idle
@@ -141,7 +150,7 @@ class LaunchCoordinator(
 
     /** The stream ended (launcher visible again): a VPN connected for it goes again, if so set. */
     fun streamEnded() {
-        streamingEntry = null
+        _activeStream.value = null
         streamNotices?.stopped()
         if (!vpnForStream) return
         vpnForStream = false
@@ -268,7 +277,7 @@ class LaunchCoordinator(
         try {
             val profileName = profiles.active("").name.ifEmpty { null }
             playtime.start(entry.item.id, target.id, profileName)
-            streamingEntry = entry
+            _activeStream.value = ActiveStream(entry, hostUuid, appId)
             streamNotices?.started(hostUuid, resuming)
             platform.startStream(entry, target, host)
             _state.value = LaunchState.Idle
@@ -281,7 +290,7 @@ class LaunchCoordinator(
         } catch (e: Exception) {
             Log.e("Stream start failed", e)
             restoreProfile()
-            streamingEntry = null
+            _activeStream.value = null
             streamNotices?.stopped()
             fail(entry, LaunchError.START_FAILED, e.message)
         }

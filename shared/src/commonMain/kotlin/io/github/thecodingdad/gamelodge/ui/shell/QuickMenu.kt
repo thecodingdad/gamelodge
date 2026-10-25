@@ -2,15 +2,14 @@ package io.github.thecodingdad.gamelodge.ui.shell
 
 import io.github.thecodingdad.gamelodge.ui.components.controllerScroll
 import androidx.compose.foundation.background
-import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.PlayCircle
+import androidx.compose.material.icons.filled.Tune
+import androidx.compose.foundation.layout.height
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInParent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -68,18 +67,17 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import io.github.thecodingdad.gamelodge.resources.*
 
-/** Sections of the quick menu, in order; the rail on the left jumps between them. */
-private enum class QuickSection(val icon: androidx.compose.ui.graphics.vector.ImageVector) {
-    RUNNING(Icons.Filled.PlayArrow),
-    QUICK(Icons.Filled.Wifi),
-    SYSTEM(Icons.Filled.VolumeUp),
+/** Tabs of the quick menu, in order; the rail on the left switches between them. */
+private enum class QuickTab(val icon: androidx.compose.ui.graphics.vector.ImageVector) {
+    RUNNING(Icons.Filled.PlayCircle),
+    QUICK(Icons.Filled.Tune),
     HOME_ASSISTANT(Icons.Filled.Home),
 }
 
 /**
- * Y or Select (hold) anywhere in the launcher: what is running (resume, quit), quick toggles,
- * device controls and Home Assistant in one scrolling column. A rail of section icons on the
- * left jumps between them; LB/RB do the same with a controller.
+ * Y or Select (hold) anywhere in the launcher: what is running (resume, quit), quick access
+ * (toggles, volume, brightness) and Home Assistant as tabs. The rail on the left switches them by
+ * touch or mouse, LB/RB with a controller.
  */
 @Composable
 fun QuickMenu(
@@ -97,123 +95,109 @@ fun QuickMenu(
 
     SidePanel(visible = visible, onDismiss = onDismiss, width = 600.dp) {
         val hasRunning = running.isNotEmpty() || local != null
-        val sections = remember(hasRunning, platform.hasSystemControls) {
-            QuickSection.entries.filter {
-                when (it) {
-                    QuickSection.RUNNING -> hasRunning
-                    QuickSection.SYSTEM -> platform.hasSystemControls
-                    else -> true
-                }
-            }
-        }
-        val scroll = rememberScrollState()
-        val scope = rememberCoroutineScope()
-        val requesters = remember { QuickSection.entries.associateWith { androidx.compose.ui.focus.FocusRequester() } }
-        // Where each section starts in the scrolling column (px).
-        val tops = remember { androidx.compose.runtime.mutableStateMapOf<QuickSection, Int>() }
-        // The section at the top of the column (highlighted in the rail); scrolled to the end: the last.
-        val current by androidx.compose.runtime.remember(sections) {
-            androidx.compose.runtime.derivedStateOf {
-                if (scroll.maxValue > 0 && scroll.value >= scroll.maxValue) sections.last()
-                else sections.lastOrNull { (tops[it] ?: Int.MAX_VALUE) <= scroll.value + 8 } ?: sections.first()
-            }
-        }
-        fun jump(section: QuickSection) {
-            val top = tops[section] ?: return
-            scope.launch {
-                scroll.animateScrollTo(top)
-                runCatching { requesters.getValue(section).requestFocus() }
-            }
-        }
-        fun step(delta: Int) {
-            val i = (sections.indexOf(current) + delta).coerceIn(0, sections.lastIndex)
-            jump(sections[i])
-        }
+        val tabs = remember(hasRunning) { QuickTab.entries.filter { it != QuickTab.RUNNING || hasRunning } }
+        // Opens on what is running, else on quick access.
+        var tab by remember(visible) { mutableStateOf(if (hasRunning) QuickTab.RUNNING else QuickTab.QUICK) }
+        if (tab !in tabs) tab = QuickTab.QUICK
+        fun step(delta: Int) { tab = tabs[(tabs.indexOf(tab) + delta).coerceIn(0, tabs.lastIndex)] }
         io.github.thecodingdad.gamelodge.ui.input.PadAction(io.github.thecodingdad.gamelodge.ui.input.PadButton.L1) { step(-1) }
         io.github.thecodingdad.gamelodge.ui.input.PadAction(io.github.thecodingdad.gamelodge.ui.input.PadButton.R1) { step(1) }
 
         Row(Modifier.weight(1f).fillMaxWidth()) {
-            QuickRail(sections, current, onDismiss, ::jump)
-            Column(
-                Modifier.weight(1f).fillMaxHeight().controllerScroll(scroll).padding(start = 18.dp, end = 14.dp, top = 16.dp, bottom = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(26.dp),
-            ) {
-                sections.forEach { section ->
-                    androidx.compose.runtime.key(section) {
-                        val group = Modifier
-                            .onGloballyPositioned { tops[section] = it.positionInParent().y.toInt() }
-                            .focusRequester(requesters.getValue(section))
-                            .focusGroup()
-                        Column(group, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            when (section) {
-                                QuickSection.RUNNING -> {
-                                    SectionHeader(stringResource(Res.string.qm_section_running))
-                                    local?.let { LocalRunningCard(it, onDismiss) }
-                                    running.forEach { RunningCard(it, onResume = { onResume(it); onDismiss() }) }
-                                }
-                                QuickSection.QUICK -> {
-                                    SectionHeader(stringResource(Res.string.qm_section_quick))
-                                    // Running background work (the status bar spinner is touch only).
-                                    TasksRow()
-                                    val settings by c.settings.settings.collectAsState(io.github.thecodingdad.gamelodge.data.settings.LauncherSettings())
-                                    val navigate = io.github.thecodingdad.gamelodge.ui.screens.settings.LocalSettingsNavigator.current
-                                    QuickToggles(
-                                        rememberQuickTiles(settings.quickTiles, onHost = onHost, onControllers = onControllers),
-                                        initialFocus = !hasRunning,
-                                    ) { target -> onDismiss(); navigate(target, null) }
-                                }
-                                QuickSection.SYSTEM -> {
-                                    SectionHeader(stringResource(Res.string.qm_system))
-                                    platform.SystemControls(visible)
-                                }
-                                QuickSection.HOME_ASSISTANT -> {
-                                    SectionHeader(stringResource(Res.string.settings_home_assistant))
-                                    HomeAssistantSection(openHaSettings)
+            QuickRail(tabs, tab, onDismiss) { tab = it }
+            Column(Modifier.weight(1f).fillMaxHeight()) {
+                Text(
+                    stringResource(
+                        when (tab) {
+                            QuickTab.RUNNING -> Res.string.qm_section_running
+                            QuickTab.QUICK -> Res.string.qm_section_quick
+                            QuickTab.HOME_ASSISTANT -> Res.string.settings_home_assistant
+                        },
+                    ),
+                    style = MaterialTheme.typography.titleLarge, color = LauncherTheme.colors.onSurface,
+                    modifier = Modifier.padding(start = 18.dp, top = 18.dp, bottom = 6.dp),
+                )
+                // Each tab its own scroll position and focus start.
+                androidx.compose.runtime.key(tab) {
+                    Column(
+                        Modifier.weight(1f).fillMaxWidth().controllerScroll(rememberScrollState())
+                            .padding(start = 18.dp, end = 14.dp, top = 10.dp, bottom = 18.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp),
+                    ) {
+                        when (tab) {
+                            QuickTab.RUNNING -> {
+                                local?.let { LocalRunningCard(it, onDismiss) }
+                                running.forEachIndexed { i, session ->
+                                    RunningCard(session, initialFocus = local == null && i == 0, onResume = { onResume(session); onDismiss() })
                                 }
                             }
+                            QuickTab.QUICK -> {
+                                // Running background work (the status bar spinner is touch only).
+                                TasksRow()
+                                val settings by c.settings.settings.collectAsState(io.github.thecodingdad.gamelodge.data.settings.LauncherSettings())
+                                val navigate = io.github.thecodingdad.gamelodge.ui.screens.settings.LocalSettingsNavigator.current
+                                QuickToggles(rememberQuickTiles(settings.quickTiles, onHost = onHost, onControllers = onControllers)) { target ->
+                                    onDismiss(); navigate(target, null)
+                                }
+                                if (platform.hasSystemControls) {
+                                    androidx.compose.foundation.layout.Spacer(Modifier.height(4.dp))
+                                    platform.SystemControls(visible)
+                                }
+                            }
+                            QuickTab.HOME_ASSISTANT -> HomeAssistantSection(openHaSettings)
                         }
                     }
                 }
             }
         }
+        // Like the launcher's own screens: only with a controller connected; touchable as well.
+        io.github.thecodingdad.gamelodge.ui.components.ButtonHintBar(
+            listOf(
+                io.github.thecodingdad.gamelodge.ui.components.ButtonHint(io.github.thecodingdad.gamelodge.ui.input.PadButton.A, stringResource(Res.string.hint_select)),
+                io.github.thecodingdad.gamelodge.ui.components.ButtonHint(
+                    io.github.thecodingdad.gamelodge.ui.input.PadButton.L1, stringResource(Res.string.hint_tabs), { step(1) },
+                    secondButton = io.github.thecodingdad.gamelodge.ui.input.PadButton.R1,
+                ),
+                io.github.thecodingdad.gamelodge.ui.components.ButtonHint(io.github.thecodingdad.gamelodge.ui.input.PadButton.B, stringResource(Res.string.hint_back), onDismiss),
+            ),
+            inPopup = true,
+        )
     }
 }
 
-/** Section icons on the left edge of the panel; touch and mouse jump, LB/RB with a controller. */
+/** Tab icons on the left edge of the panel; touch and mouse switch, LB/RB with a controller. */
 @Composable
-private fun QuickRail(sections: List<QuickSection>, current: QuickSection, onDismiss: () -> Unit, onSelect: (QuickSection) -> Unit) {
+private fun QuickRail(tabs: List<QuickTab>, current: QuickTab, onDismiss: () -> Unit, onSelect: (QuickTab) -> Unit) {
     val colors = LauncherTheme.colors
-    val padConnected = io.github.thecodingdad.gamelodge.ui.screens.settings.rememberControllers().isNotEmpty()
     Column(
         Modifier.fillMaxHeight().width(72.dp).background(colors.background.copy(alpha = 0.45f)).padding(vertical = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         io.github.thecodingdad.gamelodge.ui.components.CloseArrow(onDismiss)
-        if (padConnected) io.github.thecodingdad.gamelodge.ui.components.PadGlyph(io.github.thecodingdad.gamelodge.ui.input.PadButton.L1)
-        sections.forEach { section ->
-            val selected = section == current
+        androidx.compose.foundation.layout.Spacer(Modifier.height(6.dp))
+        tabs.forEach { t ->
+            val selected = t == current
             io.github.thecodingdad.gamelodge.ui.components.FocusSurface(
-                onClick = { onSelect(section) },
+                onClick = { onSelect(t) },
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
                 color = if (selected) colors.accent.copy(alpha = 0.2f) else androidx.compose.ui.graphics.Color.Transparent,
                 focusScale = 1f,
                 dpadFocusable = false,
             ) {
                 androidx.compose.material3.Icon(
-                    section.icon, null,
+                    t.icon, null,
                     tint = if (selected) colors.accent else colors.onSurfaceMuted,
-                    modifier = Modifier.padding(12.dp).size(24.dp),
+                    modifier = Modifier.padding(12.dp).size(26.dp),
                 )
             }
         }
-        if (padConnected) io.github.thecodingdad.gamelodge.ui.components.PadGlyph(io.github.thecodingdad.gamelodge.ui.input.PadButton.R1)
     }
 }
 
 /** A game or app running on a host: resume the stream or quit it there (held). */
 @Composable
-private fun RunningCard(session: RunningSession, onResume: () -> Unit) {
+private fun RunningCard(session: RunningSession, initialFocus: Boolean, onResume: () -> Unit) {
     val c = io.github.thecodingdad.gamelodge.LocalContainer.current
     val scope = rememberCoroutineScope()
     val canResume = session.entry?.remoteTargets?.any { it.hostUuid == session.host.uuid && it.appId == session.host.runningAppId } == true
@@ -222,6 +206,7 @@ private fun RunningCard(session: RunningSession, onResume: () -> Unit) {
         title = session.appName.ifBlank { session.entry?.item?.title.orEmpty() },
         where = stringResource(Res.string.qm_running_on_host, session.host.name),
         onResume = onResume.takeIf { canResume },
+        initialFocus = initialFocus,
         onQuit = {
             scope.launch {
                 c.hostActions.quitApp(session.host)
@@ -240,6 +225,7 @@ private fun LocalRunningCard(session: io.github.thecodingdad.gamelodge.stream.Lo
         title = session.entry.item.title,
         where = stringResource(Res.string.qm_running_here),
         onResume = { session.resume(); onDismiss() },
+        initialFocus = true,
         onQuit = { scope.launch { session.quit() } },
     )
 }
@@ -250,6 +236,7 @@ private fun RunningCardLayout(
     title: String,
     where: String,
     onResume: (() -> Unit)?,
+    initialFocus: Boolean,
     onQuit: () -> Unit,
 ) {
     val colors = LauncherTheme.colors
@@ -271,8 +258,11 @@ private fun RunningCardLayout(
             }
         }
         io.github.thecodingdad.gamelodge.ui.components.ButtonRow(spacing = 10.dp) {
-            if (onResume != null) LauncherButton(stringResource(Res.string.qm_resume), onResume, Modifier.restoreFocusIf(true), Icons.Filled.PlayArrow, primary = true)
-            HoldToConfirmButton(stringResource(Res.string.qm_quit_game), onConfirmed = onQuit, icon = Icons.Filled.StopCircle)
+            if (onResume != null) LauncherButton(stringResource(Res.string.qm_resume), onResume, Modifier.restoreFocusIf(initialFocus), Icons.Filled.PlayArrow, primary = true)
+            HoldToConfirmButton(
+                stringResource(Res.string.qm_quit_game), onConfirmed = onQuit, icon = Icons.Filled.StopCircle,
+                modifier = Modifier.restoreFocusIf(initialFocus && onResume == null),
+            )
         }
     }
 }
@@ -281,7 +271,6 @@ private fun RunningCardLayout(
 @Composable
 private fun QuickToggles(
     tiles: List<TileModel>,
-    initialFocus: Boolean,
     onSettings: (io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -291,7 +280,7 @@ private fun QuickToggles(
                     QuickToggle(
                         tile,
                         onLongClick = quickTileSettings(tile.key)?.let { target -> { onSettings(target) } },
-                        modifier = Modifier.weight(1f).then(if (initialFocus && r == 0 && i == 0) Modifier.restoreFocusIf(true) else Modifier),
+                        modifier = Modifier.weight(1f).then(if (r == 0 && i == 0) Modifier.restoreFocusIf(true) else Modifier),
                     )
                 }
                 repeat(TOGGLES_PER_ROW - row.size) { androidx.compose.foundation.layout.Spacer(Modifier.weight(1f)) }

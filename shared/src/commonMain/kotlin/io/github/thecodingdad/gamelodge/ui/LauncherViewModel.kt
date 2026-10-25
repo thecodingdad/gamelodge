@@ -73,7 +73,10 @@ class LauncherViewModel(private val c: LauncherContainer) : ViewModel() {
     val launchState: StateFlow<LaunchState> = c.launcher.state
 
     /** Sessions currently running on any host, matched to library entries where possible. */
-    val runningSessions: StateFlow<List<RunningSession>> = combine(hosts, entries) { hostMap, list ->
+    val runningSessions: StateFlow<List<RunningSession>> = combine(hosts, entries, c.launcher.activeStream) { polled, list, active ->
+        // Our own stream counts even when the host's polling (paused while streaming) hasn't seen it.
+        val hostMap = if (active == null || polled[active.hostUuid]?.isStreaming == true) polled
+        else polled[active.hostUuid]?.let { polled + (active.hostUuid to it.copy(runningAppId = active.appId)) } ?: polled
         hostMap.values.filter { it.isStreaming }.map { host ->
             val entry = list.firstOrNull { e ->
                 e.remoteTargets.any { it.hostUuid == host.uuid && it.appId == host.runningAppId }
