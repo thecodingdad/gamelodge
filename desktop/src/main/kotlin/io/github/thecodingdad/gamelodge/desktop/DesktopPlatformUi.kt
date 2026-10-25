@@ -223,6 +223,17 @@ class DesktopPlatformUi(
 
     override val hasQuickAccessEditor get() = true
 
+    override val hasQuickMenuSettings get() = true
+
+    @Composable
+    override fun QuickMenuSettingsTab() {
+        val (settings, update) = settingsState() ?: return
+        io.github.thecodingdad.gamelodge.ui.screens.settings.ComboActionRows(
+            settings, update, listOf(io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU, io.github.thecodingdad.gamelodge.input.ComboAction.MOUSE),
+            firstFocus = true,
+        )
+    }
+
     @Composable
     override fun QuickAccessEditor(visible: Boolean, onDismiss: () -> Unit) = DesktopQuickAccessEditor(visible, onDismiss)
 
@@ -338,6 +349,8 @@ class DesktopPlatformUi(
                 SectionHeader(stringResource(Res.string.controllers_defaults))
                 Text(stringResource(Res.string.controllers_defaults_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
                 ControllerLayoutDefaultRow(settings, update, initialFocus = controllers.isEmpty())
+                SectionHeader(stringResource(Res.string.combo_section))
+                io.github.thecodingdad.gamelodge.ui.screens.settings.ComboActionRows(settings, update)
             }
             SeeAlso(
                 SeeAlsoLink(stringResource(Res.string.settings_sounds), SettingsTarget.Page(SettingsPageId.SOUNDS)),

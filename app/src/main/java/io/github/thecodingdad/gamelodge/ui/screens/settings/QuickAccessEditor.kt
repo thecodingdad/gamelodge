@@ -130,7 +130,7 @@ fun QuickMenuSettingsTab() {
     fun update(transform: (LauncherSettings) -> LauncherSettings) { scope.launch { c.settings.update(transform) } }
     val context = androidx.compose.ui.platform.LocalContext.current
 
-    ComboActionRows(settings, ::update, listOf(io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU), firstFocus = true)
+    ComboActionRows(settings, ::update, listOf(io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU, io.github.thecodingdad.gamelodge.input.ComboAction.MOUSE), firstFocus = true)
     SwitchRow(
         stringResource(Res.string.combo_forward), settings.comboForward, { on -> update { it.copy(comboForward = on) } },
         subtitle = stringResource(Res.string.combo_forward_sub),

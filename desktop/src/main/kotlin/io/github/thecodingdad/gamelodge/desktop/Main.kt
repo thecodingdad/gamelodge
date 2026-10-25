@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.desktop
 
+import io.github.thecodingdad.gamelodge.data.settings.combo
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -160,6 +161,9 @@ fun main(args: Array<String>) {
         container.settings.settings.collect {
             gamepads.nintendoLayout = it.buttonLayout == ButtonLayout.NINTENDO
             gamepads.layoutOverrides = it.controllerLayouts.mapValues { (_, l) -> l == ButtonLayout.NINTENDO }
+            io.github.thecodingdad.gamelodge.input.ButtonCombos.forward = it.comboForward
+            io.github.thecodingdad.gamelodge.input.ButtonCombos.combos =
+                io.github.thecodingdad.gamelodge.input.ComboAction.entries.associateWith { a -> it.combo(a) }
             val emulation = io.github.thecodingdad.gamelodge.desktop.emulation.PcEmulation.decode(it.pcEmulation)
             val custom = io.github.thecodingdad.gamelodge.desktop.games.CustomGame.decode(it.pcCustomGames)
             val overrides = io.github.thecodingdad.gamelodge.desktop.games.LaunchOverride.decode(it.pcLaunchOverrides)
@@ -179,17 +183,33 @@ fun main(args: Array<String>) {
     application {
         val vm = remember { LauncherViewModel(container) }
         gamepads.onBack = { feedback.play(UiSound.BACK) }
-        // Guide: back to the launcher (in it: to the start tab), held: the quick menu. Also from a
-        // game or stream in front, which gets the button as well (not intercepted on Windows).
-        gamepads.onGuide = guide@{ held ->
-            // Streamed to: the button came from the client, whose own launcher handles it. A paired
+        // Button combinations, also from a game or stream in front (which gets the buttons as
+        // well: Windows doesn't let them be intercepted).
+        WindowsPointer.onChange = { PointerNotice.show(it) }
+        gamepads.onCombo = combo@{ action, _ ->
+            // Streamed to: the buttons came from the client, whose own launcher handles them. A paired
             // launcher says so (any app); for others the host's games run through a runner.
-            if (io.github.thecodingdad.gamelodge.desktop.host.HostStreams.active || Runner.hostGameRunning()) return@guide
-            java.awt.EventQueue.invokeLater {
-                val inFront = windowVisible.value && mainWindow?.isActive == true
-                windowVisible.value = true
-                platformUi.bringToFront()
-                if (held) vm.quickMenuRequests.tryEmit(true) else if (inFront) vm.homePressed.tryEmit(Unit)
+            if (io.github.thecodingdad.gamelodge.desktop.host.HostStreams.active || Runner.hostGameRunning()) return@combo
+            val streams = container.streamControls
+            when (action) {
+                io.github.thecodingdad.gamelodge.input.ComboAction.HOME,
+                io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU -> java.awt.EventQueue.invokeLater {
+                    val inFront = windowVisible.value && mainWindow?.isActive == true
+                    windowVisible.value = true
+                    platformUi.bringToFront()
+                    if (action == io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU) vm.quickMenuRequests.tryEmit(true)
+                    else if (inFront) vm.homePressed.tryEmit(Unit)
+                }
+                io.github.thecodingdad.gamelodge.input.ComboAction.DISCONNECT -> streams.disconnect()
+                io.github.thecodingdad.gamelodge.input.ComboAction.STATS -> streams.toggleOverlay()
+                // The stream in front has its own mouse; GameLodge's pointer is off meanwhile.
+                io.github.thecodingdad.gamelodge.input.ComboAction.MOUSE ->
+                    if (streams.inFront()) {
+                        if (WindowsPointer.active) WindowsPointer.toggle()
+                        streams.toggleMouse(0)
+                    } else {
+                        WindowsPointer.toggle()
+                    }
             }
         }
         // Like Android: touch or a mouse click hides the focus ring, the next key or controller

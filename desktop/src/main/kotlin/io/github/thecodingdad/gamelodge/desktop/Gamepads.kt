@@ -4,6 +4,9 @@ import com.studiohartman.jamepad.ControllerIndex
 import com.studiohartman.jamepad.ControllerManager
 import com.studiohartman.jamepad.ControllerPowerLevel
 import com.studiohartman.jamepad.ControllerState
+import io.github.thecodingdad.gamelodge.input.ButtonCombos
+import io.github.thecodingdad.gamelodge.input.ComboAction
+import io.github.thecodingdad.gamelodge.input.PadKeys
 import io.github.thecodingdad.gamelodge.ui.input.InputDispatcher
 import io.github.thecodingdad.gamelodge.ui.input.PadButton
 import io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerInfo
@@ -23,7 +26,9 @@ import kotlin.math.abs
  * buttons and the right stick go to the [InputDispatcher] like on Android.
  *
  * Polls only while the launcher window has the focus: a game or stream in front gets the pads alone.
- * Only the Guide button is watched always ([onGuide]); it still reaches the game as well.
+ * The button combinations ([ButtonCombos]) are watched always; their buttons still reach the game
+ * (Windows can't hold them back), only the launcher's own UI ignores them. While the mouse
+ * emulation is on, the pads drive the Windows mouse pointer instead ([WindowsPointer]).
  */
 class Gamepads(private val dispatcher: InputDispatcher) {
     private val manager = ControllerManager()
@@ -55,9 +60,10 @@ class Gamepads(private val dispatcher: InputDispatcher) {
         padInUse = false
     }
 
-    /** Guide released after a short press (false) or held for [GUIDE_HOLD_MS] (true); called on the poll thread. */
-    @Volatile var onGuide: (held: Boolean) -> Unit = {}
-    private val guideDownAt = HashMap<Int, Long>() // pad -> press time, -1 once the hold fired
+    /** A button combination of pad [Int] fired; called on the poll or combo thread. */
+    @Volatile var onCombo: (ComboAction, Int) -> Unit = { _, _ -> }
+    private val comboKeys = HashMap<Int, Set<Int>>() // pad -> buttons down (Android key codes)
+    private val hidden = HashMap<Int, MutableSet<Int>>() // pad -> buttons a combination took
 
     /** Called when B goes down (back sound, like the Android activity plays it). */
     @Volatile var onBack: () -> Unit = {}
@@ -65,7 +71,7 @@ class Gamepads(private val dispatcher: InputDispatcher) {
     @Volatile private var window: Window? = null
     private var started = false
     private var lastUsed = 0
-    private val previous = HashMap<Int, ControllerState>()
+    private val previous = HashMap<Int, Pad>()
     private val held = HashMap<String, Long>() // repeating key -> next repeat time
     private var selectDownAt = 0L
     private var selectRepeats = 0
@@ -74,6 +80,8 @@ class Gamepads(private val dispatcher: InputDispatcher) {
         this.window = window
         if (started) return
         started = true
+        // A short press a hold combination held back from the launcher's UI reaches it after all.
+        ButtonCombos.replay = { press, _ -> if (window.isActive) replayToUi(press as Int) }
         Thread({ loop() }, "gamepads").apply { isDaemon = true }.start()
     }
 
@@ -102,32 +110,110 @@ class Gamepads(private val dispatcher: InputDispatcher) {
                         _controllers.value = list
                         lastList = now
                     }
-                    guide(now)
-                    if (focused) poll(now) else release()
+                    combos(now)
+                    if (WindowsPointer.active) {
+                        release()
+                        pointer(now)
+                    } else if (focused) {
+                        poll(now)
+                    } else {
+                        release()
+                    }
                 }
             } catch (e: Exception) {
                 // A pad unplugged mid-poll and the like: log it and carry on with the next round.
                 Log.w("Gamepad poll failed", e)
             }
             // In the background often enough to catch a short Guide press.
-            Thread.sleep(if (focused) 16 else 50)
+            Thread.sleep(if (focused || WindowsPointer.active) 16 else 50)
         }
     }
 
-    private fun guide(now: Long) {
+    /** Feeds button changes of every pad into the combinations (also with a game in front). */
+    private fun combos(now: Long) {
         for (i in 0 until manager.numControllers) {
-            val down = runCatching { manager.getState(i) }.getOrNull()?.let { it.isConnected && it.guide } == true
-            val since = guideDownAt[i]
-            when {
-                down && since == null -> guideDownAt[i] = now
-                down && since != null && since >= 0 && now - since >= GUIDE_HOLD_MS -> {
-                    guideDownAt[i] = -1
-                    onGuide(true)
-                }
-                !down && since != null -> {
-                    guideDownAt.remove(i)
-                    if (since >= 0) onGuide(false)
-                }
+            val s = runCatching { manager.getState(i) }.getOrNull()?.takeIf { it.isConnected }
+            val keys = s?.let(::keysOf).orEmpty()
+            val before = comboKeys[i].orEmpty()
+            if (keys == before) continue
+            comboKeys[i] = keys
+            val taken = hidden.getOrPut(i) { HashSet() }
+            for (code in before - keys) {
+                ButtonCombos.handle(i, code, false, 0, now, names[i], code, onCombo)
+                taken -= code
+            }
+            for (code in keys - before) {
+                if (ButtonCombos.handle(i, code, true, 0, now, names[i], code, onCombo)) taken += code
+            }
+        }
+    }
+
+    private fun keysOf(s: ControllerState): Set<Int> = buildSet {
+        if (s.a) add(PadKeys.A)
+        if (s.b) add(PadKeys.B)
+        if (s.x) add(PadKeys.X)
+        if (s.y) add(PadKeys.Y)
+        if (s.lb) add(PadKeys.L1)
+        if (s.rb) add(PadKeys.R1)
+        if (s.leftTrigger > 0.5f) add(PadKeys.L2)
+        if (s.rightTrigger > 0.5f) add(PadKeys.R2)
+        if (s.leftStickClick) add(PadKeys.THUMBL)
+        if (s.rightStickClick) add(PadKeys.THUMBR)
+        if (s.start) add(PadKeys.START)
+        if (s.back) add(PadKeys.SELECT)
+        if (s.guide) add(PadKeys.MODE)
+        if (s.dpadUp) add(PadKeys.DPAD_UP)
+        if (s.dpadDown) add(PadKeys.DPAD_DOWN)
+        if (s.dpadLeft) add(PadKeys.DPAD_LEFT)
+        if (s.dpadRight) add(PadKeys.DPAD_RIGHT)
+    }
+
+    /** A pad's state for the launcher UI, without the buttons a combination took. */
+    private data class Pad(
+        val a: Boolean, val b: Boolean, val x: Boolean, val y: Boolean, val lb: Boolean, val rb: Boolean,
+        val start: Boolean, val back: Boolean, val leftStickClick: Boolean, val rightStickClick: Boolean,
+        val dpadUp: Boolean, val dpadDown: Boolean, val dpadLeft: Boolean, val dpadRight: Boolean,
+        val leftStickX: Float, val leftStickY: Float, val rightStickX: Float, val rightStickY: Float,
+        val leftTrigger: Float, val rightTrigger: Float,
+    )
+
+    private fun padOf(s: ControllerState, taken: Set<Int>): Pad {
+        fun on(code: Int, value: Boolean) = value && code !in taken
+        return Pad(
+            on(PadKeys.A, s.a), on(PadKeys.B, s.b), on(PadKeys.X, s.x), on(PadKeys.Y, s.y),
+            on(PadKeys.L1, s.lb), on(PadKeys.R1, s.rb), on(PadKeys.START, s.start), on(PadKeys.SELECT, s.back),
+            on(PadKeys.THUMBL, s.leftStickClick), on(PadKeys.THUMBR, s.rightStickClick),
+            on(PadKeys.DPAD_UP, s.dpadUp), on(PadKeys.DPAD_DOWN, s.dpadDown), on(PadKeys.DPAD_LEFT, s.dpadLeft), on(PadKeys.DPAD_RIGHT, s.dpadRight),
+            s.leftStickX, s.leftStickY, s.rightStickX, s.rightStickY,
+            if (PadKeys.L2 in taken) 0f else s.leftTrigger, if (PadKeys.R2 in taken) 0f else s.rightTrigger,
+        )
+    }
+
+    /** Mouse emulation: every pad steers the Windows pointer (buttons a combination took excluded). */
+    private fun pointer(now: Long) {
+        for (i in 0 until manager.numControllers) {
+            val s = runCatching { manager.getState(i) }.getOrNull()?.takeIf { it.isConnected } ?: continue
+            val p = padOf(s, hidden[i].orEmpty())
+            WindowsPointer.update(i, p.leftStickX, p.leftStickY, p.rightStickX, p.rightStickY,
+                p.a, p.b, p.x, p.lb, p.rb, p.dpadUp, p.dpadDown, p.dpadLeft, p.dpadRight, now)
+        }
+    }
+
+    private fun replayToUi(code: Int) {
+        val now = System.currentTimeMillis()
+        val keys = mapOf(
+            PadKeys.A to KeyEvent.VK_ENTER, PadKeys.B to KeyEvent.VK_ESCAPE, PadKeys.DPAD_UP to KeyEvent.VK_UP,
+            PadKeys.DPAD_DOWN to KeyEvent.VK_DOWN, PadKeys.DPAD_LEFT to KeyEvent.VK_LEFT, PadKeys.DPAD_RIGHT to KeyEvent.VK_RIGHT,
+        )
+        val buttons = mapOf(
+            PadKeys.X to PadButton.X, PadKeys.Y to PadButton.Y, PadKeys.L1 to PadButton.L1, PadKeys.R1 to PadButton.R1,
+            PadKeys.START to PadButton.START, PadKeys.SELECT to PadButton.SELECT,
+        )
+        keys[code]?.let { press(it, released = true) }
+        buttons[code]?.let { b ->
+            EventQueue.invokeLater {
+                dispatcher.dispatchButton(b, InputDispatcher.KeyPhase.DOWN, 0, now)
+                dispatcher.dispatchButton(b, InputDispatcher.KeyPhase.UP, 0, now)
             }
         }
     }
@@ -155,11 +241,12 @@ class Gamepads(private val dispatcher: InputDispatcher) {
 
     private fun poll(now: Long) {
         for (i in 0 until manager.numControllers) {
-            val s = manager.getState(i)
-            if (!s.isConnected) {
+            val state = manager.getState(i)
+            if (!state.isConnected) {
                 previous.remove(i)
                 continue
             }
+            val s = padOf(state, hidden[i].orEmpty())
             val p = previous[i]
             previous[i] = s
             if (p == null) continue
@@ -174,14 +261,14 @@ class Gamepads(private val dispatcher: InputDispatcher) {
         repeatHeld(now)
     }
 
-    private fun changed(p: ControllerState, s: ControllerState) =
+    private fun changed(p: Pad, s: Pad) =
         p.a != s.a || p.b != s.b || p.x != s.x || p.y != s.y || p.lb != s.lb || p.rb != s.rb || p.start != s.start ||
             p.back != s.back || p.dpadUp != s.dpadUp || p.dpadDown != s.dpadDown || p.dpadLeft != s.dpadLeft ||
             p.dpadRight != s.dpadRight || abs(p.leftStickX - s.leftStickX) > 0.2f || abs(p.leftStickY - s.leftStickY) > 0.2f ||
             abs(p.rightStickX - s.rightStickX) > 0.2f || abs(p.rightStickY - s.rightStickY) > 0.2f ||
             abs(p.leftTrigger - s.leftTrigger) > 0.2f || abs(p.rightTrigger - s.rightTrigger) > 0.2f
 
-    private fun handle(p: ControllerState, s: ControllerState, now: Long, nintendoLayout: Boolean) {
+    private fun handle(p: Pad, s: Pad, now: Long, nintendoLayout: Boolean) {
         val (confirm, back) = if (nintendoLayout) s.b to s.a else s.a to s.b
         val (wasConfirm, wasBack) = if (nintendoLayout) p.b to p.a else p.a to p.b
         val (y, x) = if (nintendoLayout) s.x to s.y else s.y to s.x
@@ -302,7 +389,6 @@ class Gamepads(private val dispatcher: InputDispatcher) {
         const val FIRST_REPEAT_MS = 350L
         const val NO_CHAR = '\u0000'
         const val REPEAT_MS = 90L
-        const val GUIDE_HOLD_MS = 600L
         val DIRECTIONS = mapOf("up" to KeyEvent.VK_UP, "down" to KeyEvent.VK_DOWN, "left" to KeyEvent.VK_LEFT, "right" to KeyEvent.VK_RIGHT)
     }
 }

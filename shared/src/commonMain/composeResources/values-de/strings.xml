@@ -776,6 +776,8 @@
     <string name="combo_disconnect_sub">Beendet den Stream, das Spiel läuft auf dem Host weiter</string>
     <string name="combo_stats">Leistungsanzeige</string>
     <string name="combo_stats_sub">Blendet die Leistungswerte des Streams ein oder aus</string>
+    <string name="mouse_on">Maus-Emulation an</string>
+    <string name="mouse_off">Maus-Emulation aus</string>
     <string name="combo_forward">Tasten weiterleiten</string>
     <string name="combo_forward_sub">Die Tasten der Kombinationen kommen zusätzlich beim Spiel, Stream oder der App an (mit dem systemweiten Dienst in jeder App). Aus: sie lösen nur die Aktion aus; ein kurzer Druck einer Halte-Kombination kommt in GameLodge und im Stream trotzdem an.</string>
     <string name="combo_quick_menu_sub">Öffnet das Schnellmenü</string>

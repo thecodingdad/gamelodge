@@ -41,6 +41,22 @@ class DesktopStreamControls(private val hostActions: HostActions, private val ho
         }, "disconnect").start()
     }
 
+    /** Moonlight-Qt's window is the one in front (it reads the pads then). */
+    override fun inFront(): Boolean {
+        val r = running ?: return false
+        val pids = (listOf(r.process.toHandle()) + r.process.descendants().toList()).map { it.pid() }.toSet()
+        return runCatching {
+            val window = com.sun.jna.platform.win32.User32.INSTANCE.GetForegroundWindow() ?: return false
+            val pid = com.sun.jna.ptr.IntByReference()
+            com.sun.jna.platform.win32.User32.INSTANCE.GetWindowThreadProcessId(window, pid)
+            pid.value.toLong() in pids
+        }.getOrDefault(false)
+    }
+
+    override fun toggleMouse(controller: Int): Boolean = inFront() && running?.send("mouse") == true
+
+    override fun toggleOverlay(): Boolean = running?.send("overlay") == true
+
     /** Moonlight-Qt quits the app itself (as its own "quit" does): no "connection ended" error. */
     override suspend fun quit(host: HostState): Boolean = withContext(Dispatchers.IO) {
         val r = running?.takeIf { it.hostUuid == host.uuid } ?: return@withContext false
