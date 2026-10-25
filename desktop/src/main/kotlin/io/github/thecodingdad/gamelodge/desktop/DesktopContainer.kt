@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.desktop
 
+import kotlinx.coroutines.flow.first
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.room.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
@@ -176,7 +177,13 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
         LaunchCoordinator(hosts, hostActions, { hostPower }, { NoAutoSleep }, profiles, playtime, settings, { ha }, scope, DesktopLaunches(
             pcLibrary, playtime, scope, { launcher.gameActions.ended(); onGameEnded() }, desktopHosts,
             identity = { streamIdentity },
-            streamOptions = { profiles.activeOptions() },
+            streamOptions = { entry ->
+                // Face buttons follow the launcher's layout (the game's own, else the default of
+                // all controllers: Moonlight-Qt swaps them for every pad alike).
+                val s = settings.settings.first()
+                val nintendo = (s.gameLayouts[entry.item.id] ?: s.buttonLayout) == io.github.thecodingdad.gamelodge.data.settings.ButtonLayout.NINTENDO
+                profiles.activeOptions() + if (nintendo) "--swap-gamepad-buttons" else "--no-swap-gamepad-buttons"
+            },
             onStreamEnded = {
                 launcher.streamEnded()
                 launcher.restoreProfile()

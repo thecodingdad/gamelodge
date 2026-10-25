@@ -95,6 +95,8 @@ data class LauncherSettings(
     val buttonLayout: ButtonLayout = ButtonLayout.XBOX,
     /** Controllers with their own layout ([io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerInfo.key] → layout). */
     val controllerLayouts: Map<String, ButtonLayout> = emptyMap(),
+    /** Games whose stream uses another button layout than the controllers' (library item id). */
+    val gameLayouts: Map<String, ButtonLayout> = emptyMap(),
     /** PC: button combinations of single controllers by name (Android keeps them per device). */
     val controllerCombos: Map<String, PadCombos> = emptyMap(),
     val uiSounds: Boolean = true,
@@ -244,6 +246,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val homeRowOrder = stringPreferencesKey("home_row_order")
         val buttonLayout = stringPreferencesKey("button_layout")
         val controllerLayouts = stringPreferencesKey("controller_layouts")
+        val gameLayouts = stringPreferencesKey("game_layouts")
         val controllerCombos = stringPreferencesKey("controller_combos")
         val uiSounds = booleanPreferencesKey("ui_sounds")
         val uiSoundVolume = intPreferencesKey("ui_sound_volume")
@@ -357,6 +360,10 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
                 val key = line.substringBeforeLast('\t', "").takeIf { it.isNotEmpty() } ?: return@mapNotNull null
                 runCatching { ButtonLayout.valueOf(line.substringAfterLast('\t')) }.getOrNull()?.let { key to it }
             }?.toMap() ?: d.controllerLayouts,
+            gameLayouts = this[K.gameLayouts]?.lines()?.mapNotNull { line ->
+                val key = line.substringBeforeLast('\t', "").takeIf { it.isNotEmpty() } ?: return@mapNotNull null
+                runCatching { ButtonLayout.valueOf(line.substringAfterLast('\t')) }.getOrNull()?.let { key to it }
+            }?.toMap() ?: d.gameLayouts,
             uiSounds = this[K.uiSounds] ?: d.uiSounds,
             uiSoundVolume = this[K.uiSoundVolume] ?: d.uiSoundVolume,
             haptics = this[K.haptics] ?: d.haptics,
@@ -454,6 +461,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         this[K.homeRowOrder] = s.homeRowOrder.joinToString(",")
         this[K.buttonLayout] = s.buttonLayout.name
         this[K.controllerCombos] = padCombosJson.encodeToString(s.controllerCombos)
+        this[K.gameLayouts] = s.gameLayouts.entries.joinToString("\n") { "${it.key}\t${it.value.name}" }
         this[K.controllerLayouts] = s.controllerLayouts.entries.joinToString("\n") { "${it.key}\t${it.value.name}" }
         this[K.uiSounds] = s.uiSounds
         this[K.uiSoundVolume] = s.uiSoundVolume

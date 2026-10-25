@@ -48,6 +48,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -365,6 +366,8 @@ fun EntryContextMenu(
             } else {
                 LauncherButton(stringResource(Res.string.action_mark_game), act { onKind(e, ItemKind.GAME) }, Modifier.fillMaxWidth(), Icons.Filled.SportsEsports)
             }
+            // Streamed games: their own button layout (a Nintendo game wants confirm on the right).
+            if (e.item.kind == ItemKind.GAME && e.remoteTargets.isNotEmpty()) GameLayoutRow(e.item.id)
             if (e.romTargets.isNotEmpty()) {
                 LauncherButton(stringResource(Res.string.action_emulator), act { onEmulator(e) }, Modifier.fillMaxWidth(), Icons.Filled.SportsEsports)
             }
@@ -378,6 +381,34 @@ fun EntryContextMenu(
             LauncherButton(stringResource(Res.string.action_hide), act { onHide(e) }, Modifier.fillMaxWidth(), Icons.Filled.VisibilityOff)
         }
     }
+}
+
+/** The button layout of one game's stream: the controllers' own, or fixed Xbox / Nintendo. */
+@Composable
+private fun GameLayoutRow(itemId: String) {
+    val c = io.github.thecodingdad.gamelodge.LocalContainer.current
+    val settings by c.settings.settings.collectAsState(null)
+    val s = settings ?: return
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    io.github.thecodingdad.gamelodge.ui.screens.settings.ChoiceRow(
+        stringResource(Res.string.game_layout), listOf(null) + io.github.thecodingdad.gamelodge.data.settings.ButtonLayout.entries,
+        s.gameLayouts[itemId],
+        label = {
+            stringResource(
+                when (it) {
+                    null -> Res.string.game_layout_controllers
+                    io.github.thecodingdad.gamelodge.data.settings.ButtonLayout.XBOX -> Res.string.button_layout_xbox
+                    io.github.thecodingdad.gamelodge.data.settings.ButtonLayout.NINTENDO -> Res.string.button_layout_nintendo
+                },
+            )
+        },
+        onSelect = { layout ->
+            scope.launch {
+                c.settings.update { st -> st.copy(gameLayouts = if (layout == null) st.gameLayouts - itemId else st.gameLayouts + (itemId to layout)) }
+            }
+        },
+        subtitle = stringResource(Res.string.game_layout_sub),
+    )
 }
 
 /**

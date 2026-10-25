@@ -23,6 +23,9 @@ object StreamSettingsSchema {
         // developer tools; Home and the quick menu come from GameLodge's button combinations.
         "checkbox_enable_perf_overlay_lite_dialog", "checkbox_enable_perf_logging", "share_performance_logs",
         "option_view_shared_pref_logs", "checkbox_back_as_guide", "checkbox_back_as_meta",
+        // GameLodge's mouse emulation (combination, speed) and its button layout (Xbox / Nintendo,
+        // per controller and per game) replace these.
+        "checkbox_mouse_emulation", "analog_scrolling", "checkbox_flip_face_buttons",
     )
 
     /** Artemis' render mode; anything but 2D ("0") would ask for the 3D renderer. */

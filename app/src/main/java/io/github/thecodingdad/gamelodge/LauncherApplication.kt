@@ -40,7 +40,10 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
         container.hosts.bind()
         container.library.start()
         container.emulation.start()
-        container.controllerSettings.install()
+        container.controllerSettings.install(
+            launcher = { currentSettings },
+            game = { container.launcher.activeStream.value?.entry?.item?.id },
+        )
         io.github.thecodingdad.gamelodge.ui.shell.StreamConnectingOverlay.install(container)
         container.scope.launch { container.filters.ensureDefaults() }
         // Button combinations: needed by the activity and by the accessibility service, which
@@ -66,6 +69,7 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
         }
         container.scope.launch {
             container.settings.settings.collect {
+                currentSettings = it
                 io.github.thecodingdad.gamelodge.input.ButtonCombos.forward = it.comboForward
                 io.github.thecodingdad.gamelodge.input.PointerMode.speed = it.mouseSpeed / 100f
                 io.github.thecodingdad.gamelodge.input.PointerMode.exponent = it.mouseAcceleration.exponent
@@ -116,6 +120,9 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
             .crossfade(true)
             .build()
 }
+
+/** The latest settings for code that can't suspend (Artemis asks for controller overrides synchronously). */
+@Volatile private var currentSettings = io.github.thecodingdad.gamelodge.data.settings.LauncherSettings()
 
 /** Host pixels per second of the stream's mouse at full stick deflection and 100 % speed. */
 private const val STREAM_MOUSE_SPEED = 1200f

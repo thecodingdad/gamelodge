@@ -130,7 +130,6 @@ class DesktopProfiles(dataDir: File) : StreamProfiles, ProfileEditing, StreamSet
                 "category_gamepad_settings", stringResource(Res.string.sopt_category_gamepad_settings),
                 listOf(
                     toggle(MULTI_CONTROLLER, stringResource(Res.string.sopt_title_checkbox_multi_controller), stringResource(Res.string.sopt_summary_checkbox_multi_controller)),
-                    toggle(FLIP_FACE_BUTTONS, stringResource(Res.string.sopt_title_checkbox_flip_face_buttons), stringResource(Res.string.sopt_summary_checkbox_flip_face_buttons)),
                 ),
             ),
             StreamOptionCategory(
@@ -256,7 +255,6 @@ class DesktopProfiles(dataDir: File) : StreamProfiles, ProfileEditing, StreamSet
         const val DISPLAY_MODE = "desktop_display_mode"
         const val AUDIO = "list_audio_config"
         const val MULTI_CONTROLLER = "checkbox_multi_controller"
-        const val FLIP_FACE_BUTTONS = "checkbox_flip_face_buttons"
         const val ABSOLUTE_MOUSE = "checkbox_absolute_mouse_mode"
         const val SYSTEM_KEYS = "desktop_capture_system_keys"
         const val GAME_OPTIMIZATION = "checkbox_enable_sops"
@@ -271,7 +269,7 @@ class DesktopProfiles(dataDir: File) : StreamProfiles, ProfileEditing, StreamSet
 
         /** Artemis' defaults (and Moonlight-Qt's for the PC-only options). */
         private val toggleDefaults = mapOf(
-            HDR to false, MULTI_CONTROLLER to true, FLIP_FACE_BUTTONS to false, ABSOLUTE_MOUSE to false,
+            HDR to false, MULTI_CONTROLLER to true, ABSOLUTE_MOUSE to false,
             GAME_OPTIMIZATION to true, HOST_AUDIO to false, QUIT_AFTER to false, PERF_OVERLAY to false, YUV444 to false,
         )
 
@@ -311,7 +309,6 @@ class DesktopProfiles(dataDir: File) : StreamProfiles, ProfileEditing, StreamSet
                 add("--display-mode"); add(v.getString(DISPLAY_MODE, "fullscreen")!!)
                 add("--audio-config"); add(when (v.getString(AUDIO, "2")) { "51" -> "5.1-surround"; "71" -> "7.1-surround"; else -> "stereo" })
                 add(flag("multi-controller", MULTI_CONTROLLER))
-                add(flag("swap-gamepad-buttons", FLIP_FACE_BUTTONS))
                 add(flag("absolute-mouse", ABSOLUTE_MOUSE))
                 add("--capture-system-keys"); add(v.getString(SYSTEM_KEYS, "fullscreen")!!)
                 add(flag("game-optimization", GAME_OPTIMIZATION))

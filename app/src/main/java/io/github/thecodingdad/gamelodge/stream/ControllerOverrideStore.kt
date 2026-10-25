@@ -5,13 +5,13 @@ import com.limelight.binding.input.ControllerOverrides
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import io.github.thecodingdad.gamelodge.ui.screens.settings.layoutFor
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 /** Settings of one controller that differ from the global gamepad settings (null = global). */
 @Serializable
 data class ControllerSettings(
-    val flipFaceButtons: Boolean? = null,
     val deadzonePercent: Int? = null,
     val rumblePercent: Int? = null,
     val touchpadAsMouse: Boolean? = null,
@@ -67,12 +67,19 @@ class ControllerOverrideStore(context: Context) {
         _all.value = load()
     }
 
-    /** Hands the settings to Artemis' controller handling (applied when a stream starts). */
-    fun install() {
+    /**
+     * Hands the settings to Artemis' controller handling (applied when a stream starts). The face
+     * buttons follow the launcher's layout: Nintendo swaps them for the host, the streamed game
+     * ([game], its library id) can set its own ([launcher] gives the current settings).
+     */
+    fun install(launcher: () -> io.github.thecodingdad.gamelodge.data.settings.LauncherSettings, game: () -> String?) {
         ControllerOverrides.setProvider { descriptor ->
-            val s = _all.value[descriptor] ?: return@setProvider null
+            val s = _all.value[descriptor] ?: ControllerSettings()
+            val settings = launcher()
+            val layout = game()?.let { settings.gameLayouts[it] }
+                ?: settings.layoutFor(descriptor)
             ControllerOverrides.Override().apply {
-                flipFaceButtons = s.flipFaceButtons
+                flipFaceButtons = layout == io.github.thecodingdad.gamelodge.data.settings.ButtonLayout.NINTENDO
                 deadzonePercent = s.deadzonePercent
                 rumblePercent = s.rumblePercent
                 touchpadAsMouse = s.touchpadAsMouse

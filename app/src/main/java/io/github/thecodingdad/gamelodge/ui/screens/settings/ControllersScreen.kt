@@ -221,7 +221,6 @@ private fun ControllerOverrideRows(c: ControllerInfo) {
         label = { v -> v?.let { stringResource(Res.string.controller_player_n, it + 1) } ?: stringResource(Res.string.controller_player_auto) },
         onSelect = { v -> save { it.copy(playerSlot = v) } },
     )
-    ChoiceRow(stringResource(Res.string.controller_flip), tri, s.flipFaceButtons, label = triLabel, onSelect = { v -> save { it.copy(flipFaceButtons = v) } })
     ChoiceRow(
         stringResource(Res.string.controller_deadzone), listOf<Int?>(null, 0, 3, 5, 8, 10, 15, 20), s.deadzonePercent,
         label = { v -> v?.let { "$it %" } ?: global },

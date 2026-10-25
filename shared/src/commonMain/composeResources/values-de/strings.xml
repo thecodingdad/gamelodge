@@ -184,6 +184,9 @@
     <!-- Controls -->
     <string name="setting_button_layout">Tastenbelegung</string>
     <string name="setting_button_layout_sub">Nintendo tauscht Bestätigen/Zurück (A/B) und X/Y</string>
+    <string name="game_layout">Tastenbelegung im Stream</string>
+    <string name="game_layout_controllers">Wie Controller</string>
+    <string name="game_layout_sub">Nintendo tauscht A/B und X/Y für dieses Spiel</string>
     <string name="button_layout_xbox">Xbox</string>
     <string name="button_layout_nintendo">Nintendo</string>
     <string name="setting_ui_sounds">Oberflächen-Sounds</string>
@@ -691,7 +694,6 @@
     <string name="controller_player">Spieler am Host</string>
     <string name="controller_player_auto">Automatisch</string>
     <string name="controller_player_n">Spieler %1$d</string>
-    <string name="controller_flip">A/B und X/Y tauschen</string>
     <string name="controller_deadzone">Stick-Deadzone</string>
     <string name="controller_rumble">Vibration</string>
     <string name="controller_motion">Bewegungssensoren (Gyro)</string>

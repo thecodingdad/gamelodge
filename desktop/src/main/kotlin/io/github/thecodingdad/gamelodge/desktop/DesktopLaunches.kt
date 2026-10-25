@@ -29,7 +29,7 @@ class DesktopLaunches(
     private val moonlight: () -> io.github.thecodingdad.gamelodge.desktop.stream.MoonlightQt = { io.github.thecodingdad.gamelodge.desktop.stream.MoonlightQt.locate() },
     private val identity: () -> io.github.thecodingdad.gamelodge.desktop.stream.StreamIdentity = { error("no identity") },
     /** Options for Moonlight-Qt from the active stream profile. */
-    private val streamOptions: () -> List<String> = { emptyList() },
+    private val streamOptions: suspend (LibraryEntry) -> List<String> = { emptyList() },
     /** The stream window closed (play session, profile, host state). */
     private val onStreamEnded: () -> Unit = {},
 ) : LaunchPlatform {
@@ -93,7 +93,7 @@ class DesktopLaunches(
                 }
                 hosts.quietForStream()
                 try {
-                    client.stream(identity(), hosts.storedHosts.value, stored, appId, streamOptions(), apps) {
+                    client.stream(identity(), hosts.storedHosts.value, stored, appId, streamOptions(entry), apps) {
                         if (it is io.github.thecodingdad.gamelodge.desktop.stream.MoonlightQt.Start.Streaming) hosts.markRunning(host.uuid, appId)
                         start.complete(it)
                     }

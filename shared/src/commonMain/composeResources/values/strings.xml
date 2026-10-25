@@ -186,6 +186,9 @@
     <!-- Controls -->
     <string name="setting_button_layout">Button layout</string>
     <string name="setting_button_layout_sub">Nintendo swaps confirm/back (A/B) and X/Y</string>
+    <string name="game_layout">Button layout in the stream</string>
+    <string name="game_layout_controllers">Same as controllers</string>
+    <string name="game_layout_sub">Nintendo swaps A/B and X/Y for this game</string>
     <string name="button_layout_xbox">Xbox</string>
     <string name="button_layout_nintendo">Nintendo</string>
     <string name="setting_ui_sounds">Interface sounds</string>
@@ -693,7 +696,6 @@
     <string name="controller_player">Player on the host</string>
     <string name="controller_player_auto">Automatic</string>
     <string name="controller_player_n">Player %1$d</string>
-    <string name="controller_flip">Swap A/B and X/Y</string>
     <string name="controller_deadzone">Stick dead zone</string>
     <string name="controller_rumble">Rumble</string>
     <string name="controller_motion">Motion sensors (gyro)</string>
