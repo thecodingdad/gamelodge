@@ -212,6 +212,7 @@ fun main(args: Array<String>) {
                 }
             }
             windowControls.exit = ::exitApplication
+            windowControls.close = { if (startup.settings.value.closeToTray) windowVisible.value = false else exitApplication() }
             if (!isWindows) {
                 androidx.compose.runtime.snapshotFlow { state.placement }.collect { windowControls.fullscreen.value = it == WindowPlacement.Fullscreen }
             }
@@ -264,7 +265,7 @@ fun main(args: Array<String>) {
         }
         key(windowGeneration) {
         Window(
-            onCloseRequest = { if (startup.settings.value.closeToTray) windowVisible.value = false else exitApplication() },
+            onCloseRequest = { windowControls.close() },
             visible = visible,
             icon = icon,
             title = "GameLodge",

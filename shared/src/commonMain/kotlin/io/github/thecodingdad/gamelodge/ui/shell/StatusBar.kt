@@ -204,6 +204,7 @@ fun StatusCluster(
                 .pointerInput(Unit) { detectTapGestures { clockTap?.invoke() } }
                 .padding(horizontal = 4.dp, vertical = 2.dp),
         )
+        io.github.thecodingdad.gamelodge.ui.PlatformUi.current.StatusBarActions()
     }
 }
 

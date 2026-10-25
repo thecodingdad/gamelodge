@@ -1,5 +1,7 @@
 package io.github.thecodingdad.gamelodge.desktop
 
+import io.github.thecodingdad.gamelodge.stream.LocalSessions
+
 import io.github.thecodingdad.gamelodge.data.db.LaunchTargetEntity
 import io.github.thecodingdad.gamelodge.data.db.LibraryEntry
 import io.github.thecodingdad.gamelodge.data.library.PlaytimeTracker
@@ -44,7 +46,21 @@ class DesktopLaunches(
         val started = CompletableDeferred<Boolean>()
         scope.launch {
             playtime.start(entry.item.id, target.id, null)
-            GameLauncher.play(game) { started.complete(it) }
+            try {
+                GameLauncher.play(game) { ok ->
+                    // Followed while it runs: the quick menu offers resume and quit.
+                    if (ok) LocalSessions.started(
+                        LocalSessions.Running(
+                            entry,
+                            resume = { io.github.thecodingdad.gamelodge.desktop.games.GameWindow.focus(GameLauncher.gameProcesses()) },
+                            quit = { io.github.thecodingdad.gamelodge.desktop.games.GameWindow.quit(GameLauncher.gameProcesses) },
+                        ),
+                    )
+                    started.complete(ok)
+                }
+            } finally {
+                LocalSessions.ended(entry)
+            }
             playtime.finishOpenSession()
             library.rescan()
             onGameEnded()

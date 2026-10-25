@@ -466,6 +466,10 @@
     <string name="qm_running_on">%1$s on %2$s</string>
     <string name="qm_resume">Resume</string>
     <string name="qm_quit_game">Quit</string>
+    <string name="qm_section_running">Running</string>
+    <string name="qm_section_quick">Quick access</string>
+    <string name="qm_running_on_host">Running on %1$s</string>
+    <string name="qm_running_here">Running on this PC</string>
 
     <!-- Backup -->
     <string name="backup_intro">Saves settings, profiles, favourites, filters, corrections and Home Assistant entities, without pairings.</string>

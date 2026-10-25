@@ -31,6 +31,8 @@ class WindowControls {
     val fullscreen = MutableStateFlow(false)
     var toggleFullscreen: () -> Unit = {}
     var exit: () -> Unit = {}
+    /** Closes the window: into the tray when the launcher keeps running there, else quits. */
+    var close: () -> Unit = {}
 }
 
 /** Start with Windows (the user's Run key) and the tray behaviour. */

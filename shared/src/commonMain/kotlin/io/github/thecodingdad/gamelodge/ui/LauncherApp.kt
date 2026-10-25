@@ -558,9 +558,12 @@ fun LauncherApp(
                 QuickMenu(
                     visible = quickMenu,
                     onDismiss = { quickMenu = false },
-                    profiles = profiles,
-                    activeProfile = activeProfile,
-                    onProfile = vm::setActiveProfile,
+                    running = running,
+                    onResume = { session ->
+                        val entry = session.entry
+                        val target = entry?.remoteTargets?.firstOrNull { it.hostUuid == session.host.uuid && it.appId == session.host.runningAppId }
+                        if (entry != null && target != null) vm.launch(entry, target)
+                    },
                     onHost = { hostInfoFor = it },
                     onControllers = { controllerPopup = true },
                     openHaSettings = { quickMenu = false; nav.navigate(Routes.settings(SettingsPageId.HOME_ASSISTANT)) },

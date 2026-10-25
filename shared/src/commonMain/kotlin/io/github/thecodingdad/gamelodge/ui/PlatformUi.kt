@@ -49,12 +49,19 @@ interface PlatformUi {
     /** Whether the device has what a quick tile needs (e.g. a flashlight). */
     fun quickTileAvailable(id: String): Boolean
 
-    /** Tiles the platform always shows at the end of the quick menu (desktop: window mode, quit). */
+    /** Tiles the platform always shows at the end of the quick menu. */
     val fixedQuickTiles: List<String> get() = emptyList()
+
+    /** The device has controls like volume and brightness for the quick menu ([SystemControls]). */
+    val hasSystemControls: Boolean get() = false
 
     /** Volume, brightness and similar device controls in the quick menu. */
     @Composable
     fun SystemControls(visible: Boolean)
+
+    /** Extra buttons at the right end of the status bar (desktop: full screen, close). */
+    @Composable
+    fun StatusBarActions() = Unit
 
     /** Lets the user pick an image file; [onPicked] gets its address (null: cancelled). Returns what opens the picker. */
     @Composable

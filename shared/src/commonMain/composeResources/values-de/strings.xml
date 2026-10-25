@@ -464,6 +464,10 @@
     <string name="qm_running_on">%1$s auf %2$s</string>
     <string name="qm_resume">Fortsetzen</string>
     <string name="qm_quit_game">Beenden</string>
+    <string name="qm_section_running">Läuft gerade</string>
+    <string name="qm_section_quick">Schnellzugriff</string>
+    <string name="qm_running_on_host">Läuft auf %1$s</string>
+    <string name="qm_running_here">Läuft auf diesem PC</string>
 
     <!-- Backup -->
     <string name="backup_intro">Sichert Einstellungen, Profile, Favoriten, Filter, Korrekturen und Home-Assistant-Entitäten, ohne Kopplungen.</string>

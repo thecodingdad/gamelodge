@@ -33,4 +33,29 @@ object GameWindow {
         }, null)
         return best?.let { WindowsForeground.claim(it) } != null
     }
+
+    /**
+     * Quits a game the way its own close button would (WM_CLOSE to its visible windows), and
+     * ends the processes still there after [graceMillis].
+     */
+    suspend fun quit(pids: () -> Set<Long>, graceMillis: Long = 10_000) {
+        val first = pids()
+        if (first.isEmpty()) return
+        if (isWindows) {
+            val user32 = User32.INSTANCE
+            user32.EnumWindows({ hwnd: WinDef.HWND, _: Pointer? ->
+                val pid = IntByReference()
+                user32.GetWindowThreadProcessId(hwnd, pid)
+                if (pid.value.toLong() in first && user32.IsWindowVisible(hwnd)) {
+                    user32.PostMessage(hwnd, WinUser.WM_CLOSE, WinDef.WPARAM(0), WinDef.LPARAM(0))
+                }
+                true
+            }, null)
+        }
+        val until = System.currentTimeMillis() + graceMillis
+        while (System.currentTimeMillis() < until && pids().any { pid -> ProcessHandle.of(pid).map { it.isAlive }.orElse(false) }) {
+            kotlinx.coroutines.delay(250)
+        }
+        pids().forEach { pid -> ProcessHandle.of(pid).ifPresent { it.destroyForcibly() } }
+    }
 }

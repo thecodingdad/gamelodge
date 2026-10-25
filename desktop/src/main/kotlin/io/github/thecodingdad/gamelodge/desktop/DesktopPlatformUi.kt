@@ -1,11 +1,15 @@
 package io.github.thecodingdad.gamelodge.desktop
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget
 import io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlsoLink
 import io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlso
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DesktopWindows
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.FullscreenExit
 import androidx.compose.material.icons.filled.PowerSettingsNew
@@ -164,25 +168,51 @@ class DesktopPlatformUi(
 
     // A PC has no Wi-Fi/Bluetooth/flashlight tiles of its own here; the launcher's tiles remain.
     @Composable
-    override fun rememberSystemTiles(ids: List<String>, revision: Int): Map<String, List<TileModel>> {
-        val controls = windowControls ?: return emptyMap()
+    override fun rememberSystemTiles(ids: List<String>, revision: Int): Map<String, List<TileModel>> = emptyMap()
+
+    /** Full screen and close as small icons at the end of the status bar (also in D-pad reach). */
+    @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+    @Composable
+    override fun StatusBarActions() {
+        val controls = windowControls ?: return
         val fullscreen by controls.fullscreen.collectAsState()
-        val colors = LauncherTheme.colors
-        val toWindow = stringResource(Res.string.qt_to_window)
-        val toFullscreen = stringResource(Res.string.qt_to_fullscreen)
-        val quit = stringResource(Res.string.qt_quit)
-        return mapOf(
-            TILE_WINDOW to listOf(
-                TileModel(
-                    TILE_WINDOW, if (fullscreen) Icons.Filled.FullscreenExit else Icons.Filled.Fullscreen,
-                    if (fullscreen) toWindow else toFullscreen, colors.accent, controls.toggleFullscreen,
-                ),
-            ),
-            TILE_EXIT to listOf(TileModel(TILE_EXIT, Icons.Filled.PowerSettingsNew, quit, colors.danger, controls.exit)),
-        )
+        val toTray = startup?.settings?.collectAsState()?.value?.closeToTray == true
+        androidx.compose.foundation.layout.Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(4.dp)) {
+            WindowIcon(
+                if (fullscreen) Icons.Filled.FullscreenExit else Icons.Filled.Fullscreen,
+                stringResource(if (fullscreen) Res.string.qt_to_window else Res.string.qt_to_fullscreen),
+                controls.toggleFullscreen,
+            )
+            WindowIcon(
+                if (toTray) Icons.Filled.Close else Icons.Filled.PowerSettingsNew,
+                stringResource(if (toTray) Res.string.window_to_tray else Res.string.qt_quit),
+                controls.close,
+            )
+        }
     }
 
-    override val fixedQuickTiles get() = if (windowControls != null) listOf(TILE_WINDOW, TILE_EXIT) else emptyList()
+    @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+    @Composable
+    private fun WindowIcon(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit) {
+        val colors = LauncherTheme.colors
+        androidx.compose.foundation.TooltipArea(
+            tooltip = {
+                androidx.compose.material3.Text(
+                    label, style = androidx.compose.material3.MaterialTheme.typography.labelMedium, color = colors.onSurface,
+                    modifier = Modifier.background(colors.surfaceRaised, androidx.compose.foundation.shape.RoundedCornerShape(6.dp)).padding(horizontal = 8.dp, vertical = 4.dp),
+                )
+            },
+        ) {
+            io.github.thecodingdad.gamelodge.ui.components.FocusSurface(
+                onClick = onClick,
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
+                color = androidx.compose.ui.graphics.Color.Transparent,
+                focusScale = 1f, glow = false,
+            ) {
+                androidx.compose.material3.Icon(icon, label, tint = colors.onSurfaceMuted, modifier = Modifier.padding(5.dp).size(20.dp))
+            }
+        }
+    }
 
     override fun quickTileAvailable(id: String) = id in LAUNCHER_TILES
 
@@ -327,8 +357,6 @@ class DesktopPlatformUi(
     }
 
     companion object {
-        const val TILE_WINDOW = "window_mode"
-        const val TILE_EXIT = "exit"
         private val LAUNCHER_TILES = setOf(QuickTile.CONTROLLERS, QuickTile.HOSTS, QuickTile.VPN)
         private val IMAGE_TYPES = setOf("png", "jpg", "jpeg", "webp", "gif", "bmp")
         private val systemLocale: Locale = Locale.getDefault()

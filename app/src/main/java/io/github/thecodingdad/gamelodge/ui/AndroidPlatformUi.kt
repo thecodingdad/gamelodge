@@ -72,6 +72,8 @@ class AndroidPlatformUi(private val context: Context) : PlatformUi {
 
     override fun quickTileAvailable(id: String): Boolean = io.github.thecodingdad.gamelodge.ui.shell.androidQuickTileAvailable(context, id)
 
+    override val hasSystemControls get() = true
+
     @Composable
     override fun SystemControls(visible: Boolean) = io.github.thecodingdad.gamelodge.ui.shell.AndroidSystemControls(visible)
 

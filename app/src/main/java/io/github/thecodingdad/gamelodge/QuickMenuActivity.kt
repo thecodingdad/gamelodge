@@ -164,8 +164,6 @@ class QuickMenuActivity : ComponentActivity() {
                         LocalCompactWidth provides (maxWidth < 720.dp),
                         LocalShowHintBar provides (settings.showHintBar && controllers.isNotEmpty()),
                     ) {
-                        val profiles by vm.profiles.collectAsState()
-                        val activeProfile by vm.activeProfile.collectAsState()
                         val hosts by vm.hosts.collectAsState()
                         val running by vm.runningSessions.collectAsState()
                         var hostInfoFor by remember { mutableStateOf<String?>(null) }
@@ -175,9 +173,12 @@ class QuickMenuActivity : ComponentActivity() {
                         QuickMenu(
                             visible = menuOpen,
                             onDismiss = { menuOpen = false },
-                            profiles = profiles,
-                            activeProfile = activeProfile,
-                            onProfile = vm::setActiveProfile,
+                            running = running,
+                            onResume = { session ->
+                                val entry = session.entry
+                                val target = entry?.remoteTargets?.firstOrNull { it.hostUuid == session.host.uuid && it.appId == session.host.runningAppId }
+                                if (entry != null && target != null) vm.launch(entry, target)
+                            },
                             onHost = { hostInfoFor = it },
                             onControllers = { controllerPopup = true },
                             openHaSettings = ::openLauncher,

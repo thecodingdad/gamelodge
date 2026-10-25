@@ -48,6 +48,7 @@ fun ButtonHintBar(hints: List<ButtonHint>, modifier: Modifier = Modifier, hideWh
     // Portrait/phone is mostly touch: the main hint bars are hidden there (more room for content).
     if (hideWhenCompact && LocalCompactWidth.current) return
     val compact = LocalCompactWidth.current
+    val feedback = io.github.thecodingdad.gamelodge.ui.feedback.LocalUiFeedback.current
     // One line that never wraps; on narrow screens it scrolls instead.
     Row(
         modifier = modifier
@@ -65,7 +66,13 @@ fun ButtonHintBar(hints: List<ButtonHint>, modifier: Modifier = Modifier, hideWh
                     .clip(RoundedCornerShape(20.dp))
                     // Touch only: the hints describe buttons, they must not catch D-pad focus.
                     .focusProperties { canFocus = false }
-                    .then(if (hint.onClick != null) Modifier.handCursor().clickable(onClick = hint.onClick) else Modifier)
+                    .then(
+                        if (hint.onClick != null) Modifier.handCursor().clickable {
+                            // Sound and vibration like the button it stands for.
+                            feedback?.play(if (hint.button == PadButton.B) io.github.thecodingdad.gamelodge.ui.feedback.UiSound.BACK else io.github.thecodingdad.gamelodge.ui.feedback.UiSound.CONFIRM)
+                            hint.onClick.invoke()
+                        } else Modifier,
+                    )
                     .padding(horizontal = 6.dp, vertical = 4.dp),
             ) {
                 // A pair (previous/next) is one glyph "LB/RB" to save space.

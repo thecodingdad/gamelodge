@@ -455,6 +455,7 @@ class RenderTest {
             }
         }
         ui { scene.render(0); scene.close() }
-        org.junit.Assert.assertEquals(listOf("controllers", "window_mode", "exit"), labels)
+        // Full screen and close are status bar icons now, not tiles.
+        org.junit.Assert.assertEquals(listOf("controllers"), labels)
     }
 }

@@ -190,6 +190,7 @@
     <string name="qt_to_window">Window</string>
     <string name="qt_to_fullscreen">Full screen</string>
     <string name="qt_quit">Quit launcher</string>
+    <string name="window_to_tray">Close to tray</string>
     <string name="startup_window">Window</string>
     <string name="startup_start">Start</string>
     <string name="startup_fullscreen">Start in full screen</string>

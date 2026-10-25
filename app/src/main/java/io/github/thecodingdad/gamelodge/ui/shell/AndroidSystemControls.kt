@@ -71,8 +71,27 @@ fun AndroidSystemControls(visible: Boolean) {
     val maxVolume = remember { audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC) }
     var volume by remember(visible) { mutableIntStateOf(audio.getStreamVolume(AudioManager.STREAM_MUSIC)) }
     val canWriteSettings = remember(visible) { Settings.System.canWrite(context) }
-    var brightness by remember(visible) {
-        mutableIntStateOf(runCatching { Settings.System.getInt(context.contentResolver, Settings.System.SCREEN_BRIGHTNESS) }.getOrDefault(128))
+    fun readBrightness() = runCatching { Settings.System.getInt(context.contentResolver, Settings.System.SCREEN_BRIGHTNESS) }.getOrDefault(128)
+    var brightness by remember(visible) { mutableIntStateOf(readBrightness()) }
+    // Changed elsewhere while the menu is open (volume keys, the system's own slider): follow along.
+    androidx.compose.runtime.DisposableEffect(visible) {
+        if (!visible) return@DisposableEffect onDispose { }
+        val volumeReceiver = object : android.content.BroadcastReceiver() {
+            override fun onReceive(c: android.content.Context, intent: Intent) {
+                volume = audio.getStreamVolume(AudioManager.STREAM_MUSIC)
+            }
+        }
+        androidx.core.content.ContextCompat.registerReceiver(
+            context, volumeReceiver, android.content.IntentFilter(VOLUME_CHANGED_ACTION), androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED,
+        )
+        val brightnessObserver = object : android.database.ContentObserver(android.os.Handler(android.os.Looper.getMainLooper())) {
+            override fun onChange(selfChange: Boolean) { brightness = readBrightness() }
+        }
+        context.contentResolver.registerContentObserver(Settings.System.getUriFor(Settings.System.SCREEN_BRIGHTNESS), false, brightnessObserver)
+        onDispose {
+            runCatching { context.unregisterReceiver(volumeReceiver) }
+            context.contentResolver.unregisterContentObserver(brightnessObserver)
+        }
     }
         if (!canWriteSettings) {
             LauncherButton(stringResource(Res.string.qm_brightness_permission), icon = Icons.Filled.BrightnessMedium, onClick = {
@@ -80,7 +99,6 @@ fun AndroidSystemControls(visible: Boolean) {
             })
         }
 
-        SectionHeader(stringResource(Res.string.qm_system))
         SliderRow(
             stringResource(Res.string.qm_volume), volume, 0..maxVolume, 1,
             onChange = { v -> volume = v; audio.setStreamVolume(AudioManager.STREAM_MUSIC, v, 0) },
@@ -98,3 +116,6 @@ fun AndroidSystemControls(visible: Boolean) {
             )
         }
 }
+
+/** Sent by the system on volume changes (not part of the public API constants). */
+private const val VOLUME_CHANGED_ACTION = "android.media.VOLUME_CHANGED_ACTION"
