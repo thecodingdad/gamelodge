@@ -254,7 +254,7 @@ class DesktopPlatformUi(
     override fun QuickAccessEditor(visible: Boolean, onDismiss: () -> Unit) = DesktopQuickAccessEditor(visible, onDismiss)
 
     @Composable
-    override fun backdropBlur(active: Boolean, radius: androidx.compose.ui.unit.Dp): Modifier = snapshotBlur(active, radius, 14.dp)
+    override fun backdropBlur(active: Boolean, radius: androidx.compose.ui.unit.Dp): Modifier = snapshotBlur(active, radius, 14.dp, LauncherTheme.colors.background)
 
     override fun appLabel(packageName: String) = packageName
 

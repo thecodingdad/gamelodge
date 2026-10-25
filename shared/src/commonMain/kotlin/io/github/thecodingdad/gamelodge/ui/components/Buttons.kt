@@ -59,10 +59,13 @@ fun LauncherButton(
     primary: Boolean = false,
     enabled: Boolean = true,
     onFocused: (() -> Unit)? = null,
+    /** Work in progress: a spinner instead of the icon, not clickable. */
+    busy: Boolean = false,
 ) {
     val colors = LauncherTheme.colors
     FocusSurface(
-        onClick = onClick,
+        // Busy keeps the focus (a controller doesn't lose its place) but does nothing.
+        onClick = { if (!busy) onClick() },
         modifier = modifier.heightIn(min = 52.dp),
         shape = RoundedCornerShape(26.dp),
         color = if (primary) colors.accent else colors.surfaceRaised,
@@ -76,7 +79,11 @@ fun LauncherButton(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            if (icon != null) Icon(icon, contentDescription = null, tint = content, modifier = Modifier.size(22.dp))
+            if (busy) {
+                androidx.compose.material3.CircularProgressIndicator(Modifier.size(20.dp), color = content, strokeWidth = 2.5.dp)
+            } else if (icon != null) {
+                Icon(icon, contentDescription = null, tint = content, modifier = Modifier.size(22.dp))
+            }
             Text(text, style = MaterialTheme.typography.labelLarge, color = content, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }

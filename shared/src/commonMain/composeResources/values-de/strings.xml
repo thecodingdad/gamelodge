@@ -471,6 +471,9 @@
     <string name="qm_running_on_host">Läuft auf %1$s</string>
     <string name="qm_running_here">Läuft auf diesem PC</string>
     <string name="qm_disconnect">Trennen</string>
+    <string name="qm_quitting">Wird beendet…</string>
+    <string name="task_quitting">Beende %1$s</string>
+    <string name="qm_quit_failed">%1$s konnte nicht beendet werden</string>
     <string name="qm_overlay">Leistungsanzeige</string>
     <string name="qm_server_commands">Server-Befehle</string>
     <string name="qm_server_commands_sub">Auf dem Host in Apollo eingerichtete Befehle (Konfiguration → Server-Befehle); sie laufen auf dem Host.</string>

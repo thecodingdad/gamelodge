@@ -179,6 +179,7 @@ class QuickMenuActivity : ComponentActivity() {
                         )
                         ControllerKeyboardHost(keyboard)
                         OverlayOutlet()
+                        io.github.thecodingdad.gamelodge.ui.shell.NoticeHost()
                     }
                 }
             }

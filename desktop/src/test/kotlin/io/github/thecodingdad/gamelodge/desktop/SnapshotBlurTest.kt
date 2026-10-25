@@ -19,7 +19,7 @@ class SnapshotBlurTest {
     @Test
     fun blursTheCapturedContent() {
         val scene = ImageComposeScene(200, 100) {
-            Box(Modifier.fillMaxSize().then(snapshotBlur(active = true, radius = 14.dp, full = 14.dp))) {
+            Box(Modifier.fillMaxSize().then(snapshotBlur(active = true, radius = 14.dp, full = 14.dp, background = Color.Black))) {
                 Row(Modifier.fillMaxSize()) {
                     Box(Modifier.width(100.dp).fillMaxHeight().background(Color.White))
                     Box(Modifier.width(100.dp).fillMaxHeight().background(Color.Black))

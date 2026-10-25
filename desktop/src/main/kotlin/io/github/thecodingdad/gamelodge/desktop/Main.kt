@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.desktop
 
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import io.github.thecodingdad.gamelodge.data.settings.combo
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -230,6 +231,7 @@ fun main(args: Array<String>) {
         var windowFocusManager: androidx.compose.ui.focus.FocusManager? = null
         var contentHasFocus = false
         fun controllerInput() {
+            PadCursor.controllerUsed()
             val m = inputModeManager ?: return
             if (m.inputMode != androidx.compose.ui.input.InputMode.Keyboard) m.requestInputMode(androidx.compose.ui.input.InputMode.Keyboard)
         }
@@ -366,6 +368,11 @@ fun main(args: Array<String>) {
                     // Arrow keys (and the pad's D-pad / left stick, sent as arrows) move the focus like
                     // the D-pad on Android; Compose on the desktop only moves it with Tab.
                     .onKeyEvent { e -> arrowFocus(e, focusManager) }
+                    // No mouse pointer in the way while a controller is used (also over hand cursors).
+                    .pointerHoverIcon(
+                        if (PadCursor.hidden) PadCursor.blank else androidx.compose.ui.input.pointer.PointerIcon.Default,
+                        overrideDescendants = PadCursor.hidden,
+                    )
                     .pointerInput(Unit) {
                     awaitPointerEventScope {
                         while (true) {

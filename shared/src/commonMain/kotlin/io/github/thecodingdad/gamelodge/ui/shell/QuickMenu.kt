@@ -290,7 +290,7 @@ private fun QuickRail(tabs: List<QuickMenuTab>, current: QuickMenuTab, onDismiss
 @Composable
 private fun RunningCard(session: RunningSession, initialFocus: Boolean, onResume: () -> Unit, onQuit: () -> Unit) {
     val c = io.github.thecodingdad.gamelodge.LocalContainer.current
-    val scope = rememberCoroutineScope()
+    val quitting by io.github.thecodingdad.gamelodge.stream.Quitting.keys.collectAsState()
     val active by c.launcher.activeStream.collectAsState()
     val own = active?.hostUuid == session.host.uuid
     val canResume = session.entry?.remoteTargets?.any { it.hostUuid == session.host.uuid && it.appId == session.host.runningAppId } == true
@@ -300,13 +300,21 @@ private fun RunningCard(session: RunningSession, initialFocus: Boolean, onResume
         where = stringResource(Res.string.qm_running_on_host, session.host.name),
         onResume = onResume.takeIf { canResume },
         initialFocus = initialFocus,
+        quitting = "host:${session.host.uuid}" in quitting,
         onQuit = {
-            scope.launch {
-                // Our own stream ends through its client (no "connection ended" error there).
-                if (!c.streamControls.quit(session.host)) c.hostActions.quitApp(session.host)
-                c.hosts.invalidate(session.host.uuid)
-            }
-            onQuit()
+            val uuid = session.host.uuid
+            // The menu stays open until the game is gone (its card then disappears); for our own
+            // stream the launcher comes back to the front afterwards.
+            io.github.thecodingdad.gamelodge.stream.Quitting.start(
+                c.scope, "host:$uuid", session.appName.ifBlank { session.entry?.item?.title ?: session.host.name },
+                quit = {
+                    // Our own stream ends through its client (no "connection ended" error there).
+                    if (!c.streamControls.quit(session.host)) c.hostActions.quitApp(session.host)
+                },
+                running = { c.hosts.hosts.value[uuid]?.isStreaming == true || c.launcher.activeStream.value?.hostUuid == uuid },
+                refresh = { c.hosts.invalidate(uuid) },
+                onDone = { if (own) onQuit() },
+            )
         },
         extra = if (own) { { StreamControlsSection(c.streamControls, onQuit) } } else null,
     )
@@ -343,17 +351,24 @@ private fun StreamControlsSection(controls: io.github.thecodingdad.gamelodge.str
 /** A game the launcher started on this PC. */
 @Composable
 private fun LocalRunningCard(session: io.github.thecodingdad.gamelodge.stream.LocalSessions.Running, onDismiss: () -> Unit) {
-    val scope = rememberCoroutineScope()
+    val c = io.github.thecodingdad.gamelodge.LocalContainer.current
+    val quitting by io.github.thecodingdad.gamelodge.stream.Quitting.keys.collectAsState()
+    val key = "local:${session.entry.item.id}"
+    val platform = io.github.thecodingdad.gamelodge.ui.PlatformUi.current
     RunningCardLayout(
         entry = session.entry,
         title = session.entry.item.title,
         where = stringResource(Res.string.qm_running_here),
         onResume = { session.resume(); onDismiss() },
         initialFocus = true,
+        quitting = key in quitting,
         onQuit = {
-            scope.launch { session.quit() }
-            onDismiss()
-            io.github.thecodingdad.gamelodge.ui.PlatformUi.current.bringToFront()
+            io.github.thecodingdad.gamelodge.stream.Quitting.start(
+                c.scope, key, session.entry.item.title,
+                quit = { session.quit() },
+                running = { io.github.thecodingdad.gamelodge.stream.LocalSessions.running.value?.entry?.item?.id == session.entry.item.id },
+                onDone = { onDismiss(); platform.bringToFront() },
+            )
         },
     )
 }
@@ -367,6 +382,8 @@ private fun RunningCardLayout(
     initialFocus: Boolean,
     onQuit: () -> Unit,
     extra: (@Composable () -> Unit)? = null,
+    /** Being quit: a spinner on the quit button, nothing else to do on this card meanwhile. */
+    quitting: Boolean = false,
 ) {
     val colors = LauncherTheme.colors
     Column(
@@ -387,13 +404,22 @@ private fun RunningCardLayout(
             }
         }
         io.github.thecodingdad.gamelodge.ui.components.ButtonRow(spacing = 10.dp) {
-            if (onResume != null) LauncherButton(stringResource(Res.string.qm_resume), onResume, Modifier.restoreFocusIf(initialFocus), Icons.Filled.PlayArrow, primary = true)
-            HoldToConfirmButton(
-                stringResource(Res.string.qm_quit_game), onConfirmed = onQuit, icon = Icons.Filled.StopCircle,
-                modifier = Modifier.restoreFocusIf(initialFocus && onResume == null),
-            )
+            if (onResume != null) {
+                LauncherButton(
+                    stringResource(Res.string.qm_resume), onResume, Modifier.restoreFocusIf(initialFocus), Icons.Filled.PlayArrow,
+                    primary = true, enabled = !quitting,
+                )
+            }
+            if (quitting) {
+                LauncherButton(stringResource(Res.string.qm_quitting), {}, Modifier.restoreFocusIf(true), busy = true)
+            } else {
+                HoldToConfirmButton(
+                    stringResource(Res.string.qm_quit_game), onConfirmed = onQuit, icon = Icons.Filled.StopCircle,
+                    modifier = Modifier.restoreFocusIf(initialFocus && onResume == null),
+                )
+            }
         }
-        extra?.invoke()
+        if (!quitting) extra?.invoke()
     }
 }
 

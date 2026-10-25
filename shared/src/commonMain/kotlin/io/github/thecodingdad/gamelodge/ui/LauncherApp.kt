@@ -574,6 +574,7 @@ fun LauncherApp(
                 ControllerKeyboardHost(keyboard)
                 // Every popup and panel is drawn here, above the (blurred) launcher.
                 io.github.thecodingdad.gamelodge.ui.components.OverlayOutlet()
+                io.github.thecodingdad.gamelodge.ui.shell.NoticeHost()
 
                 // Screensaver after the configured idle time (also protects the OLED panel).
                 var idle by remember { mutableStateOf(false) }
