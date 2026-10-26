@@ -252,6 +252,7 @@ class LibraryRepository(
                 releaseDate = fill(MetaField.RELEASE, fresh.releaseDate, game.releaseDate?.times(1000)),
                 releaseYear = fill(MetaField.RELEASE, fresh.releaseYear, game.releaseDate?.let { java.time.Instant.ofEpochSecond(it).atZone(java.time.ZoneOffset.UTC).year }),
                 rating = fill(MetaField.RATING, fresh.rating, game.rating?.toFloat()),
+                communityRating = fresh.communityRating ?: game.communityRating?.toFloat(),
                 coverUrl = fill(MetaField.COVER, fresh.coverUrl, if (fresh.coverUrl == null) feed.artwork(hostUuid, game.cover) else null),
                 heroUrl = fill(MetaField.HERO, fresh.heroUrl, if (fresh.heroUrl == null) feed.artwork(hostUuid, game.hero) else null),
                 logoUrl = fill(MetaField.LOGO, fresh.logoUrl, if (fresh.logoUrl == null) feed.artwork(hostUuid, game.logo) else null),

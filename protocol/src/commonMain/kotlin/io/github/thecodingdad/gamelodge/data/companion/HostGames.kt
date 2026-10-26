@@ -32,7 +32,10 @@ data class HostGame(
     val gameModes: List<String> = emptyList(),
     /** Unix seconds. */
     val releaseDate: Long? = null,
+    /** Critic score 0–100. */
     val rating: Double? = null,
+    /** Community score 0–100 (IGDB users). */
+    val communityRating: Double? = null,
     val updated: Long = 0,
     /** The game's start actions on the host (GameLodge as host; "play" is the game itself). */
     val actions: List<HostGameAction> = emptyList(),

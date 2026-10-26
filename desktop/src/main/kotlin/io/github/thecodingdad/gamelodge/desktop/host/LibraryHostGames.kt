@@ -121,6 +121,7 @@ class LibraryHostGames(
             gameModes = list(item.features),
             releaseDate = item.releaseDate?.let { it / 1000 },
             rating = item.rating?.toDouble(),
+            communityRating = item.communityRating?.toDouble(),
             actions = actions(e.id).map { io.github.thecodingdad.gamelodge.data.companion.HostGameAction(it.id, it.name) },
             defaultAction = actions(e.id).firstOrNull { it.isDefault }?.id,
         )
