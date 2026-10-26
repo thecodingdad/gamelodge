@@ -97,6 +97,12 @@ fun main(args: Array<String>) {
         }
     }
     // The runner's splash on the streaming host: the game's artwork files, if stored here.
+    // The runner of a host stream: the start action the streaming launcher picked, if any.
+    SingleInstance.onLaunch = { entryId ->
+        io.github.thecodingdad.gamelodge.desktop.host.HostStreams.takeAction(io.github.thecodingdad.gamelodge.desktop.host.sync.AppBuilder.uuid(entryId))
+            ?.let { action -> container.pcLibrary.entryFor(entryId, action) }
+            ?.let { io.github.thecodingdad.gamelodge.desktop.host.sync.LaunchSpec.of(it).encode() }
+    }
     SingleInstance.onArtwork = { entryId ->
         val target = container.database.libraryDao().getTarget(io.github.thecodingdad.gamelodge.data.library.SourceEntry.localId(entryId))
         target?.let { container.database.libraryDao().getItem(it.itemId) }?.let { item ->

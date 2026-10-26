@@ -33,8 +33,8 @@ class DesktopLaunches(
     /** The stream window closed (play session, profile, host state). */
     private val onStreamEnded: () -> Unit = {},
 ) : LaunchPlatform {
-    override suspend fun launchLocal(entry: LibraryEntry, target: LaunchTargetEntity): LaunchError? {
-        val game = target.packageName?.let(library::entry) ?: return LaunchError.APP_NOT_INSTALLED
+    override suspend fun launchLocal(entry: LibraryEntry, target: LaunchTargetEntity, action: String?): LaunchError? {
+        val game = target.packageName?.let { library.entryFor(it, action) } ?: return LaunchError.APP_NOT_INSTALLED
         if (!game.installed) {
             if (game.install == null) return LaunchError.APP_NOT_INSTALLED
             scope.launch {

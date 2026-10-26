@@ -1097,7 +1097,7 @@
 
     <!-- Emulation -->
     <string name="action_emulator">Choose emulator</string>
-    <string name="action_launch_settings">Launch options</string>
+    <string name="action_launch_settings">Start actions</string>
     <string name="emu_use_default">Platform default (%1$s)</string>
 
     <!-- Emulators -->

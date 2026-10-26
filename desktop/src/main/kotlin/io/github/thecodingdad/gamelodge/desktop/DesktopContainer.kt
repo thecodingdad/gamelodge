@@ -118,7 +118,7 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
 
     /** The PC's games for the streaming host and paired launchers. */
     val hostGames: io.github.thecodingdad.gamelodge.desktop.host.LibraryHostGames by lazy {
-        io.github.thecodingdad.gamelodge.desktop.host.LibraryHostGames(database, pcLibrary::entry, { metadata }, { hostRole.settings.value }, { hostSync }, http)
+        io.github.thecodingdad.gamelodge.desktop.host.LibraryHostGames(database, { id -> pcLibrary.entryFor(id, null) }, { metadata }, { hostRole.settings.value }, { hostSync }, http, pcLibrary::actions)
     }
 
     /** Puts the PC's games on the streaming host (Vibepollo …) with the launcher as runner. */
@@ -169,6 +169,12 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
         HaRepository(HaClient(wsHttp, haAuth, { haAuth.baseUrl }, scope), haAuth, database)
     }
     override val hostPower: HostPower by lazy { HostPower(database.hostConfigDao(), hosts, hostActions, ha) }
+    override val startActions: io.github.thecodingdad.gamelodge.stream.StartActionSource by lazy {
+        io.github.thecodingdad.gamelodge.stream.StartActionSource({ companionFeed }) { _, target ->
+            target.packageName?.let(pcLibrary::actions).orEmpty()
+        }
+    }
+
     override val streamControls: io.github.thecodingdad.gamelodge.stream.StreamControls by lazy {
         io.github.thecodingdad.gamelodge.desktop.stream.DesktopStreamControls(desktopHosts, desktopHosts)
     }

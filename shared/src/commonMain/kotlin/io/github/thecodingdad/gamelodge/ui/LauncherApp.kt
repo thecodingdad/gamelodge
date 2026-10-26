@@ -450,9 +450,9 @@ fun LauncherApp(
                     profiles = profiles,
                     activeProfile = activeProfile,
                     onDismiss = { entryActions.pick = null },
-                    onLaunch = { entry, target, profile, emulatorKey ->
+                    onLaunch = { entry, target, profile, emulatorKey, action ->
                         entryActions.pick = null
-                        vm.launch(entry, target, profile, emulatorKey = emulatorKey)
+                        vm.launch(entry, target, profile, emulatorKey = emulatorKey, action = action)
                     },
                 )
                 val runningForMenu by vm.runningSessions.collectAsState()

@@ -99,8 +99,11 @@ fun targetLabel(target: LaunchTargetEntity): String = when (target.type) {
     }
 }
 
-/** One way to start in the picker: a target, and for ROMs with "start with…" one entry per emulator. */
-private class StartOption(val target: LaunchTargetEntity, val label: String, val emulatorKey: String? = null)
+/**
+ * One way to start in the picker: a target, and with "start with…" one entry per emulator (ROMs)
+ * or per start action (PC games here or on a host with GameLodge).
+ */
+private class StartOption(val target: LaunchTargetEntity, val label: String, val emulatorKey: String? = null, val action: String? = null)
 
 /** Where to start (always asked when there is more than one target) and, for "start with…", which profile. */
 @Composable
@@ -109,7 +112,7 @@ fun TargetPickerDialog(
     profiles: List<StreamProfile>,
     activeProfile: StreamProfile,
     onDismiss: () -> Unit,
-    onLaunch: (LibraryEntry, LaunchTargetEntity, StreamProfile?, String?) -> Unit,
+    onLaunch: (LibraryEntry, LaunchTargetEntity, StreamProfile?, String?, String?) -> Unit,
 ) {
     val startFocus = remember { FocusRequester() }
     Modal(visible = pick != null, onDismiss = onDismiss, title = pick?.entry?.item?.title, initialFocus = startFocus) {
@@ -148,14 +151,28 @@ fun TargetPickerDialog(
 
         Text(stringResource(Res.string.launch_where), style = MaterialTheme.typography.labelLarge, color = LauncherTheme.colors.onSurfaceMuted)
         Spacer(Modifier.height(8.dp))
-        val emulation = io.github.thecodingdad.gamelodge.LocalContainer.current.emulators
+        val container = io.github.thecodingdad.gamelodge.LocalContainer.current
+        val emulation = container.emulators
+        // "Start with…": the start actions of every target (the host's need a moment).
+        val actions by androidx.compose.runtime.produceState(emptyMap<String, List<io.github.thecodingdad.gamelodge.stream.StartAction>>(), p) {
+            if (!p.chooseProfile) return@produceState
+            value = p.entry.targets.associate { it.id to runCatching { container.startActions.actions(p.entry, it) }.getOrDefault(emptyList()) }
+        }
         val options = p.entry.targets.sortedBy { it.type == TargetType.REMOTE }.flatMap { target ->
             val platform = target.romPlatform
-            if (target.type == TargetType.ROM && p.chooseProfile && platform != null) {
-                // "Start with…": every installed emulator of the platform.
-                emulation.choices(platform).map { StartOption(target, stringResource(Res.string.target_rom, it.label), it.key) }
-                    .ifEmpty { listOf(StartOption(target, targetLabel(target))) }
-            } else listOf(StartOption(target, targetLabel(target)))
+            val targetActions = actions[target.id].orEmpty()
+            when {
+                target.type == TargetType.ROM && p.chooseProfile && platform != null ->
+                    // Every installed emulator of the platform.
+                    emulation.choices(platform).map { StartOption(target, stringResource(Res.string.target_rom, it.label), it.key) }
+                        .ifEmpty { listOf(StartOption(target, targetLabel(target))) }
+                targetActions.isNotEmpty() -> {
+                    val label = targetLabel(target)
+                    // Default first: A on the first button starts like a plain start would.
+                    targetActions.sortedByDescending { it.isDefault }.map { StartOption(target, "$label · ${it.name}", action = it.id) }
+                }
+                else -> listOf(StartOption(target, targetLabel(target)))
+            }
         }
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             options.forEachIndexed { index, option ->
@@ -167,7 +184,7 @@ fun TargetPickerDialog(
                         TargetType.REMOTE -> Icons.Filled.Cloud
                     },
                     primary = true,
-                    onClick = { onLaunch(p.entry, option.target, if (showProfiles) chosenProfile else null, option.emulatorKey) },
+                    onClick = { onLaunch(p.entry, option.target, if (showProfiles) chosenProfile else null, option.emulatorKey, option.action) },
                     modifier = Modifier.fillMaxWidth().then(if (index == 0) Modifier.focusRequester(startFocus) else Modifier),
                 )
             }

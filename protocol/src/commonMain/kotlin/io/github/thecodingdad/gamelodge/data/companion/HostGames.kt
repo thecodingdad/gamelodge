@@ -34,6 +34,10 @@ data class HostGame(
     val releaseDate: Long? = null,
     val rating: Double? = null,
     val updated: Long = 0,
+    /** The game's start actions on the host (GameLodge as host; "play" is the game itself). */
+    val actions: List<HostGameAction> = emptyList(),
+    /** The action a start uses unless another one is asked for; null = "play". */
+    val defaultAction: String? = null,
 ) {
     val isGame: Boolean get() = kind != "app"
 
@@ -54,6 +58,10 @@ data class HostGame(
             else -> source
         }
 }
+
+/** One way to start a game on the host (its own program, a launcher, a mod manager …). */
+@Serializable
+data class HostGameAction(val id: String, val name: String)
 
 @Serializable
 data class HostGamesList(val hostId: String? = null, val games: List<HostGame> = emptyList())
@@ -91,4 +99,10 @@ data class HostGameCorrection(
  * [resume]: the stream continues a running game, whose window the PC brings to the front.
  */
 @Serializable
-data class StreamNotice(val active: Boolean, val resume: Boolean = false)
+data class StreamNotice(
+    val active: Boolean,
+    val resume: Boolean = false,
+    /** The streamed app ([HostGame.appUuid]) and the start action asked for ([HostGameAction.id]). */
+    val appUuid: String? = null,
+    val action: String? = null,
+)

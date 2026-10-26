@@ -41,6 +41,8 @@ class LibraryHostGames(
     private val settings: () -> HostSettings,
     private val sync: () -> HostSync?,
     private val http: OkHttpClient,
+    /** A game's start actions (paired launchers pick one with "start with…"). */
+    private val actions: (String) -> List<io.github.thecodingdad.gamelodge.stream.StartAction> = { emptyList() },
 ) : HostGamesSource {
     private val dao get() = db.libraryDao()
 
@@ -119,6 +121,8 @@ class LibraryHostGames(
             gameModes = list(item.features),
             releaseDate = item.releaseDate?.let { it / 1000 },
             rating = item.rating?.toDouble(),
+            actions = actions(e.id).map { io.github.thecodingdad.gamelodge.data.companion.HostGameAction(it.id, it.name) },
+            defaultAction = actions(e.id).firstOrNull { it.isDefault }?.id,
         )
     }
 

@@ -50,6 +50,10 @@ interface LauncherContainer {
     val streamControls: io.github.thecodingdad.gamelodge.stream.StreamControls
         get() = io.github.thecodingdad.gamelodge.stream.NoStreamControls
     val profiles: StreamProfiles
+
+    /** Start actions to pick with "start with…" (streamed games from the host's GameLodge; the PC adds its own games). */
+    val startActions: io.github.thecodingdad.gamelodge.stream.StartActionSource
+        get() = io.github.thecodingdad.gamelodge.stream.StartActionSource({ companionFeed })
     val emulators: Emulators
     /** [io.github.thecodingdad.gamelodge.vpn.NoVpn] where the launcher brings no VPN of its own. */
     val vpn: Vpn

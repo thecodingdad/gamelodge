@@ -65,6 +65,15 @@ class SteamScanner(
                 owned?.forEach { result.putIfAbsent(it.id, it) }
             }
         }
+        // Steam's other launch options of installed games ("Play DX11", the settings program …).
+        if (root != null) {
+            val installed = result.values.filter { it.installed && it.installDir != null }.mapNotNull { e -> e.storeId?.toIntOrNull()?.let { it to e } }.toMap()
+            val language = if (java.util.Locale.getDefault().language == "de") "german" else "english"
+            SteamLaunchOptions.read(root, installed.keys, language).forEach { (appId, options) ->
+                val e = installed.getValue(appId)
+                result[e.id] = e.copy(storeActions = SteamLaunchOptions.actions(appId, e.installDir!!, options))
+            }
+        }
         result.values.sortedBy { it.name.lowercase() }
     }
 

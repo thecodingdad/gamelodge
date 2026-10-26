@@ -22,14 +22,14 @@ class StreamNotices(private val servers: ServerRepository, private val scope: Co
     private var current: PairedServer? = null
 
     /** Before the stream starts: the first notice is awaited briefly, so a resume finds the game in front. */
-    suspend fun started(hostUuid: String, resume: Boolean) {
+    suspend fun started(hostUuid: String, resume: Boolean, appUuid: String? = null, action: String? = null) {
         val server = servers.companionFor(hostUuid)
         // Another PC: that one is told the stream ended. The same PC: no "stopped" that could
         // overtake the new notice.
         if (current?.id != server?.id) stopped() else heartbeat?.cancel()
         server ?: return
         current = server
-        withTimeoutOrNull(3_000) { send(server, StreamNotice(active = true, resume = resume)) }
+        withTimeoutOrNull(3_000) { send(server, StreamNotice(active = true, resume = resume, appUuid = appUuid, action = action)) }
         heartbeat = scope.launch {
             while (isActive) {
                 delay(30_000)

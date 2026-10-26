@@ -15,7 +15,7 @@ import io.github.thecodingdad.gamelodge.util.Log
 class AndroidLaunchPlatform(private val container: AppContainer) : LaunchPlatform {
     private fun activity() = CurrentActivity.get() ?: error("No visible activity")
 
-    override suspend fun launchLocal(entry: LibraryEntry, target: LaunchTargetEntity): LaunchError? {
+    override suspend fun launchLocal(entry: LibraryEntry, target: LaunchTargetEntity, action: String?): LaunchError? {
         val intent = target.packageName?.let(container.localApps::launchIntent) ?: return LaunchError.APP_NOT_INSTALLED
         // With usage access Android's statistics count the time (see UsageSync).
         if (!container.usage.granted) container.playtime.start(entry.item.id, target.id, null)

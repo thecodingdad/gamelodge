@@ -93,9 +93,13 @@ object SingleInstance {
     private const val GAME_END = "game-end "
     private const val GO = "go"
     private const val ARTWORK = "artwork "
+    private const val LAUNCH = "launch "
 
     /** Called for game starts/ends reported by the streaming host's runner (entry id, started). */
     @Volatile var onHostGame: suspend (String, Boolean) -> Unit = { _, _ -> }
+
+    /** The runner asks which start action to run: an encoded launch spec, or null for its own. */
+    @Volatile var onLaunch: suspend (String) -> String? = { null }
 
     /** The runner's splash asks for an entry's artwork: one line of [SplashArt] JSON, or null. */
     @Volatile var onArtwork: suspend (String) -> String? = { null }
@@ -125,6 +129,10 @@ object SingleInstance {
                                 runCatching { s.getOutputStream().write("$GO\n".toByteArray()) }
                             }
                             line.startsWith(GAME_END) -> runCatching { kotlinx.coroutines.runBlocking { onHostGame(line.removePrefix(GAME_END), false) } }
+                            line.startsWith(LAUNCH) -> runCatching {
+                                val answer = kotlinx.coroutines.runBlocking { onLaunch(line.removePrefix(LAUNCH)) }.orEmpty()
+                                s.getOutputStream().write("$answer\n".toByteArray())
+                            }
                             line.startsWith(ARTWORK) -> runCatching {
                                 val answer = kotlinx.coroutines.runBlocking { onArtwork(line.removePrefix(ARTWORK)) }.orEmpty()
                                 s.getOutputStream().write("$answer\n".toByteArray())
@@ -157,6 +165,15 @@ object SingleInstance {
             s.soTimeout = 3000
             s.getOutputStream().write("$ARTWORK$entryId\n".toByteArray())
             s.getInputStream().bufferedReader().readLine()?.takeIf { it.isNotBlank() }?.let { Json.decodeFromString<SplashArt>(it) }
+        }
+    }.getOrNull()
+
+    /** The runner asks the running launcher for the start action a paired launcher picked (null: none or no launcher). */
+    fun launchSpec(entryId: String): String? = runCatching {
+        Socket(InetAddress.getLoopbackAddress(), PORT).use { s ->
+            s.soTimeout = 3000
+            s.getOutputStream().write("$LAUNCH$entryId\n".toByteArray())
+            s.getInputStream().bufferedReader().readLine()?.takeIf { it.isNotBlank() }
         }
     }.getOrNull()
 

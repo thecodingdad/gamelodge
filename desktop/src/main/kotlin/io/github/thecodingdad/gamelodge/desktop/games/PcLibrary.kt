@@ -53,6 +53,50 @@ class PcLibrary(
     /** The entry as the scan found it (defaults of the launch options dialog). */
     fun original(id: String): GameEntry? = originals[id]
 
+    /** Start actions of a game: "play" first, then the store's, then the user's own (with the default marked). */
+    fun actions(id: String): List<io.github.thecodingdad.gamelodge.stream.StartAction> {
+        val entry = entries[id] ?: return emptyList()
+        val override = overrides()[id]
+        val default = defaultAction(id)
+        return (listOf(io.github.thecodingdad.gamelodge.stream.StartAction.PLAY to entry.name) +
+            allActions(entry, override).map { it.id to it.name })
+            .map { (actionId, name) -> io.github.thecodingdad.gamelodge.stream.StartAction(actionId, if (actionId == io.github.thecodingdad.gamelodge.stream.StartAction.PLAY) playName() else name, actionId == default) }
+    }
+
+    /** The action a plain start of [id] uses (falls back to "play" when it no longer exists). */
+    fun defaultAction(id: String): String {
+        val entry = entries[id] ?: return io.github.thecodingdad.gamelodge.stream.StartAction.PLAY
+        val chosen = overrides()[id]?.defaultAction
+        return chosen?.takeIf { c -> allActions(entry, overrides()[id]).any { it.id == c } } ?: io.github.thecodingdad.gamelodge.stream.StartAction.PLAY
+    }
+
+    /**
+     * The entry to start for [action] of [id] (null: the default action): "play" is the scanned
+     * game with the user's changes, other actions start their own program and follow the game.
+     */
+    fun entryFor(id: String, action: String?): GameEntry? {
+        val entry = entries[id] ?: return null
+        val wanted = action ?: defaultAction(id)
+        if (wanted == io.github.thecodingdad.gamelodge.stream.StartAction.PLAY || !entry.installed) return entry
+        val a = allActions(entry, overrides()[id]).firstOrNull { it.id == wanted } ?: return entry
+        val program = java.io.File(a.launch)
+        // A program inside the game's folder is the game (followed directly); one elsewhere (mod
+        // manager) is followed through the game's folder and names.
+        return entry.copy(
+            launch = a.launch, launchArgs = a.arguments,
+            workingDir = a.workingDir ?: program.parent?.takeIf { program.isAbsolute },
+            processNames = a.processNames ?: entry.processNames,
+        )
+    }
+
+    private fun allActions(entry: GameEntry, override: LaunchOverride?): List<CustomAction> =
+        entry.storeActions + override?.actions.orEmpty()
+
+    /** Display name of the built-in action, in the current language. */
+    private fun playName(): String = kotlinx.coroutines.runBlocking {
+        org.jetbrains.compose.resources.getString(io.github.thecodingdad.gamelodge.resources.Res.string.action_play)
+    }
+
     /** The stores in the order the settings list them. */
     val sources: List<String> get() = stores.map { it.source }
 

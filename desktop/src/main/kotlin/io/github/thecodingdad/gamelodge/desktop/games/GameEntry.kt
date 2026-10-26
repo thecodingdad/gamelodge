@@ -30,6 +30,8 @@ data class GameEntry(
     val storeIcons: List<String> = emptyList(),
     /** Short description from the store's local data (Epic). */
     val storeSummary: String? = null,
+    /** Start actions the store knows besides the default (Steam's launch options). */
+    val storeActions: List<CustomAction> = emptyList(),
 )
 
 /** A store's part of the PC library. */

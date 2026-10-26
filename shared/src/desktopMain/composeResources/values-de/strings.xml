@@ -235,6 +235,15 @@
     <string name="custom_is_app_sub">Erscheint im Apps-Tab</string>
     <string name="custom_remove">Gedrückt halten, um zu entfernen</string>
     <string name="custom_missing">Programm nicht gefunden</string>
+    <string name="start_actions">Startaktionen</string>
+    <string name="start_actions_intro">Wie dieses Spiel starten kann. Die Standard-Aktion nutzt ein normaler Start; „Starten mit…“ bietet alle an (auch Launchern, die von diesem PC streamen).</string>
+    <string name="start_action_default">Standard</string>
+    <string name="start_action_add">Startaktion hinzufügen</string>
+    <string name="start_action_make_default">Als Standard verwenden</string>
+    <string name="start_action_delete">Startaktion löschen</string>
+    <string name="start_action_store">Startoption des Stores (nicht änderbar).</string>
+    <string name="start_action_own_intro">Z. B. der Launcher oder das Einstellungsprogramm des Spiels, eine DX11-/VR-Variante oder ein Mod-Manager, der das Spiel mit Mods startet.</string>
+    <string name="start_action_processes_sub">Programme des Spiels, durch Kommas getrennt: Der Launcher wartet, bis sie beendet sind (Spielzeit, Streams). Leer: das Programm selbst bzw. die bekannten Prozesse des Spiels.</string>
     <string name="launch_options_intro">Ändert, wie dieses Spiel startet. Leere Felder oder unveränderte Werte behalten, was gefunden wurde, auch bei späteren Scans.</string>
     <string name="launch_options_processes">Prozessnamen (optional)</string>
     <string name="launch_options_processes_sub">Programme des Spiels, durch Kommas getrennt (z. B. game.exe): Der Launcher wartet, bis sie beendet sind (Spielzeit, Streams).</string>

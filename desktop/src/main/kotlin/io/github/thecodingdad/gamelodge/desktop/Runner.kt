@@ -31,7 +31,11 @@ object Runner {
         Log.init(File(logDir, "run-${spec.id.map { c -> if (c.isLetterOrDigit()) c else '_' }.take(60).joinToString("")}-$stamp.log"))
         cleanupLogs(logDir)
         Log.i("Runner: ${spec.mode} ${spec.name} (${spec.id})")
-        val entry = spec.toEntry()
+        // A paired launcher may have picked another start action ("start with…").
+        val entry = spec.takeIf { it.mode == LaunchSpec.PLAY }?.let { SingleInstance.launchSpec(it.id) }
+            ?.let { runCatching { LaunchSpec.decode(it).toEntry() }.getOrNull() }
+            ?.also { Log.i("Runner: start action ${it.launch} (picked by the client)") }
+            ?: spec.toEntry()
         return runCatching {
             runBlocking {
                 if (spec.mode == LaunchSpec.INSTALL) {

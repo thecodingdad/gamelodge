@@ -64,8 +64,8 @@ interface StreamVpn {
 
 /** The platform's part of starting things: apps, emulators and the stream itself. */
 interface LaunchPlatform {
-    /** Starts an installed app or game; null when it started, else why not. */
-    suspend fun launchLocal(entry: LibraryEntry, target: LaunchTargetEntity): LaunchError?
+    /** Starts an installed app or game ([action]: a start action of PC games, null = its default); null when it started, else why not. */
+    suspend fun launchLocal(entry: LibraryEntry, target: LaunchTargetEntity, action: String? = null): LaunchError?
 
     /** Starts a ROM in its emulator ([emulatorKey]: one-off choice); null when it started. */
     suspend fun launchRom(entry: LibraryEntry, target: LaunchTargetEntity, emulatorKey: String?): LaunchError?
@@ -100,6 +100,9 @@ class LaunchCoordinator(
 ) {
     private val _state = MutableStateFlow<LaunchState>(LaunchState.Idle)
     val state: StateFlow<LaunchState> = _state.asStateFlow()
+
+    /** Start action of a "start with…" (kept across the confirmations that start again). */
+    private var oneOffAction: String? = null
 
     /** Profile that was active before a one-off "start with…"; restored when we return. */
     private var profileToRestore: Pair<Boolean, UUID?> = false to null
@@ -184,10 +187,14 @@ class LaunchCoordinator(
         skipNetworkCheck: Boolean = false,
         /** ROMs: emulator for this start only ("start with…"); null = the game's / platform's choice. */
         emulatorKey: String? = null,
+        /** Start action for this start only ("start with…"); null = the game's default. */
+        action: String? = null,
     ) {
         running = kotlin.coroutines.coroutineContext[kotlinx.coroutines.Job]
+        // Confirmations (quit the running game, poor network) start again: the choice stays.
+        if (action != null || (!quitRunning && !skipNetworkCheck)) oneOffAction = action
         when (target.type) {
-            TargetType.LOCAL -> { runStartActions(entry); finish(entry, platform.launchLocal(entry, target)) }
+            TargetType.LOCAL -> { runStartActions(entry); finish(entry, platform.launchLocal(entry, target, oneOffAction)) }
             TargetType.REMOTE -> launchRemote(entry, target, override, quitRunning, skipNetworkCheck)
             TargetType.ROM -> { runStartActions(entry); finish(entry, platform.launchRom(entry, target, emulatorKey)) }
         }
@@ -278,7 +285,8 @@ class LaunchCoordinator(
             val profileName = profiles.active("").name.ifEmpty { null }
             playtime.start(entry.item.id, target.id, profileName)
             _activeStream.value = ActiveStream(entry, hostUuid, appId)
-            streamNotices?.started(hostUuid, resuming)
+            // The host's GameLodge learns which start action to run (its runner asks for it).
+            streamNotices?.started(hostUuid, resuming, target.appUuid, oneOffAction.takeUnless { resuming })
             platform.startStream(entry, target, host)
             _state.value = LaunchState.Idle
             scope.launch {

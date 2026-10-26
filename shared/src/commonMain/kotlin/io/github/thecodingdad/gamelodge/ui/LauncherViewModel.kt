@@ -240,8 +240,9 @@ class LauncherViewModel(private val c: LauncherContainer) : ViewModel() {
         quitRunning: Boolean = false,
         skipNetworkCheck: Boolean = false,
         emulatorKey: String? = null,
+        action: String? = null,
     ) {
-        viewModelScope.launch { c.launcher.launch(entry, target, override, quitRunning, skipNetworkCheck, emulatorKey) }
+        viewModelScope.launch { c.launcher.launch(entry, target, override, quitRunning, skipNetworkCheck, emulatorKey, action) }
     }
 
     fun dismissLaunch() = c.launcher.dismiss()
