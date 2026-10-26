@@ -304,6 +304,8 @@ fun main(args: Array<String>) {
         // keeps handling input but never shows a new frame. A new window starts with a fresh one
         // (the app's state lives outside; the page shown starts over).
         var windowGeneration by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+        // Rebuilds because the window stopped drawing (see the watchdog below), for the fallback.
+        val frozenAt = remember { ArrayDeque<Long>() }
         LaunchedEffect(Unit) {
             while (true) {
                 val before = System.currentTimeMillis()
@@ -355,12 +357,35 @@ fun main(args: Array<String>) {
                 mainWindow = window
                 gamepads.start(window)
                 TaskbarIdentity.applyToWindow(window)
-                if (windowGeneration == 0) Log.i("Window renderer: ${window.renderApi}")
+                if (windowGeneration == 0) Log.i("Window renderer: ${window.renderApi}") else Log.i("New window renderer: ${window.renderApi}")
                 if (isWindows && windowGeneration > 0) {
                     BorderlessFullscreen.reapply(window)
                 } else if (isWindows && startup.settings.value.startFullscreen) {
                     BorderlessFullscreen.enter(window)
                     windowControls.fullscreen.value = true
+                }
+            }
+            // Watchdog: a visible window that can't show a frame any more (the GPU device gone after
+            // sleep or a driver hiccup; input still works, the picture doesn't change) is built anew.
+            // When that doesn't help twice in a row, this session falls back to OpenGL.
+            LaunchedEffect(window) {
+                kotlinx.coroutines.delay(FRAME_CHECK_MS)
+                while (true) {
+                    kotlinx.coroutines.delay(FRAME_CHECK_MS)
+                    // Only while it's the window in use (a game or stream in front may keep it from drawing).
+                    if (!window.isShowing || !window.isActive || state.isMinimized) continue
+                    val drawn = kotlinx.coroutines.withTimeoutOrNull(FRAME_TIMEOUT_MS) { androidx.compose.runtime.withFrameNanos { } }
+                    if (drawn != null) continue
+                    Log.w("Window stopped drawing (${window.renderApi}): new window\n" + renderThreads())
+                    val now = System.currentTimeMillis()
+                    frozenAt.addLast(now)
+                    while (frozenAt.isNotEmpty() && now - frozenAt.first() > FROZEN_WINDOW_MS) frozenAt.removeFirst()
+                    if (frozenAt.size >= 2 && System.getProperty("skiko.renderApi") == null) {
+                        Log.w("Window keeps freezing: OpenGL for this session")
+                        System.setProperty("skiko.renderApi", "OPENGL")
+                    }
+                    windowGeneration++
+                    break
                 }
             }
             // A language change rebuilds the content (the texts are read once); the navigation
@@ -412,6 +437,16 @@ fun main(args: Array<String>) {
 
 /** How often the window checks for a resume from sleep, and the clock jump that means one. */
 private const val RESUME_CHECK_MS = 5_000L
+
+/** Window watchdog: how often a frame is asked for, how long it may take, rebuilds counted together. */
+private const val FRAME_CHECK_MS = 5_000L
+private const val FRAME_TIMEOUT_MS = 4_000L
+private const val FROZEN_WINDOW_MS = 180_000L
+
+/** Stacks of the threads that draw (event queue, Skia renderer) for the log of a frozen window. */
+private fun renderThreads(): String = Thread.getAllStackTraces().entries
+    .filter { (t, _) -> t.name.startsWith("AWT-EventQueue") || "skiko" in t.name.lowercase() || "skia" in t.name.lowercase() || "render" in t.name.lowercase() }
+    .joinToString("\n") { (t, stack) -> "  ${t.name} (${t.state}):\n" + stack.take(12).joinToString("\n") { "    at $it" } }
 private const val RESUME_GAP_MS = 30_000L
 
 /** Host pixels per second of the stream's mouse at full stick deflection and 100 % speed. */
