@@ -93,7 +93,7 @@ class DesktopLaunches(
                 }
                 hosts.quietForStream()
                 try {
-                    client.stream(identity(), hosts.storedHosts.value, stored, appId, streamOptions(entry), apps) {
+                    client.stream(identity(), hosts.storedHosts.value, stored, appId, streamOptions(entry), apps, entry.item.title) {
                         if (it is io.github.thecodingdad.gamelodge.desktop.stream.MoonlightQt.Start.Streaming) hosts.markRunning(host.uuid, appId)
                         start.complete(it)
                     }

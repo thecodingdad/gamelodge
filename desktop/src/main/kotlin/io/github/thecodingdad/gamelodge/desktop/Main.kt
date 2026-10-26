@@ -218,10 +218,20 @@ fun main(args: Array<String>) {
             when (action) {
                 io.github.thecodingdad.gamelodge.input.ComboAction.HOME,
                 io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU -> java.awt.EventQueue.invokeLater {
+                    val inFront = windowVisible.value && mainWindow?.isActive == true
+                    if (action == io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU) {
+                        // A game or stream in front: the menu shows over it (it keeps running in full screen).
+                        val playing = io.github.thecodingdad.gamelodge.desktop.stream.MoonlightQt.locate().running?.process?.isAlive == true ||
+                            io.github.thecodingdad.gamelodge.stream.LocalSessions.running.value != null
+                        if (QuickMenuOverlay.shown.value || (playing && !inFront)) {
+                            QuickMenuOverlay.toggle(vm.settings.value.uiScale / 100f)
+                            if (QuickMenuOverlay.shown.value) return@invokeLater
+                        }
+                    }
+                    QuickMenuOverlay.close()
                     // Home leaves a running stream like on Android (the game keeps running on the
                     // host; resuming reconnects quickly) instead of leaving it behind with its sound.
                     if (action == io.github.thecodingdad.gamelodge.input.ComboAction.HOME) streams.disconnect()
-                    val inFront = windowVisible.value && mainWindow?.isActive == true
                     windowVisible.value = true
                     platformUi.bringToFront()
                     if (action == io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU) vm.quickMenuRequests.tryEmit(true)
@@ -318,6 +328,17 @@ fun main(args: Array<String>) {
                 }
             }
         }
+        // The quick menu over a game or stream.
+        QuickMenuOverlayWindow(
+            container, vm, feedback, gamepads,
+            openSettings = { target ->
+                QuickMenuOverlay.close()
+                windowVisible.value = true
+                platformUi.bringToFront()
+                vm.settingsRequests.tryEmit(target)
+            },
+            onMenu = { open -> (container.streamControls as? io.github.thecodingdad.gamelodge.desktop.stream.DesktopStreamControls)?.setMenu(open) },
+        )
         key(windowGeneration) {
         Window(
             onCloseRequest = { windowControls.close() },

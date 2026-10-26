@@ -230,6 +230,8 @@ class LauncherViewModel(private val c: LauncherContainer) : ViewModel() {
 
     /** Quick menu requested by a button combination: true = open, false = toggle. */
     val quickMenuRequests = kotlinx.coroutines.flow.MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
+    /** A settings page to show, asked for outside the launcher's window (the quick menu over a game on the PC). */
+    val settingsRequests = kotlinx.coroutines.flow.MutableSharedFlow<io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget>(extraBufferCapacity = 1)
     /** Quick menu opened by touch (tap on the clock): no focus ring. */
     val quickMenuTouch = kotlinx.coroutines.flow.MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 

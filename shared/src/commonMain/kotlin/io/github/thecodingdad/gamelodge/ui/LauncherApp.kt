@@ -229,6 +229,17 @@ fun LauncherApp(
         }
     }
     LaunchedEffect(Unit) { vm.quickMenuTouch.collect { quickMenu = true } }
+    LaunchedEffect(Unit) {
+        vm.settingsRequests.collect { target ->
+            quickMenu = false
+            when (target) {
+                is io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Page -> nav.navigate(Routes.settings(target.id))
+                io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Controllers -> nav.navigate(Routes.CONTROLLERS)
+                io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Wizard -> nav.navigate(Routes.wizard(manual = true))
+                is io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Host -> nav.navigate(Routes.host(target.uuid))
+            }
+        }
+    }
     var platformFor by remember { mutableStateOf<io.github.thecodingdad.gamelodge.data.db.LibraryEntry?>(null) }
     var metaEditorFor by remember { mutableStateOf<String?>(null) }
     var fixingFor by remember { mutableStateOf<String?>(null) }

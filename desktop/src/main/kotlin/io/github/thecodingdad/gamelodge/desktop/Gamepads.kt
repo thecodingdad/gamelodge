@@ -25,7 +25,8 @@ import kotlin.math.abs
  * (Enter, Escape, arrows), so focus, clicks and back work exactly as with a keyboard; the other
  * buttons and the right stick go to the [InputDispatcher] like on Android.
  *
- * Polls only while the launcher window has the focus: a game or stream in front gets the pads alone.
+ * Polls only while the launcher window has the focus: a game or stream in front gets the pads alone,
+ * unless the quick menu is shown over it ([overlay]): then they drive that window.
  * The button combinations ([ButtonCombos]) are watched always; their buttons still reach the game
  * (Windows can't hold them back), only the launcher's own UI ignores them. While the mouse
  * emulation is on, the pads drive the Windows mouse pointer instead ([WindowsPointer]).
@@ -73,7 +74,16 @@ class Gamepads(private val dispatcher: InputDispatcher) {
     /** Called when B goes down (back sound, like the Android activity plays it). */
     @Volatile var onBack: () -> Unit = {}
 
+    /** A window the pads drive while it is shown over a game (it never takes the focus), with its own dispatcher. */
+    class Overlay(val window: Window, val dispatcher: InputDispatcher)
+
+    @Volatile var overlay: Overlay? = null
+    private var lastOverlay: Overlay? = null
+
     @Volatile private var window: Window? = null
+
+    /** Where pad input goes: the overlay while it is shown, else the launcher window. */
+    private val ui: InputDispatcher get() = overlay?.dispatcher ?: dispatcher
     private var started = false
     private var lastUsed = 0
     private val previous = HashMap<Int, Pad>()
@@ -84,7 +94,7 @@ class Gamepads(private val dispatcher: InputDispatcher) {
         if (started) return
         started = true
         // A short press a hold combination held back from the launcher's UI reaches it after all.
-        ButtonCombos.replay = { press, _ -> if (window.isActive) replayToUi(press as Int) }
+        ButtonCombos.replay = { press, _ -> if (overlay != null || window.isActive) replayToUi(press as Int) }
         Thread({ loop() }, "gamepads").apply { isDaemon = true }.start()
     }
 
@@ -102,9 +112,16 @@ class Gamepads(private val dispatcher: InputDispatcher) {
         }
         var lastList = 0L
         while (true) {
-            val focused = window?.let { it.isActive || it.isFocused } == true
+            val shownOver = overlay
+            val focused = shownOver != null || window?.let { it.isActive || it.isFocused } == true
             try {
                 synchronized(manager) {
+                    // Switched between the launcher and the overlay: start over (nothing held carries across).
+                    if (shownOver !== lastOverlay) {
+                        lastOverlay = shownOver
+                        held.clear()
+                        previous.clear()
+                    }
                     manager.update()
                     val now = System.currentTimeMillis()
                     if (now - lastList > 2_000) {
@@ -120,7 +137,7 @@ class Gamepads(private val dispatcher: InputDispatcher) {
                         if (front && !streamFront) WindowsPointer.pause()
                         streamFront = front
                     }
-                    if (WindowsPointer.enabled && !streamFront) {
+                    if (WindowsPointer.enabled && !streamFront && shownOver == null) {
                         release()
                         pointer(now)
                     } else if (focused) {
@@ -221,8 +238,8 @@ class Gamepads(private val dispatcher: InputDispatcher) {
         keys[code]?.let { press(it, released = true) }
         buttons[code]?.let { b ->
             EventQueue.invokeLater {
-                dispatcher.dispatchButton(b, InputDispatcher.KeyPhase.DOWN, 0, now)
-                dispatcher.dispatchButton(b, InputDispatcher.KeyPhase.UP, 0, now)
+                ui.dispatchButton(b, InputDispatcher.KeyPhase.DOWN, 0, now)
+                ui.dispatchButton(b, InputDispatcher.KeyPhase.UP, 0, now)
             }
         }
     }
@@ -284,7 +301,7 @@ class Gamepads(private val dispatcher: InputDispatcher) {
         val (wasY, wasX) = if (nintendoLayout) p.x to p.y else p.y to p.x
 
         // The setup wizard's button test: buttons only light up there, nothing else happens.
-        if (dispatcher.buttonTest != null) {
+        if (overlay == null && dispatcher.buttonTest != null) {
             listOf(
                 "A" to (wasConfirm to confirm), "B" to (wasBack to back), "X" to (wasX to x), "Y" to (wasY to y),
                 "LB" to (p.lb to s.lb), "RB" to (p.rb to s.rb), "START" to (p.start to s.start), "SELECT" to (p.back to s.back),
@@ -313,14 +330,16 @@ class Gamepads(private val dispatcher: InputDispatcher) {
         // Same orientation as Android's axes (down positive). Only on change: 60 calls a second
         // on the UI thread for a resting stick cost frames for nothing.
         if (p.leftTrigger != s.leftTrigger || p.rightTrigger != s.rightTrigger || p.rightStickX != s.rightStickX || p.rightStickY != s.rightStickY) {
-            EventQueue.invokeLater { dispatcher.dispatchAxes(s.leftTrigger, s.rightTrigger, s.rightStickX, s.rightStickY, now) }
+            val target = ui
+            EventQueue.invokeLater { target.dispatchAxes(s.leftTrigger, s.rightTrigger, s.rightStickX, s.rightStickY, now) }
         }
     }
 
     private fun button(button: PadButton, was: Boolean, now: Boolean, time: Long) {
         if (was == now) return
         val phase = if (now) InputDispatcher.KeyPhase.DOWN else InputDispatcher.KeyPhase.UP
-        EventQueue.invokeLater { dispatcher.dispatchButton(button, phase, 0, time) }
+        val target = ui
+        EventQueue.invokeLater { target.dispatchButton(button, phase, 0, time) }
     }
 
     private fun direction(name: String, was: Boolean, now: Boolean, code: Int, time: Long) {
@@ -355,9 +374,11 @@ class Gamepads(private val dispatcher: InputDispatcher) {
     }
 
     private fun post(code: Int, type: Int) {
-        val target = window ?: return
+        val shownOver = overlay?.window
+        val target = shownOver ?: window ?: return
         EventQueue.invokeLater {
-            val focusOwner = target.mostRecentFocusOwner ?: target
+            // The overlay never has the focus: its content takes the keys directly.
+            val focusOwner = (if (shownOver != null) keyReceiver(shownOver) else target.mostRecentFocusOwner) ?: target
             dispatching = true
             try {
                 // Char 0 (a control character): text fields must not take controller buttons as typed text
@@ -367,6 +388,15 @@ class Gamepads(private val dispatcher: InputDispatcher) {
                 dispatching = false
             }
         }
+    }
+
+    /** The component of [window] that handles key events (Compose's drawing surface). */
+    private fun keyReceiver(window: java.awt.Container): java.awt.Component? {
+        for (child in window.components) {
+            if (child.keyListeners.isNotEmpty()) return child
+            if (child is java.awt.Container) keyReceiver(child)?.let { return it }
+        }
+        return null
     }
 
     /** Window lost the focus: let go of everything that is still held. */

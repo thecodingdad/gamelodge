@@ -243,7 +243,7 @@ private val PopupScrim: androidx.compose.ui.graphics.Brush =
  * stacking order: the most recently opened one is on top and owns the focus.
  */
 object OverlayHost {
-    class Entry {
+    class Entry(internal val layer: Any?) {
         internal var content by mutableStateOf<@Composable () -> Unit>({})
         internal var visible by mutableStateOf(false)
         internal var onDismiss: () -> Unit = {}
@@ -251,10 +251,11 @@ object OverlayHost {
 
     internal val entries = mutableStateListOf<Entry>()
 
-    /** True while any popup/panel is shown (drives the backdrop blur). */
-    val anyVisible: Boolean get() = entries.any { it.visible }
+    /** True while any popup/panel of the launcher's own window is shown (drives the backdrop blur). */
+    val anyVisible: Boolean get() = entries.any { it.visible && it.layer == null }
 
-    fun isTop(entry: Entry): Boolean = entries.lastOrNull { it.visible } === entry
+    /** The topmost of its window's popups (another window's don't cover it). */
+    fun isTop(entry: Entry): Boolean = entries.lastOrNull { it.visible && it.layer == entry.layer } === entry
 
     fun top(): Entry? = entries.lastOrNull { it.visible }
 
@@ -266,10 +267,17 @@ object OverlayHost {
 
 val LocalOverlayEntry = androidx.compose.runtime.compositionLocalOf<OverlayHost.Entry?> { null }
 
-/** Place once, above the main content. */
+/**
+ * The window popups belong to: null for the launcher's own, a key of its own for another window
+ * (the quick menu over a game on the PC), whose [OverlayOutlet] draws only its popups.
+ */
+val LocalOverlayLayer = androidx.compose.runtime.staticCompositionLocalOf<Any?> { null }
+
+/** Place once per window, above the main content. */
 @Composable
 fun OverlayOutlet() {
-    OverlayHost.entries.forEach { entry ->
+    val layer = LocalOverlayLayer.current
+    OverlayHost.entries.filter { it.layer == layer }.forEach { entry ->
         androidx.compose.runtime.key(entry) {
             androidx.compose.runtime.CompositionLocalProvider(LocalOverlayEntry provides entry) { entry.content() }
         }
@@ -278,7 +286,8 @@ fun OverlayOutlet() {
 
 @Composable
 private fun Overlay(visible: Boolean, onDismiss: () -> Unit, content: @Composable () -> Unit) {
-    val entry = remember { OverlayHost.Entry() }
+    val layer = LocalOverlayLayer.current
+    val entry = remember(layer) { OverlayHost.Entry(layer) }
     androidx.compose.runtime.SideEffect {
         entry.content = content
         entry.onDismiss = onDismiss

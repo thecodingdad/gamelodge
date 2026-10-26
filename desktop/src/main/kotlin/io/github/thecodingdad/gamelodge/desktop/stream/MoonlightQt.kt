@@ -21,11 +21,6 @@ class MoonlightQt(val dir: File) {
         data class Failed(val message: String?, val appRunning: Boolean = false) : Start
     }
 
-    /**
-     * Starts the stream of [appId] on [host] without Moonlight-Qt's own window and dialogs
-     * (launcher mode): [started] learns once the stream runs or failed; returns the exit code
-     * once the stream has ended.
-     */
     /** The running stream: host uuid, app id and Moonlight-Qt's process. */
     data class Running(val hostUuid: String, val appId: Int, val process: Process) {
         /** A line for Moonlight-Qt's launcher control channel (quit, disconnect, servercmd N, mouse on|off, overlay …). */
@@ -40,9 +35,15 @@ class MoonlightQt(val dir: File) {
     @Volatile var running: Running? = null
         private set
 
+    /**
+     * Starts the stream of [appId] on [host] without Moonlight-Qt's own window and dialogs
+     * (launcher mode), as part of the launcher: its taskbar button, [title] and icon. [started]
+     * learns once the first picture shows or the start failed; returns the exit code once the
+     * stream has ended.
+     */
     suspend fun stream(
         identity: StreamIdentity, hosts: List<StoredHost>, host: StoredHost, appId: Int, options: List<String>,
-        apps: Map<String, List<MoonlightIni.App>>, started: (Start) -> Unit,
+        apps: Map<String, List<MoonlightIni.App>>, title: String?, started: (Start) -> Unit,
     ): Int = withContext(Dispatchers.IO) {
         prepare(identity, hosts, apps)
         val command = listOf(exe.path, "stream", host.uuid, "appid:$appId") + options
@@ -54,9 +55,16 @@ class MoonlightQt(val dir: File) {
         builder.environment()["MOONLIGHT_LAUNCHER_MOUSE"] = if (pointer.enabled) "1" else "0"
         builder.environment()["MOONLIGHT_LAUNCHER_MOUSE_SPEED"] = pointer.streamSpeed.toString()
         builder.environment()["MOONLIGHT_LAUNCHER_MOUSE_EXPONENT"] = pointer.exponent.toString()
+        // Part of the launcher: its taskbar button, the game's name and the launcher's icon.
+        builder.environment()["MOONLIGHT_LAUNCHER_APPID"] = io.github.thecodingdad.gamelodge.desktop.TaskbarIdentity.APP_ID
+        title?.let { builder.environment()["MOONLIGHT_LAUNCHER_TITLE"] = "$it – GameLodge" }
+        streamIcon()?.let { builder.environment()["MOONLIGHT_LAUNCHER_ICON"] = it.path }
         val process = builder.start()
         running = Running(host.uuid, appId, process)
-        var reported = false
+        val reported = java.util.concurrent.atomic.AtomicBoolean(false)
+        fun report(start: Start) {
+            if (reported.compareAndSet(false, true)) started(start)
+        }
         var error: String? = null
         var appRunning = false
         File(dir, "stream.log").printWriter().use { log ->
@@ -65,10 +73,13 @@ class MoonlightQt(val dir: File) {
                 log.flush()
                 val marker = line.substringAfter("LAUNCHER-", "")
                 when {
-                    marker == "STREAMING" && !reported -> {
-                        reported = true
-                        started(Start.Streaming)
-                    }
+                    // The window shows with its first picture; until then the launcher's start screen stays.
+                    marker == "FIRSTFRAME" -> report(Start.Streaming)
+                    // Connected: the picture follows (a Moonlight-Qt without FIRSTFRAME: after a moment).
+                    marker == "STREAMING" -> Thread({
+                        Thread.sleep(FIRST_FRAME_WAIT_MS)
+                        if (process.isAlive) report(Start.Streaming)
+                    }, "first-frame").apply { isDaemon = true }.start()
                     marker.startsWith("ERROR: ") -> error = marker.removePrefix("ERROR: ").trim()
                     marker.startsWith("APP-RUNNING: ") -> appRunning = true
                 }
@@ -77,9 +88,19 @@ class MoonlightQt(val dir: File) {
         val code = process.waitFor()
         running = null
         Log.i("Stream ended ($code)${error?.let { ": $it" } ?: ""}")
-        if (!reported) started(Start.Failed(error, appRunning))
+        report(Start.Failed(error, appRunning))
         code
     }
+
+    /** The launcher's icon as a file for the stream window (written once). */
+    private fun streamIcon(): File? = runCatching {
+        val file = File(io.github.thecodingdad.gamelodge.desktop.dataDirectory(), "cache/stream-icon.png")
+        if (!file.isFile) {
+            file.parentFile.mkdirs()
+            MoonlightQt::class.java.getResourceAsStream("/icon.png")!!.use { input -> file.outputStream().use { input.copyTo(it) } }
+        }
+        file
+    }.onFailure { Log.w("Stream icon not written", it) }.getOrNull()
 
     /** portable.dat and the identity / hosts part of Moonlight.ini. */
     fun prepare(identity: StreamIdentity, hosts: List<StoredHost>, apps: Map<String, List<MoonlightIni.App>> = emptyMap()) {
@@ -91,6 +112,9 @@ class MoonlightQt(val dir: File) {
     }
 
     companion object {
+        /** Longest wait for the first picture after connecting. */
+        private const val FIRST_FRAME_WAIT_MS = 10_000L
+
         @Volatile private var located: MoonlightQt? = null
 
         /**

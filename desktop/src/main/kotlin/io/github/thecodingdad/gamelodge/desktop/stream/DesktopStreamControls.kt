@@ -48,6 +48,11 @@ class DesktopStreamControls(private val hostActions: HostActions, private val ho
         running?.send("mouse speed $speed $exponent")
     }
 
+    /** GameLodge's menu over the stream: the pads drive it (released on the host), the mouse is free. */
+    fun setMenu(open: Boolean) {
+        running?.send(if (open) "menu on" else "menu off")
+    }
+
     override fun toggleOverlay(): Boolean = running?.send("overlay") == true
 
     /** Moonlight-Qt quits the app itself (as its own "quit" does): no "connection ended" error. */
