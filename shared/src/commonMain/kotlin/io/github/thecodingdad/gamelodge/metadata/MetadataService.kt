@@ -245,6 +245,7 @@ class MetadataService(
                 runCatching { rematchUnofficial() }.onFailure { Log.w("Re-matching mods failed", it) }
                 runCatching { backfillPlatforms() }.onFailure { Log.w("Platform backfill failed", it) }
                 runCatching { backfillDetails() }.onFailure { Log.w("Metadata details backfill failed", it) }
+                runCatching { backfillScores() }.onFailure { Log.w("Metadata score backfill failed", it) }
                 runCatching { refreshTimesToBeat() }.onFailure { Log.w("Time to beat lookup failed", it) }
                 runCatching { fillArtworkGaps() }.onFailure { Log.w("Artwork gap fill failed", it) }
             }
@@ -291,6 +292,31 @@ class MetadataService(
             chunk.forEach { (igdbId, items) ->
                 val t = times[igdbId]
                 items.forEach { dao.setTimeToBeat(it.id, t?.normally?.takeIf { s -> s > 0 }, t?.completely?.takeIf { s -> s > 0 }, igdbId, now) }
+            }
+            delay(300)
+        }
+    }
+
+    /**
+     * Matches from before critic and community scores were told apart (v2): the critic score
+     * becomes IGDB's press average (unless set by hand), the community score is added.
+     */
+    private suspend fun backfillScores() {
+        if (!igdb.isConfigured) return
+        val items = dao.observeAll().first().map { it.item }
+            .filter { it.igdbId != null && it.metadataVersion in 1 until SCORES_VERSION }.groupBy { it.igdbId!! }
+        items.keys.chunked(100).forEach { ids ->
+            igdb.details(ids).forEach { game ->
+                items[game.id].orEmpty().forEach { item ->
+                    val fresh = dao.getItem(item.id) ?: return@forEach
+                    dao.upsertItem(
+                        fresh.copy(
+                            rating = if (MetaField.RATING in fresh.manual) fresh.rating else game.criticScore ?: fresh.rating,
+                            communityRating = game.rating?.toFloat() ?: fresh.communityRating,
+                            metadataVersion = SCORES_VERSION,
+                        ),
+                    )
+                }
             }
             delay(300)
         }
@@ -706,15 +732,19 @@ class MetadataService(
             developer = pick(MetaField.DEVELOPER, developer, game.developer),
             releaseYear = pick(MetaField.RELEASE, releaseYear, game.releaseYear),
             releaseDate = pick(MetaField.RELEASE, releaseDate, game.releaseMillis),
-            rating = pick(MetaField.RATING, rating, game.total_rating?.toFloat()),
+            rating = pick(MetaField.RATING, rating, game.criticScore),
+            communityRating = if (replace) game.rating?.toFloat() ?: communityRating else communityRating ?: game.rating?.toFloat(),
             publisher = pick(MetaField.PUBLISHER, publisher, game.publisher),
             series = pick(MetaField.SERIES, series, game.series),
             features = pick(MetaField.FEATURES, features, game.features),
             ageRatings = pick(MetaField.AGE_RATING, ageRatings, game.ageRatings),
             coverUrl = pick(MetaField.COVER, coverUrl, game.coverUrl),
-            metadataVersion = maxOf(metadataVersion, 1),
+            metadataVersion = maxOf(metadataVersion, SCORES_VERSION),
         )
     }
+
+    /** Press average, else the total of press and users (games without enough reviews). */
+    private val IgdbGame.criticScore: Float? get() = (aggregated_rating ?: total_rating)?.toFloat()
 
     /** IGDB's background, only where SteamGridDB had none (it comes last in the order). */
     private fun LibraryItemEntity.withIgdbHero(game: IgdbGame): LibraryItemEntity =
@@ -973,6 +1003,9 @@ class MetadataService(
  * localized titles are searched too; 4: search terms without ™/®; 3 is taken by ART_FILL_VERSION
  * on the same counter).
  */
+/** metadataVersion of a match: 1 = the schema v3 fields, 2 = critic and community scores apart. */
+private const val SCORES_VERSION = 2
+
 private const val IGDB_LOOKUP_VERSION = 4
 
 /** Games without times to beat on IGDB are asked again after 30 days. */

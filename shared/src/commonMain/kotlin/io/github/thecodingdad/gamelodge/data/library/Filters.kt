@@ -48,7 +48,9 @@ enum class FilterField(val type: FieldType, val section: FieldSection, val multi
     FEATURE(FieldType.LIST, FieldSection.METADATA, multiValue = true),
     AGE_RATING(FieldType.LIST, FieldSection.METADATA),
     RELEASE_YEAR(FieldType.LIST, FieldSection.METADATA),
+    /** Critic score (0–100). */
     RATING(FieldType.BUCKET, FieldSection.METADATA),
+    COMMUNITY_RATING(FieldType.BUCKET, FieldSection.METADATA),
     /** Main story time to beat (IGDB). */
     TIME_TO_BEAT(FieldType.BUCKET, FieldSection.METADATA),
     PLAYED(FieldType.BOOLEAN, FieldSection.ACTIVITY),
@@ -56,6 +58,8 @@ enum class FilterField(val type: FieldType, val section: FieldSection, val multi
     PLAYTIME(FieldType.BUCKET, FieldSection.ACTIVITY),
     ADDED(FieldType.BUCKET, FieldSection.ACTIVITY),
     FAVORITE(FieldType.BOOLEAN, FieldSection.STATUS),
+    /** The user's own stars: "at least n". */
+    USER_RATING(FieldType.BUCKET, FieldSection.STATUS),
     /** Hidden items only show in filters with a condition on this field. */
     HIDDEN(FieldType.BOOLEAN, FieldSection.STATUS),
     REVIEW(FieldType.BOOLEAN, FieldSection.STATUS),
@@ -69,7 +73,8 @@ enum class FilterField(val type: FieldType, val section: FieldSection, val multi
             PLAYTIME -> listOf("none", "lt1", "1to10", "10to100", "100to500", "gt500")
             LAST_PLAYED -> listOf("today", "yesterday", "week", "month", "year", "older", "never")
             ADDED -> listOf("today", "week", "month", "year", "older")
-            RATING -> listOf("90", "80", "70", "60", "lt60", "none")
+            RATING, COMMUNITY_RATING -> listOf("90", "80", "70", "60", "lt60", "none")
+            USER_RATING -> listOf("5", "4", "3", "2", "1", "none")
             TIME_TO_BEAT -> listOf("lt5", "5to10", "10to20", "20to40", "40to80", "gt80", "none")
             else -> emptyList()
         }
@@ -205,7 +210,7 @@ object BuiltinFilter {
 }
 
 /** [MANUAL]: the filter's own order (a group's manual order); only offered for groups. */
-enum class LibrarySort { TITLE, LAST_PLAYED, ADDED, PLAYTIME, TIME_TO_BEAT, MANUAL }
+enum class LibrarySort { TITLE, LAST_PLAYED, ADDED, PLAYTIME, TIME_TO_BEAT, USER_RATING, CRITIC_RATING, COMMUNITY_RATING, MANUAL }
 
 /** Where a filter is being shown; decides which items it sees. */
 enum class FilterPlace { LIBRARY, HOME, APPS }
@@ -398,8 +403,12 @@ object FilterEngine {
                     },
                 )
             }
-            FilterField.RATING -> {
-                val r = item.rating ?: return setOf("none")
+            FilterField.USER_RATING -> {
+                val stars = item.userRating ?: return setOf("none")
+                (1..stars).map { it.toString() }.toSet()
+            }
+            FilterField.RATING, FilterField.COMMUNITY_RATING -> {
+                val r = (if (field == FilterField.RATING) item.rating else item.communityRating) ?: return setOf("none")
                 buildSet {
                     if (r >= 90) add("90")
                     if (r >= 80) add("80")
@@ -469,6 +478,10 @@ object FilterEngine {
                     LibrarySort.LAST_PLAYED -> seq.sortedByDescending { it.item.lastPlayedAt ?: 0L }
                     LibrarySort.ADDED -> seq.sortedByDescending { it.item.addedAt }
                     LibrarySort.PLAYTIME -> seq.sortedByDescending { it.item.playtimeSeconds }
+                    // Best first; unrated last.
+                    LibrarySort.USER_RATING -> seq.sortedByDescending { it.item.userRating ?: 0 }
+                    LibrarySort.CRITIC_RATING -> seq.sortedByDescending { it.item.rating ?: -1f }
+                    LibrarySort.COMMUNITY_RATING -> seq.sortedByDescending { it.item.communityRating ?: -1f }
                     // Shortest first; games without a time last.
                     LibrarySort.TIME_TO_BEAT -> seq.sortedBy { e -> e.item.timeToBeatMain?.takeIf { e.item.timesToBeatCurrent } ?: Int.MAX_VALUE }
                     LibrarySort.MANUAL -> seq

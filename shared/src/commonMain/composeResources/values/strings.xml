@@ -83,7 +83,6 @@
     <!-- Detail -->
     <string name="detail_developer">Developer</string>
     <string name="detail_genres">Genres</string>
-    <string name="detail_rating">Rating</string>
     <string name="detail_time_to_beat">Time to beat</string>
     <string name="detail_time_main">Story %1$s</string>
     <string name="detail_time_complete">Completely %1$s</string>
@@ -868,7 +867,6 @@
     <string name="filter_field_feature">Features</string>
     <string name="filter_field_age_rating">Age rating</string>
     <string name="filter_field_release_year">Release year</string>
-    <string name="filter_field_rating">Rating</string>
     <string name="filter_field_last_played">Last played</string>
     <string name="filter_field_playtime">Play time</string>
     <string name="filter_field_added">Added</string>
@@ -890,6 +888,14 @@
     <string name="filter_playtime_10to100">10–100 hours</string>
     <string name="filter_playtime_100to500">100–500 hours</string>
     <string name="filter_playtime_gt500">Over 500 hours</string>
+    <string name="rating_own">Your rating</string>
+    <string name="rating_critic">Critic score</string>
+    <string name="rating_community">Community score</string>
+    <string name="rating_stars">%1$d stars</string>
+    <string name="filter_stars_from">%1$d stars or more</string>
+    <string name="sort_user_rating">Sort: your rating</string>
+    <string name="sort_critic_rating">Sort: critic score</string>
+    <string name="sort_community_rating">Sort: community score</string>
     <string name="filter_rating_from">%1$s and up</string>
     <string name="filter_rating_lt60">Under 60</string>
     <string name="filter_rating_none">No rating</string>

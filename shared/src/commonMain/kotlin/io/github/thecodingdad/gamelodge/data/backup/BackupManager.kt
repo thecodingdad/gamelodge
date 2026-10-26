@@ -72,6 +72,9 @@ data class ItemBackup(
     /** Landscape and square tiles from SteamGridDB (own images are files on the device and stay there). */
     val tileUrl: String? = null,
     val squareUrl: String? = null,
+    val communityRating: Float? = null,
+    /** The user's own 1–5 stars. */
+    val userRating: Int? = null,
 )
 
 @Serializable
@@ -160,7 +163,7 @@ class BackupManager(
             items = items
                 // Only what the user changed or what took effort to fetch.
                 .filter {
-                    it.favorite || it.hidden || it.kindSource == KindSource.MANUAL || it.playtimeSeconds > 0 ||
+                    it.favorite || it.hidden || it.kindSource == KindSource.MANUAL || it.playtimeSeconds > 0 || it.userRating != null ||
                         it.metadataState != MetadataState.NONE || it.platformSource == PlatformSource.MANUAL ||
                         it.tileUrl?.startsWith("http") == true || it.squareUrl?.startsWith("http") == true
                 }
@@ -173,6 +176,8 @@ class BackupManager(
                         manualPlatform = it.platform.takeIf { _ -> it.platformSource == PlatformSource.MANUAL },
                         tileUrl = it.tileUrl?.takeIf { url -> url.startsWith("http") },
                         squareUrl = it.squareUrl?.takeIf { url -> url.startsWith("http") },
+                        communityRating = it.communityRating,
+                        userRating = it.userRating,
                     )
                 },
             collections = collections.sortedBy { it.sortOrder }.map { c ->
@@ -253,6 +258,8 @@ class BackupManager(
                     platform = b.manualPlatform ?: existing.platform,
                     tileUrl = b.tileUrl ?: existing.tileUrl,
                     squareUrl = b.squareUrl ?: existing.squareUrl,
+                    communityRating = b.communityRating ?: existing.communityRating,
+                    userRating = b.userRating ?: existing.userRating,
                     platformSource = if (b.manualPlatform != null) PlatformSource.MANUAL else existing.platformSource,
                 ),
             )

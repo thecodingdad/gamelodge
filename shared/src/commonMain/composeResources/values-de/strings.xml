@@ -81,7 +81,6 @@
     <!-- Detail -->
     <string name="detail_developer">Entwickler</string>
     <string name="detail_genres">Genres</string>
-    <string name="detail_rating">Bewertung</string>
     <string name="detail_time_to_beat">Spieldauer</string>
     <string name="detail_time_main">Story %1$s</string>
     <string name="detail_time_complete">Komplett %1$s</string>
@@ -866,7 +865,6 @@
     <string name="filter_field_feature">Features</string>
     <string name="filter_field_age_rating">Altersfreigabe</string>
     <string name="filter_field_release_year">Erscheinungsjahr</string>
-    <string name="filter_field_rating">Bewertung</string>
     <string name="filter_field_last_played">Zuletzt gespielt</string>
     <string name="filter_field_playtime">Spielzeit</string>
     <string name="filter_field_added">Hinzugefügt</string>
@@ -888,6 +886,14 @@
     <string name="filter_playtime_10to100">10–100 Stunden</string>
     <string name="filter_playtime_100to500">100–500 Stunden</string>
     <string name="filter_playtime_gt500">Über 500 Stunden</string>
+    <string name="rating_own">Deine Wertung</string>
+    <string name="rating_critic">Kritiker-Wertung</string>
+    <string name="rating_community">Community-Wertung</string>
+    <string name="rating_stars">%1$d Sterne</string>
+    <string name="filter_stars_from">Ab %1$d Sternen</string>
+    <string name="sort_user_rating">Sortierung: Deine Wertung</string>
+    <string name="sort_critic_rating">Sortierung: Kritiker-Wertung</string>
+    <string name="sort_community_rating">Sortierung: Community-Wertung</string>
     <string name="filter_rating_from">Ab %1$s</string>
     <string name="filter_rating_lt60">Unter 60</string>
     <string name="filter_rating_none">Ohne Bewertung</string>

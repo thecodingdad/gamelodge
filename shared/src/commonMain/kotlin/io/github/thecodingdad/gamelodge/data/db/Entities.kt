@@ -52,6 +52,7 @@ data class LibraryItemEntity(
     val genres: String? = null,
     val developer: String? = null,
     val releaseYear: Int? = null,
+    /** Critic score 0–100 (IGDB's press average; older matches: its total rating). */
     val rating: Float? = null,
     val coverUrl: String? = null,
     val heroUrl: String? = null,
@@ -98,6 +99,11 @@ data class LibraryItemEntity(
     // --- added in schema v10 ---
     /** Square tile for the square tile format; null = automatic stand-in. */
     val squareUrl: String? = null,
+    // --- added in schema v13 ---
+    /** Community score 0–100 (IGDB's user rating). */
+    val communityRating: Float? = null,
+    /** The user's own rating, 1–5 stars (null = not rated). */
+    val userRating: Int? = null,
 ) {
     /** Times to beat of the current match only. */
     val timesToBeatCurrent: Boolean get() = igdbId != null && timeToBeatIgdbId == igdbId

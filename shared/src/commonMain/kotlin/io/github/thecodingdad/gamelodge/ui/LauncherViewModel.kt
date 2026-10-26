@@ -254,6 +254,10 @@ class LauncherViewModel(private val c: LauncherContainer) : ViewModel() {
         viewModelScope.launch { c.library.setFavorite(entry.item.id, favorite) }
     }
 
+    fun setUserRating(entry: LibraryEntry, stars: Int?) {
+        viewModelScope.launch { c.library.setUserRating(entry.item.id, stars) }
+    }
+
     fun setHidden(entry: LibraryEntry, hidden: Boolean) {
         viewModelScope.launch { c.library.setHidden(entry.item.id, hidden) }
     }

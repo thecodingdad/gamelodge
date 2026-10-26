@@ -16,7 +16,7 @@ import androidx.room.RoomDatabaseConstructor
         HaTileEntity::class,
         FilterEntity::class,
     ],
-    version = 12,
+    version = 13,
     exportSchema = true,
 )
 @ConstructedBy(LauncherDatabaseConstructor::class)
@@ -58,5 +58,11 @@ object SchemaChanges {
     /** v12: VPN tunnel per host. */
     val V11_TO_V12 = listOf(
         "ALTER TABLE host_config ADD COLUMN vpnTunnel TEXT",
+    )
+
+    /** v13: community score and the user's own rating. */
+    val V12_TO_V13 = listOf(
+        "ALTER TABLE library_items ADD COLUMN communityRating REAL",
+        "ALTER TABLE library_items ADD COLUMN userRating INTEGER",
     )
 }

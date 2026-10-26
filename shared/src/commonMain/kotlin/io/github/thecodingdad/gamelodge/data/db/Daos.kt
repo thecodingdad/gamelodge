@@ -70,6 +70,9 @@ interface LibraryDao {
     @Query("UPDATE library_items SET favorite = :favorite WHERE id = :id")
     suspend fun setFavorite(id: String, favorite: Boolean)
 
+    @Query("UPDATE library_items SET userRating = :stars WHERE id = :id")
+    suspend fun setUserRating(id: String, stars: Int?)
+
     @Query("UPDATE library_items SET hidden = :hidden WHERE id = :id")
     suspend fun setHidden(id: String, hidden: Boolean)
 

@@ -119,7 +119,7 @@ fun MetadataEditorDialog(
             Row(EditRow.SERIES, Res.string.filter_field_series, item.series)
             Row(EditRow.FEATURES, Res.string.filter_field_feature, item.features)
             Row(EditRow.RELEASE, Res.string.meta_release, releaseText(item))
-            Row(EditRow.RATING, Res.string.filter_field_rating, item.rating?.let { "%.0f".format(it) })
+            Row(EditRow.RATING, Res.string.rating_critic, item.rating?.let { "%.0f".format(it) })
             Row(EditRow.AGE_RATING, Res.string.filter_field_age_rating, AgeRatings.display(item.ageRatings))
             SectionHeader(stringResource(Res.string.filter_section_activity))
             Row(EditRow.PLAYTIME, Res.string.filter_field_playtime, stringResource(Res.string.meta_hours, "%.1f".format(item.playtimeSeconds / 3600.0)))
@@ -281,7 +281,7 @@ private fun rowTitle(row: EditRow): String = stringResource(
         EditRow.SERIES -> Res.string.filter_field_series
         EditRow.FEATURES -> Res.string.filter_field_feature
         EditRow.RELEASE -> Res.string.meta_release
-        EditRow.RATING -> Res.string.filter_field_rating
+        EditRow.RATING -> Res.string.rating_critic
         EditRow.AGE_RATING -> Res.string.filter_field_age_rating
         EditRow.PLAYTIME -> Res.string.filter_field_playtime
         EditRow.LAST_PLAYED -> Res.string.filter_field_last_played

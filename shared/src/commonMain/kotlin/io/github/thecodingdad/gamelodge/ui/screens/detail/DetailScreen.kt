@@ -91,6 +91,8 @@ fun DetailScreen(
     onQuit: () -> Unit = {},
     /** The running game is being quit: a spinner on its quit button meanwhile. */
     quitting: Boolean = false,
+    /** Sets the user's own rating (1–5 stars, null clears it). */
+    onRate: (Int?) -> Unit = {},
     extraActions: @Composable () -> Unit = {},
 ) {
     val actions = LocalEntryActions.current
@@ -197,6 +199,9 @@ fun DetailScreen(
                 }
         val details: @Composable () -> Unit = {
             extraActions()
+            if (entry.item.kind == io.github.thecodingdad.gamelodge.data.db.ItemKind.GAME) {
+                io.github.thecodingdad.gamelodge.ui.components.StarRating(entry.item.userRating, onRate)
+            }
             entry.item.description?.let {
                 Text(it, style = MaterialTheme.typography.bodyLarge, color = colors.onSurface)
             }
@@ -290,7 +295,8 @@ private fun InfoBlock(entry: LibraryEntry, sessions: List<PlaySessionEntity>) {
         entry.item.genres?.let { add(stringResource(Res.string.detail_genres) to it) }
         entry.item.features?.let { add(stringResource(Res.string.filter_field_feature) to it) }
         io.github.thecodingdad.gamelodge.metadata.AgeRatings.display(entry.item.ageRatings)?.let { add(stringResource(Res.string.filter_field_age_rating) to it) }
-        entry.item.rating?.let { add(stringResource(Res.string.detail_rating) to "%.0f / 100".format(it)) }
+        entry.item.rating?.let { add(stringResource(Res.string.rating_critic) to "%.0f / 100".format(it)) }
+        entry.item.communityRating?.let { add(stringResource(Res.string.rating_community) to "%.0f / 100".format(it)) }
         timeToBeatText(entry.item)?.let { add(stringResource(Res.string.detail_time_to_beat) to it) }
         add(stringResource(Res.string.detail_available) to entry.targets.map { targetLabelText(it) }.joinToString(", "))
         entry.item.lastPlayedAt?.let { add(stringResource(Res.string.detail_last_played) to DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(it))) }

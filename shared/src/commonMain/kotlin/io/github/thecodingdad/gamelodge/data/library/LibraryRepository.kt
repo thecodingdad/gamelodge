@@ -400,6 +400,9 @@ class LibraryRepository(
 
     suspend fun setFavorite(id: String, favorite: Boolean) = dao.setFavorite(id, favorite)
 
+    /** The user's own rating, 1–5 stars; null clears it. */
+    suspend fun setUserRating(id: String, stars: Int?) = dao.setUserRating(id, stars?.coerceIn(1, 5))
+
     suspend fun setHidden(id: String, hidden: Boolean) = dao.setHidden(id, hidden)
 
     val collections = db.collectionDao().observeCollections()

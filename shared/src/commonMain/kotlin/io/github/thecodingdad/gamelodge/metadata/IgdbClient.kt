@@ -69,6 +69,9 @@ data class IgdbGame(
     val involved_companies: List<IgdbCompanyRef> = emptyList(),
     val first_release_date: Long? = null,
     val total_rating: Double? = null,
+    /** Critic score (press average) and community score (IGDB users). */
+    val aggregated_rating: Double? = null,
+    val rating: Double? = null,
     val cover: IgdbImage? = null,
     val artworks: List<IgdbImage> = emptyList(),
     val screenshots: List<IgdbImage> = emptyList(),
@@ -181,7 +184,7 @@ class IgdbClient(
 
     private companion object {
         const val GAME_FIELDS = "name,summary,genres.name,involved_companies.company.name,involved_companies.developer," +
-            "involved_companies.publisher,first_release_date,total_rating,cover.image_id,artworks.image_id," +
+            "involved_companies.publisher,first_release_date,total_rating,aggregated_rating,rating,cover.image_id,artworks.image_id," +
             "screenshots.image_id,platforms.name,franchises.name,collections.name,game_modes.name," +
             "age_ratings.organization.name,age_ratings.rating_category.rating,age_ratings.category,age_ratings.rating," +
             "alternative_names.name,game_localizations.name,category,game_type.type,total_rating_count"

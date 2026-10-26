@@ -347,6 +347,7 @@ fun LauncherApp(
                                         val s = runningSession ?: return@DetailScreen
                                         io.github.thecodingdad.gamelodge.stream.Quitting.quitHost(container, s.host, e.item.title)
                                     },
+                                    onRate = { vm.setUserRating(e, it) },
                                     quitting = runningSession?.let { io.github.thecodingdad.gamelodge.stream.Quitting.hostKey(it.host) in detailQuitting } == true,
                                     profiles = detailProfiles, activeProfile = detailActive, onProfile = vm::setActiveProfile,
                                     onEditProfiles = { nav.navigate(Routes.settings(SettingsPageId.PROFILES)) },

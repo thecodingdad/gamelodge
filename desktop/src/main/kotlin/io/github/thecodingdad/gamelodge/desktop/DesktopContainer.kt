@@ -58,7 +58,7 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
         Room.databaseBuilder<LauncherDatabase>(File(dataDir, "launcher.db").absolutePath)
             .setDriver(BundledSQLiteDriver())
             .setQueryCoroutineContext(Dispatchers.IO)
-            .addMigrations(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12)
+            .addMigrations(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13)
             .build()
     }
     override val settings: SettingsRepository by lazy {
@@ -276,6 +276,14 @@ internal val MIGRATION_10_11 = object : androidx.room.migration.Migration(10, 11
 internal val MIGRATION_11_12 = object : androidx.room.migration.Migration(11, 12) {
     override fun migrate(connection: androidx.sqlite.SQLiteConnection) {
         io.github.thecodingdad.gamelodge.data.db.SchemaChanges.V11_TO_V12.forEach { sql ->
+            connection.prepare(sql).use { it.step() }
+        }
+    }
+}
+
+internal val MIGRATION_12_13 = object : androidx.room.migration.Migration(12, 13) {
+    override fun migrate(connection: androidx.sqlite.SQLiteConnection) {
+        io.github.thecodingdad.gamelodge.data.db.SchemaChanges.V12_TO_V13.forEach { sql ->
             connection.prepare(sql).use { it.step() }
         }
     }

@@ -480,6 +480,9 @@ private fun sortLabel(sort: LibrarySort?): String = stringResource(
         LibrarySort.ADDED -> Res.string.filter_sort_added
         LibrarySort.PLAYTIME -> Res.string.filter_sort_playtime
         LibrarySort.TIME_TO_BEAT -> Res.string.filter_sort_time_to_beat
+        LibrarySort.USER_RATING -> Res.string.rating_own
+        LibrarySort.CRITIC_RATING -> Res.string.rating_critic
+        LibrarySort.COMMUNITY_RATING -> Res.string.rating_community
         LibrarySort.MANUAL -> Res.string.filter_sort_manual
     },
 )
@@ -502,7 +505,9 @@ private fun fieldLabel(field: FilterField): String = stringResource(
         FilterField.FEATURE -> Res.string.filter_field_feature
         FilterField.AGE_RATING -> Res.string.filter_field_age_rating
         FilterField.RELEASE_YEAR -> Res.string.filter_field_release_year
-        FilterField.RATING -> Res.string.filter_field_rating
+        FilterField.RATING -> Res.string.rating_critic
+        FilterField.COMMUNITY_RATING -> Res.string.rating_community
+        FilterField.USER_RATING -> Res.string.rating_own
         FilterField.TIME_TO_BEAT -> Res.string.filter_field_time_to_beat
         FilterField.PLAYED -> Res.string.filter_field_played
         FilterField.LAST_PLAYED -> Res.string.filter_field_last_played
@@ -682,7 +687,12 @@ private fun bucketLabel(field: FilterField, key: String): String = when (field) 
             else -> Res.string.filter_ttb_none
         },
     )
-    FilterField.RATING -> when (key) {
+    FilterField.USER_RATING -> when (key) {
+        "none" -> stringResource(Res.string.filter_rating_none)
+        "5" -> stringResource(Res.string.rating_stars, 5)
+        else -> stringResource(Res.string.filter_stars_from, key.toInt())
+    }
+    FilterField.RATING, FilterField.COMMUNITY_RATING -> when (key) {
         "lt60" -> stringResource(Res.string.filter_rating_lt60)
         "none" -> stringResource(Res.string.filter_rating_none)
         else -> stringResource(Res.string.filter_rating_from, key)
