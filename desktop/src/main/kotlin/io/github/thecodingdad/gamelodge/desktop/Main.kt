@@ -57,6 +57,8 @@ fun main(args: Array<String>) {
         TaskbarIdentity.applyToProcess(TaskbarIdentity.RUNNER_ID)
         kotlin.system.exitProcess(Runner.run(args.getOrNull(1)))
     }
+    // Diagnostics: the running launcher logs its threads (e.g. while its window hangs).
+    if (args.firstOrNull() == "--threads") kotlin.system.exitProcess(if (SingleInstance.requestThreadDump()) 0 else 1)
     // Started again while running (e.g. from the tray): the running one shows its window.
     val windowVisible = kotlinx.coroutines.flow.MutableStateFlow(true)
     var bringToFront: () -> Unit = {}
@@ -65,6 +67,7 @@ fun main(args: Array<String>) {
     val dataDir = dataDirectory()
     DataReset.runIfRequested(dataDir)
     Log.init(File(dataDir, "logs/launcher.log"))
+    Diagnostics.routeSkikoLog()
     // Class cache of a test version (no longer used).
     File(dataDir, "cache/cds").takeIf { it.isDirectory }?.deleteRecursively()
     Log.i("GameLodge ${DesktopPlatformInfo(dataDir).versionName} starting, data in $dataDir")
@@ -351,11 +354,15 @@ fun main(args: Array<String>) {
                 }
             },
         ) {
+            // Renderer and graphics adapter of every window (also the ones built after sleep), once it drew.
+            LaunchedEffect(window) {
+                androidx.compose.runtime.withFrameNanos { }
+                Log.i("Window ${windowGeneration + 1} renderer: ${window.renderApi} – ${Diagnostics.renderInfo(window)}")
+            }
             LaunchedEffect(window) {
                 mainWindow = window
                 gamepads.start(window)
                 TaskbarIdentity.applyToWindow(window)
-                if (windowGeneration == 0) Log.i("Window renderer: ${window.renderApi}")
                 if (isWindows && windowGeneration > 0) {
                     BorderlessFullscreen.reapply(window)
                 } else if (isWindows && startup.settings.value.startFullscreen) {

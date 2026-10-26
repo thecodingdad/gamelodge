@@ -94,6 +94,7 @@ object SingleInstance {
     private const val GO = "go"
     private const val ARTWORK = "artwork "
     private const val LAUNCH = "launch "
+    private const val THREADS = "threads"
 
     /** Called for game starts/ends reported by the streaming host's runner (entry id, started). */
     @Volatile var onHostGame: suspend (String, Boolean) -> Unit = { _, _ -> }
@@ -124,6 +125,7 @@ object SingleInstance {
                         val line = runCatching { s.getInputStream().bufferedReader().readLine() }.getOrNull() ?: return@use
                         when {
                             line == SHOW -> onShow()
+                            line == THREADS -> Diagnostics.logThreads()
                             line.startsWith(GAME_START) -> {
                                 runCatching { kotlinx.coroutines.runBlocking { onHostGame(line.removePrefix(GAME_START), true) } }
                                 runCatching { s.getOutputStream().write("$GO\n".toByteArray()) }
@@ -167,6 +169,11 @@ object SingleInstance {
             s.getInputStream().bufferedReader().readLine()?.takeIf { it.isNotBlank() }?.let { Json.decodeFromString<SplashArt>(it) }
         }
     }.getOrNull()
+
+    /** "GameLodge.exe --threads": the running launcher writes every thread's stack to its log. */
+    fun requestThreadDump(): Boolean = runCatching {
+        Socket(InetAddress.getLoopbackAddress(), PORT).use { it.getOutputStream().write("$THREADS\n".toByteArray()) }
+    }.isSuccess
 
     /** The runner asks the running launcher for the start action a paired launcher picked (null: none or no launcher). */
     fun launchSpec(entryId: String): String? = runCatching {
