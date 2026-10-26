@@ -73,6 +73,7 @@ class SteamLaunchOptionsTest {
                     ),
                     "2" to mapOf("executable" to "game.sh", "description" to "Linux", "config" to mapOf("oslist" to "linux")),
                     "3" to mapOf("executable" to "Launcher.exe", "description" to "Settings", "type" to "option2"),
+                    "4" to mapOf("executable" to "game.exe", "description" to "Review build", "config" to mapOf("oslist" to "windows", "BetaKey" to "review")),
                 ),
             ),
         ),

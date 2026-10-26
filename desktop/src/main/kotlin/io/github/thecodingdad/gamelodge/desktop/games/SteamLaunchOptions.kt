@@ -103,8 +103,11 @@ object SteamLaunchOptions {
             @Suppress("UNCHECKED_CAST")
             val o = value as? Map<String, Any> ?: return@mapNotNull null
             val exe = (o["executable"] as? String)?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
-            val os = (o.node("config")?.get("oslist") as? String)?.lowercase()
+            val config = o.node("config")
+            val os = (config?.get("oslist") as? String)?.lowercase()
             if (os != null && "windows" !in os) return@mapNotNull null
+            // Options of beta branches (review copies, test builds) or for DLC owners only.
+            if (config?.keys?.any { it.equals("betakey", true) || it.equals("ownsdlc", true) } == true) return@mapNotNull null
             val type = (o["type"] as? String)?.lowercase()
             if (type == "none") return@mapNotNull null
             val description = (o.node("description_loc")?.get(language) as? String) ?: (o["description"] as? String)
