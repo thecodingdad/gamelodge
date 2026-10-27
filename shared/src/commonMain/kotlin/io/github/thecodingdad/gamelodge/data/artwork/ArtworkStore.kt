@@ -30,6 +30,8 @@ import java.util.concurrent.ConcurrentHashMap
  */
 object ArtworkFiles {
     private lateinit var dir: File
+    /** Files made from stored images (an animation converted for playback), kept and removed with them. */
+    private lateinit var derivedDir: File
     private val have = ConcurrentHashMap.newKeySet<String>()
     private val names = ConcurrentHashMap<String, String>()
 
@@ -42,6 +44,7 @@ object ArtworkFiles {
 
     fun init(filesDir: File) {
         dir = File(filesDir, "artwork").apply { mkdirs() }
+        derivedDir = File(filesDir, "artwork-derived").apply { mkdirs() }
         dir.list()?.filterNot { it.endsWith(".tmp") }?.let(have::addAll)
     }
 
@@ -62,8 +65,16 @@ object ArtworkFiles {
 
     internal fun removed(name: String) {
         have -= name
+        derivedDir.listFiles { f -> f.name.startsWith("$name.") }?.forEach { it.delete() }
         version.intValue++
     }
+
+    /**
+     * A file made from the stored image [of] ([suffix] names what it is), deleted together with
+     * it; null when [of] isn't a stored image.
+     */
+    fun derivedFile(of: File, suffix: String): File? =
+        if (::dir.isInitialized && of.parentFile?.absoluteFile == dir.absoluteFile) File(derivedDir, of.name + suffix) else null
 
     /** What to show for an image: the stored file when there is one, else the address itself. */
     fun model(url: String?): Any? {
@@ -99,13 +110,14 @@ object ArtworkFiles {
     fun clear() {
         if (!::dir.isInitialized) return
         dir.listFiles()?.forEach { it.delete() }
+        derivedDir.listFiles()?.forEach { it.delete() }
         have.clear()
         version.intValue++
         generation.value++
     }
 
     /** Space the stored images take. */
-    fun sizeBytes(): Long = if (::dir.isInitialized) dir.listFiles()?.sumOf { it.length() } ?: 0 else 0
+    fun sizeBytes(): Long = if (::dir.isInitialized) listOf(dir, derivedDir).sumOf { d -> d.listFiles()?.sumOf { it.length() } ?: 0L } else 0
 }
 
 class ArtworkStore(

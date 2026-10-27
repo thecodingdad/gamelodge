@@ -18,7 +18,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import okio.ByteString.Companion.encodeUtf8
-import okio.ByteString.Companion.toByteString
 import org.jetbrains.skia.Bitmap
 import org.jetbrains.skia.BlendMode
 import org.jetbrains.skia.Codec
@@ -43,13 +42,17 @@ import kotlin.math.roundToInt
 
 /**
  * Animated GIF and WebP for the image loader on the desktop (Coil decodes only their first frame
- * there). Each animation is converted once, in the background, to what is actually shown: the
- * size it is drawn at (in steps, see [AnimationCache.width]), at most 30 frames a second, every
- * frame complete. From then on only that small file is decoded; until it exists the original
- * plays, scaled frame by frame. Frames are decoded only while the image is on screen.
+ * there). A stored animation is converted once, in the background, to what is actually shown:
+ * the size it is drawn at (in steps, see [AnimationCache.width]), at most 30 frames a second,
+ * every frame complete, kept next to the artwork. Its first loop is decoded from that file and
+ * kept in memory (LZ4, [FrameMemory]); from then on playing only unpacks. Until the file exists
+ * the original plays, scaled frame by frame. Nothing plays off screen or while [AnimationPlayback]
+ * is paused.
  */
 class AnimatedImageDecoder(private val source: ImageSource, private val options: Options) : Decoder {
     override suspend fun decode(): DecodeResult {
+        // Stored artwork gets a converted file next to it; an image still coming from the network doesn't.
+        val target = source.fileOrNull()?.toFile()?.let { io.github.thecodingdad.gamelodge.data.artwork.ArtworkFiles.derivedFile(it, AnimationCache.SUFFIX) }
         val data = source.use { it.source().readByteArray() }
         val codec = Codec.makeFromData(Data.makeFromBytes(data))
         if (codec.frameCount <= 1) {
@@ -64,17 +67,16 @@ class AnimatedImageDecoder(private val source: ImageSource, private val options:
         val targetH = options.size.height.pxOrElse { codec.height }
         val needed = min(1f, max(targetW.toFloat() / codec.width, targetH.toFloat() / codec.height))
         val neededWidth = ceil(codec.width * needed).toInt()
-        val key = AnimationCache.key(data)
         // One file per animation: a large enough one is just drawn smaller.
-        val converted = AnimationCache.converted(key, neededWidth)
+        val converted = target?.let { AnimationCache.converted(it, neededWidth) }
         val image = if (converted != null) {
             val c = Codec.makeFromData(Data.makeFromBytes(converted))
-            AnimatedImage(c, c.width, c.height, key, neededWidth, scaled = false)
+            AnimatedImage(c, c.width, c.height, target, neededWidth, scaled = false)
         } else {
             val width = AnimationCache.width(neededWidth, codec.width)
             val height = max(1, (codec.height * width.toFloat() / codec.width).roundToInt())
-            AnimationCache.convert(key, data, width, height)
-            AnimatedImage(codec, width, height, key, neededWidth, scaled = true)
+            target?.let { AnimationCache.convert(it, data, width, height) }
+            AnimatedImage(codec, width, height, target, neededWidth, scaled = true)
         }
         return DecodeResult(image, isSampled = image.width < codec.width)
     }
@@ -128,7 +130,8 @@ private class AnimatedImage(
     codec: Codec,
     override val width: Int,
     override val height: Int,
-    private val key: String,
+    /** Where the converted file is (or will be); null: none for this image. */
+    private val converted: File?,
     /** Width it is shown at: a converted file at least this wide replaces the original. */
     private val neededWidth: Int,
     scaled: Boolean,
@@ -162,7 +165,8 @@ private class AnimatedImage(
     override fun draw(canvas: org.jetbrains.skia.Canvas) {
         version.intValue
         lastDrawn = System.nanoTime()
-        if (job?.isActive != true) start()
+        // Read while drawing: resuming redraws the image, which starts it again.
+        if (job?.isActive != true && !AnimationPlayback.paused.value) start()
         frame?.let { canvas.drawImageRect(it, Rect.makeWH(width.toFloat(), height.toFloat())) }
     }
 
@@ -175,14 +179,18 @@ private class AnimatedImage(
             var decoded = -1
             var next = 0
             var checkedAt = System.nanoTime()
+            // The loop in memory: kept while it plays, built during its first loop from the file.
+            var frames: KeptFrames? = null
+            var noRoom = false
             try {
                 while (isActive) {
-                    // Off screen (not drawn for a while): stop; drawing again starts from here.
-                    if (System.nanoTime() - lastDrawn > IDLE_NS) break
+                    // Off screen (not drawn for a while) or paused: stop; drawing again starts from here.
+                    if (System.nanoTime() - lastDrawn > IDLE_NS || AnimationPlayback.paused.value) break
                     // The converted file is ready: play that from its start (checked once a second).
-                    if (p.scaled && System.nanoTime() - checkedAt > CHECK_NS) {
+                    val file = converted
+                    if (p.scaled && file != null && System.nanoTime() - checkedAt > CHECK_NS) {
                         checkedAt = System.nanoTime()
-                        if (AnimationCache.ready(key, neededWidth)) AnimationCache.converted(key, neededWidth)?.let { bytes ->
+                        if (AnimationCache.ready(file, neededWidth)) AnimationCache.converted(file, neededWidth)?.let { bytes ->
                             p = Playing(Codec.makeFromData(Data.makeFromBytes(bytes)), scaled = false)
                             playing = p
                             full.close()
@@ -192,9 +200,28 @@ private class AnimatedImage(
                         }
                     }
                     val started = System.nanoTime()
-                    p.codec.readPixels(full, next, if (next == 0) -1 else decoded)
+                    val keep = !p.scaled && !noRoom && p.codec.width == width && p.codec.height == height
+                    val kept = frames
+                    if (keep && kept != null && kept.complete) {
+                        // Everything in memory: only unpack.
+                        publish(kept.image(next))
+                    } else {
+                        p.codec.readPixels(full, next, if (next == 0) -1 else decoded)
+                        if (keep) {
+                            val f = frames ?: KeptFrames(full.imageInfo, p.durations.size).also { frames = it }
+                            val pixels = f.pixelsOf(full)
+                            if (!f.add(next, pixels)) {
+                                // Doesn't fit: this one keeps decoding (nothing else is pushed out).
+                                f.release()
+                                frames = null
+                                noRoom = true
+                            }
+                            publish(f.imageOf(pixels))
+                        } else {
+                            publish(frameImage(full, p))
+                        }
+                    }
                     decoded = next
-                    publish(frameImage(full, p))
                     // The next frame on the shared beat: all animations change together, so the window
                     // is redrawn at most TICK times a second, not once per animation and frame.
                     val due = started + p.durations[decoded] * 1_000_000L
@@ -203,6 +230,7 @@ private class AnimatedImage(
                 }
             } finally {
                 full.close()
+                frames?.release()
             }
         }
     }
@@ -253,21 +281,22 @@ private class AnimatedImage(
 private val DOWNSCALE = FilterMipmap(FilterMode.LINEAR, MipmapMode.LINEAR)
 
 /**
- * The converted animations on disk (cache/animated, least recently used dropped above
- * [LIMIT_BYTES]): one file per animation, its frames at the largest size it is shown at so far (in
- * steps), at most [MAX_FPS], each frame complete, as an animated WebP. Converted once, one at a
- * time, on a thread of low priority; shown smaller, the GPU scales it while drawing.
+ * The converted animations, kept next to their artwork and removed with it (no size limit, so
+ * nothing is converted twice): one file per animation, its frames at the largest size it is shown
+ * at so far (in steps), at most [MAX_FPS], each frame complete, as an animated WebP. Converted
+ * once, one at a time, on a thread of low priority; shown smaller, the GPU scales it.
  */
 internal object AnimationCache {
     private const val MAX_FPS = 30
     private const val QUALITY = 90
-    private const val LIMIT_BYTES = 500L * 1024 * 1024
+
+    /** The converted file's name after the artwork's ([io.github.thecodingdad.gamelodge.data.artwork.ArtworkFiles.derivedFile]). */
+    const val SUFFIX = ".played.webp"
 
     /** Widths come in steps of 25 %, so resizing the window doesn't convert again for every pixel. */
     private const val STEP = 1.25
     private const val SMALLEST = 64
 
-    private val dir by lazy { File(dataDirectory(), "cache/animated").apply { mkdirs() } }
     private val running = ConcurrentHashMap.newKeySet<String>()
     private val failed = ConcurrentHashMap.newKeySet<String>()
     private val worker = java.util.concurrent.Executors.newSingleThreadExecutor { r ->
@@ -281,26 +310,18 @@ internal object AnimationCache {
         return min(original, (SMALLEST * STEP.pow(n)).roundToInt())
     }
 
-    fun key(data: ByteArray) = data.toByteString().sha1().hex()
-
-    private fun file(key: String) = File(dir, "$key.webp")
-
     /**
      * The converted file's bytes if it is at least [minWidth] wide (marked as used, for the size
      * limit); a smaller one is replaced by the next conversion.
      */
-    fun converted(key: String, minWidth: Int): ByteArray? {
-        val f = file(key)
+    fun converted(f: File, minWidth: Int): ByteArray? {
         if (!f.isFile) return null
         val bytes = runCatching { f.readBytes() }.getOrNull() ?: return null
-        if (canvasWidth(bytes) < minWidth) return null
-        f.setLastModified(System.currentTimeMillis())
-        return bytes
+        return bytes.takeIf { canvasWidth(it) >= minWidth }
     }
 
     /** A converted file at least [minWidth] wide exists (reads only its header). */
-    fun ready(key: String, minWidth: Int): Boolean = runCatching {
-        val f = file(key)
+    fun ready(f: File, minWidth: Int): Boolean = runCatching {
         if (!f.isFile) return false
         val header = ByteArray(30)
         val read = f.inputStream().use { it.readNBytes(header, 0, header.size) }
@@ -314,21 +335,19 @@ internal object AnimationCache {
     }
 
     /** Converts [data] to [width]×[height] in the background (replacing a smaller one), once per size and session. */
-    fun convert(key: String, data: ByteArray, width: Int, height: Int) {
-        val job = "$key-$width"
+    fun convert(target: File, data: ByteArray, width: Int, height: Int) {
+        val job = "${target.name}-$width"
         if (job in failed || !running.add(job)) return
         worker.execute {
             try {
                 val started = System.nanoTime()
                 // Meanwhile converted as large or larger (another tile size): keep that one.
-                if (converted(key, width) != null) return@execute
+                if (ready(target, width)) return@execute
                 val bytes = transcode(data, width, height)
                 // Through a temporary file: a player never reads a half-written one.
-                val target = file(key)
-                val temp = File(dir, "$key.tmp").apply { writeBytes(bytes) }
+                val temp = File(target.parentFile, "${target.name}.tmp").apply { writeBytes(bytes) }
                 java.nio.file.Files.move(temp.toPath(), target.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE)
                 Log.d("Animation converted to ${width}x$height: ${data.size / 1024} KB -> ${bytes.size / 1024} KB in ${(System.nanoTime() - started) / 1_000_000} ms")
-                trim()
             } catch (e: Throwable) {
                 failed += job
                 Log.w("Animation not converted", e)
@@ -385,16 +404,6 @@ internal object AnimationCache {
         }
     }
 
-    /** Least recently used files out while the folder is above the limit. */
-    private fun trim() {
-        val files = dir.listFiles { f -> f.isFile && f.name.endsWith(".webp") }?.sortedBy { it.lastModified() } ?: return
-        var total = files.sumOf { it.length() }
-        for (f in files) {
-            if (total <= LIMIT_BYTES) break
-            total -= f.length()
-            f.delete()
-        }
-    }
 }
 
 /**
@@ -459,4 +468,98 @@ internal object AnimatedWebp {
 
     private fun u24(v: Int) = byteArrayOf(v.toByte(), (v shr 8).toByte(), (v shr 16).toByte())
     private fun u32(v: Int) = byteArrayOf(v.toByte(), (v shr 8).toByte(), (v shr 16).toByte(), (v shr 24).toByte())
+}
+
+/**
+ * Memory for animation loops kept unpacked-ready ([AnimatedImage]): a fixed budget. An animation
+ * that doesn't fit keeps decoding; nothing already kept is pushed out (no churn).
+ */
+internal object FrameMemory {
+    private const val BUDGET = 500L * 1024 * 1024
+    private var used = 0L
+
+    @Synchronized
+    fun reserve(bytes: Long): Boolean {
+        if (used + bytes > BUDGET) return false
+        used += bytes
+        return true
+    }
+
+    @Synchronized
+    fun release(bytes: Long) {
+        used = (used - bytes).coerceAtLeast(0)
+    }
+}
+
+/**
+ * Animations pause while nobody looks: the window isn't active, or nothing was used for a while
+ * (set by the window). Paused, each shows its current frame and frees its memory.
+ */
+object AnimationPlayback {
+    val paused = androidx.compose.runtime.mutableStateOf(false)
+}
+
+/**
+ * One loop of frames in memory: each as the difference to the one before (a key frame where
+ * there is none), LZ4-packed; counted against [FrameMemory]. Unpacking keeps the frame shown.
+ */
+internal class KeptFrames(val info: org.jetbrains.skia.ImageInfo, count: Int) {
+    private val rowBytes = info.minRowBytes
+    private val packed = arrayOfNulls<ByteArray>(count)
+    private val key = BooleanArray(count)
+    private var bytes = 0L
+    private var last: ByteArray? = null
+    private var lastIndex = -1
+    private var current: ByteArray? = null
+    private var unpacked: ByteArray? = null
+
+    val complete: Boolean get() = packed.all { it != null }
+
+    /** The decoded frame's pixels, lifted for Intel graphics (see [AnimatedImageDecoder.liftBlacks]). */
+    fun pixelsOf(full: Bitmap): ByteArray {
+        val pixels = full.readPixels(info, rowBytes, 0, 0)!!
+        if (AnimatedImageDecoder.liftBlacks) for (i in pixels.indices) if (pixels[i].toInt() == 0) pixels[i] = 1
+        return pixels
+    }
+
+    fun imageOf(pixels: ByteArray): Image = Image.makeRaster(info, pixels, rowBytes)
+
+    /** Keeps frame [index]; false when it doesn't fit into [FrameMemory]. */
+    fun add(index: Int, pixels: ByteArray): Boolean {
+        if (packed[index] != null) return true
+        val previous = last
+        val isKey = previous == null || lastIndex != (index - 1 + packed.size) % packed.size
+        val data = if (isKey) Lz4.compress(pixels) else Lz4.compress(xor(pixels, previous!!))
+        if (!FrameMemory.reserve(data.size.toLong())) return false
+        packed[index] = data
+        key[index] = isKey
+        bytes += data.size
+        last = pixels
+        lastIndex = index
+        current = pixels.copyOf()
+        return true
+    }
+
+    /** Frame [index] (played in order after the one before). */
+    fun image(index: Int): Image = Image.makeRaster(info, frame(index), rowBytes)
+
+    /** The pixels of frame [index] (played in order after the one before); valid until the next call. */
+    fun frame(index: Int): ByteArray {
+        val out = unpacked ?: ByteArray(info.height * rowBytes).also { unpacked = it }
+        Lz4.decompress(packed[index]!!, out)
+        val frame = current ?: ByteArray(out.size).also { current = it }
+        if (key[index]) System.arraycopy(out, 0, frame, 0, out.size) else for (i in frame.indices) frame[i] = (frame[i].toInt() xor out[i].toInt()).toByte()
+        return frame
+    }
+
+    fun release() {
+        FrameMemory.release(bytes)
+        bytes = 0
+        packed.fill(null)
+        last = null
+        current = null
+        unpacked = null
+    }
+
+    private fun xor(a: ByteArray, b: ByteArray) = ByteArray(a.size) { (a[it].toInt() xor b[it].toInt()).toByte() }
 }

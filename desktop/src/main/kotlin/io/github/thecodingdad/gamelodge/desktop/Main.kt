@@ -370,6 +370,24 @@ fun main(args: Array<String>) {
                 // Only Intel's graphics need the black lift of animation frames.
                 AnimatedImageDecoder.liftBlacks = "intel" in renderInfo.lowercase() || renderInfo == "?"
             }
+            // Animated artwork pauses while nobody looks: window not active, or no input for a while.
+            val windowActive = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(window.isActive) }
+            androidx.compose.runtime.DisposableEffect(window) {
+                val listener = object : java.awt.event.WindowAdapter() {
+                    override fun windowActivated(e: java.awt.event.WindowEvent) { windowActive.value = true }
+                    override fun windowDeactivated(e: java.awt.event.WindowEvent) { windowActive.value = false }
+                }
+                window.addWindowListener(listener)
+                onDispose { window.removeWindowListener(listener) }
+            }
+            val lastInput by vm.lastInteraction.collectAsState()
+            LaunchedEffect(windowActive.value, lastInput) {
+                AnimationPlayback.paused.value = !windowActive.value
+                if (windowActive.value) {
+                    kotlinx.coroutines.delay(ANIMATION_IDLE_MS)
+                    AnimationPlayback.paused.value = true
+                }
+            }
             LaunchedEffect(window) {
                 mainWindow = window
                 gamepads.start(window)
@@ -432,6 +450,9 @@ fun main(args: Array<String>) {
         }
     }
 }
+
+/** Animations pause after this long without input. */
+private const val ANIMATION_IDLE_MS = 60_000L
 
 /** Host pixels per second of the stream's mouse at full stick deflection and 100 % speed. */
 private const val STREAM_MOUSE_SPEED = 1200f
