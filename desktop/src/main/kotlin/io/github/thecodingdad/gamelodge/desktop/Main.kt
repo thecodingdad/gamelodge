@@ -365,7 +365,10 @@ fun main(args: Array<String>) {
             // Renderer and graphics adapter of every window (also the ones built after sleep), once it drew.
             LaunchedEffect(window) {
                 androidx.compose.runtime.withFrameNanos { }
-                Log.i("Window renderer: ${window.renderApi} – ${Diagnostics.renderInfo(window)}")
+                val renderInfo = Diagnostics.renderInfo(window)
+                Log.i("Window renderer: ${window.renderApi} – $renderInfo")
+                // Only Intel's graphics need the black lift of animation frames.
+                AnimatedImageDecoder.liftBlacks = "intel" in renderInfo.lowercase() || renderInfo == "?"
             }
             LaunchedEffect(window) {
                 mainWindow = window
