@@ -70,6 +70,8 @@ fun main(args: Array<String>) {
     Diagnostics.logUncaught()
     // Class cache of a test version (no longer used).
     File(dataDir, "cache/cds").takeIf { it.isDirectory }?.deleteRecursively()
+    // Converted animations of a test version (now kept next to the artwork).
+    File(dataDir, "cache/animated").takeIf { it.isDirectory }?.deleteRecursively()
     Log.i("GameLodge ${DesktopPlatformInfo(dataDir).versionName} starting, data in $dataDir")
     // Guide is the launcher's button while it runs: not the Game Bar's (restored on exit).
     GameBarButton(File(dataDir, "gamebar-button.restore")).takeOver()
