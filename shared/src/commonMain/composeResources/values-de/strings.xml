@@ -28,6 +28,9 @@
     <string name="hint_open">Öffnen</string>
     <string name="hint_start">Starten</string>
     <string name="hint_options">Optionen</string>
+    <string name="hint_hold_quit">Halten: Beenden</string>
+    <string name="tile_running">Läuft</string>
+    <string name="tile_quitting">Wird beendet</string>
     <string name="hint_tabs">Tab wechseln</string>
     <string name="hint_search">Suche</string>
     <string name="hint_profile">Profil wechseln</string>

@@ -30,6 +30,9 @@
     <string name="hint_open">Open</string>
     <string name="hint_start">Start</string>
     <string name="hint_options">Options</string>
+    <string name="hint_hold_quit">Hold: quit</string>
+    <string name="tile_running">Running</string>
+    <string name="tile_quitting">Quitting</string>
     <string name="hint_tabs">Switch tab</string>
     <string name="hint_search">Search</string>
     <string name="hint_profile">Change profile</string>

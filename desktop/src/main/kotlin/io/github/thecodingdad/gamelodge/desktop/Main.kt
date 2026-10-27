@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.window.Tray
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.res.loadImageBitmap
@@ -290,17 +289,17 @@ fun main(args: Array<String>) {
         val icon = remember { BitmapPainter(DesktopContainer::class.java.getResourceAsStream("/icon.png")!!.use { loadImageBitmap(it) }) }
         // Tray icon while the launcher may run without its window.
         if (startupSettings.closeToTray) {
-            Tray(
-                icon = icon,
-                tooltip = "GameLodge",
-                onAction = { windowVisible.value = true; platformUi.bringToFront() },
-                menu = {
-                    Item(stringResource(Res.string.tray_open), onClick = { windowVisible.value = true; platformUi.bringToFront() })
-                    if (hostStatus.webRunning) {
-                        Item(stringResource(Res.string.tray_web), onClick = { container.hostRole.localLoginUrl()?.let(BrowserOpener::open) })
-                    }
-                    Item(stringResource(Res.string.tray_quit), onClick = ::exitApplication)
-                },
+            val trayImage = remember { javax.imageio.ImageIO.read(DesktopContainer::class.java.getResource("/icon.png")) }
+            val traySettings by vm.settings.collectAsState()
+            val openWindow = { windowVisible.value = true; platformUi.bringToFront() }
+            LauncherTray(
+                trayImage, "GameLodge", traySettings,
+                items = listOfNotNull(
+                    TrayItem(stringResource(Res.string.tray_open), openWindow),
+                    if (hostStatus.webRunning) TrayItem(stringResource(Res.string.tray_web)) { container.hostRole.localLoginUrl()?.let(BrowserOpener::open) } else null,
+                    TrayItem(stringResource(Res.string.tray_quit), ::exitApplication),
+                ),
+                onOpen = openWindow,
             )
         }
         // A crash in the UI: into the log with its stack trace (Compose's own handler only shows a

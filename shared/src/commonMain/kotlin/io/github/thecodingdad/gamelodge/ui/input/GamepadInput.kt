@@ -27,7 +27,7 @@ enum class PadButton {
  * Platform-neutral: the platform translates its key and axis events ([dispatchButton], [dispatchAxes]).
  */
 class InputDispatcher {
-    private class Handler(val button: PadButton, val action: () -> Unit)
+    private class Handler(val button: PadButton, val action: () -> Unit, val release: (() -> Unit)? = null)
 
     private val handlers = ArrayList<Handler>()
     // Triggers: some controllers report them as keys, others only as analog axes, some both.
@@ -62,8 +62,8 @@ class InputDispatcher {
     /** The most recently shown scroll area (a popup's, else the screen's). */
     val scrollTarget: androidx.compose.foundation.gestures.ScrollableState? get() = scrollTargets.lastOrNull()
 
-    internal fun register(button: PadButton, action: () -> Unit): Any {
-        val handler = Handler(button, action)
+    internal fun register(button: PadButton, action: () -> Unit, release: (() -> Unit)? = null): Any {
+        val handler = Handler(button, action, release)
         handlers += handler
         return handler
     }
@@ -104,7 +104,10 @@ class InputDispatcher {
         val alwaysConsume = button == PadButton.START
         return when (phase) {
             KeyPhase.DOWN -> (if (repeatCount == 0) fire(button) else handlers.any { it.button == button }) || alwaysConsume
-            KeyPhase.UP -> handlers.any { it.button == button } || alwaysConsume
+            KeyPhase.UP -> {
+                handlers.lastOrNull { it.button == button }?.release?.invoke()
+                handlers.any { it.button == button } || alwaysConsume
+            }
             KeyPhase.OTHER -> alwaysConsume
         }
     }
@@ -186,8 +189,26 @@ fun PadAction(button: PadButton, enabled: Boolean = true, onPress: () -> Unit) {
     val dispatcher = LocalInputDispatcher.current
     val current = rememberUpdatedState(onPress)
     DisposableEffect(dispatcher, button, enabled) {
-        val token = if (enabled) dispatcher.register(button) { current.value() } else null
+        val token = if (enabled) dispatcher.register(button, { current.value() }) else null
         onDispose { token?.let(dispatcher::unregister) }
+    }
+}
+
+/**
+ * Like [PadAction], and [onRelease] when the button goes up again (held actions). Leaving the
+ * composition or getting disabled while held counts as released.
+ */
+@Composable
+fun PadHold(button: PadButton, enabled: Boolean = true, onPress: () -> Unit, onRelease: () -> Unit) {
+    val dispatcher = LocalInputDispatcher.current
+    val press = rememberUpdatedState(onPress)
+    val release = rememberUpdatedState(onRelease)
+    DisposableEffect(dispatcher, button, enabled) {
+        val token = if (enabled) dispatcher.register(button, { press.value() }, { release.value() }) else null
+        onDispose {
+            token?.let(dispatcher::unregister)
+            if (token != null) release.value()
+        }
     }
 }
 

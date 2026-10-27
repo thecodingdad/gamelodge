@@ -275,8 +275,14 @@ fun LauncherApp(
         androidx.compose.ui.unit.Density(fitted, baseDensity.fontScale)
     }
 
+    // Running games and apps (marked on their tiles, Y held quits them).
+    val runningForTiles by vm.runningSessions.collectAsState()
+    val runningItems = io.github.thecodingdad.gamelodge.ui.components.rememberRunningItems(runningForTiles)
+    val quitHold = remember { io.github.thecodingdad.gamelodge.ui.components.QuitHold() }
     LauncherTheme(settings) {
         CompositionLocalProvider(
+            io.github.thecodingdad.gamelodge.ui.components.LocalRunningItems provides runningItems,
+            io.github.thecodingdad.gamelodge.ui.components.LocalQuitHold provides quitHold,
             androidx.compose.ui.platform.LocalDensity provides scaledDensity,
             LocalInputDispatcher provides dispatcher,
             LocalUiFeedback provides feedback,
@@ -739,10 +745,12 @@ private fun MainShell(
                             animatedArtwork = settings.animatedArtwork,
                             layout = settings.homeLayout,
                         )
+                        val quitHint = io.github.thecodingdad.gamelodge.ui.components.quitHoldHint(homeFocused)
                         io.github.thecodingdad.gamelodge.ui.shell.ScreenHints(
-                            listOf(
+                            listOfNotNull(
                                 ButtonHint(PadButton.A, stringResource(entryActions.openLabel(homeFocused))),
                                 ButtonHint(PadButton.X, stringResource(Res.string.hint_options)),
+                                quitHint,
                                 ButtonHint(PadButton.L1, stringResource(Res.string.hint_tabs), secondButton = PadButton.R1),
                             ),
                         )

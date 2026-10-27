@@ -277,11 +277,13 @@ private fun LibraryFocusDependents(
     val actions = LocalEntryActions.current
     val entry = focused.value
     PublishAccentFrom(entry?.coverModel())
+    val quitHint = io.github.thecodingdad.gamelodge.ui.components.quitHoldHint(entry?.takeIf { gridFocused.value })
     ScreenHints(
-        listOf(
+        listOfNotNull(
             // On the filter chips A selects a filter; only on a card it opens/starts.
             ButtonHint(PadButton.A, stringResource(if (gridFocused.value) actions.openLabel(entry) else Res.string.hint_select)),
             ButtonHint(PadButton.X, stringResource(Res.string.hint_options), onClick = onOptions),
+            quitHint,
             ButtonHint(PadButton.L2, stringResource(Res.string.hint_filters), onClick = onFilters, secondButton = PadButton.R2),
             ButtonHint(PadButton.SELECT, sortLabel, onClick = onSort),
             ButtonHint(PadButton.START, stringResource(Res.string.hint_search), onClick = onSearch),

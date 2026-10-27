@@ -112,11 +112,13 @@ fun AppsScreen(
     PadAction(PadButton.SELECT) { sort = sort.next(manualSort) }
     PadAction(PadButton.START) { openSearch() }
     PadAction(PadButton.X) { focused?.let(actions::context) }
+    val quitHint = io.github.thecodingdad.gamelodge.ui.components.quitHoldHint(focused?.takeIf { gridFocused })
     ScreenHints(
-        listOf(
+        listOfNotNull(
             // On the filter chips A selects a filter; only on an app it starts it.
             ButtonHint(PadButton.A, stringResource(if (gridFocused) Res.string.hint_start else Res.string.hint_select)),
             ButtonHint(PadButton.X, stringResource(Res.string.hint_options), onClick = { focused?.let(actions::context) }),
+            quitHint,
             ButtonHint(PadButton.L2, stringResource(Res.string.hint_filters), onClick = { stepFilter(1) }, secondButton = PadButton.R2),
             ButtonHint(PadButton.SELECT, sortLabel(sort), onClick = { sort = sort.next(manualSort) }),
             ButtonHint(PadButton.START, stringResource(Res.string.hint_search), onClick = ::openSearch),

@@ -104,6 +104,7 @@ fun CoverCard(
             // Owned but not installed on the host: dimmed, playing it starts the installation.
             if (entry.notInstalled && style.dimNotInstalled) Box(Modifier.fillMaxSize().background(Color(0x99000000)))
             TileOverlay(entry, layout)
+            RunningMark(entry, layout.corners.shape)
         }
         TileTexts(entry, layout)
     }
@@ -190,9 +191,11 @@ private fun lastPlayedLabel(at: Long): String {
 @Composable
 private fun androidx.compose.foundation.layout.BoxScope.TileBadges(entry: LibraryEntry, badges: Set<TileBadge>) {
     if (TileBadge.FAVORITE in badges && entry.item.favorite) {
+        // Below the "running" badge while the game runs.
+        val below = LocalRunningItems.current.isRunning(entry.item.id)
         Icon(
             Icons.Filled.Favorite, null, tint = Color(0xFFFF5C8A),
-            modifier = Modifier.align(Alignment.TopStart).padding(8.dp).size(18.dp),
+            modifier = Modifier.align(Alignment.TopStart).padding(start = 8.dp, top = if (below) 34.dp else 8.dp).size(18.dp),
         )
     }
     SourceBadges(entry, Modifier.align(Alignment.TopEnd).padding(6.dp), badges)
@@ -281,6 +284,7 @@ fun AppTileCard(
         ) {
             AppTileImage(entry, Modifier.fillMaxSize())
             TileOverlay(entry, layout)
+            RunningMark(entry, layout.corners.shape)
         }
         TileTexts(entry, layout)
     }
@@ -348,6 +352,7 @@ fun AppTile(
                 if (onTile) TileOverlay(entry, layout.copy(info = TileInfo.NONE))
             }
             if (pkg != null || !onTile) TileBadges(entry, layout.badges)
+            RunningMark(entry, layout.corners.shape)
         }
         if (layout.title == TileTitle.BELOW) {
             Text(
