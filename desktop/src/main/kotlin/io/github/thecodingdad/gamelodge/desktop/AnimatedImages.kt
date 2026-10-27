@@ -101,6 +101,8 @@ private class AnimatedImage(private val codec: Codec, override val width: Int, o
     @Volatile private var frame: Image? = null
     @Volatile private var lastDrawn = 0L
     private var job: Job? = null
+    /** Frames replaced by a newer one, with the time: freed once surely no longer drawn. */
+    private val retired = ArrayDeque<Pair<Long, Image>>()
 
     override val size: Long get() = width.toLong() * height * 4
     // Stateful (current frame): every request gets its own.
@@ -124,19 +126,35 @@ private class AnimatedImage(private val codec: Codec, override val width: Int, o
             val full = Bitmap().apply { allocPixels(codec.imageInfo) }
             var decoded = -1
             var next = 0
-            while (isActive) {
-                // Off screen (not drawn for a while): stop; drawing again starts from here.
-                if (System.nanoTime() - lastDrawn > IDLE_NS) break
-                val started = System.nanoTime()
-                codec.readPixels(full, next, if (next == 0) -1 else decoded)
-                decoded = next
-                frame = scaled(full)
-                version.intValue++
-                val spent = (System.nanoTime() - started) / 1_000_000
-                delay((durations[decoded] - spent).coerceAtLeast(1))
-                next = (decoded + 1) % durations.size
+            try {
+                while (isActive) {
+                    // Off screen (not drawn for a while): stop; drawing again starts from here.
+                    if (System.nanoTime() - lastDrawn > IDLE_NS) break
+                    val started = System.nanoTime()
+                    codec.readPixels(full, next, if (next == 0) -1 else decoded)
+                    decoded = next
+                    publish(scaled(full))
+                    val spent = (System.nanoTime() - started) / 1_000_000
+                    delay((durations[decoded] - spent).coerceAtLeast(1))
+                    next = (decoded + 1) % durations.size
+                }
+            } finally {
+                full.close()
             }
         }
+    }
+
+    /**
+     * Makes [image] the frame drawn. Each frame is native memory (several MB for a hero): the
+     * replaced ones are freed here, not whenever the garbage collector gets to them (memory would
+     * climb by hundreds of MB a second). Freed only after a while: the UI may still draw it.
+     */
+    private fun publish(image: Image) {
+        frame?.let { retired.addLast(System.nanoTime() to it) }
+        frame = image
+        version.intValue++
+        val now = System.nanoTime()
+        while (retired.isNotEmpty() && now - retired.first().first > RETIRE_NS) retired.removeFirst().second.close()
     }
 
     /** First frame for the initial draw (synchronous, in the decoder's coroutine). */
@@ -166,5 +184,6 @@ private class AnimatedImage(private val codec: Codec, override val width: Int, o
         /** Browsers treat shorter GIF frame times as 100 ms; 20 ms keeps fast animations smooth. */
         const val MIN_FRAME_MS = 20
         const val IDLE_NS = 1_000_000_000L
+        const val RETIRE_NS = 500_000_000L
     }
 }
