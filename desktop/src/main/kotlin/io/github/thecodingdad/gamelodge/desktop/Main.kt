@@ -139,6 +139,7 @@ fun main(args: Array<String>) {
     val windowControls = WindowControls()
     val hostServices by lazy { HostServices(container.hostRole, container.hostSync, container.secrets) }
     val platformUi = DesktopPlatformUi(gamepads, { mainWindow }, { container.pcLibrary }, { hostServices }, startup, container.profiles, windowControls)
+    platformUi.onShow = { windowVisible.value = true }
     bringToFront = { platformUi.bringToFront() }
     PlatformUi.current = platformUi
     val feedback = UiFeedback(File(dataDir, "cache"), DesktopFeedbackOutput { gamepads }).also { it.load() }
@@ -314,33 +315,6 @@ fun main(args: Array<String>) {
                 }
             },
         ) {
-        // After sleep or hibernation Windows may hand the GPU a new device, and the old window then
-        // keeps handling input but never shows a new frame. A new window starts with a fresh one
-        // (the app's state lives outside; the page shown starts over).
-        var windowGeneration by remember { androidx.compose.runtime.mutableIntStateOf(0) }
-        LaunchedEffect(Unit) {
-            while (true) {
-                val before = System.currentTimeMillis()
-                kotlinx.coroutines.delay(RESUME_CHECK_MS)
-                val gap = System.currentTimeMillis() - before - RESUME_CHECK_MS
-                if (gap > RESUME_GAP_MS) {
-                    Log.i("System resumed after ${gap / 1000} s: new window")
-                    windowGeneration++
-                }
-            }
-        }
-        // The quick menu over a game or stream.
-        QuickMenuOverlayWindow(
-            container, vm, feedback, gamepads,
-            openSettings = { target ->
-                QuickMenuOverlay.close()
-                windowVisible.value = true
-                platformUi.bringToFront()
-                vm.settingsRequests.tryEmit(target)
-            },
-            onMenu = { open -> (container.streamControls as? io.github.thecodingdad.gamelodge.desktop.stream.DesktopStreamControls)?.setMenu(open) },
-        )
-        key(windowGeneration) {
         Window(
             onCloseRequest = { windowControls.close() },
             visible = visible,
@@ -379,15 +353,13 @@ fun main(args: Array<String>) {
             // Renderer and graphics adapter of every window (also the ones built after sleep), once it drew.
             LaunchedEffect(window) {
                 androidx.compose.runtime.withFrameNanos { }
-                Log.i("Window ${windowGeneration + 1} renderer: ${window.renderApi} – ${Diagnostics.renderInfo(window)}")
+                Log.i("Window renderer: ${window.renderApi} – ${Diagnostics.renderInfo(window)}")
             }
             LaunchedEffect(window) {
                 mainWindow = window
                 gamepads.start(window)
                 TaskbarIdentity.applyToWindow(window)
-                if (isWindows && windowGeneration > 0) {
-                    BorderlessFullscreen.reapply(window)
-                } else if (isWindows && startup.settings.value.startFullscreen) {
+                if (isWindows && startup.settings.value.startFullscreen) {
                     BorderlessFullscreen.enter(window)
                     windowControls.fullscreen.value = true
                 }
@@ -435,13 +407,8 @@ fun main(args: Array<String>) {
             }
         }
         }
-        }
     }
 }
-
-/** How often the window checks for a resume from sleep, and the clock jump that means one. */
-private const val RESUME_CHECK_MS = 5_000L
-private const val RESUME_GAP_MS = 30_000L
 
 /** Host pixels per second of the stream's mouse at full stick deflection and 100 % speed. */
 private const val STREAM_MOUSE_SPEED = 1200f

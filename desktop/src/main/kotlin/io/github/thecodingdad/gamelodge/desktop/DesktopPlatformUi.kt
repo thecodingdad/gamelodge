@@ -170,8 +170,13 @@ class DesktopPlatformUi(
 
     override fun openUrl(url: String) = BrowserOpener.open(url)
 
+    /** Marks the window as shown in the launcher's state (it was hidden in the tray). */
+    var onShow: () -> Unit = {}
+
     override fun bringToFront() {
         java.awt.EventQueue.invokeLater {
+            // Through the state that drives the window, so hiding it (X, tray) works afterwards.
+            onShow()
             window()?.apply {
                 isVisible = true
                 if (isWindows) WindowsForeground.claim(this)
