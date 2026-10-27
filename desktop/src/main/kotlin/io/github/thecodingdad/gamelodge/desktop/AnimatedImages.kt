@@ -174,13 +174,15 @@ private class AnimatedImage(
             var full = Bitmap().apply { allocPixels(p.codec.imageInfo) }
             var decoded = -1
             var next = 0
+            var checkedAt = System.nanoTime()
             try {
                 while (isActive) {
                     // Off screen (not drawn for a while): stop; drawing again starts from here.
                     if (System.nanoTime() - lastDrawn > IDLE_NS) break
-                    // The converted file is ready: play that from its start.
-                    if (p.scaled) {
-                        AnimationCache.converted(key, neededWidth)?.let { bytes ->
+                    // The converted file is ready: play that from its start (checked once a second).
+                    if (p.scaled && System.nanoTime() - checkedAt > CHECK_NS) {
+                        checkedAt = System.nanoTime()
+                        if (AnimationCache.ready(key, neededWidth)) AnimationCache.converted(key, neededWidth)?.let { bytes ->
                             p = Playing(Codec.makeFromData(Data.makeFromBytes(bytes)), scaled = false)
                             playing = p
                             full.close()
@@ -193,8 +195,10 @@ private class AnimatedImage(
                     p.codec.readPixels(full, next, if (next == 0) -1 else decoded)
                     decoded = next
                     publish(frameImage(full, p))
-                    val spent = (System.nanoTime() - started) / 1_000_000
-                    delay((p.durations[decoded] - spent).coerceAtLeast(1))
+                    // The next frame on the shared beat: all animations change together, so the window
+                    // is redrawn at most TICK times a second, not once per animation and frame.
+                    val due = started + p.durations[decoded] * 1_000_000L
+                    delay(((onBeat(due) - System.nanoTime()) / 1_000_000).coerceAtLeast(1))
                     next = (decoded + 1) % p.durations.size
                 }
             } finally {
@@ -237,6 +241,11 @@ private class AnimatedImage(
         const val MIN_FRAME_MS = 20
         const val IDLE_NS = 1_000_000_000L
         const val RETIRE_NS = 500_000_000L
+        const val CHECK_NS = 1_000_000_000L
+        const val BEAT_NS = 1_000_000_000L / 30
+
+        /** The first beat at or after [time] (System.nanoTime). */
+        fun onBeat(time: Long): Long = (time + BEAT_NS - 1) / BEAT_NS * BEAT_NS
     }
 }
 
@@ -288,6 +297,15 @@ internal object AnimationCache {
         f.setLastModified(System.currentTimeMillis())
         return bytes
     }
+
+    /** A converted file at least [minWidth] wide exists (reads only its header). */
+    fun ready(key: String, minWidth: Int): Boolean = runCatching {
+        val f = file(key)
+        if (!f.isFile) return false
+        val header = ByteArray(30)
+        val read = f.inputStream().use { it.readNBytes(header, 0, header.size) }
+        read == header.size && canvasWidth(header) >= minWidth
+    }.getOrDefault(false)
 
     /** The canvas width in an animated WebP's VP8X header (0 if it isn't one). */
     private fun canvasWidth(webp: ByteArray): Int {

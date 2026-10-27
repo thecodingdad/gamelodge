@@ -59,6 +59,18 @@ object Diagnostics {
      * window hangs): what Java, Windows and the drawing surface each think of it.
      */
     fun logThreads() {
+        // Which threads are busy: their CPU time over a few seconds.
+        runCatching {
+            val bean = java.lang.management.ManagementFactory.getThreadMXBean()
+            val names = Thread.getAllStackTraces().keys.associate { it.threadId() to it.name }
+            val before = names.keys.associateWith { bean.getThreadCpuTime(it) }
+            Thread.sleep(CPU_SAMPLE_MS)
+            val busy = before.mapNotNull { (id, start) ->
+                val end = bean.getThreadCpuTime(id)
+                if (start < 0 || end < 0) null else names[id] to (end - start) / 1_000_000
+            }.filter { it.second > 0 }.sortedByDescending { it.second }.take(10)
+            Log.i("CPU in the last ${CPU_SAMPLE_MS / 1000} s:\n" + busy.joinToString("\n") { (name, ms) -> "  $ms ms  \"$name\"" }.ifEmpty { "  (idle)" })
+        }.onFailure { Log.w("CPU per thread unavailable", it) }
         val dump = Thread.getAllStackTraces().entries.sortedBy { it.key.name }.joinToString("\n") { (t, stack) ->
             "  \"${t.name}\" ${t.state}${if (t.isDaemon) " daemon" else ""}\n" + stack.joinToString("\n") { "      at $it" }
         }
@@ -113,4 +125,5 @@ object Diagnostics {
     }
 
     private const val DWMWA_CLOAKED = 14
+    private const val CPU_SAMPLE_MS = 3000L
 }

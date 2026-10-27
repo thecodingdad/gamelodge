@@ -126,7 +126,9 @@ class HaClient(
         socket = http.newWebSocket(Request.Builder().url(wsUrl).build(), object : WebSocketListener() {
             override fun onMessage(webSocket: WebSocket, text: String) = handle(webSocket, text, token)
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-                Log.w("HA websocket failure (HTTP ${response?.code})", t)
+                // Dropped connections (sleep, network change, HA restart) reconnect: one line, no stack trace.
+                if (t is java.io.IOException) Log.w("HA websocket lost (${response?.code?.let { "HTTP $it, " } ?: ""}${t.javaClass.simpleName}: ${t.message}), reconnecting")
+                else Log.w("HA websocket failure (HTTP ${response?.code})", t)
                 failPending()
                 closed.complete(Unit)
             }
