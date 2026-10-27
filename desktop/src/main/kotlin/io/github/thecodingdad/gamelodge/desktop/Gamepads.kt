@@ -392,15 +392,6 @@ class Gamepads(private val dispatcher: InputDispatcher) {
         }
     }
 
-    /** The component of [window] that handles key events (Compose's drawing surface). */
-    private fun keyReceiver(window: java.awt.Container): java.awt.Component? {
-        for (child in window.components) {
-            if (child.keyListeners.isNotEmpty()) return child
-            if (child is java.awt.Container) keyReceiver(child)?.let { return it }
-        }
-        return null
-    }
-
     /** Window lost the focus: let go of everything that is still held. */
     private fun release() {
         if (held.isEmpty() && previous.isEmpty()) return
@@ -409,11 +400,20 @@ class Gamepads(private val dispatcher: InputDispatcher) {
         previous.clear()
     }
 
-    private companion object {
-        const val STICK = 0.6f
-        const val FIRST_REPEAT_MS = 350L
-        const val NO_CHAR = '\u0000'
-        const val REPEAT_MS = 90L
-        val DIRECTIONS = mapOf("up" to KeyEvent.VK_UP, "down" to KeyEvent.VK_DOWN, "left" to KeyEvent.VK_LEFT, "right" to KeyEvent.VK_RIGHT)
+    companion object {
+        /** The component of [window] that handles key events (Compose's drawing surface). */
+        fun keyReceiver(window: java.awt.Container): java.awt.Component? {
+            for (child in window.components) {
+                if (child.keyListeners.isNotEmpty()) return child
+                if (child is java.awt.Container) keyReceiver(child)?.let { return it }
+            }
+            return null
+        }
+
+        private const val STICK = 0.6f
+        private const val FIRST_REPEAT_MS = 350L
+        private const val NO_CHAR = '\u0000'
+        private const val REPEAT_MS = 90L
+        private val DIRECTIONS = mapOf("up" to KeyEvent.VK_UP, "down" to KeyEvent.VK_DOWN, "left" to KeyEvent.VK_LEFT, "right" to KeyEvent.VK_RIGHT)
     }
 }

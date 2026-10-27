@@ -340,7 +340,9 @@ fun main(args: Array<String>) {
                     if (!gamepads.dispatching) gamepads.otherInput()
                 }
                 if (isDirection && e.type == KeyEventType.KeyDown && !contentHasFocus) {
-                    windowFocusManager?.moveFocus(androidx.compose.ui.focus.FocusDirection.Next)
+                    // The pressed direction first; only when it finds nothing, the first element.
+                    val manager = windowFocusManager
+                    if (manager != null && !arrowFocus(e, manager)) manager.moveFocus(androidx.compose.ui.focus.FocusDirection.Next)
                     return@Window true
                 }
                 when {
@@ -368,6 +370,14 @@ fun main(args: Array<String>) {
             LaunchedEffect(window) {
                 mainWindow = window
                 gamepads.start(window)
+                // Activated (Home from a stream, the tray): the keyboard focus belongs to the content.
+                // Left on the frame, Compose's own focus can't show and the pad's arrows go nowhere.
+                window.addWindowFocusListener(object : java.awt.event.WindowAdapter() {
+                    override fun windowGainedFocus(e: java.awt.event.WindowEvent) {
+                        val owner = window.focusOwner
+                        if (owner == null || owner is java.awt.Window) Gamepads.keyReceiver(window)?.requestFocusInWindow()
+                    }
+                })
                 TaskbarIdentity.applyToWindow(window)
                 if (isWindows && startup.settings.value.startFullscreen) {
                     BorderlessFullscreen.enter(window)
