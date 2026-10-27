@@ -315,6 +315,17 @@ fun main(args: Array<String>) {
                 }
             },
         ) {
+        // The quick menu over a game or stream.
+        QuickMenuOverlayWindow(
+            container, vm, feedback, gamepads,
+            openSettings = { target ->
+                QuickMenuOverlay.close()
+                windowVisible.value = true
+                platformUi.bringToFront()
+                vm.settingsRequests.tryEmit(target)
+            },
+            onMenu = { open -> (container.streamControls as? io.github.thecodingdad.gamelodge.desktop.stream.DesktopStreamControls)?.setMenu(open) },
+        )
         Window(
             onCloseRequest = { windowControls.close() },
             visible = visible,
