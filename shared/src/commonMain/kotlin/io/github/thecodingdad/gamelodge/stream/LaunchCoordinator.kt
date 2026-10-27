@@ -125,7 +125,7 @@ class LaunchCoordinator(
         gameActions.beforeStart(entry.item.id) { left -> _state.value = LaunchState.Working(entry, LaunchStep.RUNNING_ACTIONS, left) }
     }
 
-    /** The stream this launcher started and that runs right now (until the launcher is back). */
+    /** The stream this launcher started and that runs right now (until its window closes). */
     data class ActiveStream(val entry: LibraryEntry, val hostUuid: String, val appId: Int)
 
     private val _activeStream = kotlinx.coroutines.flow.MutableStateFlow<ActiveStream?>(null)
@@ -151,7 +151,7 @@ class LaunchCoordinator(
         scope.launch { runCatching { vpn.disconnect() } }
     }
 
-    /** The stream ended (launcher visible again): a VPN connected for it goes again, if so set. */
+    /** The stream ended (its window closed): a VPN connected for it goes again, if so set. Safe to call twice. */
     fun streamEnded() {
         _activeStream.value = null
         streamNotices?.stopped()

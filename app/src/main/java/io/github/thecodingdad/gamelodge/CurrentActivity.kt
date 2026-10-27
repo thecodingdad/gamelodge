@@ -37,5 +37,10 @@ object CurrentActivity : Application.ActivityLifecycleCallbacks {
     override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) = Unit
     override fun onActivityDestroyed(activity: Activity) {
         if (current.get() === activity) current.clear()
+        // The stream ended, whatever comes to the front now (the quick menu that quit it, say): not
+        // only once the launcher's own window is back. A newer stream (Game.instance) keeps it.
+        if (activity is com.limelight.Game && activity.isFinishing && com.limelight.Game.instance.let { it == null || it === activity }) {
+            activity.container.launcher.streamEnded()
+        }
     }
 }
