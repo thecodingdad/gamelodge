@@ -69,8 +69,8 @@ object QuickMenuOverlay {
     val shown = mutableStateOf(false)
     val open = mutableStateOf(false)
 
-    /** Where it shows: the monitor's right edge in pixels, and the density the menu uses there. */
-    internal class Placement(val left: Int, val top: Int, val width: Int, val height: Int, val density: Float)
+    /** Where it shows: the monitor's right edge (in Java's coordinates), and the density the menu uses there. */
+    internal class Placement(val bounds: java.awt.Rectangle, val density: Float)
     internal var placement: Placement? = null
 
     /** On the UI thread. */
@@ -102,7 +102,17 @@ object QuickMenuOverlay {
         // Sized like the launcher's own quick menu on that screen.
         val density = fittedDensity(dpiX.value / 96f * uiScale, w, h, CardSize.MEDIUM)
         val width = ceil(PANEL_WIDTH_DP * density).toInt().coerceAtMost(w)
-        Placement(r.right - width, r.top, width, h, density)
+        // Java places windows in its own units (pixels / the monitor's scale): the screen of that monitor.
+        val config = java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment().screenDevices.map { it.defaultConfiguration }
+            .firstOrNull { c ->
+                val b = c.bounds
+                val scale = c.defaultTransform.scaleX
+                (kotlin.math.abs(b.x - r.left) <= 2 || kotlin.math.abs(b.x * scale - r.left) <= 2) &&
+                    (kotlin.math.abs(b.y - r.top) <= 2 || kotlin.math.abs(b.y * scale - r.top) <= 2)
+            } ?: java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment().defaultScreenDevice.defaultConfiguration
+        val screen = config.bounds
+        val userWidth = ceil(width / config.defaultTransform.scaleX).toInt()
+        Placement(java.awt.Rectangle(screen.x + screen.width - userWidth, screen.y, userWidth, screen.height), density)
     }.onFailure { Log.w("Quick menu overlay: no place", it) }.getOrNull()
 
     /** Width of the quick menu's panel (QuickMenu's SidePanel). */
@@ -144,12 +154,13 @@ fun QuickMenuOverlayWindow(
                 focusableWindowState = false
                 isAutoRequestFocus = false
                 type = java.awt.Window.Type.UTILITY
-                // A native window now, placed in pixels before it shows.
+                // Through Java: it applies its own bounds when it shows the window.
+                bounds = place.bounds
+                // A native window now, so Windows knows before it shows that it never activates.
                 addNotify()
                 val hwnd = WinDef.HWND(Native.getComponentPointer(this))
                 val user32 = User32.INSTANCE
                 user32.SetWindowLong(hwnd, WinUser.GWL_EXSTYLE, user32.GetWindowLong(hwnd, WinUser.GWL_EXSTYLE) or WS_EX_NOACTIVATE)
-                user32.SetWindowPos(hwnd, HWND_TOPMOST, place.left, place.top, place.width, place.height, SWP_NOACTIVATE)
             }
         },
         dispose = ComposeWindow::dispose,
@@ -225,5 +236,3 @@ fun QuickMenuOverlayWindow(
 }
 
 private const val WS_EX_NOACTIVATE = 0x08000000
-private const val SWP_NOACTIVATE = 0x0010
-private val HWND_TOPMOST = WinDef.HWND(com.sun.jna.Pointer.createConstant(-1))
