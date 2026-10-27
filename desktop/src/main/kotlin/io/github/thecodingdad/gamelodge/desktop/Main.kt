@@ -68,6 +68,7 @@ fun main(args: Array<String>) {
     DataReset.runIfRequested(dataDir)
     Log.init(File(dataDir, "logs/launcher.log"))
     Diagnostics.routeSkikoLog()
+    Diagnostics.logUncaught()
     // Class cache of a test version (no longer used).
     File(dataDir, "cache/cds").takeIf { it.isDirectory }?.deleteRecursively()
     Log.i("GameLodge ${DesktopPlatformInfo(dataDir).versionName} starting, data in $dataDir")
