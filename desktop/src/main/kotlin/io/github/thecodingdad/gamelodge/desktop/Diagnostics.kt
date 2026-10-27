@@ -71,6 +71,7 @@ object Diagnostics {
     private fun describeWindows(): String = java.awt.Window.getWindows().joinToString("\n") { w ->
         val title = (w as? java.awt.Frame)?.title ?: w.javaClass.simpleName
         val awt = "visible=${w.isVisible} showing=${w.isShowing} displayable=${w.isDisplayable} active=${w.isActive} " +
+            "focus=${w.focusOwner?.javaClass?.simpleName} recentFocus=${w.mostRecentFocusOwner?.javaClass?.simpleName} " +
             "state=${(w as? java.awt.Frame)?.extendedState} bounds=${w.bounds.let { "${it.x},${it.y} ${it.width}x${it.height}" }}"
         val native = if (isWindows && w.isDisplayable) runCatching {
             val hwnd = com.sun.jna.platform.win32.WinDef.HWND(com.sun.jna.Native.getComponentPointer(w))

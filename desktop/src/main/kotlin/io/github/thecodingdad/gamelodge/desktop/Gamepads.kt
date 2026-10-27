@@ -378,7 +378,9 @@ class Gamepads(private val dispatcher: InputDispatcher) {
         val target = shownOver ?: window ?: return
         EventQueue.invokeLater {
             // The overlay never has the focus: its content takes the keys directly.
-            val focusOwner = (if (shownOver != null) keyReceiver(shownOver) else target.mostRecentFocusOwner) ?: target
+            // A window as focus owner (not its content) would drop them: the content then.
+            val focusOwner = (if (shownOver != null) keyReceiver(shownOver) else target.mostRecentFocusOwner?.takeUnless { it is Window })
+                ?: keyReceiver(target) ?: target
             dispatching = true
             try {
                 // Char 0 (a control character): text fields must not take controller buttons as typed text

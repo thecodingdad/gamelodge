@@ -180,8 +180,9 @@ class DesktopPlatformUi(
             window()?.apply {
                 isVisible = true
                 if (isWindows) WindowsForeground.claim(this)
+                // No requestFocus(): that makes the frame itself the focus owner, and the keys from the
+                // pads would go there instead of to the content. Activating it restores the content's.
                 toFront()
-                requestFocus()
             }
         }
     }
