@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 /**
  * Games and streams being quit. Quitting takes a moment (the host closes the game, the stream
  * ends): meanwhile it's a background task (status bar) and the quick menu shows it on the game's
- * card; if the game is still running after [TIMEOUT_MS] a notice says so.
+ * card; if the game is still running [TIMEOUT_MS] after the quit returned, a notice says so.
  */
 object Quitting {
     private val _keys = MutableStateFlow<Set<String>>(emptySet())
@@ -40,7 +40,8 @@ object Quitting {
         BackgroundTasks.set(BackgroundTask(taskId, Res.string.task_quitting, listOf(title)))
         scope.launch {
             try {
-                runCatching { quit() }
+                // The host may answer only once the game has closed.
+                runCatching { kotlinx.coroutines.withTimeoutOrNull(QUIT_CALL_MS) { quit() } }
                 val until = System.currentTimeMillis() + TIMEOUT_MS
                 var nextRefresh = 0L
                 while (running() && System.currentTimeMillis() < until) {
@@ -50,8 +51,13 @@ object Quitting {
                     }
                     delay(POLL_MS)
                 }
-                if (running()) Notices.show(Res.string.qm_quit_failed, title)
-                else kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) { onDone() }
+                if (running()) {
+                    Notices.show(Res.string.qm_quit_failed, title)
+                    // It may still close: the cards show what the host says by then.
+                    runCatching { refresh() }
+                } else {
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) { onDone() }
+                }
             } finally {
                 BackgroundTasks.remove(taskId)
                 _keys.update { it - key }
@@ -81,6 +87,8 @@ object Quitting {
         )
     }
 
+    /** Longest wait for the quit itself (the host closing the game), then for the state to follow. */
+    private const val QUIT_CALL_MS = 90_000L
     private const val TIMEOUT_MS = 20_000L
     private const val REFRESH_MS = 2_000L
     private const val POLL_MS = 300L
