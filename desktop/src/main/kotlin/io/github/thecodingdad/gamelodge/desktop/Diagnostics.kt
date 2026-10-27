@@ -102,7 +102,8 @@ object Diagnostics {
             return null
         }
         val loop = runCatching {
-            val redrawer = field(layer, "redrawer") ?: return@runCatching "no redrawer"
+            val redrawer = layer.javaClass.methods.firstOrNull { it.name.startsWith("getRedrawer") && it.parameterCount == 0 }
+                ?.invoke(layer) ?: return@runCatching "no redrawer"
             val dispatcher = field(redrawer, "frameDispatcher") ?: return@runCatching "${redrawer.javaClass.simpleName}, no frame loop"
             val job = field(dispatcher, "job") as? kotlinx.coroutines.Job
             "${redrawer.javaClass.simpleName}, frame loop active=${job?.isActive} cancelled=${job?.isCancelled} scheduled=${field(dispatcher, "frameScheduled")}"
