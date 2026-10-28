@@ -1,5 +1,7 @@
 package io.github.thecodingdad.gamelodge.ui.screens.ha
 
+import io.github.thecodingdad.gamelodge.ui.components.controllerScroll
+import io.github.thecodingdad.gamelodge.ui.components.popupHeightIn
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -93,6 +95,8 @@ private fun GameActionDialog(initial: GameAction?, onSave: (GameAction) -> Unit,
     var startWaits by remember { mutableStateOf(initial?.startWaits ?: true) }
     var picking by remember { mutableStateOf(false) }
     Modal(visible = true, onDismiss = onDismiss, title = stringResource(Res.string.game_action_title), maxWidth = 680.dp, closeButton = false) {
+        // Scrolls on small screens; the buttons below stay.
+        androidx.compose.foundation.layout.Column(Modifier.popupHeightIn(420.dp).controllerScroll(), verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)) {
         NavRow(
             stringResource(Res.string.game_action_entity), { ha.client.start(); picking = true },
             actionLabel(action, entities) ?: stringResource(Res.string.not_set), initialFocus = true,
@@ -115,6 +119,7 @@ private fun GameActionDialog(initial: GameAction?, onSave: (GameAction) -> Unit,
                 onSelect = { startWaits = it },
                 subtitle = stringResource(if (startWaits) Res.string.game_action_mode_sub_waits else Res.string.game_action_mode_sub_later),
             )
+        }
         }
         ButtonRow {
             LauncherButton(stringResource(Res.string.action_save), primary = true, enabled = action != null, onClick = {

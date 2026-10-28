@@ -19,6 +19,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import io.github.thecodingdad.gamelodge.ui.components.controllerScroll
+import io.github.thecodingdad.gamelodge.ui.components.popupHeightIn
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
@@ -66,6 +68,11 @@ fun AccentColorPicker(
     // The sliders keep their own values (a grey loses its hue when converted back and forth).
     var hsv by remember { mutableStateOf(toHsv(color)) }
     Modal(visible = true, onDismiss = onDismiss, title = title, maxWidth = 760.dp) {
+        // Scrolls on small screens (controller, touch and mouse wheel).
+        androidx.compose.foundation.layout.Column(
+            Modifier.popupHeightIn(560.dp).controllerScroll(),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
         if (onAutomatic != null) {
             SwitchRow(
                 stringResource(Res.string.accent_text_auto), automatic,
@@ -115,6 +122,7 @@ fun AccentColorPicker(
             onChange = { v -> hsv = hsv.copy(third = v / 100f); onChange(hsvColor(hsv)) },
             valueLabel = { "$it %" },
         )
+        }
     }
 }
 

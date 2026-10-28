@@ -174,7 +174,8 @@ fun TargetPickerDialog(
                 else -> listOf(StartOption(target, targetLabel(target)))
             }
         }
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        // Many targets and start actions: the list scrolls, profile and hints stay.
+        Column(Modifier.popupHeightIn(380.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             options.forEachIndexed { index, option ->
                 LauncherButton(
                     text = option.label,
