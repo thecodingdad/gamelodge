@@ -227,6 +227,6 @@ fun haTileHints(tile: HaTileEntity?): List<io.github.thecodingdad.gamelodge.ui.c
     }
     return listOfNotNull(
         press?.let { io.github.thecodingdad.gamelodge.ui.components.ButtonHint(PadButton.A, org.jetbrains.compose.resources.stringResource(it)) },
-        stick?.let { io.github.thecodingdad.gamelodge.ui.components.ButtonHint(PadButton.RS_LEFT, org.jetbrains.compose.resources.stringResource(it), secondButton = PadButton.RS_RIGHT) },
+        stick?.let { io.github.thecodingdad.gamelodge.ui.components.ButtonHint(PadButton.RS_RIGHT, org.jetbrains.compose.resources.stringResource(it)) },
     )
 }

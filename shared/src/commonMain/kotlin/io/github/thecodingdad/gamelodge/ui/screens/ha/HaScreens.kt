@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.ui.screens.ha
 
+import io.github.thecodingdad.gamelodge.ui.components.popupHeightIn
 import io.github.thecodingdad.gamelodge.ui.components.mouseDragScroll
 import io.github.thecodingdad.gamelodge.ui.components.controllerScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -140,8 +141,6 @@ fun HaSettings(
     val tiles by ha.tiles.collectAsState(emptyList())
     val entities by ha.client.entities.collectAsState()
     var loginShown by remember { mutableStateOf(false) }
-    var picking by remember { mutableStateOf(false) }
-    var tileFor by remember { mutableStateOf<String?>(null) }
     androidx.compose.runtime.LaunchedEffect(Unit) { ha.client.start() }
 
     SettingsPage(stringResource(Res.string.settings_home_assistant)) {
@@ -169,19 +168,7 @@ fun HaSettings(
 
         SectionHeader(stringResource(Res.string.ha_tiles))
         Text(stringResource(Res.string.ha_entities_intro), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceMuted)
-        tiles.forEach { tile ->
-            val entity = entities[tile.entityId]
-            val group = EntityGroup.of(tile.entityId.substringBefore('.'))
-            NavRow(
-                entity?.name ?: tile.entityId, { tileFor = tile.entityId },
-                subtitle = listOfNotNull(group?.let { stringResource(it.label) }, if (tile.showOnHome) stringResource(Res.string.ha_tile_on_home_short) else null).joinToString(" · "),
-                icon = group?.icon,
-            )
-        }
-        LauncherButton(
-            stringResource(Res.string.ha_add_tile), icon = Icons.Filled.Add, enabled = loggedIn,
-            onClick = { ha.client.start(); picking = true },
-        )
+        HaTileList(enabled = loggedIn)
 
         SectionHeader(stringResource(Res.string.ha_game_actions))
         Text(stringResource(Res.string.ha_game_actions_intro), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceMuted)
@@ -226,16 +213,6 @@ fun HaSettings(
     }
 
     if (loginShown) LoginDialog(settings, update) { loginShown = false }
-    tiles.firstOrNull { it.entityId == tileFor }?.let { tile ->
-        TileDialog(tile, entities[tile.entityId], ha, isFirst = tiles.first() == tile, isLast = tiles.last() == tile) { tileFor = null }
-    }
-    EntityPicker(
-        visible = picking, title = stringResource(Res.string.ha_add_tile),
-        entities = entities.values.filter { it.id !in tiles.map { t -> t.entityId } },
-        domains = HaRepository.supportedDomains,
-        onPick = { id -> entities[id]?.let { scope.launch { ha.addTile(it) } } },
-        onDismiss = { picking = false },
-    )
 }
 
 /** Address of Home Assistant and the sign-in in the browser. */
@@ -302,21 +279,68 @@ internal fun LoginDialog(settings: LauncherSettings, update: ((LauncherSettings)
     }
 }
 
-/** One tile: on the home screen, its place, removing it. */
+/**
+ * The Home Assistant tiles, like the start tab's rows: moved by their handle (or with the
+ * controller), removed with ✕, a tile's own setting behind the row; new ones added below
+ * (Settings › Home Assistant and the quick menu's edit button). [enabled]: signed in.
+ */
 @Composable
-private fun TileDialog(tile: HaTileEntity, entity: HaEntity?, ha: HaRepository, isFirst: Boolean, isLast: Boolean, onDismiss: () -> Unit) {
+fun HaTileList(enabled: Boolean) {
+    val ha = io.github.thecodingdad.gamelodge.LocalContainer.current.ha
+    val scope = rememberCoroutineScope()
+    val tiles by ha.tiles.collectAsState(emptyList())
+    val entities by ha.client.entities.collectAsState()
+    var picking by remember { mutableStateOf(false) }
+    var tileFor by remember { mutableStateOf<String?>(null) }
+    io.github.thecodingdad.gamelodge.ui.screens.settings.ReorderableList(
+        items = tiles, id = { it.entityId },
+        onReorder = { ids -> scope.launch { ha.reorder(ids) } },
+    ) { _, tile ->
+        val entity = entities[tile.entityId]
+        val group = EntityGroup.of(tile.entityId.substringBefore('.'))
+        io.github.thecodingdad.gamelodge.ui.screens.settings.RemovableRow(
+            entity?.name ?: tile.entityId,
+            subtitle = listOfNotNull(group?.let { stringResource(it.label) }, if (tile.showOnHome) stringResource(Res.string.ha_tile_on_home_short) else null).joinToString(" · "),
+            icon = group?.icon,
+            onRemove = { scope.launch { ha.removeTile(tile.entityId) } },
+            removeLabel = stringResource(Res.string.ha_tile_remove),
+            onClick = { tileFor = tile.entityId },
+        )
+    }
+    LauncherButton(
+        stringResource(Res.string.ha_add_tile), icon = Icons.Filled.Add, enabled = enabled,
+        primary = tiles.isEmpty(), onClick = { ha.client.start(); picking = true },
+    )
+    tiles.firstOrNull { it.entityId == tileFor }?.let { tile ->
+        TileDialog(tile, entities[tile.entityId], ha) { tileFor = null }
+    }
+    EntityPicker(
+        visible = picking, title = stringResource(Res.string.ha_add_tile),
+        entities = entities.values.filter { it.id !in tiles.map { t -> t.entityId } },
+        domains = HaRepository.supportedDomains,
+        onPick = { id -> entities[id]?.let { scope.launch { ha.addTile(it) } } },
+        onDismiss = { picking = false },
+    )
+}
+
+/** The quick menu's Home Assistant tab: its tiles edited in a popup (like quick access). */
+@Composable
+fun HaTileEditor(visible: Boolean, onDismiss: () -> Unit) {
+    io.github.thecodingdad.gamelodge.ui.components.Modal(visible = visible, onDismiss = onDismiss, title = stringResource(Res.string.ha_tiles), maxWidth = 760.dp) {
+        Column(
+            Modifier.popupHeightIn(640.dp).controllerScroll(),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) { HaTileList(enabled = true) }
+    }
+}
+
+/** One tile's own setting: shown on the start tab or not (its place and removal are in the list). */
+@Composable
+private fun TileDialog(tile: HaTileEntity, entity: HaEntity?, ha: HaRepository, onDismiss: () -> Unit) {
     val scope = rememberCoroutineScope()
     Modal(visible = true, onDismiss = onDismiss, title = entity?.name ?: tile.entityId, maxWidth = 620.dp) {
         Text(tile.entityId, style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
         SwitchRow(stringResource(Res.string.ha_tile_on_home), tile.showOnHome, { scope.launch { ha.setShowOnHome(tile, it) } }, icon = Icons.Filled.Home, initialFocus = true)
-        io.github.thecodingdad.gamelodge.ui.components.ButtonRow {
-            if (!isFirst) LauncherButton(stringResource(Res.string.ha_tile_move_up), icon = Icons.Filled.ArrowUpward, onClick = { scope.launch { ha.move(tile, -1) } })
-            if (!isLast) LauncherButton(stringResource(Res.string.ha_tile_move_down), icon = Icons.Filled.ArrowDownward, onClick = { scope.launch { ha.move(tile, 1) } })
-        }
-        HoldToConfirmButton(
-            stringResource(Res.string.ha_tile_remove), onConfirmed = { scope.launch { ha.removeTile(tile.entityId) }; onDismiss() },
-            icon = Icons.Filled.Delete, modifier = Modifier.fillMaxWidth(),
-        )
     }
 }
 

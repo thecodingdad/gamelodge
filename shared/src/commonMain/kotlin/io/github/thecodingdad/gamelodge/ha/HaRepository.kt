@@ -24,6 +24,12 @@ class HaRepository(
 
     suspend fun setShowOnHome(tile: HaTileEntity, show: Boolean) = db.haTileDao().upsert(listOf(tile.copy(showOnHome = show)))
 
+    /** The tiles in the order of [entityIds] (dragged or moved in the settings). */
+    suspend fun reorder(entityIds: List<String>) {
+        val byId = db.haTileDao().getAll().associateBy { it.entityId }
+        db.haTileDao().upsert(entityIds.mapNotNull { byId[it] }.mapIndexed { index, t -> t.copy(sortOrder = index) })
+    }
+
     /** Moves a tile one position up (-1) or down (+1). */
     suspend fun move(tile: HaTileEntity, delta: Int) {
         val list = db.haTileDao().getAll().toMutableList()

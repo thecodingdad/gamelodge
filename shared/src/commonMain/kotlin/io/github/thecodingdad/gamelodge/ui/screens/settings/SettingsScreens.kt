@@ -439,6 +439,8 @@ fun RemovableRow(
     removeLabel: String = stringResource(Res.string.home_row_remove),
     leading: (@Composable () -> Unit)? = null,
     initialFocus: Boolean = false,
+    /** Set: the row (left of ✕) opens the entry's own settings. */
+    onClick: (() -> Unit)? = null,
 ) {
     val colors = LauncherTheme.colors
     androidx.compose.foundation.layout.Row(
@@ -451,9 +453,19 @@ fun RemovableRow(
             leading != null -> leading()
             icon != null -> androidx.compose.material3.Icon(icon, null, tint = colors.accent, modifier = Modifier.size(26.dp))
         }
-        androidx.compose.foundation.layout.Column(Modifier.weight(1f).padding(start = if (leading != null || icon != null) 16.dp else 0.dp, top = 10.dp, bottom = 10.dp)) {
-            Text(title, style = MaterialTheme.typography.titleMedium, color = colors.onSurface)
-            subtitle?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceMuted) }
+        val texts: @Composable () -> Unit = {
+            androidx.compose.foundation.layout.Column(Modifier.padding(start = if (leading != null || icon != null) 16.dp else 0.dp, top = 10.dp, bottom = 10.dp)) {
+                Text(title, style = MaterialTheme.typography.titleMedium, color = colors.onSurface)
+                subtitle?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceMuted) }
+            }
+        }
+        if (onClick != null) {
+            io.github.thecodingdad.gamelodge.ui.components.FocusSurface(
+                onClick = onClick, color = androidx.compose.ui.graphics.Color.Transparent, focusScale = 1f, glow = false,
+                shape = RoundedCornerShape(12.dp), modifier = Modifier.weight(1f).padding(end = 8.dp),
+            ) { texts() }
+        } else {
+            Box(Modifier.weight(1f)) { texts() }
         }
         io.github.thecodingdad.gamelodge.ui.components.FocusSurface(
             onClick = onRemove, shape = androidx.compose.foundation.shape.CircleShape, color = colors.surfaceRaised,

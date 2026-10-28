@@ -124,6 +124,8 @@ fun QuickMenu(
             Column(Modifier.weight(1f).fillMaxHeight()) {
                 var editing by remember(visible) { mutableStateOf(false) }
                 if (platform.hasQuickAccessEditor) platform.QuickAccessEditor(editing) { editing = false }
+                var haEditing by remember(visible) { mutableStateOf(false) }
+                io.github.thecodingdad.gamelodge.ui.screens.ha.HaTileEditor(haEditing) { haEditing = false }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     stringResource(
@@ -141,6 +143,10 @@ fun QuickMenu(
                 )
                 if (tab == QuickMenuTab.QUICK && platform.hasQuickAccessEditor) {
                     EditButton(Modifier.padding(top = 12.dp, end = 14.dp)) { editing = true }
+                }
+                // Home Assistant: its tiles, edited the same way (once signed in).
+                if (tab == QuickMenuTab.HOME_ASSISTANT && c.ha.auth.isLoggedIn) {
+                    EditButton(Modifier.padding(top = 12.dp, end = 14.dp)) { haEditing = true }
                 }
                 }
                 // Each tab its own scroll position and focus start.
