@@ -82,6 +82,9 @@ enum class EntityGroup(val domains: Set<String>, val label: StringResource, val 
 /** Domains that can serve as a host power action (switches with on or off). */
 val actionDomains = setOf("script", "button", "input_button", "switch", "input_boolean", "scene")
 
+/** Domains for game actions: the host power ones plus lights (on with brightness, or off). */
+val gameActionDomains = actionDomains + "light"
+
 /**
  * Picks a Home Assistant entity: search (focused when it opens), kind chips, list. With
  * [switchDefault] set, a switchable entity asks next whether to switch it on or off (preset to
@@ -103,6 +106,7 @@ fun EntityPicker(
     var group by remember(visible) { mutableStateOf<EntityGroup?>(null) }
     var pendingSwitch by remember(visible) { mutableStateOf<HaEntity?>(null) }
     var switchOn by remember(visible) { mutableStateOf(switchDefault ?: true) }
+    var brightness by remember(visible) { mutableStateOf<Int?>(null) }
     val search = remember { FocusRequester() }
     val available = entities.filter { it.domain in domains }
     Modal(visible = visible, onDismiss = onDismiss, title = title, maxWidth = 760.dp, initialFocus = search) {
@@ -116,8 +120,15 @@ fun EntityPicker(
                 label = { stringResource(if (it) Res.string.ha_turn_on else Res.string.ha_turn_off) },
                 onSelect = { switchOn = it }, initialFocus = true,
             )
+            if (pending.domain == "light" && switchOn) {
+                ChoiceRow(
+                    stringResource(Res.string.ha_light_brightness), HaAction.brightnessSteps, brightness,
+                    label = { if (it == null) stringResource(Res.string.ha_light_brightness_keep) else "$it %" },
+                    onSelect = { brightness = it },
+                )
+            }
             ButtonRow {
-                LauncherButton(stringResource(Res.string.ha_pick_apply), primary = true, onClick = { onPick(HaAction.encode(pending.id, switchOn)); onDismiss() })
+                LauncherButton(stringResource(Res.string.ha_pick_apply), primary = true, onClick = { onPick(HaAction.encode(pending.id, switchOn, brightness.takeIf { pending.domain == "light" })); onDismiss() })
                 LauncherButton(stringResource(Res.string.action_cancel), onClick = { pendingSwitch = null })
             }
             return@Modal
@@ -195,8 +206,9 @@ fun actionLabel(action: String?, entities: Map<String, HaEntity>): String? {
     action ?: return null
     val id = HaAction.entity(action)
     val name = entities[id]?.name ?: id
+    val brightness = HaAction.brightness(action)
     return when (HaAction.on(action)) {
-        true -> "$name · ${stringResource(Res.string.ha_turn_on)}"
+        true -> "$name · ${stringResource(Res.string.ha_turn_on)}" + (brightness?.let { " · $it %" } ?: "")
         false -> "$name · ${stringResource(Res.string.ha_turn_off)}"
         null -> name
     }

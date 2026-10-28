@@ -52,11 +52,15 @@ class HaRepository(
         }
     }
 
-    /** Runs a stored action ([HaAction]: entity id, for switches with on or off). */
+    /** Runs a stored action ([HaAction]: entity id, for switches with on or off, for lights with brightness). */
     suspend fun runAction(action: String) = guarded {
         val entityId = HaAction.entity(action)
         if (HaAction.on(action) == false) {
             client.callService("homeassistant", "turn_off", entityId)
+            return@guarded
+        }
+        HaAction.brightness(action)?.let {
+            client.callService("light", "turn_on", entityId, mapOf("brightness_pct" to JsonPrimitive(it)))
             return@guarded
         }
         when (entityId.substringBefore('.')) {

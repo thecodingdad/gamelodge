@@ -421,6 +421,8 @@
     <string name="ha_pick_all">Alle</string>
     <string name="ha_pick_no_match">Keine passende Entität</string>
     <string name="ha_switch_action">Was soll passieren?</string>
+    <string name="ha_light_brightness">Helligkeit</string>
+    <string name="ha_light_brightness_keep">Unverändert</string>
     <string name="ha_turn_on">Einschalten</string>
     <string name="ha_turn_off">Ausschalten</string>
     <string name="ha_pick_apply">Übernehmen</string>

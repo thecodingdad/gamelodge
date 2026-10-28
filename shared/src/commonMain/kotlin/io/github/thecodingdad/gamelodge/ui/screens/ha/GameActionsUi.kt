@@ -133,7 +133,7 @@ private fun GameActionDialog(initial: GameAction?, onSave: (GameAction) -> Unit,
     }
     EntityPicker(
         visible = picking, title = stringResource(Res.string.game_action_entity),
-        entities = entities.values, domains = actionDomains,
+        entities = entities.values, domains = gameActionDomains,
         onPick = { if (it != null) action = it }, onDismiss = { picking = false },
         switchDefault = true,
     )

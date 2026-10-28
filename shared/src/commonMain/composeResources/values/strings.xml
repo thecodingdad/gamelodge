@@ -423,6 +423,8 @@
     <string name="ha_pick_all">All</string>
     <string name="ha_pick_no_match">No matching entity</string>
     <string name="ha_switch_action">What should happen?</string>
+    <string name="ha_light_brightness">Brightness</string>
+    <string name="ha_light_brightness_keep">Keep current</string>
     <string name="ha_turn_on">Switch on</string>
     <string name="ha_turn_off">Switch off</string>
     <string name="ha_pick_apply">Apply</string>
