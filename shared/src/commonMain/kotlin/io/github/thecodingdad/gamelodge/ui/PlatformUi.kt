@@ -20,6 +20,9 @@ interface PlatformUi {
     @Composable
     fun rememberSystemStatus(): SystemStatus
 
+    /** Battery level and charging right now; null without a battery (desktop PC). */
+    fun battery(): Battery? = null
+
     /** Camera notch/hole on the top edge of the window. */
     @Composable
     fun rememberTopCutout(): TopCutout
@@ -174,3 +177,5 @@ interface PlatformUi {
         lateinit var current: PlatformUi
     }
 }
+
+data class Battery(val percent: Int, val charging: Boolean)

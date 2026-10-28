@@ -202,6 +202,10 @@ fun HaSettings(
                 NavRow(host.name, { openHost(host.uuid) }, set, Icons.Filled.Computer)
             }
         }
+        SectionHeader(stringResource(Res.string.mqtt_title))
+        Text(stringResource(Res.string.mqtt_section_intro), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceMuted)
+        MqttRow(settings, update)
+
         Text(stringResource(Res.string.ha_events_help), style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceMuted)
         io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlso(
             io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlsoLink(

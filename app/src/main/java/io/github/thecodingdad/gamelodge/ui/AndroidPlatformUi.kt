@@ -41,6 +41,18 @@ import java.util.UUID
 class AndroidPlatformUi(private val context: Context) : PlatformUi {
     override val localIcon = Icons.Filled.PhoneAndroid
 
+    override fun battery(): io.github.thecodingdad.gamelodge.ui.Battery? {
+        // The sticky broadcast holds the last battery state; no receiver needs to stay registered.
+        val intent = context.registerReceiver(null, android.content.IntentFilter(android.content.Intent.ACTION_BATTERY_CHANGED)) ?: return null
+        if (!intent.getBooleanExtra(android.os.BatteryManager.EXTRA_PRESENT, true)) return null
+        val level = intent.getIntExtra(android.os.BatteryManager.EXTRA_LEVEL, -1)
+        val scale = intent.getIntExtra(android.os.BatteryManager.EXTRA_SCALE, -1)
+        if (level < 0 || scale <= 0) return null
+        val status = intent.getIntExtra(android.os.BatteryManager.EXTRA_STATUS, -1)
+        val charging = status == android.os.BatteryManager.BATTERY_STATUS_CHARGING || status == android.os.BatteryManager.BATTERY_STATUS_FULL
+        return io.github.thecodingdad.gamelodge.ui.Battery(level * 100 / scale, charging)
+    }
+
     @Composable
     override fun rememberSystemStatus(): SystemStatus = io.github.thecodingdad.gamelodge.ui.shell.rememberAndroidSystemStatus()
 

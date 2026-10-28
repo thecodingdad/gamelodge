@@ -647,6 +647,7 @@ fun LauncherApp(
                         keepScreenOn(false)
                     }
                 }
+                LaunchedEffect(idle) { io.github.thecodingdad.gamelodge.ui.shell.ScreensaverControl.active.value = idle }
                 if (idle) {
                     val games by vm.games.collectAsState()
                     io.github.thecodingdad.gamelodge.ui.shell.Screensaver(games, settings.screensaverKenBurns) {

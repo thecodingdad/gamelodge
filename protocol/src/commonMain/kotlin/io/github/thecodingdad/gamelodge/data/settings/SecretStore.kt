@@ -15,6 +15,9 @@ class SecretStore(private val backend: SecretBackend) {
         const val HA_ACCESS_TOKEN = "ha_access_token"
         const val HA_REFRESH_TOKEN = "ha_refresh_token"
         const val HA_TOKEN_EXPIRY = "ha_token_expiry"
+        const val MQTT_PASSWORD = "mqtt_password"
+        /** Id of this install as an MQTT device; "_identity" keeps it out of backups (a restored device gets its own). */
+        const val MQTT_DEVICE_ID = "mqtt_device_identity"
         /** Host web API logins of older versions (removed at start). */
         const val LEGACY_HOST_API_PREFIX = "vibepollo_token_"
         fun wireguardConfig(tunnel: String) = "wg_config_$tunnel"

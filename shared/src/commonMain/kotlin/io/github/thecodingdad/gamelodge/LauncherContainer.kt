@@ -45,6 +45,8 @@ interface LauncherContainer {
     val ha: HaRepository
     val haAuth: HaAuth
     val launcher: LaunchCoordinator
+    /** Status sent to Home Assistant over MQTT (started once at launch). */
+    val mqtt: io.github.thecodingdad.gamelodge.ha.mqtt.MqttBridge
 
     /** Steering the running stream from the quick menu (what the streaming client allows). */
     val streamControls: io.github.thecodingdad.gamelodge.stream.StreamControls

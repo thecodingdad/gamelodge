@@ -124,6 +124,14 @@ data class LauncherSettings(
     val networkCheck: NetworkCheckMode = NetworkCheckMode.OUTSIDE_HOME,
     // Home Assistant (tokens live in SecretStore)
     val haUrl: String = "",
+    /** Status of the launcher sent to Home Assistant over MQTT (password in SecretStore). */
+    val mqttEnabled: Boolean = false,
+    val mqttHost: String = "",
+    val mqttPort: Int = 1883,
+    val mqttTls: Boolean = false,
+    val mqttUser: String = "",
+    /** Name of this device in Home Assistant; empty = the platform's device name. */
+    val mqttDeviceName: String = "",
     // VPN
     /** Connect the VPN when a stream starts and the host isn't reachable (before waking it). */
     val vpnOnStreamStart: Boolean = false,
@@ -275,6 +283,12 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val showHiddenApps = booleanPreferencesKey("show_hidden_apps")
         val networkCheck = stringPreferencesKey("network_check")
         val haUrl = stringPreferencesKey("ha_url")
+        val mqttEnabled = booleanPreferencesKey("mqtt_enabled")
+        val mqttHost = stringPreferencesKey("mqtt_host")
+        val mqttPort = intPreferencesKey("mqtt_port")
+        val mqttTls = booleanPreferencesKey("mqtt_tls")
+        val mqttUser = stringPreferencesKey("mqtt_user")
+        val mqttDeviceName = stringPreferencesKey("mqtt_device_name")
         /** Before [vpnOnStreamStart]: any of its triggers switches the new setting on once. */
         val autoVpnTriggers = stringSetPreferencesKey("auto_vpn_triggers")
         val homeSsids = stringSetPreferencesKey("home_ssids")
@@ -392,6 +406,12 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             showHiddenApps = this[K.showHiddenApps] ?: d.showHiddenApps,
             networkCheck = enumOr(this[K.networkCheck], d.networkCheck),
             haUrl = this[K.haUrl] ?: d.haUrl,
+            mqttEnabled = this[K.mqttEnabled] ?: d.mqttEnabled,
+            mqttHost = this[K.mqttHost] ?: d.mqttHost,
+            mqttPort = this[K.mqttPort] ?: d.mqttPort,
+            mqttTls = this[K.mqttTls] ?: d.mqttTls,
+            mqttUser = this[K.mqttUser] ?: d.mqttUser,
+            mqttDeviceName = this[K.mqttDeviceName] ?: d.mqttDeviceName,
             vpnOnStreamStart = this[K.vpnOnStreamStart] ?: (this[K.autoVpnTriggers]?.isNotEmpty() ?: d.vpnOnStreamStart),
             vpnOnlyOutsideHome = this[K.vpnOnlyOutsideHome] ?: d.vpnOnlyOutsideHome,
             homeNetworks = this[K.homeNetworks] ?: d.homeNetworks,
@@ -493,6 +513,12 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         this[K.showHiddenApps] = s.showHiddenApps
         this[K.networkCheck] = s.networkCheck.name
         this[K.haUrl] = s.haUrl
+        this[K.mqttEnabled] = s.mqttEnabled
+        this[K.mqttHost] = s.mqttHost
+        this[K.mqttPort] = s.mqttPort
+        this[K.mqttTls] = s.mqttTls
+        this[K.mqttUser] = s.mqttUser
+        this[K.mqttDeviceName] = s.mqttDeviceName
         this[K.vpnOnStreamStart] = s.vpnOnStreamStart
         this[K.vpnOnlyOutsideHome] = s.vpnOnlyOutsideHome
         this[K.homeNetworks] = s.homeNetworks

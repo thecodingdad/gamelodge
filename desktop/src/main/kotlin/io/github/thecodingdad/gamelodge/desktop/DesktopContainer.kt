@@ -179,9 +179,11 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
         io.github.thecodingdad.gamelodge.desktop.stream.DesktopStreamControls(desktopHosts, desktopHosts)
     }
 
+    override val mqtt by lazy { io.github.thecodingdad.gamelodge.ha.mqtt.MqttBridge(this) }
+
     override val launcher: LaunchCoordinator by lazy {
         LaunchCoordinator(hosts, hostActions, { hostPower }, { NoAutoSleep }, profiles, playtime, settings, { ha }, scope, DesktopLaunches(
-            pcLibrary, playtime, scope, { launcher.gameActions.ended(); onGameEnded() }, desktopHosts,
+            pcLibrary, playtime, scope, { launcher.ended(); onGameEnded() }, desktopHosts,
             identity = { streamIdentity },
             streamOptions = { entry ->
                 // Face buttons follow the launcher's layout (the game's own, else the default of
@@ -196,7 +198,7 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
             onStreamEnded = {
                 launcher.streamEnded()
                 launcher.restoreProfile()
-                launcher.gameActions.ended()
+                launcher.ended()
                 scope.launch { playtime.finishOpenSession() }
             },
         )).also { it.streamNotices = io.github.thecodingdad.gamelodge.data.companion.StreamNotices(servers, scope) }

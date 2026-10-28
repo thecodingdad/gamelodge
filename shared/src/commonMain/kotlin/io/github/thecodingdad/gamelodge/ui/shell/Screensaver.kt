@@ -49,6 +49,9 @@ import kotlin.random.Random
 object ScreensaverControl {
     internal val requests = kotlinx.coroutines.flow.MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
+    /** The screensaver is showing (reported to Home Assistant). */
+    val active = kotlinx.coroutines.flow.MutableStateFlow(false)
+
     fun show() {
         requests.tryEmit(Unit)
     }

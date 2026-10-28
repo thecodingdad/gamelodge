@@ -161,7 +161,7 @@ class MainActivity : ComponentActivity() {
         vm.touch()
         // Back from a game or stream: close the play session, undo a one-off profile, run the end actions.
         container.launcher.restoreProfile()
-        container.launcher.gameActions.ended()
+        container.launcher.ended()
         lifecycleScope.launch {
             val closed = container.playtime.finishOpenSession()
             container.usage.sync()

@@ -77,6 +77,8 @@ class AppContainer(context: Context) : LauncherContainer {
         io.github.thecodingdad.gamelodge.stream.AndroidStreamControls(launcher, hostActions)
     }
 
+    override val mqtt by lazy { io.github.thecodingdad.gamelodge.ha.mqtt.MqttBridge(this) }
+
     override val launcher: LaunchCoordinator by lazy {
         LaunchCoordinator(
             hosts, hostActions, { hostPower }, { autoSleep }, profiles, playtime, settings, { ha }, scope,

@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import java.util.UUID
@@ -125,6 +126,21 @@ class LaunchCoordinator(
         gameActions.beforeStart(entry.item.id) { left -> _state.value = LaunchState.Working(entry, LaunchStep.RUNNING_ACTIONS, left) }
     }
 
+    /**
+     * What this launcher started last (game, app or stream) and whether it still runs: set by a
+     * successful start, [running] false once [ended] (back in the launcher / game or stream closed).
+     */
+    data class NowPlaying(val entry: LibraryEntry, val target: LaunchTargetEntity, val startedAt: Long, val running: Boolean)
+
+    private val _nowPlaying = MutableStateFlow<NowPlaying?>(null)
+    val nowPlaying: StateFlow<NowPlaying?> = _nowPlaying.asStateFlow()
+
+    /** The game, app or stream started here ended: runs the end actions; safe to call more than once. */
+    fun ended() {
+        gameActions.ended()
+        _nowPlaying.update { it?.copy(running = false) }
+    }
+
     /** The stream this launcher started and that runs right now (until its window closes). */
     data class ActiveStream(val entry: LibraryEntry, val hostUuid: String, val appId: Int)
 
@@ -194,14 +210,19 @@ class LaunchCoordinator(
         // Confirmations (quit the running game, poor network) start again: the choice stays.
         if (action != null || (!quitRunning && !skipNetworkCheck)) oneOffAction = action
         when (target.type) {
-            TargetType.LOCAL -> { runStartActions(entry); finish(entry, platform.launchLocal(entry, target, oneOffAction)) }
+            TargetType.LOCAL -> { runStartActions(entry); finish(entry, target, platform.launchLocal(entry, target, oneOffAction)) }
             TargetType.REMOTE -> launchRemote(entry, target, override, quitRunning, skipNetworkCheck)
-            TargetType.ROM -> { runStartActions(entry); finish(entry, platform.launchRom(entry, target, emulatorKey)) }
+            TargetType.ROM -> { runStartActions(entry); finish(entry, target, platform.launchRom(entry, target, emulatorKey)) }
         }
     }
 
-    private fun finish(entry: LibraryEntry, error: LaunchError?) {
+    private fun finish(entry: LibraryEntry, target: LaunchTargetEntity, error: LaunchError?) {
+        if (error == null) started(entry, target)
         _state.value = if (error == null) LaunchState.Idle else LaunchState.Failed(entry, error)
+    }
+
+    private fun started(entry: LibraryEntry, target: LaunchTargetEntity) {
+        _nowPlaying.value = NowPlaying(entry, target, System.currentTimeMillis(), running = true)
     }
 
     private fun host(uuid: String) = hosts.hosts.value[uuid]
@@ -288,6 +309,7 @@ class LaunchCoordinator(
             // The host's GameLodge learns which start action to run (its runner asks for it).
             streamNotices?.started(hostUuid, resuming, target.appUuid, oneOffAction.takeUnless { resuming })
             platform.startStream(entry, target, host)
+            started(entry, target)
             _state.value = LaunchState.Idle
             scope.launch {
                 ha().fireLauncherEvent(

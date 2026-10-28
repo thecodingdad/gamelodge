@@ -94,6 +94,9 @@ class DesktopPlatformUi(
         return status
     }
 
+    override fun battery(): io.github.thecodingdad.gamelodge.ui.Battery? =
+        readStatus().let { s -> s.batteryPercent?.let { io.github.thecodingdad.gamelodge.ui.Battery(it, s.charging) } }
+
     private fun readStatus(): SystemStatus {
         val power = if (isWindows) runCatching { SystemPowerStatus().also { WindowsPower.kernel.GetSystemPowerStatus(it) } }.getOrNull() else null
         // 128 = no battery, 255 = unknown.

@@ -155,6 +155,7 @@ fun main(args: Array<String>) {
         container.library.start()
         container.servers.start()
         container.metadata.start()
+        container.mqtt.start()
     }
     // Streaming hosts are polled while the window is shown.
     container.scope.launch { windowVisible.collect { if (it) container.hosts.startPolling() else container.hosts.stopPolling() } }

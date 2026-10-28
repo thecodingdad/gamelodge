@@ -43,6 +43,7 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
         container.hosts.bind()
         container.library.start()
         container.emulation.start()
+        container.mqtt.start()
         container.controllerSettings.install(
             launcher = { currentSettings },
             game = { container.launcher.activeStream.value?.entry?.item?.id },
