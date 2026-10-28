@@ -265,13 +265,14 @@
     <string name="setting_animated_mobile">Animierte Bilder über mobile Daten laden</string>
     <string name="setting_animated_mobile_sub">Sie sind groß (oft 10–30 MB pro Bild); sonst nur über WLAN.</string>
     <string name="setting_animated_tiles_sub">Bewegte Cover auf den Kacheln. Erhöht die CPU- und GPU-Last, der Akku leert sich schneller.</string>
-    <string name="setting_animated_tiles_when">Kacheln animieren</string>
     <string name="setting_animated_hero">Animierter Hintergrund</string>
     <string name="setting_animated_hero_sub">Bewegtes Hintergrundbild auf dem Start-Tab und in der Detailansicht. Erhöht die CPU- und GPU-Last, der Akku leert sich schneller.</string>
     <string name="setting_reduce_motion_sub">Fokussierte Elemente werden nicht vergrößert, der Startbildschirm zoomt nicht, Farben wechseln ohne Übergang und der Bildschirmschoner zoomt nur in Stufen.</string>
     <string name="section_screensaver">Bildschirmschoner</string>
     <string name="setting_ken_burns">Ken-Burns-Effekt</string>
     <string name="setting_ken_burns_sub">Die Bilder zoomen langsam und fortlaufend. Kostet dauerhaft Rechenleistung; ohne den Effekt stehen die Bilder still und werden überblendet.</string>
+    <string name="screensaver_show">Bildschirmschoner anzeigen</string>
+    <string name="section_system_bars">Systemleisten</string>
     <string name="metadata_artwork_storage">Auf dem Gerät gespeicherte Bilder: %1$s</string>
     <string name="metadata_auto">Metadaten automatisch abrufen</string>
     <string name="metadata_review_list">Bitte prüfen</string>

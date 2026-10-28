@@ -81,8 +81,8 @@ data class LauncherSettings(
     val landscapeBackfillDone: Boolean = false,
     val squareBackfillDone: Boolean = false,
     val reduceMotion: Boolean = false,
-    /** Animated covers on tiles (and the detail page's cover). */
-    val animatedTiles: Boolean = true,
+    /** Animated covers on tiles (and the detail page's cover); [animatedTilesAlways] says which tiles. */
+    val animatedTiles: Boolean = false,
     /** Animated hero behind the start tab and the detail page. */
     val animatedHero: Boolean = true,
     /** Animated covers on tiles: only the focused one (controller) or all visible ones. */

@@ -45,6 +45,18 @@ import java.text.DateFormat
 import java.util.Date
 import kotlin.random.Random
 
+/** Shows the screensaver right away (Settings › Display); the launcher's frame listens. */
+object ScreensaverControl {
+    internal val requests = kotlinx.coroutines.flow.MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+    fun show() {
+        requests.tryEmit(Unit)
+    }
+
+    /** The input that asked for it (the button's press and release) must not dismiss it at once. */
+    const val GRACE_MS = 800L
+}
+
 /**
  * Idle screen: slow artwork slideshow with clock. Content drifts a little on every slide so
  * nothing stays on the same OLED pixels. Any input only dismisses it. The slides stand still and

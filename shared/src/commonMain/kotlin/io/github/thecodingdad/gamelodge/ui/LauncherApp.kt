@@ -335,7 +335,16 @@ fun LauncherApp(
                 var idle by remember { mutableStateOf(false) }
                 val lastInput by vm.lastInteraction.collectAsState()
                 val screensaverAllowed = io.github.thecodingdad.gamelodge.ui.PlatformUi.current.rememberScreensaverAllowed()
+                // Shown by hand (Settings › Display): the input that asked for it doesn't end it.
+                var shownByHandUntil by remember { androidx.compose.runtime.mutableLongStateOf(0L) }
+                LaunchedEffect(Unit) {
+                    io.github.thecodingdad.gamelodge.ui.shell.ScreensaverControl.requests.collect {
+                        shownByHandUntil = System.currentTimeMillis() + io.github.thecodingdad.gamelodge.ui.shell.ScreensaverControl.GRACE_MS
+                        idle = true
+                    }
+                }
                 LaunchedEffect(lastInput, settings.screensaverMinutes, screensaverAllowed) {
+                    if (System.currentTimeMillis() < shownByHandUntil) return@LaunchedEffect
                     idle = false
                     if (settings.screensaverMinutes <= 0 || !screensaverAllowed) return@LaunchedEffect
                     kotlinx.coroutines.delay(settings.screensaverMinutes * 60_000L)
@@ -637,7 +646,9 @@ fun LauncherApp(
                 }
                 if (idle) {
                     val games by vm.games.collectAsState()
-                    io.github.thecodingdad.gamelodge.ui.shell.Screensaver(games, settings.screensaverKenBurns) { idle = false; vm.touch() }
+                    io.github.thecodingdad.gamelodge.ui.shell.Screensaver(games, settings.screensaverKenBurns) {
+                        if (System.currentTimeMillis() >= shownByHandUntil) { idle = false; vm.touch() }
+                    }
                 }
             }
             }

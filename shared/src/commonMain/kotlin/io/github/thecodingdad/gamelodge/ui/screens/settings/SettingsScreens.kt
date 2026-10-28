@@ -543,17 +543,25 @@ fun ThemeSettings(
             val wasOn = it.animatedArtwork
             it.copy(animatedTiles = tiles, animatedHero = hero, animatedBackfillDone = it.animatedBackfillDone && (wasOn || !(tiles || hero)))
         }
-        SwitchRow(
-            stringResource(Res.string.setting_animated_tiles), settings.animatedTiles, { v -> animated(v, settings.animatedHero) },
+        // Off, on the focused tile, or on every tile shown.
+        ChoiceRow(
+            stringResource(Res.string.setting_animated_tiles), listOf(0, 1, 2),
+            if (!settings.animatedTiles) 0 else if (settings.animatedTilesAlways) 2 else 1,
+            label = {
+                stringResource(
+                    when (it) {
+                        0 -> Res.string.off
+                        1 -> Res.string.setting_animated_tiles_focus
+                        else -> Res.string.setting_animated_tiles_always
+                    },
+                )
+            },
+            onSelect = { v ->
+                animated(v > 0, settings.animatedHero)
+                if (v > 0) update { it.copy(animatedTilesAlways = v == 2) }
+            },
             subtitle = stringResource(Res.string.setting_animated_tiles_sub),
         )
-        if (settings.animatedTiles) {
-            ChoiceRow(
-                stringResource(Res.string.setting_animated_tiles_when), listOf(false, true), settings.animatedTilesAlways,
-                label = { stringResource(if (it) Res.string.setting_animated_tiles_always else Res.string.setting_animated_tiles_focus) },
-                onSelect = { v -> update { it.copy(animatedTilesAlways = v) } },
-            )
-        }
         SwitchRow(
             stringResource(Res.string.setting_animated_hero), settings.animatedHero, { v -> animated(settings.animatedTiles, v) },
             subtitle = stringResource(Res.string.setting_animated_hero_sub),
@@ -585,23 +593,28 @@ fun DisplaySettings(
     // Navigation bar, TV output and mobile data only exist on a handheld.
     val device = io.github.thecodingdad.gamelodge.ui.PlatformUi.current.deviceDisplayOptions
     SettingsPage(stringResource(Res.string.settings_display)) {
+        if (device) {
+            SectionHeader(stringResource(Res.string.section_system_bars))
+            SwitchRow(
+                stringResource(Res.string.setting_hide_nav_bar), settings.hideNavigationBar, { v -> update { it.copy(hideNavigationBar = v) } },
+                subtitle = stringResource(Res.string.setting_hide_nav_bar_sub), initialFocus = true,
+            )
+        }
         SectionHeader(stringResource(Res.string.section_screensaver))
         ChoiceRow(
             stringResource(Res.string.setting_screensaver), listOf(0, 2, 5, 10, 20), settings.screensaverMinutes,
             label = { if (it == 0) stringResource(Res.string.off) else stringResource(Res.string.minutes_short, it) },
             onSelect = { v -> update { it.copy(screensaverMinutes = v) } },
-            initialFocus = true,
+            initialFocus = !device,
         )
         if (settings.screensaverMinutes > 0) {
             SwitchRow(
                 stringResource(Res.string.setting_ken_burns), settings.screensaverKenBurns, { v -> update { it.copy(screensaverKenBurns = v) } },
                 subtitle = stringResource(Res.string.setting_ken_burns_sub),
             )
-        }
-        if (device) {
-            SwitchRow(
-                stringResource(Res.string.setting_hide_nav_bar), settings.hideNavigationBar, { v -> update { it.copy(hideNavigationBar = v) } },
-                subtitle = stringResource(Res.string.setting_hide_nav_bar_sub),
+            io.github.thecodingdad.gamelodge.ui.components.LauncherButton(
+                stringResource(Res.string.screensaver_show), { io.github.thecodingdad.gamelodge.ui.shell.ScreensaverControl.show() },
+                icon = androidx.compose.material.icons.Icons.Filled.Visibility,
             )
         }
         if (!device) return@SettingsPage
