@@ -492,8 +492,8 @@ internal object FrameMemory {
 }
 
 /**
- * Animations pause while nobody looks: the window isn't active, or nothing was used for a while
- * (set by the window). Paused, each shows its current frame and frees its memory.
+ * Animations pause while nobody looks: nothing was used for a while (set by the window). Paused,
+ * each shows its current frame and frees its memory.
  */
 object AnimationPlayback {
     val paused = androidx.compose.runtime.mutableStateOf(false)

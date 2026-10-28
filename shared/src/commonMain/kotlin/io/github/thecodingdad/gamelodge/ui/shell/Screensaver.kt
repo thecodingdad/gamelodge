@@ -94,15 +94,17 @@ fun Screensaver(games: List<LibraryEntry>, onDismiss: () -> Unit) {
             if (e != null) {
                 ArtworkImage(
                     e.heroModel(), e.item.title,
+                    // Only scaled in its layer: transparency there would draw it offscreen first, every frame.
                     Modifier.fillMaxSize().graphicsLayer {
                         scaleX = zoom.value
                         scaleY = zoom.value
-                        alpha = 0.7f
                     },
                     ContentScale.Crop, showTitleOnPlaceholder = false,
                 )
             }
         }
+        // Dimmed by a plain black veil (as the 70 % opacity did), and darker towards the clock.
+        Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f)))
         Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.5f to Color.Transparent, 1f to Color.Black)))
         Column(
             Modifier

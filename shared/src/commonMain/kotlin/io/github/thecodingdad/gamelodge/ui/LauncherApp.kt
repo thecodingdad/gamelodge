@@ -31,6 +31,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.alpha
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Home
@@ -311,12 +312,27 @@ fun LauncherApp(
                 io.github.thecodingdad.gamelodge.ui.components.LocalShowHintBar provides (settings.showHintBar && hintControllers.isNotEmpty()),
             ) {
             Box(Modifier.fillMaxSize().background(LauncherTheme.colors.background)) {
+                // Screensaver after the configured idle time (also protects the OLED panel).
+                var idle by remember { mutableStateOf(false) }
+                val lastInput by vm.lastInteraction.collectAsState()
+                val screensaverAllowed = io.github.thecodingdad.gamelodge.ui.PlatformUi.current.rememberScreensaverAllowed()
+                LaunchedEffect(lastInput, settings.screensaverMinutes, screensaverAllowed) {
+                    idle = false
+                    if (settings.screensaverMinutes <= 0 || !screensaverAllowed) return@LaunchedEffect
+                    kotlinx.coroutines.delay(settings.screensaverMinutes * 60_000L)
+                    idle = true
+                }
                 // The launcher behind any popup or panel is blurred (Android 12+; older versions just dim).
                 val backdropActive = io.github.thecodingdad.gamelodge.ui.components.OverlayHost.anyVisible
                 val backdropBlur by androidx.compose.animation.core.animateDpAsState(if (backdropActive) 14.dp else 0.dp, label = "backdropBlur")
                 val currentEntry by nav.currentBackStackEntryAsState()
                 CompositionLocalProvider(io.github.thecodingdad.gamelodge.ui.shell.LocalCurrentNavEntry provides currentEntry) {
-                NavHost(nav, startDestination = Routes.MAIN, modifier = io.github.thecodingdad.gamelodge.ui.PlatformUi.current.backdropBlur(backdropActive, backdropBlur)) {
+                NavHost(
+                    nav, startDestination = Routes.MAIN,
+                    modifier = io.github.thecodingdad.gamelodge.ui.PlatformUi.current.backdropBlur(backdropActive, backdropBlur)
+                        // Hidden behind the (opaque) screensaver: not drawn at all, every frame of it would draw it too.
+                        .then(if (idle) Modifier.drawWithContent { } else Modifier),
+                ) {
                     composable(Routes.MAIN) {
                         MainShell(
                             vm, nav, openStats = { nav.navigate(Routes.STATS) },
@@ -590,16 +606,6 @@ fun LauncherApp(
                 io.github.thecodingdad.gamelodge.ui.components.OverlayOutlet()
                 io.github.thecodingdad.gamelodge.ui.shell.NoticeHost()
 
-                // Screensaver after the configured idle time (also protects the OLED panel).
-                var idle by remember { mutableStateOf(false) }
-                val lastInput by vm.lastInteraction.collectAsState()
-                val screensaverAllowed = io.github.thecodingdad.gamelodge.ui.PlatformUi.current.rememberScreensaverAllowed()
-                LaunchedEffect(lastInput, settings.screensaverMinutes, screensaverAllowed) {
-                    idle = false
-                    if (settings.screensaverMinutes <= 0 || !screensaverAllowed) return@LaunchedEffect
-                    kotlinx.coroutines.delay(settings.screensaverMinutes * 60_000L)
-                    idle = true
-                }
                 val keepScreenOn = io.github.thecodingdad.gamelodge.ui.PlatformUi.current.rememberScreenKeeper()
                 // The system's own screen timeout would switch the display off before the screensaver:
                 // keep it on while the launcher is visible, and let it sleep 10 min into the screensaver.
