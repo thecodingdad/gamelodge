@@ -47,10 +47,13 @@ import kotlin.random.Random
 
 /**
  * Idle screen: slow artwork slideshow with clock. Content drifts a little on every slide so
- * nothing stays on the same OLED pixels. Any input only dismisses it.
+ * nothing stays on the same OLED pixels. Any input only dismisses it. The slides stand still and
+ * cross-fade; with [kenBurns] they zoom slowly all the time (in steps of ~100 ms with reduced
+ * motion), which redraws the screen all the time.
  */
 @Composable
-fun Screensaver(games: List<LibraryEntry>, onDismiss: () -> Unit) {
+fun Screensaver(games: List<LibraryEntry>, kenBurns: Boolean, onDismiss: () -> Unit) {
+    val reduceMotion = io.github.thecodingdad.gamelodge.ui.theme.LocalReduceMotion.current
     val focus = remember { FocusRequester() }
     val withArt = remember(games) { games.filter { it.heroModel() != null }.shuffled() }
     var index by remember { mutableIntStateOf(0) }
@@ -59,10 +62,17 @@ fun Screensaver(games: List<LibraryEntry>, onDismiss: () -> Unit) {
     var now by remember { mutableStateOf(System.currentTimeMillis()) }
 
     LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
-    LaunchedEffect(withArt) {
+    LaunchedEffect(withArt, kenBurns, reduceMotion) {
         while (true) {
             zoom.snapTo(1f)
-            zoom.animateTo(1.12f, tween(SLIDE_MS, easing = LinearEasing))
+            when {
+                !kenBurns -> delay(SLIDE_MS.toLong())
+                reduceMotion -> for (step in 1..SLIDE_MS / STEP_MS) {
+                    delay(STEP_MS.toLong())
+                    zoom.snapTo(1f + ZOOM * step * STEP_MS / SLIDE_MS)
+                }
+                else -> zoom.animateTo(1f + ZOOM, tween(SLIDE_MS, easing = LinearEasing))
+            }
             index = (index + 1) % withArt.size.coerceAtLeast(1)
             drift = Random.nextInt(-24, 25) to Random.nextInt(-16, 17)
         }
@@ -120,3 +130,6 @@ fun Screensaver(games: List<LibraryEntry>, onDismiss: () -> Unit) {
 }
 
 private const val SLIDE_MS = 12_000
+/** How far a slide zooms in (Ken Burns), and the step with reduced motion. */
+private const val ZOOM = 0.12f
+private const val STEP_MS = 100

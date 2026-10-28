@@ -101,6 +101,10 @@ class LauncherViewModel(private val c: LauncherContainer) : ViewModel() {
     val allEntries: StateFlow<List<LibraryEntry>> =
         c.library.allEntries.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
+    /** The library has been read once: until then "empty" only means "not loaded yet". */
+    val libraryLoaded: StateFlow<Boolean> =
+        c.library.allEntries.map { true }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
     fun sessions(itemId: String) = c.database.sessionDao().observeForItem(itemId)
 
     val finishedSessions: StateFlow<List<PlaySessionEntity>> =

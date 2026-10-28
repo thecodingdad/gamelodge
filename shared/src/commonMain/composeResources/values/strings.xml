@@ -181,7 +181,6 @@
     <string name="size_small">Small</string>
     <string name="size_medium">Medium</string>
     <string name="size_large">Large</string>
-    <string name="setting_animated_artwork">Animated artwork</string>
     <string name="setting_reduce_motion">Reduce motion</string>
     <string name="setting_screensaver">Screensaver after</string>
 
@@ -267,6 +266,14 @@
     <string name="setting_animated_tiles_always">Always</string>
     <string name="setting_animated_mobile">Load animated images over mobile data</string>
     <string name="setting_animated_mobile_sub">They are large (often 10–30 MB each); otherwise only over Wi-Fi.</string>
+    <string name="setting_animated_tiles_sub">Moving covers on the tiles. Raises CPU and GPU load, the battery drains faster.</string>
+    <string name="setting_animated_tiles_when">Animate tiles</string>
+    <string name="setting_animated_hero">Animated background</string>
+    <string name="setting_animated_hero_sub">Moving background image on the start tab and the detail page. Raises CPU and GPU load, the battery drains faster.</string>
+    <string name="setting_reduce_motion_sub">Focused elements don't grow, the start screen doesn't zoom, colours change without a transition and the screensaver zooms only in steps.</string>
+    <string name="section_screensaver">Screensaver</string>
+    <string name="setting_ken_burns">Ken Burns effect</string>
+    <string name="setting_ken_burns_sub">The pictures zoom slowly and continuously. Costs processing power all the time; without it they stand still and cross-fade.</string>
     <string name="metadata_artwork_storage">Artwork stored on this device: %1$s</string>
     <string name="metadata_auto">Fetch metadata automatically</string>
     <string name="metadata_review_list">Needs review</string>
@@ -303,7 +310,6 @@
     <string name="profile_delete">Delete</string>
     <string name="profile_essentials">Most important</string>
     <string name="profile_advanced">More settings</string>
-    <string name="profile_advanced_sub">Rarely changed, grouped by topic</string>
     <string name="launcher_intro">Use GameLodge as your home screen. You can switch back at any time; the app keeps working as a normal app too.</string>
     <string name="launcher_enable">Use as home screen</string>
     <string name="launcher_enable_sub">Shows whether the launcher is the default home app; turning it on opens Android's choice</string>

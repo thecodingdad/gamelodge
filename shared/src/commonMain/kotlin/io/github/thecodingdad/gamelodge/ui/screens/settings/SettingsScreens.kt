@@ -405,8 +405,11 @@ fun StartTabRow(initialFocus: Boolean = false) {
     val repo = io.github.thecodingdad.gamelodge.LocalContainer.current.settings
     val settings by repo.settings.collectAsState(LauncherSettings())
     val scope = androidx.compose.runtime.rememberCoroutineScope()
+    // Apps only while there are apps (the tab is hidden otherwise).
+    val appsShown = io.github.thecodingdad.gamelodge.ui.MainTab.APPS !in io.github.thecodingdad.gamelodge.ui.LocalHiddenTabs.current
+    val startTabs = StartTab.entries.filter { it != StartTab.APPS || appsShown }
     ChoiceRow(
-        stringResource(Res.string.setting_start_tab), StartTab.entries, settings.startTab,
+        stringResource(Res.string.setting_start_tab), startTabs, settings.startTab.takeIf { it in startTabs } ?: StartTab.HOME,
         label = {
             stringResource(
                 when (it) {
@@ -535,22 +538,36 @@ fun ThemeSettings(
         )
 
         SectionHeader(stringResource(Res.string.section_motion))
-        // Switched on again: games matched meanwhile get their animated artwork looked up.
-        SwitchRow(stringResource(Res.string.setting_animated_artwork), settings.animatedArtwork, { v -> update { it.copy(animatedArtwork = v, animatedBackfillDone = it.animatedBackfillDone && v) } })
-        if (settings.animatedArtwork) {
+        // Switched on again (from neither): games matched meanwhile get their animated artwork looked up.
+        fun animated(tiles: Boolean, hero: Boolean) = update {
+            val wasOn = it.animatedArtwork
+            it.copy(animatedTiles = tiles, animatedHero = hero, animatedBackfillDone = it.animatedBackfillDone && (wasOn || !(tiles || hero)))
+        }
+        SwitchRow(
+            stringResource(Res.string.setting_animated_tiles), settings.animatedTiles, { v -> animated(v, settings.animatedHero) },
+            subtitle = stringResource(Res.string.setting_animated_tiles_sub),
+        )
+        if (settings.animatedTiles) {
             ChoiceRow(
-                stringResource(Res.string.setting_animated_tiles), listOf(false, true), settings.animatedTilesAlways,
+                stringResource(Res.string.setting_animated_tiles_when), listOf(false, true), settings.animatedTilesAlways,
                 label = { stringResource(if (it) Res.string.setting_animated_tiles_always else Res.string.setting_animated_tiles_focus) },
                 onSelect = { v -> update { it.copy(animatedTilesAlways = v) } },
             )
-            if (device) {
-                SwitchRow(
-                    stringResource(Res.string.setting_animated_mobile), settings.animatedOnMobileData, { v -> update { it.copy(animatedOnMobileData = v) } },
-                    subtitle = stringResource(Res.string.setting_animated_mobile_sub),
-                )
-            }
         }
-        SwitchRow(stringResource(Res.string.setting_reduce_motion), settings.reduceMotion, { v -> update { it.copy(reduceMotion = v) } })
+        SwitchRow(
+            stringResource(Res.string.setting_animated_hero), settings.animatedHero, { v -> animated(settings.animatedTiles, v) },
+            subtitle = stringResource(Res.string.setting_animated_hero_sub),
+        )
+        if (settings.animatedArtwork && device) {
+            SwitchRow(
+                stringResource(Res.string.setting_animated_mobile), settings.animatedOnMobileData, { v -> update { it.copy(animatedOnMobileData = v) } },
+                subtitle = stringResource(Res.string.setting_animated_mobile_sub),
+            )
+        }
+        SwitchRow(
+            stringResource(Res.string.setting_reduce_motion), settings.reduceMotion, { v -> update { it.copy(reduceMotion = v) } },
+            subtitle = stringResource(Res.string.setting_reduce_motion_sub),
+        )
         SliderRow(
             stringResource(Res.string.setting_ui_scale), settings.uiScale, 60..130, 5,
             { v -> update { it.copy(uiScale = v) } }, { "$it %" },
@@ -568,12 +585,19 @@ fun DisplaySettings(
     // Navigation bar, TV output and mobile data only exist on a handheld.
     val device = io.github.thecodingdad.gamelodge.ui.PlatformUi.current.deviceDisplayOptions
     SettingsPage(stringResource(Res.string.settings_display)) {
+        SectionHeader(stringResource(Res.string.section_screensaver))
         ChoiceRow(
             stringResource(Res.string.setting_screensaver), listOf(0, 2, 5, 10, 20), settings.screensaverMinutes,
             label = { if (it == 0) stringResource(Res.string.off) else stringResource(Res.string.minutes_short, it) },
             onSelect = { v -> update { it.copy(screensaverMinutes = v) } },
             initialFocus = true,
         )
+        if (settings.screensaverMinutes > 0) {
+            SwitchRow(
+                stringResource(Res.string.setting_ken_burns), settings.screensaverKenBurns, { v -> update { it.copy(screensaverKenBurns = v) } },
+                subtitle = stringResource(Res.string.setting_ken_burns_sub),
+            )
+        }
         if (device) {
             SwitchRow(
                 stringResource(Res.string.setting_hide_nav_bar), settings.hideNavigationBar, { v -> update { it.copy(hideNavigationBar = v) } },

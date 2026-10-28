@@ -7,8 +7,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -31,6 +29,8 @@ import io.github.thecodingdad.gamelodge.ui.components.ButtonHint
 import io.github.thecodingdad.gamelodge.ui.components.HoldToConfirmButton
 import io.github.thecodingdad.gamelodge.ui.components.LauncherButton
 import io.github.thecodingdad.gamelodge.ui.components.LocalKeyboardController
+import io.github.thecodingdad.gamelodge.ui.components.controllerScroll
+import io.github.thecodingdad.gamelodge.ui.components.popupHeightIn
 import io.github.thecodingdad.gamelodge.ui.input.PadAction
 import io.github.thecodingdad.gamelodge.ui.input.PadButton
 import io.github.thecodingdad.gamelodge.ui.screens.settings.ChoiceRow
@@ -113,20 +113,26 @@ fun ProfileEditor(editing: ProfileEditing, uuid: UUID?, name: String, onDeleted:
         }
         SectionHeader(stringResource(Res.string.profile_essentials))
         essentials.forEachIndexed { i, option -> OptionRow(option, store, revision, i == 0 && uuid == null, editing) { revision++ } }
-        // Everything else is rarely changed: folded away, grouped by topic.
+        // Everything else is rarely changed: one popup per topic (the list in one piece was too long).
         val groups = schema.mapNotNull { category ->
             category.options.filter { it.key !in editing.essentialKeys }.takeIf { it.isNotEmpty() }?.let { category.title to it }
         }
         if (groups.isNotEmpty()) {
-            var advanced by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(false) }
-            io.github.thecodingdad.gamelodge.ui.screens.settings.NavRow(
-                stringResource(Res.string.profile_advanced), { advanced = !advanced },
-                subtitle = stringResource(Res.string.profile_advanced_sub),
-                icon = if (advanced) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
-            )
-            if (advanced) groups.forEach { (title, options) ->
-                SectionHeader(title)
-                options.forEach { option -> OptionRow(option, store, revision, false, editing) { revision++ } }
+            SectionHeader(stringResource(Res.string.profile_advanced))
+            var open by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf<String?>(null) }
+            groups.forEach { (title, options) ->
+                NavRow(title, { open = title }, subtitle = options.take(3).joinToString(", ") { it.title } + if (options.size > 3) " …" else "")
+            }
+            val shown = groups.firstOrNull { it.first == open }
+            io.github.thecodingdad.gamelodge.ui.components.Modal(
+                visible = shown != null, onDismiss = { open = null }, title = shown?.first,
+            ) {
+                androidx.compose.foundation.layout.Column(
+                    Modifier.popupHeightIn(560.dp).controllerScroll(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    shown?.second?.forEachIndexed { i, option -> OptionRow(option, store, revision, i == 0, editing) { revision++ } }
+                }
             }
         }
     }

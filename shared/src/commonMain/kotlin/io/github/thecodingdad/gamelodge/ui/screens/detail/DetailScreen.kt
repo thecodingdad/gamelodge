@@ -74,7 +74,9 @@ val LocalDetailTopInset = androidx.compose.runtime.compositionLocalOf { 0.dp }
 fun DetailScreen(
     entry: LibraryEntry,
     sessions: List<PlaySessionEntity>,
-    animatedArtwork: Boolean,
+    /** Animated cover / hero (each its own setting). */
+    animatedCover: Boolean,
+    animatedHero: Boolean,
     onFavorite: (Boolean) -> Unit,
     onPlatform: () -> Unit = {},
     profiles: List<io.github.thecodingdad.gamelodge.stream.StreamProfile> = emptyList(),
@@ -131,7 +133,7 @@ fun DetailScreen(
     )
 
     Box(Modifier.fillMaxSize()) {
-        io.github.thecodingdad.gamelodge.ui.components.HeroImage(entry, Modifier.fillMaxSize(), animated = animatedArtwork)
+        io.github.thecodingdad.gamelodge.ui.components.HeroImage(entry, Modifier.fillMaxSize(), animated = animatedHero)
         val bg = colors.background
         Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(0f to bg, 0.5f to bg.copy(alpha = 0.85f), 1f to bg.copy(alpha = 0.25f))))
         Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.5f to Color.Transparent, 1f to bg)))
@@ -216,7 +218,7 @@ fun DetailScreen(
             ) {
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.Bottom) {
                     io.github.thecodingdad.gamelodge.ui.components.CoverImage(
-                        entry, Modifier.width(150.dp).aspectRatio(2f / 3f).clip(RoundedCornerShape(14.dp)), animated = animatedArtwork,
+                        entry, Modifier.width(150.dp).aspectRatio(2f / 3f).clip(RoundedCornerShape(14.dp)), animated = animatedCover,
                     )
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         if (entry.item.logoUrl != null) {
@@ -250,7 +252,7 @@ fun DetailScreen(
             verticalAlignment = if (roomy) Alignment.CenterVertically else Alignment.Top,
         ) {
             io.github.thecodingdad.gamelodge.ui.components.CoverImage(
-                entry, Modifier.width(coverWidth).aspectRatio(2f / 3f).clip(RoundedCornerShape(if (roomy) 22.dp else 16.dp)), animated = animatedArtwork,
+                entry, Modifier.width(coverWidth).aspectRatio(2f / 3f).clip(RoundedCornerShape(if (roomy) 22.dp else 16.dp)), animated = animatedCover,
             )
             Column(
                 Modifier.width(textWidth).controllerScroll(),

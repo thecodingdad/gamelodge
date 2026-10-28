@@ -148,6 +148,8 @@ fun AppsScreen(
         focusRequests = filterFocusRequests,
     )
     if (sorted.isEmpty()) {
+        // Still loading: nothing, not "no apps".
+        if (!io.github.thecodingdad.gamelodge.ui.screens.library.LocalLibraryLoaded.current) return@Column
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(stringResource(if (apps.isEmpty()) Res.string.apps_empty else Res.string.library_empty_filter), color = LauncherTheme.colors.onSurfaceMuted, style = MaterialTheme.typography.titleMedium)
         }

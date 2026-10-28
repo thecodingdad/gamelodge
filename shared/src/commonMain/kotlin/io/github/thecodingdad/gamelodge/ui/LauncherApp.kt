@@ -139,6 +139,19 @@ private object Routes {
     fun settings(page: SettingsPageId) = "settings/${page.name}"
 }
 
+/** Main tabs not shown right now (Apps while there are none); their numbers stay the same. */
+val LocalHiddenTabs = androidx.compose.runtime.compositionLocalOf { emptySet<MainTab>() }
+
+/** The tab [delta] steps from [current] (by ordinal), skipping hidden ones. */
+fun stepTab(current: Int, delta: Int, hidden: Set<MainTab>): Int {
+    var i = current
+    repeat(MainTab.entries.size) {
+        i = (i + delta).mod(MainTab.entries.size)
+        if (MainTab.entries[i] !in hidden) return i
+    }
+    return current
+}
+
 enum class MainTab(val title: org.jetbrains.compose.resources.StringResource, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
     HOME(Res.string.tab_home, androidx.compose.material.icons.Icons.Filled.Home),
     LIBRARY(Res.string.tab_library, androidx.compose.material.icons.Icons.Filled.VideoLibrary),
@@ -276,6 +289,10 @@ fun LauncherApp(
         androidx.compose.ui.unit.Density(fitted, baseDensity.fontScale)
     }
 
+    val libraryLoaded by vm.libraryLoaded.collectAsState()
+    // No apps (once the library is read): no Apps tab.
+    val appsForTabs by vm.apps.collectAsState()
+    val hiddenTabs = if (libraryLoaded && appsForTabs.isEmpty()) setOf(MainTab.APPS) else emptySet()
     // Running games and apps (marked on their tiles, Y held quits them).
     val runningForTiles by vm.runningSessions.collectAsState()
     val runningItems = io.github.thecodingdad.gamelodge.ui.components.rememberRunningItems(runningForTiles)
@@ -283,6 +300,8 @@ fun LauncherApp(
     LauncherTheme(settings) {
         CompositionLocalProvider(
             io.github.thecodingdad.gamelodge.ui.components.LocalRunningItems provides runningItems,
+            io.github.thecodingdad.gamelodge.ui.screens.library.LocalLibraryLoaded provides libraryLoaded,
+            LocalHiddenTabs provides hiddenTabs,
             io.github.thecodingdad.gamelodge.ui.components.LocalQuitHold provides quitHold,
             androidx.compose.ui.platform.LocalDensity provides scaledDensity,
             LocalInputDispatcher provides dispatcher,
@@ -370,7 +389,7 @@ fun LauncherApp(
                                 val runningSession = detailRunning.firstOrNull { it.entry?.item?.id == e.item.id }
                                 val detailQuitting by io.github.thecodingdad.gamelodge.stream.Quitting.keys.collectAsState()
                                 DetailScreen(
-                                    e, sessions, settings.animatedArtwork, onFavorite = { vm.setFavorite(e, it) }, onPlatform = { platformFor = e },
+                                    e, sessions, settings.animatedTiles, settings.animatedHero, onFavorite = { vm.setFavorite(e, it) }, onPlatform = { platformFor = e },
                                     running = runningSession != null,
                                     onResume = {
                                         val s = runningSession ?: return@DetailScreen
@@ -618,7 +637,7 @@ fun LauncherApp(
                 }
                 if (idle) {
                     val games by vm.games.collectAsState()
-                    io.github.thecodingdad.gamelodge.ui.shell.Screensaver(games) { idle = false; vm.touch() }
+                    io.github.thecodingdad.gamelodge.ui.shell.Screensaver(games, settings.screensaverKenBurns) { idle = false; vm.touch() }
                 }
             }
             }
@@ -674,8 +693,11 @@ private fun MainShell(
     val tabStates = androidx.compose.runtime.saveable.rememberSaveableStateHolder()
     val controllers = io.github.thecodingdad.gamelodge.ui.screens.settings.rememberControllers()
 
-    PadAction(PadButton.L1) { tab = (tab - 1).mod(tabs.size) }
-    PadAction(PadButton.R1) { tab = (tab + 1).mod(tabs.size) }
+    val hidden = LocalHiddenTabs.current
+    PadAction(PadButton.L1) { tab = stepTab(tab, -1, hidden) }
+    PadAction(PadButton.R1) { tab = stepTab(tab, 1, hidden) }
+    // A tab that went away (the last app removed, or the start tab while there are no apps): home.
+    LaunchedEffect(hidden, tab) { if (MainTab.entries[tab] in hidden) tab = MainTab.HOME.ordinal }
     // B: library/apps move focus to their filters (handled there); settings ignore it; home only
     // swallows it in launcher mode (as a normal app, B on home leaves the app).
     BackHandler(enabled = tabs[tab] == MainTab.SETTINGS || (tabs[tab] == MainTab.HOME && settings.launcherMode)) {}
@@ -748,7 +770,8 @@ private fun MainShell(
                             onFocusKey = { vm.focusKeys[MainTab.HOME.name] = it },
                             onAtStart = { vm.homeAtStart = it },
                             onFocusedEntry = { homeFocused = it },
-                            animatedArtwork = settings.animatedArtwork,
+                            animatedTiles = settings.animatedTiles,
+                            animatedHero = settings.animatedHero,
                             layout = settings.homeLayout,
                         )
                         val quitHint = io.github.thecodingdad.gamelodge.ui.components.quitHoldHint(homeFocused)
@@ -760,7 +783,8 @@ private fun MainShell(
                                 ButtonHint(PadButton.L1, stringResource(Res.string.hint_tabs), secondButton = PadButton.R1),
                             ),
                         )
-                        val empty: @Composable () -> Unit = { io.github.thecodingdad.gamelodge.ui.screens.library.EmptyLibrary() }
+                        // "Empty" only for a library without any entry (not while rows are still being put together).
+                        val empty: @Composable () -> Unit = { if (allEntries.isEmpty()) io.github.thecodingdad.gamelodge.ui.screens.library.EmptyLibrary() }
                         HeroHome(
                             rows, callbacks, homeFilters,
                             haRow = if (settings.showHaRowOnHome && io.github.thecodingdad.gamelodge.LocalContainer.current.ha.auth.isLoggedIn) ({ HaHomeRow() }) else null,
@@ -769,7 +793,7 @@ private fun MainShell(
                         )
                     }
                     MainTab.LIBRARY -> LibraryScreen(
-                        allEntries, libraryFilters, settings.animatedArtwork, vm.focusKeys[MainTab.LIBRARY.name], openStats,
+                        allEntries, libraryFilters, settings.animatedTiles, vm.focusKeys[MainTab.LIBRARY.name], openStats,
                         openFilterSettings = { nav.navigate(Routes.settings(SettingsPageId.FILTERS)) },
                         layout = settings.libraryLayout,
                     ) { vm.focusKeys[MainTab.LIBRARY.name] = it }
@@ -896,8 +920,9 @@ private fun ShellTopBar(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 modifier = Modifier.weight(1f).horizontalScroll(androidx.compose.foundation.rememberScrollState()),
             ) {
+                val hidden = LocalHiddenTabs.current
                 MainTab.entries.forEachIndexed { index, t ->
-                    TabChip(stringResource(t.title), selected = index == selected, onClick = { onSelect(index) })
+                    if (t !in hidden) TabChip(stringResource(t.title), selected = index == selected, onClick = { onSelect(index) })
                 }
             }
             status(false, false)
@@ -981,8 +1006,9 @@ private fun SubpageFrame(
     val controllers = io.github.thecodingdad.gamelodge.ui.screens.settings.rememberControllers()
     val compact = io.github.thecodingdad.gamelodge.ui.components.LocalCompactWidth.current
     fun openTab(index: Int) = openMainTab(vm, nav, MainTab.entries[index])
-    PadAction(PadButton.L1) { openTab((tab.ordinal - 1).mod(MainTab.entries.size)) }
-    PadAction(PadButton.R1) { openTab((tab.ordinal + 1).mod(MainTab.entries.size)) }
+    val hidden = LocalHiddenTabs.current
+    PadAction(PadButton.L1) { openTab(stepTab(tab.ordinal, -1, hidden)) }
+    PadAction(PadButton.R1) { openTab(stepTab(tab.ordinal, 1, hidden)) }
     Column(Modifier.fillMaxSize().statusBarsPadding()) {
         ShellTopBar(
             selected = tab.ordinal, onSelect = ::openTab, hosts = hostsMap.values.sortedBy { it.name },
@@ -1020,7 +1046,9 @@ private fun BottomNavBar(tabs: List<MainTab>, selected: Int, onSelect: (Int) -> 
         modifier.fillMaxWidth().background(colors.surface).navigationBarsPadding().padding(horizontal = 8.dp, vertical = 6.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
     ) {
+        val hidden = LocalHiddenTabs.current
         tabs.forEachIndexed { index, t ->
+            if (t in hidden) return@forEachIndexed
             val active = index == selected
             FocusSurface(
                 onClick = { onSelect(index) },

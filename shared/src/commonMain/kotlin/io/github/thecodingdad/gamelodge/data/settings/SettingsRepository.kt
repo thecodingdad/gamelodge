@@ -81,7 +81,10 @@ data class LauncherSettings(
     val landscapeBackfillDone: Boolean = false,
     val squareBackfillDone: Boolean = false,
     val reduceMotion: Boolean = false,
-    val animatedArtwork: Boolean = true,
+    /** Animated covers on tiles (and the detail page's cover). */
+    val animatedTiles: Boolean = true,
+    /** Animated hero behind the start tab and the detail page. */
+    val animatedHero: Boolean = true,
     /** Animated covers on tiles: only the focused one (controller) or all visible ones. */
     val animatedTilesAlways: Boolean = false,
     /** Animated artwork is large: over metered connections (mobile data) only when allowed. */
@@ -111,6 +114,8 @@ data class LauncherSettings(
     // System
     val launcherMode: Boolean = false,
     val screensaverMinutes: Int = 5,
+    /** The screensaver's slides zoom slowly all the time (Ken Burns); off they stand still and cross-fade. */
+    val screensaverKenBurns: Boolean = false,
     val language: String = "system",
     // Library & metadata
     val autoMetadata: Boolean = true,
@@ -211,7 +216,10 @@ data class LauncherSettings(
     val uiScale: Int = 100,
     /** Separate app filters were created (and shared filters turned into game filters). */
     val appFiltersSeeded: Boolean = false,
-)
+) {
+    /** Some animated artwork is shown: it is looked up and downloaded. */
+    val animatedArtwork: Boolean get() = animatedTiles || animatedHero
+}
 
 /** [store]: the "launcher_settings" preferences file of the platform. */
 class SettingsRepository(private val store: DataStore<Preferences>) {
@@ -238,7 +246,10 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val landscapeBackfillDone = booleanPreferencesKey("landscape_backfill_done")
         val squareBackfillDone = booleanPreferencesKey("square_backfill_done")
         val reduceMotion = booleanPreferencesKey("reduce_motion")
+        /** The single switch before tiles and hero had their own; still read as their default. */
         val animatedArtwork = booleanPreferencesKey("animated_artwork")
+        val animatedTiles = booleanPreferencesKey("animated_tiles")
+        val animatedHero = booleanPreferencesKey("animated_hero")
         val animatedTilesAlways = booleanPreferencesKey("animated_tiles_always")
         val animatedOnMobileData = booleanPreferencesKey("animated_on_mobile_data")
         val animatedBackfillDone = booleanPreferencesKey("animated_backfill_done")
@@ -258,6 +269,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val hapticOnFocus = booleanPreferencesKey("haptic_on_focus")
         val launcherMode = booleanPreferencesKey("launcher_mode")
         val screensaverMinutes = intPreferencesKey("screensaver_minutes")
+        val screensaverKenBurns = booleanPreferencesKey("screensaver_ken_burns")
         val language = stringPreferencesKey("language")
         val autoMetadata = booleanPreferencesKey("auto_metadata")
         val showHiddenApps = booleanPreferencesKey("show_hidden_apps")
@@ -345,7 +357,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             landscapeBackfillDone = this[K.landscapeBackfillDone] ?: d.landscapeBackfillDone,
             squareBackfillDone = this[K.squareBackfillDone] ?: d.squareBackfillDone,
             reduceMotion = this[K.reduceMotion] ?: d.reduceMotion,
-            animatedArtwork = this[K.animatedArtwork] ?: d.animatedArtwork,
+            animatedTiles = this[K.animatedTiles] ?: this[K.animatedArtwork] ?: d.animatedTiles,
+            animatedHero = this[K.animatedHero] ?: this[K.animatedArtwork] ?: d.animatedHero,
             animatedTilesAlways = this[K.animatedTilesAlways] ?: d.animatedTilesAlways,
             animatedOnMobileData = this[K.animatedOnMobileData] ?: d.animatedOnMobileData,
             animatedBackfillDone = this[K.animatedBackfillDone] ?: d.animatedBackfillDone,
@@ -373,6 +386,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             hapticOnFocus = this[K.hapticOnFocus] ?: d.hapticOnFocus,
             launcherMode = this[K.launcherMode] ?: d.launcherMode,
             screensaverMinutes = this[K.screensaverMinutes] ?: d.screensaverMinutes,
+            screensaverKenBurns = this[K.screensaverKenBurns] ?: d.screensaverKenBurns,
             language = this[K.language] ?: d.language,
             autoMetadata = this[K.autoMetadata] ?: d.autoMetadata,
             showHiddenApps = this[K.showHiddenApps] ?: d.showHiddenApps,
@@ -452,7 +466,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         this[K.landscapeBackfillDone] = s.landscapeBackfillDone
         this[K.squareBackfillDone] = s.squareBackfillDone
         this[K.reduceMotion] = s.reduceMotion
-        this[K.animatedArtwork] = s.animatedArtwork
+        this[K.animatedTiles] = s.animatedTiles
+        this[K.animatedHero] = s.animatedHero
         this[K.animatedTilesAlways] = s.animatedTilesAlways
         this[K.animatedOnMobileData] = s.animatedOnMobileData
         this[K.animatedBackfillDone] = s.animatedBackfillDone
@@ -472,6 +487,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         this[K.hapticOnFocus] = s.hapticOnFocus
         this[K.launcherMode] = s.launcherMode
         this[K.screensaverMinutes] = s.screensaverMinutes
+        this[K.screensaverKenBurns] = s.screensaverKenBurns
         this[K.language] = s.language
         this[K.autoMetadata] = s.autoMetadata
         this[K.showHiddenApps] = s.showHiddenApps

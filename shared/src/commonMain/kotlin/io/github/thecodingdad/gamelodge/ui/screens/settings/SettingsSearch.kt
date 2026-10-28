@@ -136,10 +136,10 @@ private val settingsIndex: List<SearchEntry> = buildList {
     addAll(page(SettingsPageId.STARTUP, Res.string.setting_start_tab))
     addAll(page(
         SettingsPageId.THEME, Res.string.setting_theme, Res.string.setting_accent, Res.string.setting_accent_color,
-        Res.string.setting_focus_zoom, Res.string.setting_focus_glow, Res.string.setting_dim_not_installed, Res.string.setting_animated_artwork,
+        Res.string.setting_focus_zoom, Res.string.setting_focus_glow, Res.string.setting_dim_not_installed, Res.string.setting_animated_tiles, Res.string.setting_animated_hero,
         Res.string.setting_reduce_motion, Res.string.setting_ui_scale,
     ))
-    addAll(page(SettingsPageId.DISPLAY, Res.string.setting_screensaver))
+    addAll(page(SettingsPageId.DISPLAY, Res.string.setting_screensaver, Res.string.section_screensaver, Res.string.setting_ken_burns))
     addAll(page(SettingsPageId.DISPLAY, Res.string.setting_hide_nav_bar, device = true))
     addAll(page(
         SettingsPageId.DISPLAY, Res.string.tv_section, Res.string.setting_tv_launcher, Res.string.setting_tv_resolution,

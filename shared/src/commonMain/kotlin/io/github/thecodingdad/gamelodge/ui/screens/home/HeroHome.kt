@@ -70,7 +70,9 @@ class HomeCallbacks(
     val onRunningMenu: (RunningSession) -> Unit,
     val lastFocusedKey: String?,
     val onFocusKey: (String) -> Unit,
-    val animatedArtwork: Boolean,
+    /** Animated covers on the tiles / an animated hero behind them (each its own setting). */
+    val animatedTiles: Boolean,
+    val animatedHero: Boolean,
     /** How the tiles look (shape, title, extra info, badges; apps stay landscape). */
     val layout: io.github.thecodingdad.gamelodge.data.settings.TabLayout = io.github.thecodingdad.gamelodge.data.settings.TabLayout(title = io.github.thecodingdad.gamelodge.data.settings.TileTitle.OFF),
     /** Reports whether the layout is in its initial state (top, first item focused). */
@@ -127,7 +129,7 @@ fun HeroHome(
     Box(Modifier.fillMaxSize()) {
         Crossfade(shown, animationSpec = tween(400), label = "hero") { entry ->
             if (entry != null) {
-                io.github.thecodingdad.gamelodge.ui.components.HeroImage(entry, Modifier.fillMaxSize(), animated = callbacks.animatedArtwork)
+                io.github.thecodingdad.gamelodge.ui.components.HeroImage(entry, Modifier.fillMaxSize(), animated = callbacks.animatedHero)
             }
         }
         val bg = LauncherTheme.colors.background
@@ -370,7 +372,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.homeRow(
                         onClick = { actions.open(entry, entries) { id -> callbacks.onFocusKey("$key:$id") } },
                         onLongClick = { actions.context(entry, entries) { id -> callbacks.onFocusKey("$key:$id") } },
                         onFocused = { onFocus(entry, entries); callbacks.onFocusKey(focusKey) },
-                        animated = callbacks.animatedArtwork,
+                        animated = callbacks.animatedTiles,
                         modifier = cardModifier,
                     )
                 }

@@ -24,9 +24,13 @@ import io.github.thecodingdad.gamelodge.ui.screens.settings.settingsTargetAvaila
 import io.github.thecodingdad.gamelodge.ui.theme.LauncherTheme
 import org.jetbrains.compose.resources.stringResource
 
-/** Nothing in the library yet: where games come from, with the way there. */
+/** The library has been read (until then nothing shows, not "empty"); provided by the launcher. */
+val LocalLibraryLoaded = androidx.compose.runtime.compositionLocalOf { true }
+
+/** Nothing in the library yet: where games come from, with the way there. Nothing while it is still loading. */
 @Composable
 fun EmptyLibrary() {
+    if (!LocalLibraryLoaded.current) return
     val navigate = LocalSettingsNavigator.current
     Column(
         Modifier.fillMaxSize().padding(48.dp),
