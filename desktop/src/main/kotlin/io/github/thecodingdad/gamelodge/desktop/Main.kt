@@ -72,6 +72,8 @@ fun main(args: Array<String>) {
     File(dataDir, "cache/cds").takeIf { it.isDirectory }?.deleteRecursively()
     // Converted animations of a test version (now kept next to the artwork).
     File(dataDir, "cache/animated").takeIf { it.isDirectory }?.deleteRecursively()
+    // Converted animations in an older format (converted again).
+    File(dataDir, "artwork-derived").listFiles { f -> f.name.endsWith(AnimationCache.OLD_SUFFIX) }?.forEach { it.delete() }
     Log.i("GameLodge ${DesktopPlatformInfo(dataDir).versionName} starting, data in $dataDir")
     // Guide is the launcher's button while it runs: not the Game Bar's (restored on exit).
     GameBarButton(File(dataDir, "gamebar-button.restore")).takeOver()
@@ -372,10 +374,21 @@ fun main(args: Array<String>) {
                 // Only Intel's graphics need the black lift of animation frames.
                 AnimatedImageDecoder.liftBlacks = "intel" in renderInfo.lowercase() || renderInfo == "?"
             }
-            // Animated artwork pauses after a while without input (any input, hovering included, resumes it).
+            // Animated artwork pauses after a while without input (any input, hovering included, resumes
+            // it), and right away while the window is minimized or hidden in the tray.
+            val minimized = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+            androidx.compose.runtime.DisposableEffect(window) {
+                val listener = object : java.awt.event.WindowAdapter() {
+                    override fun windowIconified(e: java.awt.event.WindowEvent) { minimized.value = true }
+                    override fun windowDeiconified(e: java.awt.event.WindowEvent) { minimized.value = false }
+                }
+                window.addWindowListener(listener)
+                onDispose { window.removeWindowListener(listener) }
+            }
             val lastInput by vm.lastInteraction.collectAsState()
-            LaunchedEffect(lastInput) {
-                AnimationPlayback.paused.value = false
+            LaunchedEffect(lastInput, minimized.value, visible) {
+                AnimationPlayback.paused.value = minimized.value || !visible
+                if (AnimationPlayback.paused.value) return@LaunchedEffect
                 kotlinx.coroutines.delay(ANIMATION_IDLE_MS)
                 AnimationPlayback.paused.value = true
             }

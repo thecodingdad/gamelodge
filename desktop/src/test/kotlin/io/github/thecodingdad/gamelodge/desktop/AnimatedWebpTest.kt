@@ -47,4 +47,24 @@ class AnimatedWebpTest {
         assertTrue(AnimationCache.width(300, 2000) >= 300)
         assertTrue(AnimationCache.width(300, 2000) < 300 * 1.25 + 1)
     }
+
+    @Test
+    fun onlyTheChangedRectangleIsStored() {
+        val w = 40; val h = 30
+        val before = ByteArray(w * h * 4) { 50 }
+        val after = before.copyOf()
+        // Pixel (13, 7) changes clearly, (2, 2) only by compression noise.
+        after[(7 * w + 13) * 4] = 120
+        after[(2 * w + 2) * 4] = 52
+        val rect = AnimationCache.changedRect(before, after, w, h)!!
+        assertEquals(listOf(12, 6, 2, 2), rect.toList()) // x and y even, as WebP wants them
+        assertEquals(null, AnimationCache.changedRect(before, before.copyOf(), w, h))
+    }
+
+    @Test
+    fun aStillAnimationKeepsOneFrameForItsWholeTime() {
+        val source = AnimatedWebp.mux(120, 80, List(5) { AnimatedWebp.Frame(still(120, 80, 0xFF2050A0.toInt()), 100) })
+        val codec = Codec.makeFromData(Data.makeFromBytes(AnimationCache.transcode(source, 120, 80)))
+        assertEquals(listOf(500), codec.framesInfo.map { it.duration })
+    }
 }

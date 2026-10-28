@@ -71,8 +71,14 @@ internal object Lz4 {
             if (offset >= len) {
                 System.arraycopy(dst, from, dst, op, len)
             } else {
-                // Overlapping (a repeated pattern): byte by byte.
-                for (i in 0 until len) dst[op + i] = dst[from + i]
+                // Overlapping (a repeated pattern, e.g. a run of zeros): copied in blocks that double,
+                // each a whole number of repetitions, instead of byte by byte.
+                var done = 0
+                while (done < len) {
+                    val n = minOf(len - done, offset + done)
+                    System.arraycopy(dst, from, dst, op + done, n)
+                    done += n
+                }
             }
             op += len
         }

@@ -174,8 +174,10 @@ private class AnimatedImage(
     override fun draw(canvas: org.jetbrains.skia.Canvas) {
         version.intValue
         lastDrawn = System.nanoTime()
-        // Read while drawing: resuming redraws the image, which starts it again.
-        if (job?.isActive != true && !AnimationPlayback.paused.value) start()
+        // Read on every draw (not only while stopped): resuming then redraws every image, which
+        // starts it again, not just the one the pointer happens to be over.
+        val paused = AnimationPlayback.paused.value
+        if (job?.isActive != true && !paused) start()
         frame?.let { canvas.drawImageRect(it, Rect.makeWH(width.toFloat(), height.toFloat())) }
     }
 
@@ -227,6 +229,7 @@ private class AnimatedImage(
                             val pixels = if (sameSize) f.pixelsOf(full) else frameImage(full, p).use(f::pixelsOf)
                             if (!f.add(next, pixels)) {
                                 // Doesn't fit: this one keeps decoding (nothing else is pushed out).
+                                Log.d("Animation ${width}x$height not kept in memory: ${FrameMemory.usedMb()} MB of ${FrameMemory.BUDGET_MB} MB in use")
                                 f.release()
                                 kept = null
                                 noRoom = true
@@ -309,9 +312,14 @@ private val DOWNSCALE = FilterMipmap(FilterMode.LINEAR, MipmapMode.LINEAR)
 internal object AnimationCache {
     private const val MAX_FPS = 30
     private const val QUALITY = 90
+    /** Colour differences up to this count as unchanged (compression noise of the original). */
+    private const val TOLERANCE = 4
 
     /** The converted file's name after the artwork's ([io.github.thecodingdad.gamelodge.data.artwork.ArtworkFiles.derivedFile]). */
-    const val SUFFIX = ".played.webp"
+    const val SUFFIX = ".played2.webp"
+
+    /** The name of files in an older format, replaced by converting again. */
+    const val OLD_SUFFIX = ".played.webp"
 
     /** Widths come in steps of 25 %, so resizing the window doesn't convert again for every pixel. */
     private const val STEP = 1.25
@@ -377,13 +385,24 @@ internal object AnimationCache {
         }
     }
 
-    /** Decodes the original frame by frame and keeps one every 1/[MAX_FPS] s, scaled and encoded. */
+    /**
+     * Decodes the original frame by frame and keeps one every 1/[MAX_FPS] s, scaled. Each kept
+     * frame stores only the rectangle that changed against what is shown by then (changes within
+     * [TOLERANCE] count as none): still areas stay identical from frame to frame, which keeps
+     * the frames small to decode and their differences in memory tiny; a frame without change
+     * just extends the one before.
+     */
     fun transcode(data: ByteArray, width: Int, height: Int): ByteArray {
         val codec = Codec.makeFromData(Data.makeFromBytes(data))
         val durations = codec.framesInfo.map { it.duration.coerceAtLeast(20) }
         val minFrame = 1000 / MAX_FPS
         val frames = ArrayList<AnimatedWebp.Frame>()
         val full = Bitmap().apply { allocPixels(codec.imageInfo) }
+        val info = org.jetbrains.skia.ImageInfo.makeN32Premul(width, height)
+        val scaledBitmap = Bitmap().apply { allocPixels(info) }
+        val surface = Surface.makeRasterN32Premul(width, height)
+        // What a player shows after the frames so far.
+        var shown: ByteArray? = null
         try {
             var time = 0
             var lastStart = 0
@@ -391,39 +410,84 @@ internal object AnimationCache {
                 codec.readPixels(full, i, if (i == 0) -1 else i - 1)
                 // Frames closer than 1/MAX_FPS to the last kept one only extend it.
                 if (frames.isEmpty() || time - lastStart >= minFrame) {
-                    frames.lastOrNull()?.let { it.duration = time - lastStart }
-                    frames += AnimatedWebp.Frame(encode(full, codec.width, codec.height, width, height), 0)
-                    lastStart = time
+                    Image.makeFromBitmap(full).use { source ->
+                        surface.canvas.drawImageRect(
+                            source, Rect.makeWH(codec.width.toFloat(), codec.height.toFloat()), Rect.makeWH(width.toFloat(), height.toFloat()),
+                            DOWNSCALE, null, true,
+                        )
+                    }
+                    surface.readPixels(scaledBitmap, 0, 0)
+                    val pixels = scaledBitmap.readPixels(info, width * 4, 0, 0)!!
+                    val before = shown
+                    val rect = if (before == null) intArrayOf(0, 0, width, height) else changedRect(before, pixels, width, height)
+                    if (rect != null) {
+                        frames.lastOrNull()?.let { it.duration = time - lastStart }
+                        frames += AnimatedWebp.Frame(encode(pixels, info, rect), 0, rect[0], rect[1], rect[2], rect[3])
+                        lastStart = time
+                        shown = before?.also { copyRect(pixels, it, width, rect) } ?: pixels
+                    }
                 }
                 time += durations[i]
             }
             frames.last().duration = time - lastStart
         } finally {
             full.close()
+            scaledBitmap.close()
+            surface.close()
         }
         return AnimatedWebp.mux(width, height, frames)
     }
 
-    private fun encode(full: Bitmap, sourceW: Int, sourceH: Int, width: Int, height: Int): ByteArray {
-        val source = Image.makeFromBitmap(full)
-        val surface = Surface.makeRasterN32Premul(width, height)
-        try {
-            surface.canvas.drawImageRect(
-                source, Rect.makeWH(sourceW.toFloat(), sourceH.toFloat()), Rect.makeWH(width.toFloat(), height.toFloat()),
-                DOWNSCALE, null, true,
-            )
-            val snapshot = surface.makeImageSnapshot()
-            try {
-                return snapshot.encodeToData(EncodedImageFormat.WEBP, QUALITY)!!.bytes
-            } finally {
-                snapshot.close()
+    /** The rectangle (x, y, width, height; x and y even, as WebP wants them) of pixels that changed, null if none did. */
+    internal fun changedRect(before: ByteArray, after: ByteArray, width: Int, height: Int): IntArray? {
+        var minX = width; var minY = height; var maxX = -1; var maxY = -1
+        for (y in 0 until height) {
+            var row = y * width * 4
+            for (x in 0 until width) {
+                if (abs(before[row].toInt() and 0xFF, after[row].toInt() and 0xFF) > TOLERANCE ||
+                    abs(before[row + 1].toInt() and 0xFF, after[row + 1].toInt() and 0xFF) > TOLERANCE ||
+                    abs(before[row + 2].toInt() and 0xFF, after[row + 2].toInt() and 0xFF) > TOLERANCE ||
+                    abs(before[row + 3].toInt() and 0xFF, after[row + 3].toInt() and 0xFF) > TOLERANCE
+                ) {
+                    if (x < minX) minX = x
+                    if (x > maxX) maxX = x
+                    if (y < minY) minY = y
+                    maxY = y
+                }
+                row += 4
             }
-        } finally {
-            source.close()
-            surface.close()
+        }
+        if (maxX < 0) return null
+        minX = minX and 1.inv()
+        minY = minY and 1.inv()
+        return intArrayOf(minX, minY, maxX - minX + 1, maxY - minY + 1)
+    }
+
+    private fun abs(a: Int, b: Int) = if (a > b) a - b else b - a
+
+    private fun copyRect(from: ByteArray, to: ByteArray, width: Int, rect: IntArray) {
+        for (y in rect[1] until rect[1] + rect[3]) {
+            val at = (y * width + rect[0]) * 4
+            System.arraycopy(from, at, to, at, rect[2] * 4)
         }
     }
 
+    /** The [rect] of [pixels] as a still WebP. */
+    private fun encode(pixels: ByteArray, info: org.jetbrains.skia.ImageInfo, rect: IntArray): ByteArray {
+        val frame = Image.makeRaster(info, pixels, info.width * 4)
+        val surface = Surface.makeRasterN32Premul(rect[2], rect[3])
+        try {
+            surface.canvas.drawImageRect(
+                frame,
+                Rect.makeXYWH(rect[0].toFloat(), rect[1].toFloat(), rect[2].toFloat(), rect[3].toFloat()),
+                Rect.makeWH(rect[2].toFloat(), rect[3].toFloat()),
+            )
+            return surface.makeImageSnapshot().use { it.encodeToData(EncodedImageFormat.WEBP, QUALITY)!!.bytes }
+        } finally {
+            frame.close()
+            surface.close()
+        }
+    }
 }
 
 /**
@@ -432,7 +496,7 @@ internal object AnimationCache {
  */
 internal object AnimatedWebp {
     /** A frame (a complete still WebP of the canvas size) and how long it shows, in ms. */
-    class Frame(val webp: ByteArray, var duration: Int)
+    class Frame(val webp: ByteArray, var duration: Int, val x: Int = 0, val y: Int = 0, val width: Int = -1, val height: Int = -1)
 
     fun mux(width: Int, height: Int, frames: List<Frame>): ByteArray {
         var alpha = false
@@ -440,10 +504,11 @@ internal object AnimatedWebp {
             val chunks = imageChunks(frame.webp)
             if (chunks.any { it.first == "ALPH" || it.first == "VP8L" }) alpha = true
             val payload = ByteArrayOutputStream()
-            payload.write(u24(0)); payload.write(u24(0)) // offset x / 2, y / 2
-            payload.write(u24(width - 1)); payload.write(u24(height - 1))
+            // Where the frame's rectangle goes (offsets halved, as WebP stores them); all of it by default.
+            payload.write(u24(frame.x / 2)); payload.write(u24(frame.y / 2))
+            payload.write(u24((if (frame.width > 0) frame.width else width) - 1)); payload.write(u24((if (frame.height > 0) frame.height else height) - 1))
             payload.write(u24(frame.duration.coerceIn(1, 0xFFFFFF)))
-            payload.write(0x02) // complete frames: no blending with the previous one, no disposal
+            payload.write(0x02) // the rectangle replaces what was there (no blending), nothing is disposed
             chunks.forEach { (id, bytes) -> writeChunk(payload, id, bytes) }
             payload.toByteArray()
         }
@@ -495,8 +560,12 @@ internal object AnimatedWebp {
  * that doesn't fit keeps decoding; nothing already kept is pushed out (no churn).
  */
 internal object FrameMemory {
-    private const val BUDGET = 500L * 1024 * 1024
+    const val BUDGET_MB = 500L
+    private const val BUDGET = BUDGET_MB * 1024 * 1024
     private var used = 0L
+
+    @Synchronized
+    fun usedMb() = used / (1024 * 1024)
 
     @Synchronized
     fun reserve(bytes: Long): Boolean {
@@ -572,6 +641,7 @@ internal class KeptFrames(val info: org.jetbrains.skia.ImageInfo, count: Int) {
         packed[index] = data
         key[index] = isKey
         account.addAndGet(data.size.toLong())
+        if (complete) Log.d("Animation ${info.width}x${info.height} kept in memory: ${packed.size} frames, ${account.get() / 1024} KB (${FrameMemory.usedMb()} MB in use)")
         last = pixels
         lastIndex = index
         current = pixels.copyOf()
@@ -586,7 +656,7 @@ internal class KeptFrames(val info: org.jetbrains.skia.ImageInfo, count: Int) {
         val out = unpacked ?: ByteArray(info.height * rowBytes).also { unpacked = it }
         Lz4.decompress(packed[index]!!, out)
         val frame = current ?: ByteArray(out.size).also { current = it }
-        if (key[index]) System.arraycopy(out, 0, frame, 0, out.size) else for (i in frame.indices) frame[i] = (frame[i].toInt() xor out[i].toInt()).toByte()
+        if (key[index]) System.arraycopy(out, 0, frame, 0, out.size) else xorInto(frame, out)
         return frame
     }
 
@@ -598,7 +668,15 @@ internal class KeptFrames(val info: org.jetbrains.skia.ImageInfo, count: Int) {
         unpacked = null
     }
 
-    private fun xor(a: ByteArray, b: ByteArray) = ByteArray(a.size) { (a[it].toInt() xor b[it].toInt()).toByte() }
+    private fun xor(a: ByteArray, b: ByteArray) = a.copyOf().also { xorInto(it, b) }
+
+    /** [target] ^= [other], eight bytes at a time. */
+    private fun xorInto(target: ByteArray, other: ByteArray) {
+        val t = java.nio.ByteBuffer.wrap(target).order(java.nio.ByteOrder.nativeOrder()).asLongBuffer()
+        val o = java.nio.ByteBuffer.wrap(other).order(java.nio.ByteOrder.nativeOrder()).asLongBuffer()
+        for (i in 0 until t.limit()) t.put(i, t.get(i) xor o.get(i))
+        for (i in t.limit() * 8 until target.size) target[i] = (target[i].toInt() xor other[i].toInt()).toByte()
+    }
 }
 
 private val CLEANER: java.lang.ref.Cleaner = java.lang.ref.Cleaner.create()
