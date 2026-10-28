@@ -71,6 +71,10 @@ object Diagnostics {
             }.filter { it.second > 0 }.sortedByDescending { it.second }.take(10)
             Log.i("CPU in the last ${CPU_SAMPLE_MS / 1000} s:\n" + busy.joinToString("\n") { (name, ms) -> "  $ms ms  \"$name\"" }.ifEmpty { "  (idle)" })
         }.onFailure { Log.w("CPU per thread unavailable", it) }
+        // All threads of the process as Windows sees them: also the JVM's own (garbage collector,
+        // compiler) and the graphics driver's, which the list above doesn't know.
+        if (isWindows) runCatching { Log.i("CPU of all threads in the last ${CPU_SAMPLE_MS / 1000} s (Windows):\n" + nativeThreadCpu()) }
+            .onFailure { Log.w("CPU of native threads unavailable", it) }
         val dump = Thread.getAllStackTraces().entries.sortedBy { it.key.name }.joinToString("\n") { (t, stack) ->
             "  \"${t.name}\" ${t.state}${if (t.isDaemon) " daemon" else ""}\n" + stack.joinToString("\n") { "      at $it" }
         }
@@ -124,6 +128,62 @@ object Diagnostics {
         return "showing=${layer.isShowing} size=${layer.width}x${layer.height} $loop"
     }
 
+    /** CPU time per thread of this process over [CPU_SAMPLE_MS], with the threads' names where they have one. */
+    private fun nativeThreadCpu(): String {
+        fun sample(): Map<Int, Pair<Long, String>> {
+            val kernel = com.sun.jna.platform.win32.Kernel32.INSTANCE
+            val pid = kernel.GetCurrentProcessId()
+            val snapshot = kernel.CreateToolhelp32Snapshot(com.sun.jna.platform.win32.WinDef.DWORD(TH32CS_SNAPTHREAD), com.sun.jna.platform.win32.WinDef.DWORD(0))
+            val result = HashMap<Int, Pair<Long, String>>()
+            val times = com.sun.jna.NativeLibrary.getInstance("kernel32").getFunction("GetThreadTimes")
+            val describe = runCatching { com.sun.jna.NativeLibrary.getInstance("kernel32").getFunction("GetThreadDescription") }.getOrNull()
+            try {
+                val entry = com.sun.jna.platform.win32.Tlhelp32.THREADENTRY32()
+                var more = kernel.Thread32First(snapshot, entry)
+                while (more) {
+                    if (entry.th32OwnerProcessID == pid) {
+                        val handle = kernel.OpenThread(THREAD_QUERY_LIMITED_INFORMATION, false, entry.th32ThreadID)
+                        if (handle != null) {
+                            try {
+                                val ft = Array(4) { com.sun.jna.platform.win32.WinBase.FILETIME() }
+                                if (times.invokeInt(arrayOf(handle, ft[0], ft[1], ft[2], ft[3])) != 0) {
+                                    // Kernel + user time in 100 ns.
+                                    val cpu = ft[2].toDWordLong().toLong() + ft[3].toDWordLong().toLong()
+                                    val name = describe?.let { f ->
+                                        val ref = com.sun.jna.ptr.PointerByReference()
+                                        if (f.invokeInt(arrayOf(handle, ref)) >= 0 && ref.value != null) {
+                                            ref.value.getWideString(0).also { kernel.LocalFree(ref.value) }
+                                        } else null
+                                    }.orEmpty()
+                                    result[entry.th32ThreadID] = cpu to name
+                                }
+                            } finally {
+                                kernel.CloseHandle(handle)
+                            }
+                        }
+                    }
+                    more = kernel.Thread32Next(snapshot, entry)
+                }
+            } finally {
+                kernel.CloseHandle(snapshot)
+            }
+            return result
+        }
+        val before = sample()
+        Thread.sleep(CPU_SAMPLE_MS)
+        val after = sample()
+        val busy = after.mapNotNull { (id, now) ->
+            val then = before[id]?.first ?: 0L
+            val ms = (now.first - then) / 10_000
+            if (ms > 0) Triple(id, ms, now.second) else null
+        }.sortedByDescending { it.second }.take(15)
+        val total = busy.sumOf { it.second }
+        return busy.joinToString("\n") { (id, ms, name) -> "  $ms ms  #$id \"${name.ifEmpty { "(no name)" }}\"" }.ifEmpty { "  (idle)" } +
+            "\n  together $total ms of ${CPU_SAMPLE_MS} ms, ${after.size} threads"
+    }
+
+    private const val TH32CS_SNAPTHREAD = 0x4L
+    private const val THREAD_QUERY_LIMITED_INFORMATION = 0x0800
     private const val DWMWA_CLOAKED = 14
     private const val CPU_SAMPLE_MS = 3000L
 }

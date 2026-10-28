@@ -147,6 +147,15 @@ private class AnimatedImage(
     @Volatile private var frame: Image? = null
     @Volatile private var lastDrawn = 0L
     private var job: Job? = null
+    /**
+     * The loop in memory, built during the first loop of the converted file. Kept while paused
+     * (resuming then costs nothing), freed when the image is no longer shown.
+     */
+    private var kept: KeptFrames? = null
+    /** The loop didn't fit into [FrameMemory]: decoded while it plays, tried again when shown anew. */
+    private var noRoom = false
+    /** Where a kept loop goes on after a pause. */
+    private var keptNext = 0
     /** Frames replaced by a newer one, with the time: freed once surely no longer drawn. */
     private val retired = ArrayDeque<Pair<Long, Image>>()
 
@@ -177,15 +186,19 @@ private class AnimatedImage(
             var p = playing
             var full = Bitmap().apply { allocPixels(p.codec.imageInfo) }
             var decoded = -1
-            var next = 0
+            // A complete loop in memory goes on where it paused; decoding starts at the first frame.
+            var next = if (kept?.complete == true) keptNext else 0
             var checkedAt = System.nanoTime()
-            // The loop in memory: kept while it plays, built during its first loop from the file.
-            var frames: KeptFrames? = null
-            var noRoom = false
+            var shown = true
             try {
                 while (isActive) {
-                    // Off screen (not drawn for a while) or paused: stop; drawing again starts from here.
-                    if (System.nanoTime() - lastDrawn > IDLE_NS || AnimationPlayback.paused.value) break
+                    // Paused: stop, keeping the loop in memory.
+                    if (AnimationPlayback.paused.value) break
+                    // Off screen (not drawn for a while): stop and free its memory.
+                    if (System.nanoTime() - lastDrawn > IDLE_NS) {
+                        shown = false
+                        break
+                    }
                     // The converted file is ready: play that from its start (checked once a second).
                     val file = converted
                     if (p.scaled && file != null && System.nanoTime() - checkedAt > CHECK_NS) {
@@ -200,20 +213,22 @@ private class AnimatedImage(
                         }
                     }
                     val started = System.nanoTime()
-                    val keep = !p.scaled && !noRoom && p.codec.width == width && p.codec.height == height
-                    val kept = frames
-                    if (keep && kept != null && kept.complete) {
+                    val keep = !p.scaled && !noRoom
+                    val loop = kept
+                    if (keep && loop != null && loop.complete) {
                         // Everything in memory: only unpack.
-                        publish(kept.image(next))
+                        publish(loop.image(next))
                     } else {
                         p.codec.readPixels(full, next, if (next == 0) -1 else decoded)
                         if (keep) {
-                            val f = frames ?: KeptFrames(full.imageInfo, p.durations.size).also { frames = it }
-                            val pixels = f.pixelsOf(full)
+                            val f = loop ?: KeptFrames(org.jetbrains.skia.ImageInfo.makeN32Premul(width, height), p.durations.size).also { kept = it }
+                            // At the display size: as decoded, or scaled to it (a file larger than shown).
+                            val sameSize = p.codec.width == width && p.codec.height == height
+                            val pixels = if (sameSize) f.pixelsOf(full) else frameImage(full, p).use(f::pixelsOf)
                             if (!f.add(next, pixels)) {
                                 // Doesn't fit: this one keeps decoding (nothing else is pushed out).
                                 f.release()
-                                frames = null
+                                kept = null
                                 noRoom = true
                             }
                             publish(f.imageOf(pixels))
@@ -227,10 +242,15 @@ private class AnimatedImage(
                     val due = started + p.durations[decoded] * 1_000_000L
                     delay(((onBeat(due) - System.nanoTime()) / 1_000_000).coerceAtLeast(1))
                     next = (decoded + 1) % p.durations.size
+                    keptNext = next
                 }
             } finally {
                 full.close()
-                frames?.release()
+                if (!shown) {
+                    kept?.release()
+                    kept = null
+                    noRoom = false
+                }
             }
         }
     }
@@ -507,13 +527,31 @@ internal class KeptFrames(val info: org.jetbrains.skia.ImageInfo, count: Int) {
     private val rowBytes = info.minRowBytes
     private val packed = arrayOfNulls<ByteArray>(count)
     private val key = BooleanArray(count)
-    private var bytes = 0L
+    /** Bytes counted against [FrameMemory]; given back on [release], or when this is collected. */
+    private val account = java.util.concurrent.atomic.AtomicLong()
     private var last: ByteArray? = null
     private var lastIndex = -1
     private var current: ByteArray? = null
     private var unpacked: ByteArray? = null
 
+    init {
+        // An image that leaves the screen while paused is never told: its share comes back once it is collected.
+        val account = account
+        CLEANER.register(this) { FrameMemory.release(account.getAndSet(0)) }
+    }
+
     val complete: Boolean get() = packed.all { it != null }
+
+    /** A frame already at the display size (scaled and lifted), as pixels. */
+    fun pixelsOf(image: Image): ByteArray {
+        val bitmap = Bitmap().apply { allocPixels(info) }
+        try {
+            image.readPixels(bitmap, 0, 0)
+            return bitmap.readPixels(info, rowBytes, 0, 0)!!
+        } finally {
+            bitmap.close()
+        }
+    }
 
     /** The decoded frame's pixels, lifted for Intel graphics (see [AnimatedImageDecoder.liftBlacks]). */
     fun pixelsOf(full: Bitmap): ByteArray {
@@ -533,7 +571,7 @@ internal class KeptFrames(val info: org.jetbrains.skia.ImageInfo, count: Int) {
         if (!FrameMemory.reserve(data.size.toLong())) return false
         packed[index] = data
         key[index] = isKey
-        bytes += data.size
+        account.addAndGet(data.size.toLong())
         last = pixels
         lastIndex = index
         current = pixels.copyOf()
@@ -553,8 +591,7 @@ internal class KeptFrames(val info: org.jetbrains.skia.ImageInfo, count: Int) {
     }
 
     fun release() {
-        FrameMemory.release(bytes)
-        bytes = 0
+        FrameMemory.release(account.getAndSet(0))
         packed.fill(null)
         last = null
         current = null
@@ -563,3 +600,5 @@ internal class KeptFrames(val info: org.jetbrains.skia.ImageInfo, count: Int) {
 
     private fun xor(a: ByteArray, b: ByteArray) = ByteArray(a.size) { (a[it].toInt() xor b[it].toInt()).toByte() }
 }
+
+private val CLEANER: java.lang.ref.Cleaner = java.lang.ref.Cleaner.create()
