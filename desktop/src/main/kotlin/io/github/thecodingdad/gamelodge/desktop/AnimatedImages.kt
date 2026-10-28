@@ -438,16 +438,19 @@ internal object AnimationCache {
         return AnimatedWebp.mux(width, height, frames)
     }
 
-    /** The rectangle (x, y, width, height; x and y even, as WebP wants them) of pixels that changed, null if none did. */
-    internal fun changedRect(before: ByteArray, after: ByteArray, width: Int, height: Int): IntArray? {
+    /**
+     * The rectangle (x, y, width, height; x and y even, as WebP wants them) of pixels that changed
+     * by more than [tolerance], null if none did.
+     */
+    internal fun changedRect(before: ByteArray, after: ByteArray, width: Int, height: Int, tolerance: Int = TOLERANCE): IntArray? {
         var minX = width; var minY = height; var maxX = -1; var maxY = -1
         for (y in 0 until height) {
             var row = y * width * 4
             for (x in 0 until width) {
-                if (abs(before[row].toInt() and 0xFF, after[row].toInt() and 0xFF) > TOLERANCE ||
-                    abs(before[row + 1].toInt() and 0xFF, after[row + 1].toInt() and 0xFF) > TOLERANCE ||
-                    abs(before[row + 2].toInt() and 0xFF, after[row + 2].toInt() and 0xFF) > TOLERANCE ||
-                    abs(before[row + 3].toInt() and 0xFF, after[row + 3].toInt() and 0xFF) > TOLERANCE
+                if (abs(before[row].toInt() and 0xFF, after[row].toInt() and 0xFF) > tolerance ||
+                    abs(before[row + 1].toInt() and 0xFF, after[row + 1].toInt() and 0xFF) > tolerance ||
+                    abs(before[row + 2].toInt() and 0xFF, after[row + 2].toInt() and 0xFF) > tolerance ||
+                    abs(before[row + 3].toInt() and 0xFF, after[row + 3].toInt() and 0xFF) > tolerance
                 ) {
                     if (x < minX) minX = x
                     if (x > maxX) maxX = x
@@ -589,13 +592,15 @@ object AnimationPlayback {
 }
 
 /**
- * One loop of frames in memory: each as the difference to the one before (a key frame where
- * there is none), LZ4-packed; counted against [FrameMemory]. Unpacking keeps the frame shown.
+ * One loop of frames in memory: each as the rectangle that changed against the frame before
+ * (all of it where there is none), LZ4-packed; counted against [FrameMemory]. Playing only
+ * unpacks that rectangle into the frame shown.
  */
 internal class KeptFrames(val info: org.jetbrains.skia.ImageInfo, count: Int) {
     private val rowBytes = info.minRowBytes
+    /** Per frame the rectangle that changed against the frame before (x, y, width, height) and its pixels, LZ4-packed. */
     private val packed = arrayOfNulls<ByteArray>(count)
-    private val key = BooleanArray(count)
+    private val rects = IntArray(count * 4)
     /** Bytes counted against [FrameMemory]; given back on [release], or when this is collected. */
     private val account = java.util.concurrent.atomic.AtomicLong()
     private var last: ByteArray? = null
@@ -631,15 +636,19 @@ internal class KeptFrames(val info: org.jetbrains.skia.ImageInfo, count: Int) {
 
     fun imageOf(pixels: ByteArray): Image = Image.makeRaster(info, pixels, rowBytes)
 
-    /** Keeps frame [index]; false when it doesn't fit into [FrameMemory]. */
+    /**
+     * Keeps frame [index]: only the rectangle that changed against the frame before (all of it
+     * where there is none to compare with); false when it doesn't fit into [FrameMemory].
+     */
     fun add(index: Int, pixels: ByteArray): Boolean {
         if (packed[index] != null) return true
-        val previous = last
-        val isKey = previous == null || lastIndex != (index - 1 + packed.size) % packed.size
-        val data = if (isKey) Lz4.compress(pixels) else Lz4.compress(xor(pixels, previous!!))
+        val previous = last?.takeIf { lastIndex == (index - 1 + packed.size) % packed.size }
+        val rect = if (previous == null) intArrayOf(0, 0, info.width, info.height)
+        else AnimationCache.changedRect(previous, pixels, info.width, info.height, tolerance = 0) ?: intArrayOf(0, 0, 0, 0)
+        val data = Lz4.compress(cut(pixels, rect))
         if (!FrameMemory.reserve(data.size.toLong())) return false
         packed[index] = data
-        key[index] = isKey
+        rect.copyInto(rects, index * 4)
         account.addAndGet(data.size.toLong())
         if (complete) Log.d("Animation ${info.width}x${info.height} kept in memory: ${packed.size} frames, ${account.get() / 1024} KB (${FrameMemory.usedMb()} MB in use)")
         last = pixels
@@ -651,12 +660,17 @@ internal class KeptFrames(val info: org.jetbrains.skia.ImageInfo, count: Int) {
     /** Frame [index] (played in order after the one before). */
     fun image(index: Int): Image = Image.makeRaster(info, frame(index), rowBytes)
 
-    /** The pixels of frame [index] (played in order after the one before); valid until the next call. */
+    /**
+     * The pixels of frame [index] (played in order after the one before); valid until the next
+     * call. Only its changed rectangle is unpacked and put in place.
+     */
     fun frame(index: Int): ByteArray {
-        val out = unpacked ?: ByteArray(info.height * rowBytes).also { unpacked = it }
+        val frame = current ?: ByteArray(info.height * rowBytes).also { current = it }
+        val x = rects[index * 4]; val y = rects[index * 4 + 1]; val w = rects[index * 4 + 2]; val h = rects[index * 4 + 3]
+        if (w == 0 || h == 0) return frame
+        val out = unpacked?.takeIf { it.size >= w * h * 4 } ?: ByteArray(info.height * rowBytes).also { unpacked = it }
         Lz4.decompress(packed[index]!!, out)
-        val frame = current ?: ByteArray(out.size).also { current = it }
-        if (key[index]) System.arraycopy(out, 0, frame, 0, out.size) else xorInto(frame, out)
+        for (row in 0 until h) System.arraycopy(out, row * w * 4, frame, (y + row) * rowBytes + x * 4, w * 4)
         return frame
     }
 
@@ -668,14 +682,13 @@ internal class KeptFrames(val info: org.jetbrains.skia.ImageInfo, count: Int) {
         unpacked = null
     }
 
-    private fun xor(a: ByteArray, b: ByteArray) = a.copyOf().also { xorInto(it, b) }
-
-    /** [target] ^= [other], eight bytes at a time. */
-    private fun xorInto(target: ByteArray, other: ByteArray) {
-        val t = java.nio.ByteBuffer.wrap(target).order(java.nio.ByteOrder.nativeOrder()).asLongBuffer()
-        val o = java.nio.ByteBuffer.wrap(other).order(java.nio.ByteOrder.nativeOrder()).asLongBuffer()
-        for (i in 0 until t.limit()) t.put(i, t.get(i) xor o.get(i))
-        for (i in t.limit() * 8 until target.size) target[i] = (target[i].toInt() xor other[i].toInt()).toByte()
+    /** The pixels of [rect] in a row-by-row array of their own. */
+    private fun cut(pixels: ByteArray, rect: IntArray): ByteArray {
+        val (x, y, w, h) = rect.toList()
+        if (w == 0 || h == 0) return ByteArray(0)
+        val out = ByteArray(w * h * 4)
+        for (row in 0 until h) System.arraycopy(pixels, (y + row) * rowBytes + x * 4, out, row * w * 4, w * 4)
+        return out
     }
 }
 
