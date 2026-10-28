@@ -74,6 +74,7 @@ fun HaTileType.icon(): ImageVector = when (this) {
  */
 @Composable
 fun HaTile(tile: HaTileEntity, entity: HaEntity?, modifier: Modifier = Modifier, width: Dp = 200.dp) {
+    val focusHolder = LocalHaTileFocus.current
     val ha = io.github.thecodingdad.gamelodge.LocalContainer.current.ha
     val scope = rememberCoroutineScope()
     val feedback = LocalUiFeedback.current
@@ -128,7 +129,11 @@ fun HaTile(tile: HaTileEntity, entity: HaEntity?, modifier: Modifier = Modifier,
         modifier = modifier
             .width(width)
             .height(76.dp)
-            .onFocusChanged { focused = it.isFocused || it.hasFocus }
+            .onFocusChanged {
+                focused = it.isFocused || it.hasFocus
+                // The screen's hints follow the focused tile.
+                if (focused) focusHolder?.tile = tile else if (focusHolder?.tile == tile) focusHolder.tile = null
+            }
             .then(
                 // Touch: slide horizontally across the tile to set the value.
                 if (adjustable && tile.type != HaTileType.CLIMATE) Modifier.pointerInput(tile.entityId) {
@@ -194,4 +199,34 @@ private fun stateText(tile: HaTileEntity, entity: HaEntity?): String {
         HaTileType.CLIMATE -> listOfNotNull(entity.currentTemperature?.let { "$it°" }, entity.targetTemperature?.let { "→ $it°" }).joinToString(" ").ifEmpty { entity.state }
         HaTileType.SENSOR -> listOfNotNull(entity.state, entity.unit).joinToString(" ")
     }
+}
+
+/** The Home Assistant tile focused right now on a screen; its hints follow it ([haTileHints]). */
+class HaTileFocus {
+    var tile by androidx.compose.runtime.mutableStateOf<HaTileEntity?>(null)
+}
+
+val LocalHaTileFocus = androidx.compose.runtime.compositionLocalOf<HaTileFocus?> { null }
+
+/** What A and the right stick do on [tile] (by its kind); empty without a tile. */
+@Composable
+fun haTileHints(tile: HaTileEntity?): List<io.github.thecodingdad.gamelodge.ui.components.ButtonHint> {
+    tile ?: return emptyList()
+    val press = when (tile.type) {
+        HaTileType.SWITCH, HaTileType.LIGHT -> Res.string.ha_hint_switch
+        HaTileType.COVER -> Res.string.ha_hint_cover
+        HaTileType.CLIMATE -> Res.string.ha_hint_power
+        HaTileType.BUTTON -> Res.string.ha_hint_run
+        HaTileType.SENSOR -> null
+    }
+    val stick = when (tile.type) {
+        HaTileType.LIGHT -> Res.string.ha_hint_brightness
+        HaTileType.COVER -> Res.string.ha_hint_position
+        HaTileType.CLIMATE -> Res.string.ha_hint_temperature
+        else -> null
+    }
+    return listOfNotNull(
+        press?.let { io.github.thecodingdad.gamelodge.ui.components.ButtonHint(PadButton.A, org.jetbrains.compose.resources.stringResource(it)) },
+        stick?.let { io.github.thecodingdad.gamelodge.ui.components.ButtonHint(PadButton.RS_LEFT, org.jetbrains.compose.resources.stringResource(it), secondButton = PadButton.RS_RIGHT) },
+    )
 }

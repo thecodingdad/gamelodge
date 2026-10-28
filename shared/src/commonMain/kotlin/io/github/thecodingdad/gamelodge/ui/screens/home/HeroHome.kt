@@ -119,7 +119,6 @@ fun HeroHome(
     PublishAccentFrom(shown?.coverModel())
     LaunchedEffect(focused) { callbacks.onFocusedEntry(focused) }
     // Start: quick start of the focused game (no hint, a shortcut for those who know it).
-    PadAction(PadButton.START) { focused?.let(actions::play) }
     PadAction(PadButton.X) {
         val session = focusedSession
         if (session != null) callbacks.onRunningMenu(session)
@@ -265,6 +264,7 @@ fun HeroHome(
                 if (rows.running.isNotEmpty()) {
                     item(key = "running") { pinned("running") {
                         RowTitle(stringResource(Res.string.home_running))
+                        val runningWidth = homeTileWidth(callbacks.layout.format)
                         val runningRow = androidx.compose.foundation.lazy.rememberLazyListState()
                         LazyRow(
                             state = runningRow,
@@ -281,7 +281,8 @@ fun HeroHome(
                                     onClick = { callbacks.onResume(session) },
                                     onLongClick = { callbacks.onRunningMenu(session) },
                                     onFocused = { focused = session.entry; focusedSession = session; callbacks.onFocusKey(key) },
-                                    modifier = Modifier.width(300.dp).height(170.dp)
+                                    // As wide as the tiles below, 16:9.
+                                    modifier = Modifier.width(runningWidth).height(runningWidth / io.github.thecodingdad.gamelodge.ui.components.APP_LANDSCAPE_RATIO)
                                         .restoreFocusIf(callbacks.lastFocusedKey == key || callbacks.lastFocusedKey == null),
                                 )
                             }
@@ -353,6 +354,8 @@ private fun androidx.compose.foundation.lazy.LazyListScope.homeRow(
                     // Apps on the start tab: landscape tiles.
                     io.github.thecodingdad.gamelodge.ui.components.AppTileCard(
                         entry = entry,
+                        // As wide as the game tiles; only the height follows the app's 16:9.
+                        width = homeTileWidth(callbacks.layout.format),
                         layout = callbacks.layout,
                         onClick = { actions.open(entry, entries) },
                         onLongClick = { actions.context(entry, entries) { id -> callbacks.onFocusKey("$key:$id") } },
@@ -362,12 +365,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.homeRow(
                 } else {
                     CoverCard(
                         entry = entry,
-                        // Landscape: as high as the app tiles beside it; portrait and square a bit smaller.
-                        width = LauncherTheme.dimens.coverWidth * when (callbacks.layout.format) {
-                            io.github.thecodingdad.gamelodge.data.settings.TileFormat.PORTRAIT -> 0.82f
-                            io.github.thecodingdad.gamelodge.data.settings.TileFormat.LANDSCAPE -> 1.6f / io.github.thecodingdad.gamelodge.ui.components.APP_LANDSCAPE_RATIO * io.github.thecodingdad.gamelodge.ui.components.GAME_LANDSCAPE_RATIO
-                            io.github.thecodingdad.gamelodge.data.settings.TileFormat.SQUARE -> 1.0f
-                        },
+                        width = homeTileWidth(callbacks.layout.format),
                         layout = callbacks.layout,
                         onClick = { actions.open(entry, entries) { id -> callbacks.onFocusKey("$key:$id") } },
                         onLongClick = { actions.context(entry, entries) { id -> callbacks.onFocusKey("$key:$id") } },
@@ -424,3 +422,15 @@ private fun HeroInfo(entry: LibraryEntry?, modifier: Modifier = Modifier) {
         )
     }
 }
+
+/**
+ * Width of every tile on the start tab in the chosen [format] (games, apps, running cards): only
+ * the height differs between them. Landscape is as high as a 16:9 app tile of 1.6 covers.
+ */
+@Composable
+private fun homeTileWidth(format: io.github.thecodingdad.gamelodge.data.settings.TileFormat): androidx.compose.ui.unit.Dp =
+    LauncherTheme.dimens.coverWidth * when (format) {
+        io.github.thecodingdad.gamelodge.data.settings.TileFormat.PORTRAIT -> 0.82f
+        io.github.thecodingdad.gamelodge.data.settings.TileFormat.LANDSCAPE -> 1.6f / io.github.thecodingdad.gamelodge.ui.components.APP_LANDSCAPE_RATIO * io.github.thecodingdad.gamelodge.ui.components.GAME_LANDSCAPE_RATIO
+        io.github.thecodingdad.gamelodge.data.settings.TileFormat.SQUARE -> 1.0f
+    }

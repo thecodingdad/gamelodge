@@ -104,7 +104,6 @@ fun DetailScreen(
     if (active) PublishAccentFrom(entry.coverModel())
 
     if (hasTargetChoice) PadAction(PadButton.X, enabled = active) { actions.playWith(entry) }
-    PadAction(PadButton.START, enabled = active) { if (running) onResume() else actions.play(entry) }
     // Remote games: LB/RB switch the stream profile used for the next start.
     var profilePicker by remember { mutableStateOf(false) }
     fun stepProfile(delta: Int) {

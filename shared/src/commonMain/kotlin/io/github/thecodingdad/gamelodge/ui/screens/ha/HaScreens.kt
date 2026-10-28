@@ -100,6 +100,7 @@ fun HaPanel(visible: Boolean, onDismiss: () -> Unit, openSettings: () -> Unit) {
         }
         Text(connectionLabel(connection), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
         Spacer(Modifier.height(16.dp))
+        val haFocus = remember { HaTileFocus() }
         if (connection == HaConnection.NOT_CONFIGURED || tiles.isEmpty()) {
             Text(stringResource(Res.string.ha_panel_empty), style = MaterialTheme.typography.bodyLarge, color = LauncherTheme.colors.onSurface)
             Spacer(Modifier.height(16.dp))
@@ -110,16 +111,15 @@ fun HaPanel(visible: Boolean, onDismiss: () -> Unit, openSettings: () -> Unit) {
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                tiles.forEachIndexed { index, tile ->
-                    HaTile(tile, entities[tile.entityId], Modifier.restoreFocusIf(index == 0))
+                androidx.compose.runtime.CompositionLocalProvider(LocalHaTileFocus provides haFocus) {
+                    tiles.forEachIndexed { index, tile ->
+                        HaTile(tile, entities[tile.entityId], Modifier.restoreFocusIf(index == 0))
+                    }
                 }
             }
         }
         ButtonHintBar(
-            listOf(
-                ButtonHint(PadButton.A, stringResource(Res.string.ha_hint_toggle)),
-                ButtonHint(PadButton.B, stringResource(Res.string.action_close), onClick = onDismiss),
-            ),
+            haTileHints(haFocus.tile) + ButtonHint(PadButton.B, stringResource(Res.string.action_close), onClick = onDismiss),
             inPopup = true,
         )
     }

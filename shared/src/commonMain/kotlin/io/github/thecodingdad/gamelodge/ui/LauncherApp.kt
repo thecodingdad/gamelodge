@@ -297,11 +297,14 @@ fun LauncherApp(
     val runningForTiles by vm.runningSessions.collectAsState()
     val runningItems = io.github.thecodingdad.gamelodge.ui.components.rememberRunningItems(runningForTiles)
     val quitHold = remember { io.github.thecodingdad.gamelodge.ui.components.QuitHold() }
+    // The Home Assistant tile focused in the start tab's row (its hints replace the game's).
+    val haFocus = remember { io.github.thecodingdad.gamelodge.ui.screens.ha.HaTileFocus() }
     LauncherTheme(settings) {
         CompositionLocalProvider(
             io.github.thecodingdad.gamelodge.ui.components.LocalRunningItems provides runningItems,
             io.github.thecodingdad.gamelodge.ui.screens.library.LocalLibraryLoaded provides libraryLoaded,
             LocalHiddenTabs provides hiddenTabs,
+            io.github.thecodingdad.gamelodge.ui.screens.ha.LocalHaTileFocus provides haFocus,
             io.github.thecodingdad.gamelodge.ui.components.LocalQuitHold provides quitHold,
             androidx.compose.ui.platform.LocalDensity provides scaledDensity,
             LocalInputDispatcher provides dispatcher,
@@ -786,8 +789,12 @@ private fun MainShell(
                             layout = settings.homeLayout,
                         )
                         val quitHint = io.github.thecodingdad.gamelodge.ui.components.quitHoldHint(homeFocused)
+                        val haTile = io.github.thecodingdad.gamelodge.ui.screens.ha.LocalHaTileFocus.current?.tile
                         io.github.thecodingdad.gamelodge.ui.shell.ScreenHints(
-                            listOfNotNull(
+                            if (haTile != null) {
+                                io.github.thecodingdad.gamelodge.ui.screens.ha.haTileHints(haTile) +
+                                    ButtonHint(PadButton.L1, stringResource(Res.string.hint_tabs), secondButton = PadButton.R1)
+                            } else listOfNotNull(
                                 ButtonHint(PadButton.A, stringResource(entryActions.openLabel(homeFocused))),
                                 ButtonHint(PadButton.X, stringResource(Res.string.hint_options)),
                                 quitHint,
@@ -815,7 +822,12 @@ private fun MainShell(
                     ) { vm.focusKeys[MainTab.APPS.name] = it }
                     MainTab.SETTINGS -> {
                         io.github.thecodingdad.gamelodge.ui.shell.ScreenHints(
-                            listOf(ButtonHint(PadButton.A, stringResource(Res.string.hint_select)), ButtonHint(PadButton.L1, stringResource(Res.string.hint_tabs), secondButton = PadButton.R1)),
+                            listOf(
+                                ButtonHint(PadButton.A, stringResource(Res.string.hint_select)),
+                                // Start: search the settings with the on-screen keyboard.
+                                ButtonHint(PadButton.START, stringResource(Res.string.hint_search)),
+                                ButtonHint(PadButton.L1, stringResource(Res.string.hint_tabs), secondButton = PadButton.R1),
+                            ),
                         )
                         SettingsHome(open = { nav.navigate(Routes.settings(it)) }, isFirstVisit = true, openControllers = { nav.navigate(Routes.CONTROLLERS) }, openWizard = { nav.navigate(Routes.wizard(manual = true)) }, query = vm.settingsQuery.value, onQueryChange = { vm.settingsQuery.value = it })
                     }
@@ -1036,14 +1048,15 @@ private fun SubpageFrame(
         if (compact) {
             BottomNavBar(tabs = MainTab.entries, selected = tab.ordinal, onSelect = ::openTab)
         } else {
+            // LB / RB switch the main tabs on every sub page: always listed, last, also next to the page's own hints.
+            val tabsHint = ButtonHint(PadButton.L1, stringResource(Res.string.hint_tabs), secondButton = PadButton.R1)
             ButtonHintBar(
                 hints.hints.ifEmpty {
                     listOf(
                         ButtonHint(PadButton.A, stringResource(Res.string.hint_select)),
                         ButtonHint(PadButton.B, stringResource(Res.string.hint_back)),
-                        ButtonHint(PadButton.L1, stringResource(Res.string.hint_tabs), secondButton = PadButton.R1),
                     )
-                },
+                }.let { list -> if (list.any { it.button == PadButton.L1 }) list else list + tabsHint },
                 hideWhenCompact = true,
             )
         }

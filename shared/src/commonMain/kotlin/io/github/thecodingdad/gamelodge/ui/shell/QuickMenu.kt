@@ -118,6 +118,7 @@ fun QuickMenu(
         io.github.thecodingdad.gamelodge.ui.input.PadAction(io.github.thecodingdad.gamelodge.ui.input.PadButton.L1) { step(-1) }
         io.github.thecodingdad.gamelodge.ui.input.PadAction(io.github.thecodingdad.gamelodge.ui.input.PadButton.R1) { step(1) }
 
+        val haFocus = remember { io.github.thecodingdad.gamelodge.ui.screens.ha.HaTileFocus() }
         Row(Modifier.weight(1f).fillMaxWidth()) {
             QuickRail(tabs, tab, onDismiss) { tab = it }
             Column(Modifier.weight(1f).fillMaxHeight()) {
@@ -144,6 +145,7 @@ fun QuickMenu(
                 }
                 // Each tab its own scroll position and focus start.
                 androidx.compose.runtime.key(tab) {
+                androidx.compose.runtime.CompositionLocalProvider(io.github.thecodingdad.gamelodge.ui.screens.ha.LocalHaTileFocus provides haFocus) {
                     Column(
                         Modifier.weight(1f).fillMaxWidth().controllerScroll(rememberScrollState())
                             .padding(start = 18.dp, end = 14.dp, top = 10.dp, bottom = 18.dp),
@@ -181,17 +183,18 @@ fun QuickMenu(
                         }
                     }
                 }
+                }
             }
         }
         // Like the launcher's own screens: only with a controller connected; touchable as well.
+        // On a Home Assistant tile: what A and the stick do there. (B to close is left out: obvious.)
+        val tileHints = io.github.thecodingdad.gamelodge.ui.screens.ha.haTileHints(haFocus.tile.takeIf { tab == QuickMenuTab.HOME_ASSISTANT })
         io.github.thecodingdad.gamelodge.ui.components.ButtonHintBar(
-            listOf(
-                io.github.thecodingdad.gamelodge.ui.components.ButtonHint(io.github.thecodingdad.gamelodge.ui.input.PadButton.A, stringResource(Res.string.hint_select)),
-                io.github.thecodingdad.gamelodge.ui.components.ButtonHint(
-                    io.github.thecodingdad.gamelodge.ui.input.PadButton.L1, stringResource(Res.string.hint_tabs), { step(1) },
-                    secondButton = io.github.thecodingdad.gamelodge.ui.input.PadButton.R1,
-                ),
-                io.github.thecodingdad.gamelodge.ui.components.ButtonHint(io.github.thecodingdad.gamelodge.ui.input.PadButton.B, stringResource(Res.string.hint_back), onDismiss),
+            tileHints.ifEmpty {
+                listOf(io.github.thecodingdad.gamelodge.ui.components.ButtonHint(io.github.thecodingdad.gamelodge.ui.input.PadButton.A, stringResource(Res.string.hint_select)))
+            } + io.github.thecodingdad.gamelodge.ui.components.ButtonHint(
+                io.github.thecodingdad.gamelodge.ui.input.PadButton.L1, stringResource(Res.string.hint_tabs), { step(1) },
+                secondButton = io.github.thecodingdad.gamelodge.ui.input.PadButton.R1,
             ),
             inPopup = true,
         )

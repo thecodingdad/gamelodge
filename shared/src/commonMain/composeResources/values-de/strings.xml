@@ -341,7 +341,14 @@
     <string name="ha_auth_failed">Anmeldung abgelaufen – bitte neu anmelden</string>
     <string name="ha_panel_empty">Füge Home-Assistant-Entitäten als Kacheln hinzu, um sie überall aus dem Schnellmenü zu steuern.</string>
     <string name="ha_setup">Einrichten</string>
-    <string name="ha_hint_toggle">Schalten · ◀▶ einstellen</string>
+    <string name="ha_hint_switch">Schalten</string>
+    <string name="ha_hint_cover">Öffnen/Schließen</string>
+    <string name="ha_hint_power">Ein/Aus</string>
+    <string name="ha_hint_run">Ausführen</string>
+    <string name="ha_hint_brightness">Helligkeit</string>
+    <string name="ha_hint_position">Position</string>
+    <string name="ha_hint_temperature">Temperatur</string>
+    <string name="keyboard_cursor">Cursor</string>
     <string name="ha_status">Status</string>
     <string name="ha_url">Home-Assistant-URL</string>
     <string name="ha_login">Anmelden</string>
@@ -1293,7 +1300,6 @@
     <string name="vpn_see_hosts">Tunnel pro Host, Wartezeit nach dem Aufwecken</string>
     <string name="hint_preview">Vorschau</string>
     <string name="tile_preview_show">Vorschau anzeigen</string>
-    <string name="tile_preview_sub">Eine Kachel in echter Größe mit diesen Einstellungen</string>
     <string name="tile_preview_sample_game">Beispielspiel</string>
     <string name="tile_preview_sample_app">Beispiel-App</string>
     <string name="tile_preview_close">B oder Antippen der Kachel schließt die Vorschau</string>

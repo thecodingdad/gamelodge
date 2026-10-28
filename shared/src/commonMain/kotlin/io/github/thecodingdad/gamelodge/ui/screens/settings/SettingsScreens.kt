@@ -94,7 +94,7 @@ fun SettingsHome(
     val searchTitle = stringResource(Res.string.settings_search)
     // START: search with the controller keyboard (the field itself works by touch and A too).
     io.github.thecodingdad.gamelodge.ui.input.PadAction(io.github.thecodingdad.gamelodge.ui.input.PadButton.START) {
-        keyboard.open(searchTitle, query, onDone = onQueryChange)
+        keyboard.open(searchTitle, query, controller = true, onDone = onQueryChange)
     }
     SettingsPage(stringResource(Res.string.tab_settings)) {
         io.github.thecodingdad.gamelodge.ui.components.LauncherTextField(searchTitle, query, onQueryChange)
@@ -257,7 +257,6 @@ private fun TileSettings(layout: TabLayout, onChange: (TabLayout) -> Unit, apps:
         ),
     )
     SectionHeader(stringResource(Res.string.section_tile_look))
-    NavRow(stringResource(Res.string.tile_preview_show), { preview = true }, stringResource(Res.string.tile_preview_sub), Icons.Filled.Visibility, initialFocus = true)
     if (preview) TilePreviewDialog(layout, apps = apps, startTab = startTab) { preview = false }
     if (apps) {
         ChoiceRow(
@@ -265,6 +264,7 @@ private fun TileSettings(layout: TabLayout, onChange: (TabLayout) -> Unit, apps:
             label = { stringResource(if (it == AppsStyle.ICONS) Res.string.apps_style_icons else Res.string.apps_style_banners) },
             onSelect = { onChange(layout.copy(appsStyle = it)) },
             optionIcon = { ShapeMark(if (it == AppsStyle.ICONS) 1f else 16f / 9f) },
+            initialFocus = true,
         )
     }
     ChoiceRow(
@@ -279,6 +279,7 @@ private fun TileSettings(layout: TabLayout, onChange: (TabLayout) -> Unit, apps:
             )
         },
         onSelect = { onChange(layout.copy(cardSize = it)) },
+        initialFocus = !apps,
     )
     if (!apps) {
         ChoiceRow(
@@ -381,6 +382,8 @@ private fun TileSettings(layout: TabLayout, onChange: (TabLayout) -> Unit, apps:
         },
         subtitle = stringResource(Res.string.setting_tile_badges_sub),
     )
+    // The settings above on one tile in its real size.
+    io.github.thecodingdad.gamelodge.ui.components.LauncherButton(stringResource(Res.string.tile_preview_show), { preview = true }, icon = Icons.Filled.Visibility)
 }
 
 @Composable

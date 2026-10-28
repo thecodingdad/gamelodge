@@ -69,6 +69,8 @@ data class KeyboardRequest(
     val initial: String,
     val kind: TextKind,
     val onDone: (String) -> Unit,
+    /** Asked for with a controller button: the on-screen keyboard even while the launcher is in touch mode. */
+    val controller: Boolean = false,
 )
 
 @Stable
@@ -76,8 +78,8 @@ class KeyboardController {
     var request by mutableStateOf<KeyboardRequest?>(null)
         private set
 
-    fun open(title: String, initial: String, kind: TextKind = TextKind.TEXT, onDone: (String) -> Unit) {
-        request = KeyboardRequest(title, initial, kind, onDone)
+    fun open(title: String, initial: String, kind: TextKind = TextKind.TEXT, controller: Boolean = false, onDone: (String) -> Unit) {
+        request = KeyboardRequest(title, initial, kind, onDone, controller)
     }
 
     fun close() {
@@ -148,14 +150,14 @@ fun LauncherTextField(
                 // A (arrives as D-pad centre) would open the system keyboard: the controller's instead.
                 val confirm = e.key == androidx.compose.ui.input.key.Key.DirectionCenter || e.key == androidx.compose.ui.input.key.Key.ButtonA
                 if (!confirm) return@onPreviewKeyEvent false
-                if (e.type == androidx.compose.ui.input.key.KeyEventType.KeyUp) keyboard.open(label, value, kind, onValueChange)
+                if (e.type == androidx.compose.ui.input.key.KeyEventType.KeyUp) keyboard.open(label, value, kind, controller = true, onDone = onValueChange)
                 true
             },
         )
         return
     }
     FocusSurface(
-        onClick = { keyboard.open(label, value, kind, onValueChange) },
+        onClick = { keyboard.open(label, value, kind, onDone = onValueChange) },
         modifier = modifier.fillMaxWidth().heightIn(min = 64.dp),
         color = colors.surfaceRaised,
         focusScale = 1.02f,
@@ -191,7 +193,7 @@ fun ControllerKeyboardHost(controller: KeyboardController) {
     val request = controller.request
     // The mode at the moment the dialog opens decides; switching while typing doesn't swap it.
     val controllerMode = isControllerMode()
-    val touch = remember(request) { !controllerMode }
+    val touch = remember(request) { !controllerMode && request?.controller != true }
     if (request != null && touch) {
         TouchTextDialog(request, controller)
         return
@@ -353,7 +355,7 @@ fun ControllerKeyboardHost(controller: KeyboardController) {
                 ButtonHint(PadButton.Y, stringResource(Res.string.keyboard_space)),
                 ButtonHint(PadButton.L2, stringResource(Res.string.keyboard_shift)),
                 ButtonHint(PadButton.R2, stringResource(Res.string.keyboard_symbols)),
-                ButtonHint(PadButton.START, stringResource(Res.string.keyboard_done)),
+                ButtonHint(PadButton.L1, stringResource(Res.string.keyboard_cursor), secondButton = PadButton.R1),
                 ButtonHint(PadButton.B, stringResource(Res.string.action_cancel), onClick = controller::close),
             ),
             inPopup = true,

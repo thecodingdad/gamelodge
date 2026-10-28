@@ -343,7 +343,14 @@
     <string name="ha_auth_failed">Login expired – please sign in again</string>
     <string name="ha_panel_empty">Add Home Assistant entities as tiles to control them from anywhere in the quick menu.</string>
     <string name="ha_setup">Set up</string>
-    <string name="ha_hint_toggle">Switch · ◀▶ adjust</string>
+    <string name="ha_hint_switch">Switch</string>
+    <string name="ha_hint_cover">Open/close</string>
+    <string name="ha_hint_power">On/off</string>
+    <string name="ha_hint_run">Run</string>
+    <string name="ha_hint_brightness">Brightness</string>
+    <string name="ha_hint_position">Position</string>
+    <string name="ha_hint_temperature">Temperature</string>
+    <string name="keyboard_cursor">Cursor</string>
     <string name="ha_status">Status</string>
     <string name="ha_url">Home Assistant URL</string>
     <string name="ha_login">Sign in</string>
@@ -1295,7 +1302,6 @@
     <string name="vpn_see_hosts">Tunnel per host, waiting for a woken host</string>
     <string name="hint_preview">Preview</string>
     <string name="tile_preview_show">Show preview</string>
-    <string name="tile_preview_sub">A tile in its real size with these settings</string>
     <string name="tile_preview_sample_game">Sample game</string>
     <string name="tile_preview_sample_app">Sample app</string>
     <string name="tile_preview_close">B or a tap on the tile closes the preview</string>
