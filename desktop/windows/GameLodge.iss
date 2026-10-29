@@ -52,6 +52,8 @@ de.DesktopIcon=Verknüpfung auf dem Desktop erstellen
 en.StartNow=Start {#AppName}
 de.StartNow={#AppName} starten
 en.KeepData=Keep your library, settings and pairings?%n%nYes: they are used again after a new installation.%nNo: everything the launcher stored is deleted.
+en.InUse=GameLodge or a game started through it is still running (its files are in use).%n%nClose GameLodge, quit the game and run setup again. Nothing was changed.
+de.InUse=GameLodge oder ein darüber gestartetes Spiel läuft noch (seine Dateien sind in Benutzung).%n%nBeende GameLodge und das Spiel und starte das Setup erneut. Es wurde nichts verändert.
 de.KeepData=Bibliothek, Einstellungen und Kopplungen behalten?%n%nJa: Sie werden nach einer Neuinstallation wieder verwendet.%nNein: Alles, was der Launcher gespeichert hat, wird gelöscht.
 
 [Tasks]
@@ -80,6 +82,28 @@ Filename: "{app}\GameLodge.exe"; WorkingDir: "{app}"; Description: "{cm:StartNow
 Type: filesandordirs; Name: "{app}\moonlight"
 
 [Code]
+// A folder whose files are open can't be renamed: tried (and undone) before anything is deleted,
+// so a running launcher or game runner never leaves a half removed installation behind.
+function FolderInUse(const Dir: String): Boolean;
+begin
+  Result := False;
+  if not DirExists(Dir) then Exit;
+  if RenameFile(Dir, Dir + '.setup-check') then
+    RenameFile(Dir + '.setup-check', Dir)
+  else
+    Result := True;
+end;
+
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+var
+  App: String;
+begin
+  Result := '';
+  App := ExpandConstant('{app}');
+  if FolderInUse(App + '\runtime') or FolderInUse(App + '\lib') or FolderInUse(App + '\moonlight') then
+    Result := CustomMessage('InUse');
+end;
+
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 begin
   if CurUninstallStep = usUninstall then
