@@ -6,6 +6,7 @@ import io.github.thecodingdad.gamelodge.data.db.ItemCollectionCrossRef
 import io.github.thecodingdad.gamelodge.data.db.ItemKind
 import io.github.thecodingdad.gamelodge.data.db.KindSource
 import io.github.thecodingdad.gamelodge.data.db.MetaField
+import io.github.thecodingdad.gamelodge.data.db.LibraryItemEntity
 import io.github.thecodingdad.gamelodge.data.db.clearedMetadata
 import io.github.thecodingdad.gamelodge.data.db.MetadataState
 import io.github.thecodingdad.gamelodge.data.db.LauncherDatabase
@@ -37,6 +38,9 @@ import kotlinx.coroutines.launch
 
 /** Image hosts the companion accepts in corrections (Companion.Protocol ApiServer.ArtworkHosts). */
 private val ARTWORK_HOSTS = listOf("steamgriddb.com", "images.igdb.com", "steamstatic.com", "gog-statics.com", "cdn1.epicgames.com")
+
+/** How often the hosts' GameLodge lists are checked for changes. */
+private const val COMPANION_REFRESH_MS = 60_000L
 
 /** Entry point for everything library related: keeps sources in sync and exposes entries. */
 class LibraryRepository(
@@ -90,6 +94,20 @@ class LibraryRepository(
                 lists.filter { (uuid, apps) -> previous[uuid] !== apps }
                     .forEach { (uuid, apps) -> syncHost(uuid, apps) }
                 previous = lists
+            }
+        }
+        // Changes on a host's GameLodge (a cover picked on another device) don't change the app
+        // list: asked for once a minute (a cheap "not modified" while nothing changed).
+        scope.launch(Dispatchers.IO) {
+            while (true) {
+                kotlinx.coroutines.delay(COMPANION_REFRESH_MS)
+                val online = hosts.hosts.value.values.filter { it.paired && it.status == HostStatus.ONLINE }.map { it.uuid }
+                for (uuid in online) {
+                    if (hosts.appLists.value[uuid] == null) continue
+                    val games = runCatching { companion?.changedGames(uuid) }.getOrNull() ?: continue
+                    Log.d("Host $uuid: companion list changed")
+                    applyCompanion(uuid, games)
+                }
             }
         }
         // Paired hosts that are online but haven't sent their app list yet: a running task each.
@@ -233,6 +251,7 @@ class LibraryRepository(
             if (PlatformResolver.mayReplace(item, PlatformSource.COMPANION, platform)) {
                 dao.setPlatform(item.id, platform, PlatformSource.COMPANION)
             }
+            applyHandPicked(hostUuid, item.id, game)
             val hasMetadata = game.igdbId != null || game.summary != null || game.cover != null
             if (!hasMetadata || item.metadataState == MetadataState.LOCKED) continue
             val fresh = dao.getItem(item.id) ?: continue
@@ -264,6 +283,59 @@ class LibraryRepository(
             )
             if (updated != fresh) dao.upsertItem(updated)
         }
+    }
+
+    /**
+     * What was set by hand on another device (the host lists it as manual) replaces the value here
+     * and counts as set by hand here too; a new version of the host's own box art replaces the
+     * older one. Everything else stays as it is.
+     */
+    private suspend fun applyHandPicked(hostUuid: String, itemId: String, game: io.github.thecodingdad.gamelodge.data.companion.HostGame) {
+        val feed = companion ?: return
+        val fresh = dao.getItem(itemId) ?: return
+        val manual = game.manual.toSet()
+        var u = fresh
+        val picked = mutableSetOf<MetaField>()
+        fun isManual(field: MetaField) = field.hostName in manual
+        suspend fun image(field: MetaField, now: String?, ref: String?, set: (LibraryItemEntity, String?) -> LibraryItemEntity) {
+            when {
+                isManual(field) -> {
+                    val value = feed.artwork(hostUuid, ref)
+                    // A failed download keeps what is there.
+                    if (ref == null || value != null) {
+                        u = set(u, value)
+                        picked += field
+                    }
+                }
+                feed.isOlderVersion(now, ref) -> feed.artwork(hostUuid, ref)?.let { u = set(u, it) }
+            }
+        }
+        fun text(field: MetaField, apply: (LibraryItemEntity) -> LibraryItemEntity) {
+            if (isManual(field)) {
+                u = apply(u)
+                picked += field
+            }
+        }
+        fun list(values: List<String>) = values.joinToString(", ").ifEmpty { null }
+        image(MetaField.COVER, fresh.coverUrl, game.cover) { i, v -> i.copy(coverUrl = v) }
+        image(MetaField.HERO, fresh.heroUrl, game.hero) { i, v -> i.copy(heroUrl = v) }
+        image(MetaField.LOGO, fresh.logoUrl, game.logo) { i, v -> i.copy(logoUrl = v) }
+        image(MetaField.ICON, fresh.iconUrl, game.icon) { i, v -> i.copy(iconUrl = v) }
+        if (isManual(MetaField.ANIMATED_COVER)) { u = u.copy(animatedCoverUrl = game.animatedCover); picked += MetaField.ANIMATED_COVER }
+        if (isManual(MetaField.ANIMATED_HERO)) { u = u.copy(animatedHeroUrl = game.animatedHero); picked += MetaField.ANIMATED_HERO }
+        text(MetaField.TITLE) { it.copy(title = game.name, normalizedTitle = TitleNormalizer.normalize(game.name)) }
+        text(MetaField.DESCRIPTION) { it.copy(description = game.summary) }
+        text(MetaField.GENRES) { it.copy(genres = list(game.genres)) }
+        text(MetaField.DEVELOPER) { it.copy(developer = list(game.developers)) }
+        text(MetaField.PUBLISHER) { it.copy(publisher = list(game.publishers)) }
+        text(MetaField.RELEASE) {
+            it.copy(
+                releaseDate = game.releaseDate?.times(1000),
+                releaseYear = game.releaseDate?.let { s -> java.time.Instant.ofEpochSecond(s).atZone(java.time.ZoneOffset.UTC).year },
+            )
+        }
+        if (picked.isNotEmpty()) u = u.copy(manualFields = (u.manual + picked).joinToString(",") { it.name })
+        if (u != fresh) dao.upsertItem(u)
     }
 
     /**

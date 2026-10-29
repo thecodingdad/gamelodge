@@ -111,10 +111,15 @@ data class LibraryItemEntity(
 }
 
 /** Metadata fields that can be edited (and then are protected against automatic updates). */
-enum class MetaField {
-    TITLE, DESCRIPTION, GENRES, DEVELOPER, PUBLISHER, SERIES, FEATURES, RELEASE, RATING, AGE_RATING,
+enum class MetaField(
+    /** Its name in host game corrections / [io.github.thecodingdad.gamelodge.data.companion.HostGame.manual]; null: not shared. */
+    val hostName: String? = null,
+) {
+    TITLE("name"), DESCRIPTION("summary"), GENRES("genres"), DEVELOPER("developers"), PUBLISHER("publishers"),
+    SERIES, FEATURES, RELEASE("release"), RATING, AGE_RATING,
     // Images picked by hand.
-    COVER, HERO, LOGO, ICON, ANIMATED_COVER, ANIMATED_HERO, LANDSCAPE, SQUARE,
+    COVER("cover"), HERO("hero"), LOGO("logo"), ICON("icon"), ANIMATED_COVER("animatedCover"), ANIMATED_HERO("animatedHero"),
+    LANDSCAPE, SQUARE,
 }
 
 /** Where [LibraryItemEntity.platform] came from; higher sources are never overwritten by lower ones. */

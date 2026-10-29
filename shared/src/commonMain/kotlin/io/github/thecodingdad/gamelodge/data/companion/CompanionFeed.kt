@@ -30,6 +30,15 @@ class CompanionFeed(
         list.games.filter { it.appUuid != null }.associateBy { it.appUuid!!.uppercase() }
     }
 
+    /** Like [games], but only when the list changed since the last fetch (null otherwise). */
+    suspend fun changedGames(hostUuid: String): Map<String, HostGame>? = withContext(Dispatchers.IO) {
+        val server = companionFor(hostUuid) ?: return@withContext null
+        val before = cache[server.id]?.first
+        val list = fetch(server) ?: return@withContext null
+        if (before != null && cache[server.id]?.first == before) return@withContext null
+        list.games.filter { it.appUuid != null }.associateBy { it.appUuid!!.uppercase() }
+    }
+
     private fun companionFor(hostUuid: String): PairedServer? = servers.companionFor(hostUuid)?.takeIf(isEnabled)
 
     private fun fetch(server: PairedServer): HostGamesList? {
@@ -69,9 +78,25 @@ class CompanionFeed(
                 val tmp = File(file.parentFile, "$id.tmp")
                 r.body?.byteStream()?.use { input -> tmp.outputStream().use { input.copyTo(it) } }
                 tmp.renameTo(file)
+                // A new version of an image ("<name>.v<time>"): the older ones go.
+                val base = id.replace(VERSION_SUFFIX, "")
+                file.parentFile?.listFiles { f -> f.name != file.name && (f.name == "$base.png" || f.name.startsWith("$base.v")) }?.forEach { it.delete() }
                 file.absolutePath
             }
         }.getOrNull()
+    }
+
+    /**
+     * [current] is a downloaded companion image and [ref] another version of the same image: it
+     * is to be replaced (the same source, so no own choice is overwritten).
+     */
+    fun isOlderVersion(current: String?, ref: String?): Boolean {
+        if (current == null || ref == null || !ref.startsWith("image:")) return false
+        val file = File(current)
+        if (file.parentFile?.parentFile?.absoluteFile != imageDir.absoluteFile) return false
+        val name = file.name.removeSuffix(".png")
+        val id = ref.removePrefix("image:")
+        return name != id && name.replace(VERSION_SUFFIX, "") == id.replace(VERSION_SUFFIX, "")
     }
 
     /** Sends a correction for the host entry [appUuid] to the host's companion. */
@@ -85,6 +110,10 @@ class CompanionFeed(
                 r.isSuccessful
             }
         }.onFailure { Log.w("Correction for ${game.name} not sent", it) }.getOrDefault(false)
+    }
+
+    private companion object {
+        val VERSION_SUFFIX = Regex("""\.v\d+$""")
     }
 
     /** Forgets cached lists and images of a server (removed). */

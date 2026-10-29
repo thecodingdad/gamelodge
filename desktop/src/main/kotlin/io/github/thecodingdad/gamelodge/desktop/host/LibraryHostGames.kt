@@ -96,6 +96,12 @@ class LibraryHostGames(
         val e = s.entry
         val png = sync()?.coverFile(HostSync.fileName(e.id))
         fun web(url: String?) = url?.takeIf { it.startsWith("https://") }
+        val manual = item.manual
+        // A cover chosen by hand goes out as it is (full size); otherwise the box art made here,
+        // its version in the id so launchers fetch it again once it changes.
+        val cover = web(item.coverUrl).takeIf { MetaField.COVER in manual }
+            ?: png?.let { "image:${HostSync.fileName(e.id)}.v${it.lastModified() / 1000}" }
+            ?: web(item.coverUrl) ?: e.covers.firstNotNullOfOrNull { web(it) }
         fun list(value: String?) = value?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() }.orEmpty()
         return HostGame(
             id = e.id,
@@ -105,7 +111,7 @@ class LibraryHostGames(
             platform = e.platform,
             source = e.source,
             installed = e.installed,
-            cover = if (png != null) "image:${HostSync.fileName(e.id)}" else web(item.coverUrl) ?: e.covers.firstNotNullOfOrNull { web(it) },
+            cover = cover,
             hero = web(item.heroUrl),
             logo = web(item.logoUrl),
             icon = web(item.iconUrl),
@@ -124,6 +130,7 @@ class LibraryHostGames(
             communityRating = item.communityRating?.toDouble(),
             actions = actions(e.id).map { io.github.thecodingdad.gamelodge.data.companion.HostGameAction(it.id, it.name) },
             defaultAction = actions(e.id).firstOrNull { it.isDefault }?.id,
+            manual = manual.mapNotNull { it.hostName },
         )
     }
 

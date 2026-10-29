@@ -41,6 +41,11 @@ data class HostGame(
     val actions: List<HostGameAction> = emptyList(),
     /** The action a start uses unless another one is asked for; null = "play". */
     val defaultAction: String? = null,
+    /**
+     * Fields set by hand (on any device; names as in [HostGameCorrection.reset]): launchers take
+     * these over their own values, everything else only fills what they don't have yet.
+     */
+    val manual: List<String> = emptyList(),
 ) {
     val isGame: Boolean get() = kind != "app"
 

@@ -190,14 +190,16 @@ class HostSync(
         }.onFailure { Log.w("Sync: backup failed", it) }
     }
 
-    /** The image served for "image:<id>" (the PNG box art of a game). */
+    /** The image served for "image:<id>" (the PNG box art of a game; a ".v<time>" version suffix is ignored). */
     fun coverFile(imageId: String): File? {
         if (imageId.contains("..") || !imageId.all { it.isLetterOrDigit() && it.code < 128 || it in "-_." }) return null
-        return File(coverDir, "$imageId.png").takeIf { it.isFile }
+        val name = imageId.replace(VERSION_SUFFIX, "")
+        return File(coverDir, "$name.png").takeIf { it.isFile }
     }
 
     companion object {
         private const val TASK_ID = "host-sync"
+        private val VERSION_SUFFIX = Regex("""\.v\d+$""")
         /** File name of a game's box art (letters, digits, - and . stay). */
         fun fileName(id: String) = id.map { if (it.isLetterOrDigit() && it.code < 128 || it == '-' || it == '.') it else '_' }.joinToString("")
 
