@@ -12,6 +12,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -83,6 +85,24 @@ fun ProfilesList(
         LauncherButton(
             stringResource(Res.string.profile_new), icon = Icons.Filled.Add,
             onClick = { keyboard.open(newTitle, "") { name -> if (name.isNotBlank()) openProfile(editing.create(name.trim())) } },
+        )
+        SectionHeader(stringResource(Res.string.conn_warnings_section))
+        val container = io.github.thecodingdad.gamelodge.LocalContainer.current
+        val settings by container.settings.settings.collectAsState(io.github.thecodingdad.gamelodge.data.settings.LauncherSettings())
+        val scope = androidx.compose.runtime.rememberCoroutineScope()
+        io.github.thecodingdad.gamelodge.ui.screens.settings.ChoiceRow(
+            stringResource(Res.string.conn_warnings), io.github.thecodingdad.gamelodge.data.settings.ConnectionWarnings.entries, settings.connectionWarnings,
+            label = {
+                stringResource(
+                    when (it) {
+                        io.github.thecodingdad.gamelodge.data.settings.ConnectionWarnings.OFF -> Res.string.conn_warnings_off
+                        io.github.thecodingdad.gamelodge.data.settings.ConnectionWarnings.PERF_OVERLAY -> Res.string.conn_warnings_perf
+                        io.github.thecodingdad.gamelodge.data.settings.ConnectionWarnings.ALWAYS -> Res.string.conn_warnings_always
+                    },
+                )
+            },
+            onSelect = { mode -> scope.launch { container.settings.update { s -> s.copy(connectionWarnings = mode) } } },
+            subtitle = stringResource(Res.string.conn_warnings_sub),
         )
         io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlso(io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlsoLink(stringResource(Res.string.settings_hosts), io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Page(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId.HOSTS)))
     }

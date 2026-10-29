@@ -156,6 +156,7 @@ fun main(args: Array<String>) {
         container.servers.start()
         container.metadata.start()
         container.mqtt.start()
+        io.github.thecodingdad.gamelodge.stream.StreamQuality.follow(container.settings, container.scope)
     }
     // Streaming hosts are polled while the window is shown.
     container.scope.launch { windowVisible.collect { if (it) container.hosts.startPolling() else container.hosts.stopPolling() } }
@@ -319,6 +320,8 @@ fun main(args: Array<String>) {
                 }
             },
         ) {
+        // Connection warnings over a stream.
+        ConnectionWarningWindow(vm.settings.collectAsState().value)
         // The quick menu over a game or stream.
         QuickMenuOverlayWindow(
             container, vm, feedback, gamepads,

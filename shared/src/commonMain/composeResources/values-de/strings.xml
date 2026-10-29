@@ -1484,4 +1484,14 @@
     <string name="mqtt_entity_version">App-Version</string>
     <string name="mqtt_entity_cover">Cover</string>
     <string name="mqtt_entity_hero">Hero-Bild</string>
+    <string name="conn_warn_frame_loss">Bilder gehen verloren – Verbindung zu langsam</string>
+    <string name="conn_warn_audio">Tonaussetzer – Verbindung ungleichmäßig</string>
+    <string name="conn_warn_jitter">Verbindung schwankt</string>
+    <string name="conn_warn_latency">Hohe Latenz (%1$d ms)</string>
+    <string name="conn_warnings_section">Während des Streams</string>
+    <string name="conn_warnings">Verbindungswarnungen</string>
+    <string name="conn_warnings_sub">Ein kleiner Hinweis über dem Stream, wenn die Verbindung Bilder verliert, schwankt oder verzögert</string>
+    <string name="conn_warnings_off">Aus</string>
+    <string name="conn_warnings_perf">Mit Leistungsanzeige</string>
+    <string name="conn_warnings_always">Immer</string>
 </resources>

@@ -1486,4 +1486,14 @@
     <string name="mqtt_entity_version">App version</string>
     <string name="mqtt_entity_cover">Cover</string>
     <string name="mqtt_entity_hero">Hero image</string>
+    <string name="conn_warn_frame_loss">Frames lost – connection too slow</string>
+    <string name="conn_warn_audio">Audio dropouts – connection uneven</string>
+    <string name="conn_warn_jitter">Connection unstable</string>
+    <string name="conn_warn_latency">High latency (%1$d ms)</string>
+    <string name="conn_warnings_section">During the stream</string>
+    <string name="conn_warnings">Connection warnings</string>
+    <string name="conn_warnings_sub">A small notice over the stream when the connection loses frames, wavers or lags</string>
+    <string name="conn_warnings_off">Off</string>
+    <string name="conn_warnings_perf">With performance overlay</string>
+    <string name="conn_warnings_always">Always</string>
 </resources>

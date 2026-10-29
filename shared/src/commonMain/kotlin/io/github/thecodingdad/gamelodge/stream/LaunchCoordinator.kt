@@ -170,6 +170,7 @@ class LaunchCoordinator(
     /** The stream ended (its window closed): a VPN connected for it goes again, if so set. Safe to call twice. */
     fun streamEnded() {
         _activeStream.value = null
+        StreamQuality.reset()
         streamNotices?.stopped()
         if (!vpnForStream) return
         vpnForStream = false
@@ -305,6 +306,7 @@ class LaunchCoordinator(
         try {
             val profileName = profiles.active("").name.ifEmpty { null }
             playtime.start(entry.item.id, target.id, profileName)
+            StreamQuality.reset()
             _activeStream.value = ActiveStream(entry, hostUuid, appId)
             // The host's GameLodge learns which start action to run (its runner asks for it).
             streamNotices?.started(hostUuid, resuming, target.appUuid, oneOffAction.takeUnless { resuming })

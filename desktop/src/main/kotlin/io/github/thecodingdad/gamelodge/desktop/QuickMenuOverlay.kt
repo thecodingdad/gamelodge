@@ -87,36 +87,51 @@ object QuickMenuOverlay {
     }
 
     /** Right edge of the monitor the window in front is on. */
-    private fun placeAtForeground(uiScale: Float): Placement? = runCatching {
-        val user32 = User32.INSTANCE
-        val monitor = user32.MonitorFromWindow(user32.GetForegroundWindow(), WinUser.MONITOR_DEFAULTTOPRIMARY)
-        val info = WinUser.MONITORINFO()
-        user32.GetMonitorInfo(monitor, info)
-        val r = info.rcMonitor
-        val dpiX = IntByReference(96)
-        val dpiY = IntByReference(96)
-        // Effective DPI of that monitor (Windows' scale setting).
-        NativeLibrary.getInstance("shcore").getFunction("GetDpiForMonitor").invokeInt(arrayOf(monitor, 0, dpiX, dpiY))
-        val w = r.right - r.left
-        val h = r.bottom - r.top
+    private fun placeAtForeground(uiScale: Float): Placement? {
+        val screen = ForegroundScreen.find(uiScale) ?: return null
         // Sized like the launcher's own quick menu on that screen.
-        val density = fittedDensity(dpiX.value / 96f * uiScale, w, h, CardSize.MEDIUM)
-        val width = ceil(PANEL_WIDTH_DP * density).toInt().coerceAtMost(w)
-        // Java places windows in its own units (pixels / the monitor's scale): the screen of that monitor.
-        val config = java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment().screenDevices.map { it.defaultConfiguration }
-            .firstOrNull { c ->
-                val b = c.bounds
-                val scale = c.defaultTransform.scaleX
-                (kotlin.math.abs(b.x - r.left) <= 2 || kotlin.math.abs(b.x * scale - r.left) <= 2) &&
-                    (kotlin.math.abs(b.y - r.top) <= 2 || kotlin.math.abs(b.y * scale - r.top) <= 2)
-            } ?: java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment().defaultScreenDevice.defaultConfiguration
-        val screen = config.bounds
-        val userWidth = ceil(width / config.defaultTransform.scaleX).toInt()
-        Placement(java.awt.Rectangle(screen.x + screen.width - userWidth, screen.y, userWidth, screen.height), density)
-    }.onFailure { Log.w("Quick menu overlay: no place", it) }.getOrNull()
+        val width = screen.userUnits(PANEL_WIDTH_DP).coerceAtMost(screen.bounds.width)
+        val b = screen.bounds
+        return Placement(java.awt.Rectangle(b.x + b.width - width, b.y, width, b.height), screen.density)
+    }
 
     /** Width of the quick menu's panel (QuickMenu's SidePanel). */
     private const val PANEL_WIDTH_DP = 600f
+}
+
+/**
+ * The monitor of the window in front (a game or stream): its bounds in Java's units and the density
+ * the launcher uses there ([uiScale]: the launcher's UI scale).
+ */
+internal class ForegroundScreen(val bounds: java.awt.Rectangle, val density: Float, private val scale: Double) {
+    /** [dp] in Java's units on that monitor. */
+    fun userUnits(dp: Float): Int = ceil(dp * density / scale).toInt()
+
+    companion object {
+        fun find(uiScale: Float): ForegroundScreen? = runCatching {
+            val user32 = User32.INSTANCE
+            val monitor = user32.MonitorFromWindow(user32.GetForegroundWindow(), WinUser.MONITOR_DEFAULTTOPRIMARY)
+            val info = WinUser.MONITORINFO()
+            user32.GetMonitorInfo(monitor, info)
+            val r = info.rcMonitor
+            val dpiX = IntByReference(96)
+            val dpiY = IntByReference(96)
+            // Effective DPI of that monitor (Windows' scale setting).
+            NativeLibrary.getInstance("shcore").getFunction("GetDpiForMonitor").invokeInt(arrayOf(monitor, 0, dpiX, dpiY))
+            val w = r.right - r.left
+            val h = r.bottom - r.top
+            val density = fittedDensity(dpiX.value / 96f * uiScale, w, h, CardSize.MEDIUM)
+            // Java places windows in its own units (pixels / the monitor's scale): the screen of that monitor.
+            val config = java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment().screenDevices.map { it.defaultConfiguration }
+                .firstOrNull { c ->
+                    val b = c.bounds
+                    val scale = c.defaultTransform.scaleX
+                    (kotlin.math.abs(b.x - r.left) <= 2 || kotlin.math.abs(b.x * scale - r.left) <= 2) &&
+                        (kotlin.math.abs(b.y - r.top) <= 2 || kotlin.math.abs(b.y * scale - r.top) <= 2)
+                } ?: java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment().defaultScreenDevice.defaultConfiguration
+            ForegroundScreen(config.bounds, density, config.defaultTransform.scaleX)
+        }.onFailure { Log.w("Foreground screen not found", it) }.getOrNull()
+    }
 }
 
 /**
@@ -235,4 +250,4 @@ fun QuickMenuOverlayWindow(
     }
 }
 
-private const val WS_EX_NOACTIVATE = 0x08000000
+internal const val WS_EX_NOACTIVATE = 0x08000000

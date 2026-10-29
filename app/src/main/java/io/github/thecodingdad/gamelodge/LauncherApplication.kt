@@ -49,6 +49,7 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
             game = { container.launcher.activeStream.value?.entry?.item?.id },
         )
         io.github.thecodingdad.gamelodge.ui.shell.StreamConnectingOverlay.install(container)
+        io.github.thecodingdad.gamelodge.ui.shell.ConnectionWarningOverlay.install(container)
         container.scope.launch { container.filters.ensureDefaults() }
         // Button combinations: needed by the activity and by the accessibility service, which
         // can run without any activity (e.g. after an update).

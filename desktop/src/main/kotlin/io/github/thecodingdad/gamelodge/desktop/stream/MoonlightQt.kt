@@ -69,9 +69,14 @@ class MoonlightQt(val dir: File) {
         var appRunning = false
         File(dir, "stream.log").printWriter().use { log ->
             process.inputStream.bufferedReader().forEachLine { line ->
+                val marker = line.substringAfter("LAUNCHER-", "")
+                // Once a second: for the connection warning, not for the log.
+                if (marker.startsWith("QUALITY: ")) {
+                    qualitySample(marker.removePrefix("QUALITY: "))?.let(io.github.thecodingdad.gamelodge.stream.StreamQuality::sample)
+                    return@forEachLine
+                }
                 log.println(line)
                 log.flush()
-                val marker = line.substringAfter("LAUNCHER-", "")
                 when {
                     // The window shows with its first picture; until then the launcher's start screen stays.
                     marker == "FIRSTFRAME" -> report(Start.Streaming)
@@ -90,6 +95,13 @@ class MoonlightQt(val dir: File) {
         Log.i("Stream ended ($code)${error?.let { ": $it" } ?: ""}")
         report(Start.Failed(error, appRunning))
         code
+    }
+
+    /** "rtt variance framesLost audioDrops overlay" as Moonlight-Qt reports it. */
+    private fun qualitySample(text: String): io.github.thecodingdad.gamelodge.stream.ConnectionSample? {
+        val v = text.trim().split(' ').mapNotNull { it.toIntOrNull() }
+        if (v.size < 5) return null
+        return io.github.thecodingdad.gamelodge.stream.ConnectionSample(v[0], v[1], v[2] == 1, v[3], v[4] == 1)
     }
 
     /** The launcher's icon as a file for the stream window (written once). */

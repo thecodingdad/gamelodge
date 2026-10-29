@@ -58,6 +58,9 @@ data class TabLayout(
 }
 enum class NetworkCheckMode { OFF, OUTSIDE_HOME, ALWAYS }
 
+/** Warnings about the connection during a stream: never, only while the performance overlay shows, always. */
+enum class ConnectionWarnings { OFF, PERF_OVERLAY, ALWAYS }
+
 @kotlinx.serialization.Serializable
 data class LauncherSettings(
     // Appearance
@@ -122,6 +125,7 @@ data class LauncherSettings(
     val showHiddenApps: Boolean = false,
     // Streaming
     val networkCheck: NetworkCheckMode = NetworkCheckMode.OUTSIDE_HOME,
+    val connectionWarnings: ConnectionWarnings = ConnectionWarnings.ALWAYS,
     // Home Assistant (tokens live in SecretStore)
     val haUrl: String = "",
     /** Status of the launcher sent to Home Assistant over MQTT (password in SecretStore). */
@@ -285,6 +289,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val autoMetadata = booleanPreferencesKey("auto_metadata")
         val showHiddenApps = booleanPreferencesKey("show_hidden_apps")
         val networkCheck = stringPreferencesKey("network_check")
+        val connectionWarnings = stringPreferencesKey("connection_warnings")
         val haUrl = stringPreferencesKey("ha_url")
         val mqttEnabled = booleanPreferencesKey("mqtt_enabled")
         val mqttHost = stringPreferencesKey("mqtt_host")
@@ -410,6 +415,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             autoMetadata = this[K.autoMetadata] ?: d.autoMetadata,
             showHiddenApps = this[K.showHiddenApps] ?: d.showHiddenApps,
             networkCheck = enumOr(this[K.networkCheck], d.networkCheck),
+            connectionWarnings = enumOr(this[K.connectionWarnings], d.connectionWarnings),
             haUrl = this[K.haUrl] ?: d.haUrl,
             mqttEnabled = this[K.mqttEnabled] ?: d.mqttEnabled,
             mqttHost = this[K.mqttHost] ?: d.mqttHost,
@@ -519,6 +525,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         this[K.autoMetadata] = s.autoMetadata
         this[K.showHiddenApps] = s.showHiddenApps
         this[K.networkCheck] = s.networkCheck.name
+        this[K.connectionWarnings] = s.connectionWarnings.name
         this[K.haUrl] = s.haUrl
         this[K.mqttEnabled] = s.mqttEnabled
         this[K.mqttHost] = s.mqttHost
