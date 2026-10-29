@@ -80,7 +80,7 @@ fun MetadataSettings(
                 if (reviewCount > 0) colors.warning else colors.success, if (reviewCount > 0) Icons.Filled.Checklist else Icons.Filled.CheckCircle,
                 details = listOfNotNull(stringResource(Res.string.metadata_review_count, reviewCount).takeIf { reviewCount > 0 }, storedText),
             ) {
-                LauncherButton(stringResource(Res.string.metadata_fetch_now), icon = Icons.Filled.CloudDownload, onClick = metadata::refreshPending, primary = reviewCount == 0)
+                LauncherButton(stringResource(Res.string.metadata_fetch_now), icon = Icons.Filled.CloudDownload, onClick = { metadata.refreshPending(byHand = true) }, primary = reviewCount == 0)
                 if (reviewCount > 0) LauncherButton(stringResource(Res.string.metadata_review_list), icon = Icons.Filled.Checklist, onClick = openReview, primary = true)
             }
         }

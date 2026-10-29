@@ -374,9 +374,10 @@ class MetadataService(
     }
 
     /** Processes every game that was never looked up. */
-    fun refreshPending() {
+    fun refreshPending(byHand: Boolean = false) {
         scope.launch(Dispatchers.IO) {
-            if (!isConfigured || !settings.current().autoMetadata) return@launch
+            // Asked for by hand ("fetch now", "fetch all again"): also with automatic lookups off.
+            if (!isConfigured || (!byHand && !settings.current().autoMetadata)) return@launch
             if (!mutex.tryLock()) return@launch
             try {
                 val pending = dao.getItemsWithMetadataState(listOf(MetadataState.NONE)).filter { it.kind == ItemKind.GAME }
@@ -430,7 +431,7 @@ class MetadataService(
         }
         dao.getItemsWithMetadataState(states).forEach { dao.upsertItem(it.clearedMetadata()) }
         runCatching { onFullRefresh?.invoke() }.onFailure { Log.w("Host games not read again", it) }
-        refreshPending()
+        refreshPending(byHand = true)
     }
 
     /**
