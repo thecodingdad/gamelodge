@@ -96,7 +96,7 @@ private fun GameActionDialog(initial: GameAction?, onSave: (GameAction) -> Unit,
     var picking by remember { mutableStateOf(false) }
     Modal(visible = true, onDismiss = onDismiss, title = stringResource(Res.string.game_action_title), maxWidth = 680.dp, closeButton = false) {
         // Scrolls on small screens; the buttons below stay.
-        androidx.compose.foundation.layout.Column(Modifier.popupHeightIn(420.dp).controllerScroll(), verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)) {
+        androidx.compose.foundation.layout.Column(Modifier.weight(1f, fill = false).popupHeightIn(420.dp).controllerScroll(), verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)) {
         NavRow(
             stringResource(Res.string.game_action_entity), { ha.client.start(); picking = true },
             actionLabel(action, entities) ?: stringResource(Res.string.not_set), initialFocus = true,

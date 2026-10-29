@@ -65,7 +65,7 @@ fun QuickAccessEditor(visible: Boolean, onDismiss: () -> Unit) {
     val context = androidx.compose.ui.platform.LocalContext.current
 
     Modal(visible = visible, onDismiss = onDismiss, title = stringResource(Res.string.qm_edit), maxWidth = 760.dp) {
-        Column(Modifier.popupHeightIn(640.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.weight(1f, fill = false).popupHeightIn(640.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             SectionHeader(stringResource(Res.string.qm_tiles_section))
             Text(stringResource(Res.string.qt_settings_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
             val unavailable = remember(tiles) { tiles.filterNot { QuickTile.isAvailable(it) }.toSet() }
@@ -102,7 +102,7 @@ fun QuickAccessEditor(visible: Boolean, onDismiss: () -> Unit) {
     // Only tiles the device has the hardware for.
     val available = remember { QuickTile.groups.flatMap { it.second }.filter { QuickTile.isAvailable(it) }.toSet() }
     Modal(visible = adding, onDismiss = { adding = false }, title = stringResource(Res.string.qt_add), maxWidth = 760.dp) {
-        Column(Modifier.popupHeightIn(600.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.weight(1f, fill = false).popupHeightIn(600.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             fun add(id: String) { save(tiles + id); adding = false }
             QuickTile.groups.forEach { (title, ids) ->
                 val free = ids.filter { it !in tiles && it in available }

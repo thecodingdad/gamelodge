@@ -212,7 +212,7 @@ fun EmulatorsPage(
 @Composable
 private fun PresetDialog(visible: Boolean, onDismiss: () -> Unit, onPick: (EmulatorPreset?) -> Unit) {
     Modal(visible = visible, onDismiss = onDismiss, title = stringResource(Res.string.emu_pc_add_title), maxWidth = 680.dp) {
-        Column(Modifier.popupHeightIn(620.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.weight(1f, fill = false).popupHeightIn(620.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             EmulatorPresets.all.forEachIndexed { i, preset ->
                 NavRow(
                     preset.name, { onPick(preset) },
@@ -235,7 +235,7 @@ private fun EmulatorDialog(emulator: PcEmulator?, onDismiss: () -> Unit, onSave:
         var exe by remember(e) { mutableStateOf(e.executable) }
         var args by remember(e) { mutableStateOf(e.arguments) }
         var chosen by remember(e) { mutableStateOf(e.platforms.map { it.platform }.toSet()) }
-        Column(Modifier.popupHeightIn(640.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.weight(1f, fill = false).popupHeightIn(640.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             LauncherTextField(stringResource(Res.string.emu_pc_name), name, { name = it })
             LauncherTextField(stringResource(Res.string.emu_pc_program), exe, { exe = it.trim().removeSurrounding("\"") }, placeholder = "C:\\Emulators\\Dolphin\\Dolphin.exe")
             val exeFound by androidx.compose.runtime.produceState<Boolean?>(null, exe) {

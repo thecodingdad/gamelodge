@@ -146,6 +146,7 @@ private fun LicenseTextModal(license: LicenseText?, onDismiss: () -> Unit) {
             style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
             color = LauncherTheme.colors.onSurface,
             modifier = Modifier
+                .weight(1f, fill = false)
                 .fillMaxWidth()
                 .popupHeightIn(520.dp)
                 .focusRequester(focus)

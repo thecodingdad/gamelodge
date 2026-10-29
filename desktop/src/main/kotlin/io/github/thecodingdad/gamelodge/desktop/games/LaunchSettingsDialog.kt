@@ -75,7 +75,7 @@ fun LaunchSettingsDialog(
 
     Modal(visible = e != null && editing == null, onDismiss = onDismiss, title = stringResource(Res.string.start_actions), maxWidth = 760.dp) {
         val game = e ?: return@Modal
-        Column(Modifier.popupHeightIn(620.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.weight(1f, fill = false).popupHeightIn(620.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(title ?: game.name, style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
             Text(stringResource(Res.string.start_actions_intro), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
             NavRow(
@@ -117,7 +117,7 @@ fun LaunchSettingsDialog(
             is Editing.Store -> c.action.id
             is Editing.Own -> c.action?.id
         }
-        Column(Modifier.popupHeightIn(620.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.weight(1f, fill = false).popupHeightIn(620.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             when (c) {
                 Editing.Play -> PlayCommandFields(game, override, onSave = { save(it); editing = null })
                 is Editing.Store -> {

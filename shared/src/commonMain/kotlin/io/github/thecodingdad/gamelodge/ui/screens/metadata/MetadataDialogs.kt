@@ -100,7 +100,7 @@ fun FixMetadataDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
         when {
             applying || found == null -> CircularProgressIndicator(color = LauncherTheme.colors.accent, modifier = Modifier.align(Alignment.CenterHorizontally))
             found.isEmpty() -> Text(stringResource(Res.string.metadata_no_results), color = LauncherTheme.colors.onSurfaceMuted)
-            else -> LazyColumn(state = foundState, modifier = Modifier.popupHeightIn(340.dp).fadingEdges(foundState).mouseDragScroll(foundState), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            else -> LazyColumn(state = foundState, modifier = Modifier.weight(1f, fill = false).popupHeightIn(340.dp).fadingEdges(foundState).mouseDragScroll(foundState), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(found, key = { c -> "${c.source}:${c.id}" }) { c ->
                     FocusSurface(
                         onClick = {

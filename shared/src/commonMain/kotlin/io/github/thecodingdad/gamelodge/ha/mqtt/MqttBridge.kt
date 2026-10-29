@@ -115,6 +115,40 @@ class MqttBridge(private val c: LauncherContainer) {
         return ok
     }
 
+    /** Outcome of [test]. */
+    sealed interface TestResult {
+        data object Ok : TestResult
+        data object BadLogin : TestResult
+        data class Certificate(val fingerprint: String, val changed: Boolean) : TestResult
+        data class Failed(val message: String) : TestResult
+    }
+
+    /**
+     * Connects once with these (not yet saved) settings and leaves again; the running connection
+     * isn't touched. [password] null: the saved one.
+     */
+    suspend fun test(
+        host: String, port: Int, tls: Boolean, user: String, password: String?, allowSelfSigned: Boolean, pin: String?,
+    ): TestResult = withContext(Dispatchers.IO) {
+        val options = MqttOptions(
+            host = host.trim(), port = port, tls = tls, username = user.trim().ifEmpty { null },
+            password = password ?: c.secrets.get(SecretStore.Keys.MQTT_PASSWORD),
+            // Its own client id: the broker would otherwise drop the running connection.
+            clientId = "gamelodge-test-" + UUID.randomUUID().toString().take(8),
+            keepAliveSeconds = 10, allowSelfSigned = tls && allowSelfSigned, pinnedCertificate = pin,
+        )
+        try {
+            MqttConnection.open(options).close()
+            TestResult.Ok
+        } catch (e: MqttCertificateException) {
+            TestResult.Certificate(e.fingerprint, e.changed)
+        } catch (e: MqttRefusedException) {
+            if (e.badLogin) TestResult.BadLogin else TestResult.Failed(e.message.orEmpty())
+        } catch (e: Exception) {
+            TestResult.Failed(e.message ?: e.javaClass.simpleName)
+        }
+    }
+
     private suspend fun connectLoop(cfg: Config) {
         var backoff = MIN_BACKOFF_MS
         while (true) {

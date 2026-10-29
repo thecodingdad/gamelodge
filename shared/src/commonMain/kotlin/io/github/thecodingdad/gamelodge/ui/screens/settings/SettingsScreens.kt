@@ -215,7 +215,7 @@ fun HomeScreenSettings(
             visible = adding && hidden.isNotEmpty(), onDismiss = { adding = false }, title = stringResource(Res.string.home_row_add),
         ) {
             androidx.compose.foundation.layout.Column(
-                Modifier.popupHeightIn(480.dp).controllerScroll(), verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp),
+                Modifier.weight(1f, fill = false).popupHeightIn(480.dp).controllerScroll(), verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp),
             ) {
                 hidden.forEachIndexed { index, id ->
                     val text = if (id == HA) haLabel else label(id) ?: return@forEachIndexed

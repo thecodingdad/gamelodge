@@ -197,6 +197,13 @@ class RenderTest {
         renderPage("home-assistant") {
             io.github.thecodingdad.gamelodge.ui.screens.ha.HaSettings(io.github.thecodingdad.gamelodge.data.settings.LauncherSettings(), {}, listOf(host)) {}
         }
+        // Odin height (1080 px at 326 dpi ≈ 530 dp): the buttons must stay in view.
+        renderPage("mqtt-dialog", 795) {
+            io.github.thecodingdad.gamelodge.ui.screens.ha.MqttDialog(
+                io.github.thecodingdad.gamelodge.data.settings.LauncherSettings(mqttEnabled = true, mqttHost = "homeassistant.local", mqttTls = true, mqttAllowSelfSigned = true, mqttUser = "gamelodge"),
+                {},
+            ) {}
+        }
         renderPage("host-config") { io.github.thecodingdad.gamelodge.ui.screens.settings.HostConfigScreen(host) {} }
         fun entity(id: String, name: String, state: String) = io.github.thecodingdad.gamelodge.ha.HaEntity(
             id, state, kotlinx.serialization.json.buildJsonObject { put("friendly_name", kotlinx.serialization.json.JsonPrimitive(name)) },

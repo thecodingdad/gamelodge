@@ -37,7 +37,7 @@ fun CollectionsDialog(
     Modal(visible = entry != null, onDismiss = onDismiss, title = stringResource(Res.string.collections_title), maxWidth = 520.dp) {
         val e = entry ?: return@Modal
         Column(
-            Modifier.popupHeightIn(380.dp).controllerScroll(),
+            Modifier.weight(1f, fill = false).popupHeightIn(380.dp).controllerScroll(),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             collections.forEach { (collection, members) ->

@@ -242,7 +242,7 @@ private fun HomeNetworksDialog(
             style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted,
         )
         androidx.compose.foundation.layout.Column(
-            Modifier.popupHeightIn(320.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(8.dp),
+            Modifier.weight(1f, fill = false).popupHeightIn(320.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             if (networks.isEmpty()) Text(stringResource(Res.string.vpn_home_empty), color = LauncherTheme.colors.onSurfaceMuted)
             networks.sorted().forEach { entry ->

@@ -46,7 +46,7 @@ fun ProfilePickerPopup(
     Modal(visible = visible, onDismiss = onDismiss, title = stringResource(Res.string.profile_picker_title), maxWidth = 560.dp) {
         Text(stringResource(Res.string.profile_picker_sub), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
         androidx.compose.foundation.layout.Spacer(Modifier.heightIn(min = 14.dp))
-        Column(Modifier.popupHeightIn(420.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.weight(1f, fill = false).popupHeightIn(420.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             profiles.forEach { p ->
                 val isActive = p.uuid == active.uuid
                 LauncherButton(
@@ -77,7 +77,7 @@ fun ControllerPopup(
         val colors = LauncherTheme.colors
         Text(stringResource(Res.string.controller_popup_sub), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceMuted)
         androidx.compose.foundation.layout.Spacer(Modifier.heightIn(min = 14.dp))
-        Column(Modifier.popupHeightIn(420.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.weight(1f, fill = false).popupHeightIn(420.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             if (controllers.isEmpty()) Text(stringResource(Res.string.controllers_none), color = colors.onSurface)
             controllers.forEach { c ->
                 val details = listOfNotNull(

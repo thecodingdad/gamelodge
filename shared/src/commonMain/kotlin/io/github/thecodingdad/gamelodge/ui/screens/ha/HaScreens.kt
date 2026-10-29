@@ -332,7 +332,7 @@ fun HaTileList(enabled: Boolean) {
 fun HaTileEditor(visible: Boolean, onDismiss: () -> Unit) {
     io.github.thecodingdad.gamelodge.ui.components.Modal(visible = visible, onDismiss = onDismiss, title = stringResource(Res.string.ha_tiles), maxWidth = 760.dp) {
         Column(
-            Modifier.popupHeightIn(640.dp).controllerScroll(),
+            Modifier.weight(1f, fill = false).popupHeightIn(640.dp).controllerScroll(),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) { HaTileList(enabled = true) }
     }

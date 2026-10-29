@@ -60,7 +60,7 @@ private fun formatFingerprint(hex: String) = hex.uppercase().chunked(2).joinToSt
 
 /** Broker and device name; everything applies with Save (the password only when typed). */
 @Composable
-private fun MqttDialog(settings: LauncherSettings, update: ((LauncherSettings) -> LauncherSettings) -> Unit, onDismiss: () -> Unit) {
+fun MqttDialog(settings: LauncherSettings, update: ((LauncherSettings) -> LauncherSettings) -> Unit, onDismiss: () -> Unit) {
     val c = io.github.thecodingdad.gamelodge.LocalContainer.current
     val scope = rememberCoroutineScope()
     val state by c.mqtt.state.collectAsState()
@@ -75,11 +75,17 @@ private fun MqttDialog(settings: LauncherSettings, update: ((LauncherSettings) -
     var password by remember { mutableStateOf("") }
     val hasPassword = remember { c.secrets.get(SecretStore.Keys.MQTT_PASSWORD) != null }
     var deviceName by remember { mutableStateOf(settings.mqttDeviceName) }
+    // Confirmed certificate: applies with Save like everything else here.
+    var pin by remember { mutableStateOf(settings.mqttCertPin) }
     val portNumber = port.trim().toIntOrNull()?.takeIf { it in 1..65535 }
+    var testing by remember { mutableStateOf(false) }
+    var testResult by remember { mutableStateOf<io.github.thecodingdad.gamelodge.ha.mqtt.MqttBridge.TestResult?>(null) }
+    // A changed entry makes an earlier test result stale.
+    androidx.compose.runtime.LaunchedEffect(host, port, tls, selfSigned, user, password) { testResult = null }
 
     Modal(visible = true, onDismiss = onDismiss, title = stringResource(Res.string.mqtt_title), maxWidth = 680.dp, closeButton = false) {
-        // Scrolls on small screens; the buttons below stay.
-        Column(Modifier.popupHeightIn(460.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        // Scrolls when it doesn't fit; the buttons below always stay in view.
+        Column(Modifier.weight(1f, fill = false).popupHeightIn(460.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(stringResource(Res.string.mqtt_intro), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
             SwitchRow(stringResource(Res.string.mqtt_enabled), enabled, { enabled = it }, initialFocus = true)
             LauncherTextField(stringResource(Res.string.mqtt_host), host, { host = it.trim() }, kind = TextKind.URL, placeholder = "homeassistant.local")
@@ -92,22 +98,9 @@ private fun MqttDialog(settings: LauncherSettings, update: ((LauncherSettings) -
             if (tls) {
                 SwitchRow(stringResource(Res.string.mqtt_self_signed), selfSigned, { selfSigned = it }, subtitle = stringResource(Res.string.mqtt_self_signed_sub))
             }
-            val certToConfirm = state.fingerprint?.takeIf { state.status == MqttStatus.CERT_UNTRUSTED || state.status == MqttStatus.CERT_CHANGED }
-            if (certToConfirm != null) {
-                val changed = state.status == MqttStatus.CERT_CHANGED
+            if (tls && selfSigned && pin.isNotEmpty()) {
                 Text(
-                    stringResource(if (changed) Res.string.mqtt_cert_changed_warning else Res.string.mqtt_cert_confirm),
-                    style = MaterialTheme.typography.bodyMedium, color = if (changed) LauncherTheme.colors.danger else LauncherTheme.colors.onSurface,
-                )
-                Text(formatFingerprint(certToConfirm), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
-                LauncherButton(stringResource(Res.string.mqtt_cert_trust), onClick = {
-                    // Applies at once: the connection waits for it.
-                    update { it.copy(mqttCertPin = certToConfirm) }
-                    c.mqtt.restart()
-                })
-            } else if (tls && selfSigned && settings.mqttCertPin.isNotEmpty()) {
-                Text(
-                    stringResource(Res.string.mqtt_cert_pinned, formatFingerprint(settings.mqttCertPin)),
+                    stringResource(Res.string.mqtt_cert_pinned, formatFingerprint(pin)),
                     style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted,
                 )
             }
@@ -128,6 +121,31 @@ private fun MqttDialog(settings: LauncherSettings, update: ((LauncherSettings) -
                 )
             }
         }
+        // Outside the scroll area: the outcome of a test is seen at once.
+        testResult?.let { r ->
+            val (text, color) = when (r) {
+                io.github.thecodingdad.gamelodge.ha.mqtt.MqttBridge.TestResult.Ok -> stringResource(Res.string.mqtt_test_ok) to LauncherTheme.colors.success
+                io.github.thecodingdad.gamelodge.ha.mqtt.MqttBridge.TestResult.BadLogin -> stringResource(Res.string.mqtt_status_bad_login) to LauncherTheme.colors.danger
+                is io.github.thecodingdad.gamelodge.ha.mqtt.MqttBridge.TestResult.Certificate ->
+                    stringResource(if (selfSigned) Res.string.mqtt_status_cert_untrusted else Res.string.mqtt_test_cert_untrusted) to LauncherTheme.colors.warning
+                is io.github.thecodingdad.gamelodge.ha.mqtt.MqttBridge.TestResult.Failed -> stringResource(Res.string.mqtt_status_failed, r.message) to LauncherTheme.colors.danger
+            }
+            Text(text, style = MaterialTheme.typography.bodyMedium, color = color)
+        }
+        // A certificate to confirm: from the test, else from the running connection.
+        val tested = testResult as? io.github.thecodingdad.gamelodge.ha.mqtt.MqttBridge.TestResult.Certificate
+        val certToConfirm = (tested?.fingerprint to (tested?.changed == true)).takeIf { tested != null }
+            ?: state.fingerprint?.takeIf { state.status == MqttStatus.CERT_UNTRUSTED || state.status == MqttStatus.CERT_CHANGED }
+                ?.let { it to (state.status == MqttStatus.CERT_CHANGED) }
+        if (tls && selfSigned && certToConfirm != null && certToConfirm.first != pin) {
+            val (fingerprint, changed) = certToConfirm
+            Text(
+                stringResource(if (changed) Res.string.mqtt_cert_changed_warning else Res.string.mqtt_cert_confirm),
+                style = MaterialTheme.typography.bodyMedium, color = if (changed) LauncherTheme.colors.danger else LauncherTheme.colors.onSurface,
+            )
+            Text(formatFingerprint(fingerprint!!), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+            LauncherButton(stringResource(Res.string.mqtt_cert_trust), onClick = { pin = fingerprint; testResult = null })
+        }
         ButtonRow {
             LauncherButton(stringResource(Res.string.action_save), primary = true, enabled = !enabled || (host.isNotBlank() && portNumber != null), onClick = {
                 if (password.isNotEmpty()) c.secrets.put(SecretStore.Keys.MQTT_PASSWORD, password)
@@ -138,7 +156,7 @@ private fun MqttDialog(settings: LauncherSettings, update: ((LauncherSettings) -
                         mqttEnabled = enabled, mqttHost = host.trim(), mqttPort = portNumber ?: it.mqttPort, mqttTls = tls,
                         mqttAllowSelfSigned = tls && selfSigned,
                         // A pin belongs to one broker with self-signed certificates allowed.
-                        mqttCertPin = if (tls && selfSigned && host.trim() == it.mqttHost) it.mqttCertPin else "",
+                        mqttCertPin = if (tls && selfSigned && (pin != it.mqttCertPin || host.trim() == it.mqttHost)) pin else "",
                         mqttUser = user.trim(), mqttDeviceName = deviceName.trim(),
                     )
                 }
@@ -146,6 +164,18 @@ private fun MqttDialog(settings: LauncherSettings, update: ((LauncherSettings) -
                 onDismiss()
             })
             LauncherButton(stringResource(Res.string.action_cancel), onClick = onDismiss)
+            LauncherButton(
+                stringResource(if (testing) Res.string.mqtt_testing else Res.string.mqtt_test),
+                enabled = !testing && host.isNotBlank() && portNumber != null,
+                onClick = {
+                    testing = true
+                    testResult = null
+                    scope.launch {
+                        testResult = c.mqtt.test(host, portNumber!!, tls, user, password.ifEmpty { null }, selfSigned, pin.ifEmpty { null })
+                        testing = false
+                    }
+                },
+            )
         }
     }
 }

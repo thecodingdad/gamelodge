@@ -128,7 +128,7 @@ fun ProfileEditor(editing: ProfileEditing, uuid: UUID?, name: String, onDeleted:
                 visible = shown != null, onDismiss = { open = null }, title = shown?.first,
             ) {
                 androidx.compose.foundation.layout.Column(
-                    Modifier.popupHeightIn(560.dp).controllerScroll(),
+                    Modifier.weight(1f, fill = false).popupHeightIn(560.dp).controllerScroll(),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     shown?.second?.forEachIndexed { i, option -> OptionRow(option, store, revision, i == 0, editing) { revision++ } }

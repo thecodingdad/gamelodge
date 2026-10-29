@@ -175,7 +175,7 @@ fun TargetPickerDialog(
             }
         }
         // Many targets and start actions: the list scrolls, profile and hints stay.
-        Column(Modifier.popupHeightIn(380.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.weight(1f, fill = false).popupHeightIn(380.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             options.forEachIndexed { index, option ->
                 LauncherButton(
                     text = option.label,
@@ -340,7 +340,7 @@ fun EntryContextMenu(
     ) {
         fun act(block: () -> Unit) = { onDismiss(); block() }
         Column(
-            Modifier.popupHeightIn(420.dp).controllerScroll(),
+            Modifier.weight(1f, fill = false).popupHeightIn(420.dp).controllerScroll(),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             if (session != null) RunningSessionActions(session, onResume = act { onResume(session) }, onDone = onDismiss)
@@ -435,7 +435,7 @@ private fun GameControllerDialog(item: io.github.thecodingdad.gamelodge.data.db.
                 label = { v -> when (v) { null -> like; true -> on; false -> off } },
                 onSelect = set, subtitle = subtitle,
             )
-        Column(Modifier.popupHeightIn(560.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.weight(1f, fill = false).popupHeightIn(560.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(i.title, style = MaterialTheme.typography.bodyMedium, color = io.github.thecodingdad.gamelodge.ui.theme.LauncherTheme.colors.onSurfaceMuted)
             io.github.thecodingdad.gamelodge.ui.screens.settings.ChoiceRow(
                 stringResource(Res.string.game_layout), listOf(null) + io.github.thecodingdad.gamelodge.data.settings.ButtonLayout.entries, pad.layout,
@@ -471,7 +471,7 @@ fun GameEmulatorDialog(entry: LibraryEntry?, onDismiss: () -> Unit, onChoose: (L
         val e = entry ?: return@Modal
         val emulation = io.github.thecodingdad.gamelodge.LocalContainer.current.emulators
         val experimental = stringResource(Res.string.emu_experimental)
-        Column(Modifier.popupHeightIn(480.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.weight(1f, fill = false).popupHeightIn(480.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             for (target in e.romTargets) {
                 val platform = target.romPlatform ?: continue
                 val choices = emulation.choices(platform)

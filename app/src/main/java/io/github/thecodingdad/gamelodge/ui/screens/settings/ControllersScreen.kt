@@ -157,7 +157,7 @@ fun AndroidControllerDetailDialog(controller: ControllerInfo?, onDismiss: () -> 
     ) {
         val c = controller ?: return@Modal
         androidx.compose.foundation.layout.Column(
-            androidx.compose.ui.Modifier.popupHeightIn(560.dp).controllerScroll(),
+            androidx.compose.ui.Modifier.weight(1f, fill = false).popupHeightIn(560.dp).controllerScroll(),
             verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
         ) {
             ControllerOverrideRows(c)

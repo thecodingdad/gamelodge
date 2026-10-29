@@ -1466,6 +1466,10 @@
     <string name="mqtt_status_bad_login">Benutzername oder Passwort falsch</string>
     <string name="mqtt_status_failed">Nicht verbunden (%1$s)</string>
     <string name="mqtt_remove">Aus Home Assistant entfernen</string>
+    <string name="mqtt_test">Verbindung testen</string>
+    <string name="mqtt_testing">Teste …</string>
+    <string name="mqtt_test_ok">Verbindung funktioniert</string>
+    <string name="mqtt_test_cert_untrusted">Dem Zertifikat des Brokers wird nicht vertraut (selbstsigniert?). Lass selbstsignierte Zertifikate zu, um es zu bestätigen.</string>
     <string name="mqtt_entity_online">Online</string>
     <string name="mqtt_entity_playing">Spielt gerade</string>
     <string name="mqtt_entity_status">Status</string>

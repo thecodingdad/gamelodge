@@ -339,7 +339,7 @@ private fun StreamControlsSection(controls: io.github.thecodingdad.gamelodge.str
         visible = commandList, onDismiss = { commandList = false }, title = stringResource(Res.string.qm_server_commands),
     ) {
         Column(
-            Modifier.popupHeightIn(520.dp).controllerScroll(),
+            Modifier.weight(1f, fill = false).popupHeightIn(520.dp).controllerScroll(),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Text(stringResource(Res.string.qm_server_commands_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)

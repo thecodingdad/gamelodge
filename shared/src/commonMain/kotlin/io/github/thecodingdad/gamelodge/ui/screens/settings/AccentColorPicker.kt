@@ -70,7 +70,7 @@ fun AccentColorPicker(
     Modal(visible = true, onDismiss = onDismiss, title = title, maxWidth = 760.dp) {
         // Scrolls on small screens (controller, touch and mouse wheel).
         androidx.compose.foundation.layout.Column(
-            Modifier.popupHeightIn(560.dp).controllerScroll(),
+            Modifier.weight(1f, fill = false).popupHeightIn(560.dp).controllerScroll(),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
         if (onAutomatic != null) {

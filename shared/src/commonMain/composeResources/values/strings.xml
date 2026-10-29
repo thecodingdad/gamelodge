@@ -1468,6 +1468,10 @@
     <string name="mqtt_status_bad_login">User name or password wrong</string>
     <string name="mqtt_status_failed">Not connected (%1$s)</string>
     <string name="mqtt_remove">Remove from Home Assistant</string>
+    <string name="mqtt_test">Test connection</string>
+    <string name="mqtt_testing">Testing …</string>
+    <string name="mqtt_test_ok">Connection works</string>
+    <string name="mqtt_test_cert_untrusted">The broker's certificate isn't trusted (self-signed?). Allow self-signed certificates to confirm it.</string>
     <string name="mqtt_entity_online">Online</string>
     <string name="mqtt_entity_playing">Playing</string>
     <string name="mqtt_entity_status">Status</string>

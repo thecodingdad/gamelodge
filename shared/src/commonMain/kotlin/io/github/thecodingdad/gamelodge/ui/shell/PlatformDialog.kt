@@ -56,7 +56,7 @@ fun PlatformDialog(
             style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted,
         )
         Column(
-            Modifier.popupHeightIn(400.dp).controllerScroll(),
+            Modifier.weight(1f, fill = false).popupHeightIn(400.dp).controllerScroll(),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             LauncherButton(
