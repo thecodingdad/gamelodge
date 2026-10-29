@@ -225,14 +225,15 @@ private fun FieldDialog(
                     })
                 }
             }
-            ButtonRow(spacing = 12.dp, modifier = Modifier.padding(top = 8.dp)) {
-                LauncherButton(stringResource(Res.string.action_done), onClick = onDismiss)
-                if (r.field != null && r.field in it0.manual) {
-                    LauncherButton(
-                        stringResource(if (r == EditRow.TITLE) Res.string.meta_reset_title else Res.string.meta_reset),
-                        icon = Icons.Filled.Restore, onClick = { onReset(r) },
-                    )
-                }
+        }
+        // Below the scroll area: always in view.
+        ButtonRow(spacing = 12.dp, modifier = Modifier.padding(top = 8.dp)) {
+            LauncherButton(stringResource(Res.string.action_done), onClick = onDismiss)
+            if (r.field != null && r.field in it0.manual) {
+                LauncherButton(
+                    stringResource(if (r == EditRow.TITLE) Res.string.meta_reset_title else Res.string.meta_reset),
+                    icon = Icons.Filled.Restore, onClick = { onReset(r) },
+                )
             }
         }
     }

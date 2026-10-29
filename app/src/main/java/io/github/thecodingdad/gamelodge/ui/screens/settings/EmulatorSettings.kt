@@ -276,18 +276,19 @@ private fun CustomEmulatorDialog(
                     Chip(p.displayName, selected = p.id in chosen, onClick = { chosen = if (p.id in chosen) chosen - p.id else chosen + p.id })
                 }
             }
-            ButtonRow {
-                LauncherButton(stringResource(Res.string.action_save), primary = true, onClick = {
-                    if (name.isBlank() || pkg.isBlank()) return@LauncherButton
-                    onSave(
-                        e.copy(
-                            name = name.trim(), packageName = pkg, activity = activity.ifBlank { null }, action = action.ifBlank { null },
-                            data = data.ifBlank { null }, extras = parseExtras(extras), platforms = chosen.toList(),
-                        ),
-                    )
-                })
-                if (e.name.isNotBlank()) HoldToConfirmButton(stringResource(Res.string.emu_custom_remove), icon = Icons.Filled.Delete, onConfirmed = { onRemove(e) })
-            }
+        }
+        // Below the scroll area: always in view.
+        ButtonRow {
+            LauncherButton(stringResource(Res.string.action_save), primary = true, onClick = {
+                if (name.isBlank() || pkg.isBlank()) return@LauncherButton
+                onSave(
+                    e.copy(
+                        name = name.trim(), packageName = pkg, activity = activity.ifBlank { null }, action = action.ifBlank { null },
+                        data = data.ifBlank { null }, extras = parseExtras(extras), platforms = chosen.toList(),
+                    ),
+                )
+            })
+            if (e.name.isNotBlank()) HoldToConfirmButton(stringResource(Res.string.emu_custom_remove), icon = Icons.Filled.Delete, onConfirmed = { onRemove(e) })
         }
     }
 }

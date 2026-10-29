@@ -258,15 +258,16 @@ private fun EmulatorDialog(emulator: PcEmulator?, onDismiss: () -> Unit, onSave:
                 }
             }
             Spacer(Modifier.height(4.dp))
-            ButtonRow {
-                LauncherButton(stringResource(Res.string.action_save), primary = true, onClick = {
-                    if (name.isBlank() || exe.isBlank() || chosen.isEmpty()) return@LauncherButton
-                    // Consoles kept keep their settings (extensions, RetroArch core).
-                    val platforms = chosen.map { p -> e.platforms.firstOrNull { it.platform == p } ?: PcEmulatorPlatform(p) }
-                    onSave(e.copy(name = name.trim(), executable = exe, arguments = args.trim(), platforms = platforms))
-                })
-                if (e.id.isNotEmpty()) HoldToConfirmButton(stringResource(Res.string.emu_pc_remove), icon = Icons.Filled.Delete, onConfirmed = { onRemove(e) })
-            }
+        }
+        // Below the scroll area: always in view.
+        ButtonRow {
+            LauncherButton(stringResource(Res.string.action_save), primary = true, onClick = {
+                if (name.isBlank() || exe.isBlank() || chosen.isEmpty()) return@LauncherButton
+                // Consoles kept keep their settings (extensions, RetroArch core).
+                val platforms = chosen.map { p -> e.platforms.firstOrNull { it.platform == p } ?: PcEmulatorPlatform(p) }
+                onSave(e.copy(name = name.trim(), executable = exe, arguments = args.trim(), platforms = platforms))
+            })
+            if (e.id.isNotEmpty()) HoldToConfirmButton(stringResource(Res.string.emu_pc_remove), icon = Icons.Filled.Delete, onConfirmed = { onRemove(e) })
         }
     }
 }
