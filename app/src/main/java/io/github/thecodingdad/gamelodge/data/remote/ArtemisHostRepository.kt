@@ -162,7 +162,7 @@ class ArtemisHostRepository(
         _hosts.update { it + (uuid to state) }
 
         if (state.status == HostStatus.ONLINE && paired) ensureAppListPoller(details)
-        // App lists are polled every few minutes: a host that just came online sends its list now.
+        // App lists are polled every 30 s: a host that just came online sends its list now.
         if (cameOnline) synchronized(appListPollers) { appListPollers[uuid]?.pollNow() }
 
         details.rawAppList?.let { raw -> parseAppList(uuid, state.name, raw) }

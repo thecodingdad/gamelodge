@@ -337,7 +337,7 @@ class DesktopHosts(
         missed.remove(s.uuid)
         val paired = (info.paired || keepPaired) && s.serverCert != null
         val before = _hosts.value[s.uuid]
-        // Just came online: its app list right away (otherwise every few minutes).
+        // Just came online: its app list right away (otherwise every 30 s).
         if (before?.status != HostStatus.ONLINE) appListAt.remove(s.uuid)
         if (before?.status != HostStatus.ONLINE || before.paired != paired) {
             Log.i("Host ${info.name} online, paired: $paired (certificate ${if (s.serverCert != null) "pinned" else "none"})")
@@ -417,7 +417,7 @@ class DesktopHosts(
     companion object {
         private const val POLL_MS = 3_000L
         private const val OFFLINE_AFTER_MISSES = 2
-        private const val APP_LIST_MS = 5 * 60_000L
+        private const val APP_LIST_MS = 30_000L
         private const val EMPTY_RETRY_MS = 5_000L
         private const val BOX_ART_QUIET_MS = 5_000L
         private const val SLOW_MS = 3_000L

@@ -50,6 +50,12 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Nobody looks at the hosts while the screensaver shows: no polling meanwhile, right away again after it.
+        lifecycleScope.launch {
+            io.github.thecodingdad.gamelodge.ui.shell.ScreensaverControl.active.collect { idle ->
+                if (idle) container.hosts.stopPolling() else if (started) container.hosts.startPolling()
+            }
+        }
         enableEdgeToEdge()
         applySystemBars()
         lifecycleScope.launch {
@@ -124,9 +130,13 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /** Between onStart and onStop. */
+    private var started = false
+
     override fun onStart() {
         super.onStart()
-        container.hosts.startPolling()
+        started = true
+        if (!io.github.thecodingdad.gamelodge.ui.shell.ScreensaverControl.active.value) container.hosts.startPolling()
         container.ha.client.start()
     }
 
@@ -135,6 +145,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onStop() {
         returningFromBackground = true
+        started = false
         container.hosts.stopPolling()
         container.ha.client.stop()
         super.onStop()

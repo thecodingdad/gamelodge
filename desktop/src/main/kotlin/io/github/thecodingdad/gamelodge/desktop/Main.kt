@@ -158,8 +158,11 @@ fun main(args: Array<String>) {
         container.mqtt.start()
         io.github.thecodingdad.gamelodge.stream.StreamQuality.follow(container.settings, container.scope)
     }
-    // Streaming hosts are polled while the window is shown.
-    container.scope.launch { windowVisible.collect { if (it) container.hosts.startPolling() else container.hosts.stopPolling() } }
+    // Streaming hosts are polled while the window is shown (not while the screensaver shows).
+    container.scope.launch {
+        kotlinx.coroutines.flow.combine(windowVisible, io.github.thecodingdad.gamelodge.ui.shell.ScreensaverControl.active) { visible, idle -> visible && !idle }
+            .collect { if (it) container.hosts.startPolling() else container.hosts.stopPolling() }
+    }
     container.scope.launch { container.filters.ensureDefaults() }
     FilePickers.window = { mainWindow }
     container.scope.launch { container.backupStorage.scheduleAuto(container.settings.current().autoBackup) }
