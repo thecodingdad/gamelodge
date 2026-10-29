@@ -20,6 +20,7 @@ import io.github.thecodingdad.gamelodge.data.remote.RemoteApp
 import io.github.thecodingdad.gamelodge.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
@@ -101,13 +102,7 @@ class LibraryRepository(
         scope.launch(Dispatchers.IO) {
             while (true) {
                 kotlinx.coroutines.delay(COMPANION_REFRESH_MS)
-                val online = hosts.hosts.value.values.filter { it.paired && it.status == HostStatus.ONLINE }.map { it.uuid }
-                for (uuid in online) {
-                    if (hosts.appLists.value[uuid] == null) continue
-                    val games = runCatching { companion?.changedGames(uuid) }.getOrNull() ?: continue
-                    Log.d("Host $uuid: companion list changed")
-                    applyCompanion(uuid, games)
-                }
+                checkHostChanges()
             }
         }
         // Paired hosts that are online but haven't sent their app list yet: a running task each.
@@ -120,6 +115,17 @@ class LibraryRepository(
                 (shown - loading.map { it.uuid }.toSet()).forEach { io.github.thecodingdad.gamelodge.data.tasks.BackgroundTasks.remove("applist-$it") }
                 shown = loading.map { it.uuid }.toSet()
             }
+        }
+    }
+
+    /** Applies what changed on the reachable hosts' GameLodge since the last look (also by hand: "fetch now"). */
+    suspend fun checkHostChanges() = withContext(Dispatchers.IO) {
+        val online = hosts.hosts.value.values.filter { it.paired && it.status == HostStatus.ONLINE }.map { it.uuid }
+        for (uuid in online) {
+            if (hosts.appLists.value[uuid] == null) continue
+            val games = runCatching { companion?.changedGames(uuid) }.getOrNull() ?: continue
+            Log.d("Host $uuid: companion list changed")
+            applyCompanion(uuid, games)
         }
     }
 
