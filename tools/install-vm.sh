@@ -28,10 +28,18 @@ foreach ($s in "runtime", "lib", "moonlight") {
 }
 if ($launchers.Count -gt 0 -and $ok) {
   # Started from SSH it would run outside the desktop session: a one-time task in the user session.
-  schtasks /Create /TN GameLodgeStart /TR "`"$d\GameLodge.exe`" --autostart" /SC ONCE /ST 00:00 /IT /F 2>$null | Out-Null
-  schtasks /Run /TN GameLodgeStart | Out-Null
-  Start-Sleep 5
-  schtasks /Delete /TN GameLodgeStart /F | Out-Null
+  # schtasks warns about the start time on stderr (never used: the task runs by /Run).
+  $ErrorActionPreference = "Continue"
+  schtasks /Create /TN GameLodgeStart /TR "`"$d\GameLodge.exe`" --autostart" /SC ONCE /ST 00:00 /IT /F 2>&1 | Out-Null
+  schtasks /Run /TN GameLodgeStart 2>&1 | Out-Null
+  # The native starter needs a while until the launcher (Java) runs.
+  $started = 0
+  for ($i = 0; $i -lt 30 -and $started -eq 0; $i++) {
+    Start-Sleep 1
+    $started = @(Get-CimInstance Win32_Process | ? { $_.CommandLine -like "*MainKt*" -and $_.CommandLine -notlike "*--run*" }).Count
+  }
+  schtasks /Delete /TN GameLodgeStart /F 2>&1 | Out-Null
+  if ($started -eq 0) { "launcher NOT started again"; exit 1 }
   "launcher started again (tray)"
 }
 if (-not $ok) { exit 1 }
