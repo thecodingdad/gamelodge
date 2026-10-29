@@ -117,6 +117,18 @@ class ArtemisHostRepository(
         binder?.invalidateStateForComputer(uuid)
     }
 
+    override suspend fun refresh(uuid: String) {
+        val host = _hosts.value[uuid]?.takeIf { it.status == HostStatus.ONLINE } ?: return
+        runCatching {
+            val running = withContext(Dispatchers.IO) {
+                val h = http(host)
+                h.getCurrentGame(h.getServerInfo(true))
+            }
+            details[uuid]?.runningGameId = running
+            _hosts.update { m -> m[uuid]?.let { m + (uuid to it.copy(runningAppId = running)) } ?: m }
+        }.onFailure { Log.w("Host state of ${host.name} not refreshed: ${it.message}") }
+    }
+
     private fun onComputerUpdated(details: ComputerDetails) {
         val uuid = details.uuid ?: return
         // Live state while the host answers; otherwise the stored server certificate says it was paired.

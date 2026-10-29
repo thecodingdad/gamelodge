@@ -166,15 +166,9 @@ class MainActivity : ComponentActivity() {
             val closed = container.playtime.finishOpenSession()
             container.usage.sync()
             if (closed != null && closed.targetId.startsWith("remote:")) {
-                val title = container.database.libraryDao().getItem(closed.itemId)?.title
                 val target = container.database.libraryDao().getTarget(closed.targetId)
-                val host = target?.hostName
                 target?.hostUuid?.let { container.autoSleep.scheduleAfterStream(it) }
                 container.launcher.streamEnded()
-                container.ha.fireLauncherEvent(
-                    "stream_stopped",
-                    mapOf("game" to title, "host" to host, "duration_seconds" to (((closed.endedAt ?: 0) - closed.startedAt) / 1000).toString()),
-                )
             }
             // If the user made us the home app (also via Android settings), launcher mode is on.
             val mode = LauncherMode(this@MainActivity)

@@ -87,9 +87,17 @@ class HaRepository(
     }
 
     /** Launcher events for HA automations (e.g. dim the lights when a stream starts). */
-    suspend fun fireLauncherEvent(name: String, data: Map<String, String?>) {
+    suspend fun fireLauncherEvent(name: String, data: Map<String, Any?>) {
         if (!auth.isLoggedIn) return
-        guarded { client.fireEvent("moonlight_launcher_$name", data.filterValues { it != null }.mapValues { JsonPrimitive(it.value) }) }
+        val fields = data.mapNotNull { (k, v) ->
+            when (v) {
+                null -> null
+                is Boolean -> k to JsonPrimitive(v)
+                is Number -> k to JsonPrimitive(v)
+                else -> k to JsonPrimitive(v.toString())
+            }
+        }.toMap()
+        guarded { client.fireEvent("gamelodge_$name", fields) }
     }
 
     private suspend fun guarded(block: suspend () -> Unit): Boolean =

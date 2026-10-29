@@ -252,6 +252,21 @@ public class IconGen {
     static byte[] le16(int v) { return new byte[] {(byte) v, (byte) (v >> 8)}; }
     static byte[] le32(int v) { return new byte[] {(byte) v, (byte) (v >> 8), (byte) (v >> 16), (byte) (v >> 24)}; }
 
+    static final int COVER_W = 200, COVER_H = 300;
+
+    /** Portrait cover: the icon in the upper half, the name below it, on the launcher background. */
+    static String coverVector() {
+        Font font = new Font("DejaVu Sans", Font.BOLD, 23);
+        GlyphVector gv = font.createGlyphVector(new java.awt.font.FontRenderContext(null, true, false), "GameLodge");
+        Shape text = gv.getOutline();
+        Rectangle2D tb = text.getBounds2D();
+        Shape placed = AffineTransform.getTranslateInstance(COVER_W / 2.0 - tb.getCenterX(), 196 - tb.getCenterY()).createTransformedShape(text);
+        Shape background = new Rectangle2D.Double(0, 0, COVER_W, COVER_H);
+        AffineTransform id = new AffineTransform();
+        return vector(COVER_W, COVER_H, vectorPath(background, id, BACKGROUND_HEX)
+            + layered(fit(120, COVER_W / 2.0, 118)) + vectorPath(placed, id, "#FFF2F3F7"));
+    }
+
     static void write(String file, String content) throws IOException {
         Path p = Paths.get(file);
         Files.createDirectories(p.getParent());
@@ -297,6 +312,9 @@ public class IconGen {
         // Banner artwork for the launcher UI (about page; the page draws the background).
         write("shared/src/commonMain/composeResources/drawable/gamelodge_banner.xml", vector(BANNER_W, BANNER_H,
             vectorPath((Shape) layout[0], id, "#FFF2F3F7") + layered((AffineTransform) layout[1])));
+
+        // Sample cover (2:3) for previews of the launcher's look: icon above the name on the brand background.
+        write("shared/src/commonMain/composeResources/drawable/gamelodge_cover.xml", coverVector());
 
         // Installer images, one per display scaling (100, 125, 150, 175, 200, 250 %).
         int[][] small = {{55, 55}, {64, 68}, {83, 80}, {92, 97}, {110, 106}, {138, 140}};

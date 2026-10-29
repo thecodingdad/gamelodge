@@ -192,7 +192,8 @@ class HaClient(
     suspend fun command(type: String, fields: Map<String, JsonElement> = emptyMap()): JsonObject {
         if (_connection.value != HaConnection.CONNECTED) {
             start()
-            withTimeout(10_000) { connection.first { it == HaConnection.CONNECTED } }
+            // Connecting through a VPN that just came up may take a while.
+            withTimeout(20_000) { connection.first { it == HaConnection.CONNECTED } }
         }
         val id = nextId.getAndIncrement()
         val payload = JsonObject(mapOf("id" to JsonPrimitive(id), "type" to JsonPrimitive(type)) + fields)

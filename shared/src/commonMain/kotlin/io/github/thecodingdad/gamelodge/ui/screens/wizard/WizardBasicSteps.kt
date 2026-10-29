@@ -440,15 +440,14 @@ private fun AppearancePreview() {
         Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(colors.surface).padding(18.dp),
         horizontalArrangement = Arrangement.spacedBy(20.dp), verticalAlignment = Alignment.CenterVertically,
     ) {
-        // A focused tile: accent frame, slightly raised.
-        Box(
-            Modifier.width(92.dp).height(124.dp).clip(RoundedCornerShape(LauncherTheme.dimens.cornerRadius))
-                .background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(colors.accent.copy(alpha = 0.55f), colors.surfaceRaised)))
+        // A focused tile (GameLodge's own cover): accent frame in the chosen corners.
+        androidx.compose.foundation.Image(
+            org.jetbrains.compose.resources.painterResource(Res.drawable.gamelodge_cover),
+            contentDescription = stringResource(Res.string.tile_preview_sample_game),
+            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+            modifier = Modifier.width(92.dp).height(138.dp).clip(RoundedCornerShape(LauncherTheme.dimens.cornerRadius))
                 .border(3.dp, colors.accent, RoundedCornerShape(LauncherTheme.dimens.cornerRadius)),
-            contentAlignment = Alignment.BottomStart,
-        ) {
-            Text(stringResource(Res.string.tile_preview_sample_game), style = MaterialTheme.typography.labelMedium, color = colors.onSurface, modifier = Modifier.padding(8.dp))
-        }
+        )
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(stringResource(Res.string.wizard_appearance_preview), style = MaterialTheme.typography.titleMedium, color = colors.onSurface)
             Text(stringResource(Res.string.wizard_appearance_preview_sub), style = MaterialTheme.typography.bodySmall, color = colors.accentText)

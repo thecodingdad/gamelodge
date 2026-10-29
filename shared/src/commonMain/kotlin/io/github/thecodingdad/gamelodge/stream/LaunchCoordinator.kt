@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
@@ -130,7 +131,14 @@ class LaunchCoordinator(
      * What this launcher started last (game, app or stream) and whether it still runs: set by a
      * successful start, [running] false once [ended] (back in the launcher / game or stream closed).
      */
-    data class NowPlaying(val entry: LibraryEntry, val target: LaunchTargetEntity, val startedAt: Long, val running: Boolean)
+    data class NowPlaying(
+        val entry: LibraryEntry,
+        val target: LaunchTargetEntity,
+        val startedAt: Long,
+        val running: Boolean,
+        /** Stream profile of a stream. */
+        val profile: String? = null,
+    )
 
     private val _nowPlaying = MutableStateFlow<NowPlaying?>(null)
     val nowPlaying: StateFlow<NowPlaying?> = _nowPlaying.asStateFlow()
@@ -138,7 +146,23 @@ class LaunchCoordinator(
     /** The game, app or stream started here ended: runs the end actions; safe to call more than once. */
     fun ended() {
         gameActions.ended()
-        _nowPlaying.update { it?.copy(running = false) }
+        val was = _nowPlaying.getAndUpdate { it?.copy(running = false) }
+        if (was?.running == true) fireEvent("stopped", was, (System.currentTimeMillis() - was.startedAt) / 1000)
+    }
+
+    /** Home Assistant events "gamelodge_started" / "gamelodge_stopped" for automations. */
+    private fun fireEvent(name: String, np: NowPlaying, durationSeconds: Long?) {
+        val stream = np.target.type == TargetType.REMOTE
+        val data = mapOf(
+            "title" to np.entry.item.title,
+            "kind" to if (np.entry.item.kind == io.github.thecodingdad.gamelodge.data.db.ItemKind.GAME) "game" else "app",
+            "stream" to stream,
+            "host" to np.target.hostName.takeIf { stream },
+            "profile" to np.profile.takeIf { stream },
+            "app_id" to np.target.appId.takeIf { stream },
+            "duration_seconds" to durationSeconds,
+        )
+        scope.launch { ha().fireLauncherEvent(name, data) }
     }
 
     /** The stream this launcher started and that runs right now (until its window closes). */
@@ -222,8 +246,10 @@ class LaunchCoordinator(
         _state.value = if (error == null) LaunchState.Idle else LaunchState.Failed(entry, error)
     }
 
-    private fun started(entry: LibraryEntry, target: LaunchTargetEntity) {
-        _nowPlaying.value = NowPlaying(entry, target, System.currentTimeMillis(), running = true)
+    private fun started(entry: LibraryEntry, target: LaunchTargetEntity, profile: String? = null) {
+        val np = NowPlaying(entry, target, System.currentTimeMillis(), running = true, profile = profile)
+        _nowPlaying.value = np
+        fireEvent("started", np, null)
     }
 
     private fun host(uuid: String) = hosts.hosts.value[uuid]
@@ -245,6 +271,9 @@ class LaunchCoordinator(
                 _state.value = LaunchState.Working(entry, LaunchStep.CONNECTING_VPN)
                 if (runCatching { vpn.connectForStream(hostUuid) }.getOrDefault(false)) {
                     vpnForStream = true
+                    // The network changed: a Home Assistant connection from before is dead or hangs
+                    // (a wake through Home Assistant would wait for it and fail).
+                    runCatching { ha().client.restart() }
                     waitOnline(hostUuid, VPN_WAIT_MS)
                 }
             }
@@ -256,6 +285,8 @@ class LaunchCoordinator(
                 }
             }
         }
+        // What runs on the host right now (another client's stream too), not the last poll's state.
+        withTimeoutOrNull(REFRESH_WAIT_MS) { hosts.refresh(hostUuid) }
         val host = host(hostUuid)
         if (host == null || host.status != HostStatus.ONLINE || !platform.isReachable(host)) {
             fail(entry, LaunchError.HOST_OFFLINE)
@@ -311,14 +342,8 @@ class LaunchCoordinator(
             // The host's GameLodge learns which start action to run (its runner asks for it).
             streamNotices?.started(hostUuid, resuming, target.appUuid, oneOffAction.takeUnless { resuming })
             platform.startStream(entry, target, host)
-            started(entry, target)
+            started(entry, target, profileName)
             _state.value = LaunchState.Idle
-            scope.launch {
-                ha().fireLauncherEvent(
-                    "stream_started",
-                    mapOf("game" to entry.item.title, "host" to host.name, "profile" to profileName, "app_id" to appId.toString()),
-                )
-            }
         } catch (e: Exception) {
             Log.e("Stream start failed", e)
             restoreProfile()
@@ -364,5 +389,7 @@ class LaunchCoordinator(
     private companion object {
         /** After connecting the VPN: how long to wait for the host before waking it. */
         const val VPN_WAIT_MS = 15_000L
+        /** Longest wait for the host's current state before a start. */
+        const val REFRESH_WAIT_MS = 4_000L
     }
 }

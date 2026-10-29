@@ -60,6 +60,12 @@ interface HostRepository {
 
     fun invalidate(uuid: String)
 
+    /**
+     * Asks the host right now what runs on it (another client's stream too) and updates [hosts];
+     * polling alone may still show an older state when a start begins.
+     */
+    suspend fun refresh(uuid: String) {}
+
     fun removeHost(host: HostState)
 
     /** The host's own cover image for [app], cached on disk; null when it has none. Blocking. */

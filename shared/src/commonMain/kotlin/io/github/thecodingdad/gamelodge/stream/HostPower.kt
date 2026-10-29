@@ -28,7 +28,14 @@ class HostPower(
             hosts.hosts.value[hostUuid]?.let { sent = actions.wakeOnLan(it) || sent }
         }
         if (config.wakeMethod == WakeMethod.HOME_ASSISTANT || config.wakeMethod == WakeMethod.BOTH) {
-            config.haWakeEntity?.let { sent = ha.runAction(it) || sent }
+            config.haWakeEntity?.let { action ->
+                // Once more on a fresh connection: the one at hand may be from another network (VPN just up).
+                val done = ha.runAction(action) || run {
+                    ha.client.restart()
+                    ha.runAction(action)
+                }
+                sent = done || sent
+            }
         }
         return sent
     }

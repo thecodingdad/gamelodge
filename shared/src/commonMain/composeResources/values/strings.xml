@@ -364,7 +364,7 @@
     <string name="ha_tiles">Entity favourites</string>
     <string name="ha_entities_intro">Control these entities from anywhere in the quick menu’s Home Assistant tab and, when switched on, as a row on the home screen.</string>
     <string name="ha_add_tile">Add entity</string>
-    <string name="ha_events_help">For automations the launcher fires the events moonlight_launcher_stream_started and moonlight_launcher_stream_stopped (with game, host and profile).</string>
+    <string name="ha_events_help">For automations the launcher fires the events gamelodge_started and gamelodge_stopped with title, kind (game or app) and stream (true or false); streams also bring host and profile, gamelodge_stopped the duration in seconds.</string>
 
     <!-- Phase 6: host features -->
     <string name="error_wake_failed">The host did not wake up. Check the wake settings of the host (Wake-on-LAN / Home Assistant).</string>

@@ -165,6 +165,10 @@ class DesktopHosts(
         scope.launch(Dispatchers.IO) { known(uuid)?.let { poll(it) } }
     }
 
+    override suspend fun refresh(uuid: String) {
+        withContext(Dispatchers.IO) { known(uuid)?.let { poll(it) } }
+    }
+
     override fun removeHost(host: HostState) {
         scope.launch { remove(host) }
     }
