@@ -110,13 +110,25 @@ fun main(args: Array<String>) {
             ?.let { action -> container.pcLibrary.entryFor(entryId, action) }
             ?.let { io.github.thecodingdad.gamelodge.desktop.host.sync.LaunchSpec.of(it).encode() }
     }
+    fun splashArt(item: io.github.thecodingdad.gamelodge.data.db.LibraryItemEntity): SplashArt {
+        fun file(url: String?) = (ArtworkFiles.model(url) as? File)?.takeIf { it.isFile }?.path
+        return SplashArt(item.title, hero = file(item.heroUrl), logo = file(item.logoUrl), cover = file(item.coverUrl))
+    }
     SingleInstance.onArtwork = { entryId ->
         val target = container.database.libraryDao().getTarget(io.github.thecodingdad.gamelodge.data.library.SourceEntry.localId(entryId))
         target?.let { container.database.libraryDao().getItem(it.itemId) }?.let { item ->
-            fun file(url: String?) = (ArtworkFiles.model(url) as? File)?.takeIf { it.isFile }?.path
-            kotlinx.serialization.json.Json.encodeToString(
-                SplashArt.serializer(),
-                SplashArt(item.title, hero = file(item.heroUrl), logo = file(item.logoUrl), cover = file(item.coverUrl)),
+            kotlinx.serialization.json.Json.encodeToString(SplashArt.serializer(), splashArt(item))
+        }
+    }
+    // The same for runners that find no launcher running: kept as a file whenever the library changes.
+    container.scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+        @OptIn(kotlinx.coroutines.FlowPreview::class)
+        container.database.libraryDao().observeAll().debounce(5_000).collect { entries ->
+            ArtworkIndex.write(
+                entries.flatMap { e ->
+                    e.targets.filter { it.type == io.github.thecodingdad.gamelodge.data.db.TargetType.LOCAL && it.packageName != null }
+                        .map { it.packageName!! to splashArt(e.item) }
+                }.toMap(),
             )
         }
     }

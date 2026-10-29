@@ -193,3 +193,34 @@ object SingleInstance {
 /** Local artwork files of a game for the runner's splash. */
 @Serializable
 data class SplashArt(val title: String, val hero: String? = null, val logo: String? = null, val cover: String? = null)
+
+/**
+ * The runner's splash artwork of every game as a file in the data folder, kept by the launcher:
+ * the runner reads it when no launcher answers (not running, crashed). Only titles and paths of
+ * the launcher's own artwork files.
+ */
+object ArtworkIndex {
+    private val json = Json { ignoreUnknownKeys = true }
+    private val serializer = kotlinx.serialization.builtins.MapSerializer(kotlinx.serialization.serializer<String>(), SplashArt.serializer())
+
+    private fun file() = java.io.File(dataDirectory(), "artwork-index.json")
+
+    /** Writes [art] (entry id → artwork) when it differs from the stored one. */
+    fun write(art: Map<String, SplashArt>) {
+        runCatching {
+            val text = json.encodeToString(serializer, art)
+            val file = file()
+            if (file.isFile && file.readText() == text) return
+            val tmp = java.io.File(file.path + ".tmp")
+            tmp.writeText(text)
+            java.nio.file.Files.move(tmp.toPath(), file.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE)
+        }.onFailure { io.github.thecodingdad.gamelodge.util.Log.w("Artwork index not written: ${it.message}") }
+    }
+
+    /** The stored artwork of [entryId], only files that still exist. */
+    fun read(entryId: String): SplashArt? = runCatching {
+        val art = json.decodeFromString(serializer, file().readText())[entryId] ?: return null
+        fun keep(path: String?) = path?.takeIf { java.io.File(it).isFile }
+        art.copy(hero = keep(art.hero), logo = keep(art.logo), cover = keep(art.cover))
+    }.getOrNull()
+}

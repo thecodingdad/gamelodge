@@ -42,11 +42,11 @@ object Runner {
                     val http = OkHttpClient()
                     GameLauncher.install(entry) { PcLibrary.installedNow(entry, http) }
                 } else {
-                    // The game's artwork instead of the desktop while it loads and ends; without an
-                    // answer from the launcher at least its title.
+                    // The game's artwork instead of the desktop while it loads and ends: from the
+                    // running launcher, else from the launcher's artwork index, else just the title.
                     val title = spec.name?.takeIf { it.isNotBlank() } ?: entry.name
                     val status = org.jetbrains.compose.resources.getString(Res.string.splash_starting)
-                    val splash = io.github.thecodingdad.gamelodge.desktop.host.GameSplash.show(title, SingleInstance.artwork(entry.id), status)
+                    val splash = io.github.thecodingdad.gamelodge.desktop.host.GameSplash.show(title, SingleInstance.artwork(entry.id) ?: io.github.thecodingdad.gamelodge.desktop.ArtworkIndex.read(entry.id), status)
                     splash?.watch { GameLauncher.gameProcesses() }
                     // The running launcher's game actions (if switched on for host starts).
                     SingleInstance.reportGameStart(entry.id)
