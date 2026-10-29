@@ -1445,6 +1445,15 @@
     <string name="mqtt_port">Port</string>
     <string name="mqtt_tls">Verschlüsselt (TLS)</string>
     <string name="mqtt_tls_sub">Das Zertifikat des Brokers muss gültig und für seine Adresse ausgestellt sein</string>
+    <string name="mqtt_tls_sub_pinned">Zertifikate einer vertrauenswürdigen Stelle müssen für die Adresse ausgestellt sein; ein selbstsigniertes wird über seinen bestätigten Fingerabdruck geprüft</string>
+    <string name="mqtt_self_signed">Selbstsigniertes Zertifikat zulassen</string>
+    <string name="mqtt_self_signed_sub">Beim ersten Verbinden bestätigst du den Fingerabdruck; danach wird nur dieses Zertifikat akzeptiert</string>
+    <string name="mqtt_status_cert_untrusted">Zertifikat des Brokers bestätigen</string>
+    <string name="mqtt_status_cert_changed">Zertifikat des Brokers geändert – nicht verbunden</string>
+    <string name="mqtt_cert_confirm">Der Broker nutzt ein Zertifikat, dem das System nicht vertraut. Vertraue ihm nur, wenn der Fingerabdruck zum Zertifikat deines Brokers passt (SHA-256):</string>
+    <string name="mqtt_cert_changed_warning">Der Broker zeigt jetzt ein anderes Zertifikat als das bestätigte. Das passiert, wenn sein Zertifikat erneuert wurde – oder wenn sich jemand anderes als Broker ausgibt. Vertraue dem neuen nur, wenn du es selbst erneuert hast (SHA-256):</string>
+    <string name="mqtt_cert_trust">Zertifikat vertrauen</string>
+    <string name="mqtt_cert_pinned">Vertrautes Zertifikat (SHA-256): %1$s</string>
     <string name="mqtt_user">Benutzername</string>
     <string name="mqtt_password">Passwort</string>
     <string name="mqtt_password_kept">Gespeichert (zum Ändern eingeben)</string>

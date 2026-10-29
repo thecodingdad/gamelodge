@@ -129,6 +129,9 @@ data class LauncherSettings(
     val mqttHost: String = "",
     val mqttPort: Int = 1883,
     val mqttTls: Boolean = false,
+    /** TLS: a self-signed certificate is accepted once its fingerprint ([mqttCertPin], SHA-256 hex) was confirmed. */
+    val mqttAllowSelfSigned: Boolean = false,
+    val mqttCertPin: String = "",
     val mqttUser: String = "",
     /** Name of this device in Home Assistant; empty = the platform's device name. */
     val mqttDeviceName: String = "",
@@ -287,6 +290,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val mqttHost = stringPreferencesKey("mqtt_host")
         val mqttPort = intPreferencesKey("mqtt_port")
         val mqttTls = booleanPreferencesKey("mqtt_tls")
+        val mqttAllowSelfSigned = booleanPreferencesKey("mqtt_allow_self_signed")
+        val mqttCertPin = stringPreferencesKey("mqtt_cert_pin")
         val mqttUser = stringPreferencesKey("mqtt_user")
         val mqttDeviceName = stringPreferencesKey("mqtt_device_name")
         /** Before [vpnOnStreamStart]: any of its triggers switches the new setting on once. */
@@ -410,6 +415,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             mqttHost = this[K.mqttHost] ?: d.mqttHost,
             mqttPort = this[K.mqttPort] ?: d.mqttPort,
             mqttTls = this[K.mqttTls] ?: d.mqttTls,
+            mqttAllowSelfSigned = this[K.mqttAllowSelfSigned] ?: d.mqttAllowSelfSigned,
+            mqttCertPin = this[K.mqttCertPin] ?: d.mqttCertPin,
             mqttUser = this[K.mqttUser] ?: d.mqttUser,
             mqttDeviceName = this[K.mqttDeviceName] ?: d.mqttDeviceName,
             vpnOnStreamStart = this[K.vpnOnStreamStart] ?: (this[K.autoVpnTriggers]?.isNotEmpty() ?: d.vpnOnStreamStart),
@@ -517,6 +524,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         this[K.mqttHost] = s.mqttHost
         this[K.mqttPort] = s.mqttPort
         this[K.mqttTls] = s.mqttTls
+        this[K.mqttAllowSelfSigned] = s.mqttAllowSelfSigned
+        this[K.mqttCertPin] = s.mqttCertPin
         this[K.mqttUser] = s.mqttUser
         this[K.mqttDeviceName] = s.mqttDeviceName
         this[K.vpnOnStreamStart] = s.vpnOnStreamStart

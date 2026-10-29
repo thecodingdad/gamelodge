@@ -51,7 +51,12 @@ private fun mqttStatusLabel(state: MqttState): String = when (state.status) {
     MqttStatus.CONNECTED -> stringResource(Res.string.mqtt_status_connected)
     MqttStatus.BAD_LOGIN -> stringResource(Res.string.mqtt_status_bad_login)
     MqttStatus.FAILED -> stringResource(Res.string.mqtt_status_failed, state.error.orEmpty())
+    MqttStatus.CERT_UNTRUSTED -> stringResource(Res.string.mqtt_status_cert_untrusted)
+    MqttStatus.CERT_CHANGED -> stringResource(Res.string.mqtt_status_cert_changed)
 }
+
+/** "ab:cd:…" in groups, easier to compare with the broker's certificate. */
+private fun formatFingerprint(hex: String) = hex.uppercase().chunked(2).joinToString(":")
 
 /** Broker and device name; everything applies with Save (the password only when typed). */
 @Composable
@@ -65,6 +70,7 @@ private fun MqttDialog(settings: LauncherSettings, update: ((LauncherSettings) -
     var host by remember { mutableStateOf(settings.mqttHost.ifEmpty { haHost }) }
     var port by remember { mutableStateOf(settings.mqttPort.toString()) }
     var tls by remember { mutableStateOf(settings.mqttTls) }
+    var selfSigned by remember { mutableStateOf(settings.mqttAllowSelfSigned) }
     var user by remember { mutableStateOf(settings.mqttUser) }
     var password by remember { mutableStateOf("") }
     val hasPassword = remember { c.secrets.get(SecretStore.Keys.MQTT_PASSWORD) != null }
@@ -81,8 +87,30 @@ private fun MqttDialog(settings: LauncherSettings, update: ((LauncherSettings) -
             SwitchRow(
                 stringResource(Res.string.mqtt_tls), tls,
                 { on -> tls = on; if (port == "1883" && on) port = "8883" else if (port == "8883" && !on) port = "1883" },
-                subtitle = stringResource(Res.string.mqtt_tls_sub),
+                subtitle = stringResource(if (selfSigned) Res.string.mqtt_tls_sub_pinned else Res.string.mqtt_tls_sub),
             )
+            if (tls) {
+                SwitchRow(stringResource(Res.string.mqtt_self_signed), selfSigned, { selfSigned = it }, subtitle = stringResource(Res.string.mqtt_self_signed_sub))
+            }
+            val certToConfirm = state.fingerprint?.takeIf { state.status == MqttStatus.CERT_UNTRUSTED || state.status == MqttStatus.CERT_CHANGED }
+            if (certToConfirm != null) {
+                val changed = state.status == MqttStatus.CERT_CHANGED
+                Text(
+                    stringResource(if (changed) Res.string.mqtt_cert_changed_warning else Res.string.mqtt_cert_confirm),
+                    style = MaterialTheme.typography.bodyMedium, color = if (changed) LauncherTheme.colors.danger else LauncherTheme.colors.onSurface,
+                )
+                Text(formatFingerprint(certToConfirm), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+                LauncherButton(stringResource(Res.string.mqtt_cert_trust), onClick = {
+                    // Applies at once: the connection waits for it.
+                    update { it.copy(mqttCertPin = certToConfirm) }
+                    c.mqtt.restart()
+                })
+            } else if (tls && selfSigned && settings.mqttCertPin.isNotEmpty()) {
+                Text(
+                    stringResource(Res.string.mqtt_cert_pinned, formatFingerprint(settings.mqttCertPin)),
+                    style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted,
+                )
+            }
             LauncherTextField(stringResource(Res.string.mqtt_user), user, { user = it })
             LauncherTextField(
                 stringResource(Res.string.mqtt_password), password, { password = it }, kind = TextKind.PASSWORD,
@@ -108,6 +136,9 @@ private fun MqttDialog(settings: LauncherSettings, update: ((LauncherSettings) -
                 update {
                     it.copy(
                         mqttEnabled = enabled, mqttHost = host.trim(), mqttPort = portNumber ?: it.mqttPort, mqttTls = tls,
+                        mqttAllowSelfSigned = tls && selfSigned,
+                        // A pin belongs to one broker with self-signed certificates allowed.
+                        mqttCertPin = if (tls && selfSigned && host.trim() == it.mqttHost) it.mqttCertPin else "",
                         mqttUser = user.trim(), mqttDeviceName = deviceName.trim(),
                     )
                 }

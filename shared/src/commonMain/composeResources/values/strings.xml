@@ -1447,6 +1447,15 @@
     <string name="mqtt_port">Port</string>
     <string name="mqtt_tls">Encrypted (TLS)</string>
     <string name="mqtt_tls_sub">The broker's certificate must be valid and issued for its address</string>
+    <string name="mqtt_tls_sub_pinned">Certificates of a trusted authority must be issued for the address; a self-signed one is checked by its confirmed fingerprint</string>
+    <string name="mqtt_self_signed">Allow self-signed certificate</string>
+    <string name="mqtt_self_signed_sub">On the first connection you confirm its fingerprint; after that only this certificate is accepted</string>
+    <string name="mqtt_status_cert_untrusted">Confirm the broker's certificate</string>
+    <string name="mqtt_status_cert_changed">Broker certificate changed – not connected</string>
+    <string name="mqtt_cert_confirm">The broker uses a certificate that isn't trusted by the system. Trust it only if the fingerprint matches your broker's certificate (SHA-256):</string>
+    <string name="mqtt_cert_changed_warning">The broker now shows a different certificate than the one you confirmed. That happens when its certificate was renewed – or when someone else poses as the broker. Trust the new one only if you renewed it yourself (SHA-256):</string>
+    <string name="mqtt_cert_trust">Trust certificate</string>
+    <string name="mqtt_cert_pinned">Trusted certificate (SHA-256): %1$s</string>
     <string name="mqtt_user">User name</string>
     <string name="mqtt_password">Password</string>
     <string name="mqtt_password_kept">Saved (type to change)</string>

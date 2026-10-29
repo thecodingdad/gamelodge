@@ -9,8 +9,16 @@ import java.io.IOException
 import java.io.InputStream
 import java.net.InetSocketAddress
 import java.net.Socket
+import java.security.KeyStore
+import java.security.MessageDigest
+import java.security.cert.CertificateException
+import java.security.cert.X509Certificate
+import javax.net.ssl.SSLContext
+import javax.net.ssl.SSLException
+import javax.net.ssl.SSLPeerUnverifiedException
 import javax.net.ssl.SSLSocket
-import javax.net.ssl.SSLSocketFactory
+import javax.net.ssl.TrustManagerFactory
+import javax.net.ssl.X509TrustManager
 
 /** A retained or plain message; the client only sends and receives QoS 0. */
 class MqttMessage(val topic: String, val payload: ByteArray, val retain: Boolean = false)
@@ -25,11 +33,25 @@ data class MqttOptions(
     val clientId: String,
     val keepAliveSeconds: Int = 60,
     val will: MqttWill? = null,
+    /**
+     * TLS: a certificate the system doesn't trust (self-signed) is accepted when its SHA-256
+     * fingerprint is [pinnedCertificate]; without a pin such a connection fails with
+     * [MqttCertificateException] carrying the fingerprint to confirm.
+     */
+    val allowSelfSigned: Boolean = false,
+    val pinnedCertificate: String? = null,
 )
 
 data class MqttWill(val topic: String, val payload: String, val retain: Boolean = true)
 
 open class MqttException(message: String) : IOException(message)
+
+/**
+ * The broker's certificate isn't trusted by the system: [fingerprint] (SHA-256, hex) to confirm,
+ * [changed] when another certificate was pinned before.
+ */
+class MqttCertificateException(val fingerprint: String, val changed: Boolean) :
+    MqttException(if (changed) "Certificate changed" else "Certificate not trusted")
 
 /** The broker refused the connection (CONNACK return code, e.g. 4/5 = bad login / not authorized). */
 class MqttRefusedException(val code: Int) : MqttException("Connection refused ($code)") {
@@ -215,15 +237,16 @@ class MqttConnection private constructor(private val socket: Socket) : Closeable
         private const val CONNECT_TIMEOUT_MS = 10_000
 
         /**
-         * Connects and logs in. With TLS the broker's certificate must be trusted by the system and
-         * issued for [MqttOptions.host] ([tlsFactory] only differs in tests).
+         * Connects and logs in. With TLS the broker's certificate must be trusted by [systemTrust]
+         * and issued for [MqttOptions.host], or be the pinned one ([MqttOptions.allowSelfSigned]).
+         * [systemTrust] only differs in tests.
          */
-        fun open(o: MqttOptions, tlsFactory: SSLSocketFactory = SSLSocketFactory.getDefault() as SSLSocketFactory): MqttConnection {
+        fun open(o: MqttOptions, systemTrust: X509TrustManager = systemTrustManager()): MqttConnection {
             val plain = Socket()
             try {
                 plain.connect(InetSocketAddress(o.host, o.port), CONNECT_TIMEOUT_MS)
                 plain.soTimeout = CONNECT_TIMEOUT_MS
-                val socket = if (o.tls) secure(plain, o.host, tlsFactory) else plain
+                val socket = if (o.tls) secure(plain, o, systemTrust) else plain
                 val connection = MqttConnection(socket)
                 connection.send(MqttPackets.connect(o))
                 val ack = MqttPackets.read(connection.input, 16)
@@ -239,17 +262,65 @@ class MqttConnection private constructor(private val socket: Socket) : Closeable
             }
         }
 
-        private fun secure(plain: Socket, host: String, factory: SSLSocketFactory): Socket {
-            val s = factory.createSocket(plain, host, plain.port, true) as SSLSocket
-            // Checks the certificate's name during the handshake (not done by default for raw sockets).
-            s.sslParameters = s.sslParameters.apply { endpointIdentificationAlgorithm = "HTTPS" }
-            s.startHandshake()
-            // Checked again: some TLS providers ignore the setting above.
-            if (!okhttp3.internal.tls.OkHostnameVerifier.verify(host, s.session)) {
+        private fun secure(plain: Socket, o: MqttOptions, systemTrust: X509TrustManager): Socket {
+            val trust = BrokerTrust(systemTrust, o.allowSelfSigned, o.pinnedCertificate)
+            val context = SSLContext.getInstance("TLS").apply { init(null, arrayOf(trust), null) }
+            val s = context.socketFactory.createSocket(plain, o.host, plain.port, true) as SSLSocket
+            try {
+                s.startHandshake()
+            } catch (e: SSLException) {
                 runCatching { s.close() }
-                throw javax.net.ssl.SSLPeerUnverifiedException("Certificate is not for $host")
+                val seen = trust.untrusted
+                if (seen != null) throw MqttCertificateException(seen, changed = o.pinnedCertificate != null)
+                throw e
+            }
+            // A certificate from a trusted authority must be issued for the broker's name; a pinned
+            // one is exactly the confirmed certificate (self-signed ones often name no host at all).
+            if (!trust.pinned && !okhttp3.internal.tls.OkHostnameVerifier.verify(o.host, s.session)) {
+                runCatching { s.close() }
+                throw SSLPeerUnverifiedException("Certificate is not for ${o.host}")
             }
             return s
         }
+
+        fun systemTrustManager(): X509TrustManager =
+            TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()).apply { init(null as KeyStore?) }
+                .trustManagers.filterIsInstance<X509TrustManager>().first()
+
+        /** SHA-256 of a certificate, lower case hex. */
+        fun fingerprint(cert: X509Certificate): String =
+            MessageDigest.getInstance("SHA-256").digest(cert.encoded).joinToString("") { "%02x".format(it) }
     }
+}
+
+/**
+ * The system's trust, plus (when allowed) the one pinned certificate. Remembers how the server was
+ * accepted ([pinned]) or the fingerprint of the certificate it refused ([untrusted]).
+ */
+private class BrokerTrust(
+    private val system: X509TrustManager,
+    private val allowSelfSigned: Boolean,
+    private val pin: String?,
+) : X509TrustManager {
+    @Volatile var pinned = false
+    @Volatile var untrusted: String? = null
+
+    override fun checkServerTrusted(chain: Array<out X509Certificate>, authType: String) {
+        try {
+            system.checkServerTrusted(chain, authType)
+        } catch (e: CertificateException) {
+            if (!allowSelfSigned || chain.isEmpty()) throw e
+            val fingerprint = MqttConnection.fingerprint(chain[0])
+            if (pin != null && MessageDigest.isEqual(fingerprint.toByteArray(), pin.lowercase().toByteArray())) {
+                pinned = true
+                return
+            }
+            untrusted = fingerprint
+            throw e
+        }
+    }
+
+    override fun checkClientTrusted(chain: Array<out X509Certificate>, authType: String) = throw CertificateException("Not a server")
+
+    override fun getAcceptedIssuers(): Array<X509Certificate> = system.acceptedIssuers
 }

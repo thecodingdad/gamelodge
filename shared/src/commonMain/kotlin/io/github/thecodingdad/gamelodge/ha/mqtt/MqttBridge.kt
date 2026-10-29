@@ -47,9 +47,10 @@ import java.io.File
 import java.time.Instant
 import java.util.UUID
 
-enum class MqttStatus { OFF, CONNECTING, CONNECTED, BAD_LOGIN, FAILED }
+enum class MqttStatus { OFF, CONNECTING, CONNECTED, BAD_LOGIN, FAILED, CERT_UNTRUSTED, CERT_CHANGED }
 
-data class MqttState(val status: MqttStatus, val error: String? = null)
+/** [fingerprint]: the broker's certificate to confirm (CERT_UNTRUSTED / CERT_CHANGED). */
+data class MqttState(val status: MqttStatus, val error: String? = null, val fingerprint: String? = null)
 
 /**
  * Sends the launcher's status to Home Assistant over MQTT: one device per install, found by MQTT
@@ -68,11 +69,17 @@ class MqttBridge(private val c: LauncherContainer) {
     /** The device was just removed from HA: its connection ends without sending "offline" again. */
     @Volatile private var removed = false
 
-    private data class Config(val host: String, val port: Int, val tls: Boolean, val user: String, val deviceName: String)
+    private data class Config(
+        val host: String, val port: Int, val tls: Boolean, val user: String, val deviceName: String,
+        val allowSelfSigned: Boolean, val certPin: String?,
+    )
 
     private fun config(s: LauncherSettings): Config? =
         if (!s.mqttEnabled || s.mqttHost.isBlank()) null
-        else Config(s.mqttHost.trim(), s.mqttPort, s.mqttTls, s.mqttUser.trim(), s.mqttDeviceName.trim().ifEmpty { c.platform.deviceName })
+        else Config(
+            s.mqttHost.trim(), s.mqttPort, s.mqttTls, s.mqttUser.trim(), s.mqttDeviceName.trim().ifEmpty { c.platform.deviceName },
+            s.mqttTls && s.mqttAllowSelfSigned, s.mqttCertPin.ifEmpty { null },
+        )
 
     fun start() {
         if (job != null) return
@@ -117,6 +124,11 @@ class MqttBridge(private val c: LauncherContainer) {
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
+                if (e is MqttCertificateException) {
+                    // Waits until the user confirms the certificate (or changes the settings).
+                    _state.value = MqttState(if (e.changed) MqttStatus.CERT_CHANGED else MqttStatus.CERT_UNTRUSTED, fingerprint = e.fingerprint)
+                    return
+                }
                 if (e is MqttRefusedException && e.badLogin) {
                     // Trying again with the same login won't help: wait for new settings.
                     _state.value = MqttState(MqttStatus.BAD_LOGIN)
@@ -143,6 +155,7 @@ class MqttBridge(private val c: LauncherContainer) {
             username = cfg.user.ifEmpty { null }, password = c.secrets.get(SecretStore.Keys.MQTT_PASSWORD),
             clientId = "gamelodge-$id", keepAliveSeconds = KEEP_ALIVE_SECONDS,
             will = MqttWill(Topic.STATE.of(base), OFFLINE),
+            allowSelfSigned = cfg.allowSelfSigned, pinnedCertificate = cfg.certPin,
         )
         val conn = withContext(Dispatchers.IO) { MqttConnection.open(options) }
         removed = false
