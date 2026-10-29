@@ -341,7 +341,10 @@ class LaunchCoordinator(
             _activeStream.value = ActiveStream(entry, hostUuid, appId)
             // The host's GameLodge learns which start action to run (its runner asks for it).
             streamNotices?.started(hostUuid, resuming, target.appUuid, oneOffAction.takeUnless { resuming })
-            platform.startStream(entry, target, host)
+            // Another client's session (Vibepollo) is taken over through its copy of the game.
+            val copy = host.foreignCopy?.takeIf { resuming }
+            val streamTarget = if (copy != null) target.copy(appId = copy.appId, appUuid = copy.appUUID, name = copy.appName.trim()) else target
+            platform.startStream(entry, streamTarget, host)
             started(entry, target, profileName)
             _state.value = LaunchState.Idle
         } catch (e: Exception) {

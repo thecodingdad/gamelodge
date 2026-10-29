@@ -120,12 +120,19 @@ class ArtemisHostRepository(
     override suspend fun refresh(uuid: String) {
         val host = _hosts.value[uuid]?.takeIf { it.status == HostStatus.ONLINE } ?: return
         runCatching {
-            val running = withContext(Dispatchers.IO) {
+            val (running, rawApps) = withContext(Dispatchers.IO) {
                 val h = http(host)
-                h.getCurrentGame(h.getServerInfo(true))
+                h.getCurrentGame(h.getServerInfo(true)) to runCatching { h.getAppListRaw() }.getOrNull()
             }
             details[uuid]?.runningGameId = running
-            _hosts.update { m -> m[uuid]?.let { m + (uuid to it.copy(runningAppId = running)) } ?: m }
+            _hosts.update { m -> m[uuid]?.let { m + (uuid to it.copy(runningAppId = running, foreignCopy = null)) } ?: m }
+            // The app list too: another client's game shows there only (Vibepollo).
+            if (rawApps != null) {
+                synchronized(lastRawAppLists) { lastRawAppLists.remove(uuid) }
+                parseAppList(uuid, host.name, rawApps)
+            } else {
+                _hosts.update { m -> m[uuid]?.let { m + (uuid to it.withForeignSession(_appLists.value[uuid])) } ?: m }
+            }
         }.onFailure { Log.w("Host state of ${host.name} not refreshed: ${it.message}") }
     }
 
@@ -149,7 +156,7 @@ class ArtemisHostRepository(
             virtualDisplaySupported = details.vDisplaySupported,
             serverCommands = details.serverCommands?.toList().orEmpty(),
             permission = details.permission,
-        )
+        ).withForeignSession(_appLists.value[uuid])
         this.details[uuid] = details
         val cameOnline = state.status == HostStatus.ONLINE && _hosts.value[uuid]?.status != HostStatus.ONLINE
         _hosts.update { it + (uuid to state) }
@@ -180,7 +187,10 @@ class ArtemisHostRepository(
             .onFailure { Log.w("Unparseable app list from $hostName", it) }
             .getOrNull() ?: return
         nvApps[uuid] = apps.associateBy { it.appId }
-        _appLists.update { it + (uuid to apps.map { app -> RemoteApp(uuid, hostName, HostApp(app.appId, app.appName, app.appUUID, app.isHdrSupported)) }) }
+        val list = apps.map { app -> RemoteApp(uuid, hostName, HostApp(app.appId, app.appName, app.appUUID, app.isHdrSupported)) }
+        _appLists.update { it + (uuid to list) }
+        // Another client's game shows in the app list only (Vibepollo).
+        _hosts.update { m -> m[uuid]?.let { m + (uuid to it.withForeignSession(list)) } ?: m }
     }
 
     /** Opens an authenticated connection to the host (blocking work, call off the main thread). */

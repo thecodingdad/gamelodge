@@ -1,6 +1,7 @@
 package io.github.thecodingdad.gamelodge.desktop.stream
 
 import io.github.thecodingdad.gamelodge.desktop.writeAtomically
+import io.github.thecodingdad.gamelodge.data.remote.withForeignSession
 import io.github.thecodingdad.gamelodge.data.remote.AddHostResult
 import io.github.thecodingdad.gamelodge.data.remote.HostActions
 import io.github.thecodingdad.gamelodge.data.remote.HostApp
@@ -166,6 +167,8 @@ class DesktopHosts(
     }
 
     override suspend fun refresh(uuid: String) {
+        // The app list as well: another client's game shows there only (Vibepollo).
+        appListAt.remove(uuid)
         withContext(Dispatchers.IO) { known(uuid)?.let { poll(it) } }
     }
 
@@ -351,7 +354,7 @@ class DesktopHosts(
                 runningAppId = if (viaHttps || !paired) info.runningAppId else before?.runningAppId ?: 0,
                 address = s.address, macAddress = info.mac ?: s.mac, virtualDisplaySupported = info.virtualDisplay,
                 serverCommands = info.serverCommands, permission = info.permission,
-            ))
+            ).withForeignSession(_appLists.value[s.uuid]))
         }
         val now = System.currentTimeMillis()
         if (paired && !downloading && now - (appListAt[s.uuid] ?: 0) > APP_LIST_MS) {
@@ -361,6 +364,8 @@ class DesktopHosts(
                 if (_appLists.value[s.uuid]?.size != apps.size) Log.i("App list of ${info.name}: ${apps.size} apps")
                 val list = apps.map { RemoteApp(s.uuid, info.name, HostApp(it.id, it.name, it.uuid, it.hdr)) }
                 if (_appLists.value[s.uuid] != list) _appLists.update { m -> m + (s.uuid to list) }
+                // Another client's game shows in the app list only (Vibepollo).
+                _hosts.update { m -> m[s.uuid]?.let { m + (s.uuid to it.withForeignSession(list)) } ?: m }
             }.onFailure { Log.w("App list of ${s.name} failed: ${it.message}") }
         }
     }

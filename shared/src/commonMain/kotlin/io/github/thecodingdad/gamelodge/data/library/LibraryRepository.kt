@@ -196,7 +196,10 @@ class LibraryRepository(
         hosts.appLists.value[hostUuid]?.let { syncHost(hostUuid, it) }
     }
 
-    private suspend fun syncHost(hostUuid: String, apps: List<RemoteApp>) {
+    private suspend fun syncHost(hostUuid: String, all: List<RemoteApp>) {
+        // Vibepollo's entries for another client's session (resume, quit, the game's copy): the
+        // launcher resumes and quits itself, they'd only be extra tiles.
+        val apps = all.filterNot { io.github.thecodingdad.gamelodge.data.remote.ForeignSessions.isHidden(it.app) }
         // Not an app list: a sync would delete every game of the host with its play time,
         // favourites and corrections. Apollo/Vibepollo answer a device without the "list
         // applications" permission (also briefly, e.g. while reloading) with one fake entry; an

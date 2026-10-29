@@ -18,9 +18,50 @@ data class HostState(
     val serverCommands: List<String>,
     /** Apollo/Vibepollo permission bits for this client; -1 when unknown (Sunshine). */
     val permission: Int,
+    /**
+     * Vibepollo: the copy of a game another client started (see [ForeignSessions]); this client
+     * resumes that session through it. Null when the running game (if any) is this client's own.
+     */
+    val foreignCopy: HostApp? = null,
 ) {
     val missingPermissions: List<HostPermission> get() = HostPermission.missingEssential(permission)
     val isStreaming: Boolean get() = runningAppId != 0
+}
+
+/**
+ * Vibepollo shows a running game only to the client that started it: every other client sees the
+ * host as free and gets extra entries in its app list instead (UUIDs 9a1c5a25-58fe-40e0-b9aa-7d3f…):
+ * "Resume", "Terminate" and a copy of the running game (its title with leading spaces), through
+ * which it takes over the session.
+ */
+object ForeignSessions {
+    private const val UUID_PREFIX = "9A1C5A25-58FE-40E0-B9AA-7D3F"
+    private val controls = setOf("Resume", "Terminate", "Remote Input", "Remote Monitor")
+
+    fun isSynthetic(app: HostApp): Boolean = app.appUUID?.uppercase()?.startsWith(UUID_PREFIX) == true
+
+    /** The copy of another client's running game and the real game it stands for. */
+    fun running(apps: List<HostApp>): Pair<HostApp, HostApp>? {
+        val copy = apps.firstOrNull { isSynthetic(it) && it.appName.trim() !in controls } ?: return null
+        val title = copy.appName.trim()
+        val real = apps.firstOrNull { !isSynthetic(it) && it.appName.trim() == title } ?: return null
+        return real to copy
+    }
+
+    /** Entries the launcher doesn't list: it resumes and quits by itself (Remote Input / Monitor stay). */
+    fun isHidden(app: HostApp): Boolean =
+        isSynthetic(app) && app.appName.trim().let { it == "Resume" || it == "Terminate" || it !in controls }
+}
+
+/**
+ * The host's state with a game another client runs (Vibepollo, [ForeignSessions]) as running:
+ * the host itself reports its own sessions only.
+ */
+fun HostState.withForeignSession(apps: List<RemoteApp>?): HostState {
+    val own = if (foreignCopy != null) 0 else runningAppId
+    if (own != 0) return copy(runningAppId = own, foreignCopy = null)
+    val found = apps?.let { list -> ForeignSessions.running(list.map { it.app }) }
+    return copy(runningAppId = found?.first?.appId ?: 0, foreignCopy = found?.second)
 }
 
 /** An app in a host's app list. */
