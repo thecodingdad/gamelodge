@@ -152,8 +152,12 @@ fun SetupWizard(vm: LauncherViewModel, manual: Boolean, onDone: () -> Unit) {
         )
     }
 
-    // Start = next, B = previous step (never leaves the wizard).
+    // Start = next, B = previous step (never leaves the wizard). LB / RB page through the steps
+    // (no hints, like the others); RB doesn't finish on the last step (only Finish / Start do). A
+    // step or popup using LB / RB itself registers later and takes them first.
     PadAction(PadButton.START) { next() }
+    PadAction(PadButton.L1) { if (index > 0) back() }
+    PadAction(PadButton.R1) { if (current != WizardStep.FINISH) next() }
     // Always taken: B goes a step back. On the first step it leaves only a wizard opened from the
     // settings (back there, nothing undone); the first setup can't be left that way.
     BackHandler { if (index > 0) back() else if (manual) onDone() }
