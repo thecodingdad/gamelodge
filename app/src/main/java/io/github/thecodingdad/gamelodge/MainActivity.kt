@@ -50,6 +50,13 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // One launcher at a time. Started another way (Home while it ran in a normal task, an
+        // explicit start, the TV), the older one goes: both would draw the process' popups, and
+        // the visible one could end up behind the other's popup backdrop (black screen).
+        current?.get()?.takeIf { it !== this && !it.isFinishing && !it.isDestroyed }?.let { old ->
+            if (old.taskId != taskId) old.finishAndRemoveTask() else old.finish()
+        }
+        current = java.lang.ref.WeakReference(this)
         // Nobody looks at the hosts while the screensaver shows: no polling meanwhile, right away again after it.
         lifecycleScope.launch {
             io.github.thecodingdad.gamelodge.ui.shell.ScreensaverControl.active.collect { idle ->
@@ -146,8 +153,11 @@ class MainActivity : ComponentActivity() {
     override fun onStop() {
         returningFromBackground = true
         started = false
-        container.hosts.stopPolling()
-        container.ha.client.stop()
+        // An older instance stopping after the new one started must not stop the new one's polling.
+        if (current?.get() === this) {
+            container.hosts.stopPolling()
+            container.ha.client.stop()
+        }
         super.onStop()
     }
 
@@ -243,5 +253,8 @@ class MainActivity : ComponentActivity() {
         /** Launcher in the foreground: combinations act inside it instead of as an overlay. */
         @Volatile var resumed = false
             private set
+
+        /** The newest instance (see onCreate). */
+        private var current: java.lang.ref.WeakReference<MainActivity>? = null
     }
 }
