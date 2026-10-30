@@ -131,6 +131,12 @@ fun main(args: Array<String>) {
         fun file(url: String?) = (ArtworkFiles.model(url) as? File)?.takeIf { it.isFile }?.path
         return SplashArt(item.title, hero = file(item.heroUrl), logo = file(item.logoUrl), cover = file(item.coverUrl))
     }
+    container.hostRole.keys = object : io.github.thecodingdad.gamelodge.host.KeySource {
+        override fun keys() = container.keySync.local()
+        override fun merge(keys: io.github.thecodingdad.gamelodge.data.companion.SharedKeys, deviceName: String) {
+            if (container.keySync.merge(keys)) Log.i("Metadata keys changed by $deviceName")
+        }
+    }
     container.hostRole.playData = object : io.github.thecodingdad.gamelodge.host.PlayDataSource {
         override fun changes(after: Long) = kotlinx.coroutines.runBlocking { container.playDataHub.changesAfter(after) }
         override fun apply(deviceId: String, deviceName: String, changes: io.github.thecodingdad.gamelodge.data.companion.PlayDataChanges) =
@@ -175,6 +181,9 @@ fun main(args: Array<String>) {
 
     val dispatcher = InputDispatcher()
     val gamepads = Gamepads(dispatcher)
+    io.github.thecodingdad.gamelodge.desktop.stream.MoonlightQt.firstPad = {
+        gamepads.starter().takeIf { container.settings.current().starterPlayerOne }
+    }
     var mainWindow: java.awt.Frame? = null
     val windowControls = WindowControls()
     val hostServices by lazy { HostServices(container.hostRole, container.hostSync, container.secrets) }

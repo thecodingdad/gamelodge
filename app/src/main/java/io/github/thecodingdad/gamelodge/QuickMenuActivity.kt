@@ -188,6 +188,7 @@ class QuickMenuActivity : ComponentActivity() {
     // Lint wrongly flags ComponentActivity.dispatchKeyEvent as restricted (androidx.core override).
     @SuppressLint("RestrictedApi")
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        io.github.thecodingdad.gamelodge.input.StarterPad.onKey(event)
         val e = io.github.thecodingdad.gamelodge.ui.input.AndroidPad.inLayout(event, vm.settings.value)
         if (e.action == KeyEvent.ACTION_DOWN && e.repeatCount == 0 &&
             (e.keyCode == KeyEvent.KEYCODE_BUTTON_B || e.keyCode == KeyEvent.KEYCODE_BACK)

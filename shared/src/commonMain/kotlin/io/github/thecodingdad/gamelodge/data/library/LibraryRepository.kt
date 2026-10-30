@@ -136,6 +136,9 @@ class LibraryRepository(
     /** Play data shared through the hosts (set by the platform; null: not shared). */
     @Volatile var playData: io.github.thecodingdad.gamelodge.data.sync.PlayDataSync? = null
 
+    /** The metadata keys, shared with the hosts that allow it (set by the platform). */
+    @Volatile var keySync: io.github.thecodingdad.gamelodge.data.sync.KeySync? = null
+
     /** The Windows host's own store, synced like a remote host (null elsewhere or when it isn't a host). */
     @Volatile var ownPlayDataHost: (suspend () -> io.github.thecodingdad.gamelodge.data.sync.SyncHost?)? = null
 
@@ -146,6 +149,7 @@ class LibraryRepository(
         if (feed != null) {
             val online = hosts.hosts.value.values.filter { it.paired && it.status == HostStatus.ONLINE }.map { it.uuid }
             for (uuid in online) {
+                keySync?.let { feed.exchangeKeys(uuid, it, settings?.current()?.sendKeysToHost == true) }
                 if (!feed.sharesPlayData(uuid)) continue
                 val games = runCatching { feed.games(uuid) }.getOrNull() ?: continue
                 val targets = dao.getAllTargets().filter { it.type == TargetType.REMOTE && it.hostUuid == uuid && it.appUuid != null }

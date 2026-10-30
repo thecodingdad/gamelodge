@@ -143,6 +143,10 @@
     <string name="settings_home_screen_sub">Kacheln, Reihen</string>
     <string name="home_rows_section">Reihen im Start-Tab</string>
     <string name="home_rows_help">Die Reihen im Start-Tab und ihre Reihenfolge (unabhängig von der Bibliothek). Reihe am Griff verschieben: ziehen oder auswählen und mit hoch/runter bewegen; ✕ entfernt sie.</string>
+    <string name="setting_home_rows_position">Reihen</string>
+    <string name="setting_home_rows_bottom">Erste unten</string>
+    <string name="setting_home_rows_top">Von oben</string>
+    <string name="setting_home_rows_position_sub">Erste unten: das Artwork hat Platz, die fokussierte Reihe rückt nach oben. Von oben: so viele ganze Reihen wie passen, die Liste rückt Reihe für Reihe weiter.</string>
     <string name="home_row_ha">Home-Assistant-Favoriten</string>
     <string name="home_row_ha_needs_ha">Braucht eine Home-Assistant-Anmeldung (Einstellungen › Home Assistant)</string>
     <string name="settings_theme">Aussehen</string>
@@ -211,6 +215,12 @@
     <string name="hosts_empty">Noch keine Hosts. Hosts im Netzwerk erscheinen automatisch.</string>
     <string name="hosts_refresh">Aktualisieren</string>
     <string name="hosts_discovery_hint">Hosts mit Sunshine, Apollo oder Vibepollo im selben Netzwerk werden automatisch gefunden, solange diese Seite geöffnet ist. Für Hosts in anderen Netzwerken „Host hinzufügen“ verwenden.</string>
+    <string name="pc_version_hint">Tipp: GameLodge gibt es auch für Windows. Auf deinem Streaming-PC installiert, kann es hier mehr für dich tun.</string>
+    <string name="pc_version_more">GameLodge für Windows</string>
+    <string name="pc_version_title">GameLodge für Windows</string>
+    <string name="pc_version_text">Auf dem Streaming-PC bringt GameLodge: die Spiele des PCs mit Artwork und Metadaten, Spielzeit, Bewertungen, Favoriten und Sammlungen geteilt zwischen deinen Geräten, die Guide-Taste bleibt beim Streamen auf diesem Gerät, und Fortsetzen holt das Spielfenster nach vorn. Auf dem PC selbst ist es auch ein Launcher.</string>
+    <string name="pc_version_steps">Lade das Setup auf dem PC von der Seite unten und installiere es. Danach dieses Gerät damit koppeln: Der Einrichtungsassistent findet es, oder später Einstellungen → Metadaten &amp; Artwork → Quelle hinzufügen → Host.</string>
+    <string name="pc_version_qr_hint">Scannen, um die Seite auf dem Handy zu öffnen, oder am PC eintippen:</string>
     <string name="host_add">Host hinzufügen</string>
     <string name="host_add_title">Host-Adresse (IP oder Name)</string>
     <string name="host_added">Host hinzugefügt.</string>
@@ -239,6 +249,8 @@
     <string name="metadata_fix_title">Metadaten suchen</string>
     <string name="metadata_not_configured">Hinterlege zuerst einen SteamGridDB-API-Key oder IGDB-Zugangsdaten unter Einstellungen → Metadaten &amp; Artwork.</string>
     <string name="metadata_no_results">Keine Treffer.</string>
+    <string name="metadata_send_keys">Keys an Hosts senden</string>
+    <string name="metadata_send_keys_sub">Deine SteamGridDB-/IGDB-Keys gehen an GameLodge-Hosts, die diesem Gerät das Teilen der Keys erlauben (am Host: Geräte &amp; Pairing). Keys von so einem Host werden immer übernommen, die neueste Änderung gewinnt.</string>
     <string name="artwork_sources_unreachable">Gerade ist kein Metadaten-Server erreichbar: nur Bilder vom Host, erzeugte und eigene Bilder verfügbar.</string>
     <string name="artwork_title">Artwork ändern</string>
     <string name="artwork_cover">Cover</string>
@@ -1503,7 +1515,10 @@
     <string name="controller_section_mouse">Maus-Emulation</string>
     <string name="controller_section_mouse_sub">Zeigergeschwindigkeit und Beschleunigung mit dem Stick</string>
     <string name="controller_section_stream">Im Stream</string>
-    <string name="controller_section_stream_sub">Deadzone, Vibration, Bewegungssensor, Odin-Tastenbelegung</string>
+    <string name="controller_section_stream_sub">Spieler 1, Deadzone, Vibration, Bewegungssensor, Odin-Tastenbelegung</string>
+    <string name="controller_section_stream_sub_pc">Welcher Controller Spieler 1 ist</string>
+    <string name="setting_starter_player_one">Startender Controller ist Spieler 1</string>
+    <string name="setting_starter_player_one_sub">Der Controller, der einen Stream startet, wird am Host Spieler 1, außer ein Controller ist fest als Spieler 1 eingestellt. Per Touch, Maus oder Tastatur gestartet: die übliche Reihenfolge.</string>
     <string name="controllers_stream_defaults_sub">Gilt für jedes Stream-Profil; einzelne Controller und einzelne Spiele können in ihren eigenen Einstellungen abweichen.</string>
     <string name="qm_mouse">Maus-Modus</string>
     <string name="wizard_metadata_guide_hint">Beide sind kostenlos. Wie du sie bekommst, Schritt für Schritt mit QR-Code fürs Handy: der Button im Eingabedialog.</string>

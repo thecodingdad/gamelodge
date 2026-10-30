@@ -52,7 +52,7 @@ class HostRole(private val dataDir: File, private val secrets: SecretStore, priv
 
     val identity: ServerIdentity by lazy { ServerIdentity.loadOrCreate(secrets, serverName()) }
     val devices: DeviceRegistry by lazy { DeviceRegistry(File(dataDir, "devices.json")) }
-    val pairing: PairingManager by lazy { PairingManager(devices, { identity.fingerprint }, Permissions.all) }
+    val pairing: PairingManager by lazy { PairingManager(devices, { identity.fingerprint }, Permissions.defaults) }
     val auth: AdminAuth by lazy { AdminAuth(File(dataDir, "admin.json"), secrets) }
 
     /** The PC's games for paired launchers (set once the library is ready). */
@@ -64,11 +64,15 @@ class HostRole(private val dataDir: File, private val secrets: SecretStore, priv
     /** Play data of the PC's games shared by its paired launchers (set once the library is ready). */
     @Volatile var playData: io.github.thecodingdad.gamelodge.host.PlayDataSource? = null
 
+    /** This PC's metadata keys for the devices allowed to have them. */
+    @Volatile var keys: io.github.thecodingdad.gamelodge.host.KeySource? = null
+
     private val api by lazy {
         ApiServer(
             identity, devices, pairing, serverName, { proxy }, { hostGames },
             streamNotice = { device, notice -> HostStreams.notice(device.id, device.name, notice) },
             playData = { playData },
+            keys = { keys },
         )
     }
     private val web by lazy {

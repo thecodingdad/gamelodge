@@ -55,6 +55,7 @@ class MoonlightQt(val dir: File) {
         builder.environment()["MOONLIGHT_LAUNCHER_MOUSE"] = if (pointer.enabled) "1" else "0"
         builder.environment()["MOONLIGHT_LAUNCHER_MOUSE_SPEED"] = pointer.streamSpeed.toString()
         builder.environment()["MOONLIGHT_LAUNCHER_MOUSE_EXPONENT"] = pointer.exponent.toString()
+        firstPad()?.let { builder.environment()["MOONLIGHT_LAUNCHER_FIRST_PAD"] = it }
         // Part of the launcher: its taskbar button, the game's name and the launcher's icon.
         builder.environment()["MOONLIGHT_LAUNCHER_APPID"] = io.github.thecodingdad.gamelodge.desktop.TaskbarIdentity.APP_ID
         title?.let { builder.environment()["MOONLIGHT_LAUNCHER_TITLE"] = "$it – GameLodge" }
@@ -128,6 +129,9 @@ class MoonlightQt(val dir: File) {
         private const val FIRST_FRAME_WAIT_MS = 10_000L
 
         @Volatile private var located: MoonlightQt? = null
+
+        /** The pad that starts a stream becomes player 1 ("<n>:<name>", see [Gamepads.starter]); null: the usual order. */
+        @Volatile var firstPad: suspend () -> String? = { null }
 
         /**
          * Next to the running launcher (lib/ → moonlight/). Moonlight-Qt keeps its settings next to

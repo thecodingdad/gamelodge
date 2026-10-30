@@ -191,6 +191,11 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun dispatchTouchEvent(event: android.view.MotionEvent): Boolean {
+        if (event.actionMasked == android.view.MotionEvent.ACTION_DOWN) io.github.thecodingdad.gamelodge.input.StarterPad.onPointer()
+        return super.dispatchTouchEvent(event)
+    }
+
     override fun dispatchGenericMotionEvent(event: android.view.MotionEvent): Boolean {
         dispatcher.dispatchMotion(event)
         return super.dispatchGenericMotionEvent(event)
@@ -199,6 +204,7 @@ class MainActivity : ComponentActivity() {
     // Lint wrongly flags ComponentActivity.dispatchKeyEvent as restricted (androidx.core override).
     @SuppressLint("RestrictedApi")
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        io.github.thecodingdad.gamelodge.input.StarterPad.onKey(event)
         // Button combinations; the accessibility service handles them already when enabled.
         if (ComboAccessibilityService.instance == null || ButtonCombos.isRecording) {
             val consumed = ButtonCombos.handle(event) { action, controller ->

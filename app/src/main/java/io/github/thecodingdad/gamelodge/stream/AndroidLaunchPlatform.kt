@@ -58,6 +58,7 @@ class AndroidLaunchPlatform(private val container: AppContainer) : LaunchPlatfor
         val app = NvApp(target.name, target.appUuid, target.appId ?: error("No app id"), target.hdrSupported)
         val prefs = PreferenceConfiguration.readPreferences(activity)
         val vDisplay = prefs.useVirtualDisplay && details.vDisplaySupported && details.vDisplayDriverReady
+        io.github.thecodingdad.gamelodge.input.StarterPad.capture(container.settings.current().starterPlayerOne)
         activity.startActivity(ServerHelper.createStartIntent(activity, app, details, binder, vDisplay))
     }
 }

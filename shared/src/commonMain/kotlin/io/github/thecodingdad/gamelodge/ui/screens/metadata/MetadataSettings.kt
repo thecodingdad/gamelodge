@@ -94,6 +94,10 @@ fun MetadataSettings(
         SwitchRow(stringResource(Res.string.metadata_auto), settings.autoMetadata, { v -> update { it.copy(autoMetadata = v) } }, initialFocus = true)
 
         SourcesSection(settings.metadataSources)
+        SwitchRow(
+            stringResource(Res.string.metadata_send_keys), settings.sendKeysToHost, { v -> update { it.copy(sendKeysToHost = v) } },
+            subtitle = stringResource(Res.string.metadata_send_keys_sub),
+        )
 
         SectionHeader(stringResource(Res.string.metadata_maintenance))
         ActionRow(

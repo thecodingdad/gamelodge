@@ -63,6 +63,7 @@ private val permissionTexts: List<Pair<String, StringResource>> = listOf(
     Permissions.METADATA to Res.string.host_perm_metadata,
     Permissions.HOST_GAMES to Res.string.host_perm_hostgames,
     Permissions.HOST_GAMES_WRITE to Res.string.host_perm_hostgames_write,
+    Permissions.KEYS to Res.string.host_perm_keys,
 )
 
 /** What the Devices & pairing page works with. */

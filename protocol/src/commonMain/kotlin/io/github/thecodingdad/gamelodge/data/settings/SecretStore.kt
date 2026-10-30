@@ -12,6 +12,9 @@ class SecretStore(private val backend: SecretBackend) {
         const val IGDB_CLIENT_ID = "igdb_client_id"
         const val IGDB_CLIENT_SECRET = "igdb_client_secret"
         const val IGDB_ACCESS_TOKEN = "igdb_access_token"
+        /** When the user last changed the SteamGridDB / IGDB keys (shared through the host, see KeySync). */
+        const val SGDB_CHANGED_AT = "sgdb_keys_changed_at"
+        const val IGDB_CHANGED_AT = "igdb_keys_changed_at"
         const val HA_ACCESS_TOKEN = "ha_access_token"
         const val HA_REFRESH_TOKEN = "ha_refresh_token"
         const val HA_TOKEN_EXPIRY = "ha_token_expiry"

@@ -137,7 +137,7 @@ private val settingsIndex: List<SearchEntry> = buildList {
     addAll(page(SettingsPageId.HOME_SCREEN, Res.string.setting_tile_format, Res.string.setting_tile_info, section = Res.string.settings_home_screen))
     addAll(page(SettingsPageId.LIBRARY_VIEW, Res.string.setting_tile_format, Res.string.setting_tile_info, section = Res.string.settings_library_view))
     addAll(page(SettingsPageId.APPS_VIEW, Res.string.setting_apps_style, section = Res.string.settings_apps_view))
-    addAll(page(SettingsPageId.HOME_SCREEN, Res.string.home_rows_section, Res.string.home_row_ha))
+    addAll(page(SettingsPageId.HOME_SCREEN, Res.string.home_rows_section, Res.string.home_row_ha, Res.string.setting_home_rows_position))
     addAll(page(SettingsPageId.LAUNCHER, Res.string.setting_start_tab))
     addAll(page(SettingsPageId.STARTUP, Res.string.setting_start_tab))
     addAll(page(
@@ -151,7 +151,7 @@ private val settingsIndex: List<SearchEntry> = buildList {
         SettingsPageId.DISPLAY, Res.string.tv_section, Res.string.setting_tv_launcher, Res.string.setting_tv_resolution,
         Res.string.setting_tv_scale_auto, Res.string.setting_tv_scale, section = Res.string.tv_section, device = true,
     ))
-    addAll(page(SettingsPageId.METADATA, Res.string.metadata_auto, Res.string.metadata_review_list, Res.string.metadata_sources, Res.string.metadata_source_add, Res.string.metadata_source_companion, Res.string.metadata_source_server))
+    addAll(page(SettingsPageId.METADATA, Res.string.metadata_auto, Res.string.metadata_review_list, Res.string.metadata_sources, Res.string.metadata_source_add, Res.string.metadata_source_companion, Res.string.metadata_source_server, Res.string.metadata_send_keys))
     addAll(page(SettingsPageId.USAGE, Res.string.usage_access, Res.string.stats_title))
     addAll(page(
         SettingsPageId.EMULATORS, Res.string.emu_folders, Res.string.emu_folder_add, Res.string.emu_all_files, Res.string.emu_emulators, Res.string.emu_custom,
@@ -170,7 +170,7 @@ private val settingsIndex: List<SearchEntry> = buildList {
     listOf(Res.string.combo_section, Res.string.combo_home, Res.string.combo_quick_menu, Res.string.combo_forward, Res.string.combo_service)
         .forEach { add(SearchEntry(it, SettingsTarget.ControllerPage(ControllerSection.COMBOS), Res.string.combo_section, combos = true)) }
     add(SearchEntry(Res.string.controller_section_mouse, SettingsTarget.ControllerPage(ControllerSection.MOUSE)))
-    listOf(Res.string.controllers_stream_defaults, Res.string.odin_mapping_section)
+    listOf(Res.string.setting_starter_player_one, Res.string.controllers_stream_defaults, Res.string.odin_mapping_section)
         .forEach { add(SearchEntry(it, SettingsTarget.ControllerPage(ControllerSection.STREAM), Res.string.controller_section_stream)) }
     addAll(page(
         SettingsPageId.SOUNDS, Res.string.setting_ui_sounds, Res.string.setting_ui_volume, Res.string.setting_sound_style,

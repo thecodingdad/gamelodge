@@ -372,7 +372,7 @@ class DesktopPlatformUi(
             }
             SectionHeader(stringResource(Res.string.controllers_defaults))
             Text(stringResource(Res.string.controllers_defaults_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
-            io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSectionRows(controllerSections)
+            io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSectionRows(controllerSections, streamSub = Res.string.controller_section_stream_sub_pc)
             SeeAlso(
                 SeeAlsoLink(stringResource(Res.string.settings_sounds), SettingsTarget.Page(SettingsPageId.SOUNDS)),
                 SeeAlsoLink(stringResource(Res.string.settings_profiles), SettingsTarget.Page(SettingsPageId.PROFILES)),
@@ -385,6 +385,7 @@ class DesktopPlatformUi(
         io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.LAYOUT,
         io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.COMBOS,
         io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.MOUSE,
+        io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.STREAM,
     )
 
     @Composable
@@ -406,7 +407,8 @@ class DesktopPlatformUi(
                     io.github.thecodingdad.gamelodge.ui.screens.settings.ComboActionRows(settings, update)
                 io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.MOUSE ->
                     io.github.thecodingdad.gamelodge.ui.screens.settings.MouseSettingsRows(settings, update)
-                io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.STREAM -> Unit
+                io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.STREAM ->
+                    io.github.thecodingdad.gamelodge.ui.screens.settings.StarterPlayerOneRow(settings, update, initialFocus = true)
             }
         }
     }

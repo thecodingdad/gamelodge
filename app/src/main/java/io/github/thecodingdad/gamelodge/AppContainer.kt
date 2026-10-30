@@ -34,6 +34,7 @@ class AppContainer(context: Context) : LauncherContainer {
     override val database: LauncherDatabase by lazy { io.github.thecodingdad.gamelodge.data.db.AndroidDatabase.create(appContext) }
     override val settings: SettingsRepository by lazy { io.github.thecodingdad.gamelodge.platform.AndroidStores.settings(appContext) }
     override val secrets: SecretStore by lazy { io.github.thecodingdad.gamelodge.platform.AndroidStores.secrets(appContext) }
+    override val keySync by lazy { io.github.thecodingdad.gamelodge.data.sync.KeySync(secrets).also { it.onChanged = { metadata.refreshPending() } } }
 
     val localApps: LocalAppScanner by lazy { LocalAppScanner(appContext) }
     override val hosts: ArtemisHostRepository by lazy { ArtemisHostRepository(appContext, scope) }
@@ -46,6 +47,7 @@ class AppContainer(context: Context) : LauncherContainer {
     override val library: LibraryRepository by lazy {
         LibraryRepository(database, LibrarySync(database, emulatorPackages = ::emulatorPackages), localApps, hosts, scope, companionFeed, settings).also {
             it.playData = io.github.thecodingdad.gamelodge.data.sync.PlayDataSync.create(database, secrets, { platform.deviceName }) { filters }
+            it.keySync = keySync
         }
     }
     override val playtime: PlaytimeTracker by lazy { PlaytimeTracker(database) }

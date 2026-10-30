@@ -89,8 +89,14 @@ class ControllerOverrideStore(context: Context) {
                 }
                 touchpadAsMouse = pad?.touchpadMouse ?: s.touchpadAsMouse
                 motionSensors = pad?.motion ?: s.motionSensors
-                playerSlot = s.playerSlot
+                playerSlot = s.playerSlot ?: 0.takeIf { descriptor == io.github.thecodingdad.gamelodge.input.StarterPad.starter && !playerOneSet(descriptor) }
             }
         }
+    }
+
+    /** Whether another connected controller is set as player 1. */
+    private fun playerOneSet(except: String): Boolean = android.view.InputDevice.getDeviceIds().any { id ->
+        val descriptor = android.view.InputDevice.getDevice(id)?.descriptor
+        descriptor != null && descriptor != except && _all.value[descriptor]?.playerSlot == 0
     }
 }

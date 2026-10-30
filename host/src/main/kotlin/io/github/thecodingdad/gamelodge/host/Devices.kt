@@ -18,8 +18,12 @@ object Permissions {
     const val HOST_GAMES = "hostgames"
     /** Send metadata corrections of the PC's games. */
     const val HOST_GAMES_WRITE = "hostgames.write"
+    /** Get and change this PC's SteamGridDB / IGDB keys (credentials: never granted by pairing). */
+    const val KEYS = "keys"
 
-    val all = setOf(METADATA, HOST_GAMES, HOST_GAMES_WRITE)
+    val all = setOf(METADATA, HOST_GAMES, HOST_GAMES_WRITE, KEYS)
+    /** What a newly paired device may do. */
+    val defaults = all - KEYS
 }
 
 @Serializable

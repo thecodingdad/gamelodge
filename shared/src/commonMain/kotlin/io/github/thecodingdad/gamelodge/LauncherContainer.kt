@@ -32,6 +32,8 @@ interface LauncherContainer {
     val database: LauncherDatabase
     val settings: SettingsRepository
     val secrets: SecretStore
+    /** The SteamGridDB / IGDB keys with their change times (shared through a host). */
+    val keySync: io.github.thecodingdad.gamelodge.data.sync.KeySync
     val hosts: HostRepository
     val hostActions: HostActions
     val hostPower: HostPower

@@ -56,7 +56,7 @@ class WebAdmin(
     private val gate: PairingGate? = null,
     private val clock: () -> Long = System::currentTimeMillis,
     /** Permissions a paired device can be given here (the metadata server only has metadata). */
-    private val permissionChoices: List<String> = listOf(Permissions.METADATA, Permissions.HOST_GAMES, Permissions.HOST_GAMES_WRITE),
+    private val permissionChoices: List<String> = listOf(Permissions.METADATA, Permissions.HOST_GAMES, Permissions.HOST_GAMES_WRITE, Permissions.KEYS),
     /** Product name in titles and the menu (default: the launcher's). */
     private val product: String? = null,
     /** Server name and provider keys, edited here (metadata server); none in the launcher. */

@@ -65,6 +65,7 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
         SettingsRepository(PreferenceDataStoreFactory.create(produceFile = { File(dataDir, "launcher_settings.preferences_pb") }))
     }
     override val secrets: SecretStore by lazy { SecretStore(DesktopSecretBackend(dataDir)) }
+    override val keySync by lazy { io.github.thecodingdad.gamelodge.data.sync.KeySync(secrets).also { it.onChanged = { metadata.refreshPending() } } }
 
     val http: OkHttpClient by lazy {
         OkHttpClient.Builder()
@@ -179,6 +180,7 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
     override val library: LibraryRepository by lazy {
         LibraryRepository(database, LibrarySync(database), pcLibrary, hosts, scope, companionFeed, settings).also {
             it.playData = io.github.thecodingdad.gamelodge.data.sync.PlayDataSync.create(database, secrets, { platform.deviceName }) { filters }
+            it.keySync = keySync
             it.ownPlayDataHost = ::ownPlayDataHost
         }
     }

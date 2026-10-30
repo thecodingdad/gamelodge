@@ -66,6 +66,13 @@ interface PlayDataSource {
     fun apply(deviceId: String, deviceName: String, changes: io.github.thecodingdad.gamelodge.data.companion.PlayDataChanges): Boolean
 }
 
+/** This PC's SteamGridDB / IGDB keys for the devices allowed to have them (GET/PUT /v1/keys). */
+interface KeySource {
+    fun keys(): io.github.thecodingdad.gamelodge.data.companion.SharedKeys
+    /** Takes the newer ones; [deviceName] for the log. */
+    fun merge(keys: io.github.thecodingdad.gamelodge.data.companion.SharedKeys, deviceName: String)
+}
+
 /**
  * The API paired launchers talk to (the companion's protocol, version 1): HTTPS with the
  * server's own certificate and a client certificate on every connection (mutual TLS). Only the
@@ -82,6 +89,8 @@ class ApiServer(
     private val streamNotice: (Device, StreamNotice) -> Unit = { _, _ -> },
     /** Playtime, ratings, favourites … of the PC's games, shared by its paired launchers. */
     private val playData: () -> PlayDataSource? = { null },
+    /** This PC's metadata keys, for the devices allowed to have them. */
+    private val keys: () -> KeySource? = { null },
     /** What this server is to clients: [KIND] (Windows launcher, companion) or [KIND_METADATA]. */
     private val kind: String = KIND,
 ) {
@@ -239,6 +248,20 @@ class ApiServer(
                 val body = runCatching { json.decodeFromString<io.github.thecodingdad.gamelodge.data.companion.PlayDataChanges>(text) }.getOrNull()
                     ?: return error(ex, 400, "invalid")
                 if (source.apply(device.id, device.name, body)) empty(ex, 204) else error(ex, 400, "invalid")
+            }
+            ex.requestMethod == "GET" && rest == "keys" -> {
+                if (!device.may(Permissions.KEYS)) return empty(ex, 403)
+                val source = keys() ?: return error(ex, 404, "not_available")
+                ex.responseHeaders.set("Cache-Control", "no-store")
+                respond(ex, source.keys())
+            }
+            ex.requestMethod == "PUT" && rest == "keys" -> {
+                if (!device.may(Permissions.KEYS)) return empty(ex, 403)
+                val source = keys() ?: return error(ex, 404, "not_available")
+                val body = read<io.github.thecodingdad.gamelodge.data.companion.SharedKeys>(ex)
+                if (body == null || !body.isValid(System.currentTimeMillis())) return error(ex, 400, "invalid")
+                source.merge(body, device.name)
+                empty(ex, 204)
             }
             ex.requestMethod == "POST" && rest == "stream" -> {
                 val body = read<StreamNotice>(ex) ?: return error(ex, 400, "invalid")

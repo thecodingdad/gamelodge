@@ -327,6 +327,7 @@ fun ControllerSectionScreen(section: ControllerSection) {
             ControllerSection.STREAM -> {
                 // The stream's controller options, the same for every profile (single controllers and
                 // single games can still differ in their own settings).
+                StarterPlayerOneRow(settings, update)
                 Text(stringResource(Res.string.controllers_stream_defaults_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
                 val editing = remember { io.github.thecodingdad.gamelodge.stream.AndroidProfileEditing(context) }
                 val base = remember { io.github.thecodingdad.gamelodge.stream.ProfileStore(context, null) }

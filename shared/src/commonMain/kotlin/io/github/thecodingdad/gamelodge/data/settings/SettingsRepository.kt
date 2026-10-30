@@ -173,10 +173,15 @@ data class LauncherSettings(
     val hideNavigationBar: Boolean = false,
     /** Show the button hint bar (only while a controller is connected). */
     val showHintBar: Boolean = true,
-    /** A / tap on a game starts (or installs) it instead of opening its detail page. */
     /** A on a game starts it right away, per tab (start tab, library). */
     val homeDirectStart: Boolean = false,
     val libraryDirectStart: Boolean = false,
+    /** Start tab: the rows start at the top (only whole rows in view) instead of the first row at the bottom. */
+    val homeRowsTop: Boolean = false,
+    /** The controller that starts a game or stream becomes player 1 (unless one is set as player 1). */
+    val starterPlayerOne: Boolean = true,
+    /** Send this device's SteamGridDB / IGDB keys to the hosts that allow sharing them. */
+    val sendKeysToHost: Boolean = false,
     /** Narrow handle at the right screen edge that opens the quick menu over other apps. */
     val quickMenuEdgeHandle: Boolean = false,
     /** Emulators and ROM folders ([io.github.thecodingdad.gamelodge.data.emulation.EmulationConfig] as JSON). */
@@ -326,6 +331,9 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val gamesDirectStart = booleanPreferencesKey("games_direct_start")
         val homeDirectStart = booleanPreferencesKey("home_direct_start")
         val libraryDirectStart = booleanPreferencesKey("library_direct_start")
+        val homeRowsTop = booleanPreferencesKey("home_rows_top")
+        val starterPlayerOne = booleanPreferencesKey("starter_player_one")
+        val sendKeysToHost = booleanPreferencesKey("send_keys_to_host")
         val quickMenuEdgeHandle = booleanPreferencesKey("quick_menu_edge_handle")
         val emulation = stringPreferencesKey("emulation")
         val pcEmulation = stringPreferencesKey("pc_emulation")
@@ -450,6 +458,9 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             showHintBar = this[K.showHintBar] ?: d.showHintBar,
             homeDirectStart = this[K.homeDirectStart] ?: this[K.gamesDirectStart] ?: d.homeDirectStart,
             libraryDirectStart = this[K.libraryDirectStart] ?: this[K.gamesDirectStart] ?: d.libraryDirectStart,
+            homeRowsTop = this[K.homeRowsTop] ?: d.homeRowsTop,
+            starterPlayerOne = this[K.starterPlayerOne] ?: d.starterPlayerOne,
+            sendKeysToHost = this[K.sendKeysToHost] ?: d.sendKeysToHost,
             quickMenuEdgeHandle = this[K.quickMenuEdgeHandle] ?: d.quickMenuEdgeHandle,
             emulation = this[K.emulation] ?: d.emulation,
             pcEmulation = this[K.pcEmulation] ?: d.pcEmulation,
@@ -563,6 +574,9 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         this[K.showHintBar] = s.showHintBar
         this[K.homeDirectStart] = s.homeDirectStart
         this[K.libraryDirectStart] = s.libraryDirectStart
+        this[K.homeRowsTop] = s.homeRowsTop
+        this[K.starterPlayerOne] = s.starterPlayerOne
+        this[K.sendKeysToHost] = s.sendKeysToHost
         this[K.quickMenuEdgeHandle] = s.quickMenuEdgeHandle
         this[K.emulation] = s.emulation
         this[K.pcEmulation] = s.pcEmulation

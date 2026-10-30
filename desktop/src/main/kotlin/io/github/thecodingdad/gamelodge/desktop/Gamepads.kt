@@ -56,6 +56,19 @@ class Gamepads(private val dispatcher: InputDispatcher) {
     @Volatile var dispatching = false
         private set
 
+    /**
+     * The pad used last, while it was the last input device: "<n>:<name>", the n-th (from 0) connected
+     * pad of that name in SDL's order (Moonlight-Qt finds the same one; pads report no serial here).
+     */
+    fun starter(): String? {
+        if (!padInUse) return null
+        val index = lastUsed
+        val name = names[index] ?: return null
+        // Read from the poll thread's view (SDL is only used there).
+        val before = previous.keys.count { i -> i < index && names[i] == name }
+        return "$before:$name"
+    }
+
     /** Touch, mouse or keyboard was used. */
     fun otherInput() {
         padInUse = false
@@ -86,7 +99,7 @@ class Gamepads(private val dispatcher: InputDispatcher) {
     private val ui: InputDispatcher get() = overlay?.dispatcher ?: dispatcher
     private var started = false
     private var lastUsed = 0
-    private val previous = HashMap<Int, Pad>()
+    private val previous = java.util.concurrent.ConcurrentHashMap<Int, Pad>()
     private val held = HashMap<String, Long>() // repeating key -> next repeat time
 
     fun start(window: Window) {

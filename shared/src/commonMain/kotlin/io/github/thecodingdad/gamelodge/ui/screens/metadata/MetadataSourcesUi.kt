@@ -280,13 +280,7 @@ fun KeySourceDialog(id: String, entry: MetadataSources.Entry?, onChanged: () -> 
             }
             LauncherButton(stringResource(Res.string.action_save), modifier = Modifier.fillMaxWidth(), primary = true, onClick = {
                 if (!complete) return@LauncherButton
-                if (sgdb) {
-                    secrets.put(SecretStore.Keys.SGDB_API_KEY, first.trim())
-                } else {
-                    secrets.put(SecretStore.Keys.IGDB_CLIENT_ID, first.trim())
-                    secrets.put(SecretStore.Keys.IGDB_CLIENT_SECRET, second.trim())
-                    secrets.put(SecretStore.Keys.IGDB_ACCESS_TOKEN, null)
-                }
+                if (sgdb) container.keySync.setSgdb(first) else container.keySync.setIgdb(first, second)
                 saved++
                 onChanged()
                 metadata.refreshPending()
@@ -295,11 +289,7 @@ fun KeySourceDialog(id: String, entry: MetadataSources.Entry?, onChanged: () -> 
             if (entry != null) {
                 SwitchRow(stringResource(Res.string.metadata_source_active), entry.enabled, { storeSource(container, id, it) })
                 HoldToConfirmButton(stringResource(Res.string.servers_remove), {
-                    if (sgdb) {
-                        secrets.put(SecretStore.Keys.SGDB_API_KEY, null)
-                    } else {
-                        listOf(SecretStore.Keys.IGDB_CLIENT_ID, SecretStore.Keys.IGDB_CLIENT_SECRET, SecretStore.Keys.IGDB_ACCESS_TOKEN).forEach { secrets.put(it, null) }
-                    }
+                    if (sgdb) container.keySync.setSgdb(null) else container.keySync.setIgdb(null, null)
                     storeSource(container, id, null)
                     onChanged()
                     onDismiss()

@@ -120,6 +120,22 @@ class CompanionFeed(
         }.onFailure { Log.d("Play data not sent to ${server.name}: ${it.message}") }.getOrDefault(false)
     }
 
+    /**
+     * Shares the SteamGridDB / IGDB keys with the host's GameLodge, where it allows this device (else it
+     * answers 403): sends this device's keys when [send], then takes the newer ones from there.
+     */
+    suspend fun exchangeKeys(hostUuid: String, keys: io.github.thecodingdad.gamelodge.data.sync.KeySync, send: Boolean) = withContext(Dispatchers.IO) {
+        val server = servers.companionFor(hostUuid) ?: return@withContext
+        runCatching {
+            val client = servers.client(server)
+            val local = keys.local()
+            if (send && !local.isEmpty) client.rawPut("/v1/keys", json.encodeToString(local)).close()
+            client.rawGet("/v1/keys").use { r ->
+                if (r.isSuccessful) keys.merge(json.decodeFromString<SharedKeys>(r.body?.string().orEmpty()))
+            }
+        }.onFailure { Log.d("Keys not shared with ${server.name}: ${it.message}") }
+    }
+
     /** True when the host's companion is a GameLodge that shares play data (paired, both permissions). */
     fun sharesPlayData(hostUuid: String): Boolean =
         companionFor(hostUuid)?.permissions?.let { "hostgames" in it && "hostgames.write" in it } == true

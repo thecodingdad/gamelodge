@@ -53,6 +53,7 @@
     <string name="host_perm_metadata">Metadata (SteamGridDB, IGDB)</string>
     <string name="host_perm_hostgames">Read this PC's games</string>
     <string name="host_perm_hostgames_write">Correct this PC's games</string>
+    <string name="host_perm_keys">Get and change the SteamGridDB / IGDB keys of this PC</string>
     <string name="host_web">Web interface</string>
     <string name="host_web_sub">Pair and manage devices from a browser in your network.</string>
     <string name="host_web_address">Open in the browser: %1$s</string>

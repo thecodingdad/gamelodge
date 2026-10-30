@@ -138,6 +138,7 @@ internal fun ColumnScope.HostsStep() {
             },
         )
     }
+    io.github.thecodingdad.gamelodge.ui.screens.settings.PcVersionHint()
     if (adding) CircularProgressIndicator(color = LauncherTheme.colors.accent)
     message?.let { WizardNote(it) }
     WizardNote(stringResource(Res.string.hosts_discovery_hint))

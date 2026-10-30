@@ -846,6 +846,7 @@ private fun MainShell(
                             haRow = if (settings.showHaRowOnHome && io.github.thecodingdad.gamelodge.LocalContainer.current.ha.auth.isLoggedIn) ({ HaHomeRow() }) else null,
                             emptyContent = empty,
                             haIndex = io.github.thecodingdad.gamelodge.data.library.HomeRowOrder.haIndex(homeFilters, settings.homeRowOrder),
+                            rowsTop = settings.homeRowsTop,
                         )
                     }
                     MainTab.LIBRARY -> LibraryScreen(

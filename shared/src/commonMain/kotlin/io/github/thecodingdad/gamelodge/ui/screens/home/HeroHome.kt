@@ -92,6 +92,12 @@ fun HeroHome(
     emptyContent: @Composable () -> Unit,
     /** Index in [filterRows] before which [haRow] goes (rows.size = after the last). */
     haIndex: Int = 2,
+    /**
+     * Rows from the top: as many whole rows as fit, the lowest where the first row stands otherwise;
+     * focus moves inside them and the list moves on by whole rows. Else the first row starts at the
+     * bottom and the focused row snaps to the top.
+     */
+    rowsTop: Boolean = false,
 ) {
     val actions = LocalEntryActions.current
     var focused by remember { mutableStateOf<LibraryEntry?>(null) }
@@ -165,6 +171,10 @@ fun HeroHome(
                 if (haIndex >= filterRows.size && haRow != null) add("ha")
             }
             var snapped by remember { mutableStateOf(false) }
+            // Measured row heights (rows not composed yet count like the others).
+            val rowHeights = remember { androidx.compose.runtime.mutableStateMapOf<String, Int>() }
+            // Rows from the top: the first of the whole rows in view.
+            var windowStart by remember { androidx.compose.runtime.mutableIntStateOf(0) }
             // Initial state: list at the top and the first card of the first row focused (or nothing yet).
             val firstFilled = filterRows.firstOrNull { it.entries.isNotEmpty() }
             val atStart = listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0 && when {
@@ -180,8 +190,18 @@ fun HeroHome(
             LaunchedEffect(firstRowKey) {
                 if (firstRowKey != null && callbacks.lastFocusedKey == null && !snapped) listState.scrollToItem(0)
             }
+            // Where the rows go (pixels of the list's viewport), set below once the sizes are known.
+            val geometry = remember { RowGeometry() }
             LaunchedEffect(focusedRow) {
                 val row = rowKeys.indexOf(focusedRow).takeIf { it >= 0 } ?: return@LaunchedEffect
+                if (rowsTop) {
+                    val start = geometry.windowFor(row, windowStart)
+                    windowStart = start
+                    val (index, offset) = geometry.scrollFor(start)
+                    if (snapped) listState.animateScrollToItem(index, offset) else listState.scrollToItem(index, offset)
+                    snapped = true
+                    return@LaunchedEffect
+                }
                 // The first row returns to its start position at the bottom (the spacer item 0
                 // in view), every other row snaps to the top.
                 val index = if (row == 0) 0 else row + 1
@@ -190,12 +210,12 @@ fun HeroHome(
                 snapped = true
             }
             // Height of the first row, so the spacer above it can put it at the bottom edge.
-            var firstRowHeight by remember { mutableStateOf(0) }
+            val firstRowHeight = rowKeys.firstOrNull()?.let { rowHeights[it] } ?: 0
             val pinned: @Composable (String, @Composable () -> Unit) -> Unit = { key, content ->
                 Column(
                     Modifier
                         .onFocusChanged { if (it.hasFocus) focusedRow = key }
-                        .then(if (key == rowKeys.firstOrNull()) Modifier.onSizeChanged { firstRowHeight = it.height } else Modifier),
+                        .onSizeChanged { rowHeights[key] = it.height },
                 ) {
                     androidx.compose.runtime.CompositionLocalProvider(
                         androidx.compose.foundation.gestures.LocalBringIntoViewSpec provides outerSpec, content = content,
@@ -218,8 +238,20 @@ fun HeroHome(
             // the hint bar (the inset includes some margin), so with small cards the next row stays
             // hidden too. Portrait: above the fade.
             val startBottomPx = if (opaqueBottomPx > 0f) fadePx.toInt() else with(density) { (insets.calculateBottomPadding() - 16.dp).coerceAtLeast(0.dp).roundToPx() }
-            // A single row stays in its start position: no room to scroll below it.
-            val bottomPadding = if (rowKeys.size <= 1) with(density) { startBottomPx.toDp() } else 24.dp + insets.calculateBottomPadding()
+            // A single row stays in its start position: no room to scroll below it. Rows from the top
+            // end where the first row would: the last ones are lined up there.
+            val bottomPadding = if (rowKeys.size <= 1 || rowsTop) with(density) { startBottomPx.toDp() } else 24.dp + insets.calculateBottomPadding()
+            val spacingPx = with(density) { 10.dp.roundToPx() }
+            geometry.update(
+                heights = rowKeys.map { rowHeights[it] ?: firstRowHeight },
+                top = topFadePx.toInt(), bottom = listState.layoutInfo.viewportSize.height - startBottomPx, spacing = spacingPx,
+                // Rows from the top: as many as fit, else only the first, at the bottom.
+                startRows = if (rowsTop) null else 1,
+            )
+            // Rows from the top: nothing shows above the first whole row (no cut-off row above).
+            val cut by androidx.compose.animation.core.animateFloatAsState(
+                if (rowsTop && firstRowHeight > 0) geometry.topOf(windowStart).toFloat() else topFadePx, label = "rowsTopCut",
+            )
             LazyColumn(
                 state = listState,
                 modifier = Modifier.fillMaxWidth().weight(1f).mouseDragScroll(listState)
@@ -238,8 +270,8 @@ fun HeroHome(
                         val stop = ((size.height - fadePx) / size.height).coerceIn(0f, 1f)
                         val end = ((size.height - opaqueBottomPx) / size.height).coerceIn(stop, 1f)
                         // Top edge fades too, so rows scrolled up don't end in a hard cut.
-                        val topStop = (topFadePx / size.height).coerceIn(0f, stop)
-                        val clearStop = (topClearPx / size.height).coerceIn(0f, topStop)
+                        val topStop = (cut / size.height).coerceIn(0f, stop)
+                        val clearStop = ((cut - (topFadePx - topClearPx)) / size.height).coerceIn(0f, topStop)
                         drawRect(
                             Brush.verticalGradient(
                                 0f to Color.Transparent, clearStop to Color.Transparent, topStop to Color.Black,
@@ -256,9 +288,7 @@ fun HeroHome(
                 // Start position: the top row sits at the bottom edge with the artwork above it.
                 // Scrolling the spacer away still lets the rows go up to below the info block.
                 item(key = "start-spacer") {
-                    val viewport = listState.layoutInfo.viewportSize.height
-                    val gap = with(density) { 10.dp.roundToPx() + 48.dp.roundToPx() } + startBottomPx
-                    val height = if (firstRowHeight == 0) 0 else (viewport - firstRowHeight - gap).coerceAtLeast(0)
+                    val height = if (firstRowHeight == 0) 0 else geometry.spacer
                     androidx.compose.foundation.layout.Spacer(Modifier.fillMaxWidth().height(with(density) { height.toDp() }))
                 }
                 if (rows.running.isNotEmpty()) {
@@ -434,3 +464,76 @@ private fun homeTileWidth(format: io.github.thecodingdad.gamelodge.data.settings
         io.github.thecodingdad.gamelodge.data.settings.TileFormat.LANDSCAPE -> 1.6f / io.github.thecodingdad.gamelodge.ui.components.APP_LANDSCAPE_RATIO * io.github.thecodingdad.gamelodge.ui.components.GAME_LANDSCAPE_RATIO
         io.github.thecodingdad.gamelodge.data.settings.TileFormat.SQUARE -> 1.0f
     }
+
+/**
+ * Where the home rows go, in pixels of the list's viewport: rows lie between [top] (below the top
+ * fade) and [bottom] (where the first row ends in its start position), [spacing] apart, after the
+ * start spacer. A window is a run of whole rows lined up at the bottom.
+ */
+internal class RowGeometry {
+    private var heights: List<Int> = emptyList()
+    private var top = 0
+    private var bottom = 0
+    private var spacing = 0
+
+    /** Height of the start spacer: the first window ([startRows] rows, null: as many as fit) at the bottom. */
+    var spacer = 0
+        private set
+
+    fun update(heights: List<Int>, top: Int, bottom: Int, spacing: Int, startRows: Int?) {
+        this.heights = heights
+        this.top = top
+        this.bottom = bottom
+        this.spacing = spacing
+        val first = if (heights.isEmpty()) 0 else startRows?.coerceAtMost(heights.size) ?: fits(0)
+        spacer = (bottom - top - spacing - span(0, first)).coerceAtLeast(0)
+    }
+
+    private val room get() = bottom - top
+
+    /** Height of [count] rows from [start] with the gaps between them. */
+    private fun span(start: Int, count: Int): Int =
+        (start until (start + count).coerceAtMost(heights.size)).sumOf { heights[it] } + spacing * (count - 1).coerceAtLeast(0)
+
+    /** How many whole rows from [start] fit (at least one). */
+    private fun fits(start: Int): Int {
+        var n = 1
+        while (start + n < heights.size && span(start, n + 1) <= room) n++
+        return n
+    }
+
+    /** The window's first row once [row] has the focus ([current]: the window so far). */
+    fun windowFor(row: Int, current: Int): Int = when {
+        row < current -> row
+        row < current + fits(current) -> current
+        // Below: the window ends with the row (as far up as whole rows still fit above it).
+        else -> {
+            var start = row
+            while (start > 0 && span(start - 1, row - start + 2) <= room) start--
+            start
+        }
+    }
+
+    /** Where the window from [start] shows its first row (viewport pixels). */
+    fun topOf(start: Int): Int = if (heights.isEmpty()) top else bottom - span(start, fits(start))
+
+    /** List item (0 = spacer) and offset that put the window from [start] in place. */
+    fun scrollFor(start: Int): Pair<Int, Int> {
+        if (start == 0) return 0 to 0
+        // Content position of each item: spacer, then the rows.
+        var y = spacer + spacing
+        for (i in 0 until start) y += heights[i] + spacing
+        // Scrolled by this much, the window's first row stands at topOf(start).
+        val target = top + y - topOf(start)
+        // The item at that position.
+        var itemTop = 0
+        var itemHeight = spacer
+        var index = 0
+        while (index <= heights.size && itemTop + itemHeight + spacing <= target) {
+            itemTop += itemHeight + spacing
+            itemHeight = heights.getOrElse(index) { 0 }
+            index++
+        }
+        return index to (target - itemTop)
+    }
+}

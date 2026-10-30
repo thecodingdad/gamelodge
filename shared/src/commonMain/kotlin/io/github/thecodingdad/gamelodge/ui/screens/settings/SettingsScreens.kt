@@ -171,6 +171,12 @@ fun HomeScreenSettings(
     SettingsPage(stringResource(Res.string.settings_home_screen)) {
         TileSettings(settings.homeLayout, { l -> update { it.copy(homeLayout = l) } }, startTab = true)
         DirectStartRow(settings.homeDirectStart) { v -> update { it.copy(homeDirectStart = v) } }
+        ChoiceRow(
+            stringResource(Res.string.setting_home_rows_position), listOf(false, true), settings.homeRowsTop,
+            label = { top -> stringResource(if (top) Res.string.setting_home_rows_top else Res.string.setting_home_rows_bottom) },
+            onSelect = { v -> update { it.copy(homeRowsTop = v) } },
+            subtitle = stringResource(Res.string.setting_home_rows_position_sub),
+        )
         SectionHeader(stringResource(Res.string.home_rows_section))
         Text(stringResource(Res.string.home_rows_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
         // Game filters first, then app filters (their rows show landscape app tiles).

@@ -32,7 +32,16 @@ class PairingServerTest {
     private val devices = DeviceRegistry(dir.resolve("devices.json"))
     private val pairing = PairingManager(devices, { identity.fingerprint }, setOf(Permissions.METADATA, Permissions.HOST_GAMES))
     private val notices = java.util.concurrent.CopyOnWriteArrayList<io.github.thecodingdad.gamelodge.data.companion.StreamNotice>()
-    private val server = ApiServer(identity, devices, pairing, { "Test PC" }, streamNotice = { _, n -> notices += n })
+    private var hostKeys = io.github.thecodingdad.gamelodge.data.companion.SharedKeys(sgdb = io.github.thecodingdad.gamelodge.data.companion.SharedKey(1, listOf("pc-key")))
+    private val server = ApiServer(
+        identity, devices, pairing, { "Test PC" }, streamNotice = { _, n -> notices += n },
+        keys = {
+            object : io.github.thecodingdad.gamelodge.host.KeySource {
+                override fun keys() = hostKeys
+                override fun merge(keys: io.github.thecodingdad.gamelodge.data.companion.SharedKeys, deviceName: String) { hostKeys = keys }
+            }
+        },
+    )
     private val http = OkHttpClient()
     private lateinit var base: String
 
@@ -116,6 +125,23 @@ class PairingServerTest {
         client(me, paired.fingerprint).rawPost("/v1/stream", body, "application/json").use { assertEquals(204, it.code) }
         assertEquals(listOf(io.github.thecodingdad.gamelodge.data.companion.StreamNotice(active = true, resume = true)), notices.toList())
         client(me, paired.fingerprint).rawPost("/v1/stream", "nonsense", "application/json").use { assertEquals(400, it.code) }
+    }
+
+    @Test
+    fun keysOnlyForDevicesAllowedToHaveThem() {
+        val me = newIdentity()
+        val paired = pair(client(me), "246810").getOrThrow()
+        val c = client(me, paired.fingerprint)
+        val mine = "{\"sgdb\":{\"changedAt\":5,\"values\":[\"odin-key\"]}}"
+        // Pairing never grants the keys.
+        c.rawGet("/v1/keys").use { assertEquals(403, it.code) }
+        c.rawPut("/v1/keys", mine).use { assertEquals(403, it.code) }
+        val device = devices.devices.value.single()
+        devices.setPermissions(device.id, device.permissions + Permissions.KEYS)
+        c.rawGet("/v1/keys").use { assertTrue(it.body!!.string().contains("pc-key")) }
+        c.rawPut("/v1/keys", "{\"sgdb\":{\"changedAt\":5,\"values\":[\"a\",\"b\"]}}").use { assertEquals(400, it.code) }
+        c.rawPut("/v1/keys", mine).use { assertEquals(204, it.code) }
+        assertEquals(listOf("odin-key"), hostKeys.sgdb!!.values)
     }
 
     @Test
