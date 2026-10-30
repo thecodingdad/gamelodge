@@ -1,8 +1,12 @@
 package io.github.thecodingdad.gamelodge.desktop
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import io.github.thecodingdad.gamelodge.ui.components.controllerScroll
+import io.github.thecodingdad.gamelodge.ui.components.popupHeightIn
 import io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget
 import io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlsoLink
 import io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlso
@@ -131,32 +135,38 @@ class DesktopPlatformUi(
     override fun ControllerDetailDialog(controller: ControllerInfo?, onDismiss: () -> Unit) {
         Modal(visible = controller != null, onDismiss = onDismiss, title = controller?.name, maxWidth = 560.dp) {
             val c = controller ?: return@Modal
-            c.batteryPercent?.let { Text(stringResource(Res.string.controller_battery, it), color = LauncherTheme.colors.onSurfaceMuted) }
-            // As on Android: the launcher settings of this controller (Moonlight-Qt has no per-controller stream settings).
-            settingsState()?.let { (settings, update) ->
-                SectionHeader(stringResource(Res.string.controller_launcher_section))
-                ControllerLayoutOverrideRow(c, settings, update)
-                // Own combinations of this controller (by name, like its layout). The game always
-                // gets the buttons on Windows, so there's no pass-through choice here.
-                val own = settings.controllerCombos[c.key] ?: io.github.thecodingdad.gamelodge.data.settings.PadCombos()
-                fun save(pad: io.github.thecodingdad.gamelodge.data.settings.PadCombos) = update { s ->
-                    s.copy(controllerCombos = if (pad.isEmpty) s.controllerCombos - c.key else s.controllerCombos + (c.key to pad))
+            // Scrolls when the launcher section and combinations don't fit.
+            Column(
+                Modifier.weight(1f, fill = false).popupHeightIn(560.dp).controllerScroll(),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                c.batteryPercent?.let { Text(stringResource(Res.string.controller_battery, it), color = LauncherTheme.colors.onSurfaceMuted) }
+                // As on Android: the launcher settings of this controller (Moonlight-Qt has no per-controller stream settings).
+                settingsState()?.let { (settings, update) ->
+                    SectionHeader(stringResource(Res.string.controller_launcher_section))
+                    ControllerLayoutOverrideRow(c, settings, update)
+                    // Own combinations of this controller (by name, like its layout). The game always
+                    // gets the buttons on Windows, so there's no pass-through choice here.
+                    val own = settings.controllerCombos[c.key] ?: io.github.thecodingdad.gamelodge.data.settings.PadCombos()
+                    fun save(pad: io.github.thecodingdad.gamelodge.data.settings.PadCombos) = update { s ->
+                        s.copy(controllerCombos = if (pad.isEmpty) s.controllerCombos - c.key else s.controllerCombos + (c.key to pad))
+                    }
+                    io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerComboRows(
+                        global = settings,
+                        combo = { a -> own.combos[a.name]?.toSet() },
+                        forward = own.forward,
+                        descriptor = c.key,
+                        onCombo = { a, keys -> save(own.copy(combos = if (keys == null) own.combos - a.name else own.combos + (a.name to keys.toList()))) },
+                        onForward = { v -> save(own.copy(forward = v)) },
+                        showForward = false,
+                    )
                 }
-                io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerComboRows(
-                    global = settings,
-                    combo = { a -> own.combos[a.name]?.toSet() },
-                    forward = own.forward,
-                    descriptor = c.key,
-                    onCombo = { a, keys -> save(own.copy(combos = if (keys == null) own.combos - a.name else own.combos + (a.name to keys.toList()))) },
-                    onForward = { v -> save(own.copy(forward = v)) },
-                    showForward = false,
-                )
-            }
-            if (c.canVibrate) {
-                LauncherButton(
-                    stringResource(Res.string.controller_vibrate_test), onClick = { gamepads.vibrate(c.id) },
-                    icon = Icons.Filled.Vibration, modifier = Modifier.fillMaxWidth(),
-                )
+                if (c.canVibrate) {
+                    LauncherButton(
+                        stringResource(Res.string.controller_vibrate_test), onClick = { gamepads.vibrate(c.id) },
+                        icon = Icons.Filled.Vibration, modifier = Modifier.fillMaxWidth(),
+                    )
+                }
             }
         }
     }

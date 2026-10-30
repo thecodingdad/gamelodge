@@ -4,7 +4,11 @@ import io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId
 import io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget
 import io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlsoLink
 import io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlso
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import io.github.thecodingdad.gamelodge.ui.components.controllerScroll
+import io.github.thecodingdad.gamelodge.ui.components.popupHeightIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.CheckCircle
@@ -238,21 +242,24 @@ private fun DeviceDialog(device: Device, role: HostRole, onDismiss: () -> Unit) 
         DisposableEffect(device.id) {
             onDispose { if (name.isNotBlank() && name.trim() != device.name) role.devices.rename(device.id, name.trim().take(64)) }
         }
-        LauncherTextField(stringResource(Res.string.host_device_name), name, { name = it })
-        Text(
-            listOfNotNull(
-                stringResource(Res.string.host_device_paired, formatDate(device.paired)),
-                device.lastSeen?.let { stringResource(Res.string.host_device_seen, formatDate(it)) + (device.lastAddress?.let { a -> " ($a)" } ?: "") },
-            ).joinToString(" · "),
-            style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted,
-        )
-        SectionHeader(stringResource(Res.string.host_device_permissions))
-        permissionTexts.forEach { (permission, text) ->
-            SwitchRow(stringResource(text), device.may(permission), { on ->
-                role.devices.setPermissions(device.id, if (on) device.permissions + permission else device.permissions - permission)
-            })
+        // Scrolls when the permissions and the rest don't fit; the Remove button stays below it.
+        Column(Modifier.weight(1f, fill = false).popupHeightIn(560.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            LauncherTextField(stringResource(Res.string.host_device_name), name, { name = it })
+            Text(
+                listOfNotNull(
+                    stringResource(Res.string.host_device_paired, formatDate(device.paired)),
+                    device.lastSeen?.let { stringResource(Res.string.host_device_seen, formatDate(it)) + (device.lastAddress?.let { a -> " ($a)" } ?: "") },
+                ).joinToString(" · "),
+                style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted,
+            )
+            SectionHeader(stringResource(Res.string.host_device_permissions))
+            permissionTexts.forEach { (permission, text) ->
+                SwitchRow(stringResource(text), device.may(permission), { on ->
+                    role.devices.setPermissions(device.id, if (on) device.permissions + permission else device.permissions - permission)
+                })
+            }
+            Text(Fingerprint.pretty(device.fingerprint), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
         }
-        Text(Fingerprint.pretty(device.fingerprint), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
         HoldToConfirmButton(stringResource(Res.string.host_device_remove), onConfirmed = { role.devices.remove(device.id); onDismiss() }, modifier = Modifier.fillMaxWidth())
     }
 }

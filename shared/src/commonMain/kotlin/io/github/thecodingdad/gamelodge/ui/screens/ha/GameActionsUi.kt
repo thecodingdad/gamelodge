@@ -152,17 +152,20 @@ fun GameActionsDialog(entry: LibraryEntry?, onDismiss: () -> Unit) {
     Modal(visible = entry != null, onDismiss = onDismiss, title = entry?.item?.title, maxWidth = 720.dp) {
         val e = entry ?: return@Modal
         val own = all.games[e.item.id]
-        Text(stringResource(Res.string.ha_game_actions), style = MaterialTheme.typography.titleSmall, color = LauncherTheme.colors.accentText)
-        SwitchRow(
-            stringResource(Res.string.game_actions_own), own != null,
-            { on -> save { s -> s.copy(games = if (on) s.games + (e.item.id to s.global) else s.games - e.item.id) } },
-            subtitle = stringResource(Res.string.game_actions_own_sub), initialFocus = true,
-        )
-        if (own == null) {
-            Text(stringResource(Res.string.game_actions_global_info, all.global.size), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
-        } else {
-            if (own.isEmpty()) Text(stringResource(Res.string.game_actions_none), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
-            GameActionsList(own, { list -> save { s -> s.copy(games = s.games + (e.item.id to list)) } })
+        // Scrolls when the game has many actions.
+        androidx.compose.foundation.layout.Column(Modifier.weight(1f, fill = false).popupHeightIn(520.dp).controllerScroll(), verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)) {
+            Text(stringResource(Res.string.ha_game_actions), style = MaterialTheme.typography.titleSmall, color = LauncherTheme.colors.accentText)
+            SwitchRow(
+                stringResource(Res.string.game_actions_own), own != null,
+                { on -> save { s -> s.copy(games = if (on) s.games + (e.item.id to s.global) else s.games - e.item.id) } },
+                subtitle = stringResource(Res.string.game_actions_own_sub), initialFocus = true,
+            )
+            if (own == null) {
+                Text(stringResource(Res.string.game_actions_global_info, all.global.size), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+            } else {
+                if (own.isEmpty()) Text(stringResource(Res.string.game_actions_none), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+                GameActionsList(own, { list -> save { s -> s.copy(games = s.games + (e.item.id to list)) } })
+            }
         }
     }
 }
