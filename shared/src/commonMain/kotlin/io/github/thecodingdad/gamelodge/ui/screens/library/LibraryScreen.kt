@@ -143,6 +143,17 @@ fun LibraryScreen(
     fun select(key: String?) {
         positions[filterKey] = gridState.firstVisibleItemIndex to gridState.firstVisibleItemScrollOffset
         selectedKey = key
+        // Sort and scroll position change with the list, in the same frame: set afterwards (an
+        // effect), the first frame showed the new filter in the old order or at the old position.
+        // Resolved like [selected] (no key: all games).
+        val next = filters.firstOrNull { it.key == key }
+            ?: filters.firstOrNull { it.builtin == BuiltinFilter.ALL } ?: filters.firstOrNull()
+        if (next != null) {
+            sortFor = next.key
+            if (next.manualOrder) sort = LibrarySort.MANUAL else if (sort == LibrarySort.MANUAL) sort = LibrarySort.TITLE
+        }
+        val (first, offset) = positions[next?.key ?: BuiltinFilter.ALL] ?: (0 to 0)
+        gridState.requestScrollToItem(first, offset)
     }
     fun stepFilter(delta: Int) {
         filters.step(selected?.key, delta)?.let {
