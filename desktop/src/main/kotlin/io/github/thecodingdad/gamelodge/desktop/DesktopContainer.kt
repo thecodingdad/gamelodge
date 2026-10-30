@@ -178,7 +178,7 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
     }
     override val library: LibraryRepository by lazy {
         LibraryRepository(database, LibrarySync(database), pcLibrary, hosts, scope, companionFeed, settings).also {
-            it.playData = io.github.thecodingdad.gamelodge.data.sync.PlayDataSync.create(database, secrets) { filters }
+            it.playData = io.github.thecodingdad.gamelodge.data.sync.PlayDataSync.create(database, secrets, { platform.deviceName }) { filters }
             it.ownPlayDataHost = ::ownPlayDataHost
         }
     }

@@ -5,6 +5,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Gamepad
+import androidx.compose.material.icons.filled.Keyboard
+import androidx.compose.material.icons.filled.Mouse
+import androidx.compose.material.icons.filled.Cast
 import androidx.compose.material.icons.filled.FiberManualRecord
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material3.MaterialTheme
@@ -233,4 +237,29 @@ fun ComboDialog(
 fun comboLabel(keys: Set<Int>?, global: Boolean = false): String {
     val text = if (keys.isNullOrEmpty()) stringResource(Res.string.off) else ButtonCombos.describe(keys, stringResource(Res.string.combo_hold))
     return if (global) stringResource(Res.string.combo_global_value, text) else text
+}
+
+/** Rows of the controller settings' pages (Settings › Controllers), for the platform's [sections]. */
+@Composable
+fun ControllerSectionRows(sections: List<ControllerSection>) {
+    val navigate = LocalSettingsNavigator.current
+    sections.forEach { section ->
+        val (title, sub, icon) = when (section) {
+            ControllerSection.LAYOUT -> Triple(Res.string.controller_section_layout, Res.string.controller_section_layout_sub, Icons.Filled.Gamepad)
+            ControllerSection.COMBOS -> Triple(Res.string.combo_section, Res.string.controller_section_combos_sub, Icons.Filled.Keyboard)
+            ControllerSection.MOUSE -> Triple(Res.string.controller_section_mouse, Res.string.controller_section_mouse_sub, Icons.Filled.Mouse)
+            ControllerSection.STREAM -> Triple(Res.string.controller_section_stream, Res.string.controller_section_stream_sub, Icons.Filled.Cast)
+        }
+        val label = org.jetbrains.compose.resources.stringResource(title)
+        NavRow(label, { navigate(SettingsTarget.ControllerPage(section), null) }, org.jetbrains.compose.resources.stringResource(sub), icon)
+    }
+}
+
+/** Button hints at the bottom of the screen (shown while a controller is connected). */
+@Composable
+fun HintBarRow(settings: LauncherSettings, update: ((LauncherSettings) -> LauncherSettings) -> Unit) {
+    SwitchRow(
+        org.jetbrains.compose.resources.stringResource(Res.string.setting_hint_bar), settings.showHintBar, { v -> update { it.copy(showHintBar = v) } },
+        subtitle = org.jetbrains.compose.resources.stringResource(Res.string.setting_hint_bar_sub),
+    )
 }

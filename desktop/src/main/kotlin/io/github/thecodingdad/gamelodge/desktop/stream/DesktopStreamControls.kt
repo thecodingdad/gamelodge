@@ -55,6 +55,13 @@ class DesktopStreamControls(private val hostActions: HostActions, private val ho
 
     override fun toggleOverlay(): Boolean = running?.send("overlay") == true
 
+    /** One state for both, like the combination: GameLodge's pointer and the stream's mouse. */
+    override fun toggleMouse(): Boolean {
+        if (running == null) return false
+        io.github.thecodingdad.gamelodge.desktop.WindowsPointer.toggle()
+        return setMouse(io.github.thecodingdad.gamelodge.desktop.WindowsPointer.enabled)
+    }
+
     /** Moonlight-Qt quits the app itself (as its own "quit" does): no "connection ended" error. */
     override suspend fun quit(host: HostState): Boolean = withContext(Dispatchers.IO) {
         val r = running?.takeIf { it.hostUuid == host.uuid } ?: return@withContext false

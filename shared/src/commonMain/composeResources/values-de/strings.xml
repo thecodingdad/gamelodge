@@ -149,8 +149,6 @@
     <string name="settings_theme_sub">Theme, Akzent, Kachel-Stil, Animationen</string>
     <string name="settings_display">Bildschirm</string>
     <string name="settings_display_sub">Bildschirmschoner, Navigationsleiste, TV</string>
-    <string name="settings_controls">Tasten &amp; Bedienung</string>
-    <string name="settings_controls_sub">Tastenbelegung, Hilfe-Leiste, Direktstart, Tastenkombinationen</string>
     <string name="settings_controllers">Controller</string>
     <string name="settings_controllers_sub">Verbundene Controller und Spielerreihenfolge</string>
     <string name="settings_metadata">Metadaten &amp; Artwork</string>
@@ -241,6 +239,7 @@
     <string name="metadata_fix_title">Metadaten suchen</string>
     <string name="metadata_not_configured">Hinterlege zuerst einen SteamGridDB-API-Key oder IGDB-Zugangsdaten unter Einstellungen → Metadaten &amp; Artwork.</string>
     <string name="metadata_no_results">Keine Treffer.</string>
+    <string name="artwork_sources_unreachable">Gerade ist kein Metadaten-Server erreichbar: nur Bilder vom Host, erzeugte und eigene Bilder verfügbar.</string>
     <string name="artwork_title">Artwork ändern</string>
     <string name="artwork_cover">Cover</string>
     <string name="artwork_hero">Hintergrund</string>
@@ -286,8 +285,8 @@
     <string name="metadata_maintenance">Wartung</string>
     <string name="metadata_refetch_all_sub">Sucht alle automatisch gefundenen Metadaten neu; deine Korrekturen bleiben.</string>
     <string name="metadata_refetch_all">Alles neu abrufen</string>
-    <string name="metadata_sgdb_help">Key erstellen unter steamgriddb.com → Preferences → API.</string>
-    <string name="metadata_igdb_help">App unter dev.twitch.tv/console registrieren (Kategorie: Application Integration, OAuth-Redirect-URL: http://localhost, Client-Typ: Vertraulich), ein Secret erzeugen und Client-ID und Secret kopieren.</string>
+    <string name="metadata_sgdb_help">Ein kostenloser API-Schlüssel von SteamGridDB (Cover, Hintergründe, Logos, Icons).</string>
+    <string name="metadata_igdb_help">Client-ID und Secret einer kostenlosen Twitch-Entwickler-App (Texte, Genres, Bewertungen, Erscheinungsdaten).</string>
     <string name="metadata_api_key">API-Key</string>
     <string name="metadata_client_id">Client-ID</string>
     <string name="metadata_client_secret">Client-Secret</string>
@@ -1055,7 +1054,6 @@
     <string name="search_kw_streaming_host">Vibepollo, Apollo, Sunshine, Abgleich, Sync, API-Token, Moonlight</string>
     <string name="search_kw_host_role">Server, Handheld, Handy, Gerät koppeln, Web-Oberfläche, Fingerabdruck, Pairing</string>
     <string name="search_kw_home_assistant">HA, Smart Home, Licht, Schalter, Entität, Aufwecken, Herunterfahren, Favoriten, MQTT, Broker, Mosquitto</string>
-    <string name="search_kw_controls">Tasten, Belegung, Hinweise, Direktstart, Tastenkombination</string>
     <string name="search_kw_controllers">Gamepad, Xbox, PlayStation, Nintendo, Spieler, Belegung, Rumble, Vibration</string>
     <string name="search_kw_sounds">Ton, Lautstärke, Audio, Klick, Haptik, Rumble, Vibration</string>
     <string name="search_kw_launcher">Home-App, Standard-Launcher, Android-Startbildschirm</string>
@@ -1255,9 +1253,9 @@
     <string name="tile_today">Heute</string>
     <string name="tile_yesterday">Gestern</string>
     <string name="tile_days_ago">Vor %1$d Tagen</string>
-    <string name="settings_library_view">Bibliothek</string>
+    <string name="settings_library_view">Bibliothek-Tab</string>
     <string name="settings_library_view_sub">Kacheln, Titel, Abzeichen</string>
-    <string name="settings_apps_view">Apps</string>
+    <string name="settings_apps_view">Apps-Tab</string>
     <string name="settings_apps_view_sub">Icons oder Banner, Kacheln</string>
     <string name="setting_tile_format">Kachelformat</string>
     <string name="setting_tile_title">Titel</string>
@@ -1377,7 +1375,6 @@
     <string name="wizard_metadata_keys">Eigene Keys</string>
     <string name="wizard_metadata_sgdb_sub">API-Key: Cover, Hintergründe, Logos</string>
     <string name="wizard_metadata_igdb_sub">Client-ID und Secret: Beschreibungen, Genres, Erscheinungsdaten</string>
-    <string name="wizard_metadata_qr_hint">Die Keys legst du auf den Seiten der Anbieter an – scanne einen Code mit dem Handy oder wähle ihn aus, um die Seite hier zu öffnen:</string>
     <string name="wizard_ha_title">Home Assistant</string>
     <string name="wizard_ha_text">Licht, Szenen und deinen PC aus GameLodge steuern. Optional.</string>
     <string name="wizard_ha_connected">Verbunden</string>
@@ -1500,4 +1497,29 @@
     <string name="hide_choice_everywhere">Auf allen Geräten</string>
     <string name="detail_playtime_devices">Spielzeit pro Gerät</string>
     <string name="detail_playtime_other_clients">Andere Streaming-Clients</string>
+    <string name="controller_section_layout">Layout &amp; Hinweise</string>
+    <string name="controller_section_layout_sub">Tastenlayout (Xbox / Nintendo) und Tastenhinweise</string>
+    <string name="controller_section_combos_sub">Schnellmenü, Maus, Leistungsanzeige … per Tastenkombination</string>
+    <string name="controller_section_mouse">Maus-Emulation</string>
+    <string name="controller_section_mouse_sub">Zeigergeschwindigkeit und Beschleunigung mit dem Stick</string>
+    <string name="controller_section_stream">Im Stream</string>
+    <string name="controller_section_stream_sub">Deadzone, Vibration, Bewegungssensor, Odin-Tastenbelegung</string>
+    <string name="controllers_stream_defaults_sub">Gilt für jedes Stream-Profil; einzelne Controller und einzelne Spiele können in ihren eigenen Einstellungen abweichen.</string>
+    <string name="qm_mouse">Maus-Modus</string>
+    <string name="wizard_metadata_guide_hint">Beide sind kostenlos. Wie du sie bekommst, Schritt für Schritt mit QR-Code fürs Handy: der Button im Eingabedialog.</string>
+    <string name="guide_button_sgdb">So bekommst du den API-Schlüssel</string>
+    <string name="guide_button_igdb">So bekommst du Client-ID und Secret</string>
+    <string name="guide_title_sgdb">SteamGridDB-API-Schlüssel</string>
+    <string name="guide_title_igdb">IGDB-Client-ID und Secret</string>
+    <string name="guide_sgdb_1">steamgriddb.com öffnen und anmelden (z. B. mit deinem Steam-Konto).</string>
+    <string name="guide_sgdb_2">Dein Profil → Preferences → API öffnen (der QR-Code unten führt direkt dorthin).</string>
+    <string name="guide_sgdb_3">„Generate API Key“ wählen und den Schlüssel kopieren.</string>
+    <string name="guide_sgdb_4">Hier als API-Schlüssel einfügen und speichern.</string>
+    <string name="guide_igdb_1">dev.twitch.tv öffnen und mit einem Twitch-Konto anmelden. Für Entwickler-Apps verlangt Twitch die Zwei-Faktor-Authentifizierung: bei Nachfrage in den Twitch-Sicherheitseinstellungen einschalten.</string>
+    <string name="guide_igdb_2">Console → Applications → „Register Your Application“ öffnen (der QR-Code unten führt direkt dorthin).</string>
+    <string name="guide_igdb_3">Name: beliebig (z. B. „GameLodge“), OAuth Redirect URL: http://localhost, Category: „Application Integration“, Client Type: „Confidential“. Dann „Create“.</string>
+    <string name="guide_igdb_4">Bei der neuen App „Manage“ wählen: die Client-ID kopieren, dann mit „New Secret“ ein Secret erzeugen und kopieren (es wird nur einmal angezeigt).</string>
+    <string name="guide_igdb_5">Client-ID und Secret hier eintragen und speichern.</string>
+    <string name="guide_qr_hint">Scannen, um die Seite auf dem Handy zu öffnen, oder hier öffnen:</string>
+    <string name="guide_open_page">Seite öffnen</string>
 </resources>

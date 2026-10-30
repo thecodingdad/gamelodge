@@ -49,6 +49,12 @@ its current total. Its id is derived from device + game, so a repeated first syn
 adding it again. Sessions recorded locally before the update are not sent individually (their sum is in
 the EARLIER value).
 
+The first sync reads the host's data before sending: games that already have sessions from a device of
+the same name get no EARLIER session (that device is this one before a new installation; its playtime
+here came from there). Backups carry the sync start per host (not the copy of the sessions, not the
+install id): a restored installation doesn't count as new and reads everything from the host again.
+The detail page groups playtime per device by name.
+
 ### Last change wins
 
 Flags and memberships carry the time of the change. The host keeps the newest per game and field;
@@ -100,8 +106,8 @@ Each phase on Android and Windows, tested with Odin + Windows client against the
 
 ## Known limits (accepted)
 
-- A device restored from a backup onto a new installation counts as a new device: its restored playtime goes
-  to the host once more as "earlier" playtime (the host then counts it twice for that game).
+- Two devices with the same name count as one in the per-device list, and the second one's earlier playtime
+  isn't taken over for games the first one played.
 - An item that is both a host game and a local Android app on the same device shows the host's total; time
   from Android's usage statistics for the local app isn't added to it.
 - The same game on two hosts: the second host's first sync takes the first host's total as earlier playtime.

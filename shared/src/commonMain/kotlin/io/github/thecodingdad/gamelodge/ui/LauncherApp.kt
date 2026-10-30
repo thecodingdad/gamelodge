@@ -87,7 +87,6 @@ import io.github.thecodingdad.gamelodge.ui.screens.home.HomeCallbacks
 import io.github.thecodingdad.gamelodge.ui.screens.home.HomeRows
 import io.github.thecodingdad.gamelodge.ui.screens.library.LibraryScreen
 import io.github.thecodingdad.gamelodge.ui.screens.settings.AboutSettings
-import io.github.thecodingdad.gamelodge.ui.screens.settings.ControlsSettings
 import io.github.thecodingdad.gamelodge.ui.screens.settings.HostsSettings
 import io.github.thecodingdad.gamelodge.ui.screens.settings.LanguageSettings
 import io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsHome
@@ -130,6 +129,8 @@ private object Routes {
     const val STATS = "stats"
     const val HOST = "host/{uuid}"
     const val CONTROLLERS = "controllers"
+    const val CONTROLLER_SECTION = "controllers/{section}"
+    fun controllerSection(section: io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection) = "controllers/${section.name}"
     const val WIZARD = "wizard/{manual}"
     fun wizard(manual: Boolean) = "wizard/$manual"
     fun host(uuid: String) = "host/$uuid"
@@ -184,7 +185,6 @@ fun LauncherApp(
             launchDirect = { entry, target -> vm.launch(entry, target) },
         )
     }
-    entryActions.directStart = settings.gamesDirectStart
 
     var quickMenu by remember { mutableStateOf(false) }
     // The tab the quick menu opens on (status bar host / controller icons), null: its default.
@@ -249,6 +249,7 @@ fun LauncherApp(
             when (target) {
                 is io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Page -> nav.navigate(Routes.settings(target.id))
                 io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Controllers -> nav.navigate(Routes.CONTROLLERS)
+                is io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.ControllerPage -> nav.navigate(Routes.controllerSection(target.section))
                 io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Wizard -> nav.navigate(Routes.wizard(manual = true))
                 is io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Host -> nav.navigate(Routes.host(target.uuid))
             }
@@ -322,6 +323,8 @@ fun LauncherApp(
                 when (target) {
                     is io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Page -> nav.navigate(Routes.settings(target.id))
                     io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Controllers -> nav.navigate(Routes.CONTROLLERS)
+                    is io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.ControllerPage -> nav.navigate(Routes.controllerSection(target.section))
+                is io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.ControllerPage -> nav.navigate(Routes.controllerSection(target.section))
                     io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Wizard -> nav.navigate(Routes.wizard(manual = true))
                     is io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Host -> nav.navigate(Routes.host(target.uuid))
                 }
@@ -476,6 +479,21 @@ fun LauncherApp(
                     composable(Routes.CONTROLLERS) {
                         SubpageFrame(vm, nav, hints, MainTab.SETTINGS, listOf(tabCrumb(vm, nav, MainTab.SETTINGS)), { openQuickMenu(io.github.thecodingdad.gamelodge.ui.shell.QuickMenuTab.HOSTS) }, { openQuickMenu(io.github.thecodingdad.gamelodge.ui.shell.QuickMenuTab.CONTROLLERS) }) {
                             io.github.thecodingdad.gamelodge.ui.PlatformUi.current.ControllersScreen()
+                        }
+                    }
+                    composable(Routes.CONTROLLER_SECTION) { backStack ->
+                        val section = runCatching {
+                            io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.valueOf(backStack.arguments?.read { getStringOrNull("section") }.orEmpty())
+                        }.getOrDefault(io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.LAYOUT)
+                        val controllersCrumb = io.github.thecodingdad.gamelodge.ui.screens.settings.Crumb(stringResource(Res.string.settings_controllers)) {
+                            if (nav.previousBackStackEntry?.destination?.route == Routes.CONTROLLERS) nav.popBackStack()
+                            else nav.navigate(Routes.CONTROLLERS) { popUpTo(Routes.MAIN) }
+                        }
+                        SubpageFrame(
+                            vm, nav, hints, MainTab.SETTINGS, listOf(tabCrumb(vm, nav, MainTab.SETTINGS), controllersCrumb),
+                            { openQuickMenu(io.github.thecodingdad.gamelodge.ui.shell.QuickMenuTab.HOSTS) }, { openQuickMenu(io.github.thecodingdad.gamelodge.ui.shell.QuickMenuTab.CONTROLLERS) },
+                        ) {
+                            io.github.thecodingdad.gamelodge.ui.PlatformUi.current.ControllerSectionScreen(section)
                         }
                     }
                     composable(Routes.STATS) {
@@ -712,6 +730,12 @@ private fun MainShell(
     val entryActions = LocalEntryActions.current
     var tab by vm.tabProperty
     val tabs = MainTab.entries
+    // A on a game: details or start right away, as set for the tab it is on.
+    entryActions.directStart = when (tabs.getOrNull(tab)) {
+        MainTab.HOME -> settings.homeDirectStart
+        MainTab.LIBRARY -> settings.libraryDirectStart
+        else -> false
+    }
     val hosts = hostsMap.values.sortedBy { it.name }
     val libraryFilters by vm.libraryFilters.collectAsState()
     val homeFilters by vm.homeFilters.collectAsState()
@@ -1173,7 +1197,6 @@ private fun SettingsPageContent(
             val external by vm.externalDisplay.collectAsState()
             io.github.thecodingdad.gamelodge.ui.screens.settings.DisplaySettings(settings, vm::updateSettings, external)
         }
-        SettingsPageId.CONTROLS -> ControlsSettings(settings, vm::updateSettings)
         SettingsPageId.LANGUAGE -> LanguageSettings(settings, vm::updateSettings)
         SettingsPageId.FILTERS -> io.github.thecodingdad.gamelodge.ui.screens.settings.FilterSettings(vm, io.github.thecodingdad.gamelodge.data.db.FilterScope.GAMES)
         SettingsPageId.APP_FILTERS -> io.github.thecodingdad.gamelodge.ui.screens.settings.FilterSettings(vm, io.github.thecodingdad.gamelodge.data.db.FilterScope.APPS)

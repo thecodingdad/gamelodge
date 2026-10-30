@@ -120,26 +120,9 @@ fun ControllersScreen() {
             )
         }
         // Launcher controls every controller uses unless its own settings say otherwise.
-        val settingsRepo = context.container.settings
-        val settings by settingsRepo.settings.collectAsState(io.github.thecodingdad.gamelodge.data.settings.LauncherSettings())
-        val scope = androidx.compose.runtime.rememberCoroutineScope()
-        val update: ((io.github.thecodingdad.gamelodge.data.settings.LauncherSettings) -> io.github.thecodingdad.gamelodge.data.settings.LauncherSettings) -> Unit =
-            { t -> scope.launch { settingsRepo.update(t) } }
         SectionHeader(stringResource(Res.string.controllers_defaults))
         Text(stringResource(Res.string.controllers_defaults_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
-        ControllerLayoutDefaultRow(settings, update, initialFocus = controllers.isEmpty())
-        ButtonComboRows(settings, update)
-        // The stream's controller options, the same for every profile (single controllers and
-        // single games can still differ in their own settings).
-        SectionHeader(stringResource(Res.string.controllers_stream_defaults))
-        val editing = remember { io.github.thecodingdad.gamelodge.stream.AndroidProfileEditing(context) }
-        val base = remember { io.github.thecodingdad.gamelodge.stream.ProfileStore(context, null) }
-        val options = remember { io.github.thecodingdad.gamelodge.stream.StreamSettingsSchema.gamepadOptions(context) }
-        var revision by remember { androidx.compose.runtime.mutableIntStateOf(0) }
-        options.forEach { option ->
-            io.github.thecodingdad.gamelodge.ui.screens.profiles.OptionRow(option, base, revision, false, editing) { revision++ }
-        }
-        OdinMappingSection()
+        ControllerSectionRows(ANDROID_CONTROLLER_SECTIONS)
         SeeAlso(
             SeeAlsoLink(stringResource(Res.string.settings_sounds), SettingsTarget.Page(SettingsPageId.SOUNDS)),
             SeeAlsoLink(stringResource(Res.string.settings_profiles), SettingsTarget.Page(SettingsPageId.PROFILES)),
@@ -312,5 +295,48 @@ private fun OdinMappingSection() {
                 }
             },
         )
+    }
+}
+
+/** The controller settings' pages on Android. */
+val ANDROID_CONTROLLER_SECTIONS = listOf(ControllerSection.LAYOUT, ControllerSection.COMBOS, ControllerSection.MOUSE, ControllerSection.STREAM)
+
+/** One page of the controller settings (Settings › Controllers › …). */
+@Composable
+fun ControllerSectionScreen(section: ControllerSection) {
+    val context = LocalContext.current
+    val settingsRepo = context.container.settings
+    val settings by settingsRepo.settings.collectAsState(io.github.thecodingdad.gamelodge.data.settings.LauncherSettings())
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    val update: ((io.github.thecodingdad.gamelodge.data.settings.LauncherSettings) -> io.github.thecodingdad.gamelodge.data.settings.LauncherSettings) -> Unit =
+        { t -> scope.launch { settingsRepo.update(t) } }
+    val title = when (section) {
+        ControllerSection.LAYOUT -> Res.string.controller_section_layout
+        ControllerSection.COMBOS -> Res.string.combo_section
+        ControllerSection.MOUSE -> Res.string.controller_section_mouse
+        ControllerSection.STREAM -> Res.string.controller_section_stream
+    }
+    SettingsPage(stringResource(title)) {
+        when (section) {
+            ControllerSection.LAYOUT -> {
+                ControllerLayoutDefaultRow(settings, update, initialFocus = true)
+                HintBarRow(settings, update)
+            }
+            ControllerSection.COMBOS -> ButtonComboRows(settings, update)
+            ControllerSection.MOUSE -> MouseSettingsRows(settings, update)
+            ControllerSection.STREAM -> {
+                // The stream's controller options, the same for every profile (single controllers and
+                // single games can still differ in their own settings).
+                Text(stringResource(Res.string.controllers_stream_defaults_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+                val editing = remember { io.github.thecodingdad.gamelodge.stream.AndroidProfileEditing(context) }
+                val base = remember { io.github.thecodingdad.gamelodge.stream.ProfileStore(context, null) }
+                val options = remember { io.github.thecodingdad.gamelodge.stream.StreamSettingsSchema.gamepadOptions(context) }
+                var revision by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+                options.forEachIndexed { i, option ->
+                    io.github.thecodingdad.gamelodge.ui.screens.profiles.OptionRow(option, base, revision, i == 0, editing) { revision++ }
+                }
+                OdinMappingSection()
+            }
+        }
     }
 }

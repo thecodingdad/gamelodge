@@ -31,17 +31,18 @@ class PlayDataSyncTest {
 
     private fun db() = Room.inMemoryDatabaseBuilder<LauncherDatabase>().setDriver(BundledSQLiteDriver()).build()
 
-    private fun device(db: LauncherDatabase, id: String) = PlayDataSync(
+    private fun device(db: LauncherDatabase, id: String, name: String = id.uppercase()) = PlayDataSync(
         db, installId = { id },
         createCollection = { name -> "c-$name".also { db.collectionDao().upsert(CollectionEntity(it, name, 0)) } },
+        deviceName = { name },
         clock = { now },
     )
 
-    private fun host(deviceId: String, item: String) = SyncHost(
+    private fun host(deviceId: String, item: String, name: String = deviceId.uppercase()) = SyncHost(
         "host",
         object : PlayDataTransport {
             override suspend fun pull(after: Long) = hub.changesAfter(after)
-            override suspend fun push(changes: PlayDataChanges) = hub.apply(deviceId, deviceId.uppercase(), changes)
+            override suspend fun push(changes: PlayDataChanges) = hub.apply(deviceId, name, changes)
         },
         games = mapOf("g1" to item),
         gameOfTarget = mapOf("t-$item" to "g1"),
@@ -84,6 +85,29 @@ class PlayDataSyncTest {
         assertEquals(7200, get(pcDb, "p1").playtimeSeconds)
         assertEquals(7200, get(odinDb, "o1").playtimeSeconds)
         assertEquals(now, get(pcDb, "p1").lastPlayedAt)
+    }
+
+    @Test
+    fun `a device installed anew with the restored total doesn't count it again`() = runTest {
+        item(odinDb, "o1", playtime = 3600)
+        item(pcDb, "p1", playtime = 1800)
+        assertTrue(odin.sync(host("odin", "o1")))
+        assertTrue(pc.sync(host("pc", "p1")))
+        assertTrue(odin.sync(host("odin", "o1")))
+        assertEquals(5400, get(odinDb, "o1").playtimeSeconds)
+
+        // The Odin installed anew (new install id, paired again: a new device on the host, same name)
+        // with a backup of the total.
+        val newDb = db()
+        try {
+            item(newDb, "n1", playtime = 5400)
+            assertTrue(device(newDb, "odin-new", "ODIN").sync(host("odin-new", "n1", "ODIN")))
+            assertEquals(5400, get(newDb, "n1").playtimeSeconds)
+            assertTrue(pc.sync(host("pc", "p1")))
+            assertEquals(5400, get(pcDb, "p1").playtimeSeconds)
+        } finally {
+            newDb.close()
+        }
     }
 
     @Test

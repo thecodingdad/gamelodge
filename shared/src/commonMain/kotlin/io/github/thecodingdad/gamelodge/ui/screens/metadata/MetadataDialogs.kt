@@ -198,6 +198,9 @@ fun ArtworkPickerDialog(
         }
         val tile = kind == ArtworkKind.LANDSCAPE || kind == ArtworkKind.SQUARE
         var options by remember(target.id, kind, appliedQuery) { mutableStateOf<List<ArtworkOption>?>(null) }
+        // No server answering (and no own key): only the host's, generated and own images are offered.
+        var reachable by remember(target.id) { mutableStateOf(true) }
+        LaunchedEffect(target.id) { reachable = !metadata.isConfigured || metadata.anySourceReachable() }
         // The host's box art and a cover next to the ROM come first (they are what the game had before).
         val hostNames = io.github.thecodingdad.gamelodge.LocalContainer.current.hosts.hosts.collectAsState().value
         val local = if (kind != ArtworkKind.COVER) emptyList() else targets.mapNotNull { t ->
@@ -395,6 +398,9 @@ fun ArtworkPickerDialog(
                             }
                         }
                     }
+                }
+                if (!reachable) item(key = "unreachable", span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
+                    Text(stringResource(Res.string.artwork_sources_unreachable), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.warning)
                 }
                 when {
                     !metadata.isConfigured && list.isNullOrEmpty() -> item(key = "status", span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {

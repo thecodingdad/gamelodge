@@ -295,8 +295,9 @@ private fun InfoBlock(entry: LibraryEntry, sessions: List<PlaySessionEntity>) {
     val shared by androidx.compose.runtime.remember(entry.item.id) { db.playDataDao().observeSessionsFor(entry.item.id) }
         .collectAsState(emptyList())
     val others = stringResource(Res.string.detail_playtime_other_clients)
-    val perDevice = shared.groupBy { it.deviceId }
-        .map { (id, list) -> (if (id == io.github.thecodingdad.gamelodge.data.sync.PlayDataSync.OTHER_CLIENTS) others else list.first().deviceName.ifBlank { id }) to list.sumOf { it.seconds } }
+    // By name: a device installed anew (paired again) is a new device on the host but the same one here.
+    val perDevice = shared.groupBy { if (it.deviceId == io.github.thecodingdad.gamelodge.data.sync.PlayDataSync.OTHER_CLIENTS) others else it.deviceName.ifBlank { it.deviceId } }
+        .map { (name, list) -> name to list.sumOf { it.seconds } }
         .filter { it.second > 0 }
         .sortedByDescending { it.second }
     val perDeviceText = perDevice.takeIf { it.size > 1 }?.map { (name, seconds) -> "$name ${hoursText(seconds)}" }?.joinToString(" · ")

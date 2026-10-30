@@ -375,33 +375,13 @@ internal fun ColumnScope.MetadataStep() {
         "IGDB (Twitch)", stringResource(Res.string.wizard_metadata_igdb_sub), done = hasIgdb, icon = Icons.Filled.Key,
         action = stringResource(Res.string.wizard_enter), onClick = { keysFor = MetadataSources.IGDB },
     )
-    // The keys are made on the providers' pages: easier on a phone, so as QR codes.
-    WizardNote(stringResource(Res.string.wizard_metadata_qr_hint))
-    Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-        QrWithCaption(SGDB_KEY_PAGE, "SteamGridDB")
-        QrWithCaption(IGDB_KEY_PAGE, "IGDB (Twitch)")
-    }
+    // How to get the keys: step by step (with the page as QR code) behind the button in each key dialog.
+    WizardNote(stringResource(Res.string.wizard_metadata_guide_hint))
 
     keysFor?.let { id -> KeySourceDialog(id, null, onChanged = { revision++ }, onDismiss = { keysFor = null; revision++ }) }
     if (pairMetadata) PairDialog(PairTarget(PairedServer.KIND_METADATA, ""), onDismiss = { pairMetadata = false })
 }
 
-private const val SGDB_KEY_PAGE = "https://www.steamgriddb.com/profile/preferences/api"
-private const val IGDB_KEY_PAGE = "https://dev.twitch.tv/console/apps"
-
-/** The page as a QR code for the phone; selecting it opens the page here. */
-@Composable
-private fun QrWithCaption(url: String, caption: String) {
-    io.github.thecodingdad.gamelodge.ui.components.FocusSurface(
-        onClick = { io.github.thecodingdad.gamelodge.ui.PlatformUi.current.openUrl(url) },
-        shape = RoundedCornerShape(14.dp), focusScale = 1.04f,
-    ) {
-        Column(Modifier.padding(10.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            QrCard(url, 120.dp)
-            Text(caption, style = MaterialTheme.typography.labelLarge, color = LauncherTheme.colors.onSurface)
-        }
-    }
-}
 
 // ---- Home Assistant ----
 

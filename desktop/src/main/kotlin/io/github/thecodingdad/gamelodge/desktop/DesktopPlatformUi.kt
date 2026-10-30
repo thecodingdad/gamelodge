@@ -370,20 +370,45 @@ class DesktopPlatformUi(
                     icon = Icons.Filled.SportsEsports, initialFocus = index == 0,
                 )
             }
-            settingsState()?.let { (settings, update) ->
-                SectionHeader(stringResource(Res.string.controllers_defaults))
-                Text(stringResource(Res.string.controllers_defaults_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
-                ControllerLayoutDefaultRow(settings, update, initialFocus = controllers.isEmpty())
-                SectionHeader(stringResource(Res.string.combo_section))
-                io.github.thecodingdad.gamelodge.ui.screens.settings.ComboActionRows(settings, update)
-                io.github.thecodingdad.gamelodge.ui.screens.settings.MouseSettingsRows(settings, update)
-            }
+            SectionHeader(stringResource(Res.string.controllers_defaults))
+            Text(stringResource(Res.string.controllers_defaults_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+            io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSectionRows(controllerSections)
             SeeAlso(
                 SeeAlsoLink(stringResource(Res.string.settings_sounds), SettingsTarget.Page(SettingsPageId.SOUNDS)),
                 SeeAlsoLink(stringResource(Res.string.settings_profiles), SettingsTarget.Page(SettingsPageId.PROFILES)),
             )
         }
         ControllerDetailDialog(selected) { selected = null }
+    }
+
+    override val controllerSections = listOf(
+        io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.LAYOUT,
+        io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.COMBOS,
+        io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.MOUSE,
+    )
+
+    @Composable
+    override fun ControllerSectionScreen(section: io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection) {
+        val (settings, update) = settingsState() ?: return
+        val title = when (section) {
+            io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.LAYOUT -> Res.string.controller_section_layout
+            io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.COMBOS -> Res.string.combo_section
+            io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.MOUSE -> Res.string.controller_section_mouse
+            io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.STREAM -> Res.string.controller_section_stream
+        }
+        SettingsPage(stringResource(title)) {
+            when (section) {
+                io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.LAYOUT -> {
+                    ControllerLayoutDefaultRow(settings, update, initialFocus = true)
+                    io.github.thecodingdad.gamelodge.ui.screens.settings.HintBarRow(settings, update)
+                }
+                io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.COMBOS ->
+                    io.github.thecodingdad.gamelodge.ui.screens.settings.ComboActionRows(settings, update)
+                io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.MOUSE ->
+                    io.github.thecodingdad.gamelodge.ui.screens.settings.MouseSettingsRows(settings, update)
+                io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.STREAM -> Unit
+            }
+        }
     }
 
     @Composable

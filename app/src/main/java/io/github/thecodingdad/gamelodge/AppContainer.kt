@@ -45,7 +45,7 @@ class AppContainer(context: Context) : LauncherContainer {
     }
     override val library: LibraryRepository by lazy {
         LibraryRepository(database, LibrarySync(database, emulatorPackages = ::emulatorPackages), localApps, hosts, scope, companionFeed, settings).also {
-            it.playData = io.github.thecodingdad.gamelodge.data.sync.PlayDataSync.create(database, secrets) { filters }
+            it.playData = io.github.thecodingdad.gamelodge.data.sync.PlayDataSync.create(database, secrets, { platform.deviceName }) { filters }
         }
     }
     override val playtime: PlaytimeTracker by lazy { PlaytimeTracker(database) }
@@ -76,7 +76,7 @@ class AppContainer(context: Context) : LauncherContainer {
     }
     override val profiles: io.github.thecodingdad.gamelodge.stream.StreamProfiles = io.github.thecodingdad.gamelodge.stream.ArtemisStreamProfiles(appContext)
     override val streamControls: io.github.thecodingdad.gamelodge.stream.StreamControls by lazy {
-        io.github.thecodingdad.gamelodge.stream.AndroidStreamControls(launcher, hostActions)
+        io.github.thecodingdad.gamelodge.stream.AndroidStreamControls(launcher, hostActions, appContext)
     }
 
     override val mqtt by lazy { io.github.thecodingdad.gamelodge.ha.mqtt.MqttBridge(this) }

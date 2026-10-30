@@ -203,6 +203,20 @@ class MetadataService(
     /** Whether the source [id] is configured and switched on (a switched-off companion isn't used at all). */
     fun isEnabled(id: String): Boolean = sourceEntries().any { it.id == id && it.enabled }
 
+    /**
+     * Whether an online source answers now: an own key always counts, servers are asked again
+     * (the status of their last check may be minutes old).
+     */
+    suspend fun anySourceReachable(): Boolean {
+        val entries = sourceEntries().filter { it.enabled }
+        if (entries.any { it.server == null }) return true
+        val repo = servers ?: return false
+        return entries.mapNotNull { it.server }.any { server ->
+            repo.refresh(server)
+            repo.online.value[server.id] == true
+        }
+    }
+
     /** Routes for one provider in the user's order: its own key ([own]) and the servers offering it. */
     private fun routes(own: String, provider: (io.github.thecodingdad.gamelodge.data.companion.PairedServer) -> Boolean): List<MetadataRoute> =
         sourceEntries().filter { it.enabled }.mapNotNull { entry ->

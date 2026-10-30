@@ -12,9 +12,14 @@ import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.StringResource
 
 /** Where a search hit leads: a settings page or the controllers screen. */
+/** Pages of the controller settings; [PlatformUi.controllerSections] says which a platform has. */
+enum class ControllerSection { LAYOUT, COMBOS, MOUSE, STREAM }
+
 sealed interface SettingsTarget {
     data class Page(val id: SettingsPageId) : SettingsTarget
     data object Controllers : SettingsTarget
+    /** One page of the controller settings (Settings › Controllers › …). */
+    data class ControllerPage(val section: ControllerSection) : SettingsTarget
     /** The setup wizard (Settings › System). */
     data object Wizard : SettingsTarget
     /** Settings of one streaming host. */
@@ -22,8 +27,11 @@ sealed interface SettingsTarget {
 }
 
 /** Whether [target] exists on this platform (platform-only pages). */
-fun settingsTargetAvailable(target: SettingsTarget): Boolean =
-    target !is SettingsTarget.Page || target.id !in platformPages || io.github.thecodingdad.gamelodge.ui.PlatformUi.current.hasPage(target.id)
+fun settingsTargetAvailable(target: SettingsTarget): Boolean = when (target) {
+    is SettingsTarget.Page -> target.id !in platformPages || io.github.thecodingdad.gamelodge.ui.PlatformUi.current.hasPage(target.id)
+    is SettingsTarget.ControllerPage -> target.section in io.github.thecodingdad.gamelodge.ui.PlatformUi.current.controllerSections
+    else -> true
+}
 
 /** One searchable setting: its title, the page it is on and (optionally) the section there. */
 private class SearchEntry(val title: StringResource, val target: SettingsTarget, val section: StringResource? = null, val combos: Boolean = false, val device: Boolean = false)
@@ -49,7 +57,6 @@ private val pageTitles: List<Pair<SettingsTarget, StringResource>> = listOf(
     SettingsTarget.Page(SettingsPageId.PROFILES) to Res.string.settings_profiles,
     SettingsTarget.Page(SettingsPageId.VPN) to Res.string.settings_vpn,
     SettingsTarget.Page(SettingsPageId.HOME_ASSISTANT) to Res.string.settings_home_assistant,
-    SettingsTarget.Page(SettingsPageId.CONTROLS) to Res.string.settings_controls,
     SettingsTarget.Controllers to Res.string.settings_controllers,
     SettingsTarget.Wizard to Res.string.settings_group_system,
     SettingsTarget.Page(SettingsPageId.SOUNDS) to Res.string.settings_sounds,
@@ -78,7 +85,6 @@ private val pageKeywords: Map<SettingsTarget, StringResource> = mapOf(
     SettingsTarget.Page(SettingsPageId.STREAMING_HOST) to Res.string.search_kw_streaming_host,
     SettingsTarget.Page(SettingsPageId.HOST_ROLE) to Res.string.search_kw_host_role,
     SettingsTarget.Page(SettingsPageId.HOME_ASSISTANT) to Res.string.search_kw_home_assistant,
-    SettingsTarget.Page(SettingsPageId.CONTROLS) to Res.string.search_kw_controls,
     SettingsTarget.Controllers to Res.string.search_kw_controllers,
     SettingsTarget.Page(SettingsPageId.SOUNDS) to Res.string.search_kw_sounds,
     SettingsTarget.Page(SettingsPageId.LAUNCHER) to Res.string.search_kw_launcher,
@@ -156,11 +162,16 @@ private val settingsIndex: List<SearchEntry> = buildList {
     ))
     addAll(page(SettingsPageId.PROFILES, Res.string.conn_warnings))
     addAll(page(SettingsPageId.HOME_ASSISTANT, Res.string.ha_tiles, Res.string.ha_add_tile, Res.string.ha_host_actions, Res.string.mqtt_title))
-    addAll(page(SettingsPageId.CONTROLS, Res.string.setting_hint_bar, Res.string.setting_games_direct_start))
-    listOf(Res.string.controllers_connected, Res.string.controllers_defaults, Res.string.setting_button_layout, Res.string.odin_mapping_section)
-        .forEach { add(SearchEntry(it, SettingsTarget.Controllers)) }
+    addAll(page(SettingsPageId.HOME_SCREEN, Res.string.setting_games_direct_start))
+    addAll(page(SettingsPageId.LIBRARY_VIEW, Res.string.setting_games_direct_start))
+    add(SearchEntry(Res.string.controllers_connected, SettingsTarget.Controllers))
+    listOf(Res.string.setting_button_layout, Res.string.setting_hint_bar)
+        .forEach { add(SearchEntry(it, SettingsTarget.ControllerPage(ControllerSection.LAYOUT), Res.string.controller_section_layout)) }
     listOf(Res.string.combo_section, Res.string.combo_home, Res.string.combo_quick_menu, Res.string.combo_forward, Res.string.combo_service)
-        .forEach { add(SearchEntry(it, SettingsTarget.Controllers, Res.string.combo_section, combos = true)) }
+        .forEach { add(SearchEntry(it, SettingsTarget.ControllerPage(ControllerSection.COMBOS), Res.string.combo_section, combos = true)) }
+    add(SearchEntry(Res.string.controller_section_mouse, SettingsTarget.ControllerPage(ControllerSection.MOUSE)))
+    listOf(Res.string.controllers_stream_defaults, Res.string.odin_mapping_section)
+        .forEach { add(SearchEntry(it, SettingsTarget.ControllerPage(ControllerSection.STREAM), Res.string.controller_section_stream)) }
     addAll(page(
         SettingsPageId.SOUNDS, Res.string.setting_ui_sounds, Res.string.setting_ui_volume, Res.string.setting_sound_style,
         Res.string.setting_sound_pitch, Res.string.sounds_events, Res.string.setting_haptics, Res.string.setting_haptic_strength,

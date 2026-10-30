@@ -11,6 +11,7 @@ import io.github.thecodingdad.gamelodge.data.remote.HostState
 class AndroidStreamControls(
     private val launcher: LaunchCoordinator,
     private val hostActions: io.github.thecodingdad.gamelodge.data.remote.HostActions,
+    private val context: android.content.Context,
 ) : StreamControls {
     private val main = Handler(Looper.getMainLooper())
     private val game: Game? get() = Game.instance
@@ -30,6 +31,17 @@ class AndroidStreamControls(
     override fun inFront(): Boolean = game.let { it != null && io.github.thecodingdad.gamelodge.CurrentActivity.resumed() === it }
 
     override fun toggleOverlay(): Boolean = game != null && StreamControl.togglePerformanceOverlay()
+
+    /** From the quick menu over the stream: the stream's own mouse (no pointer service needed). */
+    override fun toggleMouse(): Boolean {
+        if (game == null) return false
+        main.post {
+            val on = !io.github.thecodingdad.gamelodge.input.PointerMode.enabled
+            io.github.thecodingdad.gamelodge.input.PointerMode.set(on)
+            android.widget.Toast.makeText(context, if (on) io.github.thecodingdad.gamelodge.R.string.pointer_on else io.github.thecodingdad.gamelodge.R.string.pointer_off, android.widget.Toast.LENGTH_SHORT).show()
+        }
+        return true
+    }
 
     /**
      * Leaves the stream, then quits the game on the host here: the host answers only once the game

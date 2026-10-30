@@ -11,6 +11,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.Mouse
 import io.github.thecodingdad.gamelodge.ui.components.popupHeightIn
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Tune
@@ -331,6 +332,8 @@ private fun StreamControlsSection(controls: io.github.thecodingdad.gamelodge.str
         LauncherButton(stringResource(Res.string.qm_disconnect), { controls.disconnect(); onLeave() }, icon = Icons.Filled.LinkOff)
         // The stream's own performance overlay (shown in the stream, not here).
         LauncherButton(stringResource(Res.string.qm_overlay), { controls.toggleOverlay() }, icon = Icons.Filled.Speed)
+        // Mouse emulation of the stream's controllers, like its button combination.
+        LauncherButton(stringResource(Res.string.qm_mouse), { controls.toggleMouse() }, icon = Icons.Filled.Mouse)
         if (commands.isNotEmpty()) {
             LauncherButton(stringResource(Res.string.qm_server_commands), { commandList = true }, icon = Icons.Filled.Terminal)
         }

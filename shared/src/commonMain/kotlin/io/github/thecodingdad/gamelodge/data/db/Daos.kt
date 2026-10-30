@@ -173,6 +173,9 @@ interface PlayDataDao {
     @Query("SELECT * FROM sync_state WHERE hostKey = :hostKey")
     suspend fun state(hostKey: String): SyncStateEntity?
 
+    @Query("SELECT * FROM sync_state")
+    suspend fun states(): List<SyncStateEntity>
+
     @Upsert
     suspend fun upsertState(state: SyncStateEntity)
 
@@ -187,6 +190,9 @@ interface PlayDataDao {
 
     @Query("SELECT * FROM sync_sessions WHERE itemId = :itemId")
     fun observeSessionsFor(itemId: String): Flow<List<SyncSessionEntity>>
+
+    @Query("SELECT DISTINCT gameId FROM sync_sessions WHERE hostKey = :hostKey AND deviceName = :deviceName")
+    suspend fun gamesPlayedBy(hostKey: String, deviceName: String): List<String>
 
     @Query("SELECT * FROM sync_sessions WHERE itemId IS NOT NULL")
     suspend fun linkedSessions(): List<SyncSessionEntity>

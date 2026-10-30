@@ -46,6 +46,8 @@ class PlayDataSync(
     private val installId: () -> String,
     /** Creates a collection (group) named so; returns its id. */
     private val createCollection: suspend (String) -> String,
+    /** This device's name, as the hosts list it (pairing). */
+    private val deviceName: () -> String = { "" },
     private val clock: () -> Long = System::currentTimeMillis,
 ) {
     private val mutex = Mutex()
@@ -60,10 +62,26 @@ class PlayDataSync(
         val now = clock()
         val state = dao.state(host.hostKey)
         val syncStart = state?.syncStart ?: now
+        var after = state?.lastSeq ?: 0
+        suspend fun pullAll(keep: Boolean = true): Boolean {
+            while (true) {
+                val changes = host.transport.pull(after) ?: return false
+                apply(host, changes)
+                after = changes.seq
+                if (keep) dao.upsertState(SyncStateEntity(host.hostKey, syncStart, after))
+                if (!changes.more) return true
+            }
+        }
+        // The first time the host's data comes first: a device of this name may have sent its playtime
+        // before (a new installation restored from a backup without sync state). The state is kept only
+        // once the earlier playtime is sent (else the next sync is the first one again).
+        val first = state == null
+        if (first && !pullAll(keep = false)) return false
+        // Read after that: what the host's data changed here isn't a change of this device.
         val items = host.games.mapValues { (_, itemId) -> library.getItem(itemId) }.filterValues { it != null }.mapValues { it.value!! }
 
         // 1. What changed here.
-        val sessions = outgoingSessions(host, items, state == null, syncStart)
+        val sessions = outgoingSessions(host, items, first, syncStart)
         val flagSnapshot = dao.flags(host.hostKey).associateBy { it.gameId to it.field }
         val flags = outgoingFlags(items, flagSnapshot, now)
         val memberSnapshot = dao.members(host.hostKey).associateBy { it.collection to it.gameId }
@@ -75,17 +93,10 @@ class PlayDataSync(
             dao.upsertFlags(flags.map { SyncFlagEntity(host.hostKey, it.gameId, it.field, it.value) })
             dao.upsertMembers(members.map { SyncMemberEntity(host.hostKey, it.collection, it.gameId, it.member) })
         }
-        dao.upsertState(SyncStateEntity(host.hostKey, syncStart, state?.lastSeq ?: 0))
+        dao.upsertState(SyncStateEntity(host.hostKey, syncStart, after))
 
         // 2. What changed elsewhere (own changes come back too: they are the host's now).
-        var after = state?.lastSeq ?: 0
-        while (true) {
-            val changes = host.transport.pull(after) ?: return false
-            apply(host, changes)
-            after = changes.seq
-            dao.upsertState(SyncStateEntity(host.hostKey, syncStart, after))
-            if (!changes.more) break
-        }
+        if (!pullAll()) return false
 
         // 3. Playtime and last played as all devices played.
         host.games.forEach { (gameId, itemId) -> dao.linkSessions(host.hostKey, gameId, itemId) }
@@ -103,9 +114,13 @@ class PlayDataSync(
         val known = dao.sessionIds(host.hostKey).toHashSet()
         val out = mutableListOf<PlaySessionData>()
         // The first time: this device's playtime so far, once per game (the sessions behind it aren't sent).
+        // Not for games a device of the same name already has sessions of: that is this device before,
+        // and the playtime here came from it (a backup, or the total it showed after syncing).
         if (first) {
+            val name = deviceName().trim()
+            val sent = if (name.isEmpty()) emptySet() else dao.gamesPlayedBy(host.hostKey, name).toHashSet()
             items.forEach { (gameId, item) ->
-                if (item.playtimeSeconds > 0) {
+                if (item.playtimeSeconds > 0 && gameId !in sent) {
                     out += PlaySessionData(id("earlier:${host.hostKey}:$gameId"), gameId, item.lastPlayedAt ?: clock(), item.playtimeSeconds, PlaySessionData.KIND_EARLIER)
                 }
             }
@@ -223,6 +238,7 @@ class PlayDataSync(
         fun create(
             db: LauncherDatabase,
             secrets: io.github.thecodingdad.gamelodge.data.settings.SecretStore,
+            deviceName: () -> String,
             filters: () -> io.github.thecodingdad.gamelodge.data.library.FilterRepository,
         ) = PlayDataSync(
             db,
@@ -231,6 +247,7 @@ class PlayDataSync(
                     ?: UUID.randomUUID().toString().also { secrets.put(io.github.thecodingdad.gamelodge.data.settings.SecretStore.Keys.PLAY_SYNC_ID, it) }
             },
             createCollection = { name -> filters().createGroup(name, io.github.thecodingdad.gamelodge.data.db.FilterScope.BOTH).id },
+            deviceName = deviceName,
         )
 
         /** Device id of streams the host counted itself (clients without GameLodge). */

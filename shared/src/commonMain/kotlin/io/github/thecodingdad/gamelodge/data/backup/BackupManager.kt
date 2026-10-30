@@ -13,6 +13,7 @@ import io.github.thecodingdad.gamelodge.data.db.ItemKind
 import io.github.thecodingdad.gamelodge.data.db.KindSource
 import io.github.thecodingdad.gamelodge.data.db.LauncherDatabase
 import io.github.thecodingdad.gamelodge.data.db.MetadataState
+import io.github.thecodingdad.gamelodge.data.db.SyncStateEntity
 import io.github.thecodingdad.gamelodge.data.db.WakeMethod
 import io.github.thecodingdad.gamelodge.data.settings.LauncherSettings
 import io.github.thecodingdad.gamelodge.data.settings.SecretStore
@@ -75,7 +76,16 @@ data class ItemBackup(
     val communityRating: Float? = null,
     /** The user's own 1–5 stars. */
     val userRating: Int? = null,
+    /** Hidden on this device only (not on the other devices of a host). */
+    val hiddenHere: Boolean = false,
 )
+
+/**
+ * Since when this device shares play data with a host: restored, the new installation doesn't send
+ * its playtime once more as earlier playtime (it reads everything from the host again).
+ */
+@Serializable
+data class PlaySyncBackup(val hostKey: String, val syncStart: Long)
 
 @Serializable
 data class FilterBackup(
@@ -128,6 +138,7 @@ data class BackupFile(
     val baseStreamSettings: Map<String, JsonElement>,
     val profiles: List<ProfileBackup>,
     val secrets: EncryptedSecrets? = null,
+    val playSync: List<PlaySyncBackup> = emptyList(),
 )
 
 class WrongPasswordException : Exception("Wrong backup password")
@@ -178,6 +189,7 @@ class BackupManager(
                         squareUrl = it.squareUrl?.takeIf { url -> url.startsWith("http") },
                         communityRating = it.communityRating,
                         userRating = it.userRating,
+                        hiddenHere = it.hiddenHere,
                     )
                 },
             collections = collections.sortedBy { it.sortOrder }.map { c ->
@@ -194,6 +206,7 @@ class BackupManager(
             baseStreamSettings = stream.baseSettings(),
             profiles = stream.profiles(),
             secrets = password?.takeIf { it.isNotEmpty() }?.let { encryptSecrets(it) },
+            playSync = db.playDataDao().states().map { PlaySyncBackup(it.hostKey, it.syncStart) },
         )
     }
 
@@ -248,7 +261,7 @@ class BackupManager(
                 existing.copy(
                     kind = if (b.kindSource == KindSource.MANUAL) b.kind else existing.kind,
                     kindSource = if (b.kindSource == KindSource.MANUAL) KindSource.MANUAL else existing.kindSource,
-                    favorite = b.favorite, hidden = b.hidden,
+                    favorite = b.favorite, hidden = b.hidden, hiddenHere = b.hidden && b.hiddenHere,
                     playtimeSeconds = maxOf(existing.playtimeSeconds, b.playtimeSeconds),
                     lastPlayedAt = listOfNotNull(existing.lastPlayedAt, b.lastPlayedAt).maxOrNull(),
                     metadataState = b.metadataState, metadataQuery = b.metadataQuery, igdbId = b.igdbId, sgdbId = b.sgdbId,
@@ -282,6 +295,10 @@ class BackupManager(
             )
         }
 
+        // Read from the host again from the start (the copy of the other devices' sessions isn't in the backup).
+        val playData = db.playDataDao()
+        backup.playSync.forEach { if (playData.state(it.hostKey) == null) playData.upsertState(SyncStateEntity(it.hostKey, it.syncStart, 0)) }
+
         stream.restore(backup.baseStreamSettings, backup.profiles)
     }
 
@@ -293,8 +310,8 @@ class BackupManager(
     }
 
     private fun encryptSecrets(password: String): EncryptedSecrets {
-        // The device's own identity (pairing keys) stays with the device.
-        val values = secrets.keys().filterNot { it.contains("_identity") }.associateWith { secrets.get(it) }.filterValues { it != null }
+        // The device's own identity (pairing keys, the id its play sessions are named by) stays with the device.
+        val values = secrets.keys().filterNot { it.contains("_identity") || it == SecretStore.Keys.PLAY_SYNC_ID }.associateWith { secrets.get(it) }.filterValues { it != null }
         val plain = json.encodeToString(stringMap, values.mapValues { it.value!! })
         val salt = ByteArray(16).also { SecureRandom().nextBytes(it) }
         val iv = ByteArray(12).also { SecureRandom().nextBytes(it) }
@@ -307,7 +324,7 @@ class BackupManager(
         cipher.init(Cipher.DECRYPT_MODE, key(password, unb64(enc.salt)), GCMParameterSpec(128, unb64(enc.iv)))
         val plain = runCatching { String(cipher.doFinal(unb64(enc.data))) }.getOrElse { throw WrongPasswordException() }
         val map = json.decodeFromString(stringMap, plain)
-        map.forEach { (k, v) -> secrets.put(k, v) }
+        map.filterKeys { it != SecretStore.Keys.PLAY_SYNC_ID }.forEach { (k, v) -> secrets.put(k, v) }
     }
 
     private val stringMap = MapSerializer(String.serializer(), String.serializer())

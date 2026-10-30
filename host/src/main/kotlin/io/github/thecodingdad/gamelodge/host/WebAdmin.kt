@@ -447,15 +447,25 @@ class WebAdmin(
             append("<label>").append(e(t(r, "server_name"))).append("<input name=\"name\" maxlength=\"64\" value=\"").append(e(settings.name)).append("\"></label>")
             val stored = t(r, "key_stored")
             append("<h2>SteamGridDB</h2>")
+            guide(r, "sgdb", "https://www.steamgriddb.com/profile/preferences/api", 4)
             field(t(r, "sgdb_key"), "sgdb", "password", "off", placeholder = if (settings.steamGridDbKeySet) stored else null)
             if (settings.steamGridDbKeySet) append("<label class=\"check\"><input type=\"checkbox\" name=\"clear_sgdb\"> ").append(e(t(r, "key_clear"))).append("</label>")
             append("<h2>IGDB</h2>")
+            guide(r, "igdb", "https://dev.twitch.tv/console/apps", 5)
             append("<label>").append(e(t(r, "igdb_client_id"))).append("<input name=\"igdb_id\" autocomplete=\"off\" value=\"").append(e(settings.igdbClientId.orEmpty())).append("\"></label>")
             field(t(r, "igdb_client_secret"), "igdb_secret", "password", "off", placeholder = if (settings.igdbClientSecretSet) stored else null)
             if (settings.igdbClientSecretSet) append("<label class=\"check\"><input type=\"checkbox\" name=\"clear_igdb_secret\"> ").append(e(t(r, "key_clear"))).append("</label>")
             append("<p class=\"hint\">").append(e(t(r, "keys_hint"))).append("</p>")
             append("<button type=\"submit\" class=\"primary\">").append(e(t(r, "save"))).append("</button></form></section>")
         }
+    }
+
+    /** How to get a provider's key, step by step, with a link to its page (opens in a new tab). */
+    private fun StringBuilder.guide(r: Request, provider: String, url: String, steps: Int) {
+        append("<details class=\"guide\"><summary>").append(e(t(r, "guide_$provider"))).append("</summary><ol>")
+        for (i in 1..steps) append("<li>").append(e(t(r, "guide_${provider}_$i"))).append("</li>")
+        append("</ol><p><a href=\"").append(e(url)).append("\" target=\"_blank\" rel=\"noopener noreferrer\">")
+            .append(e(t(r, "guide_open"))).append("</a></p></details>")
     }
 
     private fun securityPage(r: Request) {

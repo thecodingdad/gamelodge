@@ -72,3 +72,8 @@ a.button { display: inline-flex; align-items: center; text-decoration: none; bor
 a.button.secondary { background: var(--surface2); color: var(--text); }
 a.button.danger { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
 form.inline { display: inline-flex; }
+
+details.guide { margin: 4px 0 12px; }
+details.guide summary { cursor: pointer; color: var(--muted); }
+details.guide ol { margin: 8px 0 4px; padding-left: 1.4em; }
+details.guide li { margin: 4px 0; }

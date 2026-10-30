@@ -168,6 +168,12 @@ class AndroidPlatformUi(private val context: Context) : PlatformUi {
     @Composable
     override fun ControllersScreen() = io.github.thecodingdad.gamelodge.ui.screens.settings.ControllersScreen()
 
+    override val controllerSections = io.github.thecodingdad.gamelodge.ui.screens.settings.ANDROID_CONTROLLER_SECTIONS
+
+    @Composable
+    override fun ControllerSectionScreen(section: io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection) =
+        io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSectionScreen(section)
+
     @Composable
     override fun ProfileEditor(uuid: UUID?, name: String, onDeleted: () -> Unit) =
         io.github.thecodingdad.gamelodge.ui.screens.profiles.ProfileEditor(profileEditing, uuid, name, onDeleted)

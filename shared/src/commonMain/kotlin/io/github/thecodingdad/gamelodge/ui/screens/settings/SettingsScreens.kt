@@ -76,7 +76,7 @@ import io.github.thecodingdad.gamelodge.data.settings.LauncherSettings
 import io.github.thecodingdad.gamelodge.data.settings.ThemeMode
 import io.github.thecodingdad.gamelodge.resources.*
 
-enum class SettingsPageId { GAME_SOURCES, HOST_ROLE, STREAMING_HOST, STARTUP, HOSTS, PROFILES, HOME_SCREEN, LIBRARY_VIEW, APPS_VIEW, THEME, DISPLAY, FILTERS, APP_FILTERS, CONTROLS, SOUNDS, METADATA, USAGE, EMULATORS, HOME_ASSISTANT, VPN, LAUNCHER, DATA, LANGUAGE, ABOUT, LICENSES }
+enum class SettingsPageId { GAME_SOURCES, HOST_ROLE, STREAMING_HOST, STARTUP, HOSTS, PROFILES, HOME_SCREEN, LIBRARY_VIEW, APPS_VIEW, THEME, DISPLAY, FILTERS, APP_FILTERS, SOUNDS, METADATA, USAGE, EMULATORS, HOME_ASSISTANT, VPN, LAUNCHER, DATA, LANGUAGE, ABOUT, LICENSES }
 
 @Composable
 fun SettingsHome(
@@ -91,6 +91,7 @@ fun SettingsHome(
     // Back (gesture, B, Esc) ends a search and shows all settings again.
     io.github.thecodingdad.gamelodge.ui.components.BackHandler(enabled = query.isNotEmpty()) { onQueryChange("") }
     val keyboard = io.github.thecodingdad.gamelodge.ui.components.LocalKeyboardController.current
+    val navigate = LocalSettingsNavigator.current
     val searchTitle = stringResource(Res.string.settings_search)
     // START: search with the controller keyboard (the field itself works by touch and A too).
     io.github.thecodingdad.gamelodge.ui.input.PadAction(io.github.thecodingdad.gamelodge.ui.input.PadButton.START) {
@@ -104,6 +105,7 @@ fun SettingsHome(
                 when (target) {
                     is SettingsTarget.Page -> open(target.id)
                     SettingsTarget.Controllers -> openControllers()
+                    is SettingsTarget.ControllerPage -> navigate(target, title)
                     SettingsTarget.Wizard -> openWizard()
                     is SettingsTarget.Host -> Unit
                 }
@@ -118,11 +120,11 @@ fun SettingsHome(
         NavRow(stringResource(Res.string.settings_display), { open(SettingsPageId.DISPLAY) }, stringResource(if (platform.deviceDisplayOptions) Res.string.settings_display_sub else Res.string.settings_display_sub_desktop), Icons.Filled.Monitor)
 
         SectionHeader(stringResource(Res.string.settings_group_library))
-        NavRow(stringResource(Res.string.settings_filters), { open(SettingsPageId.FILTERS) }, stringResource(Res.string.settings_filters_sub), Icons.Filled.FilterAlt)
-        NavRow(stringResource(Res.string.settings_metadata), { open(SettingsPageId.METADATA) }, stringResource(Res.string.settings_metadata_sub), Icons.Filled.Image)
-        if (platform.hasPage(SettingsPageId.USAGE)) NavRow(stringResource(Res.string.settings_usage), { open(SettingsPageId.USAGE) }, stringResource(Res.string.settings_usage_sub), Icons.Filled.QueryStats)
         if (platform.hasPage(SettingsPageId.GAME_SOURCES)) NavRow(stringResource(Res.string.settings_game_sources), { open(SettingsPageId.GAME_SOURCES) }, stringResource(Res.string.settings_game_sources_sub), Icons.Filled.SportsEsports)
+        if (platform.hasPage(SettingsPageId.USAGE)) NavRow(stringResource(Res.string.settings_usage), { open(SettingsPageId.USAGE) }, stringResource(Res.string.settings_usage_sub), Icons.Filled.QueryStats)
         if (platform.hasPage(SettingsPageId.EMULATORS)) NavRow(stringResource(Res.string.settings_emulators), { open(SettingsPageId.EMULATORS) }, stringResource(Res.string.settings_emulators_sub), Icons.Filled.SportsEsports)
+        NavRow(stringResource(Res.string.settings_metadata), { open(SettingsPageId.METADATA) }, stringResource(Res.string.settings_metadata_sub), Icons.Filled.Image)
+        NavRow(stringResource(Res.string.settings_filters), { open(SettingsPageId.FILTERS) }, stringResource(Res.string.settings_filters_sub), Icons.Filled.FilterAlt)
 
         SectionHeader(stringResource(Res.string.settings_group_streaming))
         NavRow(stringResource(Res.string.settings_hosts), { open(SettingsPageId.HOSTS) }, stringResource(Res.string.settings_hosts_sub), Icons.Filled.Computer)
@@ -143,7 +145,6 @@ fun SettingsHome(
         NavRow(stringResource(Res.string.settings_home_assistant), { open(SettingsPageId.HOME_ASSISTANT) }, stringResource(Res.string.settings_home_assistant_sub), vectorResource(Res.drawable.ic_home_assistant))
 
         SectionHeader(stringResource(Res.string.settings_group_controls))
-        NavRow(stringResource(Res.string.settings_controls), { open(SettingsPageId.CONTROLS) }, stringResource(Res.string.settings_controls_sub), Icons.Filled.SportsEsports)
         NavRow(stringResource(Res.string.settings_controllers), openControllers, stringResource(Res.string.settings_controllers_sub), Icons.Filled.Gamepad)
         NavRow(stringResource(Res.string.settings_sounds), { open(SettingsPageId.SOUNDS) }, stringResource(Res.string.settings_sounds_sub), Icons.Filled.VolumeUp)
 
@@ -169,6 +170,7 @@ fun HomeScreenSettings(
     val filters by vm.filters.collectAsState()
     SettingsPage(stringResource(Res.string.settings_home_screen)) {
         TileSettings(settings.homeLayout, { l -> update { it.copy(homeLayout = l) } }, startTab = true)
+        DirectStartRow(settings.homeDirectStart) { v -> update { it.copy(homeDirectStart = v) } }
         SectionHeader(stringResource(Res.string.home_rows_section))
         Text(stringResource(Res.string.home_rows_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
         // Game filters first, then app filters (their rows show landscape app tiles).
@@ -390,6 +392,7 @@ private fun TileSettings(layout: TabLayout, onChange: (TabLayout) -> Unit, apps:
 fun LibraryViewSettings(settings: LauncherSettings, update: ((LauncherSettings) -> LauncherSettings) -> Unit) {
     SettingsPage(stringResource(Res.string.settings_library_view)) {
         TileSettings(settings.libraryLayout, { l -> update { it.copy(libraryLayout = l) } })
+        DirectStartRow(settings.libraryDirectStart) { v -> update { it.copy(libraryDirectStart = v) } }
         SeeAlso(SeeAlsoLink(stringResource(Res.string.settings_filters), SettingsTarget.Page(SettingsPageId.FILTERS)))
     }
 }
@@ -670,22 +673,6 @@ fun DisplaySettings(
 
 
 @Composable
-fun ControlsSettings(settings: LauncherSettings, update: ((LauncherSettings) -> LauncherSettings) -> Unit) {
-    SettingsPage(stringResource(Res.string.settings_controls)) {
-        // Button layout and combinations depend on the controller: Settings → Controllers.
-        SwitchRow(
-            stringResource(Res.string.setting_hint_bar), settings.showHintBar, { v -> update { it.copy(showHintBar = v) } },
-            subtitle = stringResource(Res.string.setting_hint_bar_sub),
-            initialFocus = true,
-        )
-        SwitchRow(
-            stringResource(Res.string.setting_games_direct_start), settings.gamesDirectStart, { v -> update { it.copy(gamesDirectStart = v) } },
-            subtitle = stringResource(Res.string.setting_games_direct_start_sub),
-        )
-    }
-}
-
-@Composable
 fun LanguageSettings(settings: LauncherSettings, update: ((LauncherSettings) -> LauncherSettings) -> Unit) {
     SettingsPage(stringResource(Res.string.settings_language)) {
         ChoiceRow(
@@ -706,3 +693,11 @@ fun LanguageSettings(settings: LauncherSettings, update: ((LauncherSettings) -> 
     }
 }
 
+/** A on a game in this tab starts it right away (its details then via the menu). */
+@Composable
+private fun DirectStartRow(checked: Boolean, onChange: (Boolean) -> Unit) {
+    SwitchRow(
+        stringResource(Res.string.setting_games_direct_start), checked, onChange,
+        subtitle = stringResource(Res.string.setting_games_direct_start_sub),
+    )
+}

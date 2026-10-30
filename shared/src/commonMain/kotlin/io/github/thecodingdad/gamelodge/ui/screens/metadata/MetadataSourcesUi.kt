@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Computer
@@ -261,11 +262,16 @@ fun KeySourceDialog(id: String, entry: MetadataSources.Entry?, onChanged: () -> 
     // Bumped on save: the connection is checked again.
     var saved by remember { mutableIntStateOf(if (entry != null) 1 else 0) }
     val complete = first.isNotBlank() && (sgdb || second.isNotBlank())
+    var guide by remember { mutableStateOf(false) }
 
     Modal(visible = true, onDismiss = onDismiss, title = name, maxWidth = 640.dp) {
         val formScroll = rememberScrollState()
         Column(Modifier.controllerScroll(formScroll), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(stringResource(if (sgdb) Res.string.metadata_sgdb_help else Res.string.metadata_igdb_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+            LauncherButton(
+                stringResource(if (sgdb) Res.string.guide_button_sgdb else Res.string.guide_button_igdb), { guide = true },
+                Modifier.fillMaxWidth(), Icons.AutoMirrored.Filled.HelpOutline,
+            )
             if (sgdb) {
                 LauncherTextField(stringResource(Res.string.metadata_api_key), first, { first = it }, kind = TextKind.PASSWORD)
             } else {
@@ -301,6 +307,7 @@ fun KeySourceDialog(id: String, entry: MetadataSources.Entry?, onChanged: () -> 
             }
         }
     }
+    if (guide) KeyGuideDialog(sgdb) { guide = false }
 }
 
 private sealed interface PairState {

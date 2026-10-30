@@ -143,6 +143,13 @@ interface PlatformUi {
     @Composable
     fun ControllersScreen()
 
+    /** The controller settings' pages this platform has. */
+    val controllerSections: List<io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection>
+
+    /** One page of the controller settings (Settings → Controllers → …). */
+    @Composable
+    fun ControllerSectionScreen(section: io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection)
+
     /** Editor of one stream profile. */
     @Composable
     fun ProfileEditor(uuid: java.util.UUID?, name: String, onDeleted: () -> Unit)

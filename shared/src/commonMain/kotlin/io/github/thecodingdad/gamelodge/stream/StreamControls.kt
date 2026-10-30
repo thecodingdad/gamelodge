@@ -20,6 +20,9 @@ interface StreamControls {
     /** Mouse emulation of the stream's controllers on / off; false without a stream. */
     fun setMouse(on: Boolean): Boolean = false
 
+    /** Mouse emulation on / off like its button combination (a short notice); false without a stream. */
+    fun toggleMouse(): Boolean = false
+
     /** The stream's performance overlay on / off; false without a stream. */
     fun toggleOverlay(): Boolean = false
 
