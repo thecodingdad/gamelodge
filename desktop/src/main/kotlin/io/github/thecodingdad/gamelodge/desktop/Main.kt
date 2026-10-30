@@ -96,8 +96,25 @@ fun main(args: Array<String>) {
             (matcher?.takeIf { it.hasCriteria }?.let { m -> io.github.thecodingdad.gamelodge.desktop.games.SystemProcesses.snapshot().filter(m::matches).map { it.id } } ?: emptyList())
         if (!io.github.thecodingdad.gamelodge.desktop.games.GameWindow.focus(pids.toSet())) Log.i("Resume: no game window to bring to the front")
     }
+    // Streams of clients without GameLodge (Moonlight on a TV, a console …): counted here, as no
+    // launcher reports them. A GameLodge stream tells the host before its game starts.
+    val foreignStarts = java.util.concurrent.ConcurrentHashMap<String, Long>()
     SingleInstance.onHostGame = { entryId, started ->
         hostGame = if (started) entryId else hostGame.takeIf { it != entryId }
+        if (started) {
+            if (!io.github.thecodingdad.gamelodge.desktop.host.HostStreams.active) foreignStarts[entryId] = System.currentTimeMillis() else foreignStarts.remove(entryId)
+        } else {
+            val start = foreignStarts.remove(entryId)
+            val seconds = start?.let { (System.currentTimeMillis() - it) / 1000 } ?: 0
+            if (start != null && seconds >= io.github.thecodingdad.gamelodge.data.sync.PlayDataSync.MIN_SESSION_SECONDS && container.hostRole.settings.value.serverEnabled) {
+                val session = io.github.thecodingdad.gamelodge.data.companion.PlaySessionData(
+                    java.util.UUID.randomUUID().toString(), entryId, start,
+                    seconds.coerceAtMost(io.github.thecodingdad.gamelodge.data.sync.PlayDataHub.MAX_SESSION_SECONDS),
+                )
+                container.playDataHub.apply(io.github.thecodingdad.gamelodge.data.sync.PlayDataSync.OTHER_CLIENTS, "", io.github.thecodingdad.gamelodge.data.companion.PlayDataChanges(sessions = listOf(session)))
+                container.library.syncPlayData()
+            }
+        }
         if (io.github.thecodingdad.gamelodge.ha.GameActionSettings.decode(container.settings.current().gameActions).hostStarts) {
             val itemId = container.database.libraryDao().getTarget(io.github.thecodingdad.gamelodge.data.library.SourceEntry.localId(entryId))?.itemId
             if (started) hostGameActions.beforeStart(itemId) else hostGameActions.ended()
@@ -113,6 +130,14 @@ fun main(args: Array<String>) {
     fun splashArt(item: io.github.thecodingdad.gamelodge.data.db.LibraryItemEntity): SplashArt {
         fun file(url: String?) = (ArtworkFiles.model(url) as? File)?.takeIf { it.isFile }?.path
         return SplashArt(item.title, hero = file(item.heroUrl), logo = file(item.logoUrl), cover = file(item.coverUrl))
+    }
+    container.hostRole.playData = object : io.github.thecodingdad.gamelodge.host.PlayDataSource {
+        override fun changes(after: Long) = kotlinx.coroutines.runBlocking { container.playDataHub.changesAfter(after) }
+        override fun apply(deviceId: String, deviceName: String, changes: io.github.thecodingdad.gamelodge.data.companion.PlayDataChanges) =
+            kotlinx.coroutines.runBlocking { container.playDataHub.apply(deviceId, deviceName, changes) }.also { ok ->
+                // What a launcher sent shows here too.
+                if (ok) container.scope.launch { container.library.syncPlayData() }
+            }
     }
     SingleInstance.onArtwork = { entryId ->
         val target = container.database.libraryDao().getTarget(io.github.thecodingdad.gamelodge.data.library.SourceEntry.localId(entryId))

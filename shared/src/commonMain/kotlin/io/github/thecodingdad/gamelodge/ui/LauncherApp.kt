@@ -265,6 +265,8 @@ fun LauncherApp(
     var detailShownId by remember { mutableStateOf<String?>(null) }
     val detailOpenFor = detailShownId
     var collectionsFor by remember { mutableStateOf<io.github.thecodingdad.gamelodge.data.db.LibraryEntry?>(null) }
+    // A host game to hide: only here or on every GameLodge of its host.
+    var hideChoiceFor by remember { mutableStateOf<io.github.thecodingdad.gamelodge.data.db.LibraryEntry?>(null) }
     var emulatorFor by remember { mutableStateOf<String?>(null) }
     var launchSettingsFor by remember { mutableStateOf<String?>(null) }
     var gameActionsFor by remember { mutableStateOf<String?>(null) }
@@ -543,7 +545,13 @@ fun LauncherApp(
                     },
                     onFavorite = vm::setFavorite,
                     onKind = vm::setKind,
-                    onHide = { vm.setHidden(it, true) },
+                    onHide = { e ->
+                        when {
+                            e.item.hidden -> vm.setHidden(e, false)
+                            vm.sharesPlayData(e) -> hideChoiceFor = e
+                            else -> vm.setHidden(e, true)
+                        }
+                    },
                     onCollections = { collectionsFor = it },
                     onEditMetadata = { metaEditorFor = it.item.id },
                     onAppArtwork = { appTileFor = it.item.id },
@@ -597,6 +605,11 @@ fun LauncherApp(
                     onToggle = { id, member -> collectionsFor?.let { vm.setInCollection(it.item.id, id, member) } },
                     onCreate = { name -> vm.createGroup(name, groupScope, collectionsFor?.item?.id) },
                     onDismiss = { collectionsFor = null },
+                )
+                io.github.thecodingdad.gamelodge.ui.shell.HideChoiceDialog(
+                    entry = hideChoiceFor,
+                    onChoice = { here -> hideChoiceFor?.let { vm.setHidden(it, true, here) }; hideChoiceFor = null },
+                    onDismiss = { hideChoiceFor = null },
                 )
                 val launchState by vm.launchState.collectAsState()
                 val launchKind = launchState::class

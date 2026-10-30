@@ -265,9 +265,12 @@ class LauncherViewModel(private val c: LauncherContainer) : ViewModel() {
         viewModelScope.launch { c.library.setUserRating(entry.item.id, stars) }
     }
 
-    fun setHidden(entry: LibraryEntry, hidden: Boolean) {
-        viewModelScope.launch { c.library.setHidden(entry.item.id, hidden) }
+    /** [here]: only on this device (a host game's other GameLodges keep showing it). */
+    fun setHidden(entry: LibraryEntry, hidden: Boolean, here: Boolean = false) {
+        viewModelScope.launch { c.library.setHidden(entry.item.id, hidden, here) }
     }
+
+    fun sharesPlayData(entry: LibraryEntry): Boolean = c.library.sharesPlayData(entry)
 
     fun setKind(entry: LibraryEntry, kind: ItemKind) {
         viewModelScope.launch { c.library.setKind(entry.item.id, kind) }

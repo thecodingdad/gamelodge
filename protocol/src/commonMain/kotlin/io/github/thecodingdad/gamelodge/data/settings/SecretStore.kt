@@ -18,6 +18,8 @@ class SecretStore(private val backend: SecretBackend) {
         const val MQTT_PASSWORD = "mqtt_password"
         /** Id of this install as an MQTT device; "_identity" keeps it out of backups (a restored device gets its own). */
         const val MQTT_DEVICE_ID = "mqtt_device_identity"
+        /** Id of this install for its play sessions ("_identity": not part of backups). */
+        const val PLAY_SYNC_ID = "playsync_install_identity"
         /** Host web API logins of older versions (removed at start). */
         const val LEGACY_HOST_API_PREFIX = "vibepollo_token_"
         fun wireguardConfig(tunnel: String) = "wg_config_$tunnel"

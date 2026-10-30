@@ -104,6 +104,8 @@ data class LibraryItemEntity(
     val communityRating: Float? = null,
     /** The user's own rating, 1–5 stars (null = not rated). */
     val userRating: Int? = null,
+    /** Hidden on this device only (not on the other GameLodges of its host); [hidden] includes it. */
+    @androidx.room.ColumnInfo(defaultValue = "0") val hiddenHere: Boolean = false,
 ) {
     /** Times to beat of the current match only. */
     val timesToBeatCurrent: Boolean get() = igdbId != null && timeToBeatIgdbId == igdbId
@@ -303,3 +305,81 @@ fun LibraryItemEntity.clearedMetadata(): LibraryItemEntity {
         tileUrl = tileUrl.takeIf { MetaField.LANDSCAPE in m || kind == ItemKind.APP }, squareUrl = squareUrl.takeIf { MetaField.SQUARE in m },
     )
 }
+
+
+// --- Play data shared through a host (docs/PLAYDATA_SYNC_PLAN.md) ---------------------------------
+
+/** The host's play sessions of its games, from every paired GameLodge and itself ([seq]: change order). */
+@Entity(tableName = "hub_sessions", indices = [Index("seq"), Index("gameId")])
+data class HubSessionEntity(
+    @PrimaryKey val id: String,
+    val gameId: String,
+    val deviceId: String,
+    val deviceName: String,
+    val startedAt: Long,
+    val seconds: Long,
+    val kind: String,
+    val seq: Long,
+)
+
+/** The host's flags of its games (rating, favourite, hidden everywhere); newest change wins. */
+@Entity(tableName = "hub_flags", primaryKeys = ["gameId", "field"], indices = [Index("seq")])
+data class HubFlagEntity(
+    val gameId: String,
+    val field: String,
+    val value: String?,
+    val changedAt: Long,
+    val deviceId: String,
+    val seq: Long,
+)
+
+/** The host's collection memberships of its games by collection name; newest change wins. */
+@Entity(tableName = "hub_members", primaryKeys = ["collection", "gameId"], indices = [Index("seq")])
+data class HubMemberEntity(
+    val collection: String,
+    val gameId: String,
+    val member: Boolean,
+    val changedAt: Long,
+    val deviceId: String,
+    val seq: Long,
+)
+
+/** A device's copy of a host's sessions ([hostKey]: the host; [itemId]: the library item, once known). */
+@Entity(tableName = "sync_sessions", indices = [Index("hostKey"), Index("itemId")])
+data class SyncSessionEntity(
+    @PrimaryKey val id: String,
+    val hostKey: String,
+    val gameId: String,
+    val itemId: String?,
+    val deviceId: String,
+    val deviceName: String,
+    val startedAt: Long,
+    val seconds: Long,
+    val kind: String,
+)
+
+/** The value of a flag as last agreed with the host: a different local value is a change to send. */
+@Entity(tableName = "sync_flags", primaryKeys = ["hostKey", "gameId", "field"])
+data class SyncFlagEntity(
+    val hostKey: String,
+    val gameId: String,
+    val field: String,
+    val value: String?,
+)
+
+/** A collection membership as last agreed with the host. */
+@Entity(tableName = "sync_members", primaryKeys = ["hostKey", "collection", "gameId"])
+data class SyncMemberEntity(
+    val hostKey: String,
+    val collection: String,
+    val gameId: String,
+    val member: Boolean,
+)
+
+/** Per host: since when sessions are sent one by one (earlier ones went as one sum) and what was read last. */
+@Entity(tableName = "sync_state")
+data class SyncStateEntity(
+    @PrimaryKey val hostKey: String,
+    val syncStart: Long,
+    val lastSeq: Long,
+)

@@ -44,7 +44,9 @@ class AppContainer(context: Context) : LauncherContainer {
         }
     }
     override val library: LibraryRepository by lazy {
-        LibraryRepository(database, LibrarySync(database, emulatorPackages = ::emulatorPackages), localApps, hosts, scope, companionFeed, settings)
+        LibraryRepository(database, LibrarySync(database, emulatorPackages = ::emulatorPackages), localApps, hosts, scope, companionFeed, settings).also {
+            it.playData = io.github.thecodingdad.gamelodge.data.sync.PlayDataSync.create(database, secrets) { filters }
+        }
     }
     override val playtime: PlaytimeTracker by lazy { PlaytimeTracker(database) }
     /** Packages of every known emulator (catalog and own ones); some real games share a package prefix (miHoYo). */

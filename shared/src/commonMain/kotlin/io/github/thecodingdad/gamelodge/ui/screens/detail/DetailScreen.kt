@@ -33,6 +33,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.size
@@ -289,6 +290,16 @@ fun DetailScreen(
 @Composable
 private fun InfoBlock(entry: LibraryEntry, sessions: List<PlaySessionEntity>) {
     val colors = LauncherTheme.colors
+    // Playtime of a host game per device (shared through the host), when more than one played it.
+    val db = io.github.thecodingdad.gamelodge.LocalContainer.current.database
+    val shared by androidx.compose.runtime.remember(entry.item.id) { db.playDataDao().observeSessionsFor(entry.item.id) }
+        .collectAsState(emptyList())
+    val others = stringResource(Res.string.detail_playtime_other_clients)
+    val perDevice = shared.groupBy { it.deviceId }
+        .map { (id, list) -> (if (id == io.github.thecodingdad.gamelodge.data.sync.PlayDataSync.OTHER_CLIENTS) others else list.first().deviceName.ifBlank { id }) to list.sumOf { it.seconds } }
+        .filter { it.second > 0 }
+        .sortedByDescending { it.second }
+    val perDeviceText = perDevice.takeIf { it.size > 1 }?.map { (name, seconds) -> "$name ${hoursText(seconds)}" }?.joinToString(" · ")
     val rows = buildList {
         entry.item.developer?.let { add(stringResource(Res.string.detail_developer) to it) }
         entry.item.publisher?.takeIf { it != entry.item.developer }?.let { add(stringResource(Res.string.filter_field_publisher) to it) }
@@ -302,6 +313,7 @@ private fun InfoBlock(entry: LibraryEntry, sessions: List<PlaySessionEntity>) {
         add(stringResource(Res.string.detail_available) to entry.targets.map { targetLabelText(it) }.joinToString(", "))
         entry.item.lastPlayedAt?.let { add(stringResource(Res.string.detail_last_played) to DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(it))) }
         if (sessions.isNotEmpty()) add(stringResource(Res.string.detail_sessions) to sessions.size.toString())
+        perDeviceText?.let { add(stringResource(Res.string.detail_playtime_devices) to it) }
     }
     Column(
         Modifier.background(colors.surface.copy(alpha = 0.7f), RoundedCornerShape(14.dp)).padding(18.dp),

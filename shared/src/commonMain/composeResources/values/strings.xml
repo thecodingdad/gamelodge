@@ -1496,4 +1496,10 @@
     <string name="conn_warnings_off">Off</string>
     <string name="conn_warnings_perf">With performance overlay</string>
     <string name="conn_warnings_always">Always</string>
+    <string name="action_unhide">Show again</string>
+    <string name="hide_choice_text">This game is shared with the other GameLodges of its host. Hide it only here, or on all of them?</string>
+    <string name="hide_choice_here">Only on this device</string>
+    <string name="hide_choice_everywhere">On all devices</string>
+    <string name="detail_playtime_devices">Playtime per device</string>
+    <string name="detail_playtime_other_clients">Other streaming clients</string>
 </resources>

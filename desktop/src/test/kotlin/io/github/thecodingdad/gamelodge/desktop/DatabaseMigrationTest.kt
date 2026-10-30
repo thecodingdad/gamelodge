@@ -32,7 +32,7 @@ class DatabaseMigrationTest {
         exec("PRAGMA user_version = 8")
         connection.close()
 
-        val db = Room.databaseBuilder<LauncherDatabase>(file.absolutePath).setDriver(BundledSQLiteDriver()).addMigrations(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13).build()
+        val db = Room.databaseBuilder<LauncherDatabase>(file.absolutePath).setDriver(BundledSQLiteDriver()).addMigrations(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14).build()
         val item = db.libraryDao().getItem("g1")!!
         assertEquals("Hades", item.title)
         assertEquals(3600L, item.playtimeSeconds)

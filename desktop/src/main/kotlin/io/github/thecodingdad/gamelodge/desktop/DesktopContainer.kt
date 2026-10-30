@@ -58,7 +58,7 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
         Room.databaseBuilder<LauncherDatabase>(File(dataDir, "launcher.db").absolutePath)
             .setDriver(BundledSQLiteDriver())
             .setQueryCoroutineContext(Dispatchers.IO)
-            .addMigrations(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13)
+            .addMigrations(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14)
             .build()
     }
     override val settings: SettingsRepository by lazy {
@@ -116,6 +116,33 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
         }
     }
 
+    /** Play data of the PC's games, shared with its paired launchers (docs/PLAYDATA_SYNC_PLAN.md). */
+    val playDataHub: io.github.thecodingdad.gamelodge.data.sync.PlayDataHub by lazy {
+        io.github.thecodingdad.gamelodge.data.sync.PlayDataHub(database, { hostGameIds() })
+    }
+
+    private suspend fun hostGameIds(): Set<String> =
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { hostGames.games().games.map { it.id }.toSet() }
+
+    /** This PC as a device of its own play data store (while it is a host for other launchers). */
+    private suspend fun ownPlayDataHost(): io.github.thecodingdad.gamelodge.data.sync.SyncHost? {
+        if (!hostRole.settings.value.serverEnabled) return null
+        val ids = hostGameIds()
+        val targets = database.libraryDao().getAllTargets()
+            .filter { it.type == io.github.thecodingdad.gamelodge.data.db.TargetType.LOCAL && it.packageName in ids }
+        val hub = playDataHub
+        return io.github.thecodingdad.gamelodge.data.sync.SyncHost(
+            OWN_HOST_KEY,
+            object : io.github.thecodingdad.gamelodge.data.sync.PlayDataTransport {
+                override suspend fun pull(after: Long) = hub.changesAfter(after)
+                override suspend fun push(changes: io.github.thecodingdad.gamelodge.data.companion.PlayDataChanges) =
+                    hub.apply(OWN_DEVICE_ID, platform.deviceName, changes)
+            },
+            targets.associate { it.packageName!! to it.itemId },
+            targets.associate { it.id to it.packageName!! },
+        )
+    }
+
     /** The PC's games for the streaming host and paired launchers. */
     val hostGames: io.github.thecodingdad.gamelodge.desktop.host.LibraryHostGames by lazy {
         io.github.thecodingdad.gamelodge.desktop.host.LibraryHostGames(database, { id -> pcLibrary.entryFor(id, null) }, { metadata }, { hostRole.settings.value }, { hostSync }, http, pcLibrary::actions)
@@ -150,7 +177,10 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
         CompanionFeed(dataDir, servers) { metadata.isEnabled(MetadataSources.idOf(it)) }
     }
     override val library: LibraryRepository by lazy {
-        LibraryRepository(database, LibrarySync(database), pcLibrary, hosts, scope, companionFeed, settings)
+        LibraryRepository(database, LibrarySync(database), pcLibrary, hosts, scope, companionFeed, settings).also {
+            it.playData = io.github.thecodingdad.gamelodge.data.sync.PlayDataSync.create(database, secrets) { filters }
+            it.ownPlayDataHost = ::ownPlayDataHost
+        }
     }
     override val filters: FilterRepository by lazy { FilterRepository(database, settings) }
     override val playtime: PlaytimeTracker by lazy { PlaytimeTracker(database) }
@@ -183,7 +213,7 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
 
     override val launcher: LaunchCoordinator by lazy {
         LaunchCoordinator(hosts, hostActions, { hostPower }, { NoAutoSleep }, profiles, playtime, settings, { ha }, scope, DesktopLaunches(
-            pcLibrary, playtime, scope, { launcher.ended(); onGameEnded() }, desktopHosts,
+            pcLibrary, playtime, scope, { launcher.ended(); onGameEnded(); scope.launch { library.syncPlayData() } }, desktopHosts,
             identity = { streamIdentity },
             streamOptions = { entry ->
                 // Face buttons follow the launcher's layout (the game's own, else the default of
@@ -199,12 +229,18 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
                 launcher.streamEnded()
                 launcher.restoreProfile()
                 launcher.ended()
-                scope.launch { playtime.finishOpenSession() }
+                scope.launch {
+                    playtime.finishOpenSession()
+                    library.syncPlayData()
+                }
             },
         )).also { it.streamNotices = io.github.thecodingdad.gamelodge.data.companion.StreamNotices(servers, scope) }
     }
 
     companion object {
+        /** This PC's own play data store in the local copy, and its device id there. */
+        const val OWN_HOST_KEY = "self"
+        const val OWN_DEVICE_ID = "host"
         /** Vibepollo API token or Apollo / Sunshine password of the sync. */
         const val HOST_SECRET = "host_sync_secret"
     }
@@ -292,6 +328,14 @@ internal val MIGRATION_11_12 = object : androidx.room.migration.Migration(11, 12
 internal val MIGRATION_12_13 = object : androidx.room.migration.Migration(12, 13) {
     override fun migrate(connection: androidx.sqlite.SQLiteConnection) {
         io.github.thecodingdad.gamelodge.data.db.SchemaChanges.V12_TO_V13.forEach { sql ->
+            connection.prepare(sql).use { it.step() }
+        }
+    }
+}
+
+internal val MIGRATION_13_14 = object : androidx.room.migration.Migration(13, 14) {
+    override fun migrate(connection: androidx.sqlite.SQLiteConnection) {
+        io.github.thecodingdad.gamelodge.data.db.SchemaChanges.V13_TO_V14.forEach { sql ->
             connection.prepare(sql).use { it.step() }
         }
     }

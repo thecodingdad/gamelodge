@@ -59,6 +59,13 @@ interface HostGamesSource {
     fun correct(gameId: String, correction: HostGameCorrection, deviceName: String): Boolean
 }
 
+/** Play data of the PC's games shared by its paired launchers (GET/POST /v1/playdata). */
+interface PlayDataSource {
+    fun changes(after: Long): io.github.thecodingdad.gamelodge.data.companion.PlayDataChanges
+    /** False: invalid (nothing taken). */
+    fun apply(deviceId: String, deviceName: String, changes: io.github.thecodingdad.gamelodge.data.companion.PlayDataChanges): Boolean
+}
+
 /**
  * The API paired launchers talk to (the companion's protocol, version 1): HTTPS with the
  * server's own certificate and a client certificate on every connection (mutual TLS). Only the
@@ -73,6 +80,8 @@ class ApiServer(
     private val hostGames: () -> HostGamesSource? = { null },
     /** A paired launcher streams from this PC (or stopped); any paired device may say so. */
     private val streamNotice: (Device, StreamNotice) -> Unit = { _, _ -> },
+    /** Playtime, ratings, favourites … of the PC's games, shared by its paired launchers. */
+    private val playData: () -> PlayDataSource? = { null },
     /** What this server is to clients: [KIND] (Windows launcher, companion) or [KIND_METADATA]. */
     private val kind: String = KIND,
 ) {
@@ -216,6 +225,21 @@ class ApiServer(
                 ex.responseHeaders.set("Cache-Control", "private, max-age=86400")
                 bytes(ex, 200, data, type)
             }
+            ex.requestMethod == "GET" && rest == "playdata" -> {
+                if (!device.may(Permissions.HOST_GAMES)) return empty(ex, 403)
+                val source = playData() ?: return error(ex, 404, "not_available")
+                val after = ex.requestURI.rawQuery.orEmpty().split('&').firstOrNull { it.startsWith("after=") }
+                    ?.removePrefix("after=")?.toLongOrNull()?.takeIf { it >= 0 } ?: 0
+                respond(ex, source.changes(after))
+            }
+            ex.requestMethod == "POST" && rest == "playdata" -> {
+                if (!device.may(Permissions.HOST_GAMES_WRITE)) return empty(ex, 403)
+                val source = playData() ?: return error(ex, 404, "not_available")
+                val text = readText(ex, MAX_PLAY_DATA) ?: return error(ex, 413, "too_large")
+                val body = runCatching { json.decodeFromString<io.github.thecodingdad.gamelodge.data.companion.PlayDataChanges>(text) }.getOrNull()
+                    ?: return error(ex, 400, "invalid")
+                if (source.apply(device.id, device.name, body)) empty(ex, 204) else error(ex, 400, "invalid")
+            }
             ex.requestMethod == "POST" && rest == "stream" -> {
                 val body = read<StreamNotice>(ex) ?: return error(ex, 400, "invalid")
                 streamNotice(device, body)
@@ -298,6 +322,8 @@ class ApiServer(
         const val KIND_METADATA = "metadata"
         private const val MAX_BODY = 64 * 1024
         private const val MAX_IGDB_QUERY = 8 * 1024
+        /** 1000 play data entries. */
+        private const val MAX_PLAY_DATA = 1024 * 1024
 
         /** Image servers of SteamGridDB, IGDB and the stores (and their sub domains). */
         val artworkHosts = listOf("steamgriddb.com", "images.igdb.com", "steamstatic.com", "gog-statics.com", "cdn1.epicgames.com")

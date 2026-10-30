@@ -176,6 +176,8 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             val closed = container.playtime.finishOpenSession()
             container.usage.sync()
+            // A game or stream ended: its session goes to the host right away (also brings the others' news).
+            if (closed != null) launch { container.library.syncPlayData() }
             if (closed != null && closed.targetId.startsWith("remote:")) {
                 val target = container.database.libraryDao().getTarget(closed.targetId)
                 target?.hostUuid?.let { container.autoSleep.scheduleAfterStream(it) }

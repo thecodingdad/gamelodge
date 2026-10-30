@@ -72,4 +72,17 @@ class MigrationTest {
             org.junit.Assert.assertFalse("vibepolloUrl" in columns)
         }
     }
+
+    @Test
+    fun `v13 to v14 adds the play data tables and keeps hidden items hidden`() {
+        helper.createDatabase("m14.db", 13).use { db ->
+            db.execSQL("INSERT INTO library_items (id, title, normalizedTitle, kind, kindSource, favorite, hidden, addedAt, playtimeSeconds, metadataState, matchConfidence, metadataVersion) VALUES ('i1', 'Game', 'game', 'GAME', 'AUTO', 0, 1, 0, 0, 'NONE', 0, 0)")
+        }
+        val db = helper.runMigrationsAndValidate("m14.db", 14, true, AndroidDatabase.MIGRATION_13_14)
+        db.query("SELECT hidden, hiddenHere FROM library_items WHERE id = 'i1'").use { c ->
+            org.junit.Assert.assertTrue(c.moveToFirst())
+            org.junit.Assert.assertEquals(1, c.getInt(0))
+            org.junit.Assert.assertEquals(0, c.getInt(1))
+        }
+    }
 }

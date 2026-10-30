@@ -97,3 +97,11 @@ POST /v1/playdata                  ← { sessions[], flags[], memberships[] } fr
 4. Collections by name.
 
 Each phase on Android and Windows, tested with Odin + Windows client against the host.
+
+## Known limits (accepted)
+
+- A device restored from a backup onto a new installation counts as a new device: its restored playtime goes
+  to the host once more as "earlier" playtime (the host then counts it twice for that game).
+- An item that is both a host game and a local Android app on the same device shows the host's total; time
+  from Android's usage statistics for the local app isn't added to it.
+- The same game on two hosts: the second host's first sync takes the first host's total as earlier playtime.

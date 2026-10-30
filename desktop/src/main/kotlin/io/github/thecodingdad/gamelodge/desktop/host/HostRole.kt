@@ -61,8 +61,15 @@ class HostRole(private val dataDir: File, private val secrets: SecretStore, priv
     /** SteamGridDB / IGDB with this PC's keys. */
     @Volatile var proxy: MetadataProxyApi? = null
 
+    /** Play data of the PC's games shared by its paired launchers (set once the library is ready). */
+    @Volatile var playData: io.github.thecodingdad.gamelodge.host.PlayDataSource? = null
+
     private val api by lazy {
-        ApiServer(identity, devices, pairing, serverName, { proxy }, { hostGames }, streamNotice = { device, notice -> HostStreams.notice(device.id, device.name, notice) })
+        ApiServer(
+            identity, devices, pairing, serverName, { proxy }, { hostGames },
+            streamNotice = { device, notice -> HostStreams.notice(device.id, device.name, notice) },
+            playData = { playData },
+        )
     }
     private val web by lazy {
         WebAdmin(identity, auth, devices, pairing, object : PairingGate {

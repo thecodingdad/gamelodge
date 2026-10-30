@@ -76,6 +76,14 @@ interface LibraryDao {
     @Query("UPDATE library_items SET hidden = :hidden WHERE id = :id")
     suspend fun setHidden(id: String, hidden: Boolean)
 
+    /** [hidden]: shown hidden; [here]: hidden on this device only (not shared through the host). */
+    @Query("UPDATE library_items SET hidden = :hidden, hiddenHere = :here WHERE id = :id")
+    suspend fun setHiddenState(id: String, hidden: Boolean, here: Boolean)
+
+    /** Playtime and last played of an item as all devices of its host played it. */
+    @Query("UPDATE library_items SET playtimeSeconds = :seconds, lastPlayedAt = :lastPlayedAt WHERE id = :id")
+    suspend fun setPlayStats(id: String, seconds: Long, lastPlayedAt: Long?)
+
     @Query("UPDATE library_items SET platform = :platform, platformSource = :source WHERE id = :id")
     suspend fun setPlatform(id: String, platform: String?, source: PlatformSource?)
 
@@ -121,6 +129,79 @@ interface SessionDao {
 
     @Query("UPDATE play_sessions SET itemId = :itemId WHERE id = :id")
     suspend fun relink(id: Long, itemId: String)
+
+    /** Finished sessions that started at [since] or later. */
+    @Query("SELECT * FROM play_sessions WHERE endedAt IS NOT NULL AND startedAt >= :since")
+    suspend fun finishedSince(since: Long): List<PlaySessionEntity>
+}
+
+/** Play data shared through a host: the host's own store (hub_*) and every device's copy (sync_*). */
+@Dao
+interface PlayDataDao {
+    // Host side
+    @Query("SELECT MAX(m) FROM (SELECT MAX(seq) m FROM hub_sessions UNION ALL SELECT MAX(seq) FROM hub_flags UNION ALL SELECT MAX(seq) FROM hub_members)")
+    suspend fun maxSeq(): Long?
+
+    @Query("SELECT * FROM hub_sessions WHERE id = :id")
+    suspend fun hubSession(id: String): HubSessionEntity?
+
+    @Upsert
+    suspend fun upsertHubSession(session: HubSessionEntity)
+
+    @Query("SELECT * FROM hub_flags WHERE gameId = :gameId AND field = :field")
+    suspend fun hubFlag(gameId: String, field: String): HubFlagEntity?
+
+    @Upsert
+    suspend fun upsertHubFlag(flag: HubFlagEntity)
+
+    @Query("SELECT * FROM hub_members WHERE collection = :collection AND gameId = :gameId")
+    suspend fun hubMember(collection: String, gameId: String): HubMemberEntity?
+
+    @Upsert
+    suspend fun upsertHubMember(member: HubMemberEntity)
+
+    @Query("SELECT * FROM hub_sessions WHERE seq > :after ORDER BY seq LIMIT :limit")
+    suspend fun hubSessionsAfter(after: Long, limit: Int): List<HubSessionEntity>
+
+    @Query("SELECT * FROM hub_flags WHERE seq > :after ORDER BY seq LIMIT :limit")
+    suspend fun hubFlagsAfter(after: Long, limit: Int): List<HubFlagEntity>
+
+    @Query("SELECT * FROM hub_members WHERE seq > :after ORDER BY seq LIMIT :limit")
+    suspend fun hubMembersAfter(after: Long, limit: Int): List<HubMemberEntity>
+
+    // Device side
+    @Query("SELECT * FROM sync_state WHERE hostKey = :hostKey")
+    suspend fun state(hostKey: String): SyncStateEntity?
+
+    @Upsert
+    suspend fun upsertState(state: SyncStateEntity)
+
+    @Query("SELECT id FROM sync_sessions WHERE hostKey = :hostKey")
+    suspend fun sessionIds(hostKey: String): List<String>
+
+    @Upsert
+    suspend fun upsertSessions(sessions: List<SyncSessionEntity>)
+
+    @Query("UPDATE sync_sessions SET itemId = :itemId WHERE hostKey = :hostKey AND gameId = :gameId AND (itemId IS NULL OR itemId != :itemId)")
+    suspend fun linkSessions(hostKey: String, gameId: String, itemId: String)
+
+    @Query("SELECT * FROM sync_sessions WHERE itemId = :itemId")
+    fun observeSessionsFor(itemId: String): Flow<List<SyncSessionEntity>>
+
+    @Query("SELECT * FROM sync_sessions WHERE itemId IS NOT NULL")
+    suspend fun linkedSessions(): List<SyncSessionEntity>
+
+    @Query("SELECT * FROM sync_flags WHERE hostKey = :hostKey")
+    suspend fun flags(hostKey: String): List<SyncFlagEntity>
+
+    @Upsert
+    suspend fun upsertFlags(flags: List<SyncFlagEntity>)
+
+    @Query("SELECT * FROM sync_members WHERE hostKey = :hostKey")
+    suspend fun members(hostKey: String): List<SyncMemberEntity>
+
+    @Upsert
+    suspend fun upsertMembers(members: List<SyncMemberEntity>)
 }
 
 @Dao
@@ -131,6 +212,12 @@ interface CollectionDao {
     /** In each group's manual order (members from before v6 share position 0: insertion order). */
     @Query("SELECT * FROM item_collections ORDER BY position, rowid")
     fun observeMemberships(): Flow<List<ItemCollectionCrossRef>>
+
+    @Query("SELECT * FROM collections ORDER BY sortOrder")
+    suspend fun getCollections(): List<CollectionEntity>
+
+    @Query("SELECT * FROM item_collections")
+    suspend fun getMemberships(): List<ItemCollectionCrossRef>
 
     @Query("SELECT COALESCE(MAX(position), -1) FROM item_collections WHERE collectionId = :collectionId")
     suspend fun maxPosition(collectionId: String): Int

@@ -1494,4 +1494,10 @@
     <string name="conn_warnings_off">Aus</string>
     <string name="conn_warnings_perf">Mit Leistungsanzeige</string>
     <string name="conn_warnings_always">Immer</string>
+    <string name="action_unhide">Wieder einblenden</string>
+    <string name="hide_choice_text">Dieses Spiel wird mit den anderen GameLodges seines Hosts geteilt. Nur hier ausblenden oder auf allen?</string>
+    <string name="hide_choice_here">Nur auf diesem Gerät</string>
+    <string name="hide_choice_everywhere">Auf allen Geräten</string>
+    <string name="detail_playtime_devices">Spielzeit pro Gerät</string>
+    <string name="detail_playtime_other_clients">Andere Streaming-Clients</string>
 </resources>

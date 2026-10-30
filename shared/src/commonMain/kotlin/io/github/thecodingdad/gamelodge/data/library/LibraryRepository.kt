@@ -43,6 +43,9 @@ private val ARTWORK_HOSTS = listOf("steamgriddb.com", "images.igdb.com", "steams
 /** How often the hosts' GameLodge lists are checked for changes. */
 private const val COMPANION_REFRESH_MS = 60_000L
 
+/** A change to play data (favourite, rating …) is sent this long after it. */
+private const val PLAY_SYNC_DELAY_MS = 3_000L
+
 /** Entry point for everything library related: keeps sources in sync and exposes entries. */
 class LibraryRepository(
     private val db: LauncherDatabase,
@@ -127,6 +130,40 @@ class LibraryRepository(
             Log.d("Host $uuid: companion list changed")
             applyCompanion(uuid, games)
         }
+        syncPlayData()
+    }
+
+    /** Play data shared through the hosts (set by the platform; null: not shared). */
+    @Volatile var playData: io.github.thecodingdad.gamelodge.data.sync.PlayDataSync? = null
+
+    /** The Windows host's own store, synced like a remote host (null elsewhere or when it isn't a host). */
+    @Volatile var ownPlayDataHost: (suspend () -> io.github.thecodingdad.gamelodge.data.sync.SyncHost?)? = null
+
+    /** Syncs play data (playtime, ratings, favourites, hidden, collections) with every reachable GameLodge host. */
+    suspend fun syncPlayData() = withContext(Dispatchers.IO) {
+        val sync = playData ?: return@withContext
+        val feed = companion
+        if (feed != null) {
+            val online = hosts.hosts.value.values.filter { it.paired && it.status == HostStatus.ONLINE }.map { it.uuid }
+            for (uuid in online) {
+                if (!feed.sharesPlayData(uuid)) continue
+                val games = runCatching { feed.games(uuid) }.getOrNull() ?: continue
+                val targets = dao.getAllTargets().filter { it.type == TargetType.REMOTE && it.hostUuid == uuid && it.appUuid != null }
+                val gameOfTarget = targets.mapNotNull { t -> games[t.appUuid!!.uppercase()]?.let { t.id to it.id } }.toMap()
+                val gameItems = targets.mapNotNull { t -> games[t.appUuid!!.uppercase()]?.let { it.id to t.itemId } }.toMap()
+                sync.sync(
+                    io.github.thecodingdad.gamelodge.data.sync.SyncHost(
+                        uuid,
+                        object : io.github.thecodingdad.gamelodge.data.sync.PlayDataTransport {
+                            override suspend fun pull(after: Long) = feed.pullPlayData(uuid, after)
+                            override suspend fun push(changes: io.github.thecodingdad.gamelodge.data.companion.PlayDataChanges) = feed.pushPlayData(uuid, changes)
+                        },
+                        gameItems, gameOfTarget,
+                    ),
+                )
+            }
+        }
+        ownPlayDataHost?.invoke()?.let { sync.sync(it) }
     }
 
     suspend fun syncLocal() {
@@ -480,12 +517,41 @@ class LibraryRepository(
         hosts.forEach { removeHost(it, keepGames = false) }
     }
 
-    suspend fun setFavorite(id: String, favorite: Boolean) = dao.setFavorite(id, favorite)
+    suspend fun setFavorite(id: String, favorite: Boolean) {
+        dao.setFavorite(id, favorite)
+        playDataChanged()
+    }
 
     /** The user's own rating, 1–5 stars; null clears it. */
-    suspend fun setUserRating(id: String, stars: Int?) = dao.setUserRating(id, stars?.coerceIn(1, 5))
+    suspend fun setUserRating(id: String, stars: Int?) {
+        dao.setUserRating(id, stars?.coerceIn(1, 5))
+        playDataChanged()
+    }
 
-    suspend fun setHidden(id: String, hidden: Boolean) = dao.setHidden(id, hidden)
+    /**
+     * Hides or shows an entry. [here]: hidden on this device only, not on the other GameLodges of
+     * its host; showing it again ends both.
+     */
+    suspend fun setHidden(id: String, hidden: Boolean, here: Boolean = false) {
+        dao.setHiddenState(id, hidden, hidden && here)
+        playDataChanged()
+    }
+
+    /** True when [entry] is a host game whose play data is shared with the host's other GameLodges. */
+    fun sharesPlayData(entry: LibraryEntry): Boolean =
+        playData != null && entry.remoteTargets.any { t -> t.hostUuid?.let { companion?.sharesPlayData(it) } == true }
+
+    private var pendingPlaySync: kotlinx.coroutines.Job? = null
+
+    /** A change to share: synced a moment later (several changes in a row go together). */
+    private fun playDataChanged() {
+        if (playData == null) return
+        pendingPlaySync?.cancel()
+        pendingPlaySync = scope.launch(Dispatchers.IO) {
+            kotlinx.coroutines.delay(PLAY_SYNC_DELAY_MS)
+            syncPlayData()
+        }
+    }
 
     val collections = db.collectionDao().observeCollections()
     val memberships = db.collectionDao().observeMemberships()
@@ -494,6 +560,7 @@ class LibraryRepository(
         val dao = db.collectionDao()
         if (member) dao.addItem(ItemCollectionCrossRef(itemId, collectionId, dao.maxPosition(collectionId) + 1))
         else dao.removeItem(ItemCollectionCrossRef(itemId, collectionId))
+        playDataChanged()
     }
 
     /** Stores the manual order of a group's members. */

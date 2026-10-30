@@ -99,6 +99,31 @@ class CompanionFeed(
         return name != id && name.replace(VERSION_SUFFIX, "") == id.replace(VERSION_SUFFIX, "")
     }
 
+    /** Play data changes of the host's GameLodge after [after]; null when not reachable. */
+    suspend fun pullPlayData(hostUuid: String, after: Long): PlayDataChanges? = withContext(Dispatchers.IO) {
+        val server = companionFor(hostUuid) ?: return@withContext null
+        runCatching {
+            servers.client(server).rawGet("/v1/playdata?after=$after").use { r ->
+                if (r.isSuccessful) json.decodeFromString<PlayDataChanges>(r.body?.string().orEmpty()) else null
+            }
+        }.onFailure { Log.d("Play data of ${server.name} not read: ${it.message}") }.getOrNull()
+    }
+
+    /** Sends this device's play data changes to the host's GameLodge. */
+    suspend fun pushPlayData(hostUuid: String, changes: PlayDataChanges): Boolean = withContext(Dispatchers.IO) {
+        val server = companionFor(hostUuid) ?: return@withContext false
+        runCatching {
+            servers.client(server).rawPost("/v1/playdata", json.encodeToString(changes), "application/json").use { r ->
+                if (!r.isSuccessful) Log.w("Play data refused by ${server.name}: HTTP ${r.code}")
+                r.isSuccessful
+            }
+        }.onFailure { Log.d("Play data not sent to ${server.name}: ${it.message}") }.getOrDefault(false)
+    }
+
+    /** True when the host's companion is a GameLodge that shares play data (paired, both permissions). */
+    fun sharesPlayData(hostUuid: String): Boolean =
+        companionFor(hostUuid)?.permissions?.let { "hostgames" in it && "hostgames.write" in it } == true
+
     /** Sends a correction for the host entry [appUuid] to the host's companion. */
     suspend fun correct(hostUuid: String, appUuid: String, correction: HostGameCorrection): Boolean = withContext(Dispatchers.IO) {
         val server = companionFor(hostUuid) ?: return@withContext false

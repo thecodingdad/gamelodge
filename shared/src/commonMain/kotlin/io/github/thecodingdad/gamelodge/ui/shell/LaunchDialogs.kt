@@ -42,6 +42,8 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -400,7 +402,11 @@ fun EntryContextMenu(
                 LauncherButton(stringResource(Res.string.action_game_actions), act { onGameActions(e) }, Modifier.fillMaxWidth(), Icons.Filled.Bolt)
             }
             LauncherButton(stringResource(Res.string.action_collections), act { onCollections(e) }, Modifier.fillMaxWidth(), Icons.Filled.CollectionsBookmark)
-            LauncherButton(stringResource(Res.string.action_hide), act { onHide(e) }, Modifier.fillMaxWidth(), Icons.Filled.VisibilityOff)
+            if (e.item.hidden) {
+                LauncherButton(stringResource(Res.string.action_unhide), act { onHide(e) }, Modifier.fillMaxWidth(), Icons.Filled.Visibility)
+            } else {
+                LauncherButton(stringResource(Res.string.action_hide), act { onHide(e) }, Modifier.fillMaxWidth(), Icons.Filled.VisibilityOff)
+            }
         }
     }
 }
@@ -639,5 +645,16 @@ fun StreamProgressContent(
                 Modifier.align(Alignment.BottomCenter),
             )
         }
+    }
+}
+
+/** Hiding a host game whose play data is shared: only on this device, or on every GameLodge of its host. */
+@Composable
+fun HideChoiceDialog(entry: LibraryEntry?, onChoice: (here: Boolean) -> Unit, onDismiss: () -> Unit) {
+    Modal(visible = entry != null, onDismiss = onDismiss, title = entry?.item?.title, maxWidth = 520.dp, closeButton = false) {
+        Text(stringResource(Res.string.hide_choice_text), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+        LauncherButton(stringResource(Res.string.hide_choice_here), { onChoice(true) }, Modifier.fillMaxWidth(), Icons.Filled.VisibilityOff, primary = true)
+        LauncherButton(stringResource(Res.string.hide_choice_everywhere), { onChoice(false) }, Modifier.fillMaxWidth(), Icons.Filled.Devices)
+        LauncherButton(stringResource(Res.string.action_cancel), onDismiss, Modifier.fillMaxWidth())
     }
 }
