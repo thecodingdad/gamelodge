@@ -682,11 +682,15 @@ fun DisplaySettings(
 fun LanguageSettings(settings: LauncherSettings, update: ((LauncherSettings) -> LauncherSettings) -> Unit) {
     SettingsPage(stringResource(Res.string.settings_language)) {
         ChoiceRow(
-            stringResource(Res.string.settings_language), listOf("system", "en", "de"), settings.language,
+            stringResource(Res.string.settings_language), listOf("system", "en", "de", "es", "fr", "it", "pt-BR"), settings.language,
             label = {
                 when (it) {
                     "en" -> "English"
                     "de" -> "Deutsch"
+                    "es" -> "Español"
+                    "fr" -> "Français"
+                    "it" -> "Italiano"
+                    "pt-BR" -> "Português (Brasil)"
                     else -> stringResource(Res.string.language_system)
                 }
             },

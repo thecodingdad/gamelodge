@@ -64,14 +64,32 @@ class StringResourcesTest {
     fun germanMatchesAndroid() = check(Locale.GERMAN, "values-de")
 
     @Test
-    fun bothLanguagesHaveTheSameStringsAndPlaceholders() {
+    fun spanishMatchesAndroid() = check(Locale("es"), "values-es")
+
+    @Test
+    fun frenchMatchesAndroid() = check(Locale.FRENCH, "values-fr")
+
+    @Test
+    fun italianMatchesAndroid() = check(Locale.ITALIAN, "values-it")
+
+    @Test
+    fun brazilianPortugueseMatchesAndroid() = check(Locale("pt", "BR"), "values-pt-rBR")
+
+    @Test
+    fun everyLanguageHasTheSameStringsAndPlaceholders() {
         val en = xml("values")
-        val de = xml("values-de")
         val placeholder = Regex("""%\d+\$[sd]""")
-        assertEquals(en.keys - "launcher_name", de.keys)
-        de.forEach { (name, text) ->
-            assertEquals(name, placeholder.findAll(en.getValue(name)).map { it.value }.toSortedSet(), placeholder.findAll(text).map { it.value }.toSortedSet())
-            assertTrue(name, !Regex("""%[sd]""").containsMatchIn(text))
+        for (folder in listOf("values-de", "values-es", "values-fr", "values-it", "values-pt-rBR")) {
+            val loc = xml(folder)
+            assertEquals(folder, en.keys - "launcher_name", loc.keys - "launcher_name")
+            loc.forEach { (name, text) ->
+                assertEquals(
+                    "$folder $name",
+                    placeholder.findAll(en.getValue(name)).map { it.value }.toSortedSet(),
+                    placeholder.findAll(text).map { it.value }.toSortedSet(),
+                )
+                assertTrue("$folder $name", !Regex("""%[sd]""").containsMatchIn(text))
+            }
         }
     }
 }
