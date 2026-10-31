@@ -32,11 +32,11 @@ class DesktopBackupStorage(
 
     override fun folderLabel(folder: String): String = folder
 
-    override suspend fun writeToFolder(folder: String, text: String, keep: Int) = withContext(Dispatchers.IO) {
+    override suspend fun writeToFolder(folder: String, bytes: ByteArray, keep: Int) = withContext(Dispatchers.IO) {
         val dir = File(folder).apply { mkdirs() }
         val file = File(dir, BackupManager.fileName())
         val tmp = File(dir, file.name + ".tmp")
-        tmp.writeText(text)
+        tmp.writeBytes(bytes)
         if (!tmp.renameTo(file)) { tmp.delete(); error("Cannot write ${file.path}") }
         restrictToOwner(file)
         backupFiles(dir).drop(keep.coerceAtLeast(1)).forEach { it.delete() }
@@ -46,12 +46,12 @@ class DesktopBackupStorage(
         backupFiles(File(folder)).map { BackupEntry(it.path, it.name, BackupManager.createdAt(it.name)) }
     }
 
-    override suspend fun write(address: String, text: String) = withContext(Dispatchers.IO) {
-        File(address).apply { parentFile?.mkdirs() }.writeText(text)
+    override suspend fun write(address: String, bytes: ByteArray) = withContext(Dispatchers.IO) {
+        File(address).apply { parentFile?.mkdirs() }.writeBytes(bytes)
         restrictToOwner(File(address))
     }
 
-    override suspend fun read(address: String): String = withContext(Dispatchers.IO) { File(address).readText() }
+    override suspend fun read(address: String): ByteArray = withContext(Dispatchers.IO) { File(address).readBytes() }
 
     override fun scheduleAuto(enabled: Boolean) {
         autoJob?.cancel()
@@ -70,8 +70,7 @@ class DesktopBackupStorage(
         val folder = s.backupFolderUri.ifEmpty { defaultFolder }
         val newest = backupFiles(File(folder)).firstOrNull()?.let { BackupManager.createdAt(it.name) } ?: 0L
         if (System.currentTimeMillis() - newest < DAY_MS) return
-        val b = backup()
-        writeToFolder(folder, b.encode(b.create(null)), s.backupKeepCount)
+        writeToFolder(folder, backup().export(null), s.backupKeepCount)
         Log.i("Auto backup written to $folder")
     }
 

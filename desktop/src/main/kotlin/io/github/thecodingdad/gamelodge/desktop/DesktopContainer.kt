@@ -249,7 +249,7 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
 
     /** A PC drives its monitors itself; there is no handheld screen to mirror. */
     override val backup: io.github.thecodingdad.gamelodge.data.backup.BackupManager by lazy {
-        io.github.thecodingdad.gamelodge.data.backup.BackupManager(database, settings, secrets, profiles)
+        io.github.thecodingdad.gamelodge.data.backup.BackupManager(database, settings, secrets, profiles, platform.filesDir)
     }
     override val backupStorage: DesktopBackupStorage by lazy { DesktopBackupStorage(scope, settings) { backup } }
     override val data: io.github.thecodingdad.gamelodge.data.storage.DataMaintenance by lazy {

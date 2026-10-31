@@ -61,7 +61,7 @@ class BackupManagerTest {
     @Test
     fun `user changes survive export and import into a fresh install`() = runTest {
         val settings = io.github.thecodingdad.gamelodge.platform.AndroidStores.settings(context)
-        val manager = BackupManager(source, settings, io.github.thecodingdad.gamelodge.platform.AndroidStores.secrets(context), io.github.thecodingdad.gamelodge.data.backup.ArtemisStreamBackup(context))
+        val manager = BackupManager(source, settings, io.github.thecodingdad.gamelodge.platform.AndroidStores.secrets(context), io.github.thecodingdad.gamelodge.data.backup.ArtemisStreamBackup(context), context.filesDir)
         seedLibrary(source)
         val dao = source.libraryDao()
         val elden = dao.getAllItems().first { it.title == "Elden Ring" }
@@ -80,7 +80,7 @@ class BackupManagerTest {
         settings.update { it.copy(startTab = StartTab.HOME) }
         PreferenceManager.getDefaultSharedPreferences(context).edit().clear().apply()
         seedLibrary(target)
-        BackupManager(target, settings, io.github.thecodingdad.gamelodge.platform.AndroidStores.secrets(context), io.github.thecodingdad.gamelodge.data.backup.ArtemisStreamBackup(context)).restore(manager.decode(text), null)
+        BackupManager(target, settings, io.github.thecodingdad.gamelodge.platform.AndroidStores.secrets(context), io.github.thecodingdad.gamelodge.data.backup.ArtemisStreamBackup(context), context.filesDir).restore(manager.decode(text), null)
 
         val restored = target.libraryDao().getAllItems().associateBy { it.title }
         assertTrue(restored.getValue("Elden Ring").favorite)
@@ -95,9 +95,35 @@ class BackupManagerTest {
         assertEquals(40000, prefs.getInt("seekbar_bitrate_kbps", 0))
     }
 
+    @Test
+    fun `own images are packed into the zip and repointed on restore`() = runTest {
+        val secrets = io.github.thecodingdad.gamelodge.platform.AndroidStores.secrets(context)
+        val settings = io.github.thecodingdad.gamelodge.platform.AndroidStores.settings(context)
+        val sourceFiles = java.io.File(context.cacheDir, "src-${System.nanoTime()}")
+        val img = java.io.File(sourceFiles, "own-artwork").apply { mkdirs() }.resolve("abc-cover-1.png")
+        img.writeBytes(byteArrayOf(1, 2, 3, 4, 5))
+        val manager = BackupManager(source, settings, secrets, ArtemisStreamBackup(context), sourceFiles)
+        seedLibrary(source)
+        val dao = source.libraryDao()
+        val elden = dao.getAllItems().first { it.title == "Elden Ring" }
+        dao.upsertItem(elden.copy(favorite = true, coverUrl = img.absolutePath))
+
+        val bytes = manager.export(password = null)
+        assertEquals('P'.code.toByte(), bytes[0]) // a ZIP, not plain JSON
+
+        // A fresh install with its own files dir: the own image is extracted and the path repointed.
+        val targetFiles = java.io.File(context.cacheDir, "tgt-${System.nanoTime()}")
+        seedLibrary(target)
+        BackupManager(target, settings, secrets, ArtemisStreamBackup(context), targetFiles).import(bytes, null)
+
+        val cover = target.libraryDao().getAllItems().first { it.title == "Elden Ring" }.coverUrl!!
+        assertTrue("repointed into the new files dir", cover.startsWith(java.io.File(targetFiles, "own-artwork").absolutePath))
+        assertEquals(5L, java.io.File(cover).length())
+    }
+
     @Test(expected = WrongPasswordException::class)
     fun `credentials need the right password`() = runTest {
-        val manager = BackupManager(source, io.github.thecodingdad.gamelodge.platform.AndroidStores.settings(context), io.github.thecodingdad.gamelodge.platform.AndroidStores.secrets(context), io.github.thecodingdad.gamelodge.data.backup.ArtemisStreamBackup(context))
+        val manager = BackupManager(source, io.github.thecodingdad.gamelodge.platform.AndroidStores.settings(context), io.github.thecodingdad.gamelodge.platform.AndroidStores.secrets(context), io.github.thecodingdad.gamelodge.data.backup.ArtemisStreamBackup(context), context.filesDir)
         val backup = manager.create(password = "correct horse")
         manager.restore(manager.decode(manager.encode(backup)), "wrong")
     }

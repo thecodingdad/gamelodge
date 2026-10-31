@@ -31,6 +31,8 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.longOrNull
+import io.github.thecodingdad.gamelodge.data.artwork.ArtworkFiles
+import java.io.File
 import java.security.SecureRandom
 import java.text.SimpleDateFormat
 import java.util.Base64
@@ -160,8 +162,11 @@ class BackupManager(
     private val settings: SettingsRepository,
     private val secrets: SecretStore,
     private val stream: StreamSettingsBackup,
+    /** The app's files dir; own images live in `own-artwork` there, the cache in `artwork`. */
+    private val filesDir: File,
 ) {
     private val json = Json { ignoreUnknownKeys = true; prettyPrint = true; encodeDefaults = true }
+    private val ownDir get() = File(filesDir, "own-artwork")
 
     suspend fun create(password: String?): BackupFile = withContext(Dispatchers.IO) {
         val items = db.libraryDao().getAllItems()
@@ -240,7 +245,95 @@ class BackupManager(
 
     fun decode(text: String): BackupFile = json.decodeFromString(BackupFile.serializer(), text)
 
-    suspend fun restore(backup: BackupFile, password: String?) = withContext(Dispatchers.IO) {
+    /** The image references of an item that may be files; animated ones last. */
+    private fun ItemBackup.imageValues(): List<String> =
+        listOfNotNull(coverUrl, heroUrl, logoUrl, iconUrl, tileUrl, squareUrl)
+
+    private fun ItemBackup.animatedValues(): List<String> = listOfNotNull(animatedCoverUrl, animatedHeroUrl)
+
+    /**
+     * The backup as a ZIP: `backup.json` plus the image files it refers to. Own (hand-picked)
+     * images are always included; the downloaded cache and the animated images follow the
+     * [LauncherSettings.backupArtwork] / [LauncherSettings.backupAnimatedArtwork] settings.
+     */
+    suspend fun export(password: String?): ByteArray = withContext(Dispatchers.IO) {
+        val backup = create(password)
+        val s = settings.current()
+        val own = LinkedHashMap<String, File>()
+        val cache = LinkedHashMap<String, File>()
+        backup.items.forEach { item ->
+            (item.imageValues() + item.animatedValues()).filterNot { it.startsWith("http") }.forEach { path ->
+                File(path).takeIf { it.isFile }?.let { own.putIfAbsent(it.name, it) }
+            }
+            if (s.backupArtwork) {
+                item.imageValues().forEach { url -> ArtworkFiles.cachedFileForUrl(url)?.let { cache.putIfAbsent(it.name, it) } }
+                if (s.backupAnimatedArtwork) item.animatedValues().forEach { url -> ArtworkFiles.cachedFileForUrl(url)?.let { cache.putIfAbsent(it.name, it) } }
+            }
+        }
+        val out = java.io.ByteArrayOutputStream()
+        java.util.zip.ZipOutputStream(out).use { zip ->
+            zip.putNextEntry(java.util.zip.ZipEntry(MANIFEST)); zip.write(encode(backup).toByteArray()); zip.closeEntry()
+            fun add(prefix: String, files: Map<String, File>) = files.forEach { (name, file) ->
+                zip.putNextEntry(java.util.zip.ZipEntry("$prefix$name")); file.inputStream().use { it.copyTo(zip) }; zip.closeEntry()
+            }
+            add(OWN_PREFIX, own)
+            add(CACHE_PREFIX, cache)
+        }
+        out.toByteArray()
+    }
+
+    /** The manifest of [bytes] (ZIP or legacy plain JSON), to check for a password before restoring. */
+    fun readManifest(bytes: ByteArray): BackupFile =
+        if (isZip(bytes)) {
+            java.util.zip.ZipInputStream(bytes.inputStream()).use { zip ->
+                generateSequence { zip.nextEntry }.firstOrNull { it.name == MANIFEST }
+                    ?: error("No $MANIFEST in the archive")
+                decode(zip.readBytes().decodeToString())
+            }
+        } else {
+            decode(bytes.decodeToString())
+        }
+
+    /** Restores from [bytes] (ZIP with images, or legacy plain JSON). */
+    suspend fun import(bytes: ByteArray, password: String?) = withContext(Dispatchers.IO) {
+        if (!isZip(bytes)) return@withContext restore(decode(bytes.decodeToString()), password)
+        var manifest: String? = null
+        val ownNames = HashSet<String>()
+        val ownTarget = ownDir.apply { mkdirs() }
+        // The cache dir is only touched when the archive actually carries cached images.
+        fun cacheTarget() = ArtworkFiles.cacheDir().apply { mkdirs() }
+        java.util.zip.ZipInputStream(bytes.inputStream()).use { zip ->
+            while (true) {
+                val entry = zip.nextEntry ?: break
+                val name = entry.name
+                when {
+                    name == MANIFEST -> manifest = zip.readBytes().decodeToString()
+                    // Flat basenames only: a name with a path separator is rejected (no zip-slip).
+                    !entry.isDirectory && name.startsWith(OWN_PREFIX) -> safeName(name, OWN_PREFIX)?.let { bn ->
+                        File(ownTarget, bn).outputStream().use { zip.copyTo(it) }; ownNames += bn
+                    }
+                    !entry.isDirectory && name.startsWith(CACHE_PREFIX) -> safeName(name, CACHE_PREFIX)?.let { bn ->
+                        File(cacheTarget(), bn).outputStream().use { zip.copyTo(it) }; ArtworkFiles.registerCached(bn)
+                    }
+                }
+                zip.closeEntry()
+            }
+        }
+        restore(decode(manifest ?: error("No $MANIFEST in the archive")), password, ownNames)
+    }
+
+    private fun isZip(bytes: ByteArray) = bytes.size >= 4 && bytes[0] == 'P'.code.toByte() && bytes[1] == 'K'.code.toByte()
+
+    private fun safeName(name: String, prefix: String): String? =
+        name.removePrefix(prefix).takeIf { it.isNotEmpty() && '/' !in it && '\\' !in it && it != ".." }
+
+    suspend fun restore(backup: BackupFile, password: String?, ownNames: Set<String> = emptySet()) = withContext(Dispatchers.IO) {
+        // Own images extracted from a backup live in this device's own-artwork folder; the paths
+        // in the backup come from the source device and are repointed to it here (by file name).
+        fun repoint(value: String?): String? = value?.let {
+            if (it.startsWith("http") || ownNames.isEmpty()) it
+            else File(it).name.takeIf { n -> n in ownNames }?.let { n -> File(ownDir, n).absolutePath } ?: it
+        }
         if (backup.secrets != null && !password.isNullOrEmpty()) decryptSecrets(backup.secrets, password)
         // Home app, backup folder and the setup wizard's state belong to the device, not to the backup.
         settings.update {
@@ -266,11 +359,11 @@ class BackupManager(
                     lastPlayedAt = listOfNotNull(existing.lastPlayedAt, b.lastPlayedAt).maxOrNull(),
                     metadataState = b.metadataState, metadataQuery = b.metadataQuery, igdbId = b.igdbId, sgdbId = b.sgdbId,
                     description = b.description, genres = b.genres, developer = b.developer, releaseYear = b.releaseYear,
-                    rating = b.rating, coverUrl = b.coverUrl, heroUrl = b.heroUrl, logoUrl = b.logoUrl, iconUrl = b.iconUrl,
-                    animatedCoverUrl = b.animatedCoverUrl, animatedHeroUrl = b.animatedHeroUrl,
+                    rating = b.rating, coverUrl = repoint(b.coverUrl), heroUrl = repoint(b.heroUrl), logoUrl = repoint(b.logoUrl), iconUrl = repoint(b.iconUrl),
+                    animatedCoverUrl = repoint(b.animatedCoverUrl), animatedHeroUrl = repoint(b.animatedHeroUrl),
                     platform = b.manualPlatform ?: existing.platform,
-                    tileUrl = b.tileUrl ?: existing.tileUrl,
-                    squareUrl = b.squareUrl ?: existing.squareUrl,
+                    tileUrl = repoint(b.tileUrl) ?: existing.tileUrl,
+                    squareUrl = repoint(b.squareUrl) ?: existing.squareUrl,
                     communityRating = b.communityRating ?: existing.communityRating,
                     userRating = b.userRating ?: existing.userRating,
                     platformSource = if (b.manualPlatform != null) PlatformSource.MANUAL else existing.platformSource,
@@ -335,19 +428,51 @@ class BackupManager(
     companion object {
         const val FILE_PREFIX = "gamelodge-"
 
-        /** "gamelodge-20261016-143000.json": sorts by time. */
-        fun fileName(now: Date = Date()): String = FILE_PREFIX + SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(now) + ".json"
+        /** Entry names inside the backup ZIP. */
+        private const val MANIFEST = "backup.json"
+        private const val OWN_PREFIX = "own/"
+        private const val CACHE_PREFIX = "art/"
+
+        /** "gamelodge-20261016-143000.zip": sorts by time. */
+        fun fileName(now: Date = Date()): String = FILE_PREFIX + SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(now) + ".zip"
 
         /** Backups of the app's former name ("Moonlight Launcher") count too. */
         private const val OLD_PREFIX = "moonlight-launcher-"
 
-        fun isBackupName(name: String) = (name.startsWith(FILE_PREFIX) || name.startsWith(OLD_PREFIX)) && name.endsWith(".json")
+        /** New backups are ".zip"; older ".json" ones still restore. */
+        fun isBackupName(name: String) =
+            (name.startsWith(FILE_PREFIX) || name.startsWith(OLD_PREFIX)) && (name.endsWith(".zip") || name.endsWith(".json"))
 
         /** When a backup named by [fileName] was made (null: other name). */
-        fun createdAt(name: String): Long? =
-            runCatching { SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).parse(name.removePrefix(FILE_PREFIX).removePrefix(OLD_PREFIX).removeSuffix(".json"))?.time }.getOrNull()
+        fun createdAt(name: String): Long? = runCatching {
+            SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US)
+                .parse(name.removePrefix(FILE_PREFIX).removePrefix(OLD_PREFIX).removeSuffix(".zip").removeSuffix(".json"))?.time
+        }.getOrNull()
     }
 }
+
+/** What a backup contains, for the confirm dialog before restoring. */
+data class BackupSummary(
+    val createdAt: Long,
+    val games: Int,
+    val collections: Int,
+    val filters: Int,
+    val haTiles: Int,
+    val hosts: Int,
+    val profiles: Int,
+    val hasCredentials: Boolean,
+)
+
+fun BackupFile.summary() = BackupSummary(
+    createdAt = createdAt,
+    games = items.size,
+    collections = collections.size,
+    filters = filters.size,
+    haTiles = haTiles.size,
+    hosts = hostConfigs.size,
+    profiles = profiles.size,
+    hasCredentials = secrets != null,
+)
 
 /** Plain values (settings stores) as JSON, for the stream settings in backups. */
 fun Map<String, *>.toJsonMap(): Map<String, JsonElement> = mapNotNull { (k, v) ->

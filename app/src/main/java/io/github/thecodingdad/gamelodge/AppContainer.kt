@@ -124,7 +124,7 @@ class AppContainer(context: Context) : LauncherContainer {
     override val hostPower: HostPower by lazy { HostPower(database.hostConfigDao(), hosts, hostActions, ha) }
     val autoSleep: AutoSleep by lazy { io.github.thecodingdad.gamelodge.stream.WorkManagerAutoSleep(appContext, database.hostConfigDao()) }
     override val backup: BackupManager by lazy {
-        BackupManager(database, settings, secrets, io.github.thecodingdad.gamelodge.data.backup.ArtemisStreamBackup(appContext))
+        BackupManager(database, settings, secrets, io.github.thecodingdad.gamelodge.data.backup.ArtemisStreamBackup(appContext), appContext.filesDir)
     }
     override val backupStorage: io.github.thecodingdad.gamelodge.data.backup.BackupStorage by lazy {
         io.github.thecodingdad.gamelodge.data.backup.SafBackupStorage(appContext)

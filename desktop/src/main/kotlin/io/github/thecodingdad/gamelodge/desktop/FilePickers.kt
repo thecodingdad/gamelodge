@@ -22,7 +22,7 @@ object FilePickers {
     enum class Types(val label: StringResource?, val patterns: List<String>) {
         PROGRAMS(Res.string.file_type_programs, listOf("exe")),
         IMAGES(Res.string.file_type_images, listOf("png", "jpg", "jpeg", "webp", "gif", "bmp")),
-        BACKUPS(Res.string.file_type_backups, listOf("json")),
+        BACKUPS(Res.string.file_type_backups, listOf("zip", "json")),
         ALL(null, emptyList()),
     }
 

@@ -16,15 +16,15 @@ interface BackupStorage {
     /** Short name of [folder] for the settings row. */
     fun folderLabel(folder: String): String
 
-    /** Writes [text] as a new backup into [folder] and keeps only the newest [keep]. */
-    suspend fun writeToFolder(folder: String, text: String, keep: Int)
+    /** Writes [bytes] as a new backup into [folder] and keeps only the newest [keep]. */
+    suspend fun writeToFolder(folder: String, bytes: ByteArray, keep: Int)
 
     /** Backups in [folder], newest first. */
     suspend fun list(folder: String): List<BackupEntry>
 
-    suspend fun write(address: String, text: String)
+    suspend fun write(address: String, bytes: ByteArray)
 
-    suspend fun read(address: String): String
+    suspend fun read(address: String): ByteArray
 
     /** Daily automatic backups on/off (the folder and count come from the settings). */
     fun scheduleAuto(enabled: Boolean)

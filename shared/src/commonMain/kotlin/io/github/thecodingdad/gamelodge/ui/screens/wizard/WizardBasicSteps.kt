@@ -155,7 +155,7 @@ internal fun ColumnScope.BackupStep(settings: LauncherSettings) {
         checking = true
         error = null
         scope.launch {
-            val ok = runCatching { container.backup.decode(storage.read(address)) }.isSuccess
+            val ok = runCatching { container.backup.readManifest(storage.read(address)) }.isSuccess
             checking = false
             if (ok) nav.chooseBackup(address) else error = unreadable
         }
@@ -220,15 +220,16 @@ internal fun ColumnScope.RestoreStep(settings: LauncherSettings) {
         busy = true
         message = null
         scope.launch {
-            val file = runCatching { container.backup.decode(container.backupStorage.read(settings.setupRestore)) }.getOrNull()
-            if (file == null) {
+            val bytes = runCatching { container.backupStorage.read(settings.setupRestore) }.getOrNull()
+            val manifest = bytes?.let { runCatching { container.backup.readManifest(it) }.getOrNull() }
+            if (bytes == null || manifest == null) {
                 busy = false
                 state = false
                 message = unreadable
                 return@launch
             }
             suspend fun run(pw: String?) {
-                val result = runCatching { container.backup.restore(file, pw) }
+                val result = runCatching { container.backup.import(bytes, pw) }
                 busy = false
                 state = result.isSuccess || result.exceptionOrNull() is WrongPasswordException
                 message = when (val e = result.exceptionOrNull()) {
@@ -237,7 +238,7 @@ internal fun ColumnScope.RestoreStep(settings: LauncherSettings) {
                     else -> e.message
                 }
             }
-            if (file.secrets != null) keyboard.open(pwTitle, "", TextKind.PASSWORD) { pw -> scope.launch { run(pw) } }
+            if (manifest.secrets != null) keyboard.open(pwTitle, "", TextKind.PASSWORD) { pw -> scope.launch { run(pw) } }
             else run(null)
         }
     }

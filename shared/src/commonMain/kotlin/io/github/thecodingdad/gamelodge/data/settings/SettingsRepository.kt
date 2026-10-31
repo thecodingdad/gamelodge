@@ -153,6 +153,10 @@ data class LauncherSettings(
     val backupFolderUri: String = "",
     val autoBackup: Boolean = false,
     val backupKeepCount: Int = 7,
+    /** Include the downloaded artwork cache (covers, hero, logo) in backups; own images are always included. */
+    val backupArtwork: Boolean = false,
+    /** Also include the (large) animated artwork; only together with [backupArtwork]. */
+    val backupAnimatedArtwork: Boolean = false,
     // Onboarding
     val onboardingDone: Boolean = false,
     /**
@@ -318,6 +322,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val backupFolderUri = stringPreferencesKey("backup_folder_uri")
         val autoBackup = booleanPreferencesKey("auto_backup")
         val backupKeepCount = intPreferencesKey("backup_keep_count")
+        val backupArtwork = booleanPreferencesKey("backup_artwork")
+        val backupAnimatedArtwork = booleanPreferencesKey("backup_animated_artwork")
         val onboardingDone = booleanPreferencesKey("onboarding_done")
         val setupDone = booleanPreferencesKey("setup_done")
         val setupStep = stringPreferencesKey("setup_step")
@@ -446,6 +452,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             backupFolderUri = this[K.backupFolderUri] ?: d.backupFolderUri,
             autoBackup = this[K.autoBackup] ?: d.autoBackup,
             backupKeepCount = this[K.backupKeepCount] ?: d.backupKeepCount,
+            backupArtwork = this[K.backupArtwork] ?: d.backupArtwork,
+            backupAnimatedArtwork = this[K.backupAnimatedArtwork] ?: d.backupAnimatedArtwork,
             onboardingDone = this[K.onboardingDone] ?: d.onboardingDone,
             // Not stored yet: an install with settings predates the wizard (done), an empty one is new.
             setupDone = this[K.setupDone] ?: asMap().isNotEmpty(),
@@ -563,6 +571,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         this[K.backupFolderUri] = s.backupFolderUri
         this[K.autoBackup] = s.autoBackup
         this[K.backupKeepCount] = s.backupKeepCount
+        this[K.backupArtwork] = s.backupArtwork
+        this[K.backupAnimatedArtwork] = s.backupAnimatedArtwork
         this[K.onboardingDone] = s.onboardingDone
         this[K.setupDone] = s.setupDone
         this[K.setupStep] = s.setupStep

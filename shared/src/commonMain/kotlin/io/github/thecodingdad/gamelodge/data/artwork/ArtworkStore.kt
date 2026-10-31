@@ -58,6 +58,19 @@ object ArtworkFiles {
     internal fun has(name: String) = name in have
     internal fun names(): Set<String> = have.toSet()
 
+    /** Where downloaded images are kept (for a backup to extract into). */
+    fun cacheDir(): File = dir
+
+    /** The stored file for a downloaded [url], or null when it isn't a cached http image. */
+    fun cachedFileForUrl(url: String): File? {
+        if (!::dir.isInitialized || !url.startsWith("http")) return null
+        val name = nameOf(url)
+        return if (name in have) fileOf(name) else null
+    }
+
+    /** A file extracted into [cacheDir] by a restore shows from then on. */
+    fun registerCached(name: String) = added(name)
+
     internal fun added(name: String) {
         have += name
         version.intValue++

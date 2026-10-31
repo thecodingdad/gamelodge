@@ -22,6 +22,8 @@ import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.Animation
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Restore
 import androidx.compose.material.icons.filled.Save
@@ -55,7 +57,11 @@ import io.github.thecodingdad.gamelodge.data.storage.StorageKind
 import io.github.thecodingdad.gamelodge.resources.*
 import io.github.thecodingdad.gamelodge.ui.LauncherViewModel
 import io.github.thecodingdad.gamelodge.ui.PlatformUi
+import io.github.thecodingdad.gamelodge.data.backup.summary
 import io.github.thecodingdad.gamelodge.ui.components.ButtonRow
+import io.github.thecodingdad.gamelodge.ui.components.LauncherTextField
+import io.github.thecodingdad.gamelodge.ui.components.controllerScroll
+import io.github.thecodingdad.gamelodge.ui.components.popupHeightIn
 import io.github.thecodingdad.gamelodge.ui.components.HoldToConfirmButton
 import io.github.thecodingdad.gamelodge.ui.components.LauncherButton
 import io.github.thecodingdad.gamelodge.ui.components.LocalKeyboardController
@@ -240,7 +246,10 @@ private fun BackupSection(settings: LauncherSettings, update: ((LauncherSettings
     val scope = rememberCoroutineScope()
     val keyboard = LocalKeyboardController.current
     var message by remember { mutableStateOf<String?>(null) }
-    var password by remember { mutableStateOf<String?>(null) }
+    // The backup dialog ("what goes in") and, for a chosen file, its loaded bytes + preview.
+    var showBackup by remember { mutableStateOf(false) }
+    var exportPassword by remember { mutableStateOf<String?>(null) }
+    var pending by remember { mutableStateOf<Pair<ByteArray, io.github.thecodingdad.gamelodge.data.backup.BackupFile>?>(null) }
     var choosing by remember { mutableStateOf<List<BackupEntry>?>(null) }
     val okMsg = stringResource(Res.string.backup_done)
     val restoredMsg = stringResource(Res.string.backup_restored)
@@ -250,36 +259,39 @@ private fun BackupSection(settings: LauncherSettings, update: ((LauncherSettings
 
     val pickFolder = storage.rememberFolderPicker { picked -> update { it.copy(backupFolderUri = picked) } }
     val createFile = storage.rememberCreateFile { target ->
-        scope.launch { message = runCatching { storage.write(target, backup.encode(backup.create(password))) }.fold({ okMsg }, { it.message }) }
+        scope.launch { message = runCatching { storage.write(target, backup.export(exportPassword)) }.fold({ okMsg }, { it.message }) }
     }
-    fun doRestore(file: BackupFile, pw: String?) {
+    // After the dialog: write to the folder, or pick a file (which then uses [exportPassword]).
+    fun runBackup(pw: String?) {
+        exportPassword = pw
+        if (folder.isNotEmpty()) {
+            scope.launch {
+                message = runCatching { storage.writeToFolder(folder, backup.export(pw), settings.backupKeepCount) }.fold({ okMsg }, { it.message })
+            }
+        } else {
+            createFile(BackupManager.fileName())
+        }
+    }
+    fun doRestore(bytes: ByteArray, pw: String?) {
+        pending = null
         scope.launch {
-            message = runCatching { backup.restore(file, pw) }.fold(
+            message = runCatching { backup.import(bytes, pw) }.fold(
                 { restoredMsg },
                 { if (it is WrongPasswordException) wrongPwMsg else it.message },
             )
             storage.scheduleAuto(container.settings.current().autoBackup)
         }
     }
+    // Loads the file and shows what it contains; the restore itself waits for the confirm dialog.
     fun restoreFrom(address: String) {
         choosing = null
         scope.launch {
-            val file = runCatching { backup.decode(storage.read(address)) }.getOrElse { message = it.message; return@launch }
-            if (file.secrets != null) keyboard.open(pwTitle, "", TextKind.PASSWORD) { pw -> doRestore(file, pw) }
-            else doRestore(file, null)
+            val bytes = runCatching { storage.read(address) }.getOrElse { message = it.message; return@launch }
+            val manifest = runCatching { backup.readManifest(bytes) }.getOrElse { message = it.message; return@launch }
+            pending = bytes to manifest
         }
     }
     val openFile = storage.rememberOpenFile(::restoreFrom)
-    fun backupNow() {
-        if (folder.isNotEmpty()) {
-            scope.launch {
-                message = runCatching { storage.writeToFolder(folder, backup.encode(backup.create(password)), settings.backupKeepCount) }
-                    .fold({ okMsg }, { it.message })
-            }
-        } else {
-            createFile(BackupManager.fileName())
-        }
-    }
     fun restore() {
         if (folder.isEmpty()) { openFile(); return }
         scope.launch { choosing = runCatching { storage.list(folder) }.getOrDefault(emptyList()) }
@@ -305,14 +317,14 @@ private fun BackupSection(settings: LauncherSettings, update: ((LauncherSettings
             label = { "$it" }, onSelect = { v -> update { it.copy(backupKeepCount = v) } },
         )
     }
-    SwitchRow(
-        stringResource(Res.string.backup_with_credentials), password != null,
-        { on -> if (on) keyboard.open(pwTitle, "", TextKind.PASSWORD) { pw -> password = pw.ifEmpty { null } } else password = null },
-        subtitle = stringResource(Res.string.backup_with_credentials_sub), icon = Icons.Filled.Key,
-    )
-    ActionRow(stringResource(Res.string.backup_now), ::backupNow, folder.takeIf { it.isNotEmpty() }?.let(storage::folderLabel), Icons.Filled.Save)
+    ActionRow(stringResource(Res.string.backup_now), { showBackup = true }, folder.takeIf { it.isNotEmpty() }?.let(storage::folderLabel), Icons.Filled.Save)
     ActionRow(stringResource(Res.string.backup_restore), ::restore, stringResource(Res.string.backup_restore_hint), Icons.Filled.Restore)
     message?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurface) }
+
+    if (showBackup) BackupNowDialog(settings, update, onDismiss = { showBackup = false }, onConfirm = { pw -> showBackup = false; runBackup(pw) })
+    pending?.let { (bytes, manifest) ->
+        RestoreConfirmDialog(manifest, onDismiss = { pending = null }, onConfirm = { pw -> doRestore(bytes, pw) })
+    }
 
     // Backups of the folder, newest first; restoring needs holding A (it overwrites settings).
     val list = choosing
@@ -322,10 +334,11 @@ private fun BackupSection(settings: LauncherSettings, update: ((LauncherSettings
         } else {
             val format = remember { DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT) }
             list.take(MAX_LISTED).forEach { entry ->
-                HoldToConfirmButton(
+                // Tap only shows what the backup contains; the restore is confirmed afterwards.
+                LauncherButton(
                     entry.createdAt?.let { format.format(Date(it)) } ?: entry.name,
                     icon = Icons.Filled.Description, modifier = Modifier.fillMaxWidth(),
-                    onConfirmed = { restoreFrom(entry.address) },
+                    onClick = { restoreFrom(entry.address) },
                 )
                 Spacer(Modifier.height(8.dp))
             }
@@ -339,3 +352,88 @@ private fun BackupSection(settings: LauncherSettings, update: ((LauncherSettings
 }
 
 private const val MAX_LISTED = 10
+
+/** "Back up now": choose what goes in; credentials ask for the password twice right here. */
+@Composable
+private fun BackupNowDialog(
+    settings: LauncherSettings,
+    update: ((LauncherSettings) -> LauncherSettings) -> Unit,
+    onDismiss: () -> Unit,
+    onConfirm: (password: String?) -> Unit,
+) {
+    var credentials by remember { mutableStateOf(false) }
+    var pw by remember { mutableStateOf("") }
+    var pw2 by remember { mutableStateOf("") }
+    val match = pw.isNotEmpty() && pw == pw2
+    io.github.thecodingdad.gamelodge.ui.components.Modal(
+        visible = true, onDismiss = onDismiss, title = stringResource(Res.string.backup_now), maxWidth = 620.dp, closeButton = false,
+    ) {
+        Column(Modifier.weight(1f, fill = false).popupHeightIn(560.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(stringResource(Res.string.backup_includes_intro), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+            SwitchRow(
+                stringResource(Res.string.backup_cover_cache), settings.backupArtwork,
+                { on -> update { it.copy(backupArtwork = on, backupAnimatedArtwork = on && it.backupAnimatedArtwork) } },
+                subtitle = stringResource(Res.string.backup_cover_cache_sub), icon = Icons.Filled.Image, initialFocus = true,
+            )
+            if (settings.backupArtwork) {
+                SwitchRow(
+                    stringResource(Res.string.backup_animated_art), settings.backupAnimatedArtwork,
+                    { on -> update { it.copy(backupAnimatedArtwork = on) } },
+                    subtitle = stringResource(Res.string.backup_animated_art_sub), icon = Icons.Filled.Animation,
+                )
+            }
+            SwitchRow(
+                stringResource(Res.string.backup_with_credentials), credentials,
+                { on -> credentials = on; if (!on) { pw = ""; pw2 = "" } },
+                subtitle = stringResource(Res.string.backup_with_credentials_sub), icon = Icons.Filled.Key,
+            )
+            if (credentials) {
+                LauncherTextField(stringResource(Res.string.backup_password), pw, { pw = it }, kind = TextKind.PASSWORD)
+                LauncherTextField(stringResource(Res.string.backup_password_repeat), pw2, { pw2 = it }, kind = TextKind.PASSWORD)
+                if (pw2.isNotEmpty() && !match) {
+                    Text(stringResource(Res.string.backup_password_mismatch), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.danger)
+                }
+            }
+        }
+        ButtonRow {
+            LauncherButton(
+                stringResource(Res.string.backup_now), primary = true, icon = Icons.Filled.Save,
+                enabled = !credentials || match, onClick = { onConfirm(if (credentials) pw else null) },
+            )
+            LauncherButton(stringResource(Res.string.action_cancel), onClick = onDismiss)
+        }
+    }
+}
+
+/** After a backup file is loaded: shows what it holds; restore is confirmed (or cancelled) here. */
+@Composable
+private fun RestoreConfirmDialog(
+    manifest: io.github.thecodingdad.gamelodge.data.backup.BackupFile,
+    onDismiss: () -> Unit,
+    onConfirm: (password: String?) -> Unit,
+) {
+    val s = remember(manifest) { manifest.summary() }
+    var pw by remember { mutableStateOf("") }
+    val format = remember { DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT) }
+    io.github.thecodingdad.gamelodge.ui.components.Modal(
+        visible = true, onDismiss = onDismiss, title = stringResource(Res.string.backup_restore), maxWidth = 620.dp, closeButton = false,
+    ) {
+        Column(Modifier.weight(1f, fill = false).popupHeightIn(560.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(stringResource(Res.string.backup_restore_contains), style = MaterialTheme.typography.titleSmall, color = LauncherTheme.colors.onSurface)
+            Text(format.format(Date(s.createdAt)), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+            Text(stringResource(Res.string.backup_summary_library, s.games, s.collections, s.filters), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurface)
+            Text(stringResource(Res.string.backup_summary_more, s.hosts, s.profiles, s.haTiles), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurface)
+            if (s.hasCredentials) {
+                Text(stringResource(Res.string.backup_has_credentials), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+                LauncherTextField(stringResource(Res.string.backup_password), pw, { pw = it }, kind = TextKind.PASSWORD)
+            }
+        }
+        ButtonRow {
+            LauncherButton(
+                stringResource(Res.string.backup_restore), primary = true, icon = Icons.Filled.Restore,
+                enabled = !s.hasCredentials || pw.isNotEmpty(), onClick = { onConfirm(if (s.hasCredentials) pw else null) },
+            )
+            LauncherButton(stringResource(Res.string.action_cancel), onClick = onDismiss)
+        }
+    }
+}

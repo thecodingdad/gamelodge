@@ -53,10 +53,10 @@ class ArtemisStreamBackup(private val context: Context) : StreamSettingsBackup {
 class SafBackupStorage(private val context: Context) : BackupStorage {
     override fun folderLabel(folder: String): String = Uri.decode(folder).substringAfterLast(':')
 
-    override suspend fun writeToFolder(folder: String, text: String, keep: Int) = withContext(Dispatchers.IO) {
+    override suspend fun writeToFolder(folder: String, bytes: ByteArray, keep: Int) = withContext(Dispatchers.IO) {
         val dir = DocumentFile.fromTreeUri(context, Uri.parse(folder)) ?: error("Backup folder not accessible")
-        val file = dir.createFile("application/json", BackupManager.fileName()) ?: error("Cannot create backup file")
-        context.contentResolver.openOutputStream(file.uri)?.use { it.write(text.toByteArray()) }
+        val file = dir.createFile("application/zip", BackupManager.fileName()) ?: error("Cannot create backup file")
+        context.contentResolver.openOutputStream(file.uri)?.use { it.write(bytes) }
         dir.listFiles()
             .filter { it.name?.let(BackupManager::isBackupName) == true }
             .sortedByDescending { it.name }
@@ -71,12 +71,12 @@ class SafBackupStorage(private val context: Context) : BackupStorage {
             .sortedByDescending { it.name }
     }
 
-    override suspend fun write(address: String, text: String) = withContext(Dispatchers.IO) {
-        context.contentResolver.openOutputStream(Uri.parse(address), "wt")?.use { it.write(text.toByteArray()) } ?: error("Cannot write file")
+    override suspend fun write(address: String, bytes: ByteArray) = withContext(Dispatchers.IO) {
+        context.contentResolver.openOutputStream(Uri.parse(address), "wt")?.use { it.write(bytes) } ?: error("Cannot write file")
     }
 
-    override suspend fun read(address: String): String = withContext(Dispatchers.IO) {
-        context.contentResolver.openInputStream(Uri.parse(address))?.bufferedReader()?.use { it.readText() } ?: error("Cannot read file")
+    override suspend fun read(address: String): ByteArray = withContext(Dispatchers.IO) {
+        context.contentResolver.openInputStream(Uri.parse(address))?.use { it.readBytes() } ?: error("Cannot read file")
     }
 
     override fun scheduleAuto(enabled: Boolean) = BackupWorker.schedule(context, enabled)
@@ -93,7 +93,7 @@ class SafBackupStorage(private val context: Context) : BackupStorage {
 
     @Composable
     override fun rememberCreateFile(onPicked: (String) -> Unit): (String) -> Unit {
-        val launcher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri: Uri? ->
+        val launcher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri: Uri? ->
             uri?.let { onPicked(it.toString()) }
         }
         return { name -> launcher.launch(name) }
