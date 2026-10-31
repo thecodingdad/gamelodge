@@ -177,7 +177,7 @@ interface PlatformUi {
     @Composable
     fun WizardStepContent(step: io.github.thecodingdad.gamelodge.ui.screens.wizard.WizardStep)
 
-    /** Switches the UI language ("system", "en", "de"). */
+    /** Switches the UI language (see LanguageTags: "system", "en", "de", "es", "fr", "it", "pt-BR"). */
     fun applyLanguage(tag: String)
 
     companion object {

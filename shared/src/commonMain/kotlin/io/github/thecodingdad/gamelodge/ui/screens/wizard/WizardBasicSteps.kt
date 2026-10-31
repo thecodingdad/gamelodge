@@ -103,14 +103,9 @@ private val LocalNav @Composable get() = LocalWizardNav.current!!
 internal fun ColumnScope.WelcomeStep(settings: LauncherSettings) {
     val nav = LocalNav
     ChoiceRow(
-        stringResource(Res.string.settings_language), listOf("system", "en", "de"), settings.language,
-        label = {
-            when (it) {
-                "en" -> "English"
-                "de" -> "Deutsch"
-                else -> stringResource(Res.string.language_system)
-            }
-        },
+        stringResource(Res.string.settings_language),
+        io.github.thecodingdad.gamelodge.ui.screens.settings.LanguageTags, settings.language,
+        label = { io.github.thecodingdad.gamelodge.ui.screens.settings.languageLabel(it) },
         onSelect = { v ->
             nav.update { it.copy(language = v) }
             PlatformUi.current.applyLanguage(v)

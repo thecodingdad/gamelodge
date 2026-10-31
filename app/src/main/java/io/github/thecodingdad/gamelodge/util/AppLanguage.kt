@@ -7,7 +7,7 @@ import android.os.LocaleList
 import java.util.Locale
 
 /**
- * The launcher's own language ("system", "en", "de"). Android 13+ keeps it per app (also shown in
+ * The launcher's own language ("system" or a tag like "en", "de", "es", "fr", "it", "pt-BR"). Android 13+ keeps it per app (also shown in
  * the system's app language setting); older versions get it applied to each activity's context.
  * (AppCompat's setApplicationLocales does nothing here: the activities are no AppCompat ones.)
  */

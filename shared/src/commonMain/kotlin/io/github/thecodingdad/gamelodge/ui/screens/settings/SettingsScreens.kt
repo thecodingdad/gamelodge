@@ -678,22 +678,27 @@ fun DisplaySettings(
 }
 
 
+/** The languages offered in the launcher; "system" follows the device. Used by the settings and the wizard. */
+val LanguageTags = listOf("system", "en", "de", "es", "fr", "it", "pt-BR")
+
+/** Display name of a language tag ("system" localised, the rest in their own language). */
+@Composable
+fun languageLabel(tag: String): String = when (tag) {
+    "en" -> "English"
+    "de" -> "Deutsch"
+    "es" -> "Español"
+    "fr" -> "Français"
+    "it" -> "Italiano"
+    "pt-BR" -> "Português (Brasil)"
+    else -> stringResource(Res.string.language_system)
+}
+
 @Composable
 fun LanguageSettings(settings: LauncherSettings, update: ((LauncherSettings) -> LauncherSettings) -> Unit) {
     SettingsPage(stringResource(Res.string.settings_language)) {
         ChoiceRow(
-            stringResource(Res.string.settings_language), listOf("system", "en", "de", "es", "fr", "it", "pt-BR"), settings.language,
-            label = {
-                when (it) {
-                    "en" -> "English"
-                    "de" -> "Deutsch"
-                    "es" -> "Español"
-                    "fr" -> "Français"
-                    "it" -> "Italiano"
-                    "pt-BR" -> "Português (Brasil)"
-                    else -> stringResource(Res.string.language_system)
-                }
-            },
+            stringResource(Res.string.settings_language), LanguageTags, settings.language,
+            label = { languageLabel(it) },
             onSelect = { v ->
                 update { it.copy(language = v) }
                 io.github.thecodingdad.gamelodge.ui.PlatformUi.current.applyLanguage(v)
