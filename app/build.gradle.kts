@@ -53,6 +53,9 @@ android {
     packaging {
         resources {
             pickFirsts += "META-INF/versions/9/OSGI-INF/MANIFEST.MF"
+            // BouncyCastle 1.86 ships LICENSE.md/NOTICE.md in every jar.
+            excludes += "META-INF/LICENSE.md"
+            excludes += "META-INF/NOTICE.md"
         }
     }
 }
