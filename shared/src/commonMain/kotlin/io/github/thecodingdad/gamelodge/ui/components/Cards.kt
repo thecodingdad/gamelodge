@@ -62,7 +62,10 @@ fun Modifier.restoreFocusIf(shouldFocus: Boolean, trigger: Any? = null): Modifie
     val controllerMode = isControllerMode()
     LaunchedEffect(controllerMode, trigger) {
         // The element the user just touched wins over the remembered one.
-        if (controllerMode && target && !TouchFocus.justRestored()) runCatching { requester.requestFocus() }
+        if (controllerMode && target && !TouchFocus.justRestored()) {
+            FocusSound.silence()
+            runCatching { requester.requestFocus() }
+        }
     }
     return this.focusRequester(requester)
 }

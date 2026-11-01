@@ -102,6 +102,7 @@ fun FilterBar(
         // The chip must be composed before it can take focus.
         if (listState.layoutInfo.visibleItemsInfo.none { it.index == index }) listState.scrollToItem((index - 1).coerceAtLeast(0))
         kotlinx.coroutines.yield()
+        io.github.thecodingdad.gamelodge.ui.components.FocusSound.silence()
         runCatching { selectedRequester.requestFocus() }
     }
     Row(

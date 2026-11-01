@@ -234,7 +234,7 @@ private fun rememberSearchHighlight(title: String?, focus: Boolean = true): High
         // Let the page come in and place its initial focus first.
         kotlinx.coroutines.delay(if (request.flash) HIGHLIGHT_DELAY_MS else RETURN_DELAY_MS)
         requester.bringIntoView()
-        if (focus) runCatching { focusRequester.requestFocus() }
+        if (focus) { io.github.thecodingdad.gamelodge.ui.components.FocusSound.silence(); runCatching { focusRequester.requestFocus() } }
         if (!request.flash) return@LaunchedEffect
         repeat(2) {
             anim.animateTo(1f, androidx.compose.animation.core.tween(220))

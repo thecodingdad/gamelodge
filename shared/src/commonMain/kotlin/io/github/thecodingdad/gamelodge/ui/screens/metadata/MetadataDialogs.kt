@@ -261,6 +261,7 @@ fun ArtworkPickerDialog(
             val loaded = options
             kotlinx.coroutines.delay(30)
             val toGrid = fromGrid && !loaded.isNullOrEmpty()
+            io.github.thecodingdad.gamelodge.ui.components.FocusSound.silence()
             runCatching { if (toGrid) firstChoice.requestFocus() else tabFocus[kindIndex.coerceIn(tabFocus.indices)].requestFocus() }
             // While the list loads the tab holds the focus; it moves on into the list once there.
             if (loaded != null || !fromGrid) refocus = false

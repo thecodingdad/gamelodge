@@ -367,7 +367,10 @@ private fun Modifier.focusWhenActive(active: Boolean): Modifier {
     val requester = remember { androidx.compose.ui.focus.FocusRequester() }
     val controllerMode = io.github.thecodingdad.gamelodge.ui.components.isControllerMode()
     androidx.compose.runtime.LaunchedEffect(active, controllerMode) {
-        if (active && controllerMode) runCatching { requester.requestFocus() }
+        if (active && controllerMode) {
+            io.github.thecodingdad.gamelodge.ui.components.FocusSound.silence()
+            runCatching { requester.requestFocus() }
+        }
     }
     return this.then(Modifier.focusRequester(requester))
 }

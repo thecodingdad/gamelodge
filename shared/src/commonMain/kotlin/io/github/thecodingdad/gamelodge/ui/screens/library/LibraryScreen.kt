@@ -109,6 +109,10 @@ fun LibraryScreen(
     // Read only where it is shown (hints, accent): a focus move must not recompose the grid.
     val focused = remember { mutableStateOf<LibraryEntry?>(null) }
     val gridFocused = remember { mutableStateOf(true) }
+    // On tab enter the grid is briefly unfocused before a card claims focus; ignoring that first
+    // unfocused state keeps the hints in the grid state (A = open, quit hint) instead of flipping
+    // to the chip state (A = select) and reflowing the bar. Honoured once the grid was focused.
+    var gridEverFocused by remember { mutableStateOf(false) }
 
     val selected = filters.firstOrNull { it.key == selectedKey }
         ?: filters.firstOrNull { it.builtin == BuiltinFilter.ALL } ?: filters.firstOrNull()
@@ -129,6 +133,17 @@ fun LibraryScreen(
         ),
     ) { androidx.compose.runtime.mutableStateMapOf<String, String>() }
     val filterKey = selected?.key ?: BuiltinFilter.ALL
+    // Seed the focused entry from the remembered position (the card that will claim focus this
+    // frame), so the hints show the focused state (A label, quit hint) at once. Without it the
+    // bar reflows a frame later when the card below takes focus — the A hint visibly jumps left.
+    remember(Unit) {
+        val lastId0 = lastFocusedKey?.takeIf { it.startsWith("library:") }?.removePrefix("library:")
+        val id = androidx.compose.runtime.snapshots.Snapshot.withoutReadObservation {
+            listOfNotNull(focusByFilter[filterKey], lastId0).firstOrNull { id -> shown.any { it.item.id == id } }
+        } ?: shown.firstOrNull()?.item?.id
+        focused.value = shown.firstOrNull { it.item.id == id }
+        true
+    }
     // Context menu of a card: its "Details" pages through this list like A does.
     fun openContext(entry: LibraryEntry) = actions.context(entry, shown) { id -> focusByFilter[filterKey] = id; onFocusKey("library:$id") }
 
@@ -253,7 +268,9 @@ fun LibraryScreen(
             contentPadding = PaddingValues(horizontal = if (io.github.thecodingdad.gamelodge.ui.components.LocalCompactWidth.current) 16.dp else 36.dp, vertical = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(if (io.github.thecodingdad.gamelodge.ui.components.LocalCompactWidth.current) 12.dp else 18.dp),
             verticalArrangement = Arrangement.spacedBy(22.dp),
-            modifier = Modifier.focusRestorer().onFocusChanged { gridFocused.value = it.hasFocus }.fadingEdges(gridState).mouseDragScroll(gridState),
+            modifier = Modifier.focusRestorer().onFocusChanged {
+                if (it.hasFocus) { gridFocused.value = true; gridEverFocused = true } else if (gridEverFocused) gridFocused.value = false
+            }.fadingEdges(gridState).mouseDragScroll(gridState),
         ) {
             itemsIndexed(shown, key = { _, it -> it.item.id }) { index, entry ->
                 val key = "library:${entry.item.id}"

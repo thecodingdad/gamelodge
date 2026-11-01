@@ -14,8 +14,13 @@ class HintHolder {
 
     private val stack = mutableStateListOf<Entry>()
 
-    /** The hints of the topmost screen that is not on its way out (navigation / tab cross-fade). */
-    val hints: List<ButtonHint> get() = stack.lastOrNull { it.active }?.hints.orEmpty()
+    /**
+     * The hints of the topmost screen that is not on its way out (navigation / tab cross-fade).
+     * During a transition the leaving screen is already inactive while the entering one has not
+     * registered its hints yet; falling back to the last entry then keeps the bar filled instead
+     * of blinking empty for a frame (which would also collapse its height and jolt the layout).
+     */
+    val hints: List<ButtonHint> get() = (stack.lastOrNull { it.active } ?: stack.lastOrNull())?.hints.orEmpty()
 
     internal fun push(owner: Any, hints: List<ButtonHint>, active: Boolean = true) {
         val index = stack.indexOfFirst { it.owner === owner }

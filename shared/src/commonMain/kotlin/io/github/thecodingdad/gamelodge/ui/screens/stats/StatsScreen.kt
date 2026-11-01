@@ -78,7 +78,7 @@ fun StatsScreen(entries: List<LibraryEntry>, sessions: List<PlaySessionEntity>) 
     val scroll = rememberScrollState()
     io.github.thecodingdad.gamelodge.ui.input.RegisterStickScroll(scroll)
     val focus = remember { androidx.compose.ui.focus.FocusRequester() }
-    androidx.compose.runtime.LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
+    androidx.compose.runtime.LaunchedEffect(Unit) { io.github.thecodingdad.gamelodge.ui.components.FocusSound.silence(); runCatching { focus.requestFocus() } }
     Column(
         Modifier.fillMaxSize().focusRequester(focus).dpadScroll(scroll).focusable().mouseDragScroll(scroll).verticalScroll(scroll)
             .padding(horizontal = 48.dp, vertical = 16.dp),

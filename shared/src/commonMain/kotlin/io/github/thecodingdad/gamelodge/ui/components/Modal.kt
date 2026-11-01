@@ -209,6 +209,7 @@ fun Modifier.trapFocus(initialFocus: FocusRequester? = null): Modifier {
         // Let children lay out (and a touched element inside this popup restore) first.
         delay(30)
         if (!first && TouchFocus.justRestored()) return@LaunchedEffect
+        FocusSound.silence()
         runCatching { if (first) (initialFocus ?: requester).requestFocus() else requester.requestFocus() }
         first = false
     }
@@ -220,7 +221,10 @@ fun Modifier.trapFocus(initialFocus: FocusRequester? = null): Modifier {
     LaunchedEffect(lost) {
         if (lost == 0) return@LaunchedEffect
         delay(30)
-        if (!hasFocus && controllerNow && (entry == null || OverlayHost.isTop(entry))) runCatching { requester.requestFocus() }
+        if (!hasFocus && controllerNow && (entry == null || OverlayHost.isTop(entry))) {
+            FocusSound.silence()
+            runCatching { requester.requestFocus() }
+        }
     }
     return this
         .onFocusChanged {

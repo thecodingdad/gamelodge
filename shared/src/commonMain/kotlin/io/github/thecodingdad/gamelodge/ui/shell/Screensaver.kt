@@ -76,7 +76,7 @@ fun Screensaver(games: List<LibraryEntry>, kenBurns: Boolean, onDismiss: () -> U
     val zoom = remember { Animatable(1f) }
     var now by remember { mutableStateOf(System.currentTimeMillis()) }
 
-    LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
+    LaunchedEffect(Unit) { io.github.thecodingdad.gamelodge.ui.components.FocusSound.silence(); runCatching { focus.requestFocus() } }
     LaunchedEffect(withArt, kenBurns, reduceMotion) {
         while (true) {
             zoom.snapTo(1f)

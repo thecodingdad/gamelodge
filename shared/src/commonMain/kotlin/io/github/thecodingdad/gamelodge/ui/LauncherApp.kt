@@ -810,7 +810,14 @@ private fun MainShell(
                 when (current) {
                     MainTab.HOME -> {
                         val rows = remember(games, running) { HomeRows.from(games, running) }
-                        var homeFocused by remember { mutableStateOf<io.github.thecodingdad.gamelodge.data.db.LibraryEntry?>(null) }
+                        // Seed from the remembered (or first) entry so the hints show the focused
+                        // state (A label, quit hint) from the first frame instead of reflowing when
+                        // a card claims focus a frame later (the A hint would visibly jump left).
+                        var homeFocused by remember {
+                            val id = vm.focusKeys[MainTab.HOME.name]?.substringAfterLast(':')
+                            val pool = rows.continuePlaying + rows.favorites + rows.recentlyAdded
+                            mutableStateOf(pool.firstOrNull { it.item.id == id } ?: pool.firstOrNull())
+                        }
                         val callbacks = HomeCallbacks(
                             onResume = { session ->
                                 val entry = session.entry

@@ -68,6 +68,7 @@ object TouchFocus {
         pendingOverlay = null
         val top = OverlayHost.top()
         if (top !== overlay) return
+        FocusSound.silence()
         if (runCatching { requester.requestFocus() }.getOrDefault(false)) restoredAt = System.nanoTime() / 1_000_000
     }
 
@@ -78,6 +79,19 @@ object TouchFocus {
         pending = null
         pendingOverlay = null
     }
+}
+
+/**
+ * The focus sound belongs to the user moving the focus. Placing it from code (opening a screen
+ * or popup, restoring it, recovering a lost one) must stay silent, otherwise opening something
+ * that settles focus across a few elements beeps several times. Every programmatic focus request
+ * opens a short quiet window; the first real D-pad move after it beeps again.
+ */
+object FocusSound {
+    private var quietUntil = 0L
+    private fun now() = System.nanoTime() / 1_000_000
+    fun silence(durationMs: Long = 250) { quietUntil = now() + durationMs }
+    fun silenced() = now() < quietUntil
 }
 
 /** False when the hint bar is turned off or no controller is connected. */
@@ -137,7 +151,7 @@ fun FocusSurface(
 
     LaunchedEffect(focused) {
         if (focused) {
-            if (controllerMode) feedback?.play(UiSound.FOCUS)
+            if (controllerMode && !FocusSound.silenced()) feedback?.play(UiSound.FOCUS)
             currentOnFocused?.invoke()
         }
     }

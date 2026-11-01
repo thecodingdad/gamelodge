@@ -446,6 +446,7 @@ private fun TouchTextDialog(request: KeyboardRequest, controller: KeyboardContro
     }
     androidx.compose.runtime.LaunchedEffect(request) {
         kotlinx.coroutines.delay(100)
+        FocusSound.silence()
         runCatching { focus.requestFocus() }
     }
 }

@@ -121,6 +121,7 @@ fun androidx.compose.ui.Modifier.focusAfterBrowse(id: String): androidx.compose.
     androidx.compose.runtime.LaunchedEffect(actions.returnFocusId) {
         if (actions.returnFocusId != id) return@LaunchedEffect
         kotlinx.coroutines.delay(150)
+        io.github.thecodingdad.gamelodge.ui.components.FocusSound.silence()
         if (runCatching { requester.requestFocus() }.isSuccess) actions.returnFocusId = null
     }
     return this.then(androidx.compose.ui.Modifier.focusRequester(requester))
