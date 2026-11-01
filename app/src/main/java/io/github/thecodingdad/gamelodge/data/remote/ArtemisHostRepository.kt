@@ -136,12 +136,21 @@ class ArtemisHostRepository(
         }.onFailure { Log.w("Host state of ${host.name} not refreshed: ${it.message}") }
     }
 
-    private fun onComputerUpdated(details: ComputerDetails) {
-        val uuid = details.uuid ?: return
+    /**
+     * Artemis drops a host to OFFLINE at once on a brief default-network flap (Wi-Fi roaming
+     * between access points, Android switching the default network) and on a couple of missed
+     * polls, even when the host never actually went away. Hold a non-online state this long before
+     * showing it, so a blip that recovers never appears as offline; a real outage still shows after.
+     */
+    private val offlineGraceMs = 6000L
+    private val offlineDebounce = mutableMapOf<String, kotlinx.coroutines.Job>()
+
+    private fun hostStateFrom(details: ComputerDetails): HostState {
+        val uuid = details.uuid!!
         // Live state while the host answers; otherwise the stored server certificate says it was paired.
         val paired = details.pairState == PairingManager.PairState.PAIRED ||
             (details.state != ComputerDetails.State.ONLINE && details.serverCert != null)
-        val state = HostState(
+        return HostState(
             uuid = uuid,
             name = details.name ?: uuid,
             status = when (details.state) {
@@ -157,11 +166,37 @@ class ArtemisHostRepository(
             serverCommands = details.serverCommands?.toList().orEmpty(),
             permission = details.permission,
         ).withForeignSession(_appLists.value[uuid])
+    }
+
+    private fun onComputerUpdated(details: ComputerDetails) {
+        val uuid = details.uuid ?: return
         this.details[uuid] = details
+        val state = hostStateFrom(details)
+        val wasOnline = _hosts.value[uuid]?.status == HostStatus.ONLINE
+        // A host leaving ONLINE is held back: publish it only if it is still not online once the
+        // grace window passes (checking the live state then), so a recovering flap stays invisible.
+        if (state.status != HostStatus.ONLINE && wasOnline) {
+            synchronized(offlineDebounce) {
+                if (offlineDebounce.containsKey(uuid)) return
+                offlineDebounce[uuid] = scope.launch {
+                    kotlinx.coroutines.delay(offlineGraceMs)
+                    synchronized(offlineDebounce) { offlineDebounce.remove(uuid) }
+                    val live = this@ArtemisHostRepository.details[uuid]
+                    if (live != null && live.state != ComputerDetails.State.ONLINE) publishHost(uuid, hostStateFrom(live), live)
+                }
+            }
+            return
+        }
+        // Back online (or a genuine still-offline update, or first sight): show it now.
+        synchronized(offlineDebounce) { offlineDebounce.remove(uuid)?.cancel() }
+        publishHost(uuid, state, details)
+    }
+
+    private fun publishHost(uuid: String, state: HostState, details: ComputerDetails) {
         val cameOnline = state.status == HostStatus.ONLINE && _hosts.value[uuid]?.status != HostStatus.ONLINE
         _hosts.update { it + (uuid to state) }
 
-        if (state.status == HostStatus.ONLINE && paired) ensureAppListPoller(details)
+        if (state.status == HostStatus.ONLINE && state.paired) ensureAppListPoller(details)
         // App lists are polled every 30 s: a host that just came online sends its list now.
         if (cameOnline) synchronized(appListPollers) { appListPollers[uuid]?.pollNow() }
 
