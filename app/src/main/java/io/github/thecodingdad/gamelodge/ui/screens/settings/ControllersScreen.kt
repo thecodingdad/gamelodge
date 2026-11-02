@@ -96,9 +96,12 @@ fun rememberAndroidControllers(): List<ControllerInfo> {
             revision++
         }
     }
-    // Enumerate the devices only when they actually change (binder calls); re-apply the user's
-    // name/colour/icon cheaply whenever a setting changes, without re-querying every device.
-    val base = remember(revision) { connectedControllers() }
+    // Enumerate the devices off the main thread: querying a controller's battery goes over Bluetooth
+    // and can block for seconds (Joy-Cons), which would hang the UI. Re-run only when devices change;
+    // the user's name/colour/icon are re-applied cheaply below without re-querying every device.
+    val base by androidx.compose.runtime.produceState(emptyList<ControllerInfo>(), revision) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { connectedControllers() }
+    }
     val overrides by context.container.controllerSettings.all.collectAsState()
     return remember(base, overrides) {
         base.map { c ->

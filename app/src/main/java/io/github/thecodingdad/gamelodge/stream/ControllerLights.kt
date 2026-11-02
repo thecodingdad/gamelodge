@@ -23,6 +23,9 @@ import androidx.annotation.RequiresApi
 class ControllerLights(context: Context, private val store: ControllerOverrideStore) {
     private val order = ControllerOrderStore(context)
     private val sessions = HashMap<Int, LightsManager.LightsSession>()
+    // Last state written per device, so we don't re-send the same LEDs: writing to a Joy-Con over
+    // Bluetooth competes with reading its input, so redundant writes cause input lag.
+    private val lastApplied = HashMap<Int, Int>()
 
     private val supported get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
 
@@ -52,6 +55,8 @@ class ControllerLights(context: Context, private val store: ControllerOverrideSt
     private fun apply(dev: InputDevice, pattern: Int, homeOn: Boolean) {
         val lights = lightsByNumber(dev)
         if (lights.isEmpty()) return
+        val key = (pattern and 0xF) or (if (homeOn) 0x10 else 0)
+        if (lastApplied[dev.id] == key) return
         val lm = dev.lightsManager ?: return
         val session = sessions.getOrPut(dev.id) { lm.openSession() }
         val req = LightsRequest.Builder()
@@ -60,7 +65,11 @@ class ControllerLights(context: Context, private val store: ControllerOverrideSt
             req.addLight(light, LightState.Builder().setColor(if (on) -0x1 else 0).build())
         }
         session.requestLights(req.build())
+        lastApplied[dev.id] = key
     }
+
+    /** Forget what was last written (the host/system changed the LEDs), so the next refresh re-applies. */
+    fun invalidate() = lastApplied.clear()
 
     /** The pattern a controller should show: its own choice, else the player number from the order. */
     private fun patternFor(descriptor: String, slots: Map<String, Int>): Int {
@@ -83,11 +92,12 @@ class ControllerLights(context: Context, private val store: ControllerOverrideSt
             present.add(id)
             apply(dev, patternFor(dev.descriptor, slots), store.get(dev.descriptor).homeLed)
         }
-        sessions.keys.filter { it !in present }.toList().forEach { sessions.remove(it)?.close() }
+        sessions.keys.filter { it !in present }.toList().forEach { sessions.remove(it)?.close(); lastApplied.remove(it) }
     }
 
     fun releaseAll() {
         sessions.values.forEach { it.close() }
         sessions.clear()
+        lastApplied.clear()
     }
 }

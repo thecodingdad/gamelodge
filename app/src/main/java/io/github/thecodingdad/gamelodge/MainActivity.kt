@@ -130,8 +130,10 @@ class MainActivity : ComponentActivity() {
         super.onWindowFocusChanged(hasFocus)
         // Returning from a stream or another app can bring the bars back.
         if (hasFocus) applySystemBars() else ButtonCombos.reset()
-        // The system/host owns the player LEDs while a game is focused; take them back when we are.
-        if (hasFocus) refreshLights()
+        // The system/host owns the player LEDs while a game is focused. Forget our last state when we
+        // lose focus; take the LEDs back shortly after regaining it (not during the busy transition,
+        // where writing to a Joy-Con over Bluetooth would fight the input and feel laggy).
+        if (hasFocus) refreshLights(600) else controllerLights.invalidate()
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -172,7 +174,12 @@ class MainActivity : ComponentActivity() {
     /** LightsManager calls block briefly: run them off the main thread, one at a time. */
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     private val lightsDispatcher = kotlinx.coroutines.Dispatchers.Default.limitedParallelism(1)
-    private fun refreshLights() { lifecycleScope.launch(lightsDispatcher) { controllerLights.refresh() } }
+    private fun refreshLights(delayMs: Long = 0) {
+        lifecycleScope.launch(lightsDispatcher) {
+            if (delayMs > 0) kotlinx.coroutines.delay(delayMs)
+            controllerLights.refresh()
+        }
+    }
 
     override fun onDestroy() {
         controllerLights.releaseAll()
@@ -205,8 +212,9 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         returningFromBackground = false
         resumed = true
-        // Back in the launcher the host no longer owns the player LEDs: set them to our patterns again.
-        refreshLights()
+        // Back in the launcher the host no longer owns the player LEDs: set them to our patterns again
+        // (delayed, so the LED writes don't fight the input during the return transition).
+        refreshLights(600)
         container.emulation.rescanIfStale()
         // Also picks up a just granted overlay permission.
         io.github.thecodingdad.gamelodge.system.EdgeHandle.refresh(this)
