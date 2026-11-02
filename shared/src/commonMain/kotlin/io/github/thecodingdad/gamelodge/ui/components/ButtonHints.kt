@@ -94,6 +94,9 @@ fun PadGlyph(button: PadButton, modifier: Modifier = Modifier, second: PadButton
         PadButton.A, PadButton.B, PadButton.X, PadButton.Y,
         PadButton.RS_LEFT, PadButton.RS_RIGHT, PadButton.RS_UP, PadButton.RS_DOWN,
     )
+    // PlayStation face buttons are drawn as shapes so they all fill the glyph evenly (the Unicode
+    // symbols come out tiny next to the cross).
+    val psSymbol = if (layout == ButtonLayout.PLAYSTATION && second == null) psSymbolFor(button) else null
     Box(
         modifier = modifier
             .then(if (isRound) Modifier.size(26.dp) else Modifier.widthIn(min = 34.dp))
@@ -102,7 +105,61 @@ fun PadGlyph(button: PadButton, modifier: Modifier = Modifier, second: PadButton
             .padding(horizontal = if (isRound) 0.dp else 6.dp, vertical = if (isRound) 0.dp else 3.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(label, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        if (psSymbol != null) PsSymbolGlyph(psSymbol, Modifier.size(26.dp))
+        else Text(label, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+    }
+}
+
+private enum class PsSymbol { CROSS, CIRCLE, SQUARE, TRIANGLE }
+
+private fun psSymbolFor(button: PadButton): PsSymbol? = when (button) {
+    PadButton.A -> PsSymbol.CROSS
+    PadButton.B -> PsSymbol.CIRCLE
+    PadButton.X -> PsSymbol.SQUARE
+    PadButton.Y -> PsSymbol.TRIANGLE
+    else -> null
+}
+
+/** A white PlayStation face-button symbol, drawn to a consistent size inside the coloured glyph. */
+@Composable
+private fun PsSymbolGlyph(symbol: PsSymbol, modifier: Modifier) {
+    androidx.compose.foundation.Canvas(modifier) {
+        val w = size.minDimension
+        val c = androidx.compose.ui.geometry.Offset(size.width / 2f, size.height / 2f)
+        val r = w * 0.27f
+        val stroke = androidx.compose.ui.graphics.drawscope.Stroke(
+            width = w * 0.1f,
+            cap = androidx.compose.ui.graphics.StrokeCap.Round,
+            join = androidx.compose.ui.graphics.StrokeJoin.Round,
+        )
+        val white = Color.White
+        when (symbol) {
+            PsSymbol.CIRCLE -> drawCircle(white, radius = r, center = c, style = stroke)
+            PsSymbol.SQUARE -> {
+                val s = r * 1.65f
+                drawRect(
+                    white,
+                    topLeft = androidx.compose.ui.geometry.Offset(c.x - s / 2f, c.y - s / 2f),
+                    size = androidx.compose.ui.geometry.Size(s, s),
+                    style = stroke,
+                )
+            }
+            PsSymbol.TRIANGLE -> {
+                val h = r * 1.9f
+                val path = androidx.compose.ui.graphics.Path().apply {
+                    moveTo(c.x, c.y - h * 0.5f)
+                    lineTo(c.x - h * 0.56f, c.y + h * 0.42f)
+                    lineTo(c.x + h * 0.56f, c.y + h * 0.42f)
+                    close()
+                }
+                drawPath(path, white, style = stroke)
+            }
+            PsSymbol.CROSS -> {
+                val d = r * 0.92f
+                drawLine(white, androidx.compose.ui.geometry.Offset(c.x - d, c.y - d), androidx.compose.ui.geometry.Offset(c.x + d, c.y + d), strokeWidth = w * 0.11f, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+                drawLine(white, androidx.compose.ui.geometry.Offset(c.x + d, c.y - d), androidx.compose.ui.geometry.Offset(c.x - d, c.y + d), strokeWidth = w * 0.11f, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+            }
+        }
     }
 }
 
