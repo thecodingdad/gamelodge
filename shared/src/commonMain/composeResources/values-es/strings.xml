@@ -739,7 +739,7 @@
 
     <!-- Controller overrides -->
     <string name="controller_overrides">Ajustes de este mando</string>
-    <string name="controller_overrides_sub">Se aplica a partir del próximo stream. «Predeterminado» es el valor para este tipo de mando; un juego puede tener los suyos.</string>
+    <string name="controller_overrides_sub">Se aplica a partir del próximo stream; la zona muerta y la vibración desactivada también valen en GameLodge. «Predeterminado» es el valor para este tipo de mando; un juego puede tener los suyos.</string>
     <string name="controller_auto_attach">Conectar al iniciar el stream</string>
     <string name="controller_auto_attach_auto">Automatico</string>
     <string name="controller_auto_attach_off">Nunca</string>

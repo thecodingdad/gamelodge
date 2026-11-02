@@ -739,7 +739,7 @@
 
     <!-- Controller overrides -->
     <string name="controller_overrides">Configurações deste controle</string>
-    <string name="controller_overrides_sub">Vale a partir do próximo stream. “Padrão” é o valor para este tipo de controle; um jogo pode ter os seus.</string>
+    <string name="controller_overrides_sub">Vale a partir do próximo stream; a zona morta e a vibração desligada também valem no GameLodge. “Padrão” é o valor para este tipo de controle; um jogo pode ter os seus.</string>
     <string name="controller_auto_attach">Conectar ao iniciar o stream</string>
     <string name="controller_auto_attach_auto">Automatico</string>
     <string name="controller_auto_attach_off">Nunca</string>

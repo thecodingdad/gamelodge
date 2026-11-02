@@ -739,7 +739,7 @@
 
     <!-- Controller overrides -->
     <string name="controller_overrides">Réglages de cette manette</string>
-    <string name="controller_overrides_sub">S'applique dès le prochain stream. « Par défaut » est la valeur pour ce type de manette ; un jeu peut avoir les siennes.</string>
+    <string name="controller_overrides_sub">S'applique dès le prochain stream ; la zone morte et la vibration désactivée valent aussi dans GameLodge. « Par défaut » est la valeur pour ce type de manette ; un jeu peut avoir les siennes.</string>
     <string name="controller_auto_attach">Connecter au demarrage du stream</string>
     <string name="controller_auto_attach_auto">Automatique</string>
     <string name="controller_auto_attach_off">Jamais</string>

@@ -100,7 +100,8 @@ fun InputDispatcher.dispatchMotion(event: MotionEvent) {
     // Most pads report the right stick as Z/RZ, some as RX/RY.
     val device = event.device
     val useZ = device == null || device.getMotionRange(MotionEvent.AXIS_Z, event.source) != null
-    val x = event.getAxisValue(if (useZ) MotionEvent.AXIS_Z else MotionEvent.AXIS_RX)
-    val y = event.getAxisValue(if (useZ) MotionEvent.AXIS_RZ else MotionEvent.AXIS_RY)
+    // The controller's own dead zone applies here too (it only matters above the launcher's own).
+    val x = io.github.thecodingdad.gamelodge.input.PadPreferences.deadzone(device, event.getAxisValue(if (useZ) MotionEvent.AXIS_Z else MotionEvent.AXIS_RX))
+    val y = io.github.thecodingdad.gamelodge.input.PadPreferences.deadzone(device, event.getAxisValue(if (useZ) MotionEvent.AXIS_RZ else MotionEvent.AXIS_RY))
     dispatchAxes(left, right, x, y, event.eventTime)
 }

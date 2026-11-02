@@ -43,6 +43,8 @@ class AndroidFeedbackOutput(context: Context) : FeedbackOutput {
 
     override fun haptic(sound: UiSound, strength: HapticStrength) {
         val v = vibrator ?: return
+        // A controller with its vibration off keeps GameLodge quiet too while it is in use.
+        if (io.github.thecodingdad.gamelodge.input.StarterPad.lastPad in io.github.thecodingdad.gamelodge.input.PadPreferences.vibrationOff) return
         // Durations per event; strength scales amplitude where the motor supports it.
         val millis = when (sound) {
             UiSound.FOCUS -> 8L

@@ -182,12 +182,16 @@ object PointerMode {
             Choreographer.getInstance().postFrameCallback(this)
         }
 
-        private fun deadzone(v: Float) = if (abs(v) < DEADZONE) 0f else v
+        private var device: InputDevice? = null
+
+        /** The controller's own dead zone, at least the pointer's. */
+        private fun deadzone(v: Float) = io.github.thecodingdad.gamelodge.input.PadPreferences.deadzone(device, v, DEADZONE)
 
         override fun onGenericMotionEvent(event: MotionEvent): Boolean {
             if (event.source and InputDevice.SOURCE_JOYSTICK != InputDevice.SOURCE_JOYSTICK || event.action != MotionEvent.ACTION_MOVE) {
                 return super.onGenericMotionEvent(event)
             }
+            device = event.device
             moveX = deadzone(event.getAxisValue(MotionEvent.AXIS_X))
             moveY = deadzone(event.getAxisValue(MotionEvent.AXIS_Y))
             scrollX = deadzone(event.getAxisValue(MotionEvent.AXIS_Z))

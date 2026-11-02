@@ -737,7 +737,7 @@
 
     <!-- Controller overrides -->
     <string name="controller_overrides">Einstellungen für diesen Controller</string>
-    <string name="controller_overrides_sub">Gilt ab dem nächsten Stream. „Standard“ ist der Wert für diesen Controller-Typ; ein Spiel kann eigene Werte haben.</string>
+    <string name="controller_overrides_sub">Gilt ab dem nächsten Stream; Deadzone und Vibration „Aus“ gelten auch in GameLodge. „Standard“ ist der Wert für diesen Controller-Typ; ein Spiel kann eigene Werte haben.</string>
     <string name="controller_auto_attach">Bei Stream-Start verbinden</string>
     <string name="controller_auto_attach_auto">Automatisch</string>
     <string name="controller_auto_attach_off">Nie</string>

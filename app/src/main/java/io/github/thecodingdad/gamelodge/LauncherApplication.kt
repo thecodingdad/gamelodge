@@ -73,6 +73,11 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
                 }.filterValues { it.isNotEmpty() }
                 io.github.thecodingdad.gamelodge.input.ButtonCombos.forwardOverrides =
                     all.mapNotNull { (descriptor, s) -> s.comboForward?.let { descriptor to it } }.toMap()
+                // Dead zone and vibration off also apply in GameLodge itself.
+                io.github.thecodingdad.gamelodge.input.PadPreferences.deadzones =
+                    all.mapNotNull { (descriptor, s) -> s.deadzonePercent?.let { descriptor to it / 100f } }.toMap()
+                io.github.thecodingdad.gamelodge.input.PadPreferences.vibrationOff =
+                    all.filterValues { it.vibration == io.github.thecodingdad.gamelodge.ui.screens.settings.VibrationMode.OFF }.keys
             }
         }
         // Controllers without their own combinations use the built-in ones.

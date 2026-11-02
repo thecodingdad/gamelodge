@@ -11,6 +11,9 @@ import android.view.KeyEvent
 object StarterPad {
     @Volatile private var last: String? = null
 
+    /** Descriptor of the controller used last in the launcher (null: touch or mouse since). */
+    val lastPad: String? get() = last
+
     /** Descriptor of the controller that started the current stream (null: none, or the setting is off). */
     @Volatile var starter: String? = null
         private set

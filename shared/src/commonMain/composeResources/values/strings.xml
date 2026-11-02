@@ -739,7 +739,7 @@
 
     <!-- Controller overrides -->
     <string name="controller_overrides">Settings for this controller</string>
-    <string name="controller_overrides_sub">Applied from the next stream on. “Standard” is the value for this kind of controller; a game can still have its own.</string>
+    <string name="controller_overrides_sub">Applied from the next stream on; the dead zone and vibration off also apply in GameLodge. “Default” is the value for this kind of controller; a game can still have its own.</string>
     <string name="controller_auto_attach">Connect at stream start</string>
     <string name="controller_auto_attach_auto">Automatic</string>
     <string name="controller_auto_attach_off">Never</string>
