@@ -206,9 +206,13 @@ fun FocusSurface(
                     }
                 },
                 onClick = {
-                    feedback?.play(clickSound)
-                    touched()
-                    onClick()
+                    // A hold-to-confirm just fired and the focus jumped here: the held A's release
+                    // would land as a click on this element. Swallow that one.
+                    if (!(controllerMode && HoldConfirm.swallowClick())) {
+                        feedback?.play(clickSound)
+                        touched()
+                        onClick()
+                    }
                 },
             )
             .then(if (focused && controllerMode) Modifier.border(3.dp, ring, shape) else Modifier),

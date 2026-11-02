@@ -92,6 +92,22 @@ fun LauncherButton(
 }
 
 /**
+ * A hold-to-confirm just fired. The confirm key (A) is usually still held, and its press keeps
+ * auto-repeating; if the button vanishes and the focus jumps elsewhere, that element would take the
+ * repeat + release as a click. So the next controller click right after a hold-confirm is swallowed
+ * once. A hold button that keeps its focus disarms this itself on the key's release.
+ */
+object HoldConfirm {
+    @Volatile private var at = 0L
+    fun arm() { at = System.currentTimeMillis() }
+    fun disarm() { at = 0L }
+    fun swallowClick(): Boolean {
+        if (at != 0L && System.currentTimeMillis() - at < 1500L) { at = 0L; return true }
+        return false
+    }
+}
+
+/**
  * Destructive actions (shut down host, quit game) must be held: A on a gamepad or a long
  * touch. A ring-like bar fills up; releasing early cancels.
  */
@@ -138,6 +154,8 @@ fun HoldToConfirmButton(
             progress.animateTo(1f, tween(holdMillis, easing = LinearEasing))
             confirmed[0] = true
             feedback?.play(UiSound.CONFIRM)
+            // Arm before the action: it may remove this button and move the focus right away.
+            HoldConfirm.arm()
             onConfirmed()
         }
     }
@@ -163,7 +181,13 @@ fun HoldToConfirmButton(
             .onPreviewKeyEvent { e ->
                 val confirmKey = e.key == Key.ButtonA || e.key == Key.DirectionCenter || e.key == Key.Enter
                 if (!confirmKey) return@onPreviewKeyEvent false
-                if (e.type == KeyEventType.KeyDown) start() else if (e.type == KeyEventType.KeyUp) cancel()
+                if (e.type == KeyEventType.KeyDown) {
+                    start()
+                } else if (e.type == KeyEventType.KeyUp) {
+                    // This button still has the focus and gets the release itself: no stray click to swallow.
+                    HoldConfirm.disarm()
+                    cancel()
+                }
                 true
             }
             .handCursor(enabled)
