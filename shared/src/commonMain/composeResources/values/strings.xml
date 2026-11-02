@@ -318,6 +318,10 @@
     <string name="profile_base_sub">Base settings; new profiles start from here</string>
     <string name="profile_active">Active</string>
     <string name="profile_new">New profile</string>
+    <string name="stream_input_title">Touch, mouse &amp; keyboard</string>
+    <string name="stream_device_input_section">For every profile</string>
+    <string name="stream_device_input">Trackpad &amp; keyboard of this device</string>
+    <string name="stream_device_input_sub">Trackpad sensitivity and axes, keyboard layout and keys: they depend on this device, so every profile uses them</string>
     <string name="profile_rename">Rename</string>
     <string name="profile_delete">Delete</string>
     <string name="profile_essentials">Most important</string>

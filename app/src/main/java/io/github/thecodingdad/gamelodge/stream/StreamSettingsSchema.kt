@@ -35,6 +35,8 @@ object StreamSettingsSchema {
         "seekbar_deadzone", "checkbox_gamepad_touchpad_as_mouse", "checkbox_gamepad_motion_sensors",
         "checkbox_gamepad_motion_fallback", "checkbox_gamepad_enable_battery_report", "checkbox_vibrate_fallback",
         "checkbox_enable_device_rumble", "seekbar_vibrate_fallback_strength",
+        // Samsung-only drag & drop tweaks and a workaround for old Android versions.
+        "checkbox_trackpad_drag_drop_vibration", "seekbar_trackpad_drag_drop_threshold", "checkbox_ignore_synth_events",
     )
 
     /** Artemis' render mode; anything but 2D ("0") would ask for the 3D renderer. */
@@ -130,8 +132,29 @@ object StreamSettingsSchema {
      */
     const val GAMEPAD_CATEGORY = "category_gamepad_settings"
 
-    /** Profile editor: everything but the controller options. */
-    fun profileSchema(context: Context): List<StreamOptionCategory> = load(context).filter { it.key != GAMEPAD_CATEGORY }
+    /** Touch, mouse and keyboard options (Artemis calls them input settings). */
+    const val INPUT_CATEGORY = "category_input_settings"
+
+    /**
+     * Input options that depend on this device (its screen and keyboard), not on how a stream is
+     * used: the same for every profile (the base settings).
+     */
+    val deviceInputKeys = setOf(
+        "seekbar_trackpad_sensitivity_x", "seekbar_trackpad_sensitivity_y", "checkbox_trackpad_swap_axis",
+        "checkbox_force_qwerty", "checkbox_right_alt_as_meta",
+    )
+
+    /**
+     * Profile editor: everything but the controller options and the device's input options; the
+     * input category is titled [inputTitle] (Artemis' title says "controller" in some languages).
+     */
+    fun profileSchema(context: Context, inputTitle: String): List<StreamOptionCategory> = load(context)
+        .filter { it.key != GAMEPAD_CATEGORY }
+        .map { c -> if (c.key == INPUT_CATEGORY) c.copy(title = inputTitle, options = c.options.filter { it.key !in deviceInputKeys }) else c }
+
+    /** The device's input options alone (Settings › Stream profiles, for every profile). */
+    fun deviceInputOptions(context: Context): List<StreamOption> =
+        load(context).firstOrNull { it.key == INPUT_CATEGORY }?.options.orEmpty().filter { it.key in deviceInputKeys }
 
     /** Controller settings: the controller options alone. */
     fun gamepadOptions(context: Context): List<StreamOption> = load(context).firstOrNull { it.key == GAMEPAD_CATEGORY }?.options.orEmpty()

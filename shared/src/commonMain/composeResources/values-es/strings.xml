@@ -318,6 +318,10 @@
     <string name="profile_base_sub">Ajustes base; los nuevos perfiles parten de aquí</string>
     <string name="profile_active">Activo</string>
     <string name="profile_new">Nuevo perfil</string>
+    <string name="stream_input_title">Táctil, ratón y teclado</string>
+    <string name="stream_device_input_section">Para todos los perfiles</string>
+    <string name="stream_device_input">Trackpad y teclado de este dispositivo</string>
+    <string name="stream_device_input_sub">Sensibilidad y ejes del trackpad, distribución y teclas del teclado: dependen de este dispositivo y valen en todos los perfiles</string>
     <string name="profile_rename">Renombrar</string>
     <string name="profile_delete">Eliminar</string>
     <string name="profile_essentials">Lo más importante</string>

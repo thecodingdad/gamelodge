@@ -30,6 +30,10 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
         io.github.thecodingdad.gamelodge.stream.ProfileStore.moveToBase(
             this, io.github.thecodingdad.gamelodge.stream.StreamSettingsSchema.gamepadOptions(this).map { it.key },
         )
+        // The device's touch and keyboard options hold for every profile too.
+        io.github.thecodingdad.gamelodge.stream.ProfileStore.moveToBase(
+            this, io.github.thecodingdad.gamelodge.stream.StreamSettingsSchema.deviceInputKeys, "profile_device_input_to_base",
+        )
         // Every controller setting is per controller now: pin the gamepad options GameLodge no
         // longer offers and turn the former global values into the known controllers' own, once.
         io.github.thecodingdad.gamelodge.stream.ControllerPrefsMigration.enforce(this)

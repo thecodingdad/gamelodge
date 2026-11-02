@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.stream
 
+import io.github.thecodingdad.gamelodge.resources.stream_input_title
 import android.content.Context
 import androidx.preference.PreferenceManager
 import com.limelight.profiles.ProfilesManager
@@ -51,12 +52,12 @@ class ProfileStore(private val context: Context, val uuid: UUID?) : ProfileValue
         }
 
         /**
-         * Options that now hold for every profile ([keys], the controller options): the active
-         * profile's values become the base settings, the profiles drop their own. Once per key set.
+         * Options that now hold for every profile ([keys]): the active profile's values become
+         * the base settings, the profiles drop their own. Once per key set ([flag]).
          */
-        fun moveToBase(context: Context, keys: Collection<String>) {
+        fun moveToBase(context: Context, keys: Collection<String>, flag: String = "profile_gamepad_to_base") {
             val prefs = context.getSharedPreferences("gamelodge_migrations", Context.MODE_PRIVATE)
-            if (prefs.getBoolean("profile_gamepad_to_base", false)) return
+            if (prefs.getBoolean(flag, false)) return
             val manager = ProfilesManager.getInstance()
             val base = ProfileStore(context, null)
             manager.active?.options?.forEach { (key, value) -> if (key in keys && value != null) base.set(key, value) }
@@ -67,7 +68,7 @@ class ProfileStore(private val context: Context, val uuid: UUID?) : ProfileValue
                 p.modifiedUtc = System.currentTimeMillis()
                 manager.update(p)
             }
-            prefs.edit().putBoolean("profile_gamepad_to_base", true).apply()
+            prefs.edit().putBoolean(flag, true).apply()
         }
 
         /** Back to 2D wherever Artemis' AI 3D render mode was chosen (GameLodge leaves it out). */
@@ -99,7 +100,14 @@ class ProfileStore(private val context: Context, val uuid: UUID?) : ProfileValue
 /** Artemis' profiles for the shared profile screens. */
 class AndroidProfileEditing(private val context: Context) : ProfileEditing {
     @androidx.compose.runtime.Composable
-    override fun rememberSchema(): List<StreamOptionCategory> = androidx.compose.runtime.remember { StreamSettingsSchema.profileSchema(context) }
+    override fun rememberSchema(): List<StreamOptionCategory> {
+        val inputTitle = org.jetbrains.compose.resources.stringResource(io.github.thecodingdad.gamelodge.resources.Res.string.stream_input_title)
+        return androidx.compose.runtime.remember(inputTitle) { StreamSettingsSchema.profileSchema(context, inputTitle) }
+    }
+
+    @androidx.compose.runtime.Composable
+    override fun rememberDeviceInputOptions(): List<io.github.thecodingdad.gamelodge.stream.StreamOption> =
+        androidx.compose.runtime.remember { StreamSettingsSchema.deviceInputOptions(context) }
 
     override val essentialKeys get() = StreamSettingsSchema.essentialKeys
 
