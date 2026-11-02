@@ -32,6 +32,7 @@ import io.github.thecodingdad.gamelodge.resources.*
 import io.github.thecodingdad.gamelodge.ui.components.ButtonRow
 import io.github.thecodingdad.gamelodge.ui.components.LauncherButton
 import io.github.thecodingdad.gamelodge.ui.components.Modal
+import io.github.thecodingdad.gamelodge.ui.components.restoreFocusIf
 import io.github.thecodingdad.gamelodge.ui.theme.LauncherTheme
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.StringResource
@@ -203,7 +204,9 @@ fun ComboDialog(
             error?.let { Text(stringResource(it), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error) }
             if (!recording) {
                 ButtonRow(spacing = 12.dp, modifier = Modifier.padding(top = 8.dp)) {
-                    LauncherButton(stringResource(Res.string.combo_record), onClick = {
+                    // Recording removes these buttons, so the focused one disappears; when they come
+                    // back (recording done) put the focus back on Record instead of the background.
+                    LauncherButton(modifier = Modifier.restoreFocusIf(true), text = stringResource(Res.string.combo_record), onClick = {
                         error = null
                         recording = true
                         ButtonCombos.startRecording(descriptor) { keys ->
