@@ -308,7 +308,7 @@
     <string name="metadata_confirm">A correspondência está correta</string>
     <string name="metadata_review_help">Estas correspondências estavam incertas. Confirme-as ou escolha o jogo certo.</string>
     <string name="metadata_review_done">Todas as correspondências revisadas.</string>
-    <string name="metadata_matched_as">Associado a «%1$s» (%2$d %%)</string>
+    <string name="metadata_matched_as">Associado a «%1$s» (%2$d %)</string>
 
     <!-- Phase 4: profiles, launcher mode, collections, stats -->
     <string name="profile_new_name">Nome do perfil</string>
@@ -480,7 +480,7 @@
     <string name="controllers_none">Nenhum controle conectado.</string>
     <string name="controller_external">Externo</string>
     <string name="controller_builtin">Interno</string>
-    <string name="controller_battery">Bateria %1$d %%</string>
+    <string name="controller_battery">Bateria %1$d %</string>
     <string name="controller_vibrate_test">Testar vibração</string>
 
     <!-- VPN -->

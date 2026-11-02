@@ -306,7 +306,7 @@
     <string name="metadata_confirm">Treffer stimmt</string>
     <string name="metadata_review_help">Diese Treffer waren unsicher. Bestätige sie oder wähle das richtige Spiel.</string>
     <string name="metadata_review_done">Alle Treffer geprüft.</string>
-    <string name="metadata_matched_as">Zugeordnet als „%1$s“ (%2$d %%)</string>
+    <string name="metadata_matched_as">Zugeordnet als „%1$s“ (%2$d %)</string>
 
     <!-- Phase 4: profiles, launcher mode, collections, stats -->
     <string name="profile_new_name">Profilname</string>
@@ -478,7 +478,7 @@
     <string name="controllers_none">Keine Controller verbunden.</string>
     <string name="controller_external">Extern</string>
     <string name="controller_builtin">Intern</string>
-    <string name="controller_battery">Akku %1$d %%</string>
+    <string name="controller_battery">Akku %1$d %</string>
     <string name="controller_vibrate_test">Vibration testen</string>
 
     <!-- VPN -->

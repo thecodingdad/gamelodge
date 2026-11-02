@@ -308,7 +308,7 @@
     <string name="metadata_confirm">La coincidencia es correcta</string>
     <string name="metadata_review_help">Estas coincidencias eran dudosas. Confírmalas o elige el juego correcto.</string>
     <string name="metadata_review_done">Todas las coincidencias revisadas.</string>
-    <string name="metadata_matched_as">Coincidencia con «%1$s» (%2$d %%)</string>
+    <string name="metadata_matched_as">Coincidencia con «%1$s» (%2$d %)</string>
 
     <!-- Phase 4: profiles, launcher mode, collections, stats -->
     <string name="profile_new_name">Nombre del perfil</string>
@@ -480,7 +480,7 @@
     <string name="controllers_none">Ningún mando conectado.</string>
     <string name="controller_external">Externo</string>
     <string name="controller_builtin">Interno</string>
-    <string name="controller_battery">Batería %1$d %%</string>
+    <string name="controller_battery">Batería %1$d %</string>
     <string name="controller_vibrate_test">Probar vibración</string>
 
     <!-- VPN -->

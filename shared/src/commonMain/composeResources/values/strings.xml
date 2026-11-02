@@ -308,7 +308,7 @@
     <string name="metadata_confirm">Match is correct</string>
     <string name="metadata_review_help">These matches were uncertain. Confirm them or pick the right game.</string>
     <string name="metadata_review_done">All matches reviewed.</string>
-    <string name="metadata_matched_as">Matched as "%1$s" (%2$d %%)</string>
+    <string name="metadata_matched_as">Matched as "%1$s" (%2$d %)</string>
 
     <!-- Phase 4: profiles, launcher mode, collections, stats -->
     <string name="profile_new_name">Profile name</string>
@@ -480,7 +480,7 @@
     <string name="controllers_none">No controllers connected.</string>
     <string name="controller_external">External</string>
     <string name="controller_builtin">Internal</string>
-    <string name="controller_battery">Battery %1$d %%</string>
+    <string name="controller_battery">Battery %1$d %</string>
     <string name="controller_vibrate_test">Test vibration</string>
 
     <!-- VPN -->
