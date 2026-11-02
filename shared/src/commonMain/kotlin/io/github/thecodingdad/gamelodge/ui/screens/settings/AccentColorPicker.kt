@@ -64,6 +64,8 @@ fun AccentColorPicker(
     /** Set: an "automatic" choice on top (selected when [automatic]). */
     onAutomatic: (() -> Unit)? = null,
     automatic: Boolean = false,
+    autoTitle: String = stringResource(Res.string.accent_text_auto),
+    autoSub: String? = stringResource(Res.string.accent_text_auto_sub),
 ) {
     // The sliders keep their own values (a grey loses its hue when converted back and forth).
     var hsv by remember { mutableStateOf(toHsv(color)) }
@@ -75,9 +77,9 @@ fun AccentColorPicker(
         ) {
         if (onAutomatic != null) {
             SwitchRow(
-                stringResource(Res.string.accent_text_auto), automatic,
+                autoTitle, automatic,
                 { on -> if (on) onAutomatic() else onChange(color) },
-                subtitle = stringResource(Res.string.accent_text_auto_sub), initialFocus = automatic,
+                subtitle = autoSub, initialFocus = automatic,
             )
         }
         SectionHeader(stringResource(Res.string.accent_picker_presets))

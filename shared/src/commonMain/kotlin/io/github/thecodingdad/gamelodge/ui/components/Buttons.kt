@@ -61,6 +61,8 @@ fun LauncherButton(
     onFocused: (() -> Unit)? = null,
     /** Work in progress: a spinner instead of the icon, not clickable. */
     busy: Boolean = false,
+    /** Overrides the icon's colour (e.g. a controller's own highlight colour). */
+    iconTint: androidx.compose.ui.graphics.Color? = null,
 ) {
     val colors = LauncherTheme.colors
     FocusSurface(
@@ -82,7 +84,7 @@ fun LauncherButton(
             if (busy) {
                 androidx.compose.material3.CircularProgressIndicator(Modifier.size(20.dp), color = content, strokeWidth = 2.5.dp)
             } else if (icon != null) {
-                Icon(icon, contentDescription = null, tint = content, modifier = Modifier.size(22.dp))
+                Icon(icon, contentDescription = null, tint = iconTint ?: content, modifier = Modifier.size(22.dp))
             }
             Text(text, style = MaterialTheme.typography.labelLarge, color = content, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }

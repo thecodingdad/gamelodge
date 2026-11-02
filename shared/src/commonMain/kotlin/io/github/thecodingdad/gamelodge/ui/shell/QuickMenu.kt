@@ -253,8 +253,9 @@ private fun ControllersTab(openSettings: () -> Unit) {
             controller.batteryPercent?.let { stringResource(Res.string.controller_battery, it) },
         ).joinToString("  ·  ")
         io.github.thecodingdad.gamelodge.ui.screens.settings.NavRow(
-            controller.name, { selected = controller }, subtitle = details, icon = Icons.Filled.SportsEsports,
+            controller.displayName, { selected = controller }, subtitle = details, icon = controller.displayIcon,
             initialFocus = i == 0,
+            iconTint = controller.colorArgb?.let { androidx.compose.ui.graphics.Color(it) },
         )
     }
     LauncherButton(

@@ -13,7 +13,6 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.RadioButtonChecked
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -85,10 +84,11 @@ fun ControllerPopup(
                     c.batteryPercent?.let { stringResource(Res.string.controller_battery, it) },
                 ).joinToString("  ·  ")
                 LauncherButton(
-                    "${c.name}  ·  $details",
+                    "${c.displayName}  ·  $details",
                     onClick = { selected = c },
-                    icon = Icons.Filled.SportsEsports,
+                    icon = c.displayIcon,
                     modifier = Modifier.fillMaxWidth(),
+                    iconTint = c.colorArgb?.let { androidx.compose.ui.graphics.Color(it) },
                 )
             }
             LauncherButton(stringResource(Res.string.controller_popup_settings), onClick = { onDismiss(); onOpenSettings() }, icon = Icons.Filled.Settings, modifier = Modifier.fillMaxWidth())

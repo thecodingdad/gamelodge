@@ -8,7 +8,6 @@ import android.os.Build
 import android.os.VibrationEffect
 import android.view.InputDevice
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -93,7 +92,14 @@ fun rememberAndroidControllers(): List<ControllerInfo> {
             revision++
         }
     }
-    return remember(revision) { connectedControllers() }
+    // The user's name and colour for each controller (kept per device descriptor).
+    val overrides by context.container.controllerSettings.all.collectAsState()
+    return remember(revision, overrides) {
+        connectedControllers().map { c ->
+            val s = overrides[c.descriptor]
+            if (s?.name != null || s?.colorArgb != null || s?.iconId != null) c.copy(customName = s.name, colorArgb = s.colorArgb, iconId = s.iconId) else c
+        }
+    }
 }
 
 @Composable
@@ -108,15 +114,16 @@ fun ControllersScreen() {
         if (controllers.isEmpty()) Text(stringResource(Res.string.controllers_none), color = LauncherTheme.colors.onSurface)
         controllers.forEachIndexed { index, c ->
             NavRow(
-                title = c.name,
+                title = c.displayName,
                 onClick = { selected = c },
                 subtitle = listOfNotNull(
                     stringResource(if (c.external) Res.string.controller_external else Res.string.controller_builtin),
                     if (c.odinCopy) stringResource(Res.string.controller_odin_copy) else null,
                     c.batteryPercent?.let { stringResource(Res.string.controller_battery, it) },
                 ).joinToString("  ·  "),
-                icon = Icons.Filled.SportsEsports,
+                icon = c.displayIcon,
                 initialFocus = index == 0,
+                iconTint = c.colorArgb?.let { androidx.compose.ui.graphics.Color(it) },
             )
         }
         // Launcher controls every controller uses unless its own settings say otherwise.
@@ -135,7 +142,7 @@ fun ControllersScreen() {
 @Composable
 fun AndroidControllerDetailDialog(controller: ControllerInfo?, onDismiss: () -> Unit) {
     io.github.thecodingdad.gamelodge.ui.components.Modal(
-        visible = controller != null, onDismiss = onDismiss, title = controller?.name,
+        visible = controller != null, onDismiss = onDismiss, title = controller?.displayName,
         maxWidth = 680.dp,
     ) {
         val c = controller ?: return@Modal
@@ -186,6 +193,19 @@ private fun ControllerOverrideRows(c: ControllerInfo) {
     val off = stringResource(Res.string.ha_off)
     val tri = listOf<Boolean?>(null, true, false)
     val triLabel: @Composable (Boolean?) -> String = { v -> when (v) { null -> global; true -> on; false -> off } }
+
+    // Name and highlight colour, so this controller is easy to tell apart everywhere it appears.
+    SectionHeader(stringResource(Res.string.controller_identity_section))
+    ControllerIdentityRows(
+        deviceName = c.name,
+        customName = s.name,
+        colorArgb = s.colorArgb,
+        iconId = s.iconId,
+        vendorId = c.vendorId,
+        onName = { v -> save { it.copy(name = v) } },
+        onColor = { v -> save { it.copy(colorArgb = v) } },
+        onIcon = { v -> save { it.copy(iconId = v) } },
+    )
 
     val launcherSettings by LocalContext.current.container.settings.settings.collectAsState(null)
     // In the launcher: layout and button combinations of this controller.

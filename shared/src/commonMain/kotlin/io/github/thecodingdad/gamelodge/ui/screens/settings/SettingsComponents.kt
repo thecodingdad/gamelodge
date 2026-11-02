@@ -275,10 +275,10 @@ private fun RowShell(
 }
 
 @Composable
-private fun Texts(title: String, subtitle: String?, icon: ImageVector?, modifier: Modifier = Modifier) {
+private fun Texts(title: String, subtitle: String?, icon: ImageVector?, modifier: Modifier = Modifier, iconTint: androidx.compose.ui.graphics.Color? = null) {
     Row(modifier, verticalAlignment = Alignment.CenterVertically) {
         if (icon != null) {
-            Icon(icon, null, tint = LauncherTheme.colors.accent, modifier = Modifier.size(26.dp))
+            Icon(icon, null, tint = iconTint ?: LauncherTheme.colors.accent, modifier = Modifier.size(26.dp))
             Spacer(Modifier.width(16.dp))
         }
         Column {
@@ -303,10 +303,12 @@ fun NavRow(
     trailingContent: (@Composable () -> Unit)? = null,
     /** Off for rows that only lead to a setting (search hits), so they don't take its highlight. */
     highlightable: Boolean = true,
+    /** Overrides the leading icon's colour (e.g. a controller's own highlight colour). */
+    iconTint: androidx.compose.ui.graphics.Color? = null,
 ) {
     RowShell(onClick, Modifier, initialFocus, title.takeIf { highlightable }) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Texts(title, subtitle, icon, Modifier.weight(1f))
+            Texts(title, subtitle, icon, Modifier.weight(1f), iconTint)
             // Kept short so the title keeps its room.
             if (trailing != null) Text(
                 trailing, style = MaterialTheme.typography.labelLarge, color = LauncherTheme.colors.onSurfaceMuted,

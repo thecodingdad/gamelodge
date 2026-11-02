@@ -19,6 +19,12 @@ data class ControllerSettings(
     /** Auto-attach at stream start: null = automatic (built-in pads step aside for external ones),
      *  true = always attach, false = never attach automatically (still attaches if actually used). */
     val autoAttach: Boolean? = null,
+    /** A name the user gave this controller, to tell it apart in the settings (null = its device name). */
+    val name: String? = null,
+    /** A highlight colour (ARGB) for this controller's entries/icon (null = the default accent). */
+    val colorArgb: Int? = null,
+    /** The icon kind (a [ControllerIconKind] name) the user chose; null = detect from the vendor. */
+    val iconId: String? = null,
     /** Button combinations (key codes) of this controller: null = global, empty = off. */
     val comboHome: List<Int>? = null,
     val comboQuickMenu: List<Int>? = null,
