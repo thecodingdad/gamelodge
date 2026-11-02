@@ -16,6 +16,9 @@ class ControllerOrderStore(context: Context) {
     private fun order(): List<String> =
         prefs.getString(KEY, "").orEmpty().split('\n').filter { it.isNotEmpty() }
 
+    /** Every controller seen in a stream so far (descriptors). */
+    fun known(): List<String> = order()
+
     private fun remember(descriptors: List<String>) {
         val known = order()
         val added = descriptors.filter { it !in known }

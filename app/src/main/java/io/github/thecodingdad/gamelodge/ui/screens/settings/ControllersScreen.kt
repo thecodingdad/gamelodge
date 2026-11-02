@@ -188,7 +188,10 @@ fun AndroidControllerDetailDialog(controller: ControllerInfo?, onDismiss: () -> 
     }
 }
 
-/** Settings of this controller that differ from the global ones; "global" keeps Artemis' value. */
+/**
+ * All settings of this controller. Every controller setting is per controller; "Standard" is the
+ * default for this kind of controller ([controllerDefaults]).
+ */
 @Composable
 private fun ControllerOverrideRows(c: ControllerInfo) {
     if (c.descriptor.isEmpty()) return
@@ -197,11 +200,11 @@ private fun ControllerOverrideRows(c: ControllerInfo) {
     val s = all[c.descriptor] ?: io.github.thecodingdad.gamelodge.stream.ControllerSettings()
     fun save(t: (io.github.thecodingdad.gamelodge.stream.ControllerSettings) -> io.github.thecodingdad.gamelodge.stream.ControllerSettings) =
         store.set(c.descriptor, t(s))
-    val global = stringResource(Res.string.controller_override_global)
+    val d = remember(c.vendorId, c.productId) { controllerDefaults(c.vendorId, c.productId) }
+    val default: @Composable (String) -> String = { stringResource(Res.string.controller_default_value, it) }
     val on = stringResource(Res.string.ha_on)
     val off = stringResource(Res.string.ha_off)
     val tri = listOf<Boolean?>(null, true, false)
-    val triLabel: @Composable (Boolean?) -> String = { v -> when (v) { null -> global; true -> on; false -> off } }
 
     // Name and highlight colour, so this controller is easy to tell apart everywhere it appears.
     SectionHeader(stringResource(Res.string.controller_identity_section))
@@ -276,22 +279,60 @@ private fun ControllerOverrideRows(c: ControllerInfo) {
     )
     ChoiceRow(
         stringResource(Res.string.controller_deadzone), listOf<Int?>(null, 0, 3, 5, 8, 10, 15, 20), s.deadzonePercent,
-        label = { v -> v?.let { "$it %" } ?: global },
+        label = { v -> v?.let { "$it %" } ?: default("${d.deadzonePercent} %") },
         onSelect = { v -> save { it.copy(deadzonePercent = v) } },
     )
-    if (c.canVibrate) {
+    // Where the rumble goes, and how strong it is (for the controller's motors and the device's).
+    ChoiceRow(
+        stringResource(Res.string.controller_rumble), listOf<VibrationMode?>(null) + VibrationMode.entries, s.vibration,
+        label = { v -> v?.let { vibrationLabel(it) } ?: default(vibrationLabel(d.vibration)) },
+        onSelect = { v -> save { it.copy(vibration = v) } },
+    )
+    if ((s.vibration ?: d.vibration) != VibrationMode.OFF) {
         ChoiceRow(
-            stringResource(Res.string.controller_rumble), listOf<Int?>(null, 0, 25, 50, 75, 100), s.rumblePercent,
-            label = { v -> when (v) { null -> global; 0 -> off; else -> "$v %" } },
+            stringResource(Res.string.controller_vibration_strength), listOf<Int?>(null, 25, 50, 75, 100), s.rumblePercent,
+            label = { v -> v?.let { "$it %" } ?: default("${d.vibrationStrength} %") },
             onSelect = { v -> save { it.copy(rumblePercent = v) } },
         )
     }
-    ChoiceRow(stringResource(Res.string.controller_motion), tri, s.motionSensors, label = triLabel, onSelect = { v -> save { it.copy(motionSensors = v) } })
+    ChoiceRow(
+        stringResource(Res.string.controller_motion), listOf<MotionMode?>(null) + MotionMode.entries, s.motion,
+        label = { v -> v?.let { motionLabel(it) } ?: default(motionLabel(d.motion)) },
+        onSelect = { v -> save { it.copy(motion = v) } },
+    )
     if (c.hasTouchpad) {
-        ChoiceRow(stringResource(Res.string.controller_touchpad_mouse), tri, s.touchpadAsMouse, label = triLabel, onSelect = { v -> save { it.copy(touchpadAsMouse = v) } })
+        ChoiceRow(
+            stringResource(Res.string.controller_touchpad_mouse), tri, s.touchpadAsMouse,
+            label = { v -> when (v) { null -> default(if (d.touchpadAsMouse) on else off); true -> on; false -> off } },
+            onSelect = { v -> save { it.copy(touchpadAsMouse = v) } },
+        )
     }
-
+    ChoiceRow(
+        stringResource(Res.string.controller_battery_report), tri, s.batteryReport,
+        label = { v -> when (v) { null -> default(if (d.batteryReport) on else off); true -> on; false -> off } },
+        onSelect = { v -> save { it.copy(batteryReport = v) } },
+        subtitle = stringResource(Res.string.controller_battery_report_sub),
+    )
 }
+
+@Composable
+private fun vibrationLabel(m: VibrationMode) = stringResource(
+    when (m) {
+        VibrationMode.OFF -> Res.string.controller_source_off
+        VibrationMode.CONTROLLER -> Res.string.controller_source_controller
+        VibrationMode.CONTROLLER_ELSE_DEVICE -> Res.string.controller_source_controller_else_device
+        VibrationMode.DEVICE -> Res.string.controller_source_device
+    },
+)
+
+@Composable
+private fun motionLabel(m: MotionMode) = stringResource(
+    when (m) {
+        MotionMode.OFF -> Res.string.controller_source_off
+        MotionMode.CONTROLLER -> Res.string.controller_source_controller
+        MotionMode.CONTROLLER_ELSE_DEVICE -> Res.string.controller_source_controller_else_device
+    },
+)
 
 /** One row with four tappable squares, one per player LED; filled = on. */
 @Composable

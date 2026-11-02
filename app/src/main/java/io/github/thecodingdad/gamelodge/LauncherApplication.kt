@@ -30,6 +30,12 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
         io.github.thecodingdad.gamelodge.stream.ProfileStore.moveToBase(
             this, io.github.thecodingdad.gamelodge.stream.StreamSettingsSchema.gamepadOptions(this).map { it.key },
         )
+        // Every controller setting is per controller now: pin the gamepad options GameLodge no
+        // longer offers and turn the former global values into the known controllers' own, once.
+        io.github.thecodingdad.gamelodge.stream.ControllerPrefsMigration.enforce(this)
+        io.github.thecodingdad.gamelodge.stream.ControllerPrefsMigration.migrate(
+            this, container.controllerSettings, io.github.thecodingdad.gamelodge.stream.ControllerOrderStore(this),
+        )
         // Right after boot the system is busy (on the Odin the low-memory killer then stops the
         // heaviest foreground app): the start tasks wait a moment, and run one after the other.
         if (android.os.SystemClock.elapsedRealtime() < BOOT_WINDOW_MS) {

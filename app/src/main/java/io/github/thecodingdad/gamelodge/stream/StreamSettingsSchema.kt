@@ -26,6 +26,15 @@ object StreamSettingsSchema {
         // GameLodge's mouse emulation (combination, speed) and its button layout (Xbox / Nintendo,
         // per controller and per game) replace these.
         "checkbox_mouse_emulation", "analog_scrolling", "checkbox_flip_face_buttons",
+        // Pinned (see ControllerPrefsMigration): they'd break the player order, bypass the
+        // per-controller settings, or are niche (Joy-Con remap, always device sensors).
+        "checkbox_multi_controller", "checkbox_usb_bind_all", "checkbox_enable_joyconfix",
+        "checkbox_force_device_motion", "checkbox_enable_rumble",
+        // Per controller now (with defaults for the kind of controller): dead zone, vibration,
+        // motion sensors, touchpad, battery report.
+        "seekbar_deadzone", "checkbox_gamepad_touchpad_as_mouse", "checkbox_gamepad_motion_sensors",
+        "checkbox_gamepad_motion_fallback", "checkbox_gamepad_enable_battery_report", "checkbox_vibrate_fallback",
+        "checkbox_enable_device_rumble", "seekbar_vibrate_fallback_strength",
     )
 
     /** Artemis' render mode; anything but 2D ("0") would ask for the 3D renderer. */

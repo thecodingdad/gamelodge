@@ -739,9 +739,8 @@
     <string name="qm_android">Android</string>
 
     <!-- Controller overrides -->
-    <string name="controller_override_global">Comme dans le profil</string>
     <string name="controller_overrides">Réglages de cette manette</string>
-    <string name="controller_overrides_sub">Appliqués dès le prochain stream à cette manette, prioritaires sur le profil de streaming. « Comme dans le profil » utilise la valeur du profil de streaming actif.</string>
+    <string name="controller_overrides_sub">S'applique dès le prochain stream. « Par défaut » est la valeur pour ce type de manette ; un jeu peut avoir les siennes.</string>
     <string name="controller_auto_attach">Connecter au demarrage du stream</string>
     <string name="controller_auto_attach_auto">Automatique</string>
     <string name="controller_auto_attach_off">Jamais</string>
@@ -770,6 +769,14 @@
     <string name="controller_rumble">Vibration</string>
     <string name="controller_motion">Capteurs de mouvement (gyro)</string>
     <string name="controller_touchpad_mouse">Pavé tactile en souris</string>
+    <string name="controller_default_value">Par défaut (%1$s)</string>
+    <string name="controller_vibration_strength">Intensité de vibration</string>
+    <string name="controller_source_off">Désactivé</string>
+    <string name="controller_source_controller">Manette</string>
+    <string name="controller_source_controller_else_device">Manette, sinon l'appareil</string>
+    <string name="controller_source_device">Toujours l'appareil</string>
+    <string name="controller_battery_report">Signaler la batterie à l'hôte</string>
+    <string name="controller_battery_report_sub">Désactiver peut aider si la saisie tactile ou souris saccade parfois.</string>
     <string name="qm_connected">Connecté</string>
     <string name="qm_bluetooth_off">Bluetooth éteint</string>
     <plurals name="qm_bluetooth_devices">
@@ -1550,12 +1557,12 @@
     <string name="controller_section_mouse">Émulation de souris</string>
     <string name="controller_section_mouse_sub">Vitesse du pointeur et accélération au stick</string>
     <string name="controller_section_stream">Dans le stream</string>
-    <string name="controller_section_stream_sub">Connexion, zone morte, vibration, capteur de mouvement, mappage des boutons Odin</string>
-    <string name="controller_section_stream_sub_pc">Connexion, zone morte, vibration, capteur de mouvement</string>
+    <string name="controller_section_stream_sub">Connexion, pilote USB Xbox, mappage des boutons Odin</string>
+    <string name="controller_section_stream_sub_pc">Connexion</string>
     <string name="setting_controller_attach">Connecter les manettes au demarrage du stream</string>
     <string name="setting_controller_attach_sub">Les manettes connectees sont signalees a l'hote au demarrage du stream, au lieu d'attendre leur premiere pression. La manette qui a lance le stream devient le joueur 1.</string>
     <string name="controller_starter_player_one_info">La manette qui lance le stream est le joueur 1.</string>
-    <string name="controllers_stream_defaults_sub">Identique pour chaque profil de streaming ; les manettes et jeux individuels peuvent différer dans leurs propres réglages.</string>
+    <string name="controllers_stream_defaults_sub">S'applique à toutes les manettes. Zone morte, vibration, capteurs de mouvement, etc. se règlent par manette (Manettes › la manette).</string>
     <string name="qm_mouse">Mode souris</string>
     <string name="wizard_metadata_guide_hint">Les deux sont gratuits. Comment les obtenir, étape par étape avec un code QR pour votre téléphone : le bouton dans la boîte de dialogue de la clé.</string>
     <string name="guide_button_sgdb">Comment obtenir la clé d'API</string>

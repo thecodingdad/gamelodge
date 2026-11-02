@@ -737,9 +737,8 @@
     <string name="qm_android">Android</string>
 
     <!-- Controller overrides -->
-    <string name="controller_override_global">Wie im Profil</string>
     <string name="controller_overrides">Einstellungen für diesen Controller</string>
-    <string name="controller_overrides_sub">Gelten ab dem nächsten Stream für diesen Controller und haben Vorrang vor dem Stream-Profil. „Wie im Profil“ übernimmt den Wert des aktiven Stream-Profils.</string>
+    <string name="controller_overrides_sub">Gilt ab dem nächsten Stream. „Standard“ ist der Wert für diesen Controller-Typ; ein Spiel kann eigene Werte haben.</string>
     <string name="controller_auto_attach">Bei Stream-Start verbinden</string>
     <string name="controller_auto_attach_auto">Automatisch</string>
     <string name="controller_auto_attach_off">Nie</string>
@@ -768,6 +767,14 @@
     <string name="controller_rumble">Vibration</string>
     <string name="controller_motion">Bewegungssensoren (Gyro)</string>
     <string name="controller_touchpad_mouse">Touchpad als Maus</string>
+    <string name="controller_default_value">Standard (%1$s)</string>
+    <string name="controller_vibration_strength">Vibrationsstärke</string>
+    <string name="controller_source_off">Aus</string>
+    <string name="controller_source_controller">Controller</string>
+    <string name="controller_source_controller_else_device">Controller, sonst Gerät</string>
+    <string name="controller_source_device">Immer Gerät</string>
+    <string name="controller_battery_report">Akku an Host melden</string>
+    <string name="controller_battery_report_sub">Aus kann helfen, wenn Touch- oder Mauseingaben gelegentlich ruckeln.</string>
     <string name="qm_connected">Verbunden</string>
     <string name="qm_bluetooth_off">Bluetooth aus</string>
     <plurals name="qm_bluetooth_devices">
@@ -1548,12 +1555,12 @@
     <string name="controller_section_mouse">Maus-Emulation</string>
     <string name="controller_section_mouse_sub">Zeigergeschwindigkeit und Beschleunigung mit dem Stick</string>
     <string name="controller_section_stream">Im Stream</string>
-    <string name="controller_section_stream_sub">Verbindung, Deadzone, Vibration, Bewegungssensor, Odin-Tastenbelegung</string>
-    <string name="controller_section_stream_sub_pc">Verbindung, Deadzone, Vibration, Bewegungssensor</string>
+    <string name="controller_section_stream_sub">Verbindung, Xbox-USB-Treiber, Odin-Tastenbelegung</string>
+    <string name="controller_section_stream_sub_pc">Verbindung</string>
     <string name="setting_controller_attach">Controller bei Stream-Start verbinden</string>
     <string name="setting_controller_attach_sub">Die verbundenen Controller werden beim Stream-Start am Host angemeldet, statt erst beim ersten Tastendruck. Der Controller, der den Stream gestartet hat, wird Spieler 1.</string>
     <string name="controller_starter_player_one_info">Der Controller, der den Stream startet, ist Spieler 1.</string>
-    <string name="controllers_stream_defaults_sub">Gilt für jedes Stream-Profil; einzelne Controller und einzelne Spiele können in ihren eigenen Einstellungen abweichen.</string>
+    <string name="controllers_stream_defaults_sub">Gilt für alle Controller. Deadzone, Vibration, Bewegungssensoren usw. stellst du pro Controller ein (Controller › gewünschter Controller).</string>
     <string name="qm_mouse">Maus-Modus</string>
     <string name="wizard_metadata_guide_hint">Beide sind kostenlos. Wie du sie bekommst, Schritt für Schritt mit QR-Code fürs Handy: der Button im Eingabedialog.</string>
     <string name="guide_button_sgdb">So bekommst du den API-Schlüssel</string>

@@ -739,9 +739,8 @@
     <string name="qm_android">Android</string>
 
     <!-- Controller overrides -->
-    <string name="controller_override_global">Como en el perfil</string>
     <string name="controller_overrides">Ajustes de este mando</string>
-    <string name="controller_overrides_sub">Se aplican desde el próximo stream a este mando, con prioridad sobre el perfil de streaming. «Como en el perfil» usa el valor del perfil de streaming activo.</string>
+    <string name="controller_overrides_sub">Se aplica a partir del próximo stream. «Predeterminado» es el valor para este tipo de mando; un juego puede tener los suyos.</string>
     <string name="controller_auto_attach">Conectar al iniciar el stream</string>
     <string name="controller_auto_attach_auto">Automatico</string>
     <string name="controller_auto_attach_off">Nunca</string>
@@ -770,6 +769,14 @@
     <string name="controller_rumble">Vibración</string>
     <string name="controller_motion">Sensores de movimiento (giroscopio)</string>
     <string name="controller_touchpad_mouse">Touchpad como ratón</string>
+    <string name="controller_default_value">Predeterminado (%1$s)</string>
+    <string name="controller_vibration_strength">Intensidad de vibración</string>
+    <string name="controller_source_off">Desactivado</string>
+    <string name="controller_source_controller">Mando</string>
+    <string name="controller_source_controller_else_device">Mando, si no el dispositivo</string>
+    <string name="controller_source_device">Siempre el dispositivo</string>
+    <string name="controller_battery_report">Informar batería al host</string>
+    <string name="controller_battery_report_sub">Desactivarlo puede ayudar si la entrada táctil o del ratón se entrecorta a veces.</string>
     <string name="qm_connected">Conectado</string>
     <string name="qm_bluetooth_off">Bluetooth apagado</string>
     <plurals name="qm_bluetooth_devices">
@@ -1550,12 +1557,12 @@
     <string name="controller_section_mouse">Emulación de ratón</string>
     <string name="controller_section_mouse_sub">Velocidad del puntero y aceleración con el stick</string>
     <string name="controller_section_stream">En el stream</string>
-    <string name="controller_section_stream_sub">Conexion, zona muerta, vibracion, sensor de movimiento, asignacion de botones Odin</string>
-    <string name="controller_section_stream_sub_pc">Conexion, zona muerta, vibracion, sensor de movimiento</string>
+    <string name="controller_section_stream_sub">Conexión, controlador USB de Xbox, asignación de botones de Odin</string>
+    <string name="controller_section_stream_sub_pc">Conexión</string>
     <string name="setting_controller_attach">Conectar mandos al iniciar el stream</string>
     <string name="setting_controller_attach_sub">Los mandos conectados se registran en el host al iniciar el stream, en vez de con su primera pulsacion. El mando que inicio el stream es el jugador 1.</string>
     <string name="controller_starter_player_one_info">El mando que inicia el stream es el jugador 1.</string>
-    <string name="controllers_stream_defaults_sub">Igual para cada perfil de streaming; los mandos y juegos individuales pueden diferir en sus propios ajustes.</string>
+    <string name="controllers_stream_defaults_sub">Se aplica a todos los mandos. La zona muerta, la vibración, los sensores de movimiento y más se ajustan por mando (Mandos › el mando).</string>
     <string name="qm_mouse">Modo ratón</string>
     <string name="wizard_metadata_guide_hint">Ambos son gratuitos. Cómo obtenerlos, paso a paso con un código QR para tu móvil: el botón del diálogo de la clave.</string>
     <string name="guide_button_sgdb">Cómo obtener la clave de API</string>

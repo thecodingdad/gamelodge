@@ -6,16 +6,31 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import io.github.thecodingdad.gamelodge.ui.screens.settings.layoutFor
+import io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerDefaults
+import io.github.thecodingdad.gamelodge.ui.screens.settings.MotionMode
+import io.github.thecodingdad.gamelodge.ui.screens.settings.VibrationMode
+import io.github.thecodingdad.gamelodge.ui.screens.settings.controllerDefaults
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
-/** Settings of one controller that differ from the global gamepad settings (null = global). */
+/**
+ * Settings of one controller. Every controller setting lives here (there are no global ones):
+ * null means the default for this kind of controller ([controllerDefaults]).
+ */
 @Serializable
 data class ControllerSettings(
     val deadzonePercent: Int? = null,
+    /** Vibration strength in percent (for the controller's motors and the device's). */
     val rumblePercent: Int? = null,
     val touchpadAsMouse: Boolean? = null,
+    /** Old on/off for motion sensors, replaced by [motion] (migrated once). */
     val motionSensors: Boolean? = null,
+    /** Where the rumble goes. */
+    val vibration: io.github.thecodingdad.gamelodge.ui.screens.settings.VibrationMode? = null,
+    /** Where the host gets motion data from. */
+    val motion: io.github.thecodingdad.gamelodge.ui.screens.settings.MotionMode? = null,
+    /** Report the battery level to the host. */
+    val batteryReport: Boolean? = null,
     /** Auto-attach at stream start: null = automatic (built-in pads step aside for external ones),
      *  true = always attach, false = never attach automatically (still attaches if actually used). */
     val autoAttach: Boolean? = null,
@@ -72,6 +87,28 @@ class ControllerOverrideStore(context: Context) {
 
     fun get(descriptor: String): ControllerSettings = _all.value[descriptor] ?: ControllerSettings()
 
+    /** A controller's settings with the defaults for its kind filled in: what actually applies. */
+    fun effective(descriptor: String, s: ControllerSettings = get(descriptor)): ControllerDefaults {
+        val d = defaultsFor(descriptor)
+        return d.copy(
+            deadzonePercent = s.deadzonePercent ?: d.deadzonePercent,
+            vibration = s.vibration ?: d.vibration,
+            vibrationStrength = s.rumblePercent ?: d.vibrationStrength,
+            motion = s.motion ?: d.motion,
+            touchpadAsMouse = s.touchpadAsMouse ?: d.touchpadAsMouse,
+            batteryReport = s.batteryReport ?: d.batteryReport,
+        )
+    }
+
+    /** The defaults for the connected controller with this descriptor (the standard ones if it's gone). */
+    fun defaultsFor(descriptor: String): ControllerDefaults {
+        for (id in android.view.InputDevice.getDeviceIds()) {
+            val dev = android.view.InputDevice.getDevice(id) ?: continue
+            if (dev.descriptor == descriptor) return controllerDefaults(dev.vendorId, dev.productId)
+        }
+        return ControllerDefaults()
+    }
+
     fun set(descriptor: String, settings: ControllerSettings) {
         prefs.edit().apply {
             if (settings.isEmpty) remove(descriptor) else putString(descriptor, json.encodeToString(ControllerSettings.serializer(), settings))
@@ -94,16 +131,29 @@ class ControllerOverrideStore(context: Context) {
             // Player numbers (and which pads auto-attach) come from the remembered order, with the
             // controller that started the stream as player 1.
             val assignment = orderStore.assign(io.github.thecodingdad.gamelodge.input.StarterPad.starter) { _all.value[it]?.autoAttach }
+            val e = effective(descriptor, s)
+            // The streamed game's own choices win: vibration / motion off, or on (at least the controller's).
+            val vibration = when (pad?.rumble) {
+                false -> VibrationMode.OFF
+                true -> e.vibration.takeIf { it != VibrationMode.OFF } ?: VibrationMode.CONTROLLER
+                null -> e.vibration
+            }
+            val motion = when (pad?.motion) {
+                false -> MotionMode.OFF
+                true -> e.motion.takeIf { it != MotionMode.OFF } ?: MotionMode.CONTROLLER
+                null -> e.motion
+            }
             ControllerOverrides.Override().apply {
                 flipFaceButtons = layout == io.github.thecodingdad.gamelodge.data.settings.ButtonLayout.NINTENDO
-                deadzonePercent = s.deadzonePercent
-                rumblePercent = when (pad?.rumble) {
-                    false -> 0
-                    true -> s.rumblePercent?.takeIf { it > 0 } ?: 100
-                    null -> s.rumblePercent
-                }
-                touchpadAsMouse = pad?.touchpadMouse ?: s.touchpadAsMouse
-                motionSensors = pad?.motion ?: s.motionSensors
+                deadzonePercent = e.deadzonePercent
+                rumblePercent = if (vibration == VibrationMode.OFF) 0 else e.vibrationStrength
+                deviceRumble = vibration == VibrationMode.DEVICE
+                vibrateFallback = vibration == VibrationMode.CONTROLLER_ELSE_DEVICE
+                deviceRumbleStrength = e.vibrationStrength
+                touchpadAsMouse = pad?.touchpadMouse ?: e.touchpadAsMouse
+                motionSensors = motion != MotionMode.OFF
+                motionFallback = motion == MotionMode.CONTROLLER_ELSE_DEVICE
+                batteryReport = e.batteryReport
                 playerSlot = assignment.slots[descriptor]
                 skipAutoAttach = descriptor !in assignment.eligible
             }

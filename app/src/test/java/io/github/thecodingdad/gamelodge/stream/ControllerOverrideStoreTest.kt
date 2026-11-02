@@ -22,4 +22,16 @@ class ControllerOverrideStoreTest {
         store.set("pad-1", ControllerSettings())
         assertTrue(ControllerOverrideStore(context).all.value.isEmpty())
     }
+
+    @Test
+    fun `effective settings fill in the defaults for the kind of controller`() {
+        val store = ControllerOverrideStore(context)
+        // Not connected: the standard defaults, with the controller's own choices on top.
+        val e = store.effective("gone", ControllerSettings(vibration = io.github.thecodingdad.gamelodge.ui.screens.settings.VibrationMode.OFF, deadzonePercent = 10))
+        assertEquals(io.github.thecodingdad.gamelodge.ui.screens.settings.VibrationMode.OFF, e.vibration)
+        assertEquals(10, e.deadzonePercent)
+        assertEquals(io.github.thecodingdad.gamelodge.ui.screens.settings.MotionMode.CONTROLLER, e.motion)
+        assertEquals(100, e.vibrationStrength)
+        assertEquals(true, e.batteryReport)
+    }
 }
