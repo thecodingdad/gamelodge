@@ -239,6 +239,17 @@ class MainActivity : ComponentActivity() {
         ) {
             feedback.play(io.github.thecodingdad.gamelodge.ui.feedback.UiSound.BACK)
         }
+        // Confirm (A) and back (B) otherwise reach the focus system through a fallback Android
+        // derives from the ORIGINAL button, before our layout swap — so, unlike X / Y, the swap
+        // never affected them. Translate the swapped event ourselves (A -> centre click, B -> back)
+        // and consume the original, so the controller layout applies to confirm and back as well.
+        if (e.keyCode == KeyEvent.KEYCODE_BUTTON_A || e.keyCode == KeyEvent.KEYCODE_BUTTON_B) {
+            val focusKey = if (e.keyCode == KeyEvent.KEYCODE_BUTTON_A) KeyEvent.KEYCODE_DPAD_CENTER else KeyEvent.KEYCODE_BACK
+            super.dispatchKeyEvent(
+                KeyEvent(e.downTime, e.eventTime, e.action, focusKey, e.repeatCount, e.metaState, e.deviceId, e.scanCode, e.flags, e.source),
+            )
+            return true
+        }
         if (dispatcher.dispatch(e)) return true
         // Unhandled, Android swaps X / Y for a fallback key (Y = confirm on some pads): they stay without effect.
         return super.dispatchKeyEvent(e) || io.github.thecodingdad.gamelodge.ui.input.AndroidPad.noFallback(e.keyCode)

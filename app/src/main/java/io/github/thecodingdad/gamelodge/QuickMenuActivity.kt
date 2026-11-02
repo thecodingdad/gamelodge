@@ -195,6 +195,15 @@ class QuickMenuActivity : ComponentActivity() {
         ) {
             feedback.play(io.github.thecodingdad.gamelodge.ui.feedback.UiSound.BACK)
         }
+        // Same as the launcher: translate confirm / back from the swapped event so the layout
+        // applies to them too (Android's own fallback would use the pre-swap button).
+        if (e.keyCode == KeyEvent.KEYCODE_BUTTON_A || e.keyCode == KeyEvent.KEYCODE_BUTTON_B) {
+            val focusKey = if (e.keyCode == KeyEvent.KEYCODE_BUTTON_A) KeyEvent.KEYCODE_DPAD_CENTER else KeyEvent.KEYCODE_BACK
+            super.dispatchKeyEvent(
+                KeyEvent(e.downTime, e.eventTime, e.action, focusKey, e.repeatCount, e.metaState, e.deviceId, e.scanCode, e.flags, e.source),
+            )
+            return true
+        }
         if (dispatcher.dispatch(e)) return true
         // Unhandled, Android swaps X / Y for a fallback key (Y = confirm on some pads): they stay without effect.
         return super.dispatchKeyEvent(e) || io.github.thecodingdad.gamelodge.ui.input.AndroidPad.noFallback(e.keyCode)
