@@ -182,8 +182,8 @@ data class LauncherSettings(
     val libraryDirectStart: Boolean = false,
     /** Start tab: the rows start at the top (only whole rows in view) instead of the first row at the bottom. */
     val homeRowsTop: Boolean = false,
-    /** The controller that starts a game or stream becomes player 1 (unless one is set as player 1). */
-    val starterPlayerOne: Boolean = true,
+    /** Connect the controllers to the host at stream start instead of on their first button press. */
+    val controllerAttachAtStart: Boolean = true,
     /** Send this device's SteamGridDB / IGDB keys to the hosts that allow sharing them. */
     val sendKeysToHost: Boolean = false,
     /** Narrow handle at the right screen edge that opens the quick menu over other apps. */
@@ -338,7 +338,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val homeDirectStart = booleanPreferencesKey("home_direct_start")
         val libraryDirectStart = booleanPreferencesKey("library_direct_start")
         val homeRowsTop = booleanPreferencesKey("home_rows_top")
-        val starterPlayerOne = booleanPreferencesKey("starter_player_one")
+        val controllerAttachAtStart = booleanPreferencesKey("controller_attach_at_start")
         val sendKeysToHost = booleanPreferencesKey("send_keys_to_host")
         val quickMenuEdgeHandle = booleanPreferencesKey("quick_menu_edge_handle")
         val emulation = stringPreferencesKey("emulation")
@@ -467,7 +467,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             homeDirectStart = this[K.homeDirectStart] ?: this[K.gamesDirectStart] ?: d.homeDirectStart,
             libraryDirectStart = this[K.libraryDirectStart] ?: this[K.gamesDirectStart] ?: d.libraryDirectStart,
             homeRowsTop = this[K.homeRowsTop] ?: d.homeRowsTop,
-            starterPlayerOne = this[K.starterPlayerOne] ?: d.starterPlayerOne,
+            controllerAttachAtStart = this[K.controllerAttachAtStart] ?: d.controllerAttachAtStart,
             sendKeysToHost = this[K.sendKeysToHost] ?: d.sendKeysToHost,
             quickMenuEdgeHandle = this[K.quickMenuEdgeHandle] ?: d.quickMenuEdgeHandle,
             emulation = this[K.emulation] ?: d.emulation,
@@ -585,7 +585,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         this[K.homeDirectStart] = s.homeDirectStart
         this[K.libraryDirectStart] = s.libraryDirectStart
         this[K.homeRowsTop] = s.homeRowsTop
-        this[K.starterPlayerOne] = s.starterPlayerOne
+        this[K.controllerAttachAtStart] = s.controllerAttachAtStart
         this[K.sendKeysToHost] = s.sendKeysToHost
         this[K.quickMenuEdgeHandle] = s.quickMenuEdgeHandle
         this[K.emulation] = s.emulation

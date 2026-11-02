@@ -210,9 +210,9 @@ private fun ControllerOverrideRows(c: ControllerInfo) {
     SectionHeader(stringResource(Res.string.controller_stream_section))
     Text(stringResource(Res.string.controller_overrides_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
     ChoiceRow(
-        stringResource(Res.string.controller_player), listOf<Int?>(null, 0, 1, 2, 3), s.playerSlot,
-        label = { v -> v?.let { stringResource(Res.string.controller_player_n, it + 1) } ?: stringResource(Res.string.controller_player_auto) },
-        onSelect = { v -> save { it.copy(playerSlot = v) } },
+        stringResource(Res.string.controller_auto_attach), listOf<Boolean?>(null, false), s.autoAttach?.takeIf { !it },
+        label = { v -> if (v == false) stringResource(Res.string.controller_auto_attach_off) else stringResource(Res.string.controller_auto_attach_auto) },
+        onSelect = { v -> save { it.copy(autoAttach = v) } },
     )
     ChoiceRow(
         stringResource(Res.string.controller_deadzone), listOf<Int?>(null, 0, 3, 5, 8, 10, 15, 20), s.deadzonePercent,
@@ -327,7 +327,7 @@ fun ControllerSectionScreen(section: ControllerSection) {
             ControllerSection.STREAM -> {
                 // The stream's controller options, the same for every profile (single controllers and
                 // single games can still differ in their own settings).
-                StarterPlayerOneRow(settings, update)
+                ControllerAttachRow(settings, update)
                 Text(stringResource(Res.string.controllers_stream_defaults_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
                 val editing = remember { io.github.thecodingdad.gamelodge.stream.AndroidProfileEditing(context) }
                 val base = remember { io.github.thecodingdad.gamelodge.stream.ProfileStore(context, null) }

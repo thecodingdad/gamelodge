@@ -170,7 +170,7 @@ private val settingsIndex: List<SearchEntry> = buildList {
     listOf(Res.string.combo_section, Res.string.combo_home, Res.string.combo_quick_menu, Res.string.combo_forward, Res.string.combo_service)
         .forEach { add(SearchEntry(it, SettingsTarget.ControllerPage(ControllerSection.COMBOS), Res.string.combo_section, combos = true)) }
     add(SearchEntry(Res.string.controller_section_mouse, SettingsTarget.ControllerPage(ControllerSection.MOUSE)))
-    listOf(Res.string.setting_starter_player_one, Res.string.controllers_stream_defaults, Res.string.odin_mapping_section)
+    listOf(Res.string.setting_controller_attach, Res.string.controllers_stream_defaults, Res.string.odin_mapping_section)
         .forEach { add(SearchEntry(it, SettingsTarget.ControllerPage(ControllerSection.STREAM), Res.string.controller_section_stream)) }
     addAll(page(
         SettingsPageId.SOUNDS, Res.string.setting_ui_sounds, Res.string.setting_ui_volume, Res.string.setting_sound_style,

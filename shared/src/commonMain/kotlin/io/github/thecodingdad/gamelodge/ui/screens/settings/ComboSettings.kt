@@ -259,12 +259,12 @@ fun ControllerSectionRows(
     }
 }
 
-/** The controller that starts a stream becomes player 1. */
+/** Connect the controllers at stream start instead of on their first button press. */
 @Composable
-fun StarterPlayerOneRow(settings: LauncherSettings, update: ((LauncherSettings) -> LauncherSettings) -> Unit, initialFocus: Boolean = false) {
+fun ControllerAttachRow(settings: LauncherSettings, update: ((LauncherSettings) -> LauncherSettings) -> Unit, initialFocus: Boolean = false) {
     SwitchRow(
-        org.jetbrains.compose.resources.stringResource(Res.string.setting_starter_player_one), settings.starterPlayerOne, { v -> update { it.copy(starterPlayerOne = v) } },
-        subtitle = org.jetbrains.compose.resources.stringResource(Res.string.setting_starter_player_one_sub), initialFocus = initialFocus,
+        org.jetbrains.compose.resources.stringResource(Res.string.setting_controller_attach), settings.controllerAttachAtStart, { v -> update { it.copy(controllerAttachAtStart = v) } },
+        subtitle = org.jetbrains.compose.resources.stringResource(Res.string.setting_controller_attach_sub), initialFocus = initialFocus,
     )
 }
 

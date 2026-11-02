@@ -16,8 +16,9 @@ data class ControllerSettings(
     val rumblePercent: Int? = null,
     val touchpadAsMouse: Boolean? = null,
     val motionSensors: Boolean? = null,
-    /** 0-based player slot on the host. */
-    val playerSlot: Int? = null,
+    /** Auto-attach at stream start: null = automatic (built-in pads step aside for external ones),
+     *  true = always attach, false = never attach automatically (still attaches if actually used). */
+    val autoAttach: Boolean? = null,
     /** Button combinations (key codes) of this controller: null = global, empty = off. */
     val comboHome: List<Int>? = null,
     val comboQuickMenu: List<Int>? = null,
@@ -51,6 +52,7 @@ data class ControllerSettings(
 class ControllerOverrideStore(context: Context) {
     private val prefs = context.getSharedPreferences("controller_overrides", Context.MODE_PRIVATE)
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = false }
+    private val orderStore = ControllerOrderStore(context)
     private val _all = MutableStateFlow(load())
     val all: StateFlow<Map<String, ControllerSettings>> = _all.asStateFlow()
 
@@ -79,6 +81,9 @@ class ControllerOverrideStore(context: Context) {
             // The streamed game's own settings win over the controller's.
             val pad = game()?.let { settings.gamePads[it] }
             val layout = pad?.layout ?: settings.layoutFor(descriptor)
+            // Player numbers (and which pads auto-attach) come from the remembered order, with the
+            // controller that started the stream as player 1.
+            val assignment = orderStore.assign(io.github.thecodingdad.gamelodge.input.StarterPad.starter) { _all.value[it]?.autoAttach }
             ControllerOverrides.Override().apply {
                 flipFaceButtons = layout == io.github.thecodingdad.gamelodge.data.settings.ButtonLayout.NINTENDO
                 deadzonePercent = s.deadzonePercent
@@ -89,14 +94,9 @@ class ControllerOverrideStore(context: Context) {
                 }
                 touchpadAsMouse = pad?.touchpadMouse ?: s.touchpadAsMouse
                 motionSensors = pad?.motion ?: s.motionSensors
-                playerSlot = s.playerSlot ?: 0.takeIf { descriptor == io.github.thecodingdad.gamelodge.input.StarterPad.starter && !playerOneSet(descriptor) }
+                playerSlot = assignment.slots[descriptor]
+                skipAutoAttach = descriptor !in assignment.eligible
             }
         }
-    }
-
-    /** Whether another connected controller is set as player 1. */
-    private fun playerOneSet(except: String): Boolean = android.view.InputDevice.getDeviceIds().any { id ->
-        val descriptor = android.view.InputDevice.getDevice(id)?.descriptor
-        descriptor != null && descriptor != except && _all.value[descriptor]?.playerSlot == 0
     }
 }

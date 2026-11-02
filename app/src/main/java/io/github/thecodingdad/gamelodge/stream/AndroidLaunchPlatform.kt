@@ -58,7 +58,11 @@ class AndroidLaunchPlatform(private val container: AppContainer) : LaunchPlatfor
         val app = NvApp(target.name, target.appUuid, target.appId ?: error("No app id"), target.hdrSupported)
         val prefs = PreferenceConfiguration.readPreferences(activity)
         val vDisplay = prefs.useVirtualDisplay && details.vDisplaySupported && details.vDisplayDriverReady
-        io.github.thecodingdad.gamelodge.input.StarterPad.capture(container.settings.current().starterPlayerOne)
+        // The controller that started the stream becomes player 1; optionally the connected pads
+        // attach at stream start instead of on their first input.
+        io.github.thecodingdad.gamelodge.input.StarterPad.capture(true)
+        com.limelight.binding.input.ControllerOverrides.attachAtStart = container.settings.current().controllerAttachAtStart
+        com.limelight.binding.input.ControllerOverrides.starterDescriptor = io.github.thecodingdad.gamelodge.input.StarterPad.starter
         activity.startActivity(ServerHelper.createStartIntent(activity, app, details, binder, vDisplay))
     }
 }

@@ -181,9 +181,8 @@ fun main(args: Array<String>) {
 
     val dispatcher = InputDispatcher()
     val gamepads = Gamepads(dispatcher)
-    io.github.thecodingdad.gamelodge.desktop.stream.MoonlightQt.firstPad = {
-        gamepads.starter().takeIf { container.settings.current().starterPlayerOne }
-    }
+    // The controller that starts the stream is player 1.
+    io.github.thecodingdad.gamelodge.desktop.stream.MoonlightQt.firstPad = { gamepads.starter() }
     var mainWindow: java.awt.Frame? = null
     val windowControls = WindowControls()
     val hostServices by lazy { HostServices(container.hostRole, container.hostSync, container.secrets) }

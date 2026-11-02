@@ -16,8 +16,8 @@ class ControllerOverrideStoreTest {
     @Test
     fun `settings persist per descriptor and reset removes them`() {
         val store = ControllerOverrideStore(context)
-        store.set("pad-1", ControllerSettings(rumblePercent = 50, playerSlot = 0))
-        assertEquals(ControllerSettings(rumblePercent = 50, playerSlot = 0), ControllerOverrideStore(context).get("pad-1"))
+        store.set("pad-1", ControllerSettings(rumblePercent = 50, autoAttach = false))
+        assertEquals(ControllerSettings(rumblePercent = 50, autoAttach = false), ControllerOverrideStore(context).get("pad-1"))
         assertEquals(ControllerSettings(), store.get("pad-2"))
         store.set("pad-1", ControllerSettings())
         assertTrue(ControllerOverrideStore(context).all.value.isEmpty())

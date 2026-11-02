@@ -418,7 +418,11 @@ class DesktopPlatformUi(
                 io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.MOUSE ->
                     io.github.thecodingdad.gamelodge.ui.screens.settings.MouseSettingsRows(settings, update)
                 io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.STREAM ->
-                    io.github.thecodingdad.gamelodge.ui.screens.settings.StarterPlayerOneRow(settings, update, initialFocus = true)
+                    androidx.compose.material3.Text(
+                        org.jetbrains.compose.resources.stringResource(io.github.thecodingdad.gamelodge.resources.Res.string.controller_starter_player_one_info),
+                        style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,
+                        color = io.github.thecodingdad.gamelodge.ui.theme.LauncherTheme.colors.onSurfaceMuted,
+                    )
             }
         }
     }
