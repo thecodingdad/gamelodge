@@ -202,6 +202,7 @@ private fun ControllerOverrideRows(c: ControllerInfo) {
         colorArgb = s.colorArgb,
         iconId = s.iconId,
         vendorId = c.vendorId,
+        productId = c.productId,
         onName = { v -> save { it.copy(name = v) } },
         onColor = { v -> save { it.copy(colorArgb = v) } },
         onIcon = { v -> save { it.copy(iconId = v) } },

@@ -1,9 +1,14 @@
 package io.github.thecodingdad.gamelodge.ui.screens.settings
 
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Autorenew
 import androidx.compose.ui.unit.dp
+import io.github.thecodingdad.gamelodge.ui.components.controllerScroll
+import io.github.thecodingdad.gamelodge.ui.components.popupHeightIn
+import io.github.thecodingdad.gamelodge.ui.components.restoreFocusIf
 import androidx.compose.runtime.getValue
 import io.github.thecodingdad.gamelodge.resources.*
 import androidx.compose.runtime.setValue
@@ -41,7 +46,7 @@ data class ControllerInfo(
     val displayName: String get() = customName?.takeIf { it.isNotBlank() } ?: name
 
     /** The icon to show for this controller everywhere: the chosen kind, else the detected one. */
-    val displayIcon: androidx.compose.ui.graphics.vector.ImageVector get() = controllerIconKind(iconId, vendorId).icon
+    val displayIcon: androidx.compose.ui.graphics.vector.ImageVector get() = controllerIconKind(iconId, vendorId, productId).icon
 }
 
 /** The controller used last (its layout decides the button hints); set by the platform on pad input. */
@@ -127,6 +132,7 @@ fun ControllerIdentityRows(
     colorArgb: Int?,
     iconId: String?,
     vendorId: Int,
+    productId: Int,
     onName: (String?) -> Unit,
     onColor: (Int?) -> Unit,
     onIcon: (String?) -> Unit,
@@ -139,19 +145,25 @@ fun ControllerIdentityRows(
         onClick = { keyboard.open(nameTitle, customName.orEmpty(), controller = true) { t -> onName(t.trim().ifBlank { null }) } },
         icon = Icons.Filled.Edit,
     )
-    // The icon: "automatic" (detect from the controller's vendor) or one of the known kinds.
+    // The icon: a row that opens a popup with a grid of just the glyphs (no labels).
     val iconTint = colorArgb?.let { androidx.compose.ui.graphics.Color(it) }
-    ChoiceRow(
+    var iconPicker by remember { mutableStateOf(false) }
+    NavRow(
         title = stringResource(Res.string.controller_icon),
-        options = listOf<String?>(null) + ControllerIconKind.entries.map { it.name },
-        selected = iconId,
-        label = { id -> id?.let { k -> ControllerIconKind.valueOf(k).label() } ?: stringResource(Res.string.controller_icon_auto) },
-        onSelect = { onIcon(it) },
-        icon = controllerIconKind(iconId, vendorId).icon,
-        optionIcon = { id ->
-            val kind = id?.let { ControllerIconKind.valueOf(it) } ?: controllerIconAuto(vendorId)
-            androidx.compose.material3.Icon(kind.icon, null, modifier = androidx.compose.ui.Modifier.size(24.dp), tint = iconTint ?: LauncherTheme.colors.onSurface)
+        onClick = { iconPicker = true },
+        subtitle = if (iconId == null) stringResource(Res.string.controller_icon_auto) else null,
+        trailingContent = {
+            androidx.compose.material3.Icon(
+                controllerIconKind(iconId, vendorId, productId).icon, null,
+                tint = iconTint ?: LauncherTheme.colors.onSurface,
+                modifier = androidx.compose.ui.Modifier.size(26.dp),
+            )
         },
+    )
+    if (iconPicker) ControllerIconPickerPopup(
+        selected = iconId, iconTint = iconTint,
+        onSelect = { onIcon(it); iconPicker = false },
+        onDismiss = { iconPicker = false },
     )
     var picker by remember { mutableStateOf(false) }
     val seed = colorArgb ?: LauncherTheme.colors.accent.toArgb()
@@ -168,4 +180,64 @@ fun ControllerIdentityRows(
         onAutomatic = { onColor(null) }, automatic = colorArgb == null,
         autoTitle = defaultLabel, autoSub = null,
     )
+}
+
+/** Popup to pick a controller's icon: just the glyphs in a grid, no labels. */
+@Composable
+private fun ControllerIconPickerPopup(
+    selected: String?,
+    iconTint: androidx.compose.ui.graphics.Color?,
+    onSelect: (String?) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    io.github.thecodingdad.gamelodge.ui.components.Modal(
+        visible = true, onDismiss = onDismiss,
+        title = stringResource(Res.string.controller_icon), maxWidth = 560.dp,
+    ) {
+        androidx.compose.foundation.layout.Column(
+            androidx.compose.ui.Modifier.weight(1f, fill = false)
+                .popupHeightIn(520.dp).controllerScroll(),
+        ) {
+            ControllerIconGrid(selected = selected, iconTint = iconTint, onSelect = onSelect)
+        }
+    }
+}
+
+/** All controller icons as a compact grid of glyphs only; the first tile ("automatic") clears the choice. */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun ControllerIconGrid(selected: String?, iconTint: androidx.compose.ui.graphics.Color?, onSelect: (String?) -> Unit) {
+    androidx.compose.foundation.layout.FlowRow(
+        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp),
+        verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp),
+        modifier = androidx.compose.ui.Modifier.fillMaxWidth(),
+    ) {
+        IconTile(androidx.compose.material.icons.Icons.Filled.Autorenew, selected == null, iconTint) { onSelect(null) }
+        ControllerIconKind.entries.forEach { kind ->
+            IconTile(kind.icon, selected == kind.name, iconTint) { onSelect(kind.name) }
+        }
+    }
+}
+
+@Composable
+private fun IconTile(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    selected: Boolean,
+    iconTint: androidx.compose.ui.graphics.Color?,
+    onClick: () -> Unit,
+) {
+    val colors = LauncherTheme.colors
+    io.github.thecodingdad.gamelodge.ui.components.FocusSurface(
+        onClick = onClick,
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+        color = if (selected) colors.accent.copy(alpha = 0.28f) else colors.surfaceRaised,
+        focusScale = 1.1f,
+        modifier = androidx.compose.ui.Modifier.size(52.dp).restoreFocusIf(selected),
+    ) {
+        androidx.compose.material3.Icon(
+            icon, null,
+            tint = iconTint ?: colors.onSurface,
+            modifier = androidx.compose.ui.Modifier.size(28.dp).align(androidx.compose.ui.Alignment.Center),
+        )
+    }
 }

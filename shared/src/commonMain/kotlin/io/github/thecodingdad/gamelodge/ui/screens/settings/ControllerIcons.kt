@@ -1,9 +1,7 @@
 package io.github.thecodingdad.gamelodge.ui.screens.settings
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Gamepad
 import androidx.compose.material.icons.filled.SportsEsports
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.SolidColor
@@ -11,59 +9,85 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.addPathNodes
 import androidx.compose.ui.unit.dp
 import io.github.thecodingdad.gamelodge.data.settings.ButtonLayout
-import io.github.thecodingdad.gamelodge.resources.*
-import org.jetbrains.compose.resources.StringResource
-import org.jetbrains.compose.resources.stringResource
 
 /**
- * The icon shown for a controller everywhere it appears. [GENERIC] and [RETRO] reuse Material
- * glyphs (a modern and a classic pad); the brand kinds are the vendor logos (single-path, from
- * the public simple-icons set, tinted like any other icon). A controller's kind is picked by hand
- * or, by default, detected from its USB vendor id ([controllerIconAuto]).
+ * The icon shown for a controller everywhere it appears. The brand kinds are the vendor logos
+ * (single-path, from the public simple-icons set); the "pad" and Joy-Con kinds are our own drawn
+ * silhouettes shaped like the real controllers. A controller's kind is picked by hand or, by
+ * default, detected from its USB vendor (and, for Joy-Cons, product) id ([controllerIconAuto]).
+ * All icons are tinted like any other icon.
  */
-enum class ControllerIconKind(val icon: ImageVector, private val label: StringResource) {
-    GENERIC(Icons.Filled.SportsEsports, Res.string.controller_icon_generic),
-    HANDHELD(brandIcon("Handheld", HANDHELD_PATH, PathFillType.EvenOdd), Res.string.controller_icon_handheld),
-    XBOX(brandIcon("Xbox", XBOX_PATH), Res.string.controller_icon_xbox),
-    PLAYSTATION(brandIcon("PlayStation", PLAYSTATION_PATH), Res.string.controller_icon_playstation),
-    NINTENDO(brandIcon("NintendoSwitch", NINTENDO_PATH), Res.string.controller_icon_nintendo),
-    GAMECUBE(brandIcon("GameCube", GAMECUBE_PATH), Res.string.controller_icon_gamecube),
-    STEAM(brandIcon("Steam", STEAM_PATH), Res.string.controller_icon_steam),
-    RETRO(Icons.Filled.Gamepad, Res.string.controller_icon_retro);
-
-    @Composable fun label(): String = stringResource(label)
+enum class ControllerIconKind(val icon: ImageVector) {
+    GENERIC(Icons.Filled.SportsEsports),
+    HANDHELD(shapeIcon("Handheld", HANDHELD_PATH)),
+    PAD(shapeIcon("Gamepad", PAD_PATH)),
+    PAD_XBOX(shapeIcon("XboxPad", PAD_XBOX_PATH)),
+    PAD_PLAYSTATION(shapeIcon("DualShock", PAD_PLAYSTATION_PATH)),
+    PAD_GAMECUBE(shapeIcon("GameCubePad", PAD_GAMECUBE_PATH)),
+    JOYCON_L(shapeIcon("JoyConL", JOYCON_L_PATH)),
+    JOYCON_R(shapeIcon("JoyConR", JOYCON_R_PATH)),
+    XBOX(brandIcon("Xbox", XBOX_PATH)),
+    PLAYSTATION(brandIcon("PlayStation", PLAYSTATION_PATH)),
+    NINTENDO(brandIcon("NintendoSwitch", NINTENDO_PATH)),
+    GAMECUBE(brandIcon("GameCube", GAMECUBE_PATH)),
+    STEAM(brandIcon("Steam", STEAM_PATH)),
+    RETRO(brandIcon("Classic", CLASSIC_PATH)),
 }
 
-/** The kind detected from a USB vendor id, or [GENERIC] for an unknown one. */
-fun controllerIconAuto(vendorId: Int): ControllerIconKind = when (vendorId) {
-    0x045E -> ControllerIconKind.XBOX        // Microsoft
-    0x054C -> ControllerIconKind.PLAYSTATION // Sony
-    0x057E -> ControllerIconKind.NINTENDO    // Nintendo
-    0x28DE -> ControllerIconKind.STEAM       // Valve
-    0x2DC8 -> ControllerIconKind.RETRO       // 8BitDo (SNES-style pads)
-    0x2020 -> ControllerIconKind.HANDHELD    // AYN Odin built-in controls
-    else -> ControllerIconKind.GENERIC
+/** The kind detected from a USB vendor id (and product id, to tell the two Joy-Cons apart). */
+fun controllerIconAuto(vendorId: Int, productId: Int = 0): ControllerIconKind = when (vendorId) {
+    0x045E -> ControllerIconKind.PAD_XBOX        // Microsoft
+    0x054C -> ControllerIconKind.PAD_PLAYSTATION // Sony
+    0x057E -> when (productId) {                  // Nintendo
+        0x2006 -> ControllerIconKind.JOYCON_L
+        0x2007 -> ControllerIconKind.JOYCON_R
+        else -> ControllerIconKind.NINTENDO      // Pro Controller etc.: the Switch logo
+    }
+    0x28DE -> ControllerIconKind.STEAM           // Valve
+    0x2DC8 -> ControllerIconKind.RETRO           // 8BitDo (SNES-style pads)
+    0x2020 -> ControllerIconKind.HANDHELD        // AYN Odin built-in controls
+    else -> ControllerIconKind.PAD               // a generic gamepad shape
 }
 
-/** The kind to use: the one the user chose ([iconId] = its name), else detected from [vendorId]. */
-fun controllerIconKind(iconId: String?, vendorId: Int): ControllerIconKind =
-    iconId?.let { id -> ControllerIconKind.entries.firstOrNull { it.name == id } } ?: controllerIconAuto(vendorId)
+/** The kind to use: the one the user chose ([iconId] = its name), else detected from the ids. */
+fun controllerIconKind(iconId: String?, vendorId: Int, productId: Int = 0): ControllerIconKind =
+    iconId?.let { id -> ControllerIconKind.entries.firstOrNull { it.name == id } } ?: controllerIconAuto(vendorId, productId)
 
 /**
  * The button-hint layout that matches a controller's vendor (Xbox, PlayStation or Nintendo), or
  * null when the pad has no own button style and the global default should be used.
  */
-fun buttonLayoutForVendor(vendorId: Int): ButtonLayout? = when (controllerIconAuto(vendorId)) {
-    ControllerIconKind.XBOX -> ButtonLayout.XBOX
-    ControllerIconKind.PLAYSTATION -> ButtonLayout.PLAYSTATION
-    ControllerIconKind.NINTENDO -> ButtonLayout.NINTENDO
+fun buttonLayoutForVendor(vendorId: Int): ButtonLayout? = when (vendorId) {
+    0x045E -> ButtonLayout.XBOX
+    0x054C -> ButtonLayout.PLAYSTATION
+    0x057E -> ButtonLayout.NINTENDO
     else -> null
 }
+
+private fun shapeIcon(name: String, pathData: String): ImageVector = brandIcon(name, pathData, PathFillType.EvenOdd)
 
 private fun brandIcon(name: String, pathData: String, fillType: PathFillType = PathFillType.NonZero): ImageVector =
     ImageVector.Builder(name, 24.dp, 24.dp, 24f, 24f).apply {
         addPath(addPathNodes(pathData), pathFillType = fillType, fill = SolidColor(Color.Black))
     }.build()
+
+// Controller silhouettes (body first, cut-outs via the even-odd fill): a shared gamepad body with
+// different stick / d-pad / button layouts, plus two Joy-Cons as sideways rounded rectangles.
+private const val PAD_PATH =
+    "M5.29 7.21L18.66 7.16L19.98 7.49L21.41 8.37L22.67 10.19L23 11.39L23 12.61L22.67 13.81L22.12 14.8L20.96 15.96L19.98 16.51L18.66 16.84L16.68 16.62L15.9 16.29L14.8 15.41L9.2 15.41L7.88 16.4L6.88 16.73L5.34 16.84L4.03 16.51L2.48 15.52L1.66 14.47L1.11 13.15L1 11.39L1.66 9.53L2.48 8.48L4.03 7.49zM17.83 8.97L18.54 8.92L19.15 9.53L19.15 10.4L18.66 10.9L17.77 10.9L17.17 10.29L17.17 9.63zM5.29 9.96L6.22 9.91L6.5 10.19L6.5 11.29L7.65 11.34L7.93 11.72L7.93 12.28L7.65 12.66L6.5 12.71L6.5 13.81L6.22 14.09L5.34 14.09L5.18 13.92L5.01 12.66L3.92 12.66L3.75 12.49L3.75 11.5L3.92 11.34L5.01 11.34zM15.74 11.06L16.46 11.01L17.17 11.72L17.06 12.49L16.46 12.99L15.57 12.88L15.08 12.28L15.19 11.5zM19.81 11.06L20.64 11.01L21.13 11.39L21.24 12.38L20.86 12.88L19.86 12.99L19.37 12.61L19.26 11.62zM10.9 11.72L11.29 11.67L11.45 12.05L10.19 13.32L9.96 13.32L9.69 12.94L9.8 12.71zM13.21 11.72L13.6 11.67L13.87 11.95L13.76 12.16L12.61 13.32L12.38 13.32L12.11 13.04L12.22 12.71zM18.05 13.04L18.66 13.1L19.26 13.92L19.04 14.7L18.54 15.08L17.66 14.97L17.17 14.37L17.28 13.48z"
+private const val PAD_PLAYSTATION_PATH =
+    "M4.58 5L5.85 4.97L6.57 5.17L6.7 5.49L7.09 5.62L8.75 5.72L8.75 9.36L9.17 9.79L14.77 9.79L15.25 9.17L15.29 5.62L16.91 5.62L17.24 5.49L17.37 5.17L18.09 4.97L19.32 4.97L20.1 5.23L21.7 7.87L22.67 12.1L23 16.07L22.8 17.37L22.41 18.22L21.8 18.77L21.08 19.03L20.23 19.03L19.52 18.7L18.7 17.83L17.34 14.18L17.04 13.95L16 14.54L15.09 14.54L13.92 13.89L10.01 13.89L8.84 14.54L7.93 14.54L6.89 13.95L6.66 14.12L5.56 17.24L4.61 18.57L3.77 19.03L2.92 19.03L1.88 18.57L1.2 17.57L1 16.59L1 14.12L1.33 11.84L2.43 7.41L3.47 5.65L3.8 5.52L3.8 5.26zM9.07 5.65L14.83 5.62L14.86 9.3L14.64 9.46L9.3 9.46L9.07 9.23zM18.83 6.7L19.32 6.79L19.62 7.15L19.55 7.74L19 8.09L18.54 7.96L18.25 7.54L18.38 6.96zM4.58 7.22L5.62 7.28L5.62 8.19L5.2 8.62L4.94 8.62L4.51 8.19zM17.27 8.26L17.76 8.36L18.05 8.71L17.99 9.3L17.43 9.66L16.98 9.53L16.69 9.1L16.82 8.52zM20.4 8.26L20.88 8.36L21.18 8.71L21.11 9.3L20.56 9.66L20.1 9.53L19.81 9.1L19.94 8.52zM3.28 8.45L4.29 8.49L4.64 8.84L4.64 9.17L4.16 9.59L3.38 9.59L3.21 9.43zM5.88 8.45L6.86 8.52L6.76 9.59L5.98 9.59L5.43 9.1L5.49 8.78zM4.91 9.43L5.2 9.4L5.62 9.82L5.52 10.83L4.51 10.73L4.51 9.82zM18.83 9.82L19.32 9.92L19.62 10.28L19.55 10.86L19 11.22L18.54 11.09L18.25 10.67L18.38 10.08zM8.09 11.06L9.1 11.15L9.79 11.97L9.85 12.49L9.59 13.2L8.78 13.76L7.67 13.56L7.12 12.88L7.05 12.16L7.25 11.64zM15.12 11.06L15.87 11.02L16.26 11.22L16.88 12.03L16.69 13.14L15.87 13.76L14.77 13.56L14.15 12.75L14.34 11.64z"
+private const val PAD_XBOX_PATH =
+    "M7.37 4.61L8.15 4.55L9.05 5.09L8.99 5.51L9.23 5.15L14.89 5.27L15.97 4.55L17.29 4.67L19.33 5.51L19.69 6.35L18.01 5.63L16.33 5.39L15.61 5.99L15.37 5.87L15.31 6.41L16.21 5.63L17.17 5.63L18.85 6.11L20.05 6.71L20.48 7.25L22.28 12.18L22.88 14.58L23 16.87L22.28 18.67L21.38 19.33L20.66 19.45L17.17 16.21L16.21 15.73L7.79 15.73L6.59 16.45L3.34 19.45L2.26 19.09L1.24 17.71L1 16.03L1.48 13.14L2.8 9.05L3.64 7.13L4.19 6.59L5.51 5.99L6.83 5.63L7.79 5.63L8.99 6.83L8.69 6.29L8.81 5.81L8.51 6.11L7.79 5.39L5.99 5.63L4.25 6.29L4.91 5.39zM11.82 5.45L12.48 5.51L13.02 6.17L12.9 6.89L12.12 7.43L11.52 7.31L10.98 6.41L11.1 5.93zM15.19 6.53L15.31 6.65L13.92 7.91L10.08 7.91L9.05 7.01L9.11 6.83L9.96 7.67L14.04 7.67zM17.47 7.01L17.77 6.95L18.43 7.49L18.43 7.97L17.89 8.51L17.29 8.39L16.87 7.73zM17.35 7.25L17.89 7.19L18.19 7.49L18.19 7.97L17.89 8.27L17.41 8.27L17.11 7.97L17.11 7.49zM5.81 7.61L7.19 7.67L7.61 7.97L8.09 8.93L7.85 10.02L6.83 10.8L5.99 10.8L5.51 10.56L4.85 9.78L4.85 8.57zM5.93 8.09L6.83 8.03L7.61 8.93L7.37 9.9L6.71 10.32L6.11 10.32L5.33 9.66L5.33 8.69zM16.03 8.45L16.45 8.51L16.87 8.93L16.75 9.66L16.33 9.96L15.97 9.96L15.43 9.54L15.55 8.69zM19.15 8.45L19.57 8.51L19.87 8.93L19.87 9.54L19.33 9.96L18.73 9.84L18.43 9.42L18.43 8.93zM15.91 8.69L16.33 8.63L16.63 8.93L16.75 9.3L16.45 9.72L15.67 9.54L15.55 9.05zM18.91 8.69L19.63 8.81L19.75 9.3L19.45 9.72L18.67 9.54L18.55 9.17zM10.14 8.81L10.68 8.75L10.98 9.05L10.8 9.6L10.32 9.72L10.02 9.42zM13.38 8.81L13.92 8.75L14.1 8.93L13.92 9.6L13.56 9.72L13.26 9.54L13.14 9.05zM17.35 10.02L17.89 9.96L18.43 10.5L18.43 10.86L18.01 11.4L17.41 11.4L16.99 11.1L16.87 10.74zM17.59 10.14L18.19 10.38L18.19 10.98L17.77 11.28L17.29 11.16L17.11 10.86L17.11 10.5zM14.34 10.98L15.37 10.92L16.39 11.82L16.39 13.26L15.61 14.04L14.4 14.16L13.92 13.92L13.26 13.02L13.26 12.06L13.5 11.58zM8.69 11.22L9.6 11.16L9.66 12.06L10.74 12.3L10.74 13.14L10.56 13.32L9.72 13.32L9.6 14.28L8.75 14.28L8.69 13.38L7.61 13.14L7.61 12.3L8.51 12.24L8.69 12.06zM14.46 11.46L15.25 11.4L15.91 11.94L16.03 12.78L15.49 13.56L14.52 13.68L13.74 12.9L13.74 12.06z"
+private const val PAD_GAMECUBE_PATH =
+    "M9.69 3.7L13.71 3.64L15.36 3.97L16.12 3.75L17.55 3.86L18.54 4.3L18.98 4.74L20.75 5.29L22.12 6.56L22.67 7.66L22.89 8.64L22.78 10.41L23 17.23L22.67 19.09L21.95 20.14L21.52 20.36L20.75 20.36L19.81 19.32L19.15 16.23L18.98 13.98L18.71 15.25L18.27 16.12L16.79 17.28L15.13 17.39L14.14 16.95L13.32 16.12L12.77 14.91L12.77 13.48L13.32 12.28L14.86 10.96L12.71 10.68L9.14 10.96L10.57 12.16L11.23 13.6L11.23 14.91L10.79 16.02L10.29 16.62L8.87 17.39L7.21 17.28L6.55 16.95L5.73 16.12L5.4 15.57L5.01 13.98L4.63 17.55L3.86 19.98L3.37 20.36L2.38 20.36L1.66 19.75L1.22 18.77L1 17.34L1 13.16L1.22 10.41L1.11 8.64L1.44 7.44L1.99 6.45L2.92 5.51L3.7 5.07L4.68 4.85L5.67 3.97L6.44 3.75L8.87 3.86zM18.38 5.57L19.54 5.62L19.81 5.9L19.81 6.45L19.54 6.72L17.77 7.05L17.39 6.67L17.39 6.34L17.89 5.73zM4.19 6.12L5.56 6.06L6.33 6.39L7.05 7L7.6 7.99L7.71 9.3L7.49 10.07L7.27 10.52L5.89 11.67L4.35 11.78L3.58 11.45L2.76 10.73L2.21 9.53L2.21 8.32L2.54 7.44L3.37 6.5zM4.74 6.56L5.12 6.5L6.55 7.16L7.27 8.87L6.72 10.41L5.01 11.34L3.47 10.68L2.65 8.98L3.31 7.22zM21.24 7L21.9 7.33L22.23 8.32L22.12 9.09L21.62 9.58L20.91 9.2L21.02 8.43L20.8 7.33zM18.93 7.11L19.98 7.27L20.69 8.32L20.47 9.41L19.54 10.13L18.43 9.91L17.83 9.09L17.94 7.88L18.32 7.38zM4.52 7.44L5.34 7.38L5.79 7.6L6.39 8.43L6.39 9.3L5.46 10.35L4.25 10.24L3.53 9.3L3.75 7.99zM11.67 8.64L12.16 8.7L12.55 9.2L12.44 9.75L11.95 10.13L11.5 10.02L11.12 9.53L11.23 8.98zM16.18 8.98L16.89 8.92L17.39 9.53L17.28 10.3L16.79 10.68L16.23 10.68L15.74 10.19L15.74 9.41zM15.74 11.84L17.34 12.44L18.05 14.04L17.5 15.91L15.9 16.62L14.37 16.07L13.54 14.48L14.09 12.61zM7.71 12.71L8.76 12.66L8.81 13.6L9.69 13.71L9.69 14.8L8.81 14.91L8.76 15.85L7.65 15.85L7.6 14.91L6.72 14.8L6.72 13.71L7.54 13.65zM15.63 12.71L16.57 12.88L17.28 13.93L17.06 15.14L16.23 15.74L15.13 15.63L14.42 14.8L14.31 14.25L14.53 13.48L14.91 12.99z"
+private const val JOYCON_L_PATH =
+    "M12.11 1L15.53 1L15.47 23L12.17 23L10.4 22.34L9.13 21.07L8.47 19.31L8.47 4.64L8.69 3.76L9.46 2.43L10.4 1.61zM13.76 2.98L15.03 2.93L15.09 3.32L13.93 3.37zM12 4.86L12.39 4.8L13.27 5.14L13.98 6.29L13.76 7.4L12.72 8.22L11.5 8.11L10.9 7.62L10.57 6.95L10.57 6.07L10.79 5.63L11.39 5.03zM12 10.26L12.5 10.21L13.1 10.81L12.99 11.48L12.28 11.86L11.94 11.75L11.45 11.04L11.56 10.59zM10.35 11.92L10.95 11.86L11.34 12.14L11.45 12.91L11.17 13.3L10.4 13.41L10.02 13.13L9.9 12.36zM13.54 11.92L14.26 11.86L14.76 12.47L14.65 13.02L14.26 13.41L13.6 13.41L13.1 12.8L13.1 12.47zM12.22 13.46L12.83 13.63L13.1 14.01L12.99 14.67L12.5 15.06L11.83 14.95L11.45 14.34L11.56 13.9zM12.88 16.22L13.93 16.16L14.1 16.33L14.1 17.21L13.93 17.38L12.94 17.38L12.77 17.21z"
+private const val JOYCON_R_PATH =
+    "M8.48 1.05L11.84 1L13.6 1.66L14.86 2.92L15.52 4.68L15.41 19.86L14.86 21.07L14.04 22.01L12.71 22.78L11.84 23L8.48 22.95zM9.47 2.59L9.75 2.54L9.8 2.92L10.24 3.04L10.24 3.37L9.86 3.42L9.75 3.86L9.47 3.8L9.41 3.42L9.03 3.37L9.03 3.04L9.41 2.98zM11.45 4.25L12.16 4.19L12.55 4.58L12.55 5.34L12.28 5.62L11.5 5.73L11.01 5.23L11.01 4.68zM10.02 5.79L10.73 5.95L11.01 6.44L10.9 7L10.41 7.38L9.75 7.27L9.36 6.77L9.58 6zM13.32 5.79L13.82 5.84L14.2 6.22L14.2 6.88L13.6 7.38L13.04 7.27L12.66 6.88L12.66 6.22zM11.56 7.43L12.05 7.38L12.55 7.88L12.55 8.54L11.95 9.03L11.39 8.92L11.01 8.43L11.12 7.76zM11.34 11.06L12.5 11.12L13.43 12.16L13.54 12.71L13.21 13.71L12.05 14.42L10.96 14.2L10.46 13.81L10.13 13.15L10.24 11.95L10.73 11.34zM10.35 16.02L10.85 15.96L11.45 16.57L11.34 17.23L11.07 17.5L10.52 17.61L10.07 17.39L9.8 16.89L9.91 16.35z"
+
+private const val CLASSIC_PATH =
+    "M6,7H18A5,5 0 0,1 23,12A5,5 0 0,1 18,17C16.36,17 14.91,16.21 14,15H10C9.09,16.21 7.64,17 6,17A5,5 0 0,1 1,12A5,5 0 0,1 6,7M19.75,9.5A1.25,1.25 0 0,0 18.5,10.75A1.25,1.25 0 0,0 19.75,12A1.25,1.25 0 0,0 21,10.75A1.25,1.25 0 0,0 19.75,9.5M17.25,12A1.25,1.25 0 0,0 16,13.25A1.25,1.25 0 0,0 17.25,14.5A1.25,1.25 0 0,0 18.5,13.25A1.25,1.25 0 0,0 17.25,12M5,9V11H3V13H5V15H7V13H9V11H7V9H5Z"
 
 // A generic handheld: a landscape device with a centred screen, a round d-pad and two buttons
 // (cut out via the even-odd fill), for built-in console controls like the Odin's.
