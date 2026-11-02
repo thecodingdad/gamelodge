@@ -25,6 +25,8 @@ data class ControllerSettings(
     val colorArgb: Int? = null,
     /** The icon kind (a [ControllerIconKind] name) the user chose; null = detect from the vendor. */
     val iconId: String? = null,
+    /** Which player LEDs light (bit 0 = LED 1 … bit 3 = LED 4); null = automatic (the player number). */
+    val ledPattern: Int? = null,
     /** Button combinations (key codes) of this controller: null = global, empty = off. */
     val comboHome: List<Int>? = null,
     val comboQuickMenu: List<Int>? = null,

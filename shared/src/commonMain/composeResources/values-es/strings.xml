@@ -759,6 +759,10 @@
     <string name="controller_icon_gamecube">GameCube</string>
     <string name="controller_icon_steam">Steam</string>
     <string name="controller_icon_retro">Retro</string>
+    <string name="controller_led_section">LED de jugador</string>
+    <string name="controller_led_auto">Automatico (numero de jugador)</string>
+    <string name="controller_led_auto_sub">Muestra el numero de jugador de este mando.</string>
+    <string name="controller_led_n">LED %1$d</string>
     <string name="controller_deadzone">Zona muerta del stick</string>
     <string name="controller_rumble">Vibración</string>
     <string name="controller_motion">Sensores de movimiento (giroscopio)</string>

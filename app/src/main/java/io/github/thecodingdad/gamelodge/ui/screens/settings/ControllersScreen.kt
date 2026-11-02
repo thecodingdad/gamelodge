@@ -208,6 +208,35 @@ private fun ControllerOverrideRows(c: ControllerInfo) {
         onIcon = { v -> save { it.copy(iconId = v) } },
     )
 
+    // Player LEDs (controllers that have them, e.g. Joy-Cons): automatic (the player number) or by hand.
+    val ledContext = LocalContext.current
+    val lights = remember { io.github.thecodingdad.gamelodge.stream.ControllerLights(ledContext, ledContext.container.controllerSettings) }
+    if (remember(c.id) { lights.hasPlayerLights(c.id) }) {
+        SectionHeader(stringResource(Res.string.controller_led_section))
+        val ledAuto = s.ledPattern == null
+        SwitchRow(
+            stringResource(Res.string.controller_led_auto), ledAuto,
+            { on ->
+                if (on) {
+                    save { it.copy(ledPattern = null) }
+                } else {
+                    val slot = io.github.thecodingdad.gamelodge.stream.ControllerOrderStore(ledContext).assign(null) { true }.slots[c.descriptor] ?: 0
+                    save { it.copy(ledPattern = if (slot in 0..3) 1 shl slot else 1) }
+                }
+            },
+            subtitle = stringResource(Res.string.controller_led_auto_sub),
+        )
+        if (!ledAuto) {
+            val pattern = s.ledPattern ?: 0
+            (0..3).forEach { i ->
+                SwitchRow(
+                    stringResource(Res.string.controller_led_n, i + 1), (pattern shr i) and 1 == 1,
+                    { on -> save { it.copy(ledPattern = if (on) pattern or (1 shl i) else pattern and (1 shl i).inv()) } },
+                )
+            }
+        }
+    }
+
     val launcherSettings by LocalContext.current.container.settings.settings.collectAsState(null)
     // In the launcher: layout and button combinations of this controller.
     val settingsRepo = LocalContext.current.container.settings

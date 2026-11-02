@@ -759,6 +759,10 @@
     <string name="controller_icon_gamecube">GameCube</string>
     <string name="controller_icon_steam">Steam</string>
     <string name="controller_icon_retro">Retro</string>
+    <string name="controller_led_section">Player LEDs</string>
+    <string name="controller_led_auto">Automatic (player number)</string>
+    <string name="controller_led_auto_sub">Shows this controller's player number.</string>
+    <string name="controller_led_n">LED %1$d</string>
     <string name="controller_deadzone">Stick dead zone</string>
     <string name="controller_rumble">Rumble</string>
     <string name="controller_motion">Motion sensors (gyro)</string>

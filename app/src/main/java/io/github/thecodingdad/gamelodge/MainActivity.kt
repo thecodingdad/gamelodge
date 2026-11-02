@@ -83,6 +83,20 @@ class MainActivity : ComponentActivity() {
                 vm.settings.map { it.tvModeId }.distinctUntilChanged().collect { checkTv() }
             }
         }
+        // Player LEDs (Joy-Cons): re-apply when controllers connect/disconnect or their settings change.
+        getSystemService(android.hardware.input.InputManager::class.java)?.registerInputDeviceListener(
+            object : android.hardware.input.InputManager.InputDeviceListener {
+                override fun onInputDeviceAdded(id: Int) = controllerLights.refresh()
+                override fun onInputDeviceRemoved(id: Int) = controllerLights.refresh()
+                override fun onInputDeviceChanged(id: Int) = controllerLights.refresh()
+            },
+            null,
+        )
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                container.controllerSettings.all.collect { controllerLights.refresh() }
+            }
+        }
         feedback = UiFeedback(cacheDir, io.github.thecodingdad.gamelodge.ui.feedback.AndroidFeedbackOutput(this)).also { it.load() }
         handleQuickMenuExtra(intent)
         setContent {
@@ -150,6 +164,14 @@ class MainActivity : ComponentActivity() {
     /** Stopped (another app, stream) and not resumed since: Home only returns to the launcher. */
     private var returningFromBackground = false
 
+    /** Player-LED driver for controllers that have them (Joy-Cons). */
+    private val controllerLights by lazy { io.github.thecodingdad.gamelodge.stream.ControllerLights(this, container.controllerSettings) }
+
+    override fun onDestroy() {
+        controllerLights.releaseAll()
+        super.onDestroy()
+    }
+
     override fun onStop() {
         returningFromBackground = true
         started = false
@@ -176,6 +198,8 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         returningFromBackground = false
         resumed = true
+        // Back in the launcher the host no longer owns the player LEDs: set them to our patterns again.
+        controllerLights.refresh()
         container.emulation.rescanIfStale()
         // Also picks up a just granted overlay permission.
         io.github.thecodingdad.gamelodge.system.EdgeHandle.refresh(this)
