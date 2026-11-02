@@ -760,6 +760,9 @@
     <string name="controller_led_section">Spieler-LEDs</string>
     <string name="controller_led_auto">Automatisch (Spielernummer)</string>
     <string name="controller_led_auto_sub">Zeigt die Spielernummer dieses Controllers.</string>
+    <string name="controller_led_lights">LEDs</string>
+    <string name="controller_led_home">Home-Button-LED</string>
+    <string name="controller_led_home_sub">Lässt den Ring am Home-Button leuchten.</string>
     <string name="controller_led_n">LED %1$d</string>
     <string name="controller_deadzone">Stick-Deadzone</string>
     <string name="controller_rumble">Vibration</string>

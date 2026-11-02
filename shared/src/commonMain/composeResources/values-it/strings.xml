@@ -762,6 +762,9 @@
     <string name="controller_led_section">LED giocatore</string>
     <string name="controller_led_auto">Automatico (numero giocatore)</string>
     <string name="controller_led_auto_sub">Mostra il numero giocatore di questo controller.</string>
+    <string name="controller_led_lights">LEDs</string>
+    <string name="controller_led_home">LED del tasto Home</string>
+    <string name="controller_led_home_sub">Illumina l'anello del tasto Home.</string>
     <string name="controller_led_n">LED %1$d</string>
     <string name="controller_deadzone">Zona morta dello stick</string>
     <string name="controller_rumble">Vibrazione</string>

@@ -12,11 +12,13 @@ import androidx.annotation.RequiresApi
 /**
  * Drives the player-indicator LEDs on controllers that expose them (e.g. Joy-Cons). Each controller
  * shows a pattern of its (up to four) player LEDs: by default the player number from the remembered
- * order, or a fixed pattern the user chose ([ControllerSettings.ledPattern]).
+ * order, or a fixed pattern the user chose ([ControllerSettings.ledPattern]). Controllers with a
+ * fifth light (the Right Joy-Con's Home-button ring) also get that set from [ControllerSettings.homeLed]
+ * so it stops glowing on its own.
  *
  * A [LightsManager] session is held open per device so the lights stay set while the launcher runs.
- * The host takes the LEDs over during a stream; [refresh] re-applies them on return. Only Android 12+
- * (LightsManager) and only devices that actually report player lights are touched.
+ * The host/system owns the LEDs while a game is focused; [refresh] re-applies them on return. Only
+ * Android 12+ (LightsManager) and only devices that actually report player lights are touched.
  */
 class ControllerLights(context: Context, private val store: ControllerOverrideStore) {
     private val order = ControllerOrderStore(context)
@@ -24,35 +26,37 @@ class ControllerLights(context: Context, private val store: ControllerOverrideSt
 
     private val supported get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
 
-    /** The player LEDs of [dev] (named "player-N"), ordered by number, or empty if it has none. */
+    /** The device's player lights by number (1..4 = indicator LEDs, 5 = the Home-button ring). */
     @RequiresApi(Build.VERSION_CODES.S)
-    private fun playerLights(dev: InputDevice): List<Light> {
-        val lm = dev.lightsManager ?: return emptyList()
-        return lm.lights
-            .mapNotNull { l -> playerNumber(l.name)?.let { it to l } }
-            .sortedBy { it.first }
-            .map { it.second }
+    private fun lightsByNumber(dev: InputDevice): Map<Int, Light> {
+        val lm = dev.lightsManager ?: return emptyMap()
+        return lm.lights.mapNotNull { l -> playerNumber(l.name)?.let { it to l } }.toMap()
     }
 
     private fun playerNumber(name: String?): Int? =
-        Regex("player[-_ ]?(\\d+)").find(name.orEmpty().lowercase())?.groupValues?.get(1)?.toIntOrNull()?.takeIf { it in 1..4 }
+        Regex("player[-_ ]?(\\d+)").find(name.orEmpty().lowercase())?.groupValues?.get(1)?.toIntOrNull()?.takeIf { it in 1..5 }
 
-    /** Whether [deviceId] has player LEDs we can set (so the UI can show the LED controls). */
-    fun hasPlayerLights(deviceId: Int): Boolean {
-        if (!supported) return false
-        val dev = InputDevice.getDevice(deviceId) ?: return false
-        return playerLights(dev).isNotEmpty()
+    /** Whether [deviceId] has indicator LEDs we can set (so the UI can show the LED controls). */
+    fun hasPlayerLights(deviceId: Int): Boolean = numbers(deviceId).any { it in 1..4 }
+
+    /** Whether [deviceId] has a Home-button LED (the Right Joy-Con's ring). */
+    fun hasHomeLight(deviceId: Int): Boolean = 5 in numbers(deviceId)
+
+    private fun numbers(deviceId: Int): Set<Int> {
+        if (!supported) return emptySet()
+        val dev = InputDevice.getDevice(deviceId) ?: return emptySet()
+        return lightsByNumber(dev).keys
     }
 
     @RequiresApi(Build.VERSION_CODES.S)
-    private fun apply(dev: InputDevice, pattern: Int) {
-        val lights = playerLights(dev)
+    private fun apply(dev: InputDevice, pattern: Int, homeOn: Boolean) {
+        val lights = lightsByNumber(dev)
         if (lights.isEmpty()) return
         val lm = dev.lightsManager ?: return
         val session = sessions.getOrPut(dev.id) { lm.openSession() }
         val req = LightsRequest.Builder()
-        lights.forEachIndexed { i, light ->
-            val on = (pattern shr i) and 1 == 1
+        for ((number, light) in lights) {
+            val on = if (number == 5) homeOn else (pattern shr (number - 1)) and 1 == 1
             req.addLight(light, LightState.Builder().setColor(if (on) -0x1 else 0).build())
         }
         session.requestLights(req.build())
@@ -75,9 +79,9 @@ class ControllerLights(context: Context, private val store: ControllerOverrideSt
         for (id in InputDevice.getDeviceIds()) {
             val dev = InputDevice.getDevice(id) ?: continue
             if (!(dev.supportsSource(InputDevice.SOURCE_GAMEPAD) || dev.supportsSource(InputDevice.SOURCE_JOYSTICK))) continue
-            if (playerLights(dev).isEmpty()) continue
+            if (lightsByNumber(dev).isEmpty()) continue
             present.add(id)
-            apply(dev, patternFor(dev.descriptor, slots))
+            apply(dev, patternFor(dev.descriptor, slots), store.get(dev.descriptor).homeLed)
         }
         sessions.keys.filter { it !in present }.toList().forEach { sessions.remove(it)?.close() }
     }

@@ -17,6 +17,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.heightIn
 import io.github.thecodingdad.gamelodge.container
 import androidx.compose.runtime.collectAsState
@@ -92,10 +96,12 @@ fun rememberAndroidControllers(): List<ControllerInfo> {
             revision++
         }
     }
-    // The user's name and colour for each controller (kept per device descriptor).
+    // Enumerate the devices only when they actually change (binder calls); re-apply the user's
+    // name/colour/icon cheaply whenever a setting changes, without re-querying every device.
+    val base = remember(revision) { connectedControllers() }
     val overrides by context.container.controllerSettings.all.collectAsState()
-    return remember(revision, overrides) {
-        connectedControllers().map { c ->
+    return remember(base, overrides) {
+        base.map { c ->
             val s = overrides[c.descriptor]
             if (s?.name != null || s?.colorArgb != null || s?.iconId != null) c.copy(customName = s.name, colorArgb = s.colorArgb, iconId = s.iconId) else c
         }
@@ -227,13 +233,14 @@ private fun ControllerOverrideRows(c: ControllerInfo) {
             subtitle = stringResource(Res.string.controller_led_auto_sub),
         )
         if (!ledAuto) {
-            val pattern = s.ledPattern ?: 0
-            (0..3).forEach { i ->
-                SwitchRow(
-                    stringResource(Res.string.controller_led_n, i + 1), (pattern shr i) and 1 == 1,
-                    { on -> save { it.copy(ledPattern = if (on) pattern or (1 shl i) else pattern and (1 shl i).inv()) } },
-                )
-            }
+            ControllerLedRow(s.ledPattern ?: 0) { p -> save { it.copy(ledPattern = p) } }
+        }
+        if (remember(c.id) { lights.hasHomeLight(c.id) }) {
+            SwitchRow(
+                stringResource(Res.string.controller_led_home), s.homeLed,
+                { on -> save { it.copy(homeLed = on) } },
+                subtitle = stringResource(Res.string.controller_led_home_sub),
+            )
         }
     }
 
@@ -281,6 +288,43 @@ private fun ControllerOverrideRows(c: ControllerInfo) {
         ChoiceRow(stringResource(Res.string.controller_touchpad_mouse), tri, s.touchpadAsMouse, label = triLabel, onSelect = { v -> save { it.copy(touchpadAsMouse = v) } })
     }
 
+}
+
+/** One row with four tappable squares, one per player LED; filled = on. */
+@Composable
+private fun ControllerLedRow(pattern: Int, onChange: (Int) -> Unit) {
+    val colors = LauncherTheme.colors
+    androidx.compose.foundation.layout.Row(
+        androidx.compose.ui.Modifier.fillMaxWidth().heightIn(min = 68.dp)
+            .clip(androidx.compose.foundation.shape.RoundedCornerShape(LauncherTheme.dimens.cornerRadius))
+            .background(io.github.thecodingdad.gamelodge.ui.components.LocalRowSurface.current ?: colors.surface)
+            .padding(horizontal = 20.dp, vertical = 12.dp),
+        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+    ) {
+        Text(
+            stringResource(Res.string.controller_led_lights), style = MaterialTheme.typography.titleMedium,
+            color = colors.onSurface, modifier = androidx.compose.ui.Modifier.weight(1f),
+        )
+        androidx.compose.foundation.layout.Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp)) {
+            (0..3).forEach { i ->
+                val on = (pattern shr i) and 1 == 1
+                io.github.thecodingdad.gamelodge.ui.components.FocusSurface(
+                    onClick = { onChange(pattern xor (1 shl i)) },
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(7.dp),
+                    color = if (on) colors.accent else androidx.compose.ui.graphics.Color.Transparent,
+                    focusScale = 1.12f,
+                    modifier = androidx.compose.ui.Modifier.size(36.dp)
+                        .border(2.dp, if (on) colors.accent else colors.onSurfaceMuted, androidx.compose.foundation.shape.RoundedCornerShape(7.dp)),
+                ) {
+                    Text(
+                        "${i + 1}", style = MaterialTheme.typography.labelMedium,
+                        color = if (on) colors.onAccent else colors.onSurfaceMuted,
+                        modifier = androidx.compose.ui.Modifier.align(androidx.compose.ui.Alignment.Center),
+                    )
+                }
+            }
+        }
+    }
 }
 
 /**

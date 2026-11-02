@@ -86,15 +86,15 @@ class MainActivity : ComponentActivity() {
         // Player LEDs (Joy-Cons): re-apply when controllers connect/disconnect or their settings change.
         getSystemService(android.hardware.input.InputManager::class.java)?.registerInputDeviceListener(
             object : android.hardware.input.InputManager.InputDeviceListener {
-                override fun onInputDeviceAdded(id: Int) = controllerLights.refresh()
-                override fun onInputDeviceRemoved(id: Int) = controllerLights.refresh()
-                override fun onInputDeviceChanged(id: Int) = controllerLights.refresh()
+                override fun onInputDeviceAdded(id: Int) = refreshLights()
+                override fun onInputDeviceRemoved(id: Int) = refreshLights()
+                override fun onInputDeviceChanged(id: Int) = refreshLights()
             },
             null,
         )
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                container.controllerSettings.all.collect { controllerLights.refresh() }
+                container.controllerSettings.all.collect { refreshLights() }
             }
         }
         feedback = UiFeedback(cacheDir, io.github.thecodingdad.gamelodge.ui.feedback.AndroidFeedbackOutput(this)).also { it.load() }
@@ -130,6 +130,8 @@ class MainActivity : ComponentActivity() {
         super.onWindowFocusChanged(hasFocus)
         // Returning from a stream or another app can bring the bars back.
         if (hasFocus) applySystemBars() else ButtonCombos.reset()
+        // The system/host owns the player LEDs while a game is focused; take them back when we are.
+        if (hasFocus) refreshLights()
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -167,6 +169,11 @@ class MainActivity : ComponentActivity() {
     /** Player-LED driver for controllers that have them (Joy-Cons). */
     private val controllerLights by lazy { io.github.thecodingdad.gamelodge.stream.ControllerLights(this, container.controllerSettings) }
 
+    /** LightsManager calls block briefly: run them off the main thread, one at a time. */
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    private val lightsDispatcher = kotlinx.coroutines.Dispatchers.Default.limitedParallelism(1)
+    private fun refreshLights() { lifecycleScope.launch(lightsDispatcher) { controllerLights.refresh() } }
+
     override fun onDestroy() {
         controllerLights.releaseAll()
         super.onDestroy()
@@ -199,7 +206,7 @@ class MainActivity : ComponentActivity() {
         returningFromBackground = false
         resumed = true
         // Back in the launcher the host no longer owns the player LEDs: set them to our patterns again.
-        controllerLights.refresh()
+        refreshLights()
         container.emulation.rescanIfStale()
         // Also picks up a just granted overlay permission.
         io.github.thecodingdad.gamelodge.system.EdgeHandle.refresh(this)

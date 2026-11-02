@@ -762,6 +762,9 @@
     <string name="controller_led_section">Player LEDs</string>
     <string name="controller_led_auto">Automatic (player number)</string>
     <string name="controller_led_auto_sub">Shows this controller's player number.</string>
+    <string name="controller_led_lights">LEDs</string>
+    <string name="controller_led_home">Home button LED</string>
+    <string name="controller_led_home_sub">Lights the Home button's ring.</string>
     <string name="controller_led_n">LED %1$d</string>
     <string name="controller_deadzone">Stick dead zone</string>
     <string name="controller_rumble">Rumble</string>

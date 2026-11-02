@@ -27,6 +27,8 @@ data class ControllerSettings(
     val iconId: String? = null,
     /** Which player LEDs light (bit 0 = LED 1 … bit 3 = LED 4); null = automatic (the player number). */
     val ledPattern: Int? = null,
+    /** Whether the Home-button LED (Right Joy-Con ring) lights; off by default so it stops glowing. */
+    val homeLed: Boolean = false,
     /** Button combinations (key codes) of this controller: null = global, empty = off. */
     val comboHome: List<Int>? = null,
     val comboQuickMenu: List<Int>? = null,
