@@ -51,11 +51,11 @@ object AndroidPad {
         else -> null
     }?.takeIf { KeyEvent.isGamepadButton(event.keyCode) || (event.source and android.view.InputDevice.SOURCE_GAMEPAD) == android.view.InputDevice.SOURCE_GAMEPAD }
 
+    // Only confirm/back (A/B) swap for Nintendo. Joy-Cons report A/B by position (so they need the
+    // swap) but X/Y by label (so swapping them would break X/Y); the other Nintendo pads match.
     fun swapForNintendo(keyCode: Int): Int = when (keyCode) {
         KeyEvent.KEYCODE_BUTTON_A -> KeyEvent.KEYCODE_BUTTON_B
         KeyEvent.KEYCODE_BUTTON_B -> KeyEvent.KEYCODE_BUTTON_A
-        KeyEvent.KEYCODE_BUTTON_X -> KeyEvent.KEYCODE_BUTTON_Y
-        KeyEvent.KEYCODE_BUTTON_Y -> KeyEvent.KEYCODE_BUTTON_X
         else -> keyCode
     }
 
