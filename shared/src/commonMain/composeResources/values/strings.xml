@@ -188,7 +188,6 @@
 
     <!-- Controls -->
     <string name="setting_button_layout">Button layout</string>
-    <string name="setting_button_layout_sub">Nintendo swaps confirm/back (A/B) and X/Y</string>
     <string name="controllers_stream_defaults">In the stream (all controllers, every profile)</string>
     <string name="game_controller_settings">Controller settings</string>
     <string name="game_mouse">Mouse emulation at start</string>
@@ -474,8 +473,8 @@
     <string name="power_shutdown">Shut down</string>
     <string name="controllers_intro">In a stream every controller is passed to the host as its own gamepad. Select a controller to give it its own settings or a fixed player number.</string>
     <string name="controller_layout_default">Default (%1$s)</string>
-    <string name="controllers_defaults">Default for all controllers</string>
-    <string name="controllers_defaults_sub">Each controller can differ: select it above.</string>
+    <string name="controllers_defaults">General</string>
+    <string name="controllers_defaults_sub">For every controller. Button layout, combinations and stream settings are each controller's own: select it above.</string>
     <string name="controller_launcher_section">In the launcher</string>
     <string name="controller_stream_section">In the stream</string>
     <string name="controllers_none">No controllers connected.</string>
@@ -770,6 +769,8 @@
     <string name="controller_motion">Motion sensors (gyro)</string>
     <string name="controller_touchpad_mouse">Touchpad as mouse</string>
     <string name="controller_default_value">Standard (%1$s)</string>
+    <string name="controller_combos_of">Button combinations of %1$s</string>
+    <string name="controller_combos_none">Button combinations belong to a controller: connect one or press one of its buttons to change them here.</string>
     <string name="controller_vibration_strength">Vibration strength</string>
     <string name="controller_source_off">Off</string>
     <string name="controller_source_controller">Controller</string>
@@ -879,9 +880,7 @@
     <string name="combo_none">Not set</string>
     <string name="combo_help">Record a single button (e.g. Guide) or a combination (e.g. Select + Start). Keep the buttons held for a moment to record a hold combination. The button that completes a combination is held back from the game.</string>
     <string name="combo_recording_hint">Press buttons…</string>
-    <string name="combo_recording_help">Hold the buttons together, then release them. Cancels after 10 seconds.</string>
     <string name="combo_record">Record</string>
-    <string name="combo_clear">Remove</string>
     <string name="combo_error_blocked">A, B or a D-pad direction alone are needed for navigation.</string>
     <string name="combo_error_duplicate">This combination is already used for the other action.</string>
 
@@ -889,7 +888,7 @@
     <string name="qt_unavailable">Not available on this device (hidden)</string>
 
     <!-- Button combos -->
-    <string name="combo_use_global">Use global</string>
+    <string name="combo_use_global">Use default</string>
     <string name="combo_off">Off</string>
     <string name="combo_global_value">Default (%1$s)</string>
     <string name="combo_recording_help_controller">Hold the buttons together on this controller, then release them. Cancels after 10 seconds.</string>
@@ -1479,12 +1478,12 @@
     <string name="wizard_emu_detected">Detected emulators</string>
     <string name="wizard_add">Add</string>
     <string name="wizard_launcher_sub">The home button then leads to GameLodge. You can undo it in Android's default apps.</string>
-    <string name="wizard_controller_waiting">No controller connected. The default layout applies to every controller you connect later; touch and mouse work too.</string>
+    <string name="wizard_controller_waiting">No controller connected. Each controller starts with the layout of its model when you connect it (changeable in Settings › Controllers); touch and mouse work too.</string>
     <string name="combo_service_where">Look for "GameLodge combos" there (often under "Installed apps" or "Downloaded apps") and switch it on.</string>
     <string name="combo_service_restricted_title">Allow restricted settings</string>
     <string name="combo_service_restricted">Android blocks accessibility services of apps not installed from an app store (the service is greyed out). To allow it: tap the greyed-out service once, then in GameLodge's app info open the menu (⋮) at the top right and choose “Allow restricted settings”. Then enable the service.</string>
     <string name="combo_service_app_info">Open app info</string>
-    <string name="wizard_controller_default">Default button layout</string>
+    <string name="wizard_controller_default">Button layout of this controller</string>
     <string name="wizard_controller_test_sub">Try the buttons without anything happening</string>
     <string name="wizard_controller_test_start">Start</string>
     <string name="wizard_vpn_only_outside_sub">On: your current network becomes your home network – no VPN there</string>
@@ -1551,9 +1550,6 @@
     <string name="hide_choice_everywhere">On all devices</string>
     <string name="detail_playtime_devices">Playtime per device</string>
     <string name="detail_playtime_other_clients">Other streaming clients</string>
-    <string name="controller_section_layout">Layout &amp; hints</string>
-    <string name="controller_section_layout_sub">Button layout (Xbox, Nintendo, PlayStation) and button hints</string>
-    <string name="controller_section_combos_sub">Quick menu, mouse, performance overlay … with a button combination</string>
     <string name="controller_section_mouse">Mouse emulation</string>
     <string name="controller_section_mouse_sub">Pointer speed and acceleration with the stick</string>
     <string name="controller_section_stream">In the stream</string>

@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Gamepad
-import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material.icons.filled.Mouse
 import androidx.compose.material.icons.filled.Cast
 import androidx.compose.material.icons.filled.FiberManualRecord
@@ -25,7 +23,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.thecodingdad.gamelodge.data.settings.LauncherSettings
 import io.github.thecodingdad.gamelodge.data.settings.combo
-import io.github.thecodingdad.gamelodge.data.settings.withCombo
 import io.github.thecodingdad.gamelodge.input.ButtonCombos
 import io.github.thecodingdad.gamelodge.input.ComboAction
 import io.github.thecodingdad.gamelodge.resources.*
@@ -52,27 +49,35 @@ fun comboSubtitle(action: ComboAction): StringResource = when (action) {
     ComboAction.STATS -> Res.string.combo_stats_sub
 }
 
+/** The built-in combinations and pass-through, used by every controller without its own. */
+val DefaultCombos = LauncherSettings()
+
 /**
- * One controller's combinations and pass-through, each either its own or the global one ([global]).
- * [combo] gives the controller's own combination (null = global), [descriptor] limits recording to it.
+ * One controller's combinations and pass-through, each either its own or the built-in default.
+ * [combo] gives the controller's own combination (null = default), [descriptor] limits recording
+ * to it. [actions] limits the rows (the quick access editor only shows a few).
  */
 @Composable
 fun ControllerComboRows(
-    global: LauncherSettings,
     combo: (ComboAction) -> Set<Int>?,
     forward: Boolean?,
     descriptor: String,
     onCombo: (ComboAction, Set<Int>?) -> Unit,
     onForward: (Boolean?) -> Unit,
     showForward: Boolean = true,
+    actions: List<ComboAction> = ComboAction.entries,
+    firstFocus: Boolean = false,
+    subtitles: Boolean = false,
 ) {
     var editing by remember { mutableStateOf<ComboAction?>(null) }
-    fun effective(a: ComboAction) = combo(a) ?: global.combo(a)
-    ComboAction.entries.forEach { action ->
+    fun effective(a: ComboAction) = combo(a) ?: DefaultCombos.combo(a)
+    actions.forEachIndexed { i, action ->
         val own = combo(action)
         NavRow(
             stringResource(comboTitle(action)), { editing = action },
-            trailing = if (own == null) comboLabel(global.combo(action), global = true) else comboLabel(own),
+            subtitle = if (subtitles) stringResource(comboSubtitle(action)) else null,
+            trailing = if (own == null) comboLabel(DefaultCombos.combo(action), default = true) else comboLabel(own),
+            initialFocus = firstFocus && i == 0,
         )
     }
     if (showForward) {
@@ -82,12 +87,13 @@ fun ControllerComboRows(
             stringResource(Res.string.combo_forward), listOf<Boolean?>(null, true, false), forward,
             label = { v ->
                 when (v) {
-                    null -> stringResource(Res.string.combo_global_value, if (global.comboForward) on else off)
+                    null -> stringResource(Res.string.combo_global_value, if (DefaultCombos.comboForward) on else off)
                     true -> on
                     false -> off
                 }
             },
             onSelect = onForward,
+            subtitle = if (subtitles) stringResource(Res.string.combo_forward_sub) else null,
         )
     }
     val action = editing
@@ -95,7 +101,7 @@ fun ControllerComboRows(
         action = action,
         current = action?.let { combo(it) },
         others = ComboAction.entries.filter { it != action }.map { effective(it) },
-        global = action?.let { global.combo(it) }.orEmpty(),
+        default = action?.let { DefaultCombos.combo(it) }.orEmpty(),
         descriptor = descriptor,
         onSave = { keys -> action?.let { onCombo(it, keys) } },
         onDismiss = { editing = null },
@@ -125,36 +131,9 @@ fun MouseSettingsRows(settings: LauncherSettings, update: ((LauncherSettings) ->
     )
 }
 
-/** One row per [actions] with its combination, each editable in the record dialog. */
-@Composable
-fun ComboActionRows(
-    settings: LauncherSettings,
-    update: ((LauncherSettings) -> LauncherSettings) -> Unit,
-    actions: List<ComboAction> = ComboAction.entries,
-    firstFocus: Boolean = false,
-) {
-    var editing by remember { mutableStateOf<ComboAction?>(null) }
-    actions.forEachIndexed { i, action ->
-        NavRow(
-            stringResource(comboTitle(action)), { editing = action },
-            subtitle = stringResource(comboSubtitle(action)),
-            trailing = comboLabel(settings.combo(action)), initialFocus = firstFocus && i == 0,
-        )
-    }
-    val action = editing
-    ComboDialog(
-        action = action,
-        current = action?.let { settings.combo(it) }.orEmpty(),
-        others = ComboAction.entries.filter { it != action }.map { settings.combo(it) },
-        onSave = { keys -> action?.let { a -> update { it.withCombo(a, keys.orEmpty()) } } },
-        onDismiss = { editing = null },
-    )
-}
-
 /**
- * Records a combination for [action]. [current] null = the controller follows the global one
- * ([global] shown), only possible with a [descriptor] (per-controller dialog, which also
- * records from that controller only).
+ * Records a combination for [action] from the controller [descriptor] only. [current] null = the
+ * controller uses the built-in [default].
  */
 @Composable
 fun ComboDialog(
@@ -163,8 +142,8 @@ fun ComboDialog(
     others: Collection<Set<Int>>,
     onSave: (Set<Int>?) -> Unit,
     onDismiss: () -> Unit,
-    descriptor: String? = null,
-    global: Set<Int> = emptySet(),
+    descriptor: String,
+    default: Set<Int>,
 ) {
     var recording by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<org.jetbrains.compose.resources.StringResource?>(null) }
@@ -179,13 +158,12 @@ fun ComboDialog(
     }
     DisposableEffect(action) { onDispose { ButtonCombos.cancelRecording(); recording = false; error = null } }
     val title = action?.let { stringResource(comboTitle(it)) }.orEmpty()
-    val perController = descriptor != null
     Modal(visible = action != null, onDismiss = { if (!recording) onDismiss() }, title = title, maxWidth = 640.dp, closeButton = false) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(
                 when {
                     recording -> if (preview.isEmpty()) stringResource(Res.string.combo_recording_hint) else ButtonCombos.describe(preview, stringResource(Res.string.combo_hold))
-                    current == null -> comboLabel(global, global = true)
+                    current == null -> comboLabel(default, default = true)
                     else -> comboLabel(current)
                 },
                 style = MaterialTheme.typography.headlineSmall,
@@ -194,8 +172,7 @@ fun ComboDialog(
             Text(
                 stringResource(
                     when {
-                        recording && perController -> Res.string.combo_recording_help_controller
-                        recording -> Res.string.combo_recording_help
+                        recording -> Res.string.combo_recording_help_controller
                         else -> Res.string.combo_help
                     },
                 ),
@@ -219,12 +196,12 @@ fun ComboDialog(
                             if (error == null) onSave(keys)
                         }
                     }, primary = true, icon = Icons.Filled.FiberManualRecord)
-                    if (perController && current != null) {
+                    if (current != null) {
                         LauncherButton(stringResource(Res.string.combo_use_global), onClick = { onSave(null) }, icon = Icons.Filled.Public)
                     }
                     if (current == null || current.isNotEmpty()) {
                         LauncherButton(
-                            stringResource(if (perController) Res.string.combo_off else Res.string.combo_clear),
+                            stringResource(Res.string.combo_off),
                             onClick = { onSave(emptySet()) }, icon = Icons.Filled.Delete,
                         )
                     }
@@ -235,11 +212,11 @@ fun ComboDialog(
     }
 }
 
-/** "LB + RB", "Off", or for a controller following the global one "Global (LB + RB)". */
+/** "LB + RB", "Off", or for a controller using the built-in one "Default (LB + RB)". */
 @Composable
-fun comboLabel(keys: Set<Int>?, global: Boolean = false): String {
+fun comboLabel(keys: Set<Int>?, default: Boolean = false): String {
     val text = if (keys.isNullOrEmpty()) stringResource(Res.string.off) else ButtonCombos.describe(keys, stringResource(Res.string.combo_hold))
-    return if (global) stringResource(Res.string.combo_global_value, text) else text
+    return if (default) stringResource(Res.string.combo_global_value, text) else text
 }
 
 /** Rows of the controller settings' pages (Settings › Controllers), for the platform's [sections]. */
@@ -252,8 +229,6 @@ fun ControllerSectionRows(
     val navigate = LocalSettingsNavigator.current
     sections.forEach { section ->
         val (title, sub, icon) = when (section) {
-            ControllerSection.LAYOUT -> Triple(Res.string.controller_section_layout, Res.string.controller_section_layout_sub, Icons.Filled.Gamepad)
-            ControllerSection.COMBOS -> Triple(Res.string.combo_section, Res.string.controller_section_combos_sub, Icons.Filled.Keyboard)
             ControllerSection.MOUSE -> Triple(Res.string.controller_section_mouse, Res.string.controller_section_mouse_sub, Icons.Filled.Mouse)
             ControllerSection.STREAM -> Triple(Res.string.controller_section_stream, streamSub, Icons.Filled.Cast)
         }

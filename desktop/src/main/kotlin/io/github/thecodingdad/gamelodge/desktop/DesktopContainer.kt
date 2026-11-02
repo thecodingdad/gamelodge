@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.desktop
 
+import io.github.thecodingdad.gamelodge.ui.screens.settings.layoutFor
 import kotlinx.coroutines.flow.first
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.room.Room
@@ -218,13 +219,15 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
             pcLibrary, playtime, scope, { launcher.ended(); onGameEnded(); scope.launch { library.syncPlayData() } }, desktopHosts,
             identity = { streamIdentity },
             streamOptions = { entry ->
-                // Face buttons follow the launcher's layout (the game's own, else the default of
-                // all controllers: Moonlight-Qt swaps them for every pad alike).
+                // Face buttons follow the launcher's layout (the game's own, else the one of the pad
+                // that started it: Moonlight-Qt swaps them for every pad alike).
                 val s = settings.settings.first()
                 val pad = s.gamePads[entry.item.id]
                 // A game that wants the mouse emulation on (or off) starts with it (one state with the launcher's).
                 pad?.mouse?.let { io.github.thecodingdad.gamelodge.desktop.WindowsPointer.set(it) }
-                val nintendo = (pad?.layout ?: s.buttonLayout) == io.github.thecodingdad.gamelodge.data.settings.ButtonLayout.NINTENDO
+                val starter = io.github.thecodingdad.gamelodge.ui.screens.settings.ActivePad.key
+                val nintendo = (pad?.layout ?: s.layoutFor(starter, starter?.let { io.github.thecodingdad.gamelodge.desktop.modelLayout(it) })) ==
+                    io.github.thecodingdad.gamelodge.data.settings.ButtonLayout.NINTENDO
                 profiles.activeOptions() + if (nintendo) "--swap-gamepad-buttons" else "--no-swap-gamepad-buttons"
             },
             onStreamEnded = {

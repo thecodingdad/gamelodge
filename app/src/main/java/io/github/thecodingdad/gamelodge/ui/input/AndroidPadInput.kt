@@ -60,8 +60,8 @@ object AndroidPad {
     }
 
     /**
-     * [event] in the layout of the controller it comes from (its own, else the default of all
-     * controllers); remembers that controller as the active one (button hints follow it).
+     * [event] in the layout of the controller it comes from (its own, else its model's);
+     * remembers that controller as the active one (button hints follow it).
      */
     fun inLayout(event: KeyEvent, settings: io.github.thecodingdad.gamelodge.data.settings.LauncherSettings): KeyEvent {
         val device = event.device?.takeIf { (it.sources and android.view.InputDevice.SOURCE_GAMEPAD) == android.view.InputDevice.SOURCE_GAMEPAD }
@@ -72,7 +72,8 @@ object AndroidPad {
             io.github.thecodingdad.gamelodge.ui.screens.settings.ActivePad.detectedLayout =
                 io.github.thecodingdad.gamelodge.ui.screens.settings.buttonLayoutForVendor(device.vendorId)
         }
-        val layout = settings.controllerLayouts[key] ?: settings.buttonLayout
+        val layout = settings.controllerLayouts[key]
+            ?: device?.let { io.github.thecodingdad.gamelodge.ui.screens.settings.buttonLayoutForVendor(it.vendorId) }
         if (layout != io.github.thecodingdad.gamelodge.data.settings.ButtonLayout.NINTENDO) return event
         val swapped = swapForNintendo(event.keyCode)
         if (swapped == event.keyCode) return event

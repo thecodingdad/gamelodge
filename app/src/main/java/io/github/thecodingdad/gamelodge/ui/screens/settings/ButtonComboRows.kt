@@ -38,20 +38,18 @@ import io.github.thecodingdad.gamelodge.ui.theme.LauncherTheme
 import kotlinx.coroutines.delay
 import io.github.thecodingdad.gamelodge.resources.*
 
-/** Rows for the button combinations plus the optional system-wide service. */
+/**
+ * The optional system-wide service for the button combinations (each controller's own, set in its
+ * dialog), so they also work outside GameLodge.
+ */
 @Composable
-fun ButtonComboRows(settings: LauncherSettings, update: ((LauncherSettings) -> LauncherSettings) -> Unit) {
+fun ComboServiceRows() {
     val context = LocalContext.current
     var tick by remember { mutableIntStateOf(0) }
     LifecycleResumeEffect(Unit) { tick++; onPauseOrDispose { } }
     val serviceOn = remember(tick) { ComboAccessibilityService.isEnabled(context) }
     val restricted = remember(tick) { ComboAccessibilityService.isRestricted(context) }
 
-    ComboActionRows(settings, update)
-    SwitchRow(
-        stringResource(Res.string.combo_forward), settings.comboForward, { on -> update { it.copy(comboForward = on) } },
-        subtitle = stringResource(Res.string.combo_forward_sub),
-    )
     // Only the general list could be opened: say what to look for there.
     var generalList by remember { mutableStateOf(false) }
     NavRow(

@@ -2,6 +2,9 @@ package io.github.thecodingdad.gamelodge.desktop
 
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import io.github.thecodingdad.gamelodge.data.settings.combo
+import io.github.thecodingdad.gamelodge.data.settings.hasControllerGlobals
+import kotlinx.coroutines.flow.first
+import io.github.thecodingdad.gamelodge.data.settings.withControllerGlobalsMoved
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -225,18 +228,25 @@ fun main(args: Array<String>) {
             .debounce(20_000)
             .collect { if (it.syncEnabled) container.hostSync.run() }
     }
+    // The former global layout / combinations become the pads' own (the configured ones and those
+    // connected within the first minute), once.
+    container.scope.launch {
+        if (!container.settings.settings.first().hasControllerGlobals) return@launch
+        val pads = kotlinx.coroutines.withTimeoutOrNull(60_000) { gamepads.controllers.first { it.isNotEmpty() } }.orEmpty()
+        container.settings.update { it.withControllerGlobalsMoved(it.controllerCombos.keys + it.controllerLayouts.keys + pads.map { p -> p.key }) }
+    }
+    // Pads without their own combinations use the built-in ones.
+    io.github.thecodingdad.gamelodge.input.ButtonCombos.forward = io.github.thecodingdad.gamelodge.ui.screens.settings.DefaultCombos.comboForward
+    io.github.thecodingdad.gamelodge.input.ButtonCombos.combos = io.github.thecodingdad.gamelodge.input.ComboAction.entries
+        .associateWith { a -> io.github.thecodingdad.gamelodge.ui.screens.settings.DefaultCombos.combo(a) }
     container.scope.launch {
         container.settings.settings.collect {
-            gamepads.nintendoLayout = it.buttonLayout == ButtonLayout.NINTENDO
             gamepads.layoutOverrides = it.controllerLayouts.mapValues { (_, l) -> l == ButtonLayout.NINTENDO }
-            io.github.thecodingdad.gamelodge.input.ButtonCombos.forward = it.comboForward
             WindowsPointer.speed = it.mouseSpeed / 100f
             WindowsPointer.exponent = it.mouseAcceleration.exponent
             WindowsPointer.streamSpeed = STREAM_MOUSE_SPEED * it.mouseSpeed / 100f
             (container.streamControls as? io.github.thecodingdad.gamelodge.desktop.stream.DesktopStreamControls)
                 ?.setMouseSpeed(WindowsPointer.streamSpeed, WindowsPointer.exponent)
-            io.github.thecodingdad.gamelodge.input.ButtonCombos.combos =
-                io.github.thecodingdad.gamelodge.input.ComboAction.entries.associateWith { a -> it.combo(a) }
             io.github.thecodingdad.gamelodge.input.ButtonCombos.overrides = it.controllerCombos.mapValues { (_, pad) ->
                 pad.combos.mapNotNull { (name, keys) ->
                     io.github.thecodingdad.gamelodge.input.ComboAction.entries.firstOrNull { a -> a.name == name }?.let { a -> a to keys.toSet() }

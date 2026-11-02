@@ -37,6 +37,7 @@ import io.github.thecodingdad.gamelodge.resources.*
 import io.github.thecodingdad.gamelodge.system.LauncherMode
 import io.github.thecodingdad.gamelodge.ui.components.LauncherButton
 import io.github.thecodingdad.gamelodge.ui.screens.settings.ComboDialog
+import io.github.thecodingdad.gamelodge.ui.screens.settings.DefaultCombos
 import io.github.thecodingdad.gamelodge.ui.screens.settings.PlatformEmulatorRow
 import io.github.thecodingdad.gamelodge.ui.screens.settings.SectionHeader
 import io.github.thecodingdad.gamelodge.ui.screens.settings.SwitchRow
@@ -92,21 +93,29 @@ private fun android.content.Context.open(intent: Intent, fallback: Intent? = nul
 
 @Composable
 private fun ColumnScope.GuideStep(settings: LauncherSettings) {
-    val nav = LocalWizardNav.current!!
     val context = LocalContext.current
     val tick = rememberResumeTick()
     val serviceOn = remember(tick) { ComboAccessibilityService.isEnabled(context) }
     var editing by remember { mutableStateOf<ComboAction?>(null) }
+    // The combinations belong to the controller in use; without one (touch) there is nothing to set.
+    val pad = io.github.thecodingdad.gamelodge.ui.screens.settings.rememberActiveController()
+    val store = context.container.controllerSettings
+    val all by store.all.collectAsState()
+    val own = pad?.let { all[it.descriptor] } ?: io.github.thecodingdad.gamelodge.stream.ControllerSettings()
+    fun ownCombo(a: ComboAction) = own.combo(a)?.toSet()
+    fun effective(a: ComboAction) = ownCombo(a) ?: DefaultCombos.combo(a)
 
-    WizardStatusRow(
-        stringResource(Res.string.wizard_guide_press), comboLabel(settings.comboHome), done = false,
-        icon = Icons.Filled.Home, action = stringResource(Res.string.wizard_change), onClick = { editing = ComboAction.HOME },
-        initialFocus = true,
-    )
-    WizardStatusRow(
-        stringResource(Res.string.wizard_guide_hold), comboLabel(settings.comboQuickMenu), done = false,
-        icon = Icons.Filled.Tune, action = stringResource(Res.string.wizard_change), onClick = { editing = ComboAction.QUICK_MENU },
-    )
+    if (pad != null) {
+        WizardStatusRow(
+            stringResource(Res.string.wizard_guide_press), comboLabel(effective(ComboAction.HOME)), done = false,
+            icon = Icons.Filled.Home, action = stringResource(Res.string.wizard_change), onClick = { editing = ComboAction.HOME },
+            initialFocus = true,
+        )
+        WizardStatusRow(
+            stringResource(Res.string.wizard_guide_hold), comboLabel(effective(ComboAction.QUICK_MENU)), done = false,
+            icon = Icons.Filled.Tune, action = stringResource(Res.string.wizard_change), onClick = { editing = ComboAction.QUICK_MENU },
+        )
+    }
     SectionHeader(stringResource(Res.string.wizard_guide_other_apps))
     // Only the general list could be opened: say what to look for there.
     var generalList by remember { mutableStateOf(false) }
@@ -134,20 +143,17 @@ private fun ColumnScope.GuideStep(settings: LauncherSettings) {
         )
     }
     val action = editing
-    ComboDialog(
-        action = action,
-        current = if (action == ComboAction.QUICK_MENU) settings.comboQuickMenu else settings.comboHome,
-        others = ComboAction.entries.filter { it != action }.map { settings.combo(it) },
-        onSave = { keys ->
-            val k = keys.orEmpty()
-            when (action) {
-                ComboAction.HOME -> nav.update { it.copy(comboHome = k) }
-                ComboAction.QUICK_MENU -> nav.update { it.copy(comboQuickMenu = k) }
-                else -> Unit
-            }
-        },
-        onDismiss = { editing = null },
-    )
+    if (pad != null) {
+        ComboDialog(
+            action = action,
+            current = action?.let { ownCombo(it) },
+            others = ComboAction.entries.filter { it != action }.map { effective(it) },
+            descriptor = pad.descriptor,
+            default = action?.let { DefaultCombos.combo(it) }.orEmpty(),
+            onSave = { keys -> action?.let { a -> store.set(pad.descriptor, own.withCombo(a, keys?.toList())) } },
+            onDismiss = { editing = null },
+        )
+    }
 }
 
 // ---- Home app ----

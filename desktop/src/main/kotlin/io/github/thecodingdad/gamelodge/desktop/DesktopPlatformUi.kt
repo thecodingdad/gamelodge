@@ -39,7 +39,6 @@ import io.github.thecodingdad.gamelodge.ui.PlatformUi
 import io.github.thecodingdad.gamelodge.ui.components.LauncherButton
 import io.github.thecodingdad.gamelodge.ui.components.Modal
 import io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerInfo
-import io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerLayoutDefaultRow
 import io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerLayoutOverrideRow
 import io.github.thecodingdad.gamelodge.ui.screens.settings.NavRow
 import io.github.thecodingdad.gamelodge.ui.screens.settings.SectionHeader
@@ -152,7 +151,6 @@ class DesktopPlatformUi(
                         s.copy(controllerCombos = if (pad.isEmpty) s.controllerCombos - c.key else s.controllerCombos + (c.key to pad))
                     }
                     io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerComboRows(
-                        global = settings,
                         combo = { a -> own.combos[a.name]?.toSet() },
                         forward = own.forward,
                         descriptor = c.key,
@@ -262,10 +260,29 @@ class DesktopPlatformUi(
     @Composable
     override fun QuickMenuSettingsTab() {
         val (settings, update) = settingsState() ?: return
-        io.github.thecodingdad.gamelodge.ui.screens.settings.ComboActionRows(
-            settings, update, listOf(io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU, io.github.thecodingdad.gamelodge.input.ComboAction.MOUSE),
-            firstFocus = true,
-        )
+        // The combinations of the pad in use (each pad has its own, by name).
+        val controllers = rememberControllers()
+        val c = controllers.firstOrNull { it.key == io.github.thecodingdad.gamelodge.ui.screens.settings.ActivePad.key } ?: controllers.firstOrNull()
+        if (c == null) {
+            Text(stringResource(Res.string.controller_combos_none), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+        } else {
+            val own = settings.controllerCombos[c.key] ?: io.github.thecodingdad.gamelodge.data.settings.PadCombos()
+            fun save(pad: io.github.thecodingdad.gamelodge.data.settings.PadCombos) = update { s ->
+                s.copy(controllerCombos = if (pad.isEmpty) s.controllerCombos - c.key else s.controllerCombos + (c.key to pad))
+            }
+            SectionHeader(stringResource(Res.string.controller_combos_of, c.displayName))
+            io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerComboRows(
+                combo = { a -> own.combos[a.name]?.toSet() },
+                forward = own.forward,
+                descriptor = c.key,
+                onCombo = { a, keys -> save(own.copy(combos = if (keys == null) own.combos - a.name else own.combos + (a.name to keys.toList()))) },
+                onForward = { v -> save(own.copy(forward = v)) },
+                showForward = false,
+                actions = listOf(io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU, io.github.thecodingdad.gamelodge.input.ComboAction.MOUSE),
+                firstFocus = true,
+                subtitles = true,
+            )
+        }
         io.github.thecodingdad.gamelodge.ui.screens.settings.MouseSettingsRows(settings, update)
     }
 
@@ -375,13 +392,15 @@ class DesktopPlatformUi(
             if (controllers.isEmpty()) Text(stringResource(Res.string.controllers_none), color = LauncherTheme.colors.onSurface)
             controllers.forEachIndexed { index, c ->
                 NavRow(
-                    c.name, { selected = c },
+                    c.displayName, { selected = c },
                     subtitle = c.batteryPercent?.let { stringResource(Res.string.controller_battery, it) },
-                    icon = Icons.Filled.SportsEsports, initialFocus = index == 0,
+                    icon = c.displayIcon, initialFocus = index == 0,
                 )
             }
+            // What applies to every pad (layout and combinations are each pad's own).
             SectionHeader(stringResource(Res.string.controllers_defaults))
             Text(stringResource(Res.string.controllers_defaults_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+            settingsState()?.let { (settings, update) -> io.github.thecodingdad.gamelodge.ui.screens.settings.HintBarRow(settings, update) }
             io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSectionRows(controllerSections, streamSub = Res.string.controller_section_stream_sub_pc)
             SeeAlso(
                 SeeAlsoLink(stringResource(Res.string.settings_sounds), SettingsTarget.Page(SettingsPageId.SOUNDS)),
@@ -392,8 +411,6 @@ class DesktopPlatformUi(
     }
 
     override val controllerSections = listOf(
-        io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.LAYOUT,
-        io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.COMBOS,
         io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.MOUSE,
         io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.STREAM,
     )
@@ -402,19 +419,11 @@ class DesktopPlatformUi(
     override fun ControllerSectionScreen(section: io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection) {
         val (settings, update) = settingsState() ?: return
         val title = when (section) {
-            io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.LAYOUT -> Res.string.controller_section_layout
-            io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.COMBOS -> Res.string.combo_section
             io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.MOUSE -> Res.string.controller_section_mouse
             io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.STREAM -> Res.string.controller_section_stream
         }
         SettingsPage(stringResource(title)) {
             when (section) {
-                io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.LAYOUT -> {
-                    ControllerLayoutDefaultRow(settings, update, initialFocus = true)
-                    io.github.thecodingdad.gamelodge.ui.screens.settings.HintBarRow(settings, update)
-                }
-                io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.COMBOS ->
-                    io.github.thecodingdad.gamelodge.ui.screens.settings.ComboActionRows(settings, update)
                 io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.MOUSE ->
                     io.github.thecodingdad.gamelodge.ui.screens.settings.MouseSettingsRows(settings, update)
                 io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.STREAM ->

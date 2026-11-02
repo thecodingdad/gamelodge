@@ -13,7 +13,7 @@ import org.jetbrains.compose.resources.StringResource
 
 /** Where a search hit leads: a settings page or the controllers screen. */
 /** Pages of the controller settings; [PlatformUi.controllerSections] says which a platform has. */
-enum class ControllerSection { LAYOUT, COMBOS, MOUSE, STREAM }
+enum class ControllerSection { MOUSE, STREAM }
 
 sealed interface SettingsTarget {
     data class Page(val id: SettingsPageId) : SettingsTarget
@@ -165,10 +165,11 @@ private val settingsIndex: List<SearchEntry> = buildList {
     addAll(page(SettingsPageId.HOME_SCREEN, Res.string.setting_games_direct_start))
     addAll(page(SettingsPageId.LIBRARY_VIEW, Res.string.setting_games_direct_start))
     add(SearchEntry(Res.string.controllers_connected, SettingsTarget.Controllers))
+    // Layout and combinations are set per controller (its dialog on the controllers page).
     listOf(Res.string.setting_button_layout, Res.string.setting_hint_bar)
-        .forEach { add(SearchEntry(it, SettingsTarget.ControllerPage(ControllerSection.LAYOUT), Res.string.controller_section_layout)) }
+        .forEach { add(SearchEntry(it, SettingsTarget.Controllers)) }
     listOf(Res.string.combo_section, Res.string.combo_home, Res.string.combo_quick_menu, Res.string.combo_forward, Res.string.combo_service)
-        .forEach { add(SearchEntry(it, SettingsTarget.ControllerPage(ControllerSection.COMBOS), Res.string.combo_section, combos = true)) }
+        .forEach { add(SearchEntry(it, SettingsTarget.Controllers, combos = true)) }
     add(SearchEntry(Res.string.controller_section_mouse, SettingsTarget.ControllerPage(ControllerSection.MOUSE)))
     listOf(Res.string.setting_controller_attach, Res.string.controllers_stream_defaults, Res.string.odin_mapping_section)
         .forEach { add(SearchEntry(it, SettingsTarget.ControllerPage(ControllerSection.STREAM), Res.string.controller_section_stream)) }

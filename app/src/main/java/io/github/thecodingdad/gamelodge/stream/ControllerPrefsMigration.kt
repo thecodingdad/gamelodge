@@ -1,6 +1,8 @@
 package io.github.thecodingdad.gamelodge.stream
 
 import android.content.Context
+import io.github.thecodingdad.gamelodge.data.settings.combo
+import kotlinx.coroutines.flow.first
 import androidx.preference.PreferenceManager
 import com.limelight.profiles.ProfilesManager
 import io.github.thecodingdad.gamelodge.ui.screens.settings.MotionMode
@@ -11,7 +13,8 @@ import io.github.thecodingdad.gamelodge.ui.screens.settings.VibrationMode
  * - [enforce] pins the options GameLodge no longer offers (they would break the player order,
  *   bypass the per-controller settings or are covered by them) and keeps profiles from carrying
  *   their own copy of any gamepad option, so the base settings always apply;
- * - [migrate] turns the former global values into each known controller's own settings, once.
+ * - [migrate] turns the former global values into each known controller's own settings, once;
+ * - [migrateLauncher] does the same for the former global button layout and combinations.
  */
 object ControllerPrefsMigration {
     /** All of Artemis' gamepad keys (incl. the one its Joy-Con option is actually read from). */
@@ -96,5 +99,42 @@ object ControllerPrefsMigration {
         flags.edit().putBoolean(FLAG, true).apply()
     }
 
+    /**
+     * The button layout and combinations were global (each controller could differ); now every
+     * controller has its own, defaulting to its model's layout and the built-in combinations.
+     * Global values the user had changed become the known controllers' own, once.
+     */
+    suspend fun migrateLauncher(
+        context: Context,
+        store: ControllerOverrideStore,
+        order: ControllerOrderStore,
+        settings: io.github.thecodingdad.gamelodge.data.settings.SettingsRepository,
+    ) {
+        val flags = context.getSharedPreferences("gamelodge_migrations", Context.MODE_PRIVATE)
+        if (flags.getBoolean(FLAG_LAUNCHER, false)) return
+        val global = settings.settings.first()
+        val defaults = io.github.thecodingdad.gamelodge.ui.screens.settings.DefaultCombos
+        val changed = io.github.thecodingdad.gamelodge.input.ComboAction.entries
+            .filter { global.combo(it) != defaults.combo(it) }
+        val known = (store.all.value.keys + order.known() + global.controllerLayouts.keys).filter { it.isNotEmpty() }.toSet()
+        known.forEach { descriptor ->
+            val s = store.get(descriptor)
+            var migrated = changed.fold(s) { acc, a ->
+                if (acc.combo(a) == null) acc.withCombo(a, global.combo(a).toList()) else acc
+            }
+            if (migrated.comboForward == null && global.comboForward != defaults.comboForward) {
+                migrated = migrated.copy(comboForward = global.comboForward)
+            }
+            if (migrated != s) store.set(descriptor, migrated)
+        }
+        if (global.buttonLayout != io.github.thecodingdad.gamelodge.data.settings.ButtonLayout.XBOX) {
+            settings.update { s ->
+                s.copy(controllerLayouts = known.associateWith { s.buttonLayout } + s.controllerLayouts)
+            }
+        }
+        flags.edit().putBoolean(FLAG_LAUNCHER, true).apply()
+    }
+
     private const val FLAG = "controller_settings_per_controller"
+    private const val FLAG_LAUNCHER = "controller_layout_combos_per_controller"
 }

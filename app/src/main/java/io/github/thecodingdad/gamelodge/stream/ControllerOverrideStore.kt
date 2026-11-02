@@ -54,7 +54,7 @@ data class ControllerSettings(
 ) {
     val isEmpty: Boolean get() = this == ControllerSettings()
 
-    /** This controller's combination of [action]: null = the global one. */
+    /** This controller's combination of [action]: null = the built-in one. */
     fun combo(action: io.github.thecodingdad.gamelodge.input.ComboAction): List<Int>? = when (action) {
         io.github.thecodingdad.gamelodge.input.ComboAction.HOME -> comboHome
         io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU -> comboQuickMenu
@@ -127,7 +127,7 @@ class ControllerOverrideStore(context: Context) {
             val settings = launcher()
             // The streamed game's own settings win over the controller's.
             val pad = game()?.let { settings.gamePads[it] }
-            val layout = pad?.layout ?: settings.layoutFor(descriptor)
+            val layout = pad?.layout ?: settings.layoutFor(descriptor, defaultsFor(descriptor).layout)
             // Player numbers (and which pads auto-attach) come from the remembered order, with the
             // controller that started the stream as player 1.
             val assignment = orderStore.assign(io.github.thecodingdad.gamelodge.input.StarterPad.starter) { _all.value[it]?.autoAttach }

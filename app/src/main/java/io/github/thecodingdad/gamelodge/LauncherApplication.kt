@@ -57,6 +57,12 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
         io.github.thecodingdad.gamelodge.ui.shell.StreamConnectingOverlay.install(container)
         io.github.thecodingdad.gamelodge.ui.shell.ConnectionWarningOverlay.install(container)
         container.scope.launch { container.filters.ensureDefaults() }
+        container.scope.launch {
+            io.github.thecodingdad.gamelodge.stream.ControllerPrefsMigration.migrateLauncher(
+                this@LauncherApplication, container.controllerSettings,
+                io.github.thecodingdad.gamelodge.stream.ControllerOrderStore(this@LauncherApplication), container.settings,
+            )
+        }
         // Button combinations: needed by the activity and by the accessibility service, which
         // can run without any activity (e.g. after an update).
         container.scope.launch {
@@ -69,6 +75,10 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
                     all.mapNotNull { (descriptor, s) -> s.comboForward?.let { descriptor to it } }.toMap()
             }
         }
+        // Controllers without their own combinations use the built-in ones.
+        io.github.thecodingdad.gamelodge.input.ButtonCombos.forward = io.github.thecodingdad.gamelodge.ui.screens.settings.DefaultCombos.comboForward
+        io.github.thecodingdad.gamelodge.input.ButtonCombos.combos = io.github.thecodingdad.gamelodge.input.ComboAction.entries
+            .associateWith { a -> io.github.thecodingdad.gamelodge.ui.screens.settings.DefaultCombos.combo(a) }
         io.github.thecodingdad.gamelodge.input.AndroidCombos.installReplay()
         // Back in the stream (and Artemis' other ways to its game menu) opens GameLodge's quick menu.
         com.limelight.StreamControl.menuAction = Runnable { io.github.thecodingdad.gamelodge.QuickMenuActivity.toggle(this) }
@@ -90,13 +100,10 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
         container.scope.launch {
             container.settings.settings.collect {
                 currentSettings = it
-                io.github.thecodingdad.gamelodge.input.ButtonCombos.forward = it.comboForward
                 io.github.thecodingdad.gamelodge.input.PointerMode.speed = it.mouseSpeed / 100f
                 io.github.thecodingdad.gamelodge.input.PointerMode.exponent = it.mouseAcceleration.exponent
                 com.limelight.StreamControl.mouseSpeed = STREAM_MOUSE_SPEED * it.mouseSpeed / 100f
                 com.limelight.StreamControl.mouseExponent = it.mouseAcceleration.exponent
-                io.github.thecodingdad.gamelodge.input.ButtonCombos.combos =
-                    io.github.thecodingdad.gamelodge.input.ComboAction.entries.associateWith { a -> it.combo(a) }
                 // Mouse, leaving the stream and its overlay are GameLodge's combinations now.
                 com.limelight.StreamControl.builtInCombos = false
             }

@@ -45,60 +45,53 @@ data class ControllerInfo(
     /** What to show for this controller everywhere: the user's name, else the device name. */
     val displayName: String get() = customName?.takeIf { it.isNotBlank() } ?: name
 
+    /** Vendor / product id of the model: the reported ones, else guessed from the name (Windows). */
+    val modelIds: Pair<Int, Int> get() = if (vendorId != 0) vendorId to productId else controllerIdsFromName(name)
+
     /** The icon to show for this controller everywhere: the chosen kind, else the detected one. */
-    val displayIcon: androidx.compose.ui.graphics.vector.ImageVector get() = controllerIconKind(iconId, vendorId, productId).icon
+    val displayIcon: androidx.compose.ui.graphics.vector.ImageVector get() = modelIds.let { (v, p) -> controllerIconKind(iconId, v, p).icon }
+
+    /** The settings this kind of controller starts with (its layout, vibration, …). */
+    val defaults: ControllerDefaults get() = modelIds.let { (v, p) -> controllerDefaults(v, p) }
 }
 
 /** The controller used last (its layout decides the button hints); set by the platform on pad input. */
 object ActivePad {
     var key by androidx.compose.runtime.mutableStateOf<String?>(null)
 
-    /** The layout detected from the active controller's vendor (null = unknown → the global default). */
+    /** The layout detected from the active controller's model (null = unknown → Xbox). */
     var detectedLayout by androidx.compose.runtime.mutableStateOf<io.github.thecodingdad.gamelodge.data.settings.ButtonLayout?>(null)
 }
 
 /**
- * The layout a controller uses: its own override, else the layout [detected] from its type
- * (a Sony pad shows PlayStation glyphs, a Nintendo pad Nintendo), else the default of all controllers.
+ * The layout a controller uses: its own choice, else the layout [detected] from its model
+ * (a Sony pad shows PlayStation glyphs, a Nintendo pad Nintendo), else Xbox.
  */
 fun io.github.thecodingdad.gamelodge.data.settings.LauncherSettings.layoutFor(
     key: String?,
     detected: io.github.thecodingdad.gamelodge.data.settings.ButtonLayout? = null,
 ): io.github.thecodingdad.gamelodge.data.settings.ButtonLayout =
-    key?.let { controllerLayouts[it] } ?: detected ?: buttonLayout
+    key?.let { controllerLayouts[it] } ?: detected ?: io.github.thecodingdad.gamelodge.data.settings.ButtonLayout.XBOX
 
-/** Default button layout of all controllers (Settings → Controllers). */
-@androidx.compose.runtime.Composable
-fun ControllerLayoutDefaultRow(
-    settings: io.github.thecodingdad.gamelodge.data.settings.LauncherSettings,
-    update: ((io.github.thecodingdad.gamelodge.data.settings.LauncherSettings) -> io.github.thecodingdad.gamelodge.data.settings.LauncherSettings) -> Unit,
-    initialFocus: Boolean = false,
-    title: String? = null,
-) {
-    ChoiceRow(
-        title ?: org.jetbrains.compose.resources.stringResource(io.github.thecodingdad.gamelodge.resources.Res.string.setting_button_layout),
-        io.github.thecodingdad.gamelodge.data.settings.ButtonLayout.entries, settings.buttonLayout,
-        label = { layoutLabel(it) },
-        onSelect = { v -> update { it.copy(buttonLayout = v) } },
-        subtitle = org.jetbrains.compose.resources.stringResource(io.github.thecodingdad.gamelodge.resources.Res.string.setting_button_layout_sub),
-        initialFocus = initialFocus,
-    )
-}
-
-/** One controller's layout: the default of all controllers or its own (controller dialog). */
+/** One controller's layout: the one of its model ("Default (…)") or its own choice. */
 @androidx.compose.runtime.Composable
 fun ControllerLayoutOverrideRow(
     controller: ControllerInfo,
     settings: io.github.thecodingdad.gamelodge.data.settings.LauncherSettings,
     update: ((io.github.thecodingdad.gamelodge.data.settings.LauncherSettings) -> io.github.thecodingdad.gamelodge.data.settings.LauncherSettings) -> Unit,
+    title: String? = null,
+    subtitle: String? = null,
+    initialFocus: Boolean = false,
 ) {
-    val default = org.jetbrains.compose.resources.stringResource(io.github.thecodingdad.gamelodge.resources.Res.string.controller_layout_default, layoutLabel(settings.buttonLayout))
+    val default = org.jetbrains.compose.resources.stringResource(io.github.thecodingdad.gamelodge.resources.Res.string.controller_layout_default, layoutLabel(controller.defaults.layout))
     ChoiceRow(
-        org.jetbrains.compose.resources.stringResource(io.github.thecodingdad.gamelodge.resources.Res.string.setting_button_layout),
+        title ?: org.jetbrains.compose.resources.stringResource(io.github.thecodingdad.gamelodge.resources.Res.string.setting_button_layout),
         listOf<io.github.thecodingdad.gamelodge.data.settings.ButtonLayout?>(null) + io.github.thecodingdad.gamelodge.data.settings.ButtonLayout.entries,
         settings.controllerLayouts[controller.key],
         label = { it?.let { l -> layoutLabel(l) } ?: default },
         onSelect = { v -> update { s -> s.copy(controllerLayouts = if (v == null) s.controllerLayouts - controller.key else s.controllerLayouts + (controller.key to v)) } },
+        subtitle = subtitle,
+        initialFocus = initialFocus,
     )
 }
 

@@ -487,7 +487,7 @@ fun LauncherApp(
                     composable(Routes.CONTROLLER_SECTION) { backStack ->
                         val section = runCatching {
                             io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.valueOf(backStack.arguments?.read { getStringOrNull("section") }.orEmpty())
-                        }.getOrDefault(io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.LAYOUT)
+                        }.getOrDefault(io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.MOUSE)
                         val controllersCrumb = io.github.thecodingdad.gamelodge.ui.screens.settings.Crumb(stringResource(Res.string.settings_controllers)) {
                             if (nav.previousBackStackEntry?.destination?.route == Routes.CONTROLLERS) nav.popBackStack()
                             else nav.navigate(Routes.CONTROLLERS) { popUpTo(Routes.MAIN) }

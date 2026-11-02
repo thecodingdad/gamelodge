@@ -49,6 +49,25 @@ fun controllerIconAuto(vendorId: Int, productId: Int = 0): ControllerIconKind = 
     else -> ControllerIconKind.PAD               // a generic gamepad shape
 }
 
+/**
+ * USB vendor / product ids guessed from a controller's name, for platforms that only report the
+ * name (Windows: SDL's standard names such as "Xbox One Controller", "PS5 Controller",
+ * "Nintendo Switch Joy-Con (L)"). 0 / 0 for an unknown name.
+ */
+fun controllerIdsFromName(name: String): Pair<Int, Int> {
+    val n = name.lowercase()
+    return when {
+        "joy-con (l)" in n || "joycon (l)" in n || "joy-con l" in n -> 0x057E to 0x2006
+        "joy-con (r)" in n || "joycon (r)" in n || "joy-con r" in n -> 0x057E to 0x2007
+        "nintendo" in n || "switch" in n || "pro controller" in n -> 0x057E to 0x2009
+        "xbox" in n || "x-box" in n -> 0x045E to 0
+        listOf("ps3", "ps4", "ps5", "dualshock", "dualsense", "playstation").any { it in n } -> 0x054C to 0
+        "8bitdo" in n -> 0x2DC8 to 0
+        "steam" in n -> 0x28DE to 0
+        else -> 0 to 0
+    }
+}
+
 /** The kind to use: the one the user chose ([iconId] = its name), else detected from the ids. */
 fun controllerIconKind(iconId: String?, vendorId: Int, productId: Int = 0): ControllerIconKind =
     iconId?.let { id -> ControllerIconKind.entries.firstOrNull { it.name == id } } ?: controllerIconAuto(vendorId, productId)

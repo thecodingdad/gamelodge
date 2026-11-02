@@ -188,7 +188,6 @@
 
     <!-- Controls -->
     <string name="setting_button_layout">Disposizione dei tasti</string>
-    <string name="setting_button_layout_sub">Nintendo inverte conferma/indietro (A/B) e X/Y</string>
     <string name="controllers_stream_defaults">Nello stream (tutti i controller, ogni profilo)</string>
     <string name="game_controller_settings">Impostazioni del controller</string>
     <string name="game_mouse">Emulazione del mouse all'avvio</string>
@@ -474,8 +473,8 @@
     <string name="power_shutdown">Spegni</string>
     <string name="controllers_intro">In uno stream ogni controller viene passato all'host come proprio gamepad. Seleziona un controller per dargli impostazioni proprie o un numero di giocatore fisso.</string>
     <string name="controller_layout_default">Predefinito (%1$s)</string>
-    <string name="controllers_defaults">Predefinito per tutti i controller</string>
-    <string name="controllers_defaults_sub">Ogni controller può differire: selezionalo sopra.</string>
+    <string name="controllers_defaults">Generale</string>
+    <string name="controllers_defaults_sub">Per tutti i controller. Disposizione, combinazioni e impostazioni dello stream sono di ciascun controller: selezionalo sopra.</string>
     <string name="controller_launcher_section">Nel launcher</string>
     <string name="controller_stream_section">Nello stream</string>
     <string name="controllers_none">Nessun controller collegato.</string>
@@ -770,6 +769,8 @@
     <string name="controller_motion">Sensori di movimento (giroscopio)</string>
     <string name="controller_touchpad_mouse">Touchpad come mouse</string>
     <string name="controller_default_value">Predefinito (%1$s)</string>
+    <string name="controller_combos_of">Combinazioni di tasti di %1$s</string>
+    <string name="controller_combos_none">Le combinazioni di tasti appartengono a un controller: collegane uno o premi uno dei suoi tasti per modificarle qui.</string>
     <string name="controller_vibration_strength">Intensità vibrazione</string>
     <string name="controller_source_off">Disattivato</string>
     <string name="controller_source_controller">Controller</string>
@@ -879,9 +880,7 @@
     <string name="combo_none">Non configurato</string>
     <string name="combo_help">Registra un singolo tasto (ad es. Guide) o una combinazione (ad es. Select + Start). Tieni premuti i tasti per un momento per registrare una combinazione a pressione prolungata. Il tasto che completa una combinazione viene trattenuto dal gioco.</string>
     <string name="combo_recording_hint">Premi i tasti…</string>
-    <string name="combo_recording_help">Tieni premuti i tasti insieme, poi rilasciali. Si annulla dopo 10 secondi.</string>
     <string name="combo_record">Registra</string>
-    <string name="combo_clear">Rimuovi</string>
     <string name="combo_error_blocked">A, B o una direzione della croce da soli servono per navigare.</string>
     <string name="combo_error_duplicate">Questa combinazione è già usata per l'altra azione.</string>
 
@@ -889,7 +888,7 @@
     <string name="qt_unavailable">Non disponibile su questo dispositivo (nascosto)</string>
 
     <!-- Button combos -->
-    <string name="combo_use_global">Usa globale</string>
+    <string name="combo_use_global">Usa predefinito</string>
     <string name="combo_off">No</string>
     <string name="combo_global_value">Predefinito (%1$s)</string>
     <string name="combo_recording_help_controller">Tieni premuti i tasti insieme su questo controller, poi rilasciali. Si annulla dopo 10 secondi.</string>
@@ -1479,12 +1478,12 @@
     <string name="wizard_emu_detected">Emulatori rilevati</string>
     <string name="wizard_add">Aggiungi</string>
     <string name="wizard_launcher_sub">Il tasto home porterà allora a GameLodge. Puoi annullarlo nelle app predefinite di Android.</string>
-    <string name="wizard_controller_waiting">Nessun controller collegato. La disposizione predefinita si applica a ogni controller che colleghi dopo; funzionano anche tocco e mouse.</string>
+    <string name="wizard_controller_waiting">Nessun controller collegato. Ogni controller parte con la disposizione del suo modello quando lo colleghi (modificabile in Impostazioni › Controller); funzionano anche tocco e mouse.</string>
     <string name="combo_service_where">Cerca lì «GameLodge combos» (spesso sotto «App installate» o «App scaricate») e attivalo.</string>
     <string name="combo_service_restricted_title">Consenti le impostazioni con restrizioni</string>
     <string name="combo_service_restricted">Android blocca i servizi di accessibilità delle app non installate da uno store (il servizio è in grigio). Per consentirlo: tocca una volta il servizio in grigio, poi nelle info dell'app GameLodge apri il menu (⋮) in alto a destra e scegli «Consenti le impostazioni con restrizioni». Poi attiva il servizio.</string>
     <string name="combo_service_app_info">Apri info dell'app</string>
-    <string name="wizard_controller_default">Disposizione dei tasti predefinita</string>
+    <string name="wizard_controller_default">Disposizione dei tasti di questo controller</string>
     <string name="wizard_controller_test_sub">Prova i tasti senza che accada nulla</string>
     <string name="wizard_controller_test_start">Avvia</string>
     <string name="wizard_vpn_only_outside_sub">Attivo: la tua rete attuale diventa la tua rete domestica: lì niente VPN</string>
@@ -1551,9 +1550,6 @@
     <string name="hide_choice_everywhere">Su tutti i dispositivi</string>
     <string name="detail_playtime_devices">Tempo di gioco per dispositivo</string>
     <string name="detail_playtime_other_clients">Altri client di streaming</string>
-    <string name="controller_section_layout">Disposizione e suggerimenti</string>
-    <string name="controller_section_layout_sub">Disposizione dei tasti (Xbox, Nintendo, PlayStation) e suggerimenti dei tasti</string>
-    <string name="controller_section_combos_sub">Menu rapido, mouse, overlay prestazioni… con una combinazione di tasti</string>
     <string name="controller_section_mouse">Emulazione del mouse</string>
     <string name="controller_section_mouse_sub">Velocità del puntatore e accelerazione con lo stick</string>
     <string name="controller_section_stream">Nello stream</string>

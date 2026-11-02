@@ -36,9 +36,6 @@ class Gamepads(private val dispatcher: InputDispatcher) {
     private val _controllers = MutableStateFlow<List<ControllerInfo>>(emptyList())
     val controllers: StateFlow<List<ControllerInfo>> = _controllers.asStateFlow()
 
-    /** Nintendo layout: confirm on the right button (A/B and X/Y swapped); the default of all pads. */
-    @Volatile var nintendoLayout = false
-
     /** Pads with their own layout, by name ([ControllerInfo.key] on the PC): true = Nintendo. */
     @Volatile var layoutOverrides: Map<String, Boolean> = emptyMap()
 
@@ -292,10 +289,16 @@ class Gamepads(private val dispatcher: InputDispatcher) {
             if (changed(p, s)) {
                 lastUsed = i
                 padInUse = true
-                names[i]?.let { name -> java.awt.EventQueue.invokeLater { io.github.thecodingdad.gamelodge.ui.screens.settings.ActivePad.key = name } }
+                names[i]?.let { name ->
+                    java.awt.EventQueue.invokeLater {
+                        io.github.thecodingdad.gamelodge.ui.screens.settings.ActivePad.key = name
+                        io.github.thecodingdad.gamelodge.ui.screens.settings.ActivePad.detectedLayout = modelLayout(name)
+                    }
+                }
                 onInput()
             }
-            handle(p, s, now, names[i]?.let { layoutOverrides[it] } ?: nintendoLayout)
+            // The pad's own layout, else its model's (a Nintendo pad confirms on the right button).
+            handle(p, s, now, names[i]?.let { layoutOverrides[it] ?: (modelLayout(it) == io.github.thecodingdad.gamelodge.data.settings.ButtonLayout.NINTENDO) } ?: false)
         }
         repeatHeld(now)
     }
@@ -430,3 +433,9 @@ class Gamepads(private val dispatcher: InputDispatcher) {
         private val DIRECTIONS = mapOf("up" to KeyEvent.VK_UP, "down" to KeyEvent.VK_DOWN, "left" to KeyEvent.VK_LEFT, "right" to KeyEvent.VK_RIGHT)
     }
 }
+
+/** The layout of a pad's model, guessed from its name (null = unknown → Xbox). */
+fun modelLayout(name: String): io.github.thecodingdad.gamelodge.data.settings.ButtonLayout? =
+    io.github.thecodingdad.gamelodge.ui.screens.settings.buttonLayoutForVendor(
+        io.github.thecodingdad.gamelodge.ui.screens.settings.controllerIdsFromName(name).first,
+    )

@@ -204,7 +204,7 @@ fun QuickMenuOverlayWindow(
                 LocalUiFeedback provides feedback,
                 LocalKeyboardController provides keyboard,
                 LocalHintHolder provides hints,
-                LocalButtonLayout provides settings.layoutFor(ActivePad.key),
+                LocalButtonLayout provides settings.layoutFor(ActivePad.key, ActivePad.detectedLayout),
                 // Laid out like the launcher's own quick menu, not like a narrow screen.
                 LocalCompactWidth provides false,
                 LocalShowHintBar provides (settings.showHintBar && rememberControllers().isNotEmpty()),

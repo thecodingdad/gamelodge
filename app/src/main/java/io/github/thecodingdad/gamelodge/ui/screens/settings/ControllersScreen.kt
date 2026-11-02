@@ -111,6 +111,40 @@ fun rememberAndroidControllers(): List<ControllerInfo> {
     }
 }
 
+/** The controller in use (the last one pressed), else the first connected one; null without any. */
+@Composable
+fun rememberActiveController(): ControllerInfo? {
+    val controllers = rememberAndroidControllers().filter { it.descriptor.isNotEmpty() }
+    return controllers.firstOrNull { it.key == ActivePad.key } ?: controllers.firstOrNull()
+}
+
+/**
+ * The button combinations of the controller in use (quick menu settings), titled with its name;
+ * without a controller only a hint (combinations belong to a controller).
+ */
+@Composable
+fun ActiveControllerComboRows(actions: List<io.github.thecodingdad.gamelodge.input.ComboAction>, firstFocus: Boolean = false) {
+    val pad = rememberActiveController()
+    if (pad == null) {
+        Text(stringResource(Res.string.controller_combos_none), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+        return
+    }
+    val store = LocalContext.current.container.controllerSettings
+    val all by store.all.collectAsState()
+    val s = all[pad.descriptor] ?: io.github.thecodingdad.gamelodge.stream.ControllerSettings()
+    SectionHeader(stringResource(Res.string.controller_combos_of, pad.displayName))
+    ControllerComboRows(
+        combo = { a -> s.combo(a)?.toSet() },
+        forward = s.comboForward,
+        descriptor = pad.descriptor,
+        onCombo = { a, keys -> store.set(pad.descriptor, s.withCombo(a, keys?.toList())) },
+        onForward = { v -> store.set(pad.descriptor, s.copy(comboForward = v)) },
+        actions = actions,
+        firstFocus = firstFocus,
+        subtitles = true,
+    )
+}
+
 @Composable
 fun ControllersScreen() {
     val controllers = rememberAndroidControllers()
@@ -135,9 +169,14 @@ fun ControllersScreen() {
                 iconTint = c.colorArgb?.let { androidx.compose.ui.graphics.Color(it) },
             )
         }
-        // Launcher controls every controller uses unless its own settings say otherwise.
+        // What applies to every controller (layout, combinations … are each controller's own).
         SectionHeader(stringResource(Res.string.controllers_defaults))
         Text(stringResource(Res.string.controllers_defaults_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+        val settingsRepo = context.container.settings
+        val settings by settingsRepo.settings.collectAsState(io.github.thecodingdad.gamelodge.data.settings.LauncherSettings())
+        val scope = androidx.compose.runtime.rememberCoroutineScope()
+        HintBarRow(settings) { t -> scope.launch { settingsRepo.update(t) } }
+        ComboServiceRows()
         ControllerSectionRows(ANDROID_CONTROLLER_SECTIONS)
         SeeAlso(
             SeeAlsoLink(stringResource(Res.string.settings_sounds), SettingsTarget.Page(SettingsPageId.SOUNDS)),
@@ -200,7 +239,7 @@ private fun ControllerOverrideRows(c: ControllerInfo) {
     val s = all[c.descriptor] ?: io.github.thecodingdad.gamelodge.stream.ControllerSettings()
     fun save(t: (io.github.thecodingdad.gamelodge.stream.ControllerSettings) -> io.github.thecodingdad.gamelodge.stream.ControllerSettings) =
         store.set(c.descriptor, t(s))
-    val d = remember(c.vendorId, c.productId) { controllerDefaults(c.vendorId, c.productId) }
+    val d = remember(c.vendorId, c.productId) { c.defaults }
     val default: @Composable (String) -> String = { stringResource(Res.string.controller_default_value, it) }
     val on = stringResource(Res.string.ha_on)
     val off = stringResource(Res.string.ha_off)
@@ -256,12 +295,11 @@ private fun ControllerOverrideRows(c: ControllerInfo) {
     val scope = androidx.compose.runtime.rememberCoroutineScope()
     SectionHeader(stringResource(Res.string.controller_launcher_section))
     launcherSettings?.let { ls ->
-        ControllerLayoutOverrideRow(c, ls) { t -> scope.launch { settingsRepo.update(t) } }
+        ControllerLayoutOverrideRow(c, ls, update = { t -> scope.launch { settingsRepo.update(t) } })
     }
     // Button combinations of this controller (e.g. Guide on an Xbox pad, Select + Start elsewhere).
     launcherSettings?.let { ls ->
         ControllerComboRows(
-            global = ls,
             combo = { a -> s.combo(a)?.toSet() },
             forward = s.comboForward,
             descriptor = c.descriptor,
@@ -437,7 +475,7 @@ private fun OdinMappingSection() {
 }
 
 /** The controller settings' pages on Android. */
-val ANDROID_CONTROLLER_SECTIONS = listOf(ControllerSection.LAYOUT, ControllerSection.COMBOS, ControllerSection.MOUSE, ControllerSection.STREAM)
+val ANDROID_CONTROLLER_SECTIONS = listOf(ControllerSection.MOUSE, ControllerSection.STREAM)
 
 /** One page of the controller settings (Settings › Controllers › …). */
 @Composable
@@ -449,18 +487,11 @@ fun ControllerSectionScreen(section: ControllerSection) {
     val update: ((io.github.thecodingdad.gamelodge.data.settings.LauncherSettings) -> io.github.thecodingdad.gamelodge.data.settings.LauncherSettings) -> Unit =
         { t -> scope.launch { settingsRepo.update(t) } }
     val title = when (section) {
-        ControllerSection.LAYOUT -> Res.string.controller_section_layout
-        ControllerSection.COMBOS -> Res.string.combo_section
         ControllerSection.MOUSE -> Res.string.controller_section_mouse
         ControllerSection.STREAM -> Res.string.controller_section_stream
     }
     SettingsPage(stringResource(title)) {
         when (section) {
-            ControllerSection.LAYOUT -> {
-                ControllerLayoutDefaultRow(settings, update, initialFocus = true)
-                HintBarRow(settings, update)
-            }
-            ControllerSection.COMBOS -> ButtonComboRows(settings, update)
             ControllerSection.MOUSE -> MouseSettingsRows(settings, update)
             ControllerSection.STREAM -> {
                 // The stream's controller options, the same for every profile (single controllers and

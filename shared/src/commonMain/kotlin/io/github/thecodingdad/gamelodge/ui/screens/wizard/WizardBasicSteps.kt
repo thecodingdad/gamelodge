@@ -59,7 +59,6 @@ import io.github.thecodingdad.gamelodge.ui.screens.settings.AccentColorPicker
 import io.github.thecodingdad.gamelodge.ui.screens.settings.AccentSwatchRow
 import io.github.thecodingdad.gamelodge.ui.screens.settings.ActivePad
 import io.github.thecodingdad.gamelodge.ui.screens.settings.ChoiceRow
-import io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerLayoutDefaultRow
 import io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerLayoutOverrideRow
 import io.github.thecodingdad.gamelodge.ui.screens.settings.PictureChoiceRow
 import io.github.thecodingdad.gamelodge.ui.screens.settings.SectionHeader
@@ -256,23 +255,23 @@ internal fun ColumnScope.ControllerStep(settings: LauncherSettings) {
     val nav = LocalNav
     val controllers = rememberControllers()
     var testing by remember { mutableStateOf(false) }
-    // The default of all controllers, also without one connected (it applies once one is).
-    ControllerLayoutDefaultRow(settings, nav.update, initialFocus = true, title = stringResource(Res.string.wizard_controller_default))
     if (controllers.isEmpty()) {
         WizardNote(stringResource(Res.string.wizard_controller_waiting))
         return
     }
-    controllers.forEach { c ->
+    // The controller in use (the last one pressed), else the first connected: the layout is its own.
+    val c = controllers.firstOrNull { it.key == ActivePad.key } ?: controllers.first()
+    run {
         val colors = LauncherTheme.colors
         Column(
             Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(colors.surface).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Filled.SportsEsports, null, tint = colors.onSurface)
+                Icon(c.displayIcon, null, tint = c.colorArgb?.let { androidx.compose.ui.graphics.Color(it) } ?: colors.onSurface)
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(c.name, style = MaterialTheme.typography.titleMedium, color = colors.onSurface)
+                    Text(c.displayName, style = MaterialTheme.typography.titleMedium, color = colors.onSurface)
                     Text(
                         listOfNotNull(
                             stringResource(if (c.external) Res.string.controller_external else Res.string.controller_builtin),
@@ -283,7 +282,7 @@ internal fun ColumnScope.ControllerStep(settings: LauncherSettings) {
                 }
                 if (c.canVibrate) LauncherButton(stringResource(Res.string.controller_vibrate_test), onClick = { vibrateController(c.id) }, icon = Icons.Filled.Vibration)
             }
-            ControllerLayoutOverrideRow(c, settings, nav.update)
+            ControllerLayoutOverrideRow(c, settings, nav.update, title = stringResource(Res.string.wizard_controller_default), initialFocus = true)
         }
     }
     WizardStatusRow(

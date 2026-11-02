@@ -188,7 +188,6 @@
 
     <!-- Controls -->
     <string name="setting_button_layout">Disposição dos botões</string>
-    <string name="setting_button_layout_sub">Nintendo troca confirmar/voltar (A/B) e X/Y</string>
     <string name="controllers_stream_defaults">No stream (todos os controles, cada perfil)</string>
     <string name="game_controller_settings">Configurações do controle</string>
     <string name="game_mouse">Emulação de mouse ao iniciar</string>
@@ -474,8 +473,8 @@
     <string name="power_shutdown">Desligar</string>
     <string name="controllers_intro">Num stream, cada controle é passado ao host como seu próprio gamepad. Selecione um controle para dar a ele configurações próprias ou um número de jogador fixo.</string>
     <string name="controller_layout_default">Padrão (%1$s)</string>
-    <string name="controllers_defaults">Padrão para todos os controles</string>
-    <string name="controllers_defaults_sub">Cada controle pode diferir: selecione-o acima.</string>
+    <string name="controllers_defaults">Geral</string>
+    <string name="controllers_defaults_sub">Para todos os controles. Disposição, combinações e ajustes do stream são de cada controle: selecione-o acima.</string>
     <string name="controller_launcher_section">No lançador</string>
     <string name="controller_stream_section">No stream</string>
     <string name="controllers_none">Nenhum controle conectado.</string>
@@ -770,6 +769,8 @@
     <string name="controller_motion">Sensores de movimento (giroscópio)</string>
     <string name="controller_touchpad_mouse">Touchpad como mouse</string>
     <string name="controller_default_value">Padrão (%1$s)</string>
+    <string name="controller_combos_of">Combinações de botões de %1$s</string>
+    <string name="controller_combos_none">As combinações de botões pertencem a um controle: conecte um ou pressione um dos botões dele para alterá-las aqui.</string>
     <string name="controller_vibration_strength">Intensidade da vibração</string>
     <string name="controller_source_off">Desligado</string>
     <string name="controller_source_controller">Controle</string>
@@ -879,9 +880,7 @@
     <string name="combo_none">Não configurado</string>
     <string name="combo_help">Grave um único botão (p. ex. Guide) ou uma combinação (p. ex. Select + Start). Mantenha os botões pressionados por um momento para gravar uma combinação de segurar. O botão que completa uma combinação é retido do jogo.</string>
     <string name="combo_recording_hint">Pressione botões…</string>
-    <string name="combo_recording_help">Mantenha os botões pressionados juntos, depois solte-os. Cancela após 10 segundos.</string>
     <string name="combo_record">Gravar</string>
-    <string name="combo_clear">Remover</string>
     <string name="combo_error_blocked">A, B ou uma direção do direcional sozinhos são necessários para navegar.</string>
     <string name="combo_error_duplicate">Esta combinação já é usada para a outra ação.</string>
 
@@ -889,7 +888,7 @@
     <string name="qt_unavailable">Indisponível neste dispositivo (oculto)</string>
 
     <!-- Button combos -->
-    <string name="combo_use_global">Usar global</string>
+    <string name="combo_use_global">Usar padrão</string>
     <string name="combo_off">Não</string>
     <string name="combo_global_value">Padrão (%1$s)</string>
     <string name="combo_recording_help_controller">Mantenha os botões pressionados juntos neste controle, depois solte-os. Cancela após 10 segundos.</string>
@@ -1479,12 +1478,12 @@
     <string name="wizard_emu_detected">Emuladores detectados</string>
     <string name="wizard_add">Adicionar</string>
     <string name="wizard_launcher_sub">O botão início levará então ao GameLodge. Você pode desfazer isso nos apps padrão do Android.</string>
-    <string name="wizard_controller_waiting">Nenhum controle conectado. A disposição padrão se aplica a cada controle que você conectar depois; toque e mouse também funcionam.</string>
+    <string name="wizard_controller_waiting">Nenhum controle conectado. Cada controle começa com a disposição do seu modelo ao conectá-lo (alterável em Configurações › Controles); toque e mouse também funcionam.</string>
     <string name="combo_service_where">Procure ali «GameLodge combos» (muitas vezes em «Apps instalados» ou «Apps baixados») e ative-o.</string>
     <string name="combo_service_restricted_title">Permitir configurações restritas</string>
     <string name="combo_service_restricted">O Android bloqueia os serviços de acessibilidade de apps não instalados por uma loja (o serviço fica acinzentado). Para permitir: toque uma vez no serviço acinzentado, depois nas informações do app GameLodge abra o menu (⋮) no canto superior direito e escolha «Permitir configurações restritas». Depois ative o serviço.</string>
     <string name="combo_service_app_info">Abrir informações do app</string>
-    <string name="wizard_controller_default">Disposição de botões padrão</string>
+    <string name="wizard_controller_default">Disposição de botões deste controle</string>
     <string name="wizard_controller_test_sub">Experimente os botões sem que nada aconteça</string>
     <string name="wizard_controller_test_start">Iniciar</string>
     <string name="wizard_vpn_only_outside_sub">Ativado: sua rede atual passa a ser sua rede doméstica — sem VPN ali</string>
@@ -1551,9 +1550,6 @@
     <string name="hide_choice_everywhere">Em todos os dispositivos</string>
     <string name="detail_playtime_devices">Tempo de jogo por dispositivo</string>
     <string name="detail_playtime_other_clients">Outros clientes de streaming</string>
-    <string name="controller_section_layout">Disposição e dicas</string>
-    <string name="controller_section_layout_sub">Disposição dos botões (Xbox, Nintendo, PlayStation) e dicas de botões</string>
-    <string name="controller_section_combos_sub">Menu rápido, mouse, overlay de desempenho… com uma combinação de botões</string>
     <string name="controller_section_mouse">Emulação de mouse</string>
     <string name="controller_section_mouse_sub">Velocidade do ponteiro e aceleração com o analógico</string>
     <string name="controller_section_stream">No stream</string>

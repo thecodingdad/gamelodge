@@ -188,7 +188,6 @@
 
     <!-- Controls -->
     <string name="setting_button_layout">Distribución de botones</string>
-    <string name="setting_button_layout_sub">Nintendo intercambia confirmar/atrás (A/B) y X/Y</string>
     <string name="controllers_stream_defaults">En el stream (todos los mandos, cada perfil)</string>
     <string name="game_controller_settings">Ajustes del mando</string>
     <string name="game_mouse">Emulación de ratón al iniciar</string>
@@ -474,8 +473,8 @@
     <string name="power_shutdown">Apagar</string>
     <string name="controllers_intro">En un stream, cada mando se pasa al host como su propio gamepad. Selecciona un mando para darle sus propios ajustes o un número de jugador fijo.</string>
     <string name="controller_layout_default">Predeterminado (%1$s)</string>
-    <string name="controllers_defaults">Predeterminado para todos los mandos</string>
-    <string name="controllers_defaults_sub">Cada mando puede diferir: selecciónalo arriba.</string>
+    <string name="controllers_defaults">General</string>
+    <string name="controllers_defaults_sub">Para todos los mandos. La distribución, las combinaciones y los ajustes del stream son de cada mando: selecciónalo arriba.</string>
     <string name="controller_launcher_section">En el lanzador</string>
     <string name="controller_stream_section">En el stream</string>
     <string name="controllers_none">Ningún mando conectado.</string>
@@ -770,6 +769,8 @@
     <string name="controller_motion">Sensores de movimiento (giroscopio)</string>
     <string name="controller_touchpad_mouse">Touchpad como ratón</string>
     <string name="controller_default_value">Predeterminado (%1$s)</string>
+    <string name="controller_combos_of">Combinaciones de botones de %1$s</string>
+    <string name="controller_combos_none">Las combinaciones de botones pertenecen a un mando: conecta uno o pulsa uno de sus botones para cambiarlas aquí.</string>
     <string name="controller_vibration_strength">Intensidad de vibración</string>
     <string name="controller_source_off">Desactivado</string>
     <string name="controller_source_controller">Mando</string>
@@ -879,9 +880,7 @@
     <string name="combo_none">Sin configurar</string>
     <string name="combo_help">Graba un solo botón (p. ej. Guide) o una combinación (p. ej. Select + Start). Mantén los botones un momento para grabar una combinación de mantener. El botón que completa una combinación se retiene del juego.</string>
     <string name="combo_recording_hint">Pulsa botones…</string>
-    <string name="combo_recording_help">Mantén los botones juntos y luego suéltalos. Se cancela tras 10 segundos.</string>
     <string name="combo_record">Grabar</string>
-    <string name="combo_clear">Quitar</string>
     <string name="combo_error_blocked">A, B o una dirección de la cruceta por sí solas se necesitan para navegar.</string>
     <string name="combo_error_duplicate">Esta combinación ya se usa para la otra acción.</string>
 
@@ -889,7 +888,7 @@
     <string name="qt_unavailable">No disponible en este dispositivo (oculto)</string>
 
     <!-- Button combos -->
-    <string name="combo_use_global">Usar global</string>
+    <string name="combo_use_global">Usar predeterminado</string>
     <string name="combo_off">No</string>
     <string name="combo_global_value">Predeterminado (%1$s)</string>
     <string name="combo_recording_help_controller">Mantén los botones juntos en este mando y luego suéltalos. Se cancela tras 10 segundos.</string>
@@ -1479,12 +1478,12 @@
     <string name="wizard_emu_detected">Emuladores detectados</string>
     <string name="wizard_add">Añadir</string>
     <string name="wizard_launcher_sub">El botón de inicio llevará entonces a GameLodge. Puedes deshacerlo en las apps predeterminadas de Android.</string>
-    <string name="wizard_controller_waiting">Ningún mando conectado. La distribución predeterminada se aplica a cada mando que conectes después; el táctil y el ratón también funcionan.</string>
+    <string name="wizard_controller_waiting">Ningún mando conectado. Cada mando empieza con la distribución de su modelo al conectarlo (se cambia en Ajustes › Mandos); el táctil y el ratón también funcionan.</string>
     <string name="combo_service_where">Busca ahí «GameLodge combos» (a menudo en «Apps instaladas» o «Apps descargadas») y actívalo.</string>
     <string name="combo_service_restricted_title">Permitir ajustes restringidos</string>
     <string name="combo_service_restricted">Android bloquea los servicios de accesibilidad de apps no instaladas desde una tienda (el servicio aparece atenuado). Para permitirlo: toca una vez el servicio atenuado, luego en la info de la app de GameLodge abre el menú (⋮) arriba a la derecha y elige «Permitir ajustes restringidos». Después activa el servicio.</string>
     <string name="combo_service_app_info">Abrir info de la app</string>
-    <string name="wizard_controller_default">Distribución de botones predeterminada</string>
+    <string name="wizard_controller_default">Distribución de botones de este mando</string>
     <string name="wizard_controller_test_sub">Prueba los botones sin que ocurra nada</string>
     <string name="wizard_controller_test_start">Iniciar</string>
     <string name="wizard_vpn_only_outside_sub">Activado: tu red actual pasa a ser tu red doméstica: ahí no hay VPN</string>
@@ -1551,9 +1550,6 @@
     <string name="hide_choice_everywhere">En todos los dispositivos</string>
     <string name="detail_playtime_devices">Tiempo de juego por dispositivo</string>
     <string name="detail_playtime_other_clients">Otros clientes de streaming</string>
-    <string name="controller_section_layout">Distribución y pistas</string>
-    <string name="controller_section_layout_sub">Distribución de botones (Xbox, Nintendo, PlayStation) y pistas de botones</string>
-    <string name="controller_section_combos_sub">Menú rápido, ratón, overlay de rendimiento… con una combinación de botones</string>
     <string name="controller_section_mouse">Emulación de ratón</string>
     <string name="controller_section_mouse_sub">Velocidad del puntero y aceleración con el stick</string>
     <string name="controller_section_stream">En el stream</string>

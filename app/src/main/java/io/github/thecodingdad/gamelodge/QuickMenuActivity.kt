@@ -1,6 +1,7 @@
 package io.github.thecodingdad.gamelodge
 
 
+import io.github.thecodingdad.gamelodge.ui.screens.settings.layoutFor
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
@@ -153,7 +154,10 @@ class QuickMenuActivity : ComponentActivity() {
                 LocalUiFeedback provides feedback,
                 LocalKeyboardController provides keyboard,
                 LocalHintHolder provides hints,
-                LocalButtonLayout provides settings.buttonLayout,
+                LocalButtonLayout provides settings.layoutFor(
+                    io.github.thecodingdad.gamelodge.ui.screens.settings.ActivePad.key,
+                    io.github.thecodingdad.gamelodge.ui.screens.settings.ActivePad.detectedLayout,
+                ),
             ) {
                 io.github.thecodingdad.gamelodge.ui.input.RightStickScrollDriver()
                 BoxWithConstraints(Modifier.fillMaxSize()) {

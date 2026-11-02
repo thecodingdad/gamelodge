@@ -188,7 +188,6 @@
 
     <!-- Controls -->
     <string name="setting_button_layout">Disposition des boutons</string>
-    <string name="setting_button_layout_sub">Nintendo inverse confirmer/retour (A/B) et X/Y</string>
     <string name="controllers_stream_defaults">Dans le stream (toutes les manettes, chaque profil)</string>
     <string name="game_controller_settings">Réglages de la manette</string>
     <string name="game_mouse">Émulation de souris au démarrage</string>
@@ -474,8 +473,8 @@
     <string name="power_shutdown">Éteindre</string>
     <string name="controllers_intro">Dans un stream, chaque manette est transmise à l'hôte comme son propre gamepad. Sélectionnez une manette pour lui donner ses propres réglages ou un numéro de joueur fixe.</string>
     <string name="controller_layout_default">Par défaut (%1$s)</string>
-    <string name="controllers_defaults">Par défaut pour toutes les manettes</string>
-    <string name="controllers_defaults_sub">Chaque manette peut différer : sélectionnez-la ci-dessus.</string>
+    <string name="controllers_defaults">Général</string>
+    <string name="controllers_defaults_sub">Pour toutes les manettes. Disposition, combinaisons et réglages du stream sont propres à chaque manette : sélectionnez-la ci-dessus.</string>
     <string name="controller_launcher_section">Dans le lanceur</string>
     <string name="controller_stream_section">Dans le stream</string>
     <string name="controllers_none">Aucune manette connectée.</string>
@@ -770,6 +769,8 @@
     <string name="controller_motion">Capteurs de mouvement (gyro)</string>
     <string name="controller_touchpad_mouse">Pavé tactile en souris</string>
     <string name="controller_default_value">Par défaut (%1$s)</string>
+    <string name="controller_combos_of">Combinaisons de boutons de %1$s</string>
+    <string name="controller_combos_none">Les combinaisons de boutons appartiennent à une manette : connectez-en une ou appuyez sur l'un de ses boutons pour les modifier ici.</string>
     <string name="controller_vibration_strength">Intensité de vibration</string>
     <string name="controller_source_off">Désactivé</string>
     <string name="controller_source_controller">Manette</string>
@@ -879,9 +880,7 @@
     <string name="combo_none">Non configuré</string>
     <string name="combo_help">Enregistrez un seul bouton (p. ex. Guide) ou une combinaison (p. ex. Select + Start). Maintenez les boutons un moment pour enregistrer une combinaison maintenue. Le bouton qui complète une combinaison est retenu du jeu.</string>
     <string name="combo_recording_hint">Appuyez sur des boutons…</string>
-    <string name="combo_recording_help">Maintenez les boutons ensemble, puis relâchez-les. S'annule après 10 secondes.</string>
     <string name="combo_record">Enregistrer</string>
-    <string name="combo_clear">Retirer</string>
     <string name="combo_error_blocked">A, B ou une direction de la croix seuls sont nécessaires pour naviguer.</string>
     <string name="combo_error_duplicate">Cette combinaison est déjà utilisée pour l'autre action.</string>
 
@@ -889,7 +888,7 @@
     <string name="qt_unavailable">Indisponible sur cet appareil (masqué)</string>
 
     <!-- Button combos -->
-    <string name="combo_use_global">Utiliser le global</string>
+    <string name="combo_use_global">Utiliser la valeur par défaut</string>
     <string name="combo_off">Non</string>
     <string name="combo_global_value">Par défaut (%1$s)</string>
     <string name="combo_recording_help_controller">Maintenez les boutons ensemble sur cette manette, puis relâchez-les. S'annule après 10 secondes.</string>
@@ -1479,12 +1478,12 @@
     <string name="wizard_emu_detected">Émulateurs détectés</string>
     <string name="wizard_add">Ajouter</string>
     <string name="wizard_launcher_sub">Le bouton d'accueil mènera alors à GameLodge. Vous pouvez l'annuler dans les apps par défaut d'Android.</string>
-    <string name="wizard_controller_waiting">Aucune manette connectée. La disposition par défaut s'applique à chaque manette que vous connectez ensuite ; le tactile et la souris fonctionnent aussi.</string>
+    <string name="wizard_controller_waiting">Aucune manette connectée. Chaque manette démarre avec la disposition de son modèle quand vous la connectez (modifiable dans Paramètres › Manettes) ; le tactile et la souris fonctionnent aussi.</string>
     <string name="combo_service_where">Cherchez-y « GameLodge combos » (souvent sous « Apps installées » ou « Apps téléchargées ») et activez-le.</string>
     <string name="combo_service_restricted_title">Autoriser les réglages restreints</string>
     <string name="combo_service_restricted">Android bloque les services d'accessibilité des apps non installées depuis une boutique (le service est grisé). Pour l'autoriser : touchez une fois le service grisé, puis dans les infos de l'app GameLodge ouvrez le menu (⋮) en haut à droite et choisissez « Autoriser les réglages restreints ». Activez ensuite le service.</string>
     <string name="combo_service_app_info">Ouvrir les infos de l'app</string>
-    <string name="wizard_controller_default">Disposition de boutons par défaut</string>
+    <string name="wizard_controller_default">Disposition des boutons de cette manette</string>
     <string name="wizard_controller_test_sub">Essayez les boutons sans que rien ne se passe</string>
     <string name="wizard_controller_test_start">Démarrer</string>
     <string name="wizard_vpn_only_outside_sub">Activé : votre réseau actuel devient votre réseau domestique — pas de VPN là</string>
@@ -1551,9 +1550,6 @@
     <string name="hide_choice_everywhere">Sur tous les appareils</string>
     <string name="detail_playtime_devices">Temps de jeu par appareil</string>
     <string name="detail_playtime_other_clients">Autres clients de streaming</string>
-    <string name="controller_section_layout">Disposition et aides</string>
-    <string name="controller_section_layout_sub">Disposition des boutons (Xbox, Nintendo, PlayStation) et aides de boutons</string>
-    <string name="controller_section_combos_sub">Menu rapide, souris, overlay de performances… avec une combinaison de boutons</string>
     <string name="controller_section_mouse">Émulation de souris</string>
     <string name="controller_section_mouse_sub">Vitesse du pointeur et accélération au stick</string>
     <string name="controller_section_stream">Dans le stream</string>
