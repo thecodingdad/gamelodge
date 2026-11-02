@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.addPathNodes
 import androidx.compose.ui.unit.dp
+import io.github.thecodingdad.gamelodge.data.settings.ButtonLayout
 import io.github.thecodingdad.gamelodge.resources.*
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -47,6 +48,17 @@ fun controllerIconAuto(vendorId: Int): ControllerIconKind = when (vendorId) {
 /** The kind to use: the one the user chose ([iconId] = its name), else detected from [vendorId]. */
 fun controllerIconKind(iconId: String?, vendorId: Int): ControllerIconKind =
     iconId?.let { id -> ControllerIconKind.entries.firstOrNull { it.name == id } } ?: controllerIconAuto(vendorId)
+
+/**
+ * The button-hint layout that matches a controller's vendor (Xbox, PlayStation or Nintendo), or
+ * null when the pad has no own button style and the global default should be used.
+ */
+fun buttonLayoutForVendor(vendorId: Int): ButtonLayout? = when (controllerIconAuto(vendorId)) {
+    ControllerIconKind.XBOX -> ButtonLayout.XBOX
+    ControllerIconKind.PLAYSTATION -> ButtonLayout.PLAYSTATION
+    ControllerIconKind.NINTENDO -> ButtonLayout.NINTENDO
+    else -> null
+}
 
 private fun brandIcon(name: String, pathData: String, fillType: PathFillType = PathFillType.NonZero): ImageVector =
     ImageVector.Builder(name, 24.dp, 24.dp, 24f, 24f).apply {

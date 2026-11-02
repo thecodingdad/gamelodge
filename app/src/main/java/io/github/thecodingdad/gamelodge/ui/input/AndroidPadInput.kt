@@ -66,7 +66,12 @@ object AndroidPad {
     fun inLayout(event: KeyEvent, settings: io.github.thecodingdad.gamelodge.data.settings.LauncherSettings): KeyEvent {
         val device = event.device?.takeIf { (it.sources and android.view.InputDevice.SOURCE_GAMEPAD) == android.view.InputDevice.SOURCE_GAMEPAD }
         val key = device?.descriptor
-        if (key != null && event.action == KeyEvent.ACTION_DOWN) io.github.thecodingdad.gamelodge.ui.screens.settings.ActivePad.key = key
+        if (key != null && event.action == KeyEvent.ACTION_DOWN) {
+            io.github.thecodingdad.gamelodge.ui.screens.settings.ActivePad.key = key
+            // Button hints follow the pad in use: a Sony pad shows PlayStation glyphs, a Nintendo pad Nintendo.
+            io.github.thecodingdad.gamelodge.ui.screens.settings.ActivePad.detectedLayout =
+                io.github.thecodingdad.gamelodge.ui.screens.settings.buttonLayoutForVendor(device.vendorId)
+        }
         val layout = settings.controllerLayouts[key] ?: settings.buttonLayout
         if (layout != io.github.thecodingdad.gamelodge.data.settings.ButtonLayout.NINTENDO) return event
         val swapped = swapForNintendo(event.keyCode)

@@ -202,6 +202,7 @@
     <string name="game_layout_sub">Nintendo inverte A/B e X/Y per questo gioco</string>
     <string name="button_layout_xbox">Xbox</string>
     <string name="button_layout_nintendo">Nintendo</string>
+    <string name="button_layout_playstation">PlayStation</string>
     <string name="setting_ui_sounds">Suoni dell'interfaccia</string>
     <string name="setting_ui_volume">Volume del suono</string>
     <string name="setting_haptics">Vibrazione</string>
@@ -1537,7 +1538,7 @@
     <string name="detail_playtime_devices">Tempo di gioco per dispositivo</string>
     <string name="detail_playtime_other_clients">Altri client di streaming</string>
     <string name="controller_section_layout">Disposizione e suggerimenti</string>
-    <string name="controller_section_layout_sub">Disposizione dei tasti (Xbox / Nintendo) e suggerimenti dei tasti</string>
+    <string name="controller_section_layout_sub">Disposizione dei tasti (Xbox, Nintendo, PlayStation) e suggerimenti dei tasti</string>
     <string name="controller_section_combos_sub">Menu rapido, mouse, overlay prestazioni… con una combinazione di tasti</string>
     <string name="controller_section_mouse">Emulazione del mouse</string>
     <string name="controller_section_mouse_sub">Velocità del puntatore e accelerazione con lo stick</string>

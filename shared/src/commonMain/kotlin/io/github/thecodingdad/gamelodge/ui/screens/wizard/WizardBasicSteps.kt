@@ -290,7 +290,7 @@ internal fun ColumnScope.ControllerStep(settings: LauncherSettings) {
         stringResource(Res.string.wizard_controller_test), stringResource(Res.string.wizard_controller_test_sub), done = false,
         icon = Icons.Filled.TouchApp, action = stringResource(Res.string.wizard_controller_test_start), onClick = { testing = true },
     )
-    if (testing) ButtonTestDialog(settings.layoutFor(ActivePad.key)) { testing = false }
+    if (testing) ButtonTestDialog(settings.layoutFor(ActivePad.key, ActivePad.detectedLayout)) { testing = false }
 }
 
 /**
@@ -353,7 +353,8 @@ private fun ButtonPad(layout: ButtonLayout, lit: Map<String, Boolean>) {
         ) { Text(label, style = MaterialTheme.typography.labelLarge, color = if (on) colors.onAccent else colors.onSurface) }
     }
     // Diamond: top, left, right, bottom.
-    val face = if (layout == ButtonLayout.XBOX) listOf("Y", "X", "B", "A") else listOf("X", "Y", "A", "B")
+    // PlayStation shares the Xbox diamond positions; only Nintendo swaps them.
+    val face = if (layout == ButtonLayout.NINTENDO) listOf("X", "Y", "A", "B") else listOf("Y", "X", "B", "A")
     Column(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(colors.surface).padding(18.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),

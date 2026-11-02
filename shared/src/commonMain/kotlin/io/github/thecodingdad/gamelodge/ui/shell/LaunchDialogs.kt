@@ -451,6 +451,7 @@ private fun GameControllerDialog(item: io.github.thecodingdad.gamelodge.data.db.
                             null -> Res.string.game_layout_controllers
                             io.github.thecodingdad.gamelodge.data.settings.ButtonLayout.XBOX -> Res.string.button_layout_xbox
                             io.github.thecodingdad.gamelodge.data.settings.ButtonLayout.NINTENDO -> Res.string.button_layout_nintendo
+                            io.github.thecodingdad.gamelodge.data.settings.ButtonLayout.PLAYSTATION -> Res.string.button_layout_playstation
                         },
                     )
                 },

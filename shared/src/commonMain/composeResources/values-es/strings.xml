@@ -202,6 +202,7 @@
     <string name="game_layout_sub">Nintendo intercambia A/B y X/Y para este juego</string>
     <string name="button_layout_xbox">Xbox</string>
     <string name="button_layout_nintendo">Nintendo</string>
+    <string name="button_layout_playstation">PlayStation</string>
     <string name="setting_ui_sounds">Sonidos de interfaz</string>
     <string name="setting_ui_volume">Volumen del sonido</string>
     <string name="setting_haptics">Vibración</string>
@@ -1537,7 +1538,7 @@
     <string name="detail_playtime_devices">Tiempo de juego por dispositivo</string>
     <string name="detail_playtime_other_clients">Otros clientes de streaming</string>
     <string name="controller_section_layout">Distribución y pistas</string>
-    <string name="controller_section_layout_sub">Distribución de botones (Xbox / Nintendo) y pistas de botones</string>
+    <string name="controller_section_layout_sub">Distribución de botones (Xbox, Nintendo, PlayStation) y pistas de botones</string>
     <string name="controller_section_combos_sub">Menú rápido, ratón, overlay de rendimiento… con una combinación de botones</string>
     <string name="controller_section_mouse">Emulación de ratón</string>
     <string name="controller_section_mouse_sub">Velocidad del puntero y aceleración con el stick</string>

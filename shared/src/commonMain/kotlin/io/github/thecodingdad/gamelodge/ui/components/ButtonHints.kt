@@ -109,11 +109,28 @@ fun PadGlyph(button: PadButton, modifier: Modifier = Modifier, second: PadButton
 private fun glyphFor(button: PadButton, layout: ButtonLayout): Pair<String, Color> {
     val shoulder = Color(0xFF3A3F4E)
     return when (button) {
-        // Logical buttons: A = confirm, B = back. In Nintendo layout they are labelled accordingly.
-        PadButton.A -> if (layout == ButtonLayout.NINTENDO) "A" to Color(0xFFE5484D) else "A" to Color(0xFF2FA84F)
-        PadButton.B -> if (layout == ButtonLayout.NINTENDO) "B" to Color(0xFFE6B422) else "B" to Color(0xFFD9363E)
-        PadButton.X -> if (layout == ButtonLayout.NINTENDO) "X" to Color(0xFF2D7FF9) else "X" to Color(0xFF2D6FD8)
-        PadButton.Y -> if (layout == ButtonLayout.NINTENDO) "Y" to Color(0xFF2FA84F) else "Y" to Color(0xFFE6B422)
+        // Logical buttons: A = confirm (bottom face button), B = back (right). Nintendo keeps the
+        // letters but its own colours; PlayStation shows its symbols in the classic colours.
+        PadButton.A -> when (layout) {
+            ButtonLayout.NINTENDO -> "A" to Color(0xFFE5484D)
+            ButtonLayout.PLAYSTATION -> "✕" to Color(0xFF2E79D6)
+            else -> "A" to Color(0xFF2FA84F)
+        }
+        PadButton.B -> when (layout) {
+            ButtonLayout.NINTENDO -> "B" to Color(0xFFE6B422)
+            ButtonLayout.PLAYSTATION -> "○" to Color(0xFFD9363E)
+            else -> "B" to Color(0xFFD9363E)
+        }
+        PadButton.X -> when (layout) {
+            ButtonLayout.NINTENDO -> "X" to Color(0xFF2D7FF9)
+            ButtonLayout.PLAYSTATION -> "□" to Color(0xFFE0529C)
+            else -> "X" to Color(0xFF2D6FD8)
+        }
+        PadButton.Y -> when (layout) {
+            ButtonLayout.NINTENDO -> "Y" to Color(0xFF2FA84F)
+            ButtonLayout.PLAYSTATION -> "△" to Color(0xFF2FB7A3)
+            else -> "Y" to Color(0xFFE6B422)
+        }
         PadButton.L1 -> "LB" to shoulder
         PadButton.R1 -> "RB" to shoulder
         PadButton.L2 -> "LT" to shoulder

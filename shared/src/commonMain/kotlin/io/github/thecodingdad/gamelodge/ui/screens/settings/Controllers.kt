@@ -47,11 +47,20 @@ data class ControllerInfo(
 /** The controller used last (its layout decides the button hints); set by the platform on pad input. */
 object ActivePad {
     var key by androidx.compose.runtime.mutableStateOf<String?>(null)
+
+    /** The layout detected from the active controller's vendor (null = unknown → the global default). */
+    var detectedLayout by androidx.compose.runtime.mutableStateOf<io.github.thecodingdad.gamelodge.data.settings.ButtonLayout?>(null)
 }
 
-/** The layout a controller uses: its own, else the default of all controllers. */
-fun io.github.thecodingdad.gamelodge.data.settings.LauncherSettings.layoutFor(key: String?): io.github.thecodingdad.gamelodge.data.settings.ButtonLayout =
-    key?.let { controllerLayouts[it] } ?: buttonLayout
+/**
+ * The layout a controller uses: its own override, else the layout [detected] from its type
+ * (a Sony pad shows PlayStation glyphs, a Nintendo pad Nintendo), else the default of all controllers.
+ */
+fun io.github.thecodingdad.gamelodge.data.settings.LauncherSettings.layoutFor(
+    key: String?,
+    detected: io.github.thecodingdad.gamelodge.data.settings.ButtonLayout? = null,
+): io.github.thecodingdad.gamelodge.data.settings.ButtonLayout =
+    key?.let { controllerLayouts[it] } ?: detected ?: buttonLayout
 
 /** Default button layout of all controllers (Settings → Controllers). */
 @androidx.compose.runtime.Composable
@@ -90,8 +99,11 @@ fun ControllerLayoutOverrideRow(
 
 @androidx.compose.runtime.Composable
 private fun layoutLabel(l: io.github.thecodingdad.gamelodge.data.settings.ButtonLayout) = org.jetbrains.compose.resources.stringResource(
-    if (l == io.github.thecodingdad.gamelodge.data.settings.ButtonLayout.XBOX) io.github.thecodingdad.gamelodge.resources.Res.string.button_layout_xbox
-    else io.github.thecodingdad.gamelodge.resources.Res.string.button_layout_nintendo,
+    when (l) {
+        io.github.thecodingdad.gamelodge.data.settings.ButtonLayout.XBOX -> io.github.thecodingdad.gamelodge.resources.Res.string.button_layout_xbox
+        io.github.thecodingdad.gamelodge.data.settings.ButtonLayout.NINTENDO -> io.github.thecodingdad.gamelodge.resources.Res.string.button_layout_nintendo
+        io.github.thecodingdad.gamelodge.data.settings.ButtonLayout.PLAYSTATION -> io.github.thecodingdad.gamelodge.resources.Res.string.button_layout_playstation
+    },
 )
 
 /** Connected controllers, updated when one connects, disconnects or changes (battery). */

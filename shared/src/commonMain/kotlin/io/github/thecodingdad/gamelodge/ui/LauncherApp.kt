@@ -315,7 +315,10 @@ fun LauncherApp(
             LocalKeyboardController provides keyboard,
             LocalHintHolder provides hints,
             LocalEntryActions provides entryActions,
-            LocalButtonLayout provides settings.layoutFor(io.github.thecodingdad.gamelodge.ui.screens.settings.ActivePad.key),
+            LocalButtonLayout provides settings.layoutFor(
+                io.github.thecodingdad.gamelodge.ui.screens.settings.ActivePad.key,
+                io.github.thecodingdad.gamelodge.ui.screens.settings.ActivePad.detectedLayout,
+            ),
             LocalBringIntoViewSpec provides scrollSpec,
             io.github.thecodingdad.gamelodge.ui.components.LocalAnimatedTilesAlways provides settings.animatedTilesAlways,
             io.github.thecodingdad.gamelodge.ui.screens.settings.LocalSettingsNavigator provides { target, highlight ->

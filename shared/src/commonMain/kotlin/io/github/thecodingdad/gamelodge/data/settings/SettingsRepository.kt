@@ -19,7 +19,7 @@ enum class AccentMode { FIXED, COVER }
 enum class CardSize { SMALL, MEDIUM, LARGE }
 /** Shape of game tiles: cover (2:3), landscape (16:9) or square. */
 enum class TileFormat { PORTRAIT, LANDSCAPE, SQUARE }
-enum class ButtonLayout { XBOX, NINTENDO }
+enum class ButtonLayout { XBOX, NINTENDO, PLAYSTATION }
 /** Where a tile shows its title. */
 enum class TileTitle { OFF, BELOW, ON_TILE }
 /** Extra line on a tile. */

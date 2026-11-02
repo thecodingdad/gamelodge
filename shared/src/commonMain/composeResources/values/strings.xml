@@ -202,6 +202,7 @@
     <string name="game_layout_sub">Nintendo swaps A/B and X/Y for this game</string>
     <string name="button_layout_xbox">Xbox</string>
     <string name="button_layout_nintendo">Nintendo</string>
+    <string name="button_layout_playstation">PlayStation</string>
     <string name="setting_ui_sounds">Interface sounds</string>
     <string name="setting_ui_volume">Sound volume</string>
     <string name="setting_haptics">Vibration</string>
@@ -1537,7 +1538,7 @@
     <string name="detail_playtime_devices">Playtime per device</string>
     <string name="detail_playtime_other_clients">Other streaming clients</string>
     <string name="controller_section_layout">Layout &amp; hints</string>
-    <string name="controller_section_layout_sub">Button layout (Xbox / Nintendo) and button hints</string>
+    <string name="controller_section_layout_sub">Button layout (Xbox, Nintendo, PlayStation) and button hints</string>
     <string name="controller_section_combos_sub">Quick menu, mouse, performance overlay … with a button combination</string>
     <string name="controller_section_mouse">Mouse emulation</string>
     <string name="controller_section_mouse_sub">Pointer speed and acceleration with the stick</string>
