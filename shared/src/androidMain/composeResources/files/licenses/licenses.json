@@ -1,169 +1,225 @@
 [
- {
-  "name": "Artemis",
-  "copyright": "ClassicOldSong and contributors",
-  "license": "GPL-3.0",
-  "text": "gpl-3.0",
-  "url": "https://github.com/ClassicOldSong/moonlight-android"
- },
- {
-  "name": "Moonlight for Android",
-  "copyright": "Cameron Gutman and contributors",
-  "license": "GPL-3.0",
-  "text": "gpl-3.0",
-  "url": "https://github.com/moonlight-stream/moonlight-android"
- },
- {
-  "name": "moonlight-common-c",
-  "copyright": "Cameron Gutman and contributors",
-  "license": "GPL-3.0",
-  "text": "gpl-3.0",
-  "url": "https://github.com/moonlight-stream/moonlight-common-c"
- },
- {
-  "name": "ENet",
-  "copyright": "Lee Salzman",
-  "license": "MIT",
-  "text": "enet",
-  "url": "http://enet.bespin.org"
- },
- {
-  "name": "Reed-Solomon FEC",
-  "copyright": "Luigi Rizzo, Alain Knaff, Iwan Timmer",
-  "license": "BSD-2-Clause",
-  "text": "reedsolomon"
- },
- {
-  "name": "Opus",
-  "copyright": "Xiph.Org Foundation and contributors",
-  "license": "BSD-3-Clause",
-  "text": "opus",
-  "url": "https://opus-codec.org"
- },
- {
-  "name": "OpenSSL",
-  "copyright": "The OpenSSL Project",
-  "license": "OpenSSL / SSLeay",
-  "text": "openssl",
-  "url": "https://www.openssl.org"
- },
- {
-  "name": "Bouncy Castle",
-  "copyright": "Legion of the Bouncy Castle Inc.",
-  "license": "MIT",
-  "text": "bouncycastle",
-  "url": "https://www.bouncycastle.org"
- },
- {
-  "name": "JCodec",
-  "copyright": "JCodecProject",
-  "license": "BSD-2-Clause",
-  "text": "jcodec",
-  "url": "https://github.com/jcodec/jcodec"
- },
- {
-  "name": "JmDNS",
-  "copyright": "JmDNS contributors",
-  "license": "Apache-2.0",
-  "text": "apache-2.0",
-  "url": "https://github.com/jmdns/jmdns"
- },
- {
-  "name": "WireGuard Android tunnel",
-  "copyright": "WireGuard LLC",
-  "license": "Apache-2.0",
-  "text": "apache-2.0",
-  "url": "https://git.zx2c4.com/wireguard-android"
- },
- {
-  "name": "wireguard-go",
-  "copyright": "WireGuard LLC",
-  "license": "MIT",
-  "text": "wireguard-go",
-  "url": "https://git.zx2c4.com/wireguard-go"
- },
- {
-  "name": "AndroidX, Jetpack Compose, Room, DataStore, WorkManager, Media3",
-  "copyright": "The Android Open Source Project",
-  "license": "Apache-2.0",
-  "text": "apache-2.0",
-  "url": "https://developer.android.com/jetpack"
- },
- {
-  "name": "Material Components, Material Icons",
-  "copyright": "Google LLC",
-  "license": "Apache-2.0",
-  "text": "apache-2.0",
-  "url": "https://github.com/material-components"
- },
- {
-  "name": "Kotlin, kotlinx.coroutines, kotlinx.serialization",
-  "copyright": "JetBrains s.r.o. and contributors",
-  "license": "Apache-2.0",
-  "text": "apache-2.0",
-  "url": "https://kotlinlang.org"
- },
- {
-  "name": "OkHttp",
-  "copyright": "Square, Inc.",
-  "license": "Apache-2.0",
-  "text": "apache-2.0",
-  "url": "https://square.github.io/okhttp"
- },
- {
-  "name": "Coil",
-  "copyright": "Coil Contributors",
-  "license": "Apache-2.0",
-  "text": "apache-2.0",
-  "url": "https://coil-kt.github.io/coil"
- },
- {
-  "name": "Gson",
-  "copyright": "Google LLC",
-  "license": "Apache-2.0",
-  "text": "apache-2.0",
-  "url": "https://github.com/google/gson"
- },
- {
-  "name": "MPAndroidChart",
-  "copyright": "Philipp Jahoda",
-  "license": "Apache-2.0",
-  "text": "apache-2.0",
-  "url": "https://github.com/PhilJay/MPAndroidChart"
- },
- {
-  "name": "SearchPreference",
-  "copyright": "ByteHamster",
-  "license": "MIT",
-  "text": "searchpreference",
-  "url": "https://github.com/ByteHamster/SearchPreference"
- },
- {
-  "name": "ShieldControllerExtensions",
-  "copyright": "Cameron Gutman",
-  "license": "MIT",
-  "text": "shieldcontrollerextensions",
-  "url": "https://github.com/cgutman/ShieldControllerExtensions"
- },
- {
-  "name": "LiteRT",
-  "copyright": "Google LLC",
-  "license": "Apache-2.0",
-  "text": "apache-2.0",
-  "url": "https://ai.google.dev/edge/litert"
- },
- {
-  "name": "OpenCV",
-  "copyright": "OpenCV team",
-  "license": "Apache-2.0",
-  "text": "apache-2.0",
-  "url": "https://opencv.org"
- },
- {
-  "name": "ES-DE (emulator start commands)",
-  "copyright": "Northwestern Software AB, Leon Styhre, Alec Lofquist",
-  "license": "MIT",
-  "text": "es-de",
-  "url": "https://es-de.org"
- }
+  {
+    "name": "Artemis",
+    "copyright": "ClassicOldSong and contributors",
+    "license": "GPL-3.0",
+    "text": "gpl-3.0",
+    "url": "https://github.com/ClassicOldSong/moonlight-android"
+  },
+  {
+    "name": "Moonlight for Android",
+    "copyright": "Cameron Gutman and contributors",
+    "license": "GPL-3.0",
+    "text": "gpl-3.0",
+    "url": "https://github.com/moonlight-stream/moonlight-android"
+  },
+  {
+    "name": "moonlight-common-c",
+    "copyright": "Cameron Gutman and contributors",
+    "license": "GPL-3.0",
+    "text": "gpl-3.0",
+    "url": "https://github.com/moonlight-stream/moonlight-common-c"
+  },
+  {
+    "name": "ENet",
+    "copyright": "Lee Salzman",
+    "license": "MIT",
+    "text": "enet",
+    "url": "http://enet.bespin.org"
+  },
+  {
+    "name": "Reed-Solomon FEC",
+    "copyright": "Luigi Rizzo, Alain Knaff, Iwan Timmer",
+    "license": "BSD-2-Clause",
+    "text": "reedsolomon"
+  },
+  {
+    "name": "Opus",
+    "copyright": "Xiph.Org Foundation and contributors",
+    "license": "BSD-3-Clause",
+    "text": "opus",
+    "url": "https://opus-codec.org"
+  },
+  {
+    "name": "OpenSSL",
+    "copyright": "The OpenSSL Project",
+    "license": "OpenSSL / SSLeay",
+    "text": "openssl",
+    "url": "https://www.openssl.org"
+  },
+  {
+    "name": "Bouncy Castle",
+    "copyright": "Legion of the Bouncy Castle Inc.",
+    "license": "MIT",
+    "text": "bouncycastle",
+    "url": "https://www.bouncycastle.org"
+  },
+  {
+    "name": "JCodec",
+    "copyright": "JCodecProject",
+    "license": "BSD-2-Clause",
+    "text": "jcodec",
+    "url": "https://github.com/jcodec/jcodec"
+  },
+  {
+    "name": "JmDNS",
+    "copyright": "JmDNS contributors",
+    "license": "Apache-2.0",
+    "text": "apache-2.0",
+    "url": "https://github.com/jmdns/jmdns"
+  },
+  {
+    "name": "WireGuard Android tunnel",
+    "copyright": "WireGuard LLC",
+    "license": "Apache-2.0",
+    "text": "apache-2.0",
+    "url": "https://git.zx2c4.com/wireguard-android"
+  },
+  {
+    "name": "wireguard-go",
+    "copyright": "WireGuard LLC",
+    "license": "MIT",
+    "text": "wireguard-go",
+    "url": "https://git.zx2c4.com/wireguard-go"
+  },
+  {
+    "name": "AndroidX, Jetpack Compose, Room, DataStore, WorkManager, Media3",
+    "copyright": "The Android Open Source Project",
+    "license": "Apache-2.0",
+    "text": "apache-2.0",
+    "url": "https://developer.android.com/jetpack"
+  },
+  {
+    "name": "Material Components, Material Icons",
+    "copyright": "Google LLC",
+    "license": "Apache-2.0",
+    "text": "apache-2.0",
+    "url": "https://github.com/material-components"
+  },
+  {
+    "name": "Kotlin, kotlinx.coroutines, kotlinx.serialization",
+    "copyright": "JetBrains s.r.o. and contributors",
+    "license": "Apache-2.0",
+    "text": "apache-2.0",
+    "url": "https://kotlinlang.org"
+  },
+  {
+    "name": "OkHttp",
+    "copyright": "Square, Inc.",
+    "license": "Apache-2.0",
+    "text": "apache-2.0",
+    "url": "https://square.github.io/okhttp"
+  },
+  {
+    "name": "Coil",
+    "copyright": "Coil Contributors",
+    "license": "Apache-2.0",
+    "text": "apache-2.0",
+    "url": "https://coil-kt.github.io/coil"
+  },
+  {
+    "name": "Gson",
+    "copyright": "Google LLC",
+    "license": "Apache-2.0",
+    "text": "apache-2.0",
+    "url": "https://github.com/google/gson"
+  },
+  {
+    "name": "MPAndroidChart",
+    "copyright": "Philipp Jahoda",
+    "license": "Apache-2.0",
+    "text": "apache-2.0",
+    "url": "https://github.com/PhilJay/MPAndroidChart"
+  },
+  {
+    "name": "SearchPreference",
+    "copyright": "ByteHamster",
+    "license": "MIT",
+    "text": "searchpreference",
+    "url": "https://github.com/ByteHamster/SearchPreference"
+  },
+  {
+    "name": "ShieldControllerExtensions",
+    "copyright": "Cameron Gutman",
+    "license": "MIT",
+    "text": "shieldcontrollerextensions",
+    "url": "https://github.com/cgutman/ShieldControllerExtensions"
+  },
+  {
+    "name": "LiteRT",
+    "copyright": "Google LLC",
+    "license": "Apache-2.0",
+    "text": "apache-2.0",
+    "url": "https://ai.google.dev/edge/litert"
+  },
+  {
+    "name": "OpenCV",
+    "copyright": "OpenCV team",
+    "license": "Apache-2.0",
+    "text": "apache-2.0",
+    "url": "https://opencv.org"
+  },
+  {
+    "name": "ES-DE (emulator start commands)",
+    "copyright": "Northwestern Software AB, Leon Styhre, Alec Lofquist",
+    "license": "MIT",
+    "text": "es-de",
+    "url": "https://es-de.org"
+  },
+  {
+    "name": "Guava",
+    "copyright": "The Guava Authors",
+    "license": "Apache-2.0",
+    "text": "apache-2.0",
+    "url": "https://github.com/google/guava"
+  },
+  {
+    "name": "Apache Commons Lang, Apache Commons Text",
+    "copyright": "The Apache Software Foundation",
+    "license": "Apache-2.0",
+    "text": "apache-2.0",
+    "url": "https://commons.apache.org"
+  },
+  {
+    "name": "Accompanist",
+    "copyright": "The Android Open Source Project",
+    "license": "Apache-2.0",
+    "text": "apache-2.0",
+    "url": "https://github.com/google/accompanist"
+  },
+  {
+    "name": "Error Prone annotations",
+    "copyright": "Google LLC",
+    "license": "Apache-2.0",
+    "text": "apache-2.0",
+    "url": "https://github.com/google/error-prone"
+  },
+  {
+    "name": "JSpecify",
+    "copyright": "The JSpecify Authors",
+    "license": "Apache-2.0",
+    "text": "apache-2.0",
+    "url": "https://jspecify.dev"
+  },
+  {
+    "name": "JetBrains Java Annotations",
+    "copyright": "JetBrains s.r.o.",
+    "license": "Apache-2.0",
+    "text": "apache-2.0",
+    "url": "https://github.com/JetBrains/java-annotations"
+  },
+  {
+    "name": "SLF4J",
+    "copyright": "QOS.ch Sarl",
+    "license": "MIT",
+    "text": "slf4j",
+    "url": "https://www.slf4j.org"
+  },
+  {
+    "name": "QR Code generator",
+    "copyright": "Project Nayuki",
+    "license": "MIT",
+    "text": "qrcodegen",
+    "url": "https://www.nayuki.io/page/qr-code-generator-library"
+  }
 ]

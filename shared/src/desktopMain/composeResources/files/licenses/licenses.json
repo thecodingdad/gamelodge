@@ -109,5 +109,201 @@
     "license": "GPL-2.0 with Classpath Exception",
     "text": "openjdk",
     "url": "https://adoptium.net"
+  },
+  {
+    "name": "Moonlight-Qt (GameLodge fork)",
+    "copyright": "Cameron Gutman and the Moonlight contributors",
+    "license": "GPL-3.0",
+    "text": "gpl-3.0",
+    "url": "https://github.com/moonlight-stream/moonlight-qt"
+  },
+  {
+    "name": "moonlight-common-c",
+    "copyright": "Cameron Gutman and the Moonlight contributors",
+    "license": "GPL-3.0",
+    "text": "gpl-3.0",
+    "url": "https://github.com/moonlight-stream/moonlight-common-c"
+  },
+  {
+    "name": "ENet",
+    "copyright": "Lee Salzman",
+    "license": "MIT",
+    "text": "enet",
+    "url": "http://enet.bespin.org"
+  },
+  {
+    "name": "nanors (Reed-Solomon)",
+    "copyright": "Joseph Calderon",
+    "license": "MIT",
+    "text": "nanors",
+    "url": "https://github.com/sleepybishop/nanors"
+  },
+  {
+    "name": "Qt 6",
+    "copyright": "The Qt Company Ltd. and other contributors",
+    "license": "LGPL-3.0",
+    "text": "lgpl-3.0",
+    "url": "https://www.qt.io"
+  },
+  {
+    "name": "Qt 6 bundled components (FreeType, HarfBuzz, libpng, libjpeg-turbo, zlib, PCRE2, md4c …)",
+    "copyright": "see the list",
+    "license": "FTL, MIT, BSD, Zlib, Libpng, IJG and others",
+    "text": "qt-components",
+    "url": "https://www.qt.io/licensing/open-source-lgpl-obligations"
+  },
+  {
+    "name": "FFmpeg",
+    "copyright": "The FFmpeg developers",
+    "license": "LGPL-2.1-or-later",
+    "text": "lgpl-2.1",
+    "url": "https://ffmpeg.org"
+  },
+  {
+    "name": "libplacebo",
+    "copyright": "Niklas Haas and contributors",
+    "license": "LGPL-2.1-or-later",
+    "text": "lgpl-2.1",
+    "url": "https://code.videolan.org/videolan/libplacebo"
+  },
+  {
+    "name": "glslang",
+    "copyright": "The Khronos Group Inc. and others",
+    "license": "BSD-3-Clause and others",
+    "text": "glslang",
+    "url": "https://github.com/KhronosGroup/glslang"
+  },
+  {
+    "name": "shaderc",
+    "copyright": "Google LLC",
+    "license": "Apache-2.0",
+    "text": "apache-2.0",
+    "url": "https://github.com/google/shaderc"
+  },
+  {
+    "name": "dav1d",
+    "copyright": "VideoLAN and dav1d authors",
+    "license": "BSD-2-Clause",
+    "text": "dav1d",
+    "url": "https://code.videolan.org/videolan/dav1d"
+  },
+  {
+    "name": "Opus",
+    "copyright": "Xiph.Org Foundation, Skype Limited, Octasic, Jean-Marc Valin, Timothy B. Terriberry and others",
+    "license": "BSD-3-Clause",
+    "text": "opus",
+    "url": "https://opus-codec.org"
+  },
+  {
+    "name": "OpenSSL",
+    "copyright": "The OpenSSL Project Authors",
+    "license": "Apache-2.0",
+    "text": "apache-2.0",
+    "url": "https://www.openssl.org"
+  },
+  {
+    "name": "SDL_ttf",
+    "copyright": "Sam Lantinga",
+    "license": "Zlib",
+    "text": "sdl-ttf",
+    "url": "https://github.com/libsdl-org/SDL_ttf"
+  },
+  {
+    "name": "FreeType",
+    "copyright": "The FreeType Project (David Turner, Robert Wilhelm, Werner Lemberg)",
+    "license": "FTL",
+    "text": "freetype",
+    "url": "https://freetype.org"
+  },
+  {
+    "name": "HarfBuzz",
+    "copyright": "Google, Inc., Red Hat, Inc. and others",
+    "license": "MIT",
+    "text": "harfbuzz",
+    "url": "https://harfbuzz.github.io"
+  },
+  {
+    "name": "SDL_GameControllerDB",
+    "copyright": "Sam Lantinga and contributors",
+    "license": "Zlib",
+    "text": "gamecontrollerdb",
+    "url": "https://github.com/mdqinc/SDL_GameControllerDB"
+  },
+  {
+    "name": "h264bitstream",
+    "copyright": "Alex Izvorski, Alex Giladi",
+    "license": "LGPL-2.1-or-later",
+    "text": "lgpl-2.1",
+    "url": "https://github.com/aizvorski/h264bitstream"
+  },
+  {
+    "name": "qmdnsengine",
+    "copyright": "Nathan Osman",
+    "license": "MIT",
+    "text": "qmdnsengine",
+    "url": "https://github.com/nitroshare/qmdnsengine"
+  },
+  {
+    "name": "discord-rpc",
+    "copyright": "Discord, Inc.",
+    "license": "MIT",
+    "text": "discord-rpc",
+    "url": "https://github.com/discord/discord-rpc"
+  },
+  {
+    "name": "LZ4",
+    "copyright": "Yann Collet",
+    "license": "BSD-2-Clause",
+    "text": "lz4",
+    "url": "https://github.com/lz4/lz4"
+  },
+  {
+    "name": "PyroWave",
+    "copyright": "Hans-Kristian Arntzen",
+    "license": "MIT",
+    "text": "pyrowave",
+    "url": "https://github.com/Themaister/pyrowave"
+  },
+  {
+    "name": "Granite",
+    "copyright": "Hans-Kristian Arntzen",
+    "license": "MIT",
+    "text": "granite",
+    "url": "https://github.com/Themaister/Granite"
+  },
+  {
+    "name": "volk",
+    "copyright": "Arseny Kapoulkine",
+    "license": "MIT",
+    "text": "volk",
+    "url": "https://github.com/zeux/volk"
+  },
+  {
+    "name": "SAxense (DualSense haptics)",
+    "copyright": "Egor Vorontsov (Sdore / egormanga)",
+    "license": "MPL-2.0",
+    "text": "saxense",
+    "url": "https://github.com/egormanga/SAxense"
+  },
+  {
+    "name": "JmDNS",
+    "copyright": "JmDNS contributors",
+    "license": "Apache-2.0",
+    "text": "apache-2.0",
+    "url": "https://github.com/jmdns/jmdns"
+  },
+  {
+    "name": "SLF4J",
+    "copyright": "QOS.ch Sarl",
+    "license": "MIT",
+    "text": "slf4j",
+    "url": "https://www.slf4j.org"
+  },
+  {
+    "name": "JSpecify",
+    "copyright": "The JSpecify Authors",
+    "license": "Apache-2.0",
+    "text": "apache-2.0",
+    "url": "https://jspecify.dev"
   }
 ]
