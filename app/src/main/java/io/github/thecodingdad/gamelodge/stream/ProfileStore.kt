@@ -105,10 +105,6 @@ class AndroidProfileEditing(private val context: Context) : ProfileEditing {
         return androidx.compose.runtime.remember(inputTitle) { StreamSettingsSchema.profileSchema(context, inputTitle) }
     }
 
-    @androidx.compose.runtime.Composable
-    override fun rememberDeviceInputOptions(): List<io.github.thecodingdad.gamelodge.stream.StreamOption> =
-        androidx.compose.runtime.remember { StreamSettingsSchema.deviceInputOptions(context) }
-
     override val essentialKeys get() = StreamSettingsSchema.essentialKeys
 
     override fun values(uuid: UUID?): ProfileValues = ProfileStore(context, uuid)

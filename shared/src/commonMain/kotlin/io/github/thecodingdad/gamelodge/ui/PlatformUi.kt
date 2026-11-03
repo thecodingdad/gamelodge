@@ -124,6 +124,13 @@ interface PlatformUi {
     /** Handheld display options (navigation bar, TV output, mobile data); not on a PC. */
     val deviceDisplayOptions: Boolean get() = true
 
+    /**
+     * The stream's touch ([keyboard] false) or keyboard options of this device (Settings › Touch,
+     * mouse & keyboard), with their section header; none by default.
+     */
+    @androidx.compose.runtime.Composable
+    fun DeviceInputRows(keyboard: Boolean, initialFocus: Boolean) = Unit
+
     /** Settings pages only some platforms have (VPN, backup, emulators …). */
     fun hasPage(id: io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId): Boolean
 

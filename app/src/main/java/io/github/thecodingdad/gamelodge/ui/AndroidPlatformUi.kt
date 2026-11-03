@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalView
@@ -162,6 +163,28 @@ class AndroidPlatformUi(private val context: Context) : PlatformUi {
             SettingsPageId.LAUNCHER -> io.github.thecodingdad.gamelodge.ui.screens.settings.LauncherModeSettings(settings, vm::updateSettings)
             SettingsPageId.VPN -> io.github.thecodingdad.gamelodge.ui.screens.settings.VpnSettings(settings, vm::updateSettings)
             else -> Unit
+        }
+    }
+
+    @Composable
+    override fun DeviceInputRows(keyboard: Boolean, initialFocus: Boolean) {
+        // Artemis' input options that depend on this device, the same for every profile (base settings).
+        val options = androidx.compose.runtime.remember(keyboard) {
+            io.github.thecodingdad.gamelodge.stream.StreamSettingsSchema.deviceInputOptions(context)
+                .filter { (it.key in io.github.thecodingdad.gamelodge.stream.StreamSettingsSchema.deviceKeyboardKeys) == keyboard }
+        }
+        if (options.isEmpty()) return
+        if (!keyboard) {
+            io.github.thecodingdad.gamelodge.ui.screens.settings.SectionHeader(stringResource(Res.string.input_touch_section))
+            androidx.compose.material3.Text(
+                stringResource(Res.string.input_touch_sub), style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
+                color = io.github.thecodingdad.gamelodge.ui.theme.LauncherTheme.colors.onSurfaceMuted,
+            )
+        }
+        val base = androidx.compose.runtime.remember { io.github.thecodingdad.gamelodge.stream.ProfileStore(context, null) }
+        var revision by androidx.compose.runtime.remember { androidx.compose.runtime.mutableIntStateOf(0) }
+        options.forEachIndexed { i, option ->
+            io.github.thecodingdad.gamelodge.ui.screens.profiles.OptionRow(option, base, revision, initialFocus && i == 0, profileEditing) { revision++ }
         }
     }
 

@@ -21,7 +21,10 @@ class ComboAccessibilityService : AccessibilityService() {
         super.onDestroy()
     }
 
-    override fun onKeyEvent(event: KeyEvent): Boolean = ButtonCombos.handle(event) { action, controller -> AndroidCombos.run(this, action, controller) }
+    override fun onKeyEvent(event: KeyEvent): Boolean =
+        // The keyboard's quick menu shortcut, in every app.
+        io.github.thecodingdad.gamelodge.ui.input.AndroidKeyboard.handleShortcut(event) { AndroidCombos.run(this, ComboAction.QUICK_MENU, -1) } ||
+            ButtonCombos.handle(event) { action, controller -> AndroidCombos.run(this, action, controller) }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) = Unit
     override fun onInterrupt() = Unit

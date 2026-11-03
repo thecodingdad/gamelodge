@@ -164,7 +164,7 @@ class QuickMenuActivity : ComponentActivity() {
                     val controllers = rememberControllers()
                     CompositionLocalProvider(
                         LocalCompactWidth provides (maxWidth < 720.dp),
-                        LocalShowHintBar provides (settings.showHintBar && controllers.isNotEmpty()),
+                        LocalShowHintBar provides (settings.showHintBar && (controllers.isNotEmpty() || io.github.thecodingdad.gamelodge.input.KeyboardKeys.active)),
                     ) {
                         val running by vm.runningSessions.collectAsState()
                         QuickMenu(
@@ -193,6 +193,15 @@ class QuickMenuActivity : ComponentActivity() {
     @SuppressLint("RestrictedApi")
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         io.github.thecodingdad.gamelodge.input.StarterPad.onKey(event)
+        val tabs = vm.settings.value.mouseSideButtons == io.github.thecodingdad.gamelodge.data.settings.MouseSideButtons.TABS
+        if (io.github.thecodingdad.gamelodge.ui.input.AndroidKeyboard.handleMouseButtons(event, tabs, dispatcher)) return true
+        io.github.thecodingdad.gamelodge.ui.input.AndroidKeyboard.handle(event, { super.dispatchKeyEvent(it) }) { action ->
+            when (action) {
+                io.github.thecodingdad.gamelodge.input.KeyAction.QUICK_MENU -> finish()
+                io.github.thecodingdad.gamelodge.input.KeyAction.HOME -> openLauncher()
+                else -> Unit
+            }
+        }?.let { return it }
         val e = io.github.thecodingdad.gamelodge.ui.input.AndroidPad.inLayout(event, vm.settings.value)
         if (e.action == KeyEvent.ACTION_DOWN && e.repeatCount == 0 &&
             (e.keyCode == KeyEvent.KEYCODE_BUTTON_B || e.keyCode == KeyEvent.KEYCODE_BACK)

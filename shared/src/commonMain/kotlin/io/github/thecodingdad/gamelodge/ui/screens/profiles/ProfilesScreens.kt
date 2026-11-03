@@ -8,7 +8,6 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Tune
-import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -87,28 +86,6 @@ fun ProfilesList(
             stringResource(Res.string.profile_new), icon = Icons.Filled.Add,
             onClick = { keyboard.open(newTitle, "") { name -> if (name.isNotBlank()) openProfile(editing.create(name.trim())) } },
         )
-        // Touch and keyboard options of this device: the same in every profile.
-        val deviceInput = editing.rememberDeviceInputOptions()
-        if (deviceInput.isNotEmpty()) {
-            var open by remember { androidx.compose.runtime.mutableStateOf(false) }
-            SectionHeader(stringResource(Res.string.stream_device_input_section))
-            NavRow(
-                stringResource(Res.string.stream_device_input), { open = true },
-                subtitle = stringResource(Res.string.stream_device_input_sub), icon = Icons.Filled.TouchApp,
-            )
-            val base = remember { editing.values(null) }
-            var revision by remember { mutableIntStateOf(0) }
-            io.github.thecodingdad.gamelodge.ui.components.Modal(
-                visible = open, onDismiss = { open = false }, title = stringResource(Res.string.stream_device_input), maxWidth = 760.dp,
-            ) {
-                androidx.compose.foundation.layout.Column(
-                    Modifier.weight(1f, fill = false).popupHeightIn(560.dp).controllerScroll(),
-                    verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
-                ) {
-                    deviceInput.forEachIndexed { i, option -> OptionRow(option, base, revision, i == 0, editing) { revision++ } }
-                }
-            }
-        }
         SectionHeader(stringResource(Res.string.conn_warnings_section))
         val container = io.github.thecodingdad.gamelodge.LocalContainer.current
         val settings by container.settings.settings.collectAsState(io.github.thecodingdad.gamelodge.data.settings.LauncherSettings())
@@ -130,6 +107,7 @@ fun ProfilesList(
         io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlso(
             io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlsoLink(stringResource(Res.string.settings_hosts), io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Page(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId.HOSTS)),
             io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlsoLink(stringResource(Res.string.settings_controllers), io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Controllers),
+            io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlsoLink(stringResource(Res.string.settings_input), io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Page(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId.INPUT)),
         )
     }
 }

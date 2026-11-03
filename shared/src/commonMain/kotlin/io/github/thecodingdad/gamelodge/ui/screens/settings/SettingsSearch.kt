@@ -58,6 +58,7 @@ private val pageTitles: List<Pair<SettingsTarget, StringResource>> = listOf(
     SettingsTarget.Page(SettingsPageId.VPN) to Res.string.settings_vpn,
     SettingsTarget.Page(SettingsPageId.HOME_ASSISTANT) to Res.string.settings_home_assistant,
     SettingsTarget.Controllers to Res.string.settings_controllers,
+    SettingsTarget.Page(SettingsPageId.INPUT) to Res.string.settings_input,
     SettingsTarget.Wizard to Res.string.settings_group_system,
     SettingsTarget.Page(SettingsPageId.SOUNDS) to Res.string.settings_sounds,
     SettingsTarget.Page(SettingsPageId.LAUNCHER) to Res.string.settings_launcher,
@@ -86,6 +87,7 @@ private val pageKeywords: Map<SettingsTarget, StringResource> = mapOf(
     SettingsTarget.Page(SettingsPageId.HOST_ROLE) to Res.string.search_kw_host_role,
     SettingsTarget.Page(SettingsPageId.HOME_ASSISTANT) to Res.string.search_kw_home_assistant,
     SettingsTarget.Controllers to Res.string.search_kw_controllers,
+    SettingsTarget.Page(SettingsPageId.INPUT) to Res.string.search_kw_input,
     SettingsTarget.Page(SettingsPageId.SOUNDS) to Res.string.search_kw_sounds,
     SettingsTarget.Page(SettingsPageId.LAUNCHER) to Res.string.search_kw_launcher,
     SettingsTarget.Page(SettingsPageId.STARTUP) to Res.string.search_kw_startup,
@@ -173,6 +175,9 @@ private val settingsIndex: List<SearchEntry> = buildList {
     add(SearchEntry(Res.string.controller_section_mouse, SettingsTarget.ControllerPage(ControllerSection.MOUSE)))
     listOf(Res.string.setting_controller_attach, Res.string.odin_mapping_section, Res.string.odin_mapping_all)
         .forEach { add(SearchEntry(it, SettingsTarget.Controllers)) }
+    addAll(page(
+        SettingsPageId.INPUT, Res.string.input_mouse_side, Res.string.input_shortcut, Res.string.input_keyboard_section,
+    ))
     addAll(page(
         SettingsPageId.SOUNDS, Res.string.setting_ui_sounds, Res.string.setting_ui_volume, Res.string.setting_sound_style,
         Res.string.setting_sound_pitch, Res.string.sounds_events, Res.string.setting_haptics, Res.string.setting_haptic_strength,

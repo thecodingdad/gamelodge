@@ -339,7 +339,7 @@ fun LauncherApp(
             val hintControllers = io.github.thecodingdad.gamelodge.ui.screens.settings.rememberControllers()
             CompositionLocalProvider(
                 io.github.thecodingdad.gamelodge.ui.components.LocalCompactWidth provides (maxWidth < 720.dp),
-                io.github.thecodingdad.gamelodge.ui.components.LocalShowHintBar provides (settings.showHintBar && hintControllers.isNotEmpty()),
+                io.github.thecodingdad.gamelodge.ui.components.LocalShowHintBar provides (settings.showHintBar && (hintControllers.isNotEmpty() || io.github.thecodingdad.gamelodge.input.KeyboardKeys.active)),
             ) {
             Box(Modifier.fillMaxSize().background(LauncherTheme.colors.background)) {
                 // Screensaver after the configured idle time (also protects the OLED panel).
@@ -1212,6 +1212,7 @@ private fun SettingsPageContent(
         SettingsPageId.FILTERS -> io.github.thecodingdad.gamelodge.ui.screens.settings.FilterSettings(vm, io.github.thecodingdad.gamelodge.data.db.FilterScope.GAMES)
         SettingsPageId.APP_FILTERS -> io.github.thecodingdad.gamelodge.ui.screens.settings.FilterSettings(vm, io.github.thecodingdad.gamelodge.data.db.FilterScope.APPS)
         SettingsPageId.SOUNDS -> io.github.thecodingdad.gamelodge.ui.screens.settings.SoundSettings(settings, vm::updateSettings)
+        SettingsPageId.INPUT -> io.github.thecodingdad.gamelodge.ui.screens.settings.InputSettings(settings, vm::updateSettings)
         SettingsPageId.ABOUT -> AboutSettings(openLicenses = { openPage(SettingsPageId.LICENSES) })
         SettingsPageId.LICENSES -> io.github.thecodingdad.gamelodge.ui.screens.settings.OpenSourceLicenses()
         SettingsPageId.HOME_ASSISTANT -> HaSettings(settings, vm::updateSettings, hosts.values.filter { it.paired }.sortedBy { it.name }, openHost, openPage)

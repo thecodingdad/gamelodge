@@ -49,6 +49,9 @@ fun ButtonHintBar(hints: List<ButtonHint>, modifier: Modifier = Modifier, hideWh
     if (hideWhenCompact && LocalCompactWidth.current) return
     val compact = LocalCompactWidth.current
     val feedback = io.github.thecodingdad.gamelodge.ui.feedback.LocalUiFeedback.current
+    // Keyboard used last: keys instead of buttons; a button without a key has no hint then.
+    val keyboard = io.github.thecodingdad.gamelodge.input.KeyboardKeys.active
+    val shown = if (keyboard) hints.filter { keyLabel(it.button) != null } else hints
     // One line that never wraps; on narrow screens it scrolls instead.
     Row(
         modifier = modifier
@@ -59,7 +62,7 @@ fun ButtonHintBar(hints: List<ButtonHint>, modifier: Modifier = Modifier, hideWh
         horizontalArrangement = Arrangement.spacedBy(if (compact) 12.dp else 22.dp, Alignment.End),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        abOrder(hints).forEach { hint ->
+        abOrder(shown).forEach { hint ->
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
@@ -84,9 +87,42 @@ fun ButtonHintBar(hints: List<ButtonHint>, modifier: Modifier = Modifier, hideWh
     }
 }
 
-/** Controller button glyph in the style of the configured layout. */
+/** The keyboard key that does what [button] does (null = none): Enter / Esc, else the assigned one. */
+fun keyLabel(button: PadButton): String? {
+    val keys = io.github.thecodingdad.gamelodge.input.KeyboardKeys
+    return when (button) {
+        PadButton.A -> keys.CONFIRM_KEY
+        PadButton.B -> keys.BACK_KEY
+        else -> io.github.thecodingdad.gamelodge.input.KeyAction.entries.firstOrNull { it.button == button }?.let { keys.keyOf(it) }
+    }
+}
+
+/** A keyboard key as a key cap ("Enter", "F2", "PageUp/PageDown"). */
+@Composable
+private fun KeyCap(label: String, modifier: Modifier) {
+    Box(
+        modifier = modifier
+            .widthIn(min = 34.dp)
+            .clip(RoundedCornerShape(6.dp))
+            .background(LauncherTheme.colors.onSurface.copy(alpha = 0.16f))
+            .padding(horizontal = 7.dp, vertical = 3.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(label, color = LauncherTheme.colors.onSurface, fontSize = 12.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
+    }
+}
+
+/** Controller button glyph in the style of the configured layout (a key cap while the keyboard is used). */
 @Composable
 fun PadGlyph(button: PadButton, modifier: Modifier = Modifier, second: PadButton? = null) {
+    if (io.github.thecodingdad.gamelodge.input.KeyboardKeys.active) {
+        keyLabel(button)?.let { first ->
+            val name = io.github.thecodingdad.gamelodge.ui.screens.settings.keyDisplayName(first)
+            val secondName = second?.let { keyLabel(it) }?.let { io.github.thecodingdad.gamelodge.ui.screens.settings.keyDisplayName(it) }
+            KeyCap(secondName?.let { "$name/$it" } ?: name, modifier)
+            return
+        }
+    }
     val layout = LocalButtonLayout.current
     val (first, color) = glyphFor(button, layout)
     val label = second?.let { "$first/${glyphFor(it, layout).first}" } ?: first

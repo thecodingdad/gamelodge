@@ -230,6 +230,12 @@ data class LauncherSettings(
     val mouseAcceleration: MouseAcceleration = MouseAcceleration.MEDIUM,
     /** The combinations' buttons reach the game / app as well. */
     val comboForward: Boolean = false,
+    /** Keyboard: action name → key name ("" = none); missing = the built-in key (KeyboardKeys). */
+    val keyboardKeys: Map<String, String> = emptyMap(),
+    /** System-wide shortcut that opens the quick menu ("Ctrl+Alt+M"), "" = off. */
+    val keyboardQuickMenu: String = "",
+    /** What the mouse's side buttons do in GameLodge. */
+    val mouseSideButtons: MouseSideButtons = MouseSideButtons.BACK,
     /** Shrink the UI while a TV/monitor is attached (the layout is sized for the handheld). */
     val tvScaleAuto: Boolean = true,
     /** UI size on an external display, percent of the handheld size. */
@@ -357,6 +363,9 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val comboHome = stringPreferencesKey("combo_home")
         val comboQuickMenu = stringPreferencesKey("combo_quick_menu")
         val comboForward = booleanPreferencesKey("combo_forward")
+        val keyboardKeys = stringPreferencesKey("keyboard_keys")
+        val keyboardQuickMenu = stringPreferencesKey("keyboard_quick_menu")
+        val mouseSideButtons = stringPreferencesKey("mouse_side_buttons")
         val comboMouse = stringPreferencesKey("combo_mouse")
         val mouseSpeed = intPreferencesKey("mouse_speed")
         val mouseAcceleration = stringPreferencesKey("mouse_acceleration")
@@ -480,6 +489,11 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             // Controllers and hosts were tiles once; they are tabs of the quick menu now.
             quickTiles = this[K.quickTiles]?.split(',')?.filter { it.isNotBlank() && it != "controllers" && it != "hosts" } ?: d.quickTiles,
             comboForward = this[K.comboForward] ?: d.comboForward,
+            keyboardKeys = this[K.keyboardKeys]?.lines()?.mapNotNull { line ->
+                line.split('\t').takeIf { it.size == 2 }?.let { it[0] to it[1] }
+            }?.toMap() ?: d.keyboardKeys,
+            keyboardQuickMenu = this[K.keyboardQuickMenu] ?: d.keyboardQuickMenu,
+            mouseSideButtons = enumOr(this[K.mouseSideButtons], d.mouseSideButtons),
             quickShowVolume = this[K.quickShowVolume] ?: d.quickShowVolume,
             quickShowBrightness = this[K.quickShowBrightness] ?: d.quickShowBrightness,
             quickShowAudioOutput = this[K.quickShowAudioOutput] ?: d.quickShowAudioOutput,
@@ -598,6 +612,9 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         this[K.quickTiles] = s.quickTiles.joinToString(",")
         this[K.quickShowVolume] = s.quickShowVolume
         this[K.comboForward] = s.comboForward
+        this[K.keyboardKeys] = s.keyboardKeys.entries.joinToString("\n") { "${it.key}\t${it.value}" }
+        this[K.keyboardQuickMenu] = s.keyboardQuickMenu
+        this[K.mouseSideButtons] = s.mouseSideButtons.name
         this[K.quickShowBrightness] = s.quickShowBrightness
         this[K.quickShowAudioOutput] = s.quickShowAudioOutput
         this[K.metadataSources] = s.metadataSources.joinToString(",")
@@ -649,6 +666,9 @@ data class PadCombos(val combos: Map<String, List<Int>> = emptyMap(), val forwar
 }
 
 private val padCombosJson = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
+
+/** The mouse's side buttons: back (and nothing forward), or switch tabs (LB / RB). */
+enum class MouseSideButtons { BACK, TABS }
 
 /** Mouse emulation curve: the exponent on the stick deflection (higher = finer near the centre). */
 enum class MouseAcceleration(val exponent: Float) { LOW(1.6f), MEDIUM(2.4f), HIGH(3.2f) }

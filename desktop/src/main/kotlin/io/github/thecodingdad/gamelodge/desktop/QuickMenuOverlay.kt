@@ -207,7 +207,7 @@ fun QuickMenuOverlayWindow(
                 LocalButtonLayout provides settings.layoutFor(ActivePad.key, ActivePad.detectedLayout),
                 // Laid out like the launcher's own quick menu, not like a narrow screen.
                 LocalCompactWidth provides false,
-                LocalShowHintBar provides (settings.showHintBar && rememberControllers().isNotEmpty()),
+                LocalShowHintBar provides (settings.showHintBar && (rememberControllers().isNotEmpty() || io.github.thecodingdad.gamelodge.input.KeyboardKeys.active)),
             ) {
                 io.github.thecodingdad.gamelodge.ui.input.RightStickScrollDriver()
                 Box(

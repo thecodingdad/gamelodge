@@ -16,6 +16,9 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.isAltPressed
+import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.input.pointer.pointerInput
@@ -184,6 +187,63 @@ fun main(args: Array<String>) {
 
     val dispatcher = InputDispatcher()
     val gamepads = Gamepads(dispatcher)
+    // The mouse's side buttons switch tabs (LB / RB) instead of going back (setting).
+    var mouseSideTabs = false
+    fun mouseSideButton(button: androidx.compose.ui.input.pointer.PointerButton?) {
+        val back = button == androidx.compose.ui.input.pointer.PointerButton.Back
+        if (!back && button != androidx.compose.ui.input.pointer.PointerButton.Forward) return
+        if (mouseSideTabs) {
+            val pad = if (back) PadButton.L1 else PadButton.R1
+            dispatcher.dispatchButton(pad, InputDispatcher.KeyPhase.DOWN, 0, System.currentTimeMillis())
+            dispatcher.dispatchButton(pad, InputDispatcher.KeyPhase.UP, 0, System.currentTimeMillis())
+        } else if (back) {
+            gamepads.postKey(java.awt.event.KeyEvent.VK_ESCAPE, true)
+            gamepads.postKey(java.awt.event.KeyEvent.VK_ESCAPE, false)
+        }
+    }
+    // Keyboard: recording a key / the shortcut, and the keys assigned to confirm, back, quick menu and
+    // home (the other assigned keys reach the dispatcher as pad buttons). Null = go on as usual.
+    fun keyboardKeys(e: androidx.compose.ui.input.key.KeyEvent): Boolean? {
+        val keys = io.github.thecodingdad.gamelodge.input.KeyboardKeys
+        val down = e.type == KeyEventType.KeyDown
+        if (down) keys.onKeyboard()
+        keys.recording?.let { done ->
+            if (down) {
+                if (e.key == Key.Escape) { keys.recording = null; done(null) }
+                else keys.nameOf(e.key)?.let { name -> keys.recording = null; done(name) }
+            }
+            return true
+        }
+        keys.recordingShortcut?.let { done ->
+            if (down) {
+                if (e.key == Key.Escape) {
+                    keys.recordingShortcut = null
+                    done(null)
+                } else {
+                    keys.shortcutNameOf(e.key)?.let { name ->
+                        val shortcut = io.github.thecodingdad.gamelodge.input.KeyShortcut(e.isCtrlPressed, e.isAltPressed, e.isShiftPressed, name)
+                        if (shortcut.hasModifier) { keys.recordingShortcut = null; done(shortcut) }
+                    }
+                }
+            }
+            return true
+        }
+        return when (val action = keys.actionFor(e.key)) {
+            io.github.thecodingdad.gamelodge.input.KeyAction.A, io.github.thecodingdad.gamelodge.input.KeyAction.B -> {
+                gamepads.postKey(if (action == io.github.thecodingdad.gamelodge.input.KeyAction.A) java.awt.event.KeyEvent.VK_ENTER else java.awt.event.KeyEvent.VK_ESCAPE, down)
+                true
+            }
+            io.github.thecodingdad.gamelodge.input.KeyAction.QUICK_MENU, io.github.thecodingdad.gamelodge.input.KeyAction.HOME -> {
+                if (down) gamepads.onCombo(
+                    if (action == io.github.thecodingdad.gamelodge.input.KeyAction.HOME) io.github.thecodingdad.gamelodge.input.ComboAction.HOME
+                    else io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU,
+                    -1,
+                )
+                true
+            }
+            else -> null
+        }
+    }
     // The controller that starts the stream is player 1.
     io.github.thecodingdad.gamelodge.desktop.stream.MoonlightQt.firstPad = { gamepads.starter() }
     var mainWindow: java.awt.Frame? = null
@@ -242,6 +302,12 @@ fun main(args: Array<String>) {
     container.scope.launch {
         container.settings.settings.collect {
             gamepads.layoutOverrides = it.controllerLayouts.mapValues { (_, l) -> l == ButtonLayout.NINTENDO }
+            io.github.thecodingdad.gamelodge.input.KeyboardKeys.mapping = it.keyboardKeys
+            mouseSideTabs = it.mouseSideButtons == io.github.thecodingdad.gamelodge.data.settings.MouseSideButtons.TABS
+            // The system-wide quick menu shortcut: like the pad's quick menu combination.
+            val shortcut = io.github.thecodingdad.gamelodge.input.KeyShortcut.parse(it.keyboardQuickMenu)
+            io.github.thecodingdad.gamelodge.input.KeyboardKeys.quickMenuShortcut = shortcut
+            WindowsHotkey.set(shortcut) { gamepads.onCombo(io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU, -1) }
             WindowsPointer.speed = it.mouseSpeed / 100f
             WindowsPointer.exponent = it.mouseAcceleration.exponent
             WindowsPointer.streamSpeed = STREAM_MOUSE_SPEED * it.mouseSpeed / 100f
@@ -400,6 +466,9 @@ fun main(args: Array<String>) {
             onPreviewKeyEvent = { e ->
                 vm.touch()
                 val isDirection = e.key == Key.DirectionUp || e.key == Key.DirectionDown || e.key == Key.DirectionLeft || e.key == Key.DirectionRight
+                if (!gamepads.dispatching) {
+                    keyboardKeys(e)?.let { return@Window it }
+                }
                 if (e.type == KeyEventType.KeyDown) {
                     // Controller buttons and navigation keys show the focus; typing (letters, Shift …) doesn't.
                     if (gamepads.dispatching || isDirection || e.key == Key.Tab) controllerInput()
@@ -421,7 +490,8 @@ fun main(args: Array<String>) {
                         feedback.play(UiSound.BACK)
                         false
                     }
-                    else -> keyboardButton(e.key)?.let { button ->
+                    gamepads.dispatching -> false
+                    else -> io.github.thecodingdad.gamelodge.input.KeyboardKeys.actionFor(e.key)?.button?.let { button ->
                         val phase = if (e.type == KeyEventType.KeyDown) InputDispatcher.KeyPhase.DOWN else InputDispatcher.KeyPhase.UP
                         dispatcher.dispatchButton(button, phase, 0, System.currentTimeMillis())
                     } ?: false
@@ -496,7 +566,11 @@ fun main(args: Array<String>) {
                             val event = awaitPointerEvent(androidx.compose.ui.input.pointer.PointerEventPass.Initial)
                             // Moving, clicking and scrolling with the mouse is using the launcher too (screensaver).
                             vm.touchThrottled()
-                            if (event.type == androidx.compose.ui.input.pointer.PointerEventType.Press) gamepads.otherInput()
+                            if (event.type == androidx.compose.ui.input.pointer.PointerEventType.Press) {
+                                gamepads.otherInput()
+                                io.github.thecodingdad.gamelodge.input.KeyboardKeys.onOtherInput()
+                                mouseSideButton(event.button)
+                            }
                             if (event.type == androidx.compose.ui.input.pointer.PointerEventType.Press &&
                                 modeManager.inputMode != androidx.compose.ui.input.InputMode.Touch
                             ) modeManager.requestInputMode(androidx.compose.ui.input.InputMode.Touch)
@@ -536,12 +610,4 @@ internal fun arrowFocus(e: androidx.compose.ui.input.key.KeyEvent, focusManager:
     return focusManager.moveFocus(direction)
 }
 
-/** Keyboard equivalents of the pad buttons, as on Android (handy without a controller). */
-private fun keyboardButton(key: Key): PadButton? = when (key) {
-    Key.PageUp -> PadButton.L1
-    Key.PageDown -> PadButton.R1
-    Key.F1 -> PadButton.Y
-    Key.F2 -> PadButton.X
-    Key.F3 -> PadButton.START
-    else -> null
-}
+

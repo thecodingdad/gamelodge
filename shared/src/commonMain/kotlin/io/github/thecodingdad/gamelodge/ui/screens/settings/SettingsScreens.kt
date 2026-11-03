@@ -1,6 +1,7 @@
 package io.github.thecodingdad.gamelodge.ui.screens.settings
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material.icons.filled.AutoFixHigh
 import androidx.compose.material.icons.filled.Visibility
 import io.github.thecodingdad.gamelodge.ui.components.restoreFocusIf
@@ -76,7 +77,7 @@ import io.github.thecodingdad.gamelodge.data.settings.LauncherSettings
 import io.github.thecodingdad.gamelodge.data.settings.ThemeMode
 import io.github.thecodingdad.gamelodge.resources.*
 
-enum class SettingsPageId { GAME_SOURCES, HOST_ROLE, STREAMING_HOST, STARTUP, HOSTS, PROFILES, HOME_SCREEN, LIBRARY_VIEW, APPS_VIEW, THEME, DISPLAY, FILTERS, APP_FILTERS, SOUNDS, METADATA, USAGE, EMULATORS, HOME_ASSISTANT, VPN, LAUNCHER, DATA, LANGUAGE, ABOUT, LICENSES }
+enum class SettingsPageId { INPUT, GAME_SOURCES, HOST_ROLE, STREAMING_HOST, STARTUP, HOSTS, PROFILES, HOME_SCREEN, LIBRARY_VIEW, APPS_VIEW, THEME, DISPLAY, FILTERS, APP_FILTERS, SOUNDS, METADATA, USAGE, EMULATORS, HOME_ASSISTANT, VPN, LAUNCHER, DATA, LANGUAGE, ABOUT, LICENSES }
 
 @Composable
 fun SettingsHome(
@@ -146,6 +147,7 @@ fun SettingsHome(
 
         SectionHeader(stringResource(Res.string.settings_group_controls))
         NavRow(stringResource(Res.string.settings_controllers), openControllers, stringResource(Res.string.settings_controllers_sub), Icons.Filled.Gamepad)
+        NavRow(stringResource(Res.string.settings_input), { open(SettingsPageId.INPUT) }, stringResource(Res.string.settings_input_sub), Icons.Filled.Keyboard)
         NavRow(stringResource(Res.string.settings_sounds), { open(SettingsPageId.SOUNDS) }, stringResource(Res.string.settings_sounds_sub), Icons.Filled.VolumeUp)
 
         SectionHeader(stringResource(Res.string.settings_group_system))

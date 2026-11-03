@@ -109,6 +109,8 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
         container.scope.launch {
             container.settings.settings.collect {
                 currentSettings = it
+                io.github.thecodingdad.gamelodge.input.KeyboardKeys.mapping = it.keyboardKeys
+                io.github.thecodingdad.gamelodge.input.KeyboardKeys.quickMenuShortcut = io.github.thecodingdad.gamelodge.input.KeyShortcut.parse(it.keyboardQuickMenu)
                 io.github.thecodingdad.gamelodge.input.PointerMode.speed = it.mouseSpeed / 100f
                 io.github.thecodingdad.gamelodge.input.PointerMode.exponent = it.mouseAcceleration.exponent
                 com.limelight.StreamControl.mouseSpeed = STREAM_MOUSE_SPEED * it.mouseSpeed / 100f

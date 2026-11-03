@@ -51,10 +51,6 @@ interface ProfileEditing {
     /** The options shown first in the editor ("the important ones"). */
     val essentialKeys: List<String>
 
-    /** Input options of this device that hold for every profile (base settings); none by default. */
-    @Composable
-    fun rememberDeviceInputOptions(): List<StreamOption> = emptyList()
-
     /** [uuid] null: the base settings. */
     fun values(uuid: UUID?): ProfileValues
 

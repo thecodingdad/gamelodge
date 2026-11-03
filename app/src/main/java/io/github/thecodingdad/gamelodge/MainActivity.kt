@@ -241,7 +241,10 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun dispatchTouchEvent(event: android.view.MotionEvent): Boolean {
-        if (event.actionMasked == android.view.MotionEvent.ACTION_DOWN) io.github.thecodingdad.gamelodge.input.StarterPad.onPointer()
+        if (event.actionMasked == android.view.MotionEvent.ACTION_DOWN) {
+            io.github.thecodingdad.gamelodge.input.StarterPad.onPointer()
+            io.github.thecodingdad.gamelodge.input.KeyboardKeys.onOtherInput()
+        }
         return super.dispatchTouchEvent(event)
     }
 
@@ -254,6 +257,16 @@ class MainActivity : ComponentActivity() {
     @SuppressLint("RestrictedApi")
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         io.github.thecodingdad.gamelodge.input.StarterPad.onKey(event)
+        // Keyboard: recording, the quick menu shortcut and the assigned keys; the mouse's side buttons.
+        val tabs = vm.settings.value.mouseSideButtons == io.github.thecodingdad.gamelodge.data.settings.MouseSideButtons.TABS
+        if (io.github.thecodingdad.gamelodge.ui.input.AndroidKeyboard.handleMouseButtons(event, tabs, dispatcher)) return true
+        io.github.thecodingdad.gamelodge.ui.input.AndroidKeyboard.handle(event, { super.dispatchKeyEvent(it) }) { action ->
+            when (action) {
+                io.github.thecodingdad.gamelodge.input.KeyAction.QUICK_MENU -> vm.quickMenuRequests.tryEmit(false)
+                io.github.thecodingdad.gamelodge.input.KeyAction.HOME -> vm.homePressed.tryEmit(Unit)
+                else -> Unit
+            }
+        }?.let { return it }
         // Button combinations; the accessibility service handles them already when enabled.
         if (ComboAccessibilityService.instance == null || ButtonCombos.isRecording) {
             val consumed = ButtonCombos.handle(event) { action, controller ->

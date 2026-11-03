@@ -152,7 +152,10 @@ object StreamSettingsSchema {
         .filter { it.key != GAMEPAD_CATEGORY }
         .map { c -> if (c.key == INPUT_CATEGORY) c.copy(title = inputTitle, options = c.options.filter { it.key !in deviceInputKeys }) else c }
 
-    /** The device's input options alone (Settings › Stream profiles, for every profile). */
+    /** The keyboard ones among [deviceInputKeys] (the rest are touch / trackpad options). */
+    val deviceKeyboardKeys = setOf("checkbox_force_qwerty", "checkbox_right_alt_as_meta")
+
+    /** The device's input options alone (Settings › Touch, mouse & keyboard, for every profile). */
     fun deviceInputOptions(context: Context): List<StreamOption> =
         load(context).firstOrNull { it.key == INPUT_CATEGORY }?.options.orEmpty().filter { it.key in deviceInputKeys }
 

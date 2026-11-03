@@ -287,6 +287,7 @@ class Gamepads(private val dispatcher: InputDispatcher) {
             previous[i] = s
             if (p == null) continue
             if (changed(p, s)) {
+                io.github.thecodingdad.gamelodge.input.KeyboardKeys.onOtherInput()
                 lastUsed = i
                 padInUse = true
                 names[i]?.let { name ->
@@ -378,6 +379,9 @@ class Gamepads(private val dispatcher: InputDispatcher) {
             held[name] = now + REPEAT_MS
         }
     }
+
+    /** A keyboard key assigned to confirm / back: sent like the pad's (Enter / Esc). */
+    fun postKey(code: Int, pressed: Boolean) = post(code, if (pressed) KeyEvent.KEY_PRESSED else KeyEvent.KEY_RELEASED)
 
     private fun key(code: Int, was: Boolean, now: Boolean) {
         if (now && !was) post(code, KeyEvent.KEY_PRESSED)

@@ -15,12 +15,8 @@ object AndroidPad {
         KeyEvent.KEYCODE_BUTTON_R2 -> PadButton.R2
         KeyEvent.KEYCODE_BUTTON_START, KeyEvent.KEYCODE_MENU -> PadButton.START
         KeyEvent.KEYCODE_BUTTON_SELECT -> PadButton.SELECT
-        // Keyboard equivalents, handy on the emulator and with BT keyboards
-        KeyEvent.KEYCODE_PAGE_UP -> PadButton.L1
-        KeyEvent.KEYCODE_PAGE_DOWN -> PadButton.R1
-        KeyEvent.KEYCODE_F1 -> PadButton.Y
-        KeyEvent.KEYCODE_F2 -> PadButton.X
-        else -> null
+        // Keyboard keys as the user assigned them (Settings › Touch, mouse & keyboard).
+        else -> io.github.thecodingdad.gamelodge.input.KeyboardKeys.actionFor(androidx.compose.ui.input.key.Key(keyCode))?.button
     }
 
     /**
