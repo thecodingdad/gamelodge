@@ -133,6 +133,7 @@ fun HostCard(
                     scope.launch { c.hostPower.save(updated) }
                 },
                 icon = Icons.Filled.Bedtime,
+                subtitle = stringResource(Res.string.host_auto_sleep_sub),
             )
         }
         message?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceMuted) }

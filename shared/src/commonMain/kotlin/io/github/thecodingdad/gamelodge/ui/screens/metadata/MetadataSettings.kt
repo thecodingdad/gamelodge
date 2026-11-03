@@ -91,7 +91,10 @@ fun MetadataSettings(
         running?.let {
             LinearProgressIndicator(progress = { it.done.toFloat() / it.total.coerceAtLeast(1) }, modifier = Modifier.fillMaxWidth(), color = colors.accent)
         }
-        SwitchRow(stringResource(Res.string.metadata_auto), settings.autoMetadata, { v -> update { it.copy(autoMetadata = v) } }, initialFocus = true)
+        SwitchRow(
+            stringResource(Res.string.metadata_auto), settings.autoMetadata, { v -> update { it.copy(autoMetadata = v) } },
+            subtitle = stringResource(Res.string.metadata_auto_sub), initialFocus = true,
+        )
 
         SourcesSection(settings.metadataSources)
         SwitchRow(

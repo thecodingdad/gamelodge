@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- GameLodge's texts for Artemis options shown in the stream profile editor: they override
+     the Artemis library strings (app lint doesn't see those: hence ExtraTranslation). -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="ExtraTranslation">
+    <string name="summary_seekbar_bitrate">Più alto: immagine più nitida, ma più dati. In Wi-Fi bastano di solito 40–60 Mbps per 1080p60; un valore troppo alto causa interruzioni.</string>
+    <string name="title_checkbox_enable_sops">Consenti all\'host di cambiare risoluzione</string>
+    <string name="summary_checkbox_enable_sops">Necessario se l\'host è impostato per cambiare la risoluzione dello schermo per lo stream (impostazioni dello schermo di Sunshine/Apollo/Vibepollo: su quella dello stream o una fissa). Disattivato: l\'host mantiene la sua risoluzione.</string>
+    <string name="summary_prevent_packet_loss">Tiene attivo il Wi-Fi con un piccolo pacchetto ogni 20 ms, così non entra in risparmio energetico. Aiuta contro brevi interruzioni regolari; consuma un po\' di batteria.</string>
+    <string name="summary_touchpad_sensitivity_x">Per la modalità mouse touchpad e il touchpad dei tasti speciali virtuali. Entrambi condividono questo valore, ma possono risultare diversi.</string>
+    <string name="summary_touchpad_sensitivity_y">Per la modalità mouse touchpad e il touchpad dei tasti speciali virtuali. Entrambi condividono questo valore, ma possono risultare diversi.</string>
+    <string name="summary_touchscreen_mode">Multi-touch, tocco singolo, trackpad o disattivato.\nLe penne funzionano anche se disattivato.\nSu uno schermo esterno si usa sempre la modalità trackpad (naturale).</string>
+</resources>

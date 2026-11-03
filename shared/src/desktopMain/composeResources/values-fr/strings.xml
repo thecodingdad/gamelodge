@@ -139,7 +139,7 @@
     <string name="sopt_title_fps_list">Images par seconde</string>
     <string name="sopt_summary_fps_list">Augmente pour une vidéo plus fluide. Diminue pour de meilleures performances sur les appareils modestes.</string>
     <string name="sopt_title_seekbar_bitrate">Débit vidéo</string>
-    <string name="sopt_summary_seekbar_bitrate">Augmente pour une meilleure qualité d'image. Diminue pour de meilleures performances sur les connexions lentes.</string>
+    <string name="sopt_summary_seekbar_bitrate">Plus élevé : image plus nette, mais plus de données. En Wi-Fi, 40 à 60 Mbit/s suffisent généralement pour du 1080p60 ; une valeur trop élevée provoque des coupures.</string>
     <string name="sopt_suffix_seekbar_bitrate_mbps">Mbit/s</string>
     <string name="sopt_title_frame_pacing">Cadence des images</string>
     <string name="sopt_summary_frame_pacing">Indique comment équilibrer la latence et la fluidité de la vidéo</string>
@@ -154,13 +154,13 @@
     <string name="sopt_audioconf_51surround">Son surround 5.1</string>
     <string name="sopt_audioconf_71surround">Son surround 7.1</string>
     <string name="sopt_title_checkbox_multi_controller">Détection automatique de la présence de la manette</string>
-    <string name="sopt_summary_checkbox_multi_controller">Décocher cette option force une manette à toujours être présente</string>
+    <string name="sopt_summary_checkbox_multi_controller">Activé : chaque manette est un joueur à part. Désactivé : toutes les manettes contrôlent ensemble le joueur 1 et l'hôte voit toujours une manette connectée.</string>
     <string name="sopt_title_checkbox_flip_face_buttons">Inverser les boutons frontaux</string>
     <string name="sopt_summary_checkbox_flip_face_buttons">Échange les boutons frontaux A/B et X/Y pour les manettes et les commandes à l'écran</string>
     <string name="sopt_title_checkbox_absolute_mouse_mode">Mode souris bureau à distance</string>
     <string name="sopt_summary_checkbox_absolute_mouse_mode">Cela peut rendre l'accélération de la souris plus naturelle pour le bureau à distance, mais c'est incompatible avec beaucoup de jeux.</string>
-    <string name="sopt_title_checkbox_enable_sops">Optimiser les réglages du jeu</string>
-    <string name="sopt_summary_checkbox_enable_sops">Permet à GFE de modifier les réglages du jeu pour un streaming optimal</string>
+    <string name="sopt_title_checkbox_enable_sops">Autoriser l'hôte à changer sa résolution</string>
+    <string name="sopt_summary_checkbox_enable_sops">Nécessaire si l'hôte est configuré pour changer la résolution de son écran pour le stream (réglages d'affichage de Sunshine/Apollo/Vibepollo : vers celle du stream ou une fixe). Désactivé : l'hôte garde sa résolution.</string>
     <string name="sopt_title_checkbox_host_audio">Lire l'audio sur le PC</string>
     <string name="sopt_summary_checkbox_host_audio">Lit l'audio sur l'ordinateur et sur cet appareil</string>
     <string name="sopt_title_enable_perf_overlay">Afficher les stats de performance pendant le stream</string>

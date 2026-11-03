@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- GameLodge's texts for Artemis options shown in the stream profile editor: they override
+     the Artemis library strings (app lint doesn't see those: hence ExtraTranslation). -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="ExtraTranslation">
+    <string name="summary_seekbar_bitrate">Plus élevé : image plus nette, mais plus de données. En Wi-Fi, 40 à 60 Mbit/s suffisent généralement pour du 1080p60 ; une valeur trop élevée provoque des coupures.</string>
+    <string name="title_checkbox_enable_sops">Autoriser l\'hôte à changer sa résolution</string>
+    <string name="summary_checkbox_enable_sops">Nécessaire si l\'hôte est configuré pour changer la résolution de son écran pour le stream (réglages d\'affichage de Sunshine/Apollo/Vibepollo : vers celle du stream ou une fixe). Désactivé : l\'hôte garde sa résolution.</string>
+    <string name="summary_prevent_packet_loss">Garde le Wi-Fi actif avec un petit paquet toutes les 20 ms pour qu\'il ne passe pas en économie d\'énergie. Aide contre les coupures brèves et régulières ; consomme un peu de batterie.</string>
+    <string name="summary_touchpad_sensitivity_x">Pour le mode souris tactile et le pavé tactile des touches spéciales virtuelles. Les deux partagent cette valeur mais peuvent se ressentir différemment.</string>
+    <string name="summary_touchpad_sensitivity_y">Pour le mode souris tactile et le pavé tactile des touches spéciales virtuelles. Les deux partagent cette valeur mais peuvent se ressentir différemment.</string>
+    <string name="summary_touchscreen_mode">Multitouch, simple toucher, trackpad ou désactivé.\nLes stylets fonctionnent même désactivé.\nSur un écran externe, le mode trackpad (naturel) est toujours utilisé.</string>
+</resources>

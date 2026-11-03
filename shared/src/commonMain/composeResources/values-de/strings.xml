@@ -1122,7 +1122,7 @@
 
     <!-- TV -->
     <string name="setting_tv_launcher">Launcher auf dem TV anzeigen</string>
-    <string name="setting_tv_launcher_sub">Läuft direkt auf dem TV in dessen Auflösung, das Handy zeigt dabei einen schwarzen Bildschirm. Erlaubt das Gerät das nicht, wird gespiegelt</string>
+    <string name="setting_tv_launcher_sub">Läuft direkt auf dem TV in dessen Auflösung, das Gerät zeigt dabei einen schwarzen Bildschirm. Erlaubt das Gerät das nicht, wird gespiegelt.</string>
     <string name="setting_tv_resolution">Auflösung am TV</string>
     <string name="setting_tv_resolution_auto">Automatisch (flüssig)</string>
     <string name="setting_tv_resolution_sub">Automatisch: bis 1080p mit der höchsten Bildrate, der TV skaliert hoch. Höhere Auflösungen können auf einem Handheld ruckeln.</string>
@@ -1322,7 +1322,7 @@
     <string name="artwork_fit_bottom">gestreckt, unten</string>
     <string name="vpn_auto">Beim Stream-Start</string>
     <string name="vpn_on_stream">Verbinden, wenn der Host nicht erreichbar ist</string>
-    <string name="vpn_on_stream_sub">Erst die VPN, dann den Host aufwecken</string>
+    <string name="vpn_on_stream_sub">Erst das VPN, dann den Host aufwecken</string>
     <string name="vpn_only_outside">Nur außerhalb des Heimnetzes</string>
     <string name="vpn_only_outside_none">Noch keine Heimnetze eingetragen: bis dahin immer</string>
     <string name="vpn_at_home">Gerade im Heimnetz</string>
@@ -1338,7 +1338,7 @@
     <string name="vpn_device_addresses">Dieses Gerät: %1$s</string>
     <string name="vpn_device_no_address">Dieses Gerät hat gerade keine Netzwerkadresse.</string>
     <string name="vpn_disconnect_after">Nach dem Stream trennen</string>
-    <string name="vpn_disconnect_after_sub">Nur wenn der Launcher die VPN für den Stream verbunden hat</string>
+    <string name="vpn_disconnect_after_sub">Nur wenn der Launcher das VPN für den Stream verbunden hat</string>
     <string name="vpn_remove">Entfernen</string>
     <string name="host_wake_timeout_setting">Wartezeit nach dem Aufwecken</string>
     <string name="host_wake_timeout_sub">So lange wartet ein Spielstart, bis der Host bereit ist (Booten dauert je nach Hardware länger)</string>
@@ -1604,7 +1604,7 @@
     <string name="controller_section_mouse">Maus-Emulation</string>
     <string name="controller_section_mouse_sub">Zeigergeschwindigkeit und Beschleunigung mit dem Stick</string>
     <string name="setting_controller_attach">Controller bei Stream-Start verbinden</string>
-    <string name="setting_controller_attach_sub">Die verbundenen Controller werden beim Stream-Start am Host angemeldet, statt erst beim ersten Tastendruck. Der Controller, der den Stream gestartet hat, wird Spieler 1.</string>
+    <string name="setting_controller_attach_sub">Die verbundenen Controller werden schon beim Stream-Start am Host angemeldet statt erst beim ersten Tastendruck. (Der Controller, der den Stream startet, ist immer Spieler 1.)</string>
     <string name="controller_starter_player_one_info">Der Controller, der den Stream startet, ist Spieler 1.</string>
     <string name="qm_mouse">Maus-Modus</string>
     <string name="qm_keyboard">Tastatur</string>
@@ -1654,4 +1654,7 @@
     <string name="tv_mode_hint_open">Odin-Einstellungen öffnen</string>
     <string name="setting_tv_render_1080">Maximal in 1080p zeichnen</string>
     <string name="setting_tv_render_1080_sub">Auf einem TV über 1080p zeichnet der Launcher in 1080p und skaliert hoch: deutlich flüssiger, Schrift minimal weicher.</string>
+    <string name="controller_deadzone_sub">Stick-Ausschläge darunter werden ignoriert. Die Maus-Emulation nutzt immer mindestens 15 %.</string>
+    <string name="controller_auto_attach_sub">Nie: Dieser Controller meldet sich erst beim ersten Tastendruck am Host an – z. B. die eingebaute Steuerung, damit ein externer Controller Spieler 1 bleibt.</string>
+    <string name="metadata_auto_sub">Ergänzt fehlende Cover und Texte, z. B. neuer Spiele. Vorhandene Daten bleiben; alles neu abrufen nur von Hand.</string>
 </resources>

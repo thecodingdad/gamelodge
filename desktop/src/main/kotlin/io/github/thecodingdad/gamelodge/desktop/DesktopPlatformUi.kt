@@ -559,6 +559,7 @@ private fun ControllerStreamRows(
         stringResource(Res.string.controller_deadzone), listOf<Int?>(null, 0, 3, 5, 8, 10, 15, 20), own.deadzonePercent,
         label = { v -> v?.let { "$it %" } ?: default("${d.deadzonePercent} %") },
         onSelect = { v -> save { it.copy(deadzonePercent = v) } },
+        subtitle = stringResource(Res.string.controller_deadzone_sub),
     )
     if (touchpad) {
         io.github.thecodingdad.gamelodge.ui.screens.settings.ChoiceRow(
@@ -587,11 +588,11 @@ private fun ControllerStreamRows(
         stringResource(Res.string.controller_auto_attach), listOf<Boolean?>(null, true), own.attachOnUse?.takeIf { it },
         label = { v -> stringResource(if (v == true) Res.string.controller_auto_attach_off else Res.string.controller_auto_attach_auto) },
         onSelect = { v -> save { it.copy(attachOnUse = v) } },
+        subtitle = stringResource(Res.string.controller_auto_attach_sub),
     )
     io.github.thecodingdad.gamelodge.ui.screens.settings.ChoiceRow(
         stringResource(Res.string.controller_battery_report), tri, own.batteryReport,
         label = { v -> onOff(v, d.batteryReport) },
         onSelect = { v -> save { it.copy(batteryReport = v) } },
-        subtitle = stringResource(Res.string.controller_battery_report_sub),
     )
 }

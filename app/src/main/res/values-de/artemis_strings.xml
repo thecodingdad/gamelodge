@@ -9,7 +9,7 @@
     <string name="align_right">Rechtsbündig</string>
     <string name="category_general_settings">Allgemeine Einstellungen</string>
     <string name="category_perf_monitor_settings">Leistungsanzeige</string>
-    <string name="category_video_settings">Videoeinstellungen</string>
+    <string name="category_video_settings">Video-Einstellungen</string>
     <string name="clipboard_sync_unsupported">Dieser Server unterstützt keine Zwischenablage-Synchronisierung. Bitte installiere oder aktualisiere Apollo auf die neueste Version.</string>
     <string name="dialog_custom_refresh_rate">Bildwiederholrate in Hz eingeben, Nachkommastellen sind erlaubt.</string>
     <string name="dialog_custom_resolution">Auflösung festlegen und die Einstellungen verlassen, damit sie wirksam wird.</string>
@@ -118,7 +118,7 @@
     <string name="summary_onscreen_keyboard_height">Höhe der virtuellen Volltastatur anpassen</string>
     <string name="summary_onscreen_keyboard_width">Breite der virtuellen Volltastatur anpassen</string>
     <string name="summary_performance_link">Leistungsdaten anderer Geräte ansehen.\nHinweis: Diese Daten pflegt die Community, nicht Artemis, und sie sind keine offizielle Aussage von Artemis.</string>
-    <string name="summary_prevent_packet_loss">Für Geräte mit Paketverlust aus unbekannten Gründen kann diese Option helfen.</string>
+    <string name="summary_prevent_packet_loss">Hält das WLAN mit einem winzigen Paket alle 20 ms wach, damit es nicht in den Stromsparmodus fällt. Hilft bei regelmäßigen kurzen Aussetzern, kostet etwas Akku.</string>
     <string name="summary_quit_dialog">Wenn aktiviert, zeigt die Zurück-Taste des Geräts im Stream ein Menü:\nBildschirmtastatur, Leistungsdaten, Touch-Modus wechseln, Sondertasten senden</string>
     <string name="summary_render_mode">Standard-2D oder SBS-3D. 3D verdoppelt einfach die Breite und erzeugt den Effekt automatisch, ohne Einrichtung. KI-Umwandlung von 2D in 3D</string>
     <string name="summary_reset_keyboard_layout">Sondertasten-Layout zurücksetzen (setzt das gewählte Standard-Layout zurück)</string>
@@ -239,4 +239,28 @@
     <string name="video_scale_mode_fit">Einpassen</string>
     <string name="video_scale_mode_stretch">Strecken</string>
     <string name="wrong_import_format">Falsches Importformat, bitte prüfen!</string>
+    <string name="category_audio_settings">Audio-Einstellungen</string>
+    <string name="category_gamepad_settings">Gamepad-Einstellungen</string>
+    <string name="category_input_settings">Eingabe-Einstellungen</string>
+    <string name="category_host_settings">Host-Einstellungen</string>
+    <string name="title_fps_list">Video-Framerate</string>
+    <string name="summary_fps_list">Erhöhen für einen flüssigeren Stream. Verringern, um auf schwächeren Geräten eine bessere Leistung zu erzielen.</string>
+    <string name="title_seekbar_bitrate">Video-Bitrate</string>
+    <string name="title_audio_config_list">Surround-Sound-Konfiguration</string>
+    <string name="summary_audio_config_list">5.1- oder 7.1-Surround-Sound für Heimkinoanlagen aktivieren</string>
+    <string name="title_enable_perf_overlay">Leistungsdaten im Stream anzeigen</string>
+    <string name="summary_enable_perf_overlay">Zeigt während des Streams Leistungsdaten in Echtzeit an</string>
+    <string name="summary_video_format">Neuere Codecs brauchen weniger Bandbreite, wenn dein Gerät sie unterstützt. Unterstützen Host-Software oder GPU sie nicht, wird die Auswahl eventuell ignoriert.</string>
+    <string name="summary_seekbar_bitrate">Höher: schärferes Bild, aber mehr Daten. Im WLAN reichen für 1080p60 meist 40–60 Mbit/s; zu hohe Werte führen zu Aussetzern.</string>
+    <string name="title_checkbox_enable_sops">Host darf seine Auflösung ändern</string>
+    <string name="summary_checkbox_enable_sops">Nötig, wenn der Host seinen Bildschirm für den Stream umstellen soll (Bildschirm-Einstellungen von Sunshine/Apollo/Vibepollo: auf die Stream-Auflösung oder eine feste). Aus: Der Host behält seine Auflösung.</string>
+    <string name="title_checkbox_xb1_driver">USB-Treiber für Xbox 360/One/Nintendo Pro</string>
+    <string name="summary_checkbox_xb1_driver">Aktiviert einen eingebauten USB-Treiber für Geräte ohne eigene Unterstützung für Xbox- oder Nintendo-Pro-Controller</string>
+    <string name="summary_checkbox_mouse_nav_buttons">Kann auf manchen fehlerhaften Geräten Rechtsklicks verhindern</string>
+    <string name="title_unlock_fps">Alle möglichen Framerates freischalten</string>
+    <string name="summary_unlock_fps">Streaming mit 90 oder 120 FPS kann auf schnellen Geräten die Latenz senken, auf Geräten, die das nicht schaffen, aber zu Rucklern oder Instabilität führen.</string>
+    <string name="title_checkbox_reduce_refresh_rate">Niedrigere Bildwiederholrate erlauben</string>
+    <string name="summary_checkbox_reduce_refresh_rate">Eine niedrigere Bildwiederholrate des Displays spart Akku, auf Kosten etwas höherer Video-Latenz.</string>
+    <string name="title_full_range">Full-Range-Video erzwingen (experimentell)</string>
+    <string name="summary_full_range">Führt zu Detailverlust in hellen und dunklen Bereichen, wenn dein Gerät Full-Range-Video nicht richtig darstellt.</string>
 </resources>

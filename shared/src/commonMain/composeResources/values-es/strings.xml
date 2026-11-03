@@ -1606,7 +1606,7 @@
     <string name="controller_section_mouse">Emulación de ratón</string>
     <string name="controller_section_mouse_sub">Velocidad del puntero y aceleración con el stick</string>
     <string name="setting_controller_attach">Conectar mandos al iniciar el stream</string>
-    <string name="setting_controller_attach_sub">Los mandos conectados se registran en el host al iniciar el stream, en vez de con su primera pulsacion. El mando que inicio el stream es el jugador 1.</string>
+    <string name="setting_controller_attach_sub">Los mandos conectados se conectan al host al iniciar el stream, en lugar de al pulsar su primer botón. (El mando que inicia un stream siempre es el jugador 1.)</string>
     <string name="controller_starter_player_one_info">El mando que inicia el stream es el jugador 1.</string>
     <string name="qm_mouse">Modo ratón</string>
     <string name="qm_keyboard">Teclado</string>
@@ -1656,4 +1656,7 @@
     <string name="tv_mode_hint_open">Abrir ajustes de Odin</string>
     <string name="setting_tv_render_1080">Dibujar como máximo en 1080p</string>
     <string name="setting_tv_render_1080_sub">En una TV de más de 1080p el launcher dibuja en 1080p y escala: mucho más fluido, el texto algo más suave.</string>
+    <string name="controller_deadzone_sub">Se ignoran los movimientos del stick por debajo de este valor. La emulación de ratón usa siempre al menos un 15 %.</string>
+    <string name="controller_auto_attach_sub">Nunca: este mando se conecta al host solo al pulsar su primer botón; p. ej., los controles integrados, para que un mando externo siga siendo el jugador 1.</string>
+    <string name="metadata_auto_sub">Completa las portadas y textos que faltan, p. ej. de juegos nuevos. Los datos existentes se mantienen; volver a obtenerlo todo solo a mano.</string>
 </resources>

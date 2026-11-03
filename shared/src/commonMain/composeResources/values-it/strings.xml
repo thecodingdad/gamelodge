@@ -1606,7 +1606,7 @@
     <string name="controller_section_mouse">Emulazione del mouse</string>
     <string name="controller_section_mouse_sub">Velocità del puntatore e accelerazione con lo stick</string>
     <string name="setting_controller_attach">Collega i controller all'avvio dello stream</string>
-    <string name="setting_controller_attach_sub">I controller collegati vengono segnalati all'host all'avvio dello stream, invece che alla prima pressione. Il controller che ha avviato lo stream diventa giocatore 1.</string>
+    <string name="setting_controller_attach_sub">I controller collegati si collegano all'host all'avvio dello stream, invece che alla prima pressione di un tasto. (Il controller che avvia uno stream è sempre il giocatore 1.)</string>
     <string name="controller_starter_player_one_info">Il controller che avvia lo stream e il giocatore 1.</string>
     <string name="qm_mouse">Modalità mouse</string>
     <string name="qm_keyboard">Tastiera</string>
@@ -1656,4 +1656,7 @@
     <string name="tv_mode_hint_open">Apri impostazioni Odin</string>
     <string name="setting_tv_render_1080">Disegna al massimo in 1080p</string>
     <string name="setting_tv_render_1080_sub">Su una TV sopra i 1080p il launcher disegna a 1080p e scala: molto più fluido, testo un po’ più morbido.</string>
+    <string name="controller_deadzone_sub">I movimenti dello stick al di sotto di questo valore vengono ignorati. L'emulazione del mouse usa sempre almeno il 15 %.</string>
+    <string name="controller_auto_attach_sub">Mai: questo controller si collega all'host solo alla prima pressione di un tasto – ad es. i comandi integrati, così un controller esterno resta il giocatore 1.</string>
+    <string name="metadata_auto_sub">Completa copertine e testi mancanti, ad es. dei nuovi giochi. I dati esistenti restano; riscaricare tutto solo a mano.</string>
 </resources>

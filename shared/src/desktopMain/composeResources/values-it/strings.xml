@@ -139,7 +139,7 @@
     <string name="sopt_title_fps_list">Frame rate video</string>
     <string name="sopt_summary_fps_list">Aumenta per un video più fluido. Diminuisci per prestazioni migliori su dispositivi modesti.</string>
     <string name="sopt_title_seekbar_bitrate">Bitrate video</string>
-    <string name="sopt_summary_seekbar_bitrate">Aumenta per una qualità d'immagine migliore. Diminuisci per prestazioni migliori su connessioni lente.</string>
+    <string name="sopt_summary_seekbar_bitrate">Più alto: immagine più nitida, ma più dati. In Wi-Fi bastano di solito 40–60 Mbps per 1080p60; un valore troppo alto causa interruzioni.</string>
     <string name="sopt_suffix_seekbar_bitrate_mbps">Mbps</string>
     <string name="sopt_title_frame_pacing">Ritmo dei frame</string>
     <string name="sopt_summary_frame_pacing">Indica come bilanciare latenza e fluidità del video</string>
@@ -154,13 +154,13 @@
     <string name="sopt_audioconf_51surround">Suono surround 5.1</string>
     <string name="sopt_audioconf_71surround">Suono surround 7.1</string>
     <string name="sopt_title_checkbox_multi_controller">Rilevamento automatico della presenza del gamepad</string>
-    <string name="sopt_summary_checkbox_multi_controller">Deselezionare questa opzione forza un gamepad a essere sempre presente</string>
+    <string name="sopt_summary_checkbox_multi_controller">Attivo: ogni controller è un giocatore a sé. Disattivato: tutti i controller comandano insieme il giocatore 1 e l'host vede sempre un controller collegato.</string>
     <string name="sopt_title_checkbox_flip_face_buttons">Inverti i tasti frontali</string>
     <string name="sopt_summary_checkbox_flip_face_buttons">Scambia i tasti frontali A/B e X/Y per i gamepad e i comandi su schermo</string>
     <string name="sopt_title_checkbox_absolute_mouse_mode">Modalità mouse desktop remoto</string>
     <string name="sopt_summary_checkbox_absolute_mouse_mode">Questo può rendere l'accelerazione del mouse più naturale per il desktop remoto, ma è incompatibile con molti giochi.</string>
-    <string name="sopt_title_checkbox_enable_sops">Ottimizza le impostazioni del gioco</string>
-    <string name="sopt_summary_checkbox_enable_sops">Permette a GFE di modificare le impostazioni del gioco per uno streaming ottimale</string>
+    <string name="sopt_title_checkbox_enable_sops">Consenti all'host di cambiare risoluzione</string>
+    <string name="sopt_summary_checkbox_enable_sops">Necessario se l'host è impostato per cambiare la risoluzione dello schermo per lo stream (impostazioni dello schermo di Sunshine/Apollo/Vibepollo: su quella dello stream o una fissa). Disattivato: l'host mantiene la sua risoluzione.</string>
     <string name="sopt_title_checkbox_host_audio">Riproduci l'audio sul PC</string>
     <string name="sopt_summary_checkbox_host_audio">Riproduce l'audio sul computer e su questo dispositivo</string>
     <string name="sopt_title_enable_perf_overlay">Mostra le statistiche di prestazione durante lo stream</string>

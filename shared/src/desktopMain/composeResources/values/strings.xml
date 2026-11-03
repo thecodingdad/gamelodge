@@ -139,7 +139,7 @@
     <string name="sopt_title_fps_list">Video frame rate</string>
     <string name="sopt_summary_fps_list">Increase for a smoother video stream. Decrease for better performance on lower end devices.</string>
     <string name="sopt_title_seekbar_bitrate">Video bitrate</string>
-    <string name="sopt_summary_seekbar_bitrate">Increase for better image quality. Decrease to improve performance on slower connections.</string>
+    <string name="sopt_summary_seekbar_bitrate">Higher: sharper picture, but more data. On Wi-Fi, 40–60 Mbps are usually enough for 1080p60; too high a value causes dropouts.</string>
     <string name="sopt_suffix_seekbar_bitrate_mbps">Mbps</string>
     <string name="sopt_title_frame_pacing">Video frame pacing</string>
     <string name="sopt_summary_frame_pacing">Specify how to balance video latency and smoothness</string>
@@ -154,13 +154,13 @@
     <string name="sopt_audioconf_51surround">5.1 Surround Sound</string>
     <string name="sopt_audioconf_71surround">7.1 Surround Sound</string>
     <string name="sopt_title_checkbox_multi_controller">Automatic gamepad presence detection</string>
-    <string name="sopt_summary_checkbox_multi_controller">Unchecking this option forces a gamepad to always be present</string>
+    <string name="sopt_summary_checkbox_multi_controller">On: every controller is its own player. Off: all controllers act as one (player 1), and the host always sees a controller connected.</string>
     <string name="sopt_title_checkbox_flip_face_buttons">Flip face buttons</string>
     <string name="sopt_summary_checkbox_flip_face_buttons">Switches the face buttons A/B and X/Y for gamepads and the on-screen controls</string>
     <string name="sopt_title_checkbox_absolute_mouse_mode">Remote desktop mouse mode</string>
     <string name="sopt_summary_checkbox_absolute_mouse_mode">This can make mouse acceleration behave more naturally for remote desktop usage, but it is incompatible with many games.</string>
-    <string name="sopt_title_checkbox_enable_sops">Optimize game settings</string>
-    <string name="sopt_summary_checkbox_enable_sops">Allow GFE to modify game settings for optimal streaming</string>
+    <string name="sopt_title_checkbox_enable_sops">Let the host change its resolution</string>
+    <string name="sopt_summary_checkbox_enable_sops">Needed when the host is set to change its display resolution for a stream (Sunshine/Apollo/Vibepollo display settings: to the stream's resolution or a fixed one). Off: the host keeps its resolution.</string>
     <string name="sopt_title_checkbox_host_audio">Play audio on PC</string>
     <string name="sopt_summary_checkbox_host_audio">Play audio from the computer and this device</string>
     <string name="sopt_title_enable_perf_overlay">Show performance stats while streaming</string>

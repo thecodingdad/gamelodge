@@ -1606,7 +1606,7 @@
     <string name="controller_section_mouse">Mouse emulation</string>
     <string name="controller_section_mouse_sub">Pointer speed and acceleration with the stick</string>
     <string name="setting_controller_attach">Connect controllers at stream start</string>
-    <string name="setting_controller_attach_sub">The connected controllers reach the host when the stream starts, instead of on their first button press. The controller that started the stream becomes player 1.</string>
+    <string name="setting_controller_attach_sub">The connected controllers join the host when the stream starts, instead of on their first button press. (The controller that starts a stream is always player 1.)</string>
     <string name="controller_starter_player_one_info">The controller that starts the stream is player 1.</string>
     <string name="qm_mouse">Mouse mode</string>
     <string name="qm_keyboard">Keyboard</string>
@@ -1656,4 +1656,7 @@
     <string name="tv_mode_hint_open">Open Odin settings</string>
     <string name="setting_tv_render_1080">Draw at most in 1080p</string>
     <string name="setting_tv_render_1080_sub">On a TV above 1080p the launcher draws at 1080p and scales up: much smoother, text a little softer.</string>
+    <string name="controller_deadzone_sub">Stick movements below this are ignored. The mouse emulation always uses at least 15 %.</string>
+    <string name="controller_auto_attach_sub">Never: this controller joins the host only on its first button press – e.g. the built-in controls, so an external controller stays player 1.</string>
+    <string name="metadata_auto_sub">Fills in missing covers and texts, e.g. of new games. Existing data stays; re-fetching everything only by hand.</string>
 </resources>

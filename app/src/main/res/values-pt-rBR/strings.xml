@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="quick_menu">Menu rápido</string>
+    <string name="combo_service_label">GameLodge combos</string>
+    <string name="combo_service_description">Detecta as combinações de botões do controle que você configurou em todos os apps e no stream (voltar ao GameLodge, menu rápido, emulação de mouse). Na emulação de mouse, toca e desliza onde está o ponteiro. Só os botões do controle são lidos, nada da tela.</string>
+    <string name="keep_alive_channel">Tarefas em segundo plano</string>
+    <string name="keyboard_service_label">Teclado do GameLodge no stream</string>
+    <string name="pointer_on">Emulação de mouse ligada</string>
+    <string name="pointer_off">Emulação de mouse desligada</string>
+    <string name="pointer_needs_service">A emulação de mouse fora do stream precisa do serviço de combinações em todo o sistema (Configurações → Controles)</string>
+</resources>

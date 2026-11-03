@@ -1606,7 +1606,7 @@
     <string name="controller_section_mouse">Emulação de mouse</string>
     <string name="controller_section_mouse_sub">Velocidade do ponteiro e aceleração com o analógico</string>
     <string name="setting_controller_attach">Conectar controles ao iniciar o stream</string>
-    <string name="setting_controller_attach_sub">Os controles conectados sao registrados no host ao iniciar o stream, em vez de no primeiro toque. O controle que iniciou o stream vira jogador 1.</string>
+    <string name="setting_controller_attach_sub">Os controles conectados entram no host quando o stream começa, em vez de no primeiro botão pressionado. (O controle que inicia um stream é sempre o jogador 1.)</string>
     <string name="controller_starter_player_one_info">O controle que inicia o stream e o jogador 1.</string>
     <string name="qm_mouse">Modo mouse</string>
     <string name="qm_keyboard">Teclado</string>
@@ -1656,4 +1656,7 @@
     <string name="tv_mode_hint_open">Abrir configurações do Odin</string>
     <string name="setting_tv_render_1080">Desenhar no máximo em 1080p</string>
     <string name="setting_tv_render_1080_sub">Numa TV acima de 1080p o launcher desenha em 1080p e amplia: bem mais fluido, texto um pouco mais suave.</string>
+    <string name="controller_deadzone_sub">Movimentos do analógico abaixo deste valor são ignorados. A emulação de mouse usa sempre pelo menos 15 %.</string>
+    <string name="controller_auto_attach_sub">Nunca: este controle só se conecta ao host no primeiro botão pressionado – p. ex. os controles integrados, para que um controle externo continue sendo o jogador 1.</string>
+    <string name="metadata_auto_sub">Completa capas e textos ausentes, p. ex. de jogos novos. Os dados existentes ficam; buscar tudo de novo só manualmente.</string>
 </resources>

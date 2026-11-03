@@ -320,6 +320,7 @@ private fun ControllerOverrideRows(c: ControllerInfo) {
         stringResource(Res.string.controller_deadzone), listOf<Int?>(null, 0, 3, 5, 8, 10, 15, 20), s.deadzonePercent,
         label = { v -> v?.let { "$it %" } ?: default("${d.deadzonePercent} %") },
         onSelect = { v -> save { it.copy(deadzonePercent = v) } },
+        subtitle = stringResource(Res.string.controller_deadzone_sub),
     )
     if (c.hasTouchpad) {
         ChoiceRow(
@@ -356,6 +357,7 @@ private fun ControllerOverrideRows(c: ControllerInfo) {
         stringResource(Res.string.controller_auto_attach), listOf<Boolean?>(null, false), s.autoAttach?.takeIf { !it },
         label = { v -> if (v == false) stringResource(Res.string.controller_auto_attach_off) else stringResource(Res.string.controller_auto_attach_auto) },
         onSelect = { v -> save { it.copy(autoAttach = v) } },
+        subtitle = stringResource(Res.string.controller_auto_attach_sub),
     )
     ChoiceRow(
         stringResource(Res.string.controller_battery_report), tri, s.batteryReport,

@@ -1606,7 +1606,7 @@
     <string name="controller_section_mouse">Émulation de souris</string>
     <string name="controller_section_mouse_sub">Vitesse du pointeur et accélération au stick</string>
     <string name="setting_controller_attach">Connecter les manettes au demarrage du stream</string>
-    <string name="setting_controller_attach_sub">Les manettes connectees sont signalees a l'hote au demarrage du stream, au lieu d'attendre leur premiere pression. La manette qui a lance le stream devient le joueur 1.</string>
+    <string name="setting_controller_attach_sub">Les manettes connectées rejoignent l'hôte au démarrage du stream, au lieu de leur première pression de bouton. (La manette qui lance un stream est toujours le joueur 1.)</string>
     <string name="controller_starter_player_one_info">La manette qui lance le stream est le joueur 1.</string>
     <string name="qm_mouse">Mode souris</string>
     <string name="qm_keyboard">Clavier</string>
@@ -1656,4 +1656,7 @@
     <string name="tv_mode_hint_open">Ouvrir les réglages Odin</string>
     <string name="setting_tv_render_1080">Dessiner au plus en 1080p</string>
     <string name="setting_tv_render_1080_sub">Sur une TV au-delà de 1080p, le lanceur dessine en 1080p et met à l’échelle : bien plus fluide, texte un peu plus doux.</string>
+    <string name="controller_deadzone_sub">Les mouvements du stick en dessous de cette valeur sont ignorés. L'émulation de souris utilise toujours au moins 15 %.</string>
+    <string name="controller_auto_attach_sub">Jamais : cette manette ne rejoint l'hôte qu'à sa première pression de bouton – p. ex. les commandes intégrées, pour qu'une manette externe reste le joueur 1.</string>
+    <string name="metadata_auto_sub">Complète les jaquettes et textes manquants, p. ex. des nouveaux jeux. Les données existantes restent ; tout récupérer à nouveau uniquement à la main.</string>
 </resources>

@@ -68,6 +68,8 @@ class PhoneScreenActivity : ComponentActivity() {
     }
 
     // Keys and controller sticks: to the launcher on the TV (which takes the focus again).
+    // RestrictedApi: lint takes the super call for androidx.core's restricted overload (it's Activity's).
+    @android.annotation.SuppressLint("RestrictedApi")
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         val tv = TvSession.launcherOnTv ?: return super.dispatchKeyEvent(event)
         if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) TvSession.focusTv(this)
