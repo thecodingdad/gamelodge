@@ -183,7 +183,7 @@ private val settingsIndex: List<SearchEntry> = buildList {
         Res.string.setting_sound_pitch, Res.string.sounds_events, Res.string.setting_haptics, Res.string.setting_haptic_strength,
         Res.string.setting_haptic_focus,
     ))
-    addAll(page(SettingsPageId.LAUNCHER, Res.string.launcher_enable, Res.string.launcher_system_settings))
+    addAll(page(SettingsPageId.LAUNCHER, Res.string.launcher_enable))
     addAll(page(SettingsPageId.ABOUT, Res.string.about_license, Res.string.about_source, Res.string.about_data_sources))
     addAll(page(
         SettingsPageId.DATA, Res.string.data_storage, Res.string.data_clear_cache, Res.string.data_orphans, Res.string.data_redownload,

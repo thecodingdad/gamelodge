@@ -369,7 +369,6 @@
     <string name="launcher_intro">Usa GameLodge come schermata Home. Puoi tornare indietro in qualsiasi momento; l'app continua a funzionare anche come app normale.</string>
     <string name="launcher_enable">Usa come schermata Home</string>
     <string name="launcher_enable_sub">Mostra se GameLodge è la schermata home predefinita. Attivare chiede ad Android; disattivare apre la scelta di Android (resta attivo finché non ne scegli un'altra lì).</string>
-    <string name="launcher_system_settings">Impostazioni della schermata Home di Android</string>
     <string name="yes">Sì</string>
     <string name="no">No</string>
     <string name="action_collections">Gruppi…</string>

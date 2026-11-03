@@ -369,7 +369,6 @@
     <string name="launcher_intro">Usa GameLodge como tu pantalla de inicio. Puedes volver atrás en cualquier momento; la app también sigue funcionando como una app normal.</string>
     <string name="launcher_enable">Usar como pantalla de inicio</string>
     <string name="launcher_enable_sub">Indica si GameLodge es la app de inicio predeterminada. Activar pregunta a Android; desactivar abre la elección de Android (sigue activo hasta que elijas otra allí).</string>
-    <string name="launcher_system_settings">Ajustes de pantalla de inicio de Android</string>
     <string name="yes">Sí</string>
     <string name="no">No</string>
     <string name="action_collections">Grupos…</string>

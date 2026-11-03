@@ -4,7 +4,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -61,7 +60,6 @@ fun LauncherModeSettings(settings: LauncherSettings, update: ((LauncherSettings)
             icon = Icons.Filled.Home,
             initialFocus = true,
         )
-        NavRow(stringResource(Res.string.launcher_system_settings), { context.startActivity(mode.homeSettingsIntent()) }, icon = Icons.Filled.Settings)
         SeeAlso(SeeAlsoLink(stringResource(Res.string.settings_home_screen), SettingsTarget.Page(SettingsPageId.HOME_SCREEN)))
     }
 }
