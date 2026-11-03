@@ -103,6 +103,8 @@ data class FilterRules(
     val groupBy: GroupBy? = null,
     /** Order and maximum number of items (e.g. "last played, 20"); null = title order, all. */
     val sort: LibrarySort? = null,
+    /** Direction of [sort]: null = its usual one ([LibrarySort.defaultAscending]). */
+    val sortAscending: Boolean? = null,
     val limit: Int? = null,
     /** With [groupBy]: prefix each part with the filter name ("Couch: Nintendo Switch") … */
     val chipShowName: Boolean = true,
@@ -210,7 +212,10 @@ object BuiltinFilter {
 }
 
 /** [MANUAL]: the filter's own order (a group's manual order); only offered for groups. */
-enum class LibrarySort { TITLE, LAST_PLAYED, ADDED, PLAYTIME, TIME_TO_BEAT, USER_RATING, CRITIC_RATING, COMMUNITY_RATING, MANUAL }
+enum class LibrarySort(
+    /** Its usual direction: names A→Z and shortest first, everything else newest / most / best first. */
+    val defaultAscending: Boolean = false,
+) { TITLE(true), LAST_PLAYED, ADDED, PLAYTIME, TIME_TO_BEAT(true), USER_RATING, CRITIC_RATING, COMMUNITY_RATING, MANUAL(true) }
 
 /** Where a filter is being shown; decides which items it sees. */
 enum class FilterPlace { LIBRARY, HOME, APPS }
@@ -308,7 +313,9 @@ object FilterEngine {
     fun apply(pool: List<LibraryEntry>, rules: FilterRules, groupMembers: Map<String, Set<String>> = emptyMap()): List<LibraryEntry> {
         val withHidden = rules.effectiveConditions.any { it.field == FilterField.HIDDEN }
         val matching = pool.filter { (withHidden || !it.item.hidden) && matches(it, rules, groupMembers) }
-        val sorted = rules.sort?.let { query(matching, it, "") } ?: matching
+        // A direction without an order: the title order turned round.
+        val sort = rules.sort ?: LibrarySort.TITLE.takeIf { rules.sortAscending != null }
+        val sorted = sort?.let { query(matching, it, "", rules.sortAscending) } ?: matching
         return rules.limit?.let { sorted.take(it) } ?: sorted
     }
 
@@ -467,24 +474,31 @@ object FilterEngine {
         entries.flatMap { values(it, by) }.distinct().sortedBy { it.lowercase() }
 
     /** Search + sort on top of a filter's entries (library grid). */
-    fun query(entries: List<LibraryEntry>, sort: LibrarySort, search: String): List<LibraryEntry> {
+    /**
+     * [entries] matching [search], sorted by [sort] in its usual direction or, with [ascending],
+     * that one. Entries without a value (never played, unrated …) stay last either way.
+     */
+    fun query(entries: List<LibraryEntry>, sort: LibrarySort, search: String, ascending: Boolean? = null): List<LibraryEntry> {
         val q = TitleNormalizer.normalize(search)
+        val asc = ascending ?: sort.defaultAscending
+        fun <T : Comparable<T>> Sequence<LibraryEntry>.by(key: (LibraryEntry) -> T?): Sequence<LibraryEntry> {
+            val order: Comparator<T> = if (asc) naturalOrder() else reverseOrder()
+            return sortedWith(compareBy<LibraryEntry, T?>(nullsLast(order)) { key(it) })
+        }
         return entries.asSequence()
             // The source name (normalizedTitle) and a name edited by hand both count.
             .filter { q.isEmpty() || it.item.normalizedTitle.contains(q) || TitleNormalizer.normalize(it.item.title).contains(q) }
             .let { seq ->
                 when (sort) {
-                    LibrarySort.TITLE -> seq.sortedBy { TitleNormalizer.sortKey(it.item.title) }
-                    LibrarySort.LAST_PLAYED -> seq.sortedByDescending { it.item.lastPlayedAt ?: 0L }
-                    LibrarySort.ADDED -> seq.sortedByDescending { it.item.addedAt }
-                    LibrarySort.PLAYTIME -> seq.sortedByDescending { it.item.playtimeSeconds }
-                    // Best first; unrated last.
-                    LibrarySort.USER_RATING -> seq.sortedByDescending { it.item.userRating ?: 0 }
-                    LibrarySort.CRITIC_RATING -> seq.sortedByDescending { it.item.rating ?: -1f }
-                    LibrarySort.COMMUNITY_RATING -> seq.sortedByDescending { it.item.communityRating ?: -1f }
-                    // Shortest first; games without a time last.
-                    LibrarySort.TIME_TO_BEAT -> seq.sortedBy { e -> e.item.timeToBeatMain?.takeIf { e.item.timesToBeatCurrent } ?: Int.MAX_VALUE }
-                    LibrarySort.MANUAL -> seq
+                    LibrarySort.TITLE -> seq.by { TitleNormalizer.sortKey(it.item.title) }
+                    LibrarySort.LAST_PLAYED -> seq.by { it.item.lastPlayedAt }
+                    LibrarySort.ADDED -> seq.by { it.item.addedAt }
+                    LibrarySort.PLAYTIME -> seq.by { it.item.playtimeSeconds }
+                    LibrarySort.USER_RATING -> seq.by { it.item.userRating?.takeIf { r -> r > 0 } }
+                    LibrarySort.CRITIC_RATING -> seq.by { it.item.rating }
+                    LibrarySort.COMMUNITY_RATING -> seq.by { it.item.communityRating }
+                    LibrarySort.TIME_TO_BEAT -> seq.by { e -> e.item.timeToBeatMain?.takeIf { e.item.timesToBeatCurrent } }
+                    LibrarySort.MANUAL -> if (asc) seq else seq.toList().asReversed().asSequence()
                 }
             }
             .toList()

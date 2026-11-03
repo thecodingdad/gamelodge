@@ -1639,4 +1639,8 @@
     <string name="wizard_next_review_sub">Uncertain matches: %1$d. Check them and pick the right game</string>
     <string name="wizard_next_profiles">Stream profiles</string>
     <string name="wizard_next_profiles_sub">Resolution, frame rate and bitrate for home and on the go</string>
+    <string name="sort_by">Sort by</string>
+    <string name="sort_order">Order</string>
+    <string name="sort_ascending">Ascending</string>
+    <string name="sort_descending">Descending</string>
 </resources>

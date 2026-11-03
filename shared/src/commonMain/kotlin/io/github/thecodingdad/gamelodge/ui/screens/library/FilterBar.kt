@@ -1,5 +1,7 @@
 package io.github.thecodingdad.gamelodge.ui.screens.library
 
+import io.github.thecodingdad.gamelodge.ui.components.controllerScroll
+import io.github.thecodingdad.gamelodge.ui.components.popupHeightIn
 import io.github.thecodingdad.gamelodge.ui.components.fadingEdges
 import io.github.thecodingdad.gamelodge.ui.components.mouseDragScroll
 import androidx.compose.foundation.gestures.animateScrollBy
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Close
@@ -148,7 +151,7 @@ fun FilterBar(
                         )
                     }
                     item(Icons.Filled.Search, stringResource(Res.string.hint_search), onSearch)
-                    item(Icons.AutoMirrored.Filled.Sort, sortLabel(sort) + "  →  " + sortLabel(sort.next(manualSort)).substringAfter(": "), onSort)
+                    item(Icons.AutoMirrored.Filled.Sort, sortLabel(sort), onSort)
                     if (onStats != null) item(Icons.Filled.BarChart, stringResource(Res.string.stats_title), onStats)
                     item(Icons.Filled.Edit, stringResource(Res.string.filters_edit), onEdit)
                 }
@@ -181,10 +184,45 @@ fun List<ResolvedFilter>.step(selectedKey: String?, delta: Int): String? {
     return if (next == current) null else this[next].key
 }
 
-/** Next sort order; [LibrarySort.MANUAL] only when the filter has its own order (groups). */
-fun LibrarySort.next(manual: Boolean = false): LibrarySort {
-    val options = LibrarySort.entries.filter { manual || it != LibrarySort.MANUAL }
-    return options[(options.indexOf(this) + 1).mod(options.size)]
+/** "Sort: Name ↑" for the hint bar: the order and its direction ([ascending] null: its usual one). */
+@Composable
+fun sortHint(sort: LibrarySort, ascending: Boolean?): String =
+    sortLabel(sort) + if ((ascending ?: sort.defaultAscending)) " ↑" else " ↓"
+
+/**
+ * The sort orders to pick from, the current one ticked, and the direction on top. Picking an
+ * order takes its usual direction and closes; the direction switches in place.
+ * [LibrarySort.MANUAL] only when the filter has its own order (groups).
+ */
+@Composable
+fun SortDialog(
+    visible: Boolean,
+    sort: LibrarySort,
+    ascending: Boolean?,
+    manual: Boolean,
+    onChange: (LibrarySort, Boolean?) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    io.github.thecodingdad.gamelodge.ui.components.Modal(visible = visible, onDismiss = onDismiss, title = stringResource(Res.string.sort_by), maxWidth = 560.dp) {
+        val asc = ascending ?: sort.defaultAscending
+        androidx.compose.foundation.layout.Column(
+            Modifier.weight(1f, fill = false).popupHeightIn(560.dp).controllerScroll(),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            io.github.thecodingdad.gamelodge.ui.screens.settings.ChoiceRow(
+                stringResource(Res.string.sort_order), listOf(true, false), asc,
+                label = { stringResource(if (it) Res.string.sort_ascending else Res.string.sort_descending) },
+                onSelect = { onChange(sort, it.takeIf { v -> v != sort.defaultAscending }) },
+            )
+            LibrarySort.entries.filter { manual || it != LibrarySort.MANUAL }.forEach { option ->
+                io.github.thecodingdad.gamelodge.ui.screens.settings.NavRow(
+                    sortLabel(option).substringAfter(": "), { onChange(option, null); onDismiss() },
+                    icon = if (option == sort) androidx.compose.material.icons.Icons.Filled.Check else null,
+                    initialFocus = option == sort,
+                )
+            }
+        }
+    }
 }
 
 @Composable

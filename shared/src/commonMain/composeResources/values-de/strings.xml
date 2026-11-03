@@ -1637,4 +1637,8 @@
     <string name="wizard_next_review_sub">Unsichere Treffer: %1$d. Prüfen und das richtige Spiel wählen</string>
     <string name="wizard_next_profiles">Stream-Profile</string>
     <string name="wizard_next_profiles_sub">Auflösung, Bildrate und Bitrate für zu Hause und unterwegs</string>
+    <string name="sort_by">Sortieren nach</string>
+    <string name="sort_order">Reihenfolge</string>
+    <string name="sort_ascending">Aufsteigend</string>
+    <string name="sort_descending">Absteigend</string>
 </resources>

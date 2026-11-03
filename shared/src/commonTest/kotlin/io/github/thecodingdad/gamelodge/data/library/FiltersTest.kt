@@ -185,4 +185,19 @@ class FiltersTest {
         assertTrue(FilterEngine.matches(e, FilterCondition(FilterField.RATING, setOf("none"))))
         assertFalse(FilterEngine.matches(e, FilterCondition(FilterField.INSTALLED, setOf("true"))))
     }
+
+    @Test
+    fun sortsBothWaysWithMissingValuesLast() {
+        val rated = listOf(
+            entry("a", "PC").let { it.copy(item = it.item.copy(rating = 50f)) },
+            entry("b", "PC"),
+            entry("c", "PC").let { it.copy(item = it.item.copy(rating = 90f)) },
+        )
+        fun ids(sort: LibrarySort, ascending: Boolean?) = FilterEngine.query(rated, sort, "", ascending).map { it.item.id }
+        assertEquals(listOf("a", "b", "c"), ids(LibrarySort.TITLE, null))
+        assertEquals(listOf("c", "b", "a"), ids(LibrarySort.TITLE, false))
+        // Best first by default, unrated last both ways.
+        assertEquals(listOf("c", "a", "b"), ids(LibrarySort.CRITIC_RATING, null))
+        assertEquals(listOf("a", "c", "b"), ids(LibrarySort.CRITIC_RATING, true))
+    }
 }

@@ -1639,4 +1639,8 @@
     <string name="wizard_next_review_sub">Corrispondenze incerte: %1$d. Controllale e scegli il gioco giusto</string>
     <string name="wizard_next_profiles">Profili di stream</string>
     <string name="wizard_next_profiles_sub">Risoluzione, frame rate e bitrate per casa e in giro</string>
+    <string name="sort_by">Ordina per</string>
+    <string name="sort_order">Ordine</string>
+    <string name="sort_ascending">Crescente</string>
+    <string name="sort_descending">Decrescente</string>
 </resources>

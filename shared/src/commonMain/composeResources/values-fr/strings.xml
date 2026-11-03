@@ -1639,4 +1639,8 @@
     <string name="wizard_next_review_sub">Correspondances incertaines : %1$d. Vérifiez-les et choisissez le bon jeu</string>
     <string name="wizard_next_profiles">Profils de stream</string>
     <string name="wizard_next_profiles_sub">Résolution, fréquence d’images et débit pour la maison et en déplacement</string>
+    <string name="sort_by">Trier par</string>
+    <string name="sort_order">Ordre</string>
+    <string name="sort_ascending">Croissant</string>
+    <string name="sort_descending">Décroissant</string>
 </resources>

@@ -17,9 +17,10 @@ import io.github.thecodingdad.gamelodge.data.library.ResolvedFilter
 import io.github.thecodingdad.gamelodge.data.library.FilterEngine
 import io.github.thecodingdad.gamelodge.data.library.LibrarySort
 import io.github.thecodingdad.gamelodge.ui.screens.library.FilterBar
-import io.github.thecodingdad.gamelodge.ui.screens.library.next
 import io.github.thecodingdad.gamelodge.ui.screens.library.step
 import io.github.thecodingdad.gamelodge.ui.screens.library.sortLabel
+import io.github.thecodingdad.gamelodge.ui.screens.library.SortDialog
+import io.github.thecodingdad.gamelodge.ui.screens.library.sortHint
 import io.github.thecodingdad.gamelodge.ui.screens.library.filterLabel
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -72,6 +73,9 @@ fun AppsScreen(
     var gridFocused by remember { mutableStateOf(true) }
     var selectedKey by rememberSaveable { mutableStateOf<String?>(null) }
     var sort by rememberSaveable { mutableStateOf(LibrarySort.TITLE) }
+    // null: the order's usual direction.
+    var ascending by rememberSaveable { mutableStateOf<Boolean?>(null) }
+    var sortMenu by remember { mutableStateOf(false) }
     // One grid for all filters: apps in both stay as they are. Each filter's scroll position is
     // kept here and restored when it is shown again; the focused app is kept per filter too.
     val gridState = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
@@ -91,6 +95,7 @@ fun AppsScreen(
         if (sortFor == selected?.key) return@LaunchedEffect
         sortFor = selected?.key
         if (manualSort) sort = LibrarySort.MANUAL else if (sort == LibrarySort.MANUAL) sort = LibrarySort.TITLE
+        ascending = null
     }
     val keyboard = io.github.thecodingdad.gamelodge.ui.components.LocalKeyboardController.current
     val searchTitle = stringResource(Res.string.hint_search)
@@ -111,7 +116,8 @@ fun AppsScreen(
     io.github.thecodingdad.gamelodge.ui.components.BackHandler { filterFocusRequests++ }
     PadAction(PadButton.L2) { stepFilter(-1) }
     PadAction(PadButton.R2) { stepFilter(1) }
-    PadAction(PadButton.SELECT) { sort = sort.next(manualSort) }
+    PadAction(PadButton.SELECT) { sortMenu = true }
+    SortDialog(sortMenu, sort, ascending, manualSort, onChange = { s, a -> sort = s; ascending = a }, onDismiss = { sortMenu = false })
     PadAction(PadButton.START) { openSearch() }
     PadAction(PadButton.X) { focused?.let(actions::context) }
     val quitHint = io.github.thecodingdad.gamelodge.ui.components.quitHoldHint(focused?.takeIf { gridFocused })
@@ -122,7 +128,7 @@ fun AppsScreen(
             ButtonHint(PadButton.X, stringResource(Res.string.hint_options), onClick = { focused?.let(actions::context) }),
             quitHint,
             ButtonHint(PadButton.L2, stringResource(Res.string.hint_filters), onClick = { stepFilter(1) }, secondButton = PadButton.R2),
-            ButtonHint(PadButton.SELECT, sortLabel(sort), onClick = { sort = sort.next(manualSort) }),
+            ButtonHint(PadButton.SELECT, sortHint(sort, ascending), onClick = { sortMenu = true }),
             ButtonHint(PadButton.START, stringResource(Res.string.hint_search), onClick = ::openSearch),
             // Last, as on the other tabs.
             ButtonHint(PadButton.L1, stringResource(Res.string.hint_tabs), secondButton = PadButton.R1),
@@ -132,7 +138,7 @@ fun AppsScreen(
     // "All" (or no filter) shows sections per source; any other filter a flat list.
     val flat = selected != null && selected.builtin != BuiltinFilter.ALL
     val source = if (flat) selected!!.entries else apps
-    val sorted = remember(source, sort, search) { FilterEngine.query(source, sort, search) }
+    val sorted = remember(source, sort, ascending, search) { FilterEngine.query(source, sort, search, ascending) }
     val local = if (flat) sorted else sorted.filter { it.localTarget != null }
     val byHost = if (flat) emptyMap() else sorted.filter { it.localTarget == null }
         .groupBy { it.remoteTargets.firstOrNull()?.hostName.orEmpty() }
@@ -147,7 +153,7 @@ fun AppsScreen(
         onClearSearch = { search = "" },
         sort = sort,
         manualSort = manualSort,
-        onSort = { sort = sort.next(manualSort) },
+        onSort = { sortMenu = true },
         onEdit = openFilterSettings,
         focusRequests = filterFocusRequests,
     )

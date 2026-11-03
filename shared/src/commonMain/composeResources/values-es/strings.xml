@@ -1639,4 +1639,8 @@
     <string name="wizard_next_review_sub">Coincidencias dudosas: %1$d. Revísalas y elige el juego correcto</string>
     <string name="wizard_next_profiles">Perfiles de stream</string>
     <string name="wizard_next_profiles_sub">Resolución, fotogramas y bitrate para casa y fuera</string>
+    <string name="sort_by">Ordenar por</string>
+    <string name="sort_order">Orden</string>
+    <string name="sort_ascending">Ascendente</string>
+    <string name="sort_descending">Descendente</string>
 </resources>

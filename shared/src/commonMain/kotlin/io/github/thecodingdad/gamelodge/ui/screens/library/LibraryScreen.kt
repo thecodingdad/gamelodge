@@ -107,6 +107,9 @@ fun LibraryScreen(
     // opening details and switching tabs.
     var selectedKey by rememberSaveable { mutableStateOf<String?>(null) }
     var sort by rememberSaveable { mutableStateOf(LibrarySort.TITLE) }
+    // null: the order's usual direction.
+    var ascending by rememberSaveable { mutableStateOf<Boolean?>(null) }
+    var sortMenu by remember { mutableStateOf(false) }
     var search by rememberSaveable { mutableStateOf("") }
     // Read only where it is shown (hints, accent): a focus move must not recompose the grid.
     val focused = remember { mutableStateOf<LibraryEntry?>(null) }
@@ -125,9 +128,10 @@ fun LibraryScreen(
         if (sortFor == selected?.key) return@LaunchedEffect
         sortFor = selected?.key
         if (manualSort) sort = LibrarySort.MANUAL else if (sort == LibrarySort.MANUAL) sort = LibrarySort.TITLE
+        ascending = null
     }
     val base = selected?.entries ?: remember(allEntries) { allEntries.filter { it.item.kind == ItemKind.GAME && !it.item.hidden } }
-    val shown = remember(base, sort, search) { FilterEngine.query(base, sort, search) }
+    val shown = remember(base, sort, ascending, search) { FilterEngine.query(base, sort, search, ascending) }
     // Saveable: survives switching tabs (the tab's saved state is kept while another tab is shown).
     val focusByFilter = androidx.compose.runtime.saveable.rememberSaveable(
         saver = androidx.compose.runtime.saveable.Saver<androidx.compose.runtime.snapshots.SnapshotStateMap<String, String>, HashMap<String, String>>(
@@ -168,6 +172,7 @@ fun LibraryScreen(
         if (next != null) {
             sortFor = next.key
             if (next.manualOrder) sort = LibrarySort.MANUAL else if (sort == LibrarySort.MANUAL) sort = LibrarySort.TITLE
+            ascending = null
         }
         val (first, offset) = positions[next?.key ?: BuiltinFilter.ALL] ?: (0 to 0)
         gridState.requestScrollToItem(first, offset)
@@ -183,7 +188,8 @@ fun LibraryScreen(
     io.github.thecodingdad.gamelodge.ui.components.BackHandler { filterFocusRequests++ }
     PadAction(PadButton.L2) { stepFilter(-1) }
     PadAction(PadButton.R2) { stepFilter(1) }
-    PadAction(PadButton.SELECT) { sort = sort.next(manualSort) }
+    PadAction(PadButton.SELECT) { sortMenu = true }
+    SortDialog(sortMenu, sort, ascending, manualSort, onChange = { s, a -> sort = s; ascending = a }, onDismiss = { sortMenu = false })
     PadAction(PadButton.START) { openSearch() }
     PadAction(PadButton.X) { focused.value?.let { openContext(it) } }
 
@@ -191,8 +197,8 @@ fun LibraryScreen(
         focused, gridFocused,
         onOptions = { focused.value?.let { openContext(it) } },
         onFilters = { stepFilter(1) },
-        sortLabel = sortLabel(sort),
-        onSort = { sort = sort.next(manualSort) },
+        sortLabel = sortHint(sort, ascending),
+        onSort = { sortMenu = true },
         onSearch = ::openSearch,
     )
 
@@ -206,7 +212,7 @@ fun LibraryScreen(
             onClearSearch = { search = "" },
             sort = sort,
             manualSort = manualSort,
-            onSort = { sort = sort.next(manualSort) },
+            onSort = { sortMenu = true },
             onEdit = openFilterSettings,
         focusRequests = filterFocusRequests,
             onStats = openStats,

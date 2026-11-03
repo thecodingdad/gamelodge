@@ -282,10 +282,17 @@ private fun FilterEditorDialog(
                             subtitle = stringResource(Res.string.filter_show_name_sub),
                         )
                     }
-                    ChoiceRow(
-                        stringResource(Res.string.filter_sort), listOf<LibrarySort?>(null) + LibrarySort.entries.filter { it != LibrarySort.MANUAL }, current.sort,
-                        label = { sortLabel(it) },
-                        onSelect = { v -> saveRules(current.copy(sort = v)) },
+                    // The same picker as in the library: order and direction.
+                    var sorting by remember { mutableStateOf(false) }
+                    val order = current.sort ?: LibrarySort.TITLE
+                    NavRow(
+                        stringResource(Res.string.filter_sort), { sorting = true },
+                        trailing = sortLabel(current.sort) + if (current.sortAscending ?: order.defaultAscending) " ↑" else " ↓",
+                    )
+                    io.github.thecodingdad.gamelodge.ui.screens.library.SortDialog(
+                        sorting, order, current.sortAscending, manual = false,
+                        onChange = { s, a -> saveRules(current.copy(sort = s.takeIf { it != LibrarySort.TITLE || a != null }, sortAscending = a)) },
+                        onDismiss = { sorting = false },
                     )
                     ChoiceRow(
                         stringResource(Res.string.filter_limit), listOf<Int?>(null, 10, 20, 30, 50, 100), current.limit,
