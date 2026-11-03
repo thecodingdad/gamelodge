@@ -1,9 +1,5 @@
 package io.github.thecodingdad.gamelodge.desktop
 
-import com.studiohartman.jamepad.ControllerIndex
-import com.studiohartman.jamepad.ControllerManager
-import com.studiohartman.jamepad.ControllerPowerLevel
-import com.studiohartman.jamepad.ControllerState
 import io.github.thecodingdad.gamelodge.input.ButtonCombos
 import io.github.thecodingdad.gamelodge.input.ComboAction
 import io.github.thecodingdad.gamelodge.input.PadKeys
@@ -20,7 +16,7 @@ import java.awt.event.KeyEvent
 import kotlin.math.abs
 
 /**
- * Game controllers through SDL (Jamepad): Xbox, PlayStation, Switch and most other pads with the
+ * Game controllers through SDL3 ([SdlPads], the same SDL as Moonlight-Qt's): Xbox, PlayStation, Switch and most other pads with the
  * standard layout. A, B, the D-pad and the left stick become key presses in the launcher window
  * (Enter, Escape, arrows), so focus, clicks and back work exactly as with a keyboard; the other
  * buttons and the right stick go to the [InputDispatcher] like on Android.
@@ -32,15 +28,17 @@ import kotlin.math.abs
  * emulation is on, the pads drive the Windows mouse pointer instead ([WindowsPointer]).
  */
 class Gamepads(private val dispatcher: InputDispatcher) {
-    private val manager = ControllerManager()
+    private val manager = SdlPads()
     private val _controllers = MutableStateFlow<List<ControllerInfo>>(emptyList())
     val controllers: StateFlow<List<ControllerInfo>> = _controllers.asStateFlow()
 
-    /** Pads with their own layout, by name ([ControllerInfo.key] on the PC): true = Nintendo. */
+    /** Pads with their own layout, by [ControllerInfo.key]: true = Nintendo. */
     @Volatile var layoutOverrides: Map<String, Boolean> = emptyMap()
 
-    /** Names of the connected pads by index (for their own layout). */
+    /** The connected pads by slot: SDL name (what Moonlight-Qt matches the starter by) and settings key. */
     private val names = java.util.concurrent.ConcurrentHashMap<Int, String>()
+    private val keys = java.util.concurrent.ConcurrentHashMap<Int, String>()
+    private val vendors = java.util.concurrent.ConcurrentHashMap<Int, Int>()
 
     /** Called on every pad input (screensaver, sounds). */
     @Volatile var onInput: () -> Unit = {}
@@ -55,7 +53,7 @@ class Gamepads(private val dispatcher: InputDispatcher) {
 
     /**
      * The pad used last, while it was the last input device: "<n>:<name>", the n-th (from 0) connected
-     * pad of that name in SDL's order (Moonlight-Qt finds the same one; pads report no serial here).
+     * pad of that name in SDL's order (Moonlight-Qt finds the same one with the same SDL).
      */
     fun starter(): String? {
         if (!padInUse) return null
@@ -110,12 +108,12 @@ class Gamepads(private val dispatcher: InputDispatcher) {
 
     /** Short rumble on a controller (test in the controller list) or on the one used last. */
     fun vibrate(id: Int = lastUsed, strength: Float = 0.6f, millis: Int = 250) {
-        synchronized(manager) { runCatching { manager.getControllerIndex(id).doVibration(strength, strength, millis) } }
+        synchronized(manager) { runCatching { manager.vibrate(id, strength, millis) } }
     }
 
     private fun loop() {
         try {
-            synchronized(manager) { manager.initSDLGamepad() }
+            synchronized(manager) { manager.init(io.github.thecodingdad.gamelodge.desktop.stream.MoonlightQt.sdlLibrary()) }
         } catch (e: Throwable) {
             Log.e("Gamepad support unavailable", e)
             return
@@ -167,24 +165,24 @@ class Gamepads(private val dispatcher: InputDispatcher) {
 
     /** Feeds button changes of every pad into the combinations (also with a game in front). */
     private fun combos(now: Long) {
-        for (i in 0 until manager.numControllers) {
-            val s = runCatching { manager.getState(i) }.getOrNull()?.takeIf { it.isConnected }
+        for (i in 0 until manager.count) {
+            val s = runCatching { manager.state(i) }.getOrNull()
             val keys = s?.let(::keysOf).orEmpty()
             val before = comboKeys[i].orEmpty()
             if (keys == before) continue
             comboKeys[i] = keys
             val taken = hidden.getOrPut(i) { HashSet() }
             for (code in before - keys) {
-                ButtonCombos.handle(i, code, false, 0, now, names[i], code, onCombo)
+                ButtonCombos.handle(i, code, false, 0, now, this.keys[i], code, onCombo)
                 taken -= code
             }
             for (code in keys - before) {
-                if (ButtonCombos.handle(i, code, true, 0, now, names[i], code, onCombo)) taken += code
+                if (ButtonCombos.handle(i, code, true, 0, now, this.keys[i], code, onCombo)) taken += code
             }
         }
     }
 
-    private fun keysOf(s: ControllerState): Set<Int> = buildSet {
+    private fun keysOf(s: SdlPads.State): Set<Int> = buildSet {
         if (s.a) add(PadKeys.A)
         if (s.b) add(PadKeys.B)
         if (s.x) add(PadKeys.X)
@@ -213,7 +211,7 @@ class Gamepads(private val dispatcher: InputDispatcher) {
         val leftTrigger: Float, val rightTrigger: Float,
     )
 
-    private fun padOf(s: ControllerState, taken: Set<Int>): Pad {
+    private fun padOf(s: SdlPads.State, taken: Set<Int>): Pad {
         fun on(code: Int, value: Boolean) = value && code !in taken
         return Pad(
             on(PadKeys.A, s.a), on(PadKeys.B, s.b), on(PadKeys.X, s.x), on(PadKeys.Y, s.y),
@@ -227,8 +225,8 @@ class Gamepads(private val dispatcher: InputDispatcher) {
 
     /** Mouse emulation: every pad steers the Windows pointer (buttons a combination took excluded). */
     private fun pointer(now: Long) {
-        for (i in 0 until manager.numControllers) {
-            val s = runCatching { manager.getState(i) }.getOrNull()?.takeIf { it.isConnected } ?: continue
+        for (i in 0 until manager.count) {
+            val s = runCatching { manager.state(i) }.getOrNull() ?: continue
             val p = padOf(s, hidden[i].orEmpty())
             WindowsPointer.update(i, p.leftStickX, p.leftStickY, p.rightStickX, p.rightStickY,
                 p.a, p.b, p.x, p.lb, p.rb, p.dpadUp, p.dpadDown, p.dpadLeft, p.dpadRight, now)
@@ -254,31 +252,34 @@ class Gamepads(private val dispatcher: InputDispatcher) {
         }
     }
 
-    private fun list(): List<ControllerInfo> = (0 until manager.numControllers).mapNotNull { i ->
-        val index: ControllerIndex = manager.getControllerIndex(i)
-        if (!index.isConnected) return@mapNotNull null
-        runCatching {
-            names[i] = index.name
-            ControllerInfo(
-                id = i,
-                name = index.name,
-                external = true,
-                batteryPercent = when (index.powerLevel) {
-                    ControllerPowerLevel.POWER_EMPTY -> 5
-                    ControllerPowerLevel.POWER_LOW -> 20
-                    ControllerPowerLevel.POWER_MEDIUM -> 60
-                    ControllerPowerLevel.POWER_FULL -> 100
-                    else -> null // wired or unknown
-                },
-                canVibrate = index.canVibrate(),
-            )
-        }.getOrNull()
+    private fun list(): List<ControllerInfo> = (0 until manager.count).mapNotNull { i ->
+        val info = runCatching { manager.info(i, refresh = true) }.getOrNull()
+        if (info == null) {
+            names.remove(i)
+            keys.remove(i)
+            vendors.remove(i)
+            return@mapNotNull null
+        }
+        names[i] = info.name
+        keys[i] = info.key
+        vendors[i] = info.vendorId
+        ControllerInfo(
+            id = i,
+            name = info.name,
+            external = true,
+            batteryPercent = info.batteryPercent,
+            canVibrate = info.canVibrate,
+            vendorId = info.vendorId,
+            productId = info.productId,
+            descriptor = info.key,
+            hasTouchpad = info.hasTouchpad,
+        )
     }
 
     private fun poll(now: Long) {
-        for (i in 0 until manager.numControllers) {
-            val state = manager.getState(i)
-            if (!state.isConnected) {
+        for (i in 0 until manager.count) {
+            val state = manager.state(i)
+            if (state == null) {
                 previous.remove(i)
                 continue
             }
@@ -290,16 +291,16 @@ class Gamepads(private val dispatcher: InputDispatcher) {
                 io.github.thecodingdad.gamelodge.input.KeyboardKeys.onOtherInput()
                 lastUsed = i
                 padInUse = true
-                names[i]?.let { name ->
+                keys[i]?.let { key ->
                     java.awt.EventQueue.invokeLater {
-                        io.github.thecodingdad.gamelodge.ui.screens.settings.ActivePad.key = name
-                        io.github.thecodingdad.gamelodge.ui.screens.settings.ActivePad.detectedLayout = modelLayout(name)
+                        io.github.thecodingdad.gamelodge.ui.screens.settings.ActivePad.key = key
+                        io.github.thecodingdad.gamelodge.ui.screens.settings.ActivePad.detectedLayout = modelLayout(key)
                     }
                 }
                 onInput()
             }
             // The pad's own layout, else its model's (a Nintendo pad confirms on the right button).
-            handle(p, s, now, names[i]?.let { layoutOverrides[it] ?: (modelLayout(it) == io.github.thecodingdad.gamelodge.data.settings.ButtonLayout.NINTENDO) } ?: false)
+            handle(p, s, now, keys[i]?.let { layoutOverrides[it] ?: (modelLayout(it) == io.github.thecodingdad.gamelodge.data.settings.ButtonLayout.NINTENDO) } ?: false)
         }
         repeatHeld(now)
     }
@@ -438,8 +439,16 @@ class Gamepads(private val dispatcher: InputDispatcher) {
     }
 }
 
-/** The layout of a pad's model, guessed from its name (null = unknown → Xbox). */
-fun modelLayout(name: String): io.github.thecodingdad.gamelodge.data.settings.ButtonLayout? =
-    io.github.thecodingdad.gamelodge.ui.screens.settings.buttonLayoutForVendor(
-        io.github.thecodingdad.gamelodge.ui.screens.settings.controllerIdsFromName(name).first,
-    )
+/**
+ * The layout of a pad's model from its settings key ("vendor:product[:serial]", [SdlPads.Info.key]),
+ * else guessed from a name (null = unknown → Xbox).
+ */
+fun modelLayout(keyOrName: String): io.github.thecodingdad.gamelodge.data.settings.ButtonLayout? =
+    io.github.thecodingdad.gamelodge.ui.screens.settings.buttonLayoutForVendor(modelIds(keyOrName).first)
+
+/** Vendor and product id from a settings key, else guessed from a name. */
+fun modelIds(keyOrName: String): Pair<Int, Int> {
+    val match = Regex("^([0-9a-f]{4}):([0-9a-f]{4})(:.*)?$").matchEntire(keyOrName)
+    return if (match != null) match.groupValues[1].toInt(16) to match.groupValues[2].toInt(16)
+    else io.github.thecodingdad.gamelodge.ui.screens.settings.controllerIdsFromName(keyOrName)
+}

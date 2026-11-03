@@ -28,7 +28,6 @@ jbMaterial3 = "1.9.0"
 jbMaterialIcons = "1.7.3"
 sqlite = "2.6.2"
 bouncycastle = "1.86"
-jamepad = "2.30.0.0"
 jna = "5.19.1"
 javasteam = "1.8.0"
 qrcodegen = "1.8.0"
@@ -87,7 +86,6 @@ bouncycastle-pkix = { group = "org.bouncycastle", name = "bcpkix-jdk18on", versi
 androidx-datastore-preferences-core = { group = "androidx.datastore", name = "datastore-preferences-core", version.ref = "datastore" }
 androidx-room-runtime-kmp = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
-jamepad = { group = "com.badlogicgames.jamepad", name = "jamepad", version.ref = "jamepad" }
 jna-platform = { group = "net.java.dev.jna", name = "jna-platform", version.ref = "jna" }
 javasteam = { group = "in.dragonbra", name = "javasteam", version.ref = "javasteam" }
 qrcodegen = { group = "io.nayuki", name = "qrcodegen", version.ref = "qrcodegen" }

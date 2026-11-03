@@ -62,13 +62,6 @@
     "url": "https://www.bouncycastle.org"
   },
   {
-    "name": "Jamepad",
-    "copyright": "William Hartman and contributors",
-    "license": "Apache-2.0",
-    "text": "apache-2.0",
-    "url": "https://github.com/libgdx/Jamepad"
-  },
-  {
     "name": "JavaSteam",
     "copyright": "Longi94 and contributors",
     "license": "MIT",

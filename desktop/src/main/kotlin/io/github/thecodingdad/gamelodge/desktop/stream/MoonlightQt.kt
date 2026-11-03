@@ -147,6 +147,16 @@ class MoonlightQt(val dir: File) {
         /** The pad that starts a stream becomes player 1 ("<n>:<name>", see [Gamepads.starter]); null: the usual order. */
         @Volatile var firstPad: suspend () -> String? = { null }
 
+        /**
+         * Moonlight-Qt's SDL3, which the launcher's controller support uses as well: from the
+         * installed package (not the writable copy, which a newer version may replace).
+         */
+        fun sdlLibrary(): File {
+            val jar = File(MoonlightQt::class.java.protectionDomain.codeSource.location.toURI())
+            val base = if (jar.isFile) jar.parentFile.parentFile else File(".")
+            return File(File(base, "moonlight"), "SDL3.dll")
+        }
+
         /** The controllers' stream settings as JSON (see [StreamPads]); null: Moonlight-Qt's defaults. */
         @Volatile var padSettings: suspend () -> String? = { null }
 

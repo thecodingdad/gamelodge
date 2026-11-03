@@ -249,4 +249,5 @@
     <string name="launch_options_processes">Noms de processus (facultatif)</string>
     <string name="launch_options_processes_sub">Programmes du jeu, séparés par des virgules (p. ex. game.exe) : le lanceur attend qu'ils se terminent (temps de jeu, streams).</string>
     <string name="launch_options_reset">Réinitialiser</string>
+    <string name="controller_model_shared">Windows ne distingue pas les manettes d’un même modèle sans numéro de série (par exemple les manettes Xbox) : ces réglages s’appliquent alors à toutes.</string>
 </resources>

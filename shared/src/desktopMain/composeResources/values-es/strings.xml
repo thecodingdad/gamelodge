@@ -249,4 +249,5 @@
     <string name="launch_options_processes">Nombres de procesos (opcional)</string>
     <string name="launch_options_processes_sub">Programas del juego, separados por comas (p. ej. game.exe): el lanzador espera a que terminen (tiempo de juego, streams).</string>
     <string name="launch_options_reset">Restablecer</string>
+    <string name="controller_model_shared">Windows no distingue mandos del mismo modelo que no indican número de serie (por ejemplo, los de Xbox): estos ajustes se aplican entonces a todos ellos.</string>
 </resources>

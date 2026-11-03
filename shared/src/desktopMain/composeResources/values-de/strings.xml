@@ -249,4 +249,5 @@
     <string name="launch_options_processes">Prozessnamen (optional)</string>
     <string name="launch_options_processes_sub">Programme des Spiels, durch Kommas getrennt (z. B. game.exe): Der Launcher wartet, bis sie beendet sind (Spielzeit, Streams).</string>
     <string name="launch_options_reset">Zurücksetzen</string>
+    <string name="controller_model_shared">Windows kann Controller desselben Modells nicht unterscheiden, wenn sie keine Seriennummer melden (z. B. Xbox-Controller): Diese Einstellungen gelten dann für alle davon.</string>
 </resources>

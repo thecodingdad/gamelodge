@@ -26,7 +26,6 @@ dependencies {
     implementation(compose.desktop.windows_x64)
     implementation(libs.kotlinx.coroutines.swing)
     implementation(libs.androidx.sqlite.bundled)
-    implementation(libs.jamepad)
     implementation(libs.jna.platform)
     implementation(libs.javasteam)
     implementation(libs.qrcodegen)

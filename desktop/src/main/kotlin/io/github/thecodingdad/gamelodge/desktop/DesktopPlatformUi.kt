@@ -140,6 +140,10 @@ class DesktopPlatformUi(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 c.batteryPercent?.let { Text(stringResource(Res.string.controller_battery, it), color = LauncherTheme.colors.onSurfaceMuted) }
+                // No serial number ("vendor:product" key): every controller of this model shares the settings.
+                if (c.key.count { it == ':' } == 1) {
+                    Text(stringResource(Res.string.controller_model_shared), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+                }
                 // As on Android: this controller's buttons, combinations and stream settings.
                 settingsState()?.let { (settings, update) ->
                     SectionHeader(stringResource(Res.string.controller_section_buttons))

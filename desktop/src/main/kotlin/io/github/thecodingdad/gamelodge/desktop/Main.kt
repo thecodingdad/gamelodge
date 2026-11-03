@@ -272,14 +272,34 @@ fun main(args: Array<String>) {
     }
     // The controller that starts the stream is player 1.
     io.github.thecodingdad.gamelodge.desktop.stream.MoonlightQt.firstPad = { gamepads.starter() }
+    // Controller settings were kept by name before the launcher used SDL3 like Moonlight-Qt: they
+    // move to the controller's key ("vendor:product[:serial]") once it is connected.
+    container.scope.launch {
+        gamepads.controllers.collect { pads ->
+            fun <T> moved(map: Map<String, T>): Map<String, T> {
+                var result = map
+                for (c in pads) {
+                    val old = result[c.name] ?: continue
+                    if (c.key == c.name || c.key in result) continue
+                    result = result - c.name + (c.key to old)
+                }
+                return result
+            }
+            val s = container.settings.current()
+            if (moved(s.controllerLayouts) != s.controllerLayouts || moved(s.controllerCombos) != s.controllerCombos || moved(s.controllerStream) != s.controllerStream) {
+                Log.i("Controller settings moved from names to SDL keys")
+                container.settings.update { it.copy(controllerLayouts = moved(it.controllerLayouts), controllerCombos = moved(it.controllerCombos), controllerStream = moved(it.controllerStream)) }
+            }
+        }
+    }
     // Each controller's own stream settings, also changed during the stream (quick menu, settings).
     fun streamPads(settings: io.github.thecodingdad.gamelodge.data.settings.LauncherSettings, connected: List<String>) =
         io.github.thecodingdad.gamelodge.desktop.stream.StreamPads.run { json(names(connected, settings), settings, game) }
     io.github.thecodingdad.gamelodge.desktop.stream.MoonlightQt.padSettings = {
-        streamPads(container.settings.settings.first(), gamepads.controllers.value.map { it.name })
+        streamPads(container.settings.settings.first(), gamepads.controllers.value.map { it.key })
     }
     container.scope.launch {
-        kotlinx.coroutines.flow.combine(container.settings.settings, gamepads.controllers) { s, pads -> streamPads(s, pads.map { it.name }) }
+        kotlinx.coroutines.flow.combine(container.settings.settings, gamepads.controllers) { s, pads -> streamPads(s, pads.map { it.key }) }
             .distinctUntilChanged()
             .collect { json -> io.github.thecodingdad.gamelodge.desktop.stream.MoonlightQt.locate().running?.send("pads $json") }
     }

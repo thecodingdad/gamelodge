@@ -6,7 +6,6 @@ import io.github.thecodingdad.gamelodge.data.settings.LauncherSettings
 import io.github.thecodingdad.gamelodge.data.settings.PadStreamSettings
 import io.github.thecodingdad.gamelodge.ui.screens.settings.MotionMode
 import io.github.thecodingdad.gamelodge.ui.screens.settings.controllerDefaults
-import io.github.thecodingdad.gamelodge.ui.screens.settings.controllerIdsFromName
 import io.github.thecodingdad.gamelodge.ui.screens.settings.layoutFor
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
@@ -14,7 +13,7 @@ import kotlinx.serialization.json.put
 
 /**
  * Each controller's stream settings for Moonlight-Qt (MOONLIGHT_LAUNCHER_PADS / "pads …"), by
- * its SDL name: its own settings, else its model's defaults; the streamed game's choices win.
+ * its settings key ([io.github.thecodingdad.gamelodge.desktop.SdlPads.Info.key]): its own settings, else its model's defaults; the streamed game's choices win.
  */
 object StreamPads {
     /** The settings of one controller as Moonlight-Qt takes them. */
@@ -28,11 +27,11 @@ object StreamPads {
         val attachOnUse: Boolean,
     )
 
-    fun effective(name: String, settings: LauncherSettings, game: GamePadSettings? = null): Effective {
-        val (vendor, product) = controllerIdsFromName(name)
+    fun effective(key: String, settings: LauncherSettings, game: GamePadSettings? = null): Effective {
+        val (vendor, product) = io.github.thecodingdad.gamelodge.desktop.modelIds(key)
         val d = controllerDefaults(vendor, product)
-        val own = settings.controllerStream[name] ?: PadStreamSettings()
-        val layout = game?.layout ?: settings.layoutFor(name, d.layout)
+        val own = settings.controllerStream[key] ?: PadStreamSettings()
+        val layout = game?.layout ?: settings.layoutFor(key, d.layout)
         val rumble = own.rumblePercent ?: d.vibrationStrength
         val motion = own.motion ?: (d.motion != MotionMode.OFF)
         return Effective(
@@ -51,12 +50,12 @@ object StreamPads {
         )
     }
 
-    /** The JSON for [names] (connected controllers and the ones with settings). */
-    fun json(names: Collection<String>, settings: LauncherSettings, game: GamePadSettings? = null): String {
+    /** The JSON for [keys] (connected controllers and the ones with settings). */
+    fun json(keys: Collection<String>, settings: LauncherSettings, game: GamePadSettings? = null): String {
         val all: JsonObject = buildJsonObject {
-            for (name in names.distinct()) {
-                val e = effective(name, settings, game)
-                put(name, buildJsonObject {
+            for (key in keys.distinct()) {
+                val e = effective(key, settings, game)
+                put(key, buildJsonObject {
                     put("deadzone", e.deadzonePercent)
                     put("rumble", e.rumblePercent)
                     put("motion", e.motion)
