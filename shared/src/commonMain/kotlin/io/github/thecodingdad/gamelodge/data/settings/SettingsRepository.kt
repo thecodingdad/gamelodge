@@ -175,6 +175,8 @@ data class LauncherSettings(
     /** The "not installed" default filter (added later) was created for existing installs. */
     val notInstalledFilterSeeded: Boolean = false,
     val emulationFilterSeeded: Boolean = false,
+    /** The default filters got the leaner chip set once (installs from before it). */
+    val filterChipsTrimmed: Boolean = false,
     /** Hide Android's navigation bar / gesture handle while the launcher is shown. */
     val hideNavigationBar: Boolean = false,
     /** Show the button hint bar (only while a controller is connected). */
@@ -348,6 +350,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val filtersSeeded = booleanPreferencesKey("filters_seeded")
         val notInstalledFilterSeeded = booleanPreferencesKey("not_installed_filter_seeded")
         val emulationFilterSeeded = booleanPreferencesKey("emulation_filter_seeded")
+        val filterChipsTrimmed = booleanPreferencesKey("filter_chips_trimmed")
         val hideNavigationBar = booleanPreferencesKey("hide_navigation_bar")
         val showHintBar = booleanPreferencesKey("show_hint_bar")
         /** Before per-tab direct start: one switch for every tab (still read as their default). */
@@ -488,6 +491,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             filtersSeeded = this[K.filtersSeeded] ?: d.filtersSeeded,
             notInstalledFilterSeeded = this[K.notInstalledFilterSeeded] ?: d.notInstalledFilterSeeded,
             emulationFilterSeeded = this[K.emulationFilterSeeded] ?: d.emulationFilterSeeded,
+            filterChipsTrimmed = this[K.filterChipsTrimmed] ?: d.filterChipsTrimmed,
             hideNavigationBar = this[K.hideNavigationBar] ?: d.hideNavigationBar,
             showHintBar = this[K.showHintBar] ?: d.showHintBar,
             homeDirectStart = this[K.homeDirectStart] ?: this[K.gamesDirectStart] ?: d.homeDirectStart,
@@ -615,6 +619,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         this[K.filtersSeeded] = s.filtersSeeded
         this[K.notInstalledFilterSeeded] = s.notInstalledFilterSeeded
         this[K.emulationFilterSeeded] = s.emulationFilterSeeded
+        this[K.filterChipsTrimmed] = s.filterChipsTrimmed
         this[K.hideNavigationBar] = s.hideNavigationBar
         this[K.showHintBar] = s.showHintBar
         this[K.homeDirectStart] = s.homeDirectStart

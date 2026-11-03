@@ -159,28 +159,32 @@ object BuiltinFilter {
     const val HIDDEN = "hidden"
     const val EMULATION = "emulation"
 
-    /** Default game filters in display order. */
+    /**
+     * Default game filters in display order. Only few are chips at first (all, favourites, one per
+     * platform; hidden ones only when there are any, as empty filters don't show); the others are
+     * there to switch on.
+     */
     val gameDefaults = listOf(
         Default(CONTINUE, library = false, home = true),
         Default(ALL, library = true, home = false),
-        Default(LOCAL, library = true, home = false),
-        Default(EMULATION, library = true, home = false),
-        Default(HOSTS, library = true, home = false),
-        Default(PLATFORMS, library = true, home = false),
         Default(FAVORITES, library = true, home = true),
+        Default(PLATFORMS, library = true, home = false),
         Default(RECENT, library = false, home = true),
-        Default(NEVER_PLAYED, library = true, home = false),
-        Default(NOT_INSTALLED, library = true, home = false),
-        Default(REVIEW, library = true, home = false),
+        Default(LOCAL, library = false, home = false),
+        Default(EMULATION, library = false, home = false),
+        Default(HOSTS, library = false, home = false),
+        Default(NEVER_PLAYED, library = false, home = false),
+        Default(NOT_INSTALLED, library = false, home = false),
+        Default(REVIEW, library = false, home = false),
         Default(HIDDEN, library = true, home = false),
     )
 
     /** Default app filters (chips in the Apps tab). */
     val appDefaults = listOf(
         Default(ALL, library = true, home = false),
+        Default(FAVORITES, library = true, home = false),
         Default(LOCAL, library = true, home = false),
         Default(HOSTS, library = true, home = false),
-        Default(FAVORITES, library = true, home = false),
         Default(HIDDEN, library = true, home = false),
     )
 

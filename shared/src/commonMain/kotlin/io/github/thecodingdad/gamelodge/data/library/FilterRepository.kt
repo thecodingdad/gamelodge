@@ -42,7 +42,8 @@ class FilterRepository(
             )
             restoreDefaults(FilterScope.APPS)
         }
-        settings.update { it.copy(filtersSeeded = true, appFiltersSeeded = true, notInstalledFilterSeeded = true, emulationFilterSeeded = true) }
+        if (current.filtersSeeded && !current.filterChipsTrimmed) trimDefaultChips()
+        settings.update { it.copy(filtersSeeded = true, appFiltersSeeded = true, notInstalledFilterSeeded = true, emulationFilterSeeded = true, filterChipsTrimmed = true) }
         // Default filters used to be special rows; they are ordinary free filters now.
         val builtin = dao.getAll().filter { it.kind == FilterKind.BUILTIN }
         if (builtin.isNotEmpty()) {
@@ -84,6 +85,31 @@ class FilterRepository(
         val defaults = if (apps) BuiltinFilter.appDefaults else BuiltinFilter.gameDefaults
         val base = (dao.getAll().maxOfOrNull { it.sortOrder } ?: -1) + 1
         dao.upsert(defaults.mapIndexed { index, d -> defaultEntity(d, scope, base + index) })
+    }
+
+    /**
+     * Once for installs from before the leaner defaults: the default filters get their new chip
+     * visibility and order (within the places they had, so own filters stay where they are). Home
+     * rows stay as they are.
+     */
+    private suspend fun trimDefaultChips() {
+        val all = dao.getAll()
+        val updated = mutableListOf<FilterEntity>()
+        for ((scope, defaults) in listOf(FilterScope.GAMES to BuiltinFilter.gameDefaults, FilterScope.APPS to BuiltinFilter.appDefaults)) {
+            val rows = all.filter { it.scope == scope }.sortedBy { it.sortOrder }
+            val defaultRows = rows.filter { r -> defaults.any { it.key == r.builtin } }
+            val slots = defaultRows.map { it.sortOrder }.sorted()
+            val ordered = defaultRows.sortedBy { r -> defaults.indexOfFirst { it.key == r.builtin } }
+            ordered.forEachIndexed { i, r ->
+                val d = defaults.first { it.key == r.builtin }
+                updated += r.copy(
+                    sortOrder = slots[i],
+                    showInLibrary = d.library && scope != FilterScope.APPS,
+                    showInApps = d.library && scope == FilterScope.APPS,
+                )
+            }
+        }
+        if (updated.isNotEmpty()) dao.upsert(updated)
     }
 
     private fun defaultEntity(d: BuiltinFilter.Default, scope: FilterScope, order: Int) = FilterEntity(
