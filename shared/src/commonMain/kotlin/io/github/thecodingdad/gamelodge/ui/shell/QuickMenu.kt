@@ -12,6 +12,10 @@ import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Mouse
+import androidx.compose.material.icons.filled.Keyboard
+import androidx.compose.material.icons.filled.KeyboardAlt
+import androidx.compose.material.icons.filled.TouchApp
+import androidx.compose.material.icons.filled.Check
 import io.github.thecodingdad.gamelodge.ui.components.popupHeightIn
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Tune
@@ -169,6 +173,7 @@ fun QuickMenu(
                                             onDismiss()
                                             io.github.thecodingdad.gamelodge.ui.PlatformUi.current.bringToFront()
                                         },
+                                        onDismiss = onDismiss,
                                     )
                                 }
                             }
@@ -299,7 +304,7 @@ private fun QuickRail(tabs: List<QuickMenuTab>, current: QuickMenuTab, onDismiss
  * launcher runs gets its controls as well: performance, keyboard, server commands, disconnect.
  */
 @Composable
-private fun RunningCard(session: RunningSession, initialFocus: Boolean, onResume: () -> Unit, onQuit: () -> Unit) {
+private fun RunningCard(session: RunningSession, initialFocus: Boolean, onResume: () -> Unit, onQuit: () -> Unit, onDismiss: () -> Unit) {
     val c = io.github.thecodingdad.gamelodge.LocalContainer.current
     val quitting by io.github.thecodingdad.gamelodge.stream.Quitting.keys.collectAsState()
     val active by c.launcher.activeStream.collectAsState()
@@ -320,23 +325,54 @@ private fun RunningCard(session: RunningSession, initialFocus: Boolean, onResume
                 onDone = { if (own) onQuit() },
             )
         },
-        extra = if (own) { { StreamControlsSection(c.streamControls, onQuit) } } else null,
+        // Back to the stream: the menu over it just closes; from the launcher the stream resumes.
+        extra = if (own) { { StreamControlsSection(c.streamControls, onQuit, backToStream = if (canResume) onResume else onDismiss) } } else null,
     )
 }
 
 /** Controls of the stream this launcher runs, as far as its client offers them. */
 @Composable
-private fun StreamControlsSection(controls: io.github.thecodingdad.gamelodge.stream.StreamControls, onLeave: () -> Unit) {
+private fun StreamControlsSection(controls: io.github.thecodingdad.gamelodge.stream.StreamControls, onLeave: () -> Unit, backToStream: () -> Unit) {
     val commands = remember { controls.serverCommands() }
     var commandList by remember { mutableStateOf(false) }
+    var touchList by remember { mutableStateOf(false) }
+    val touchModes = remember { controls.touchModes() }
     io.github.thecodingdad.gamelodge.ui.components.ButtonRow(spacing = 10.dp) {
         LauncherButton(stringResource(Res.string.qm_disconnect), { controls.disconnect(); onLeave() }, icon = Icons.Filled.LinkOff)
         // The stream's own performance overlay (shown in the stream, not here).
         LauncherButton(stringResource(Res.string.qm_overlay), { controls.toggleOverlay() }, icon = Icons.Filled.Speed)
         // Mouse emulation of the stream's controllers, like its button combination.
         LauncherButton(stringResource(Res.string.qm_mouse), { controls.toggleMouse() }, icon = Icons.Filled.Mouse)
+        // On-screen keyboard in the stream (opens once the stream is in front again).
+        if (controls.hasKeyboard) {
+            LauncherButton(stringResource(Res.string.qm_keyboard), { controls.showKeyboard(false); backToStream() }, icon = Icons.Filled.Keyboard)
+            LauncherButton(stringResource(Res.string.qm_keyboard_full), { controls.showKeyboard(true); backToStream() }, icon = Icons.Filled.KeyboardAlt)
+        }
+        // Touch mode for this stream only (the profile keeps its own).
+        if (touchModes.isNotEmpty()) {
+            LauncherButton(stringResource(Res.string.qm_touch_mode), { touchList = true }, icon = Icons.Filled.TouchApp)
+        }
         if (commands.isNotEmpty()) {
             LauncherButton(stringResource(Res.string.qm_server_commands), { commandList = true }, icon = Icons.Filled.Terminal)
+        }
+    }
+    io.github.thecodingdad.gamelodge.ui.components.Modal(
+        visible = touchList, onDismiss = { touchList = false }, title = stringResource(Res.string.qm_touch_mode),
+    ) {
+        val current = remember(touchList) { controls.touchMode() }
+        Column(
+            Modifier.weight(1f, fill = false).popupHeightIn(520.dp).controllerScroll(),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(stringResource(Res.string.qm_touch_mode_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+            touchModes.forEachIndexed { i, (mode, name) ->
+                LauncherButton(
+                    name, { controls.setTouchMode(mode); touchList = false; backToStream() },
+                    Modifier.fillMaxWidth().then(if (mode == current || (current < 0 && i == 0)) Modifier.restoreFocusIf(true) else Modifier),
+                    if (mode == current) Icons.Filled.Check else Icons.Filled.TouchApp,
+                    primary = mode == current,
+                )
+            }
         }
     }
     io.github.thecodingdad.gamelodge.ui.components.Modal(

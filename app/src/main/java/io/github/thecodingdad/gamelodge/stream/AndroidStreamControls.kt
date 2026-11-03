@@ -32,6 +32,19 @@ class AndroidStreamControls(
 
     override fun toggleOverlay(): Boolean = game != null && StreamControl.togglePerformanceOverlay()
 
+    override fun touchModes(): List<Pair<Int, String>> {
+        val names = context.resources.getStringArray(com.limelight.R.array.mouse_mode_names)
+        return StreamControl.touchModes().filter { it in names.indices }.map { it to names[it] }
+    }
+
+    override fun touchMode(): Int = StreamControl.touchMode()
+
+    override fun setTouchMode(mode: Int): Boolean = StreamControl.setTouchMode(mode)
+
+    override val hasKeyboard: Boolean get() = true
+
+    override fun showKeyboard(full: Boolean): Boolean = StreamControl.showKeyboard(full)
+
     /** From the quick menu over the stream: the stream's own mouse (no pointer service needed). */
     override fun toggleMouse(): Boolean {
         if (game == null) return false

@@ -167,6 +167,8 @@
     <string name="input_mouse_side_back">Voltar</string>
     <string name="input_mouse_side_tabs">Trocar aba</string>
     <string name="input_mouse_side_sub">No GameLodge. Um clique direito abre o menu de contexto (como X).</string>
+    <string name="input_mouse_nav_stream">Repassar os botões laterais no stream</string>
+    <string name="input_mouse_nav_stream_sub">Voltar / avançar chegam ao PC (ex.: o navegador). Pode atrapalhar o clique direito em alguns aparelhos.</string>
     <string name="input_keyboard_section">Teclado</string>
     <string name="input_keyboard_intro">Enter confirma, Esc volta, as setas movem o foco. Teclas que digitam texto não podem ser atribuídas.</string>
     <string name="input_shortcut">Atalho do menu rápido (em todo o sistema)</string>
@@ -1600,6 +1602,10 @@
     <string name="setting_controller_attach_sub">Os controles conectados sao registrados no host ao iniciar o stream, em vez de no primeiro toque. O controle que iniciou o stream vira jogador 1.</string>
     <string name="controller_starter_player_one_info">O controle que inicia o stream e o jogador 1.</string>
     <string name="qm_mouse">Modo mouse</string>
+    <string name="qm_keyboard">Teclado</string>
+    <string name="qm_keyboard_full">Teclado de PC</string>
+    <string name="qm_touch_mode">Modo de toque</string>
+    <string name="qm_touch_mode_sub">Só para este stream; o perfil mantém o seu.</string>
     <string name="wizard_metadata_guide_hint">Ambos são gratuitos. Como obtê-los, passo a passo com um código QR para o seu celular: o botão na caixa de diálogo da chave.</string>
     <string name="guide_button_sgdb">Como obter a chave de API</string>
     <string name="guide_button_igdb">Como obter client ID e secret</string>

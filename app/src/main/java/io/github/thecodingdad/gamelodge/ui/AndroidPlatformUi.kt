@@ -167,14 +167,27 @@ class AndroidPlatformUi(private val context: Context) : PlatformUi {
     }
 
     @Composable
-    override fun DeviceInputRows(keyboard: Boolean, initialFocus: Boolean) {
+    override fun DeviceInputRows(group: io.github.thecodingdad.gamelodge.ui.DeviceInputGroup, initialFocus: Boolean) {
         // Artemis' input options that depend on this device, the same for every profile (base settings).
-        val options = androidx.compose.runtime.remember(keyboard) {
-            io.github.thecodingdad.gamelodge.stream.StreamSettingsSchema.deviceInputOptions(context)
-                .filter { (it.key in io.github.thecodingdad.gamelodge.stream.StreamSettingsSchema.deviceKeyboardKeys) == keyboard }
+        val options = androidx.compose.runtime.remember(group) {
+            val schema = io.github.thecodingdad.gamelodge.stream.StreamSettingsSchema
+            schema.deviceInputOptions(context).filter {
+                val of = when (it.key) {
+                    in schema.deviceKeyboardKeys -> io.github.thecodingdad.gamelodge.ui.DeviceInputGroup.KEYBOARD
+                    in schema.deviceMouseKeys -> io.github.thecodingdad.gamelodge.ui.DeviceInputGroup.MOUSE
+                    else -> io.github.thecodingdad.gamelodge.ui.DeviceInputGroup.TOUCH
+                }
+                of == group
+            }
         }
         if (options.isEmpty()) return
-        if (!keyboard) {
+        // Artemis' title doesn't say it's about the mouse in the stream.
+        val navTitle = stringResource(Res.string.input_mouse_nav_stream)
+        val navSub = stringResource(Res.string.input_mouse_nav_stream_sub)
+        val shown = options.map { o ->
+            if (o.key == "checkbox_mouse_nav_buttons" && o is io.github.thecodingdad.gamelodge.stream.StreamOption.Toggle) o.copy(title = navTitle, summary = navSub) else o
+        }
+        if (group == io.github.thecodingdad.gamelodge.ui.DeviceInputGroup.TOUCH) {
             io.github.thecodingdad.gamelodge.ui.screens.settings.SectionHeader(stringResource(Res.string.input_touch_section))
             androidx.compose.material3.Text(
                 stringResource(Res.string.input_touch_sub), style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
@@ -183,7 +196,7 @@ class AndroidPlatformUi(private val context: Context) : PlatformUi {
         }
         val base = androidx.compose.runtime.remember { io.github.thecodingdad.gamelodge.stream.ProfileStore(context, null) }
         var revision by androidx.compose.runtime.remember { androidx.compose.runtime.mutableIntStateOf(0) }
-        options.forEachIndexed { i, option ->
+        shown.forEachIndexed { i, option ->
             io.github.thecodingdad.gamelodge.ui.screens.profiles.OptionRow(option, base, revision, initialFocus && i == 0, profileEditing) { revision++ }
         }
     }

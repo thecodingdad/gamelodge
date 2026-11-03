@@ -12,6 +12,9 @@ import io.github.thecodingdad.gamelodge.ui.shell.TopCutout
  * The parts of the UI that only the platform can provide: device state, controllers, system
  * tiles and screens of platform features. Set once at start.
  */
+/** Groups of the device's input options (Settings › Touch, mouse & keyboard). */
+enum class DeviceInputGroup { TOUCH, MOUSE, KEYBOARD }
+
 interface PlatformUi {
     /** Badge of entries that run on this device (phone on Android, monitor on the PC). */
     val localIcon: androidx.compose.ui.graphics.vector.ImageVector
@@ -125,11 +128,11 @@ interface PlatformUi {
     val deviceDisplayOptions: Boolean get() = true
 
     /**
-     * The stream's touch ([keyboard] false) or keyboard options of this device (Settings › Touch,
-     * mouse & keyboard), with their section header; none by default.
+     * The stream's touch (with its section header), mouse or keyboard options of this device
+     * (Settings › Touch, mouse & keyboard); none by default.
      */
     @androidx.compose.runtime.Composable
-    fun DeviceInputRows(keyboard: Boolean, initialFocus: Boolean) = Unit
+    fun DeviceInputRows(group: DeviceInputGroup, initialFocus: Boolean) = Unit
 
     /** Settings pages only some platforms have (VPN, backup, emulators …). */
     fun hasPage(id: io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId): Boolean

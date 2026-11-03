@@ -23,6 +23,21 @@ interface StreamControls {
     /** Mouse emulation on / off like its button combination (a short notice); false without a stream. */
     fun toggleMouse(): Boolean = false
 
+    /** Touch modes of the stream (Artemis' index to its name), empty: not changeable here. */
+    fun touchModes(): List<Pair<Int, String>> = emptyList()
+
+    /** The stream's touch mode (an index of [touchModes]), -1 without a stream. */
+    fun touchMode(): Int = -1
+
+    /** Switches the touch mode for this stream only; false without a stream. */
+    fun setTouchMode(mode: Int): Boolean = false
+
+    /** The client can show an on-screen keyboard in the stream. */
+    val hasKeyboard: Boolean get() = false
+
+    /** Shows the system keyboard ([full]: the client's PC keyboard) once the stream is in front again. */
+    fun showKeyboard(full: Boolean): Boolean = false
+
     /** The stream's performance overlay on / off; false without a stream. */
     fun toggleOverlay(): Boolean = false
 

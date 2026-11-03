@@ -167,6 +167,8 @@
     <string name="input_mouse_side_back">Indietro</string>
     <string name="input_mouse_side_tabs">Cambia scheda</string>
     <string name="input_mouse_side_sub">In GameLodge. Un clic destro apre il menu contestuale (come X).</string>
+    <string name="input_mouse_nav_stream">Inoltra i tasti laterali nello stream</string>
+    <string name="input_mouse_nav_stream_sub">Indietro / avanti arrivano al PC (es. il browser). Può disturbare il clic destro su alcuni dispositivi.</string>
     <string name="input_keyboard_section">Tastiera</string>
     <string name="input_keyboard_intro">Invio conferma, Esc torna indietro, le frecce spostano il focus. I tasti che scrivono testo non si possono assegnare.</string>
     <string name="input_shortcut">Scorciatoia menu rapido (in tutto il sistema)</string>
@@ -1600,6 +1602,10 @@
     <string name="setting_controller_attach_sub">I controller collegati vengono segnalati all'host all'avvio dello stream, invece che alla prima pressione. Il controller che ha avviato lo stream diventa giocatore 1.</string>
     <string name="controller_starter_player_one_info">Il controller che avvia lo stream e il giocatore 1.</string>
     <string name="qm_mouse">Modalità mouse</string>
+    <string name="qm_keyboard">Tastiera</string>
+    <string name="qm_keyboard_full">Tastiera PC</string>
+    <string name="qm_touch_mode">Modalità tocco</string>
+    <string name="qm_touch_mode_sub">Solo per questo stream; il profilo mantiene il suo.</string>
     <string name="wizard_metadata_guide_hint">Entrambi sono gratuiti. Come ottenerli, passo per passo con un codice QR per il telefono: il pulsante nella finestra della chiave.</string>
     <string name="guide_button_sgdb">Come ottenere la chiave API</string>
     <string name="guide_button_igdb">Come ottenere client ID e secret</string>

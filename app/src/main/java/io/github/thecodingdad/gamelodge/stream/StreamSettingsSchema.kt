@@ -37,6 +37,8 @@ object StreamSettingsSchema {
         "checkbox_enable_device_rumble", "seekbar_vibrate_fallback_strength",
         // Samsung-only drag & drop tweaks and a workaround for old Android versions.
         "checkbox_trackpad_drag_drop_vibration", "seekbar_trackpad_drag_drop_threshold", "checkbox_ignore_synth_events",
+        // Pinned off (see ControllerPrefsMigration): the touch mode changes per stream in the quick menu.
+        "checkbox_remember_mouse_mode", "checkbox_multi_touch_gestures",
     )
 
     /** Artemis' render mode; anything but 2D ("0") would ask for the 3D renderer. */
@@ -141,7 +143,7 @@ object StreamSettingsSchema {
      */
     val deviceInputKeys = setOf(
         "seekbar_trackpad_sensitivity_x", "seekbar_trackpad_sensitivity_y", "checkbox_trackpad_swap_axis",
-        "checkbox_force_qwerty", "checkbox_right_alt_as_meta",
+        "checkbox_force_qwerty", "checkbox_right_alt_as_meta", "checkbox_mouse_nav_buttons", "checkbox_enable_commit_text",
     )
 
     /**
@@ -152,8 +154,11 @@ object StreamSettingsSchema {
         .filter { it.key != GAMEPAD_CATEGORY }
         .map { c -> if (c.key == INPUT_CATEGORY) c.copy(title = inputTitle, options = c.options.filter { it.key !in deviceInputKeys }) else c }
 
-    /** The keyboard ones among [deviceInputKeys] (the rest are touch / trackpad options). */
-    val deviceKeyboardKeys = setOf("checkbox_force_qwerty", "checkbox_right_alt_as_meta")
+    /** The keyboard ones among [deviceInputKeys]. */
+    val deviceKeyboardKeys = setOf("checkbox_force_qwerty", "checkbox_right_alt_as_meta", "checkbox_enable_commit_text")
+
+    /** The mouse ones among [deviceInputKeys] (the rest are touch / trackpad options). */
+    val deviceMouseKeys = setOf("checkbox_mouse_nav_buttons")
 
     /** The device's input options alone (Settings › Touch, mouse & keyboard, for every profile). */
     fun deviceInputOptions(context: Context): List<StreamOption> =

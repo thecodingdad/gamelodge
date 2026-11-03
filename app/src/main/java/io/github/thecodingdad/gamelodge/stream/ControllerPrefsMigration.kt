@@ -39,6 +39,10 @@ object ControllerPrefsMigration {
         "checkbox_joycon_fix" to false,
         "checkbox_force_device_motion" to false,
         "checkbox_enable_rumble" to true,
+        // Touch: a touch mode changed in the stream stays for that stream only (quick menu), and
+        // multi-finger taps reach the game in multi-touch mode (the other modes have them anyway).
+        "checkbox_remember_mouse_mode" to false,
+        "checkbox_multi_touch_gestures" to false,
     )
 
     fun enforce(context: Context) {
@@ -49,8 +53,8 @@ object ControllerPrefsMigration {
         val manager = ProfilesManager.getInstance()
         manager.profiles.forEach { p ->
             val options = p.options ?: return@forEach
-            if (options.keys.none { it in gamepadKeys }) return@forEach
-            p.options = HashMap(options).apply { keys.removeAll(gamepadKeys) }
+            if (options.keys.none { it in gamepadKeys || it in pinned }) return@forEach
+            p.options = HashMap(options).apply { keys.removeAll(gamepadKeys); keys.removeAll(pinned.keys) }
             p.modifiedUtc = System.currentTimeMillis()
             manager.update(p)
         }

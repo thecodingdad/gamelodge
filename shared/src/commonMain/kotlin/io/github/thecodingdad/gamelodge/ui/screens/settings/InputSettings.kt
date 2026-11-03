@@ -77,7 +77,7 @@ fun InputSettings(settings: LauncherSettings, update: ((LauncherSettings) -> Lau
 
     SettingsPage(stringResource(Res.string.settings_input)) {
         // Touch (the screen as a trackpad in the stream): only where the platform has such options.
-        platform.DeviceInputRows(keyboard = false, initialFocus = true)
+        platform.DeviceInputRows(io.github.thecodingdad.gamelodge.ui.DeviceInputGroup.TOUCH, initialFocus = true)
 
         SectionHeader(stringResource(Res.string.input_mouse_section))
         ChoiceRow(
@@ -86,6 +86,7 @@ fun InputSettings(settings: LauncherSettings, update: ((LauncherSettings) -> Lau
             onSelect = { v -> update { it.copy(mouseSideButtons = v) } },
             subtitle = stringResource(Res.string.input_mouse_side_sub),
         )
+        platform.DeviceInputRows(io.github.thecodingdad.gamelodge.ui.DeviceInputGroup.MOUSE, initialFocus = false)
 
         SectionHeader(stringResource(Res.string.input_keyboard_section))
         Text(stringResource(Res.string.input_keyboard_intro), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
@@ -107,7 +108,7 @@ fun InputSettings(settings: LauncherSettings, update: ((LauncherSettings) -> Lau
             )
         }
         // The stream's keyboard options of this device (Android).
-        platform.DeviceInputRows(keyboard = true, initialFocus = false)
+        platform.DeviceInputRows(io.github.thecodingdad.gamelodge.ui.DeviceInputGroup.KEYBOARD, initialFocus = false)
 
         SeeAlso(
             SeeAlsoLink(stringResource(Res.string.settings_controllers), SettingsTarget.Controllers),
