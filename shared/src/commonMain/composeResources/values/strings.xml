@@ -1628,4 +1628,15 @@
     <string name="guide_open_page">Open page</string>
     <string name="input_disconnect">End stream (keyboard)</string>
     <string name="input_disconnect_sub">Ends the stream from the keyboard; the game keeps running on the host. Always with Ctrl, Alt or Shift.</string>
+    <string name="wizard_next_title">Next up</string>
+    <string name="wizard_next_look">Look &amp; tiles</string>
+    <string name="wizard_next_look_sub">Tile format and size, rows on the Home tab; theme and scale under Appearance</string>
+    <string name="wizard_next_filters">Filters &amp; groups</string>
+    <string name="wizard_next_filters_sub">Your own chips in the library and rows on the Home tab</string>
+    <string name="wizard_next_controllers">Controllers &amp; buttons</string>
+    <string name="wizard_next_controllers_sub">Button combinations, layout and stream settings of each controller</string>
+    <string name="wizard_next_review">Check metadata</string>
+    <string name="wizard_next_review_sub">Uncertain matches: %1$d. Check them and pick the right game</string>
+    <string name="wizard_next_profiles">Stream profiles</string>
+    <string name="wizard_next_profiles_sub">Resolution, frame rate and bitrate for home and on the go</string>
 </resources>

@@ -26,6 +26,8 @@ sealed interface SettingsTarget {
     data class Host(val uuid: String) : SettingsTarget
     /** The settings overview itself (rows on it, e.g. the start tab). */
     data object Overview : SettingsTarget
+    /** The list of metadata matches to check ("please check"). */
+    data object Review : SettingsTarget
 }
 
 /** Whether [target] exists on this platform (platform-only pages). */

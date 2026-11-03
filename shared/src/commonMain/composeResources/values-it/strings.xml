@@ -1628,4 +1628,15 @@
     <string name="guide_open_page">Apri la pagina</string>
     <string name="input_disconnect">Chiudi lo stream (tastiera)</string>
     <string name="input_disconnect_sub">Chiude lo stream da tastiera; il gioco continua sull’host. Sempre con Ctrl, Alt o Maiusc.</string>
+    <string name="wizard_next_title">Prossimi passi</string>
+    <string name="wizard_next_look">Aspetto e riquadri</string>
+    <string name="wizard_next_look_sub">Formato e dimensione dei riquadri, righe della scheda Home; tema e scala in Aspetto</string>
+    <string name="wizard_next_filters">Filtri e gruppi</string>
+    <string name="wizard_next_filters_sub">I tuoi chip nella libreria e righe nella scheda Home</string>
+    <string name="wizard_next_controllers">Controller e tasti</string>
+    <string name="wizard_next_controllers_sub">Combinazioni, layout e impostazioni di stream di ogni controller</string>
+    <string name="wizard_next_review">Controlla i metadati</string>
+    <string name="wizard_next_review_sub">Corrispondenze incerte: %1$d. Controllale e scegli il gioco giusto</string>
+    <string name="wizard_next_profiles">Profili di stream</string>
+    <string name="wizard_next_profiles_sub">Risoluzione, frame rate e bitrate per casa e in giro</string>
 </resources>

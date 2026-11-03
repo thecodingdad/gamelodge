@@ -1626,4 +1626,15 @@
     <string name="guide_open_page">Seite öffnen</string>
     <string name="input_disconnect">Stream trennen (Tastatur)</string>
     <string name="input_disconnect_sub">Trennt den Stream per Tastatur; das Spiel läuft auf dem Host weiter. Immer mit Strg, Alt oder Shift.</string>
+    <string name="wizard_next_title">Als Nächstes</string>
+    <string name="wizard_next_look">Look &amp; Kacheln</string>
+    <string name="wizard_next_look_sub">Kachelformat und -größe, Reihen im Start-Tab; Theme und Skalierung unter Aussehen</string>
+    <string name="wizard_next_filters">Filter &amp; Gruppen</string>
+    <string name="wizard_next_filters_sub">Eigene Chips in der Bibliothek und Reihen im Start-Tab</string>
+    <string name="wizard_next_controllers">Controller &amp; Tasten</string>
+    <string name="wizard_next_controllers_sub">Tastenkombis, Layout und Stream-Einstellungen pro Controller</string>
+    <string name="wizard_next_review">Metadaten prüfen</string>
+    <string name="wizard_next_review_sub">Unsichere Treffer: %1$d. Prüfen und das richtige Spiel wählen</string>
+    <string name="wizard_next_profiles">Stream-Profile</string>
+    <string name="wizard_next_profiles_sub">Auflösung, Bildrate und Bitrate für zu Hause und unterwegs</string>
 </resources>

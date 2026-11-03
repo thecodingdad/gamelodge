@@ -111,6 +111,7 @@ fun SettingsHome(
                     SettingsTarget.Wizard -> openWizard()
                     is SettingsTarget.Host -> Unit
                     SettingsTarget.Overview -> onQueryChange("")
+                    SettingsTarget.Review -> Unit
                 }
             }
             return@SettingsPage

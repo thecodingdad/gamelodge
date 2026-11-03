@@ -1628,4 +1628,15 @@
     <string name="guide_open_page">Ouvrir la page</string>
     <string name="input_disconnect">Couper le stream (clavier)</string>
     <string name="input_disconnect_sub">Coupe le stream au clavier ; le jeu continue sur l’hôte. Toujours avec Ctrl, Alt ou Maj.</string>
+    <string name="wizard_next_title">Et ensuite</string>
+    <string name="wizard_next_look">Style et tuiles</string>
+    <string name="wizard_next_look_sub">Format et taille des tuiles, rangées de l’onglet Accueil ; thème et échelle dans Apparence</string>
+    <string name="wizard_next_filters">Filtres et groupes</string>
+    <string name="wizard_next_filters_sub">Vos propres chips dans la bibliothèque et rangées dans l’onglet Accueil</string>
+    <string name="wizard_next_controllers">Manettes et boutons</string>
+    <string name="wizard_next_controllers_sub">Combinaisons, disposition et réglages de stream de chaque manette</string>
+    <string name="wizard_next_review">Vérifier les métadonnées</string>
+    <string name="wizard_next_review_sub">Correspondances incertaines : %1$d. Vérifiez-les et choisissez le bon jeu</string>
+    <string name="wizard_next_profiles">Profils de stream</string>
+    <string name="wizard_next_profiles_sub">Résolution, fréquence d’images et débit pour la maison et en déplacement</string>
 </resources>

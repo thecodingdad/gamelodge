@@ -253,6 +253,7 @@ fun LauncherApp(
                 io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Wizard -> nav.navigate(Routes.wizard(manual = true))
                 is io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Host -> nav.navigate(Routes.host(target.uuid))
                 io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Overview -> nav.popBackStack(Routes.MAIN, inclusive = false)
+                io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Review -> nav.navigate(Routes.REVIEW)
             }
         }
     }
@@ -331,7 +332,7 @@ fun LauncherApp(
                     io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Wizard -> nav.navigate(Routes.wizard(manual = true))
                     is io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Host -> nav.navigate(Routes.host(target.uuid))
                     io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Overview -> nav.popBackStack(Routes.MAIN, inclusive = false)
-                io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Overview -> nav.popBackStack(Routes.MAIN, inclusive = false)
+                    io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Review -> nav.navigate(Routes.REVIEW)
                 }
             },
         ) {

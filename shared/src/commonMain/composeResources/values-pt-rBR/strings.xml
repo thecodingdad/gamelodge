@@ -1628,4 +1628,15 @@
     <string name="guide_open_page">Abrir página</string>
     <string name="input_disconnect">Encerrar a transmissão (teclado)</string>
     <string name="input_disconnect_sub">Encerra a transmissão pelo teclado; o jogo continua no host. Sempre com Ctrl, Alt ou Shift.</string>
+    <string name="wizard_next_title">A seguir</string>
+    <string name="wizard_next_look">Visual e blocos</string>
+    <string name="wizard_next_look_sub">Formato e tamanho dos blocos, fileiras da aba Início; tema e escala em Aparência</string>
+    <string name="wizard_next_filters">Filtros e grupos</string>
+    <string name="wizard_next_filters_sub">Seus próprios chips na biblioteca e fileiras na aba Início</string>
+    <string name="wizard_next_controllers">Controles e botões</string>
+    <string name="wizard_next_controllers_sub">Combinações, layout e configurações de stream de cada controle</string>
+    <string name="wizard_next_review">Revisar metadados</string>
+    <string name="wizard_next_review_sub">Correspondências incertas: %1$d. Revise-as e escolha o jogo certo</string>
+    <string name="wizard_next_profiles">Perfis de stream</string>
+    <string name="wizard_next_profiles_sub">Resolução, taxa de quadros e bitrate para casa e fora</string>
 </resources>

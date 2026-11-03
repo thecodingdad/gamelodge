@@ -485,4 +485,49 @@ internal fun ColumnScope.FinishStep() {
             else LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = colors.accent, trackColor = colors.surfaceRaised)
         }
     }
+    NextSteps(games, review = visible.count { it.item.metadataState == io.github.thecodingdad.gamelodge.data.db.MetadataState.REVIEW })
+}
+
+/**
+ * What to do next, each opening its page (and ending the wizard): only the ones that apply here
+ * (controllers connected, matches to check, a paired host for stream profiles).
+ */
+@Composable
+private fun NextSteps(games: Int, review: Int) {
+    val wizard = LocalWizardNav.current ?: return
+    val navigate = io.github.thecodingdad.gamelodge.ui.screens.settings.LocalSettingsNavigator.current
+    val platform = io.github.thecodingdad.gamelodge.ui.PlatformUi.current
+    val controllers = platform.rememberControllers()
+    val hosts by LocalContainer.current.hosts.hosts.collectAsState()
+    val paired = hosts.values.any { it.paired }
+    fun open(target: io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget) = wizard.finishThen { navigate(target, null) }
+    SectionHeader(stringResource(Res.string.wizard_next_title))
+    WizardStatusRow(
+        stringResource(Res.string.wizard_next_look), stringResource(Res.string.wizard_next_look_sub), done = false,
+        icon = Icons.Filled.Palette, onClick = { open(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Page(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId.HOME_SCREEN)) },
+    )
+    if (games > 0) {
+        WizardStatusRow(
+            stringResource(Res.string.wizard_next_filters), stringResource(Res.string.wizard_next_filters_sub), done = false,
+            icon = Icons.Filled.FilterAlt, onClick = { open(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Page(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId.FILTERS)) },
+        )
+    }
+    if (controllers.isNotEmpty()) {
+        WizardStatusRow(
+            stringResource(Res.string.wizard_next_controllers), stringResource(Res.string.wizard_next_controllers_sub), done = false,
+            icon = Icons.Filled.SportsEsports, onClick = { open(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Controllers) },
+        )
+    }
+    if (review > 0) {
+        WizardStatusRow(
+            stringResource(Res.string.wizard_next_review), stringResource(Res.string.wizard_next_review_sub, review), done = false,
+            icon = Icons.Filled.FactCheck, onClick = { open(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Review) },
+        )
+    }
+    if (paired && platform.hasPage(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId.PROFILES)) {
+        WizardStatusRow(
+            stringResource(Res.string.wizard_next_profiles), stringResource(Res.string.wizard_next_profiles_sub), done = false,
+            icon = Icons.Filled.Tune, onClick = { open(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Page(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId.PROFILES)) },
+        )
+    }
 }

@@ -98,6 +98,8 @@ class WizardNav internal constructor(
     val chooseBackup: (String) -> Unit,
     /** Changes the launcher settings (applies at once). */
     val update: ((LauncherSettings) -> LauncherSettings) -> Unit,
+    /** Ends the wizard, then runs the action (e.g. opens a settings page). */
+    val finishThen: (() -> Unit) -> Unit = {},
 )
 
 val LocalWizardNav = staticCompositionLocalOf<WizardNav?> { null }
@@ -149,6 +151,7 @@ fun SetupWizard(vm: LauncherViewModel, manual: Boolean, onDone: () -> Unit) {
                 current = WizardStep.HOSTS
             },
             update = vm::updateSettings,
+            finishThen = { action -> finish(); action() },
         )
     }
 
