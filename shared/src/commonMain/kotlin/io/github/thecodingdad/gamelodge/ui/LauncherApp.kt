@@ -407,20 +407,33 @@ fun LauncherApp(
                                 val detailActive by vm.activeProfile.collectAsState()
                                 val detailRunning by vm.runningSessions.collectAsState()
                                 val runningSession = detailRunning.firstOrNull { it.entry?.item?.id == e.item.id }
+                                // Or running on this PC (started by the launcher, Windows).
+                                val detailLocal by io.github.thecodingdad.gamelodge.stream.LocalSessions.running.collectAsState()
+                                val localSession = detailLocal?.takeIf { it.entry.item.id == e.item.id }
+                                val localKey = "local:${e.item.id}"
                                 val detailQuitting by io.github.thecodingdad.gamelodge.stream.Quitting.keys.collectAsState()
                                 DetailScreen(
                                     e, sessions, settings.animatedTiles, settings.animatedHero, onFavorite = { vm.setFavorite(e, it) }, onPlatform = { platformFor = e },
-                                    running = runningSession != null,
+                                    running = runningSession != null || localSession != null,
                                     onResume = {
+                                        localSession?.let { it.resume(); return@DetailScreen }
                                         val s = runningSession ?: return@DetailScreen
                                         e.remoteTargets.firstOrNull { it.hostUuid == s.host.uuid && it.appId == s.host.runningAppId }?.let { vm.launch(e, it) }
                                     },
                                     onQuit = {
+                                        localSession?.let { l ->
+                                            io.github.thecodingdad.gamelodge.stream.Quitting.start(
+                                                container.scope, localKey, e.item.title, quit = { l.quit() },
+                                                running = { io.github.thecodingdad.gamelodge.stream.LocalSessions.running.value?.entry?.item?.id == e.item.id },
+                                            )
+                                            return@DetailScreen
+                                        }
                                         val s = runningSession ?: return@DetailScreen
                                         io.github.thecodingdad.gamelodge.stream.Quitting.quitHost(container, s.host, e.item.title)
                                     },
                                     onRate = { vm.setUserRating(e, it) },
-                                    quitting = runningSession?.let { io.github.thecodingdad.gamelodge.stream.Quitting.hostKey(it.host) in detailQuitting } == true,
+                                    quitting = if (localSession != null) localKey in detailQuitting
+                                    else runningSession?.let { io.github.thecodingdad.gamelodge.stream.Quitting.hostKey(it.host) in detailQuitting } == true,
                                     profiles = detailProfiles, activeProfile = detailActive, onProfile = vm::setActiveProfile,
                                     onEditProfiles = { nav.navigate(Routes.settings(SettingsPageId.PROFILES)) },
                                     onBrowse = onBrowse,

@@ -88,6 +88,11 @@ class EntryActions(
 
     /** A / "Play": asks for the target whenever there is more than one. */
     fun play(entry: LibraryEntry) {
+        // Already running on this PC: back to it instead of a second start.
+        io.github.thecodingdad.gamelodge.stream.LocalSessions.running.value?.takeIf { it.entry.item.id == entry.item.id }?.let {
+            it.resume()
+            return
+        }
         when (entry.targets.size) {
             0 -> Unit
             1 -> launchDirect(entry, entry.targets.single())

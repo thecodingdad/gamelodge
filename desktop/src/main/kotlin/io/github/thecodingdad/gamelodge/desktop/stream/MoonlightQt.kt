@@ -56,6 +56,9 @@ class MoonlightQt(val dir: File) {
         builder.environment()["MOONLIGHT_LAUNCHER_MOUSE_SPEED"] = pointer.streamSpeed.toString()
         builder.environment()["MOONLIGHT_LAUNCHER_MOUSE_EXPONENT"] = pointer.exponent.toString()
         firstPad()?.let { builder.environment()["MOONLIGHT_LAUNCHER_FIRST_PAD"] = it }
+        // The stream grabs the keyboard (Windows never sees Ctrl / Alt / Shift there, so the quick
+        // menu hotkey can't fire): Moonlight-Qt catches it and reports "LAUNCHER-HOTKEY".
+        builder.environment()["MOONLIGHT_LAUNCHER_HOTKEY"] = hotkeySpec(io.github.thecodingdad.gamelodge.input.KeyboardKeys.quickMenuShortcut)
         // Part of the launcher: its taskbar button, the game's name and the launcher's icon.
         builder.environment()["MOONLIGHT_LAUNCHER_APPID"] = io.github.thecodingdad.gamelodge.desktop.TaskbarIdentity.APP_ID
         title?.let { builder.environment()["MOONLIGHT_LAUNCHER_TITLE"] = "$it – GameLodge" }
@@ -88,6 +91,7 @@ class MoonlightQt(val dir: File) {
                     }, "first-frame").apply { isDaemon = true }.start()
                     marker.startsWith("ERROR: ") -> error = marker.removePrefix("ERROR: ").trim()
                     marker.startsWith("APP-RUNNING: ") -> appRunning = true
+                    marker == "HOTKEY" -> onHotkey()
                 }
             }
         }
@@ -129,6 +133,14 @@ class MoonlightQt(val dir: File) {
         private const val FIRST_FRAME_WAIT_MS = 10_000L
 
         @Volatile private var located: MoonlightQt? = null
+
+        /** The quick menu shortcut was pressed in the stream (Moonlight-Qt's output thread). */
+        @Volatile var onHotkey: () -> Unit = {}
+
+        /** [shortcut] for Moonlight-Qt ("ctrl+alt+M", SDL key names), "" for none. */
+        fun hotkeySpec(shortcut: io.github.thecodingdad.gamelodge.input.KeyShortcut?): String = shortcut?.let { s ->
+            listOfNotNull("ctrl".takeIf { s.ctrl }, "alt".takeIf { s.alt }, "shift".takeIf { s.shift }, s.key).joinToString("+")
+        }.orEmpty()
 
         /** The pad that starts a stream becomes player 1 ("<n>:<name>", see [Gamepads.starter]); null: the usual order. */
         @Volatile var firstPad: suspend () -> String? = { null }

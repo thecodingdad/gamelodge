@@ -347,9 +347,13 @@ fun EntryContextMenu(
         ) {
             if (session != null) RunningSessionActions(session, onResume = act { onResume(session) }, onDone = onDismiss)
             val e = entry ?: return@Column
+            // Running on this PC (started by the launcher): resume and quit here too.
+            val localRunning by io.github.thecodingdad.gamelodge.stream.LocalSessions.running.collectAsState()
+            val local = localRunning?.takeIf { session == null && it.entry.item.id == e.item.id }
+            if (local != null) LocalSessionActions(local, onResume = act { local.resume() }, onDone = onDismiss)
             val isApp = e.item.kind == ItemKind.APP
             if (!inDetail) {
-                if (session == null) {
+                if (session == null && local == null) {
                     LauncherButton(
                         stringResource(
                             when {
@@ -503,6 +507,38 @@ fun GameEmulatorDialog(entry: LibraryEntry?, onDismiss: () -> Unit, onChoose: (L
             }
         }
     }
+}
+
+/** Context menu section for a game the launcher started on this PC and follows. */
+@Composable
+private fun LocalSessionActions(
+    session: io.github.thecodingdad.gamelodge.stream.LocalSessions.Running,
+    onResume: () -> Unit,
+    onDone: () -> Unit,
+) {
+    val c = io.github.thecodingdad.gamelodge.LocalContainer.current
+    val key = "local:${session.entry.item.id}"
+    Text(stringResource(Res.string.qm_running_here), style = MaterialTheme.typography.labelLarge, color = LauncherTheme.colors.accent)
+    val quitting by io.github.thecodingdad.gamelodge.stream.Quitting.keys.collectAsState()
+    val busy = key in quitting
+    LauncherButton(stringResource(Res.string.qm_resume), onResume, Modifier.fillMaxWidth(), Icons.Filled.PlayArrow, primary = true, enabled = !busy)
+    if (busy) {
+        LauncherButton(stringResource(Res.string.qm_quitting), {}, Modifier.fillMaxWidth(), busy = true)
+    } else {
+        HoldToConfirmButton(
+            stringResource(Res.string.qm_quit_game),
+            onConfirmed = {
+                io.github.thecodingdad.gamelodge.stream.Quitting.start(
+                    c.scope, key, session.entry.item.title, quit = { session.quit() },
+                    running = { io.github.thecodingdad.gamelodge.stream.LocalSessions.running.value?.entry?.item?.id == session.entry.item.id },
+                )
+                onDone()
+            },
+            modifier = Modifier.fillMaxWidth(),
+            icon = Icons.Filled.StopCircle,
+        )
+    }
+    androidx.compose.foundation.layout.Spacer(Modifier.height(6.dp))
 }
 
 /** Stream section of the context menu for a game that is running on a host. */

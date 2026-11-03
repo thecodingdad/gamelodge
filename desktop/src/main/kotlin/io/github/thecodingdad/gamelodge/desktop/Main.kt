@@ -308,6 +308,10 @@ fun main(args: Array<String>) {
             val shortcut = io.github.thecodingdad.gamelodge.input.KeyShortcut.parse(it.keyboardQuickMenu)
             io.github.thecodingdad.gamelodge.input.KeyboardKeys.quickMenuShortcut = shortcut
             WindowsHotkey.set(shortcut) { gamepads.onCombo(io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU, -1) }
+            // In the stream Moonlight-Qt catches it (it grabs the keyboard): the same action.
+            io.github.thecodingdad.gamelodge.desktop.stream.MoonlightQt.onHotkey = { gamepads.onCombo(io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU, -1) }
+            io.github.thecodingdad.gamelodge.desktop.stream.MoonlightQt.locate().running
+                ?.send("hotkey " + io.github.thecodingdad.gamelodge.desktop.stream.MoonlightQt.hotkeySpec(shortcut))
             WindowsPointer.speed = it.mouseSpeed / 100f
             WindowsPointer.exponent = it.mouseAcceleration.exponent
             WindowsPointer.streamSpeed = STREAM_MOUSE_SPEED * it.mouseSpeed / 100f
