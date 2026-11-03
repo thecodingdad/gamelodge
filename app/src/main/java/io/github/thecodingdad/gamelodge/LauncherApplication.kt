@@ -26,6 +26,8 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
         super.onCreate()
         registerActivityLifecycleCallbacks(CurrentActivity)
         container = AppContainer(this)
+        // Always offered as a home app (earlier versions switched the alias off).
+        io.github.thecodingdad.gamelodge.system.LauncherMode(this).ensureOffered()
         io.github.thecodingdad.gamelodge.stream.ProfileStore.resetRenderMode(this)
         io.github.thecodingdad.gamelodge.stream.ProfileStore.moveToBase(
             this, io.github.thecodingdad.gamelodge.stream.StreamSettingsSchema.gamepadOptions(this).map { it.key },

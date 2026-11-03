@@ -368,7 +368,7 @@
     <string name="profile_advanced">Plus de réglages</string>
     <string name="launcher_intro">Utilisez GameLodge comme écran d'accueil. Vous pouvez revenir en arrière à tout moment ; l'app continue aussi de fonctionner comme une app normale.</string>
     <string name="launcher_enable">Utiliser comme écran d'accueil</string>
-    <string name="launcher_enable_sub">Indique si le lanceur est l'app d'accueil par défaut ; l'activer ouvre le choix d'Android</string>
+    <string name="launcher_enable_sub">Indique si GameLodge est l'écran d'accueil par défaut. Activer interroge Android ; désactiver ouvre le choix d'Android (reste activé tant que vous n'en choisissez pas un autre).</string>
     <string name="launcher_system_settings">Réglages de l'écran d'accueil Android</string>
     <string name="yes">Oui</string>
     <string name="no">Non</string>

@@ -368,7 +368,7 @@
     <string name="profile_advanced">Mais configurações</string>
     <string name="launcher_intro">Use o GameLodge como sua tela inicial. Você pode voltar a qualquer momento; o app também continua funcionando como um app normal.</string>
     <string name="launcher_enable">Usar como tela inicial</string>
-    <string name="launcher_enable_sub">Mostra se o lançador é o app inicial padrão; ativá-lo abre a escolha do Android</string>
+    <string name="launcher_enable_sub">Mostra se o GameLodge é a tela inicial padrão. Ativar pergunta ao Android; desativar abre a escolha do Android (fica ativo até você escolher outra lá).</string>
     <string name="launcher_system_settings">Configurações de tela inicial do Android</string>
     <string name="yes">Sim</string>
     <string name="no">Não</string>

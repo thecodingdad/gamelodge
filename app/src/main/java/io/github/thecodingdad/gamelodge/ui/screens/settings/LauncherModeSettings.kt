@@ -30,20 +30,17 @@ fun LauncherModeSettings(settings: LauncherSettings, update: ((LauncherSettings)
     LifecycleResumeEffect(Unit) { tick++; onPauseOrDispose { } }
     val isDefault = remember(tick) { mode.isDefaultHome }
 
-    // The switch shows whether we are the default home app. Turning it on asks Android; if the
-    // user picks another launcher there, it springs back to off.
+    // The switch shows whether we are the default home app, always the real state. On asks
+    // Android; off opens Android's home app settings (only the user can pick another launcher):
+    // if they don't, it stays on.
     val roleRequest = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        val held = mode.isDefaultHome
-        if (!held) mode.setAvailable(false)
-        update { it.copy(launcherMode = held) }
+        update { it.copy(launcherMode = mode.isDefaultHome) }
         tick++
     }
 
-    // Default app changed outside (system settings, another launcher): follow it. The home
-    // alias only stays enabled while we hold the role.
+    // Default app changed outside (system settings, another launcher): follow it.
     LaunchedEffect(isDefault) {
         if (settings.launcherMode != isDefault) update { it.copy(launcherMode = isDefault) }
-        if (mode.isAvailable != isDefault) mode.setAvailable(isDefault)
     }
 
     SettingsPage(stringResource(Res.string.settings_launcher)) {
@@ -53,13 +50,10 @@ fun LauncherModeSettings(settings: LauncherSettings, update: ((LauncherSettings)
             stringResource(Res.string.launcher_enable), isDefault,
             onChange = { enabled ->
                 if (enabled) {
-                    mode.setAvailable(true)
                     val request = mode.requestDefaultHomeIntent()
                     if (request != null) roleRequest.launch(request) else context.startActivity(mode.homeSettingsIntent())
                 } else {
-                    // Android can't give the role back from here: choose another launcher.
-                    update { it.copy(launcherMode = false) }
-                    mode.setAvailable(false)
+                    // Android can't give the role back from here: choose another launcher there.
                     context.startActivity(mode.homeSettingsIntent())
                 }
             },

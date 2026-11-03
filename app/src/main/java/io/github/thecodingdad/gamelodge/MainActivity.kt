@@ -232,11 +232,10 @@ class MainActivity : ComponentActivity() {
                 target?.hostUuid?.let { container.autoSleep.scheduleAfterStream(it) }
                 container.launcher.streamEnded()
             }
-            // If the user made us the home app (also via Android settings), launcher mode is on.
+            // Launcher mode is whether we are the home app (also chosen or dropped in Android's settings).
             val mode = LauncherMode(this@MainActivity)
-            if (mode.isDefaultHome && !vm.settings.value.launcherMode) {
-                container.settings.update { it.copy(launcherMode = true) }
-            }
+            val held = mode.isDefaultHome
+            if (held != vm.settings.value.launcherMode) container.settings.update { it.copy(launcherMode = held) }
         }
     }
 

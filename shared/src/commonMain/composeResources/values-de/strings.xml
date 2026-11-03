@@ -366,7 +366,7 @@
     <string name="profile_advanced">Weitere Einstellungen</string>
     <string name="launcher_intro">GameLodge als Startbildschirm verwenden. Du kannst jederzeit zurückwechseln, die App funktioniert auch weiter als normale App.</string>
     <string name="launcher_enable">Als Startbildschirm verwenden</string>
-    <string name="launcher_enable_sub">Zeigt an, ob der Launcher der Standard-Startbildschirm ist; Einschalten öffnet Androids Auswahl</string>
+    <string name="launcher_enable_sub">Zeigt an, ob GameLodge der Standard-Startbildschirm ist. Einschalten fragt Android; Ausschalten öffnet Androids Auswahl (bleibt an, bis du dort einen anderen wählst).</string>
     <string name="launcher_system_settings">Android-Startbildschirm-Einstellungen</string>
     <string name="yes">Ja</string>
     <string name="no">Nein</string>

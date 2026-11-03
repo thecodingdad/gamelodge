@@ -168,7 +168,6 @@ private fun ColumnScope.LauncherModeStep() {
     val isDefault = remember(tick, refresh) { mode.isDefaultHome }
     val roleRequest = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         val held = mode.isDefaultHome
-        if (!held) mode.setAvailable(false)
         nav.update { it.copy(launcherMode = held) }
         refresh++
     }
@@ -177,7 +176,6 @@ private fun ColumnScope.LauncherModeStep() {
         stringResource(Res.string.wizard_launcher_sub), done = isDefault, icon = Icons.Filled.Home,
         action = stringResource(Res.string.wizard_launcher_set_short),
         onClick = if (isDefault) null else ({
-            mode.setAvailable(true)
             val request = mode.requestDefaultHomeIntent()
             if (request != null) roleRequest.launch(request) else context.open(mode.homeSettingsIntent())
         }),

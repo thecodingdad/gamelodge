@@ -8,25 +8,25 @@ import android.content.pm.PackageManager
 import android.provider.Settings
 
 /**
- * Optional home-screen mode. The HOME intent filter lives on a disabled activity-alias, so
- * the app only appears as a launcher choice after the user switched launcher mode on.
+ * Home-screen mode. The app is always one of the home apps Android offers (HOME filter on an
+ * activity-alias); launcher mode is on exactly while it is the default home app.
  */
 class LauncherMode(private val context: Context) {
     private val alias = ComponentName(context, "${context.packageName}.HomeAlias")
     private val roleManager = context.getSystemService(RoleManager::class.java)
 
-    val isAvailable: Boolean
-        get() = context.packageManager.getComponentEnabledSetting(alias) == PackageManager.COMPONENT_ENABLED_STATE_ENABLED
-
     val isDefaultHome: Boolean
         get() = roleManager?.isRoleHeld(RoleManager.ROLE_HOME) == true
 
-    fun setAvailable(enabled: Boolean) {
-        context.packageManager.setComponentEnabledSetting(
-            alias,
-            if (enabled) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-            PackageManager.DONT_KILL_APP,
-        )
+    /**
+     * Earlier versions switched the home alias off while launcher mode was off: back to the
+     * manifest's state (always offered as a home app).
+     */
+    fun ensureOffered() {
+        val pm = context.packageManager
+        if (pm.getComponentEnabledSetting(alias) != PackageManager.COMPONENT_ENABLED_STATE_DEFAULT) {
+            pm.setComponentEnabledSetting(alias, PackageManager.COMPONENT_ENABLED_STATE_DEFAULT, PackageManager.DONT_KILL_APP)
+        }
     }
 
     /** System dialog asking to make us the default home app (Android 10+). */

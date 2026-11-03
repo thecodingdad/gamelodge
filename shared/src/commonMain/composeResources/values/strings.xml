@@ -368,7 +368,7 @@
     <string name="profile_advanced">More settings</string>
     <string name="launcher_intro">Use GameLodge as your home screen. You can switch back at any time; the app keeps working as a normal app too.</string>
     <string name="launcher_enable">Use as home screen</string>
-    <string name="launcher_enable_sub">Shows whether the launcher is the default home app; turning it on opens Android's choice</string>
+    <string name="launcher_enable_sub">Shows whether GameLodge is the default home app. On asks Android; off opens Android's home app choice (it stays on until you pick another one there).</string>
     <string name="launcher_system_settings">Android home screen settings</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
