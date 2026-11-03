@@ -214,7 +214,7 @@ fun QuickMenuOverlayWindow(
                     Modifier.fillMaxSize()
                         .background(LauncherTheme.colors.surface)
                         // The pad's D-pad / stick arrive as arrow keys: they move the focus.
-                        .onKeyEvent { e -> arrowFocus(e, focusManager) }
+                        .onKeyEvent { e -> arrowFocus(e, focusManager, consumeAtEdge = true) }
                         .pointerInput(Unit) {
                             awaitPointerEventScope {
                                 while (true) {

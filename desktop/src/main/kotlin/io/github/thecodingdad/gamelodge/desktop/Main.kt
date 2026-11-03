@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.key.onKeyEvent
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.res.loadImageBitmap
@@ -413,7 +412,6 @@ fun main(args: Array<String>) {
         // Nothing focused (e.g. after touch on an empty spot or a closed popup): the next direction
         // key focuses the first element, so the controller always finds something to select.
         var windowFocusManager: androidx.compose.ui.focus.FocusManager? = null
-        var contentHasFocus = false
         fun controllerInput() {
             PadCursor.controllerUsed()
             val m = inputModeManager ?: return
@@ -505,12 +503,6 @@ fun main(args: Array<String>) {
                     if (gamepads.dispatching || isDirection || e.key == Key.Tab) controllerInput()
                     if (!gamepads.dispatching) gamepads.otherInput()
                 }
-                if (isDirection && e.type == KeyEventType.KeyDown && !contentHasFocus) {
-                    // The pressed direction first; only when it finds nothing, the first element.
-                    val manager = windowFocusManager
-                    if (manager != null && !arrowFocus(e, manager)) manager.moveFocus(androidx.compose.ui.focus.FocusDirection.Next)
-                    return@Window true
-                }
                 when {
                     // F11: full screen like a console.
                     e.key == Key.F11 && e.type == KeyEventType.KeyDown -> {
@@ -527,6 +519,17 @@ fun main(args: Array<String>) {
                         dispatcher.dispatchButton(button, phase, 0, System.currentTimeMillis())
                     } ?: false
                 }
+            },
+            // Only keys nothing in the content took: a direction key while nothing is focused (after
+            // touch on an empty spot, a closed popup) focuses in its direction, else the first element.
+            // With something focused the content takes every direction key, also at a list's end.
+            onKeyEvent = { e ->
+                val isDirection = e.key == Key.DirectionUp || e.key == Key.DirectionDown || e.key == Key.DirectionLeft || e.key == Key.DirectionRight
+                if (isDirection && e.type == KeyEventType.KeyDown) {
+                    val manager = windowFocusManager
+                    if (manager != null && !arrowFocus(e, manager)) manager.moveFocus(androidx.compose.ui.focus.FocusDirection.Next)
+                    true
+                } else false
             },
         ) {
             // Renderer and graphics adapter of every window (also the ones built after sleep), once it drew.
@@ -582,10 +585,9 @@ fun main(args: Array<String>) {
             androidx.compose.runtime.SideEffect { windowFocusManager = focusManager }
             androidx.compose.foundation.layout.Box(
                 androidx.compose.ui.Modifier.fillMaxSize()
-                    .onFocusChanged { contentHasFocus = it.hasFocus }
                     // Arrow keys (and the pad's D-pad / left stick, sent as arrows) move the focus like
                     // the D-pad on Android; Compose on the desktop only moves it with Tab.
-                    .onKeyEvent { e -> arrowFocus(e, focusManager) }
+                    .onKeyEvent { e -> arrowFocus(e, focusManager, consumeAtEdge = true) }
                     // No mouse pointer in the way while a controller is used (also over hand cursors).
                     .pointerHoverIcon(
                         if (PadCursor.hidden) PadCursor.blank else androidx.compose.ui.input.pointer.PointerIcon.Default,
@@ -631,8 +633,12 @@ private const val INSTALL_WATCH_MS = 8 * 3_600_000L
 /** Host pixels per second of the stream's mouse at full stick deflection and 100 % speed. */
 private const val STREAM_MOUSE_SPEED = 1200f
 
-/** Unhandled arrow keys move the focus in their direction. */
-internal fun arrowFocus(e: androidx.compose.ui.input.key.KeyEvent, focusManager: androidx.compose.ui.focus.FocusManager): Boolean {
+/**
+ * Unhandled arrow keys move the focus in their direction. [consumeAtEdge]: an arrow that finds
+ * nothing in its direction (the end of a list or row) is taken as well, so the focus stays put
+ * instead of something further out moving it elsewhere.
+ */
+internal fun arrowFocus(e: androidx.compose.ui.input.key.KeyEvent, focusManager: androidx.compose.ui.focus.FocusManager, consumeAtEdge: Boolean = false): Boolean {
     if (e.type != KeyEventType.KeyDown) return false
     val direction = when (e.key) {
         Key.DirectionUp -> androidx.compose.ui.focus.FocusDirection.Up
@@ -641,7 +647,7 @@ internal fun arrowFocus(e: androidx.compose.ui.input.key.KeyEvent, focusManager:
         Key.DirectionRight -> androidx.compose.ui.focus.FocusDirection.Right
         else -> return false
     }
-    return focusManager.moveFocus(direction)
+    return focusManager.moveFocus(direction) || consumeAtEdge
 }
 
 
