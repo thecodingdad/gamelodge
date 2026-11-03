@@ -169,14 +169,19 @@ fun BoxScope.RunningMark(entry: LibraryEntry, shape: Shape) {
             style = MaterialTheme.typography.labelSmall, color = Color.White, maxLines = 1,
         )
     }
+    QuitHoldBar(id)
+}
+
+/** The progress of a held quit (Y) of [itemId], along the bottom edge of its tile. */
+@Composable
+fun BoxScope.QuitHoldBar(itemId: String?) {
     val hold = LocalQuitHold.current
-    if (hold.itemId == id) {
-        Box(
-            Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(6.dp).height(5.dp)
-                .clip(RoundedCornerShape(3.dp)).background(Color(0x66000000)),
-        ) {
-            Box(Modifier.fillMaxHeight().fillMaxWidth(hold.progress.value).background(colors.danger))
-        }
+    if (itemId == null || hold.itemId != itemId) return
+    Box(
+        Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(6.dp).height(5.dp)
+            .clip(RoundedCornerShape(3.dp)).background(Color(0x66000000)),
+    ) {
+        Box(Modifier.fillMaxHeight().fillMaxWidth(hold.progress.value).background(LauncherTheme.colors.danger))
     }
 }
 

@@ -4,13 +4,18 @@
 # uses the installation's files and must never be stopped. Stops only the launcher itself, installs
 # silently with a log, compares the installed files with the build, and starts the launcher again
 # in the user's session (in the tray, like at Windows start) when it was running before.
+# --force: install during a stream too (test setup; the runner check stays).
 set -euo pipefail
+FORCE='$false'
+[[ "${1:-}" == "--force" ]] && FORCE='$true'
+
 cd "$(dirname "$0")/.."
 VM=../.android-dev/win11vm.sh
 
 "$VM" '
 $ErrorActionPreference = "Stop"
-if (Get-Process sunshine_wgc_capture -ErrorAction SilentlyContinue) { "A stream is active - not installing."; exit 3 }
+$force = '"$FORCE"'
+if (-not $force -and (Get-Process sunshine_wgc_capture -ErrorAction SilentlyContinue)) { "A stream is active - not installing."; exit 3 }
 $runners = @(Get-CimInstance Win32_Process | ? { $_.CommandLine -like "*--run*" -and $_.Path -like "*GameLodge*" })
 if ($runners.Count -gt 0) { "A game started through GameLodge runs - not installing."; exit 3 }
 $launchers = @(Get-CimInstance Win32_Process | ? { $_.CommandLine -like "*MainKt*" -and $_.CommandLine -notlike "*--run*" })

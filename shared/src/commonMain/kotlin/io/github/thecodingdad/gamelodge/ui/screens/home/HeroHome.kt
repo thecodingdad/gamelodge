@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.ui.screens.home
 
+import io.github.thecodingdad.gamelodge.ui.components.QuitHoldBar
 import io.github.thecodingdad.gamelodge.ui.components.keepHorizontalFocus
 
 import io.github.thecodingdad.gamelodge.ui.components.mouseDragScroll
@@ -315,6 +316,7 @@ fun HeroHome(
                                     onClick = { callbacks.onResume(session) },
                                     onLongClick = { callbacks.onRunningMenu(session) },
                                     onFocused = { focused = session.entry; focusedSession = session; callbacks.onFocusKey(key) },
+                                    overlay = { QuitHoldBar(session.entry?.item?.id) },
                                     // 16:9.
                                     modifier = Modifier.width(runningWidth).height(runningWidth / io.github.thecodingdad.gamelodge.ui.components.APP_LANDSCAPE_RATIO)
                                         .restoreFocusIf(callbacks.lastFocusedKey == key || callbacks.lastFocusedKey == null),

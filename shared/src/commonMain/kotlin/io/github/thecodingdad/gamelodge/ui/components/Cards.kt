@@ -382,6 +382,8 @@ fun WideCard(
     icon: ImageVector = Icons.Filled.PlayArrow,
     onFocused: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
+    /** Drawn over the card (e.g. the progress of a held quit). */
+    overlay: @Composable androidx.compose.foundation.layout.BoxScope.() -> Unit = {},
 ) {
     val colors = LauncherTheme.colors
     FocusSurface(onClick = onClick, onFocused = onFocused, onLongClick = onLongClick, modifier = modifier, focusScale = 1.04f) {
@@ -404,6 +406,7 @@ fun WideCard(
                 Text(subtitle, style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.8f), maxLines = 1)
             }
         }
+        overlay()
     }
 }
 
