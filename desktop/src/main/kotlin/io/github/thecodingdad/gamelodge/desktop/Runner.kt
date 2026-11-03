@@ -40,7 +40,11 @@ object Runner {
             runBlocking {
                 if (spec.mode == LaunchSpec.INSTALL) {
                     val http = OkHttpClient()
-                    GameLauncher.install(entry) { PcLibrary.installedNow(entry, http) }
+                    // Installed: the running launcher rescans at once (its library, the host's apps and
+                    // what paired launchers see), not only at its next scan.
+                    val installed = GameLauncher.install(entry) { PcLibrary.installedNow(entry, http) }
+                    if (installed) SingleInstance.reportInstalled(entry.id)
+                    installed
                 } else {
                     // The game's artwork instead of the desktop while it loads and ends: from the
                     // running launcher, else from the launcher's artwork index, else just the title.

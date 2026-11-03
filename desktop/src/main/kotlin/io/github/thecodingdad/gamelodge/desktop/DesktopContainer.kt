@@ -239,7 +239,11 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
                     library.syncPlayData()
                 }
             },
-        )).also { it.streamNotices = io.github.thecodingdad.gamelodge.data.companion.StreamNotices(servers, scope) }
+        )).also {
+            it.streamNotices = io.github.thecodingdad.gamelodge.data.companion.StreamNotices(servers, scope)
+            // A stream ended: maybe a game was installed on the host; its list changes soon.
+            it.afterStream = { library.checkHostChangesSoon() }
+        }
     }
 
     companion object {

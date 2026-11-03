@@ -166,13 +166,15 @@ fun ArtworkPickerDialog(
     // An own image from the device's storage, copied into the launcher (the document may not stay readable).
     val filesDir = io.github.thecodingdad.gamelodge.LocalContainer.current.platform.filesDir
     var ownKind by remember { mutableStateOf<ArtworkKind?>(null) }
+    // A choice keeps the popup open (several images in a row): back to the top, where the new one shows.
+    var chosen by remember { mutableStateOf(0) }
     val pickOwnImage = io.github.thecodingdad.gamelodge.ui.PlatformUi.current.rememberImagePicker { address ->
         val target = item
         val kind = ownKind
         if (address == null || target == null || kind == null) return@rememberImagePicker
         scope.launch {
             copyOwn(filesDir, address, target.id, kind)?.let { metadata.setOwnArtwork(target.id, kind, it.absolutePath) }
-            onDismiss()
+            chosen++
         }
     }
     // Constant height (the whole screen but a margin): switching tabs doesn't make it jump.
@@ -270,6 +272,14 @@ fun ArtworkPickerDialog(
         val gridState = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
         io.github.thecodingdad.gamelodge.ui.input.RegisterStickScroll(gridState)
         LaunchedEffect(kindIndex) { gridState.scrollToItem(0) }
+        // After a choice: focus up to the tab first (else the focused image would scroll back
+        // into view), then the list to its top with the chosen image.
+        LaunchedEffect(chosen) {
+            if (chosen == 0) return@LaunchedEffect
+            io.github.thecodingdad.gamelodge.ui.components.FocusSound.silence()
+            runCatching { tabFocus[kindIndex.coerceIn(tabFocus.indices)].requestFocus() }
+            gridState.animateScrollToItem(0)
+        }
 
         // Tabs and hints stay; current image and choices scroll together.
         Column(Modifier.weight(1f)) {
@@ -299,17 +309,6 @@ fun ArtworkPickerDialog(
                 }
                 Spacer(Modifier.height(12.dp))
             }
-            io.github.thecodingdad.gamelodge.ui.components.LauncherTextField(
-                stringResource(Res.string.hint_search), query, { query = it },
-                modifier = Modifier.fillMaxWidth().then(if (kinds.size > 1) Modifier else Modifier.focusRequester(tabFocus[0])),
-            )
-            if (query.trim() != defaultQuery) {
-                Text(
-                    stringResource(Res.string.artwork_search_info), style = MaterialTheme.typography.bodySmall,
-                    color = LauncherTheme.colors.onSurfaceMuted, modifier = Modifier.padding(top = 6.dp),
-                )
-            }
-            Spacer(Modifier.height(14.dp))
             // The current image of this tab, picked by hand or automatic.
             val current = when (kind) {
                 ArtworkKind.COVER -> target.coverUrl
@@ -365,6 +364,17 @@ fun ArtworkPickerDialog(
                                 ),
                                 style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted,
                             )
+                            // The search term scrolls away with the current image: the choices get the room.
+                            io.github.thecodingdad.gamelodge.ui.components.LauncherTextField(
+                                stringResource(Res.string.hint_search), query, { query = it },
+                                modifier = Modifier.fillMaxWidth().then(if (kinds.size > 1) Modifier else Modifier.focusRequester(tabFocus[0])),
+                            )
+                            if (query.trim() != defaultQuery) {
+                                Text(
+                                    stringResource(Res.string.artwork_search_info), style = MaterialTheme.typography.bodySmall,
+                                    color = LauncherTheme.colors.onSurfaceMuted, modifier = Modifier.padding(top = 6.dp),
+                                )
+                            }
                             // Wraps on narrow (portrait) screens.
                             io.github.thecodingdad.gamelodge.ui.components.ButtonRow(spacing = 10.dp) {
                                 io.github.thecodingdad.gamelodge.ui.components.LauncherButton(
@@ -376,13 +386,13 @@ fun ArtworkPickerDialog(
                                 if (current != null && !tile) {
                                     io.github.thecodingdad.gamelodge.ui.components.LauncherButton(
                                         stringResource(Res.string.artwork_none), icon = androidx.compose.material.icons.Icons.Filled.Delete,
-                                        onClick = { scope.launch { metadata.clearArtwork(target.id, kind); onDismiss() } },
+                                        onClick = { scope.launch { metadata.clearArtwork(target.id, kind); chosen++ } },
                                     )
                                 }
                                 if (manual || (tile && current != null)) {
                                     io.github.thecodingdad.gamelodge.ui.components.LauncherButton(
                                         stringResource(Res.string.artwork_reset_auto), icon = androidx.compose.material.icons.Icons.Filled.Restore,
-                                        onClick = { scope.launch { metadata.resetArtwork(target.id, kind); onDismiss() } },
+                                        onClick = { scope.launch { metadata.resetArtwork(target.id, kind); chosen++ } },
                                     )
                                 }
                             }
@@ -428,7 +438,7 @@ fun ArtworkPickerDialog(
                                     if (option.url.startsWith("http")) metadata.setArtwork(target.id, kind, option)
                                     else copyOwn(filesDir, option.url, target.id, kind)
                                         ?.let { metadata.setOwnArtwork(target.id, kind, it.absolutePath) }
-                                    onDismiss()
+                                    chosen++
                                 }
                             },
                             modifier = Modifier.fillMaxWidth().aspectRatio(ratio).then(if (i == 0) Modifier.focusRequester(firstChoice) else Modifier),

@@ -42,6 +42,8 @@ private val ARTWORK_HOSTS = listOf("steamgriddb.com", "images.igdb.com", "steams
 
 /** How often the hosts' GameLodge lists are checked for changes. */
 private const val COMPANION_REFRESH_MS = 60_000L
+/** Pauses between the frequent looks after a stream (about 6 minutes in all). */
+private val HOST_CHANGES_SOON_MS = listOf(5_000L, 10_000L, 15_000L, 30_000L, 60_000L, 120_000L, 120_000L)
 
 /** A change to play data (favourite, rating …) is sent this long after it. */
 private const val PLAY_SYNC_DELAY_MS = 3_000L
@@ -117,6 +119,22 @@ class LibraryRepository(
                 loading.forEach { h -> io.github.thecodingdad.gamelodge.data.tasks.BackgroundTasks.set(io.github.thecodingdad.gamelodge.data.tasks.BackgroundTask("applist-${h.uuid}", Res.string.task_app_list, listOf(h.name))) }
                 (shown - loading.map { it.uuid }.toSet()).forEach { io.github.thecodingdad.gamelodge.data.tasks.BackgroundTasks.remove("applist-$it") }
                 shown = loading.map { it.uuid }.toSet()
+            }
+        }
+    }
+
+    private var soonJob: kotlinx.coroutines.Job? = null
+
+    /**
+     * Looks for host changes often for a while (a stream ended: maybe a game was installed there,
+     * the host rescans and its list changes within a few minutes).
+     */
+    fun checkHostChangesSoon() {
+        soonJob?.cancel()
+        soonJob = scope.launch(Dispatchers.IO) {
+            for (wait in HOST_CHANGES_SOON_MS) {
+                kotlinx.coroutines.delay(wait)
+                runCatching { checkHostChanges() }
             }
         }
     }
@@ -292,6 +310,9 @@ class LibraryRepository(
         val feed = companion ?: return
         for (target in dao.getAllTargets().filter { it.hostUuid == hostUuid }) {
             val game = target.appUuid?.uppercase()?.let { games[it] } ?: continue
+            // Installed on the host meanwhile (or uninstalled): play instead of install, without
+            // waiting for the app list to change.
+            if (target.installed != game.installed) dao.upsertTargets(listOf(target.copy(installed = game.installed)))
             val item = dao.getItem(target.itemId) ?: continue
             val groups = game.collections.joinToString(", ").ifEmpty { null }
             if (item.playniteCategories != groups || item.playnitePlugin != game.sourceLabel) {

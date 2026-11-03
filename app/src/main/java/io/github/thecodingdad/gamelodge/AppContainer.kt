@@ -91,6 +91,8 @@ class AppContainer(context: Context) : LauncherContainer {
             it.vpn = vpn
             it.gameActions.delayed = io.github.thecodingdad.gamelodge.stream.WorkManagerGameActions(appContext)
             it.streamNotices = io.github.thecodingdad.gamelodge.data.companion.StreamNotices(servers, scope)
+            // A stream ended: maybe a game was installed on the host; its list changes soon.
+            it.afterStream = { library.checkHostChangesSoon() }
         }
     }
     override val hostActions: ArtemisHostActions by lazy { ArtemisHostActions(hosts) }

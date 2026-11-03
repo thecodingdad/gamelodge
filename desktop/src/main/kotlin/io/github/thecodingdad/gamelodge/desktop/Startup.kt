@@ -95,9 +95,13 @@ object SingleInstance {
     private const val ARTWORK = "artwork "
     private const val LAUNCH = "launch "
     private const val THREADS = "threads"
+    private const val INSTALLED = "installed "
 
     /** Called for game starts/ends reported by the streaming host's runner (entry id, started). */
     @Volatile var onHostGame: suspend (String, Boolean) -> Unit = { _, _ -> }
+
+    /** The runner installed a game (entry id): the library rescans (and the host apps follow). */
+    @Volatile var onInstalled: (String) -> Unit = {}
 
     /** The runner asks which start action to run: an encoded launch spec, or null for its own. */
     @Volatile var onLaunch: suspend (String) -> String? = { null }
@@ -131,6 +135,7 @@ object SingleInstance {
                                 runCatching { s.getOutputStream().write("$GO\n".toByteArray()) }
                             }
                             line.startsWith(GAME_END) -> runCatching { kotlinx.coroutines.runBlocking { onHostGame(line.removePrefix(GAME_END), false) } }
+                            line.startsWith(INSTALLED) -> runCatching { onInstalled(line.removePrefix(INSTALLED)) }
                             line.startsWith(LAUNCH) -> runCatching {
                                 val answer = kotlinx.coroutines.runBlocking { onLaunch(line.removePrefix(LAUNCH)) }.orEmpty()
                                 s.getOutputStream().write("$answer\n".toByteArray())
@@ -183,6 +188,11 @@ object SingleInstance {
             s.getInputStream().bufferedReader().readLine()?.takeIf { it.isNotBlank() }
         }
     }.getOrNull()
+
+    /** The runner reports that a game was installed through its store. */
+    fun reportInstalled(entryId: String) {
+        runCatching { Socket(InetAddress.getLoopbackAddress(), PORT).use { it.getOutputStream().write("$INSTALLED$entryId\n".toByteArray()) } }
+    }
 
     /** The runner reports that the game ended. */
     fun reportGameEnd(entryId: String) {

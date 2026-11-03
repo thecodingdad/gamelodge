@@ -105,6 +105,10 @@ fun main(args: Array<String>) {
     // Streams of clients without GameLodge (Moonlight on a TV, a console …): counted here, as no
     // launcher reports them. A GameLodge stream tells the host before its game starts.
     val foreignStarts = java.util.concurrent.ConcurrentHashMap<String, Long>()
+    SingleInstance.onInstalled = { entryId ->
+        Log.i("Installed by the host's runner: $entryId")
+        container.pcLibrary.rescan()
+    }
     SingleInstance.onHostGame = { entryId, started ->
         hostGame = if (started) entryId else hostGame.takeIf { it != entryId }
         if (started) {

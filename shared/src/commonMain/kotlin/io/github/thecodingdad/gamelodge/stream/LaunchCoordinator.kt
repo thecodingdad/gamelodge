@@ -191,8 +191,12 @@ class LaunchCoordinator(
         scope.launch { runCatching { vpn.disconnect() } }
     }
 
+    /** Called when a stream ended (the library then looks for host changes often for a while). */
+    @Volatile var afterStream: () -> Unit = {}
+
     /** The stream ended (its window closed): a VPN connected for it goes again, if so set. Safe to call twice. */
     fun streamEnded() {
+        if (_activeStream.value != null) afterStream()
         _activeStream.value = null
         StreamQuality.reset()
         streamNotices?.stopped()
