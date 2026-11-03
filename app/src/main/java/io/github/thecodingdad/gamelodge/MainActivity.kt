@@ -1,6 +1,8 @@
 package io.github.thecodingdad.gamelodge
 
 
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
@@ -102,7 +104,11 @@ class MainActivity : ComponentActivity() {
         feedback = UiFeedback(cacheDir, io.github.thecodingdad.gamelodge.ui.feedback.AndroidFeedbackOutput(this)).also { it.load() }
         handleQuickMenuExtra(intent)
         setContent {
-            androidx.compose.runtime.CompositionLocalProvider(LocalContainer provides container) { LauncherApp(vm, dispatcher, feedback) }
+            val settings by vm.settings.collectAsState()
+            // On a TV above 1080p: drawn at 1080p and scaled up (a handheld GPU can't draw 4K smoothly).
+            io.github.thecodingdad.gamelodge.ui.components.RenderAtMost(enabled = onTv.value && settings.tvRender1080) {
+                androidx.compose.runtime.CompositionLocalProvider(LocalContainer provides container) { LauncherApp(vm, dispatcher, feedback) }
+            }
         }
     }
 
@@ -119,14 +125,43 @@ class MainActivity : ComponentActivity() {
 
     /** On the TV display: full screen, chosen mode, handheld side; back on the handheld: release. */
     private fun checkTv() {
-        if (TvSession.isOnTv(this)) {
+        onTv.value = TvSession.isOnTv(this)
+        if (onTv.value) {
             val modes = vm.externalDisplay.value?.modes.orEmpty()
             val mode = io.github.thecodingdad.gamelodge.system.TvModes.resolve(vm.settings.value.tvMode, modes)
             TvSession.onShownOnTv(this, mode?.id ?: 0)
             watchTvSmoothness()
+            checkTvModeSoon(mode)
         } else {
             TvSession.onLeftTv(this)
             tvFrames.stop()
+        }
+    }
+
+    /** The launcher is on the TV display (drawn at 1080p there, if wanted). */
+    private val onTv = androidx.compose.runtime.mutableStateOf(false)
+
+    /** Connection (display id) for which the "mode not taken" popup was shown already. */
+    private var modeHintFor: Int? = null
+    private var modeCheck: kotlinx.coroutines.Job? = null
+
+    /**
+     * A few seconds after asking for [wanted]: when the TV still runs another mode, the popup says
+     * so (once per connection; the settings show it as long as it lasts).
+     */
+    private fun checkTvModeSoon(wanted: io.github.thecodingdad.gamelodge.system.TvMode?) {
+        modeCheck?.cancel()
+        if (wanted == null) return
+        modeCheck = lifecycleScope.launch {
+            kotlinx.coroutines.delay(4000)
+            val tv = vm.externalDisplay.value ?: return@launch
+            val s = vm.settings.value
+            if (s.tvModeHintOff || modeHintFor == tv.id) return@launch
+            val running = io.github.thecodingdad.gamelodge.system.TvMode(-1, tv.width, tv.height, tv.refreshRate)
+            if (running.key == wanted.key) return@launch
+            modeHintFor = tv.id
+            fun text(m: io.github.thecodingdad.gamelodge.system.TvMode) = "${m.width}×${m.height} @ ${kotlin.math.round(m.refreshRate).toInt()} Hz"
+            vm.tvModeHint.value = text(wanted) to text(running)
         }
     }
 

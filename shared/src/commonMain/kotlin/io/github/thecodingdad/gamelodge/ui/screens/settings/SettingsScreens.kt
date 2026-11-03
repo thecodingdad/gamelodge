@@ -669,15 +669,23 @@ fun DisplaySettings(
                 onSelect = { v -> update { it.copy(tvMode = v) } },
                 subtitle = stringResource(if (externalDisplay == null) Res.string.setting_tv_resolution_none else Res.string.setting_tv_resolution_sub),
             )
-            // Many devices switch the TV's resolution only when it is connected anew.
+            // The TV keeps another mode (some devices only switch it in their own settings).
             val wanted = io.github.thecodingdad.gamelodge.system.TvModes.resolve(settings.tvMode, modes)
             val tv = externalDisplay
             if (tv != null && wanted != null && (wanted.width != tv.width || wanted.height != tv.height || wanted.refreshRate.roundToInt() != tv.refreshRate.roundToInt())) {
+                val running = io.github.thecodingdad.gamelodge.system.TvMode(-1, tv.width, tv.height, tv.refreshRate)
                 Text(
-                    stringResource(Res.string.setting_tv_resolution_pending, text(wanted)),
+                    stringResource(Res.string.tv_mode_hint_text, text(wanted), text(running)),
                     style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.accentText,
                 )
+                io.github.thecodingdad.gamelodge.ui.PlatformUi.current.openTvOutputSettings?.let { open ->
+                    NavRow(stringResource(Res.string.tv_mode_hint_open), open, subtitle = stringResource(Res.string.tv_mode_hint_odin), icon = Icons.Filled.Monitor)
+                }
             }
+            SwitchRow(
+                stringResource(Res.string.setting_tv_render_1080), settings.tvRender1080, { v -> update { it.copy(tvRender1080 = v) } },
+                subtitle = stringResource(Res.string.setting_tv_render_1080_sub),
+            )
         }
         SwitchRow(
             stringResource(Res.string.setting_tv_scale_auto), settings.tvScaleAuto, { v -> update { it.copy(tvScaleAuto = v) } },

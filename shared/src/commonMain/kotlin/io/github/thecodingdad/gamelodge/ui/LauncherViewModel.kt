@@ -232,6 +232,9 @@ class LauncherViewModel(private val c: LauncherContainer) : ViewModel() {
     /** The TV stutters in the mode the user chose: offer automatic (set by the platform). */
     val tvSlowHint = androidx.compose.runtime.mutableStateOf(false)
 
+    /** The TV keeps another mode than the one wanted: (wanted, running), shown as a popup. */
+    val tvModeHint = androidx.compose.runtime.mutableStateOf<Pair<String, String>?>(null)
+
     /** Emits when the Home button is pressed while the launcher is the home app. */
     val homePressed = kotlinx.coroutines.flow.MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 

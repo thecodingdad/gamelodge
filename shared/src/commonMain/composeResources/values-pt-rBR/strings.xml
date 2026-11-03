@@ -1648,5 +1648,10 @@
     <string name="tv_slow_text">Este dispositivo não desenha o launcher com fluidez na resolução escolhida para a TV (ou a TV roda abaixo de 50 Hz). “Automática” usa até 1080p com taxa alta; a TV amplia de forma limpa. Vale quando a TV for conectada de novo.</string>
     <string name="tv_slow_auto">Usar automática</string>
     <string name="tv_slow_never">Não perguntar de novo</string>
-    <string name="setting_tv_resolution_pending">%1$s é aplicado quando a TV for conectada de novo (desconecte e conecte outra vez).</string>
+    <string name="tv_mode_hint_title">Resolução da TV não aplicada</string>
+    <string name="tv_mode_hint_text">Desejada: %1$s. A TV roda em %2$s; este dispositivo não muda isso sozinho.</string>
+    <string name="tv_mode_hint_odin">No Odin: configurações do Odin › “Video output mode” e conecte a TV de novo.</string>
+    <string name="tv_mode_hint_open">Abrir configurações do Odin</string>
+    <string name="setting_tv_render_1080">Desenhar no máximo em 1080p</string>
+    <string name="setting_tv_render_1080_sub">Numa TV acima de 1080p o launcher desenha em 1080p e amplia: bem mais fluido, texto um pouco mais suave.</string>
 </resources>

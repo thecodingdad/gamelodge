@@ -1648,5 +1648,10 @@
     <string name="tv_slow_text">Cet appareil n’affiche pas le lanceur de façon fluide dans la résolution choisie pour la TV (ou la TV tourne à moins de 50 Hz). « Automatique » utilise jusqu’à 1080p à une fréquence élevée ; la TV met proprement à l’échelle. S’applique quand la TV est reconnectée.</string>
     <string name="tv_slow_auto">Utiliser automatique</string>
     <string name="tv_slow_never">Ne plus demander</string>
-    <string name="setting_tv_resolution_pending">%1$s s’applique dès que la TV est reconnectée (débrancher puis rebrancher).</string>
+    <string name="tv_mode_hint_title">Résolution de la TV non appliquée</string>
+    <string name="tv_mode_hint_text">Souhaitée : %1$s. La TV tourne en %2$s ; cet appareil ne la change pas de lui-même.</string>
+    <string name="tv_mode_hint_odin">Sur l’Odin : réglages Odin › « Video output mode », puis rebranchez la TV.</string>
+    <string name="tv_mode_hint_open">Ouvrir les réglages Odin</string>
+    <string name="setting_tv_render_1080">Dessiner au plus en 1080p</string>
+    <string name="setting_tv_render_1080_sub">Sur une TV au-delà de 1080p, le lanceur dessine en 1080p et met à l’échelle : bien plus fluide, texte un peu plus doux.</string>
 </resources>

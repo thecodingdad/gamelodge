@@ -64,6 +64,12 @@ class AndroidPlatformUi(private val context: Context) : PlatformUi {
      * Like the system clock: the device's language and its 12 / 24 hour setting, not the
      * launcher's own language (an English launcher on a German device still shows 14:05).
      */
+    /** The Odin's own settings app has the DP output mode ("Video output mode"). */
+    override val openTvOutputSettings: (() -> Unit)?
+        get() = context.packageManager.getLaunchIntentForPackage(ODIN_SETTINGS)?.let { intent ->
+            { runCatching { context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) } }
+        }
+
     override fun formatTime(millis: Long): String {
         // The device's language: with a language of its own for the launcher (Android 13+) the
         // system resources follow the launcher, only the LocaleManager knows the device's.
@@ -266,5 +272,6 @@ class AndroidPlatformUi(private val context: Context) : PlatformUi {
             SettingsPageId.USAGE, SettingsPageId.EMULATORS, SettingsPageId.PROFILES,
             SettingsPageId.LAUNCHER, SettingsPageId.VPN,
         )
+        const val ODIN_SETTINGS = "com.odin.settings"
     }
 }

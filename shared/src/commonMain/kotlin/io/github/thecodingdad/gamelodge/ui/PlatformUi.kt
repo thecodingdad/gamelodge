@@ -137,6 +137,12 @@ interface PlatformUi {
     /** The stream client can show an on-screen keyboard (Android's or its PC keyboard). */
     val hasStreamKeyboard: Boolean get() = false
 
+    /**
+     * Opens the device's own setting for the TV output's resolution (the Odin's "Video output
+     * mode"); null where there is none.
+     */
+    val openTvOutputSettings: (() -> Unit)? get() = null
+
     /** The stream takes a keyboard shortcut that ends it (the PC's Moonlight-Qt). */
     val hasDisconnectShortcut: Boolean get() = false
 

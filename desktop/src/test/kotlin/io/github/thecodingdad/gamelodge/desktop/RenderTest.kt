@@ -62,6 +62,41 @@ class RenderTest {
         assertTrue("UI drew something", distinct.size > 3)
     }
 
+    /** A 4K screen drawn at 1080p and scaled up: the same layout as at 1080p, filling the screen. */
+    @Test
+    fun launcherDrawnAt1080pOn4k() {
+        val dir = Files.createTempDirectory("launcher-4k").toFile()
+        val container = DesktopContainer(dir)
+        ArtworkFiles.init(dir)
+        ArtworkPlatform.current = DesktopArtwork
+        val dispatcher = InputDispatcher()
+        PlatformUi.current = DesktopPlatformUi(Gamepads(dispatcher), { null }, { null })
+        val feedback = UiFeedback(File(dir, "cache"), DesktopFeedbackOutput { null })
+        fun <T> ui(block: () -> T): T {
+            var result: Result<T>? = null
+            javax.swing.SwingUtilities.invokeAndWait { result = runCatching(block) }
+            return result!!.getOrThrow()
+        }
+        val vm = ui { LauncherViewModel(container) }
+        val scene = ui {
+            ImageComposeScene(3840, 2160, Density(3f)) {
+                io.github.thecodingdad.gamelodge.ui.components.RenderAtMost(enabled = true) {
+                    CompositionLocalProvider(LocalContainer provides container) { LauncherApp(vm, dispatcher, feedback) }
+                }
+            }
+        }
+        ui { scene.render(0) }
+        Thread.sleep(1500)
+        ui { scene.render(500_000_000L) }
+        Thread.sleep(300)
+        val image = ui { scene.render(2_000_000_000L).also { scene.close() } }
+        File("build/render").apply { mkdirs() }.resolve("launcher-4k.png").writeBytes(image.encodeToData(EncodedImageFormat.PNG)!!.bytes)
+        val pixels = org.jetbrains.skia.Bitmap.makeFromImage(image)
+        // Drawn over the whole screen, not only its top left quarter.
+        val bottomRight = (2000 until 3840 step 80).flatMap { x -> (1200 until 2160 step 80).map { y -> pixels.getColor(x, y) } }.toSet()
+        assertTrue("UI fills the 4K screen", bottomRight.size > 2)
+    }
+
     @Test
     fun runningTasksShowInTheStatusBarAndPopup() {
         val dir = Files.createTempDirectory("launcher-tasks").toFile()

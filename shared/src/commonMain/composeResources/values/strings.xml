@@ -1648,5 +1648,10 @@
     <string name="tv_slow_text">This device can’t draw the launcher smoothly in the resolution chosen for the TV (or the TV runs below 50 Hz). “Automatic” uses up to 1080p at a high refresh rate; the TV scales it up cleanly. Takes effect once the TV is connected anew.</string>
     <string name="tv_slow_auto">Use automatic</string>
     <string name="tv_slow_never">Don’t ask again</string>
-    <string name="setting_tv_resolution_pending">%1$s is used once the TV is connected anew (unplug and plug in again).</string>
+    <string name="tv_mode_hint_title">TV resolution not applied</string>
+    <string name="tv_mode_hint_text">Wanted: %1$s. The TV runs at %2$s, this device doesn’t switch it by itself.</string>
+    <string name="tv_mode_hint_odin">On the Odin: Odin settings › “Video output mode”, then connect the TV anew.</string>
+    <string name="tv_mode_hint_open">Open Odin settings</string>
+    <string name="setting_tv_render_1080">Draw at most in 1080p</string>
+    <string name="setting_tv_render_1080_sub">On a TV above 1080p the launcher draws at 1080p and scales up: much smoother, text a little softer.</string>
 </resources>

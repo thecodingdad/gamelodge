@@ -258,6 +258,10 @@ data class LauncherSettings(
     val tvMode: String = "",
     /** Don't offer to switch the TV to automatic when it stutters. */
     val tvSlowHintOff: Boolean = false,
+    /** Don't tell when the TV keeps another mode than the one wanted. */
+    val tvModeHintOff: Boolean = false,
+    /** On a TV above 1080p: draw at 1080p and scale up (smooth on handhelds). */
+    val tvRender1080: Boolean = true,
     /** UI size on the device's own display, percent. */
     val uiScale: Int = 100,
     /** Separate app filters were created (and shared filters turned into game filters). */
@@ -397,6 +401,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val tvLauncher = booleanPreferencesKey("tv_launcher")
         val tvMode = stringPreferencesKey("tv_mode")
         val tvSlowHintOff = booleanPreferencesKey("tv_slow_hint_off")
+        val tvModeHintOff = booleanPreferencesKey("tv_mode_hint_off")
+        val tvRender1080 = booleanPreferencesKey("tv_render_1080")
         val uiScale = intPreferencesKey("ui_scale")
         val appFiltersSeeded = booleanPreferencesKey("app_filters_seeded")
     }
@@ -541,6 +547,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             tvLauncher = this[K.tvLauncher] ?: d.tvLauncher,
             tvMode = this[K.tvMode] ?: d.tvMode,
             tvSlowHintOff = this[K.tvSlowHintOff] ?: d.tvSlowHintOff,
+            tvModeHintOff = this[K.tvModeHintOff] ?: d.tvModeHintOff,
+            tvRender1080 = this[K.tvRender1080] ?: d.tvRender1080,
             uiScale = this[K.uiScale] ?: d.uiScale,
             appFiltersSeeded = this[K.appFiltersSeeded] ?: d.appFiltersSeeded,
         )
@@ -664,6 +672,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         this[K.tvLauncher] = s.tvLauncher
         this[K.tvMode] = s.tvMode
         this[K.tvSlowHintOff] = s.tvSlowHintOff
+        this[K.tvModeHintOff] = s.tvModeHintOff
+        this[K.tvRender1080] = s.tvRender1080
         this[K.uiScale] = s.uiScale
         this[K.appFiltersSeeded] = s.appFiltersSeeded
     }

@@ -684,6 +684,7 @@ fun LauncherApp(
                 )
         io.github.thecodingdad.gamelodge.ui.shell.TasksPopup()
                 TvSlowHint(vm)
+                TvModeHint(vm)
                 ControllerKeyboardHost(keyboard)
                 // Every popup and panel is drawn here, above the (blurred) launcher.
                 io.github.thecodingdad.gamelodge.ui.components.OverlayOutlet()
@@ -1257,6 +1258,33 @@ private fun TvSlowHint(vm: LauncherViewModel) {
             })
             io.github.thecodingdad.gamelodge.ui.components.LauncherButton(stringResource(Res.string.tv_slow_never), onClick = {
                 vm.updateSettings { it.copy(tvSlowHintOff = true) }; close()
+            })
+        }
+    }
+}
+
+/** The TV keeps another mode than wanted: says so, with the device's own setting where it has one. */
+@Composable
+private fun TvModeHint(vm: LauncherViewModel) {
+    val hint = vm.tvModeHint.value
+    fun close() { vm.tvModeHint.value = null }
+    val openOutput = io.github.thecodingdad.gamelodge.ui.PlatformUi.current.openTvOutputSettings
+    io.github.thecodingdad.gamelodge.ui.components.Modal(
+        visible = hint != null, onDismiss = ::close, title = stringResource(Res.string.tv_mode_hint_title),
+        size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.COMPACT, closeButton = false,
+    ) {
+        val (wanted, running) = hint ?: ("" to "")
+        Text(stringResource(Res.string.tv_mode_hint_text, wanted, running), style = MaterialTheme.typography.bodyMedium, color = io.github.thecodingdad.gamelodge.ui.theme.LauncherTheme.colors.onSurfaceMuted)
+        if (openOutput != null) {
+            Text(stringResource(Res.string.tv_mode_hint_odin), style = MaterialTheme.typography.bodyMedium, color = io.github.thecodingdad.gamelodge.ui.theme.LauncherTheme.colors.onSurface)
+        }
+        io.github.thecodingdad.gamelodge.ui.components.ButtonRow {
+            if (openOutput != null) {
+                io.github.thecodingdad.gamelodge.ui.components.LauncherButton(stringResource(Res.string.tv_mode_hint_open), primary = true, onClick = { close(); openOutput() })
+            }
+            io.github.thecodingdad.gamelodge.ui.components.LauncherButton(stringResource(Res.string.action_close), primary = openOutput == null, onClick = ::close)
+            io.github.thecodingdad.gamelodge.ui.components.LauncherButton(stringResource(Res.string.tv_slow_never), onClick = {
+                vm.updateSettings { it.copy(tvModeHintOff = true) }; close()
             })
         }
     }
