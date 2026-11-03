@@ -39,7 +39,7 @@ fun KeyGuideDialog(sgdb: Boolean, onDismiss: () -> Unit) {
     } else {
         listOf(Res.string.guide_igdb_1, Res.string.guide_igdb_2, Res.string.guide_igdb_3, Res.string.guide_igdb_4, Res.string.guide_igdb_5)
     }
-    Modal(visible = true, onDismiss = onDismiss, title = stringResource(if (sgdb) Res.string.guide_title_sgdb else Res.string.guide_title_igdb), maxWidth = 760.dp) {
+    Modal(visible = true, onDismiss = onDismiss, title = stringResource(if (sgdb) Res.string.guide_title_sgdb else Res.string.guide_title_igdb), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         Column(Modifier.weight(1f, fill = false).popupHeightIn(520.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             steps.forEachIndexed { i, step ->
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {

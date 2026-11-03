@@ -42,7 +42,7 @@ fun ProfilePickerPopup(
     onDismiss: () -> Unit,
 ) {
     val profileStore = io.github.thecodingdad.gamelodge.LocalContainer.current.profiles
-    Modal(visible = visible, onDismiss = onDismiss, title = stringResource(Res.string.profile_picker_title), maxWidth = 560.dp) {
+    Modal(visible = visible, onDismiss = onDismiss, title = stringResource(Res.string.profile_picker_title), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         Text(stringResource(Res.string.profile_picker_sub), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
         androidx.compose.foundation.layout.Spacer(Modifier.heightIn(min = 14.dp))
         Column(Modifier.weight(1f, fill = false).popupHeightIn(420.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -72,7 +72,7 @@ fun ControllerPopup(
     // Selecting a controller opens its settings (on top of this popup).
     var selected by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<ControllerInfo?>(null) }
     io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerDetailDialog(selected, onDismiss = { selected = null })
-    Modal(visible = visible, onDismiss = onDismiss, title = stringResource(Res.string.settings_controllers), maxWidth = 600.dp) {
+    Modal(visible = visible, onDismiss = onDismiss, title = stringResource(Res.string.settings_controllers), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         val colors = LauncherTheme.colors
         Text(stringResource(Res.string.controller_popup_sub), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceMuted)
         androidx.compose.foundation.layout.Spacer(Modifier.heightIn(min = 14.dp))

@@ -60,7 +60,8 @@ fun Modal(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     title: String? = null,
-    maxWidth: Dp = 620.dp,
+    /** How wide it gets: a share of the screen within the size's bounds ([PopupSize]). */
+    size: PopupSize = PopupSize.STANDARD,
     /** Element that gets focus when the modal opens; defaults to the first focusable child. */
     initialFocus: FocusRequester? = null,
     /** Back arrow left of the title (touch / mouse); off for dialogs with their own cancel / done button. */
@@ -74,7 +75,7 @@ fun Modal(
             val heightScale = popupHeightScale()
             Column(
                 modifier = modifier
-                    .widthIn(max = maxWidth)
+                    .widthIn(max = popupWidth(size))
                     .padding(24.dp)
                     .background(LauncherTheme.colors.surface, RoundedCornerShape(24.dp))
                     .padding(28.dp)
@@ -308,4 +309,26 @@ private fun Overlay(visible: Boolean, onDismiss: () -> Unit, content: @Composabl
         }
         entry.visible = visible
     }
+}
+
+/**
+ * Popup widths: a share of the screen width within bounds, so popups grow on big screens (TV,
+ * tablet) without getting endless, and always keep a margin to the screen's edges.
+ */
+enum class PopupSize(val share: Float, val min: Dp, val max: Dp) {
+    /** Confirmations, short choices. */
+    COMPACT(0.5f, 420.dp, 640.dp),
+    /** Settings popups (a controller's settings, an entry's options …). */
+    STANDARD(0.75f, 600.dp, 1100.dp),
+    /** Editors and pickers with much content (artwork, keyboard). */
+    WIDE(0.9f, 760.dp, 1500.dp),
+}
+
+/** The width of a popup of [size] on this screen. */
+@Composable
+fun popupWidth(size: PopupSize): Dp {
+    val window = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize
+    val screen = with(androidx.compose.ui.platform.LocalDensity.current) { window.width.toDp() }
+    // The popup's own outer padding (24 dp each side) is part of this width.
+    return (screen * size.share).coerceIn(size.min, size.max).coerceAtMost(screen)
 }

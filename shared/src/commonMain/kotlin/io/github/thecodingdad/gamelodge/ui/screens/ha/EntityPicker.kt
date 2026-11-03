@@ -109,7 +109,7 @@ fun EntityPicker(
     var brightness by remember(visible) { mutableStateOf<Int?>(null) }
     val search = remember { FocusRequester() }
     val available = entities.filter { it.domain in domains }
-    Modal(visible = visible, onDismiss = onDismiss, title = title, maxWidth = 760.dp, initialFocus = search) {
+    Modal(visible = visible, onDismiss = onDismiss, title = title, size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD, initialFocus = search) {
         val pending = pendingSwitch
         if (pending != null) {
             // Second step for switches: on or off.

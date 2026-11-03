@@ -134,7 +134,7 @@ fun OpenSourceLicenses() {
 @Composable
 private fun LicenseTextModal(license: LicenseText?, onDismiss: () -> Unit) {
     val focus = remember { FocusRequester() }
-    Modal(visible = license != null, onDismiss = onDismiss, title = license?.title, maxWidth = 900.dp, initialFocus = focus) {
+    Modal(visible = license != null, onDismiss = onDismiss, title = license?.title, size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.WIDE, initialFocus = focus) {
         val l = license ?: return@Modal
         val text by androidx.compose.runtime.produceState("", l.file) {
             value = runCatching { Res.readBytes("files/licenses/${l.file}.txt").decodeToString() }.getOrDefault("")

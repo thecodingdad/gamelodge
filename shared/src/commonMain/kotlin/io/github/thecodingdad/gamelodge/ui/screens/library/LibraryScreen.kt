@@ -96,7 +96,6 @@ fun LibraryScreen(
     filters: List<ResolvedFilter>,
     animatedArtwork: Boolean,
     lastFocusedKey: String?,
-    openStats: () -> Unit,
     openFilterSettings: () -> Unit,
     layout: io.github.thecodingdad.gamelodge.data.settings.TabLayout = io.github.thecodingdad.gamelodge.data.settings.TabLayout(),
     onFocusKey: (String) -> Unit,
@@ -215,7 +214,6 @@ fun LibraryScreen(
             onSort = { sortMenu = true },
             onEdit = openFilterSettings,
         focusRequests = filterFocusRequests,
-            onStats = openStats,
         )
         if (allEntries.isEmpty()) {
             EmptyLibrary()

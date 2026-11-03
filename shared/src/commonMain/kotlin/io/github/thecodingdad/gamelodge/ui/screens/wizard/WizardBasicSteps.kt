@@ -320,7 +320,7 @@ private fun ButtonTestDialog(layout: ButtonLayout, onDone: () -> Unit) {
             if (bDownAt?.let { now - it >= 2_000 } == true || now - lastPress > 30_000) done()
         }
     }
-    Modal(visible = true, onDismiss = onDone, title = stringResource(Res.string.wizard_controller_test), maxWidth = 760.dp, closeButton = false) {
+    Modal(visible = true, onDismiss = onDone, title = stringResource(Res.string.wizard_controller_test), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD, closeButton = false) {
         WizardNote(stringResource(Res.string.wizard_controller_test_hint))
         Spacer(Modifier.height(12.dp))
         ButtonPad(layout, lit)

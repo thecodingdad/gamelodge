@@ -69,7 +69,7 @@ fun AccentColorPicker(
 ) {
     // The sliders keep their own values (a grey loses its hue when converted back and forth).
     var hsv by remember { mutableStateOf(toHsv(color)) }
-    Modal(visible = true, onDismiss = onDismiss, title = title, maxWidth = 760.dp) {
+    Modal(visible = true, onDismiss = onDismiss, title = title, size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         // Scrolls on small screens (controller, touch and mouse wheel).
         androidx.compose.foundation.layout.Column(
             Modifier.weight(1f, fill = false).popupHeightIn(560.dp).controllerScroll(),

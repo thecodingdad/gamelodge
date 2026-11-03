@@ -202,7 +202,7 @@ fun EmulatorsPage(
 /** The known emulators (with the consoles they run) and "other emulator". */
 @Composable
 private fun PresetDialog(visible: Boolean, onDismiss: () -> Unit, onPick: (EmulatorPreset?) -> Unit) {
-    Modal(visible = visible, onDismiss = onDismiss, title = stringResource(Res.string.emu_pc_add_title), maxWidth = 680.dp) {
+    Modal(visible = visible, onDismiss = onDismiss, title = stringResource(Res.string.emu_pc_add_title), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         Column(Modifier.weight(1f, fill = false).popupHeightIn(620.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             EmulatorPresets.all.forEachIndexed { i, preset ->
                 NavRow(
@@ -220,7 +220,7 @@ private fun PresetDialog(visible: Boolean, onDismiss: () -> Unit, onPick: (Emula
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun EmulatorDialog(emulator: PcEmulator?, onDismiss: () -> Unit, onSave: (PcEmulator) -> Unit, onRemove: (PcEmulator) -> Unit) {
-    Modal(visible = emulator != null, onDismiss = onDismiss, title = stringResource(Res.string.emu_pc_edit_title), maxWidth = 780.dp) {
+    Modal(visible = emulator != null, onDismiss = onDismiss, title = stringResource(Res.string.emu_pc_edit_title), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         val e = emulator ?: return@Modal
         var name by remember(e) { mutableStateOf(e.name) }
         var exe by remember(e) { mutableStateOf(e.executable) }
@@ -272,7 +272,7 @@ private fun FolderDialog(
     onSave: (PcRomFolder, PcRomFolder) -> Unit,
     onRemove: (PcRomFolder) -> Unit,
 ) {
-    Modal(visible = folder != null, onDismiss = onDismiss, title = folder?.path?.let { File(it).name.ifEmpty { it } }, maxWidth = 680.dp) {
+    Modal(visible = folder != null, onDismiss = onDismiss, title = folder?.path?.let { File(it).name.ifEmpty { it } }, size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         val f = folder ?: return@Modal
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             LauncherTextField(stringResource(Res.string.emu_pc_folder_path), f.path, { onSave(f, f.copy(path = it.trim().removeSurrounding("\""))) })

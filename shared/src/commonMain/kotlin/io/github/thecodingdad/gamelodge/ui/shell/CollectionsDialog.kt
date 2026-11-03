@@ -34,7 +34,7 @@ fun CollectionsDialog(
 ) {
     val keyboard = LocalKeyboardController.current
     val newTitle = stringResource(Res.string.collection_new_name)
-    Modal(visible = entry != null, onDismiss = onDismiss, title = stringResource(Res.string.collections_title), maxWidth = 520.dp) {
+    Modal(visible = entry != null, onDismiss = onDismiss, title = stringResource(Res.string.collections_title), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.COMPACT) {
         val e = entry ?: return@Modal
         Column(
             Modifier.weight(1f, fill = false).popupHeightIn(380.dp).controllerScroll(),

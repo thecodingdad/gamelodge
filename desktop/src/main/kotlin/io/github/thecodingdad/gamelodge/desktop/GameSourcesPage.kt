@@ -180,7 +180,7 @@ internal fun SteamQrDialog(library: PcLibrary, onDismiss: () -> Unit) {
             failed = true
         }
     }
-    Modal(visible = true, onDismiss = onDismiss, title = stringResource(Res.string.steam_qr_title), maxWidth = 560.dp) {
+    Modal(visible = true, onDismiss = onDismiss, title = stringResource(Res.string.steam_qr_title), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         val current = url
         when {
             failed -> {

@@ -223,7 +223,7 @@ fun ControllerKeyboardHost(controller: KeyboardController) {
         visible = request != null,
         onDismiss = controller::close,
         title = request?.title,
-        maxWidth = 1100.dp,
+        size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.WIDE,
         modifier = hardwareKeys,
     ) {
         if (request == null) return@Modal
@@ -420,7 +420,7 @@ private fun TouchTextDialog(request: KeyboardRequest, controller: KeyboardContro
         request.onDone(text.text)
         controller.close()
     }
-    Modal(visible = true, onDismiss = controller::close, title = request.title, maxWidth = 720.dp) {
+    Modal(visible = true, onDismiss = controller::close, title = request.title, size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         OutlinedTextField(
             value = text,
             onValueChange = { text = it },

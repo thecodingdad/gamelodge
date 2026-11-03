@@ -179,7 +179,7 @@ fun FilterSettings(vm: LauncherViewModel, initialScope: FilterScope) {
         )
     }
 
-    Modal(visible = resetting, onDismiss = { resetting = false }, title = stringResource(Res.string.filters_restore), maxWidth = 680.dp, closeButton = false) {
+    Modal(visible = resetting, onDismiss = { resetting = false }, title = stringResource(Res.string.filters_restore), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD, closeButton = false) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(stringResource(Res.string.filters_reset_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
             LauncherButton(
@@ -220,7 +220,7 @@ private fun FilterEditorDialog(
     pickMembers: Boolean,
     onDismiss: () -> Unit,
 ) {
-    Modal(visible = filter != null, onDismiss = onDismiss, title = filter?.let { filterEntityLabel(it) }, maxWidth = 760.dp) {
+    Modal(visible = filter != null, onDismiss = onDismiss, title = filter?.let { filterEntityLabel(it) }, size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         val f = filter ?: return@Modal
         var editingCondition by remember(f.id) { mutableStateOf<Int?>(null) }
         val kind = if (f.scope == FilterScope.APPS) ItemKind.APP else ItemKind.GAME
@@ -337,7 +337,7 @@ private fun FilterEditorDialog(
                             icon = Icons.Filled.DragHandle,
                         )
                     }
-                    Modal(visible = ordering, onDismiss = { ordering = false }, title = filterEntityLabel(f), maxWidth = 720.dp) {
+                    Modal(visible = ordering, onDismiss = { ordering = false }, title = filterEntityLabel(f), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
                         io.github.thecodingdad.gamelodge.ui.components.ScrollAreaColumn(Modifier.weight(1f, fill = false).popupHeightIn(560.dp)) {
                             ReorderableList(ordered, id = { it.item.id }, onReorder = { vm.reorderGroup(f.id, it) }) { _, entry ->
                                 Row(
@@ -388,7 +388,7 @@ private fun GroupMembersDialog(
     onToggle: (String, Boolean) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    Modal(visible = visible, onDismiss = onDismiss, title = title, maxWidth = 720.dp) {
+    Modal(visible = visible, onDismiss = onDismiss, title = title, size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         var query by remember { mutableStateOf("") }
         LauncherTextField(stringResource(Res.string.hint_search), query, { query = it })
         Spacer(Modifier.height(12.dp))
@@ -561,7 +561,7 @@ private fun ConditionDialog(
     onDismiss: () -> Unit,
 ) {
     val keyboard = LocalKeyboardController.current
-    Modal(visible = condition != null, onDismiss = onDismiss, title = condition?.let { fieldLabel(it.field) }, maxWidth = 760.dp, closeButton = false) {
+    Modal(visible = condition != null, onDismiss = onDismiss, title = condition?.let { fieldLabel(it.field) }, size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD, closeButton = false) {
         val c = condition ?: return@Modal
         val field = c.field
         Column(
@@ -627,7 +627,7 @@ private fun ConditionDialog(
 /** Picks the field of a new condition, sorted into sections like Playnite's filter panel. */
 @Composable
 private fun FieldPickerDialog(visible: Boolean, onDismiss: () -> Unit, onPick: (FilterField) -> Unit) {
-    Modal(visible = visible, onDismiss = onDismiss, title = stringResource(Res.string.filter_condition_add), maxWidth = 640.dp) {
+    Modal(visible = visible, onDismiss = onDismiss, title = stringResource(Res.string.filter_condition_add), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         Column(Modifier.weight(1f, fill = false).popupHeightIn(600.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             FieldSection.entries.forEachIndexed { s, section ->
                 SectionHeader(

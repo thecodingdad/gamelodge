@@ -222,7 +222,7 @@ private fun offers(server: PairedServer): String? =
 /** The kinds of source to add; own keys only once. */
 @Composable
 private fun AddSourceDialog(entries: List<MetadataSources.Entry>, onPick: (String) -> Unit, onDismiss: () -> Unit) {
-    Modal(visible = true, onDismiss = onDismiss, title = stringResource(Res.string.metadata_source_add), maxWidth = 600.dp) {
+    Modal(visible = true, onDismiss = onDismiss, title = stringResource(Res.string.metadata_source_add), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             if (entries.none { it.id == MetadataSources.SGDB }) {
                 NavRow("SteamGridDB", { onPick(MetadataSources.SGDB) }, stringResource(Res.string.metadata_source_sgdb_sub), Icons.Filled.Image, initialFocus = true)
@@ -239,7 +239,7 @@ private fun AddSourceDialog(entries: List<MetadataSources.Entry>, onPick: (Strin
 /** Companion: for which host (prefills its address), or an address typed in. */
 @Composable
 private fun PickHostDialog(hosts: Collection<HostState>, onPick: (HostState?) -> Unit, onDismiss: () -> Unit) {
-    Modal(visible = true, onDismiss = onDismiss, title = stringResource(Res.string.metadata_source_pick_host), maxWidth = 600.dp) {
+    Modal(visible = true, onDismiss = onDismiss, title = stringResource(Res.string.metadata_source_pick_host), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             hosts.sortedBy { it.name.lowercase() }.forEachIndexed { i, host ->
                 NavRow(host.name, { onPick(host) }, host.address, Icons.Filled.Computer, initialFocus = i == 0)
@@ -264,7 +264,7 @@ fun KeySourceDialog(id: String, entry: MetadataSources.Entry?, onChanged: () -> 
     val complete = first.isNotBlank() && (sgdb || second.isNotBlank())
     var guide by remember { mutableStateOf(false) }
 
-    Modal(visible = true, onDismiss = onDismiss, title = name, maxWidth = 640.dp) {
+    Modal(visible = true, onDismiss = onDismiss, title = name, size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         val formScroll = rememberScrollState()
         Column(Modifier.controllerScroll(formScroll), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(stringResource(if (sgdb) Res.string.metadata_sgdb_help else Res.string.metadata_igdb_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
@@ -326,7 +326,7 @@ internal fun PairDialog(target: PairTarget, onDismiss: () -> Unit) {
         companion -> stringResource(Res.string.servers_pair_companion_manual)
         else -> stringResource(Res.string.servers_pair_metadata)
     }
-    Modal(visible = true, onDismiss = ::close, title = title, maxWidth = 560.dp) {
+    Modal(visible = true, onDismiss = ::close, title = title, size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
             when (val s = state) {
                 PairState.Address -> {
@@ -391,7 +391,7 @@ private fun ServerSourceDialog(entry: MetadataSources.Entry, online: Boolean?, o
     val repo = container.servers
     val scope = rememberCoroutineScope()
     val s = entry.server ?: return
-    Modal(visible = true, onDismiss = onDismiss, title = s.name, maxWidth = 600.dp) {
+    Modal(visible = true, onDismiss = onDismiss, title = s.name, size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         val formScroll = rememberScrollState()
         Column(Modifier.controllerScroll(formScroll), verticalArrangement = Arrangement.spacedBy(10.dp), horizontalAlignment = Alignment.Start) {
             InfoRow(stringResource(Res.string.servers_address), s.baseUrl.removePrefix("https://"))

@@ -204,7 +204,7 @@ fun ControllersScreen() {
 fun AndroidControllerDetailDialog(controller: ControllerInfo?, onDismiss: () -> Unit) {
     io.github.thecodingdad.gamelodge.ui.components.Modal(
         visible = controller != null, onDismiss = onDismiss, title = controller?.displayName,
-        maxWidth = 680.dp,
+        size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD,
     ) {
         val c = controller ?: return@Modal
         androidx.compose.foundation.layout.Column(
@@ -481,7 +481,7 @@ private fun OdinMappingRows() {
         subtitle = stringResource(Res.string.odin_mapping_all_row_sub),
     )
     io.github.thecodingdad.gamelodge.ui.components.Modal(
-        visible = listShown, onDismiss = { listShown = false }, title = stringResource(Res.string.odin_mapping_list_title), maxWidth = 760.dp,
+        visible = listShown, onDismiss = { listShown = false }, title = stringResource(Res.string.odin_mapping_list_title), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD,
     ) {
         androidx.compose.foundation.layout.Column(
             androidx.compose.ui.Modifier.weight(1f, fill = false).popupHeightIn(560.dp).controllerScroll(),

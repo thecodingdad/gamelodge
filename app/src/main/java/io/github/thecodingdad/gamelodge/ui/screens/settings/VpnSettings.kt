@@ -178,7 +178,7 @@ fun VpnSettings(settings: LauncherSettings, update: ((LauncherSettings) -> Launc
 
     // One tunnel: state, networks, connect / disconnect, default, delete.
     val shown = tunnelDialog
-    io.github.thecodingdad.gamelodge.ui.components.Modal(visible = shown != null, onDismiss = { tunnelDialog = null }, title = shown, maxWidth = 640.dp) {
+    io.github.thecodingdad.gamelodge.ui.components.Modal(visible = shown != null, onDismiss = { tunnelDialog = null }, title = shown, size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         val name = shown ?: return@Modal
         val isUp = state.status == VpnStatus.UP && state.tunnel == name
         val routes = remember(name) { vpn.allowedIps(name) }
@@ -204,7 +204,7 @@ fun VpnSettings(settings: LauncherSettings, update: ((LauncherSettings) -> Launc
     }
 
     // Import: from a file or the clipboard.
-    io.github.thecodingdad.gamelodge.ui.components.Modal(visible = importDialog, onDismiss = { importDialog = false; message = null }, title = stringResource(Res.string.vpn_add_tunnel), maxWidth = 640.dp) {
+    io.github.thecodingdad.gamelodge.ui.components.Modal(visible = importDialog, onDismiss = { importDialog = false; message = null }, title = stringResource(Res.string.vpn_add_tunnel), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         Text(stringResource(Res.string.vpn_import_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
         io.github.thecodingdad.gamelodge.ui.components.ButtonRow(spacing = 10.dp) {
             LauncherButton(stringResource(Res.string.vpn_import_file), icon = Icons.Filled.FileOpen, primary = true, onClick = { openFile.launch(arrayOf("*/*")) })
@@ -232,7 +232,7 @@ private fun HomeNetworksDialog(
     val manualTitle = stringResource(Res.string.vpn_add_manual)
     val invalid = stringResource(Res.string.vpn_home_invalid, "%s")
     fun add(entries: List<String>) = update { it.copy(homeNetworks = it.homeNetworks + entries) }
-    io.github.thecodingdad.gamelodge.ui.components.Modal(visible = visible, onDismiss = onDismiss, title = title, maxWidth = 640.dp) {
+    io.github.thecodingdad.gamelodge.ui.components.Modal(visible = visible, onDismiss = onDismiss, title = title, size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         // Read when the popup shows (the network may have changed since the page opened).
         val addresses = remember(visible) { vpn.localAddresses() }
         Text(stringResource(Res.string.vpn_home_networks_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)

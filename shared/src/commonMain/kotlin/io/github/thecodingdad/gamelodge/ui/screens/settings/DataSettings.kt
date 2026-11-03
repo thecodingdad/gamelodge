@@ -366,7 +366,7 @@ private fun BackupNowDialog(
     var pw2 by remember { mutableStateOf("") }
     val match = pw.isNotEmpty() && pw == pw2
     io.github.thecodingdad.gamelodge.ui.components.Modal(
-        visible = true, onDismiss = onDismiss, title = stringResource(Res.string.backup_now), maxWidth = 620.dp, closeButton = false,
+        visible = true, onDismiss = onDismiss, title = stringResource(Res.string.backup_now), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD, closeButton = false,
     ) {
         Column(Modifier.weight(1f, fill = false).popupHeightIn(560.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(stringResource(Res.string.backup_includes_intro), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
@@ -416,7 +416,7 @@ private fun RestoreConfirmDialog(
     var pw by remember { mutableStateOf("") }
     val format = remember { DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT) }
     io.github.thecodingdad.gamelodge.ui.components.Modal(
-        visible = true, onDismiss = onDismiss, title = stringResource(Res.string.backup_restore), maxWidth = 620.dp, closeButton = false,
+        visible = true, onDismiss = onDismiss, title = stringResource(Res.string.backup_restore), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD, closeButton = false,
     ) {
         Column(Modifier.weight(1f, fill = false).popupHeightIn(560.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(stringResource(Res.string.backup_restore_contains), style = MaterialTheme.typography.titleSmall, color = LauncherTheme.colors.onSurface)

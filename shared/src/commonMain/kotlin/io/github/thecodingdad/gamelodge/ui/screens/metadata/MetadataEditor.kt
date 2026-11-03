@@ -85,7 +85,7 @@ fun MetadataEditorDialog(
         appScope.launch { service.commitEdit() }
         onDismiss()
     }
-    Modal(visible = entry != null, onDismiss = cancel, title = stringResource(Res.string.meta_edit_title), maxWidth = 820.dp, modifier = Modifier.fillMaxHeight(), closeButton = false) {
+    Modal(visible = entry != null, onDismiss = cancel, title = stringResource(Res.string.meta_edit_title), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.WIDE, modifier = Modifier.fillMaxHeight(), closeButton = false) {
         val e = entry ?: return@Modal
         val item = e.item
         val manual = item.manual
@@ -154,7 +154,7 @@ private fun FieldDialog(
     onDismiss: () -> Unit,
 ) {
     val keyboard = LocalKeyboardController.current
-    Modal(visible = row != null && item != null, onDismiss = onDismiss, title = row?.let { rowTitle(it) }, maxWidth = 760.dp, closeButton = false) {
+    Modal(visible = row != null && item != null, onDismiss = onDismiss, title = row?.let { rowTitle(it) }, size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD, closeButton = false) {
         val r = row ?: return@Modal
         val it0 = item ?: return@Modal
         val title = rowTitle(r)

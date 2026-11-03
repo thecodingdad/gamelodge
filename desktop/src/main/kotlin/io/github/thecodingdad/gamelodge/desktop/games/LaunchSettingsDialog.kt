@@ -73,7 +73,7 @@ fun LaunchSettingsDialog(
     val playName = stringResource(Res.string.action_play)
     val defaultLabel = stringResource(Res.string.start_action_default)
 
-    Modal(visible = e != null && editing == null, onDismiss = onDismiss, title = stringResource(Res.string.start_actions), maxWidth = 760.dp) {
+    Modal(visible = e != null && editing == null, onDismiss = onDismiss, title = stringResource(Res.string.start_actions), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         val game = e ?: return@Modal
         Column(Modifier.weight(1f, fill = false).popupHeightIn(620.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(title ?: game.name, style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
@@ -108,7 +108,7 @@ fun LaunchSettingsDialog(
             is Editing.Own -> current.action?.name ?: stringResource(Res.string.start_action_add)
             null -> null
         },
-        maxWidth = 760.dp,
+        size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD,
     ) {
         val game = e ?: return@Modal
         val c = current ?: return@Modal

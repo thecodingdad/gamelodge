@@ -74,7 +74,7 @@ fun TasksPopup() {
         visible = popupOpen && tasks.isNotEmpty(),
         onDismiss = { BackgroundTasks.popupOpen = false },
         title = stringResource(Res.string.tasks_title),
-        maxWidth = 600.dp,
+        size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD,
     ) {
         val navigate = io.github.thecodingdad.gamelodge.ui.screens.settings.LocalSettingsNavigator.current
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {

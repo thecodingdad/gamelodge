@@ -199,7 +199,7 @@ private fun KeyRecordDialog(
         if (visible) start { onDismiss() }
         onDispose { stop() }
     }
-    Modal(visible = visible, onDismiss = onDismiss, title = title.orEmpty(), maxWidth = 640.dp, closeButton = false) {
+    Modal(visible = visible, onDismiss = onDismiss, title = title.orEmpty(), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD, closeButton = false) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(stringResource(Res.string.input_record_waiting), style = MaterialTheme.typography.headlineSmall, color = LauncherTheme.colors.accent)
             Text(help, style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)

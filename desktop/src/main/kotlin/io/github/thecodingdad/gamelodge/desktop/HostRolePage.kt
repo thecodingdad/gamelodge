@@ -161,7 +161,7 @@ internal fun PairingDialog(role: HostRole, pairedBefore: Int, onClose: () -> Uni
     var pinFor by remember { mutableStateOf<String?>(null) }
     var pin by remember { mutableStateOf("") }
     var invalid by remember { mutableStateOf(false) }
-    Modal(visible = true, onDismiss = onClose, title = stringResource(Res.string.host_pair_start), maxWidth = 620.dp) {
+    Modal(visible = true, onDismiss = onClose, title = stringResource(Res.string.host_pair_start), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         val locked = pairing.lockedUntil
         val open = pairing.openUntil
         Text(stringResource(Res.string.host_pair_hint), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
@@ -202,7 +202,7 @@ private fun WebDialog(role: HostRole, onDismiss: () -> Unit) {
     // Webpage changes (setup done, password reset) show up when the dialog is opened again.
     var revision by remember { mutableStateOf(0) }
     val needsSetup = remember(revision, status.webRunning) { role.auth.needsSetup }
-    Modal(visible = true, onDismiss = onDismiss, title = stringResource(Res.string.host_web), maxWidth = 640.dp) {
+    Modal(visible = true, onDismiss = onDismiss, title = stringResource(Res.string.host_web), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         val code = setupCode
         if (code != null) {
             Text(stringResource(Res.string.host_web_setup_hint), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
@@ -236,7 +236,7 @@ private fun WebDialog(role: HostRole, onDismiss: () -> Unit) {
 
 @Composable
 private fun DeviceDialog(device: Device, role: HostRole, onDismiss: () -> Unit) {
-    Modal(visible = true, onDismiss = onDismiss, title = device.name, maxWidth = 620.dp) {
+    Modal(visible = true, onDismiss = onDismiss, title = device.name, size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         // Saved when the dialog closes, not per keystroke.
         var name by remember(device.id) { mutableStateOf(device.name) }
         DisposableEffect(device.id) {

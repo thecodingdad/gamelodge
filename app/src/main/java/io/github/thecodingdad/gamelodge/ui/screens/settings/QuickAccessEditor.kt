@@ -64,7 +64,7 @@ fun QuickAccessEditor(visible: Boolean, onDismiss: () -> Unit) {
     fun save(list: List<String>) = update { it.copy(quickTiles = list) }
     val context = androidx.compose.ui.platform.LocalContext.current
 
-    Modal(visible = visible, onDismiss = onDismiss, title = stringResource(Res.string.qm_edit), maxWidth = 760.dp) {
+    Modal(visible = visible, onDismiss = onDismiss, title = stringResource(Res.string.qm_edit), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         Column(Modifier.weight(1f, fill = false).popupHeightIn(640.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             SectionHeader(stringResource(Res.string.qm_tiles_section))
             Text(stringResource(Res.string.qt_settings_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
@@ -101,7 +101,7 @@ fun QuickAccessEditor(visible: Boolean, onDismiss: () -> Unit) {
     }
     // Only tiles the device has the hardware for.
     val available = remember { QuickTile.groups.flatMap { it.second }.filter { QuickTile.isAvailable(it) }.toSet() }
-    Modal(visible = adding, onDismiss = { adding = false }, title = stringResource(Res.string.qt_add), maxWidth = 760.dp) {
+    Modal(visible = adding, onDismiss = { adding = false }, title = stringResource(Res.string.qt_add), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         Column(Modifier.weight(1f, fill = false).popupHeightIn(600.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             fun add(id: String) { save(tiles + id); adding = false }
             QuickTile.groups.forEach { (title, ids) ->

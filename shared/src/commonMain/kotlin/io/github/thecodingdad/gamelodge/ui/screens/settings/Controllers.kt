@@ -185,7 +185,7 @@ private fun ControllerIconPickerPopup(
 ) {
     io.github.thecodingdad.gamelodge.ui.components.Modal(
         visible = true, onDismiss = onDismiss,
-        title = stringResource(Res.string.controller_icon), maxWidth = 560.dp,
+        title = stringResource(Res.string.controller_icon), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD,
     ) {
         androidx.compose.foundation.layout.Column(
             androidx.compose.ui.Modifier.weight(1f, fill = false)

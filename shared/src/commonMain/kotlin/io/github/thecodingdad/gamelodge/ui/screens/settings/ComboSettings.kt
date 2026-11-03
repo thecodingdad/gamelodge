@@ -162,7 +162,7 @@ fun ComboDialog(
     }
     DisposableEffect(action) { onDispose { ButtonCombos.cancelRecording(); recording = false; error = null } }
     val title = action?.let { stringResource(comboTitle(it)) }.orEmpty()
-    Modal(visible = action != null, onDismiss = { if (!recording) onDismiss() }, title = title, maxWidth = 640.dp, closeButton = false) {
+    Modal(visible = action != null, onDismiss = { if (!recording) onDismiss() }, title = title, size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD, closeButton = false) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(
                 when {

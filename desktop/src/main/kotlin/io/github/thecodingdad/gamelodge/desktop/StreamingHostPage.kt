@@ -165,7 +165,7 @@ internal fun ConnectionDialog(role: HostRole, sync: HostSync, secrets: SecretSto
     val scope = rememberCoroutineScope()
     fun connection() = HostConnection(url.trim(), type, user.trim().ifEmpty { null }, secret.ifBlank { stored })
 
-    Modal(visible = true, onDismiss = onDismiss, title = stringResource(Res.string.host_connection_title), maxWidth = 640.dp) {
+    Modal(visible = true, onDismiss = onDismiss, title = stringResource(Res.string.host_connection_title), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         ChoiceRow(stringResource(Res.string.host_sync_type), HostType.entries, type, label = { hostTypeName(it) }, onSelect = { type = it; result = null })
         LauncherTextField(stringResource(Res.string.host_sync_url), url, { url = it; result = null }, kind = TextKind.URL)
         val placeholder = if (stored != null) stringResource(Res.string.host_sync_stored) else null

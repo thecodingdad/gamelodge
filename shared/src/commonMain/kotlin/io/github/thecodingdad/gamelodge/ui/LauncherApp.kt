@@ -877,7 +877,7 @@ private fun MainShell(
                         )
                     }
                     MainTab.LIBRARY -> LibraryScreen(
-                        allEntries, libraryFilters, settings.animatedTiles, vm.focusKeys[MainTab.LIBRARY.name], openStats,
+                        allEntries, libraryFilters, settings.animatedTiles, vm.focusKeys[MainTab.LIBRARY.name],
                         openFilterSettings = { nav.navigate(Routes.settings(SettingsPageId.FILTERS)) },
                         layout = settings.libraryLayout,
                     ) { vm.focusKeys[MainTab.LIBRARY.name] = it }

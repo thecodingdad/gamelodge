@@ -132,7 +132,7 @@ class DesktopPlatformUi(
 
     @Composable
     override fun ControllerDetailDialog(controller: ControllerInfo?, onDismiss: () -> Unit) {
-        Modal(visible = controller != null, onDismiss = onDismiss, title = controller?.name, maxWidth = 560.dp) {
+        Modal(visible = controller != null, onDismiss = onDismiss, title = controller?.name, size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
             val c = controller ?: return@Modal
             // Scrolls when the launcher section and combinations don't fit.
             Column(

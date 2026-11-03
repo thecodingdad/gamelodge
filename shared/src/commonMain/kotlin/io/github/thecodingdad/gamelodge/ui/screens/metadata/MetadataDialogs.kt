@@ -77,7 +77,7 @@ import io.github.thecodingdad.gamelodge.resources.*
 fun FixMetadataDialog(item: LibraryItemEntity?, onDismiss: () -> Unit) {
     val metadata = io.github.thecodingdad.gamelodge.LocalContainer.current.metadata
     val scope = rememberCoroutineScope()
-    Modal(visible = item != null, onDismiss = onDismiss, title = stringResource(Res.string.metadata_fix_title), maxWidth = 860.dp) {
+    Modal(visible = item != null, onDismiss = onDismiss, title = stringResource(Res.string.metadata_fix_title), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.WIDE) {
         val target = item ?: return@Modal
         var query by remember(target.id) { mutableStateOf(target.metadataQuery ?: io.github.thecodingdad.gamelodge.data.library.TitleNormalizer.searchTerm(target.title)) }
         var results by remember(target.id) { mutableStateOf<List<MetadataCandidate>?>(null) }
@@ -178,7 +178,7 @@ fun ArtworkPickerDialog(
         }
     }
     // Constant height (the whole screen but a margin): switching tabs doesn't make it jump.
-    Modal(visible = item != null, onDismiss = onDismiss, title = title ?: stringResource(Res.string.artwork_title), maxWidth = 1000.dp, modifier = Modifier.fillMaxHeight()) {
+    Modal(visible = item != null, onDismiss = onDismiss, title = title ?: stringResource(Res.string.artwork_title), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.WIDE, modifier = Modifier.fillMaxHeight()) {
         val target = item ?: return@Modal
         val entry = io.github.thecodingdad.gamelodge.data.db.LibraryEntry(target, targets)
         val isApp = target.kind == io.github.thecodingdad.gamelodge.data.db.ItemKind.APP

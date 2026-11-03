@@ -42,7 +42,7 @@ fun PlatformDialog(
 ) {
     val keyboard = LocalKeyboardController.current
     val customTitle = stringResource(Res.string.platform_custom)
-    Modal(visible = entry != null, onDismiss = onDismiss, title = stringResource(Res.string.platform_title), maxWidth = 560.dp) {
+    Modal(visible = entry != null, onDismiss = onDismiss, title = stringResource(Res.string.platform_title), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         val e = entry ?: return@Modal
         val source = when (e.item.platformSource) {
             PlatformSource.MANUAL -> Res.string.platform_source_manual

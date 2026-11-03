@@ -141,7 +141,7 @@ fun FilterBar(
                 Icon(Icons.Filled.MoreVert, stringResource(Res.string.hint_options))
             })
             io.github.thecodingdad.gamelodge.ui.components.Modal(
-                visible = menu, onDismiss = { menu = false }, maxWidth = 420.dp, title = stringResource(Res.string.hint_options),
+                visible = menu, onDismiss = { menu = false }, size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.COMPACT, title = stringResource(Res.string.hint_options),
             ) {
                 androidx.compose.foundation.layout.Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     val item: @Composable (androidx.compose.ui.graphics.vector.ImageVector, String, () -> Unit) -> Unit = { icon, label, action ->
@@ -203,7 +203,7 @@ fun SortDialog(
     onChange: (LibrarySort, Boolean?) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    io.github.thecodingdad.gamelodge.ui.components.Modal(visible = visible, onDismiss = onDismiss, title = stringResource(Res.string.sort_by), maxWidth = 560.dp) {
+    io.github.thecodingdad.gamelodge.ui.components.Modal(visible = visible, onDismiss = onDismiss, title = stringResource(Res.string.sort_by), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         val asc = ascending ?: sort.defaultAscending
         androidx.compose.foundation.layout.Column(
             Modifier.weight(1f, fill = false).popupHeightIn(560.dp).controllerScroll(),

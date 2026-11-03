@@ -162,7 +162,7 @@ class RenderTest {
     @Test
     fun popupWithSettingsRows() {
         renderPage("popup-rows", 1200) {
-            io.github.thecodingdad.gamelodge.ui.components.Modal(visible = true, onDismiss = {}, title = "Xbox Wireless Controller", maxWidth = 760.dp) {
+            io.github.thecodingdad.gamelodge.ui.components.Modal(visible = true, onDismiss = {}, title = "Xbox Wireless Controller", size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
                 io.github.thecodingdad.gamelodge.ui.screens.settings.SectionHeader("In the launcher")
                 io.github.thecodingdad.gamelodge.ui.screens.settings.ChoiceRow("Button layout", listOf("Xbox", "Nintendo"), "Xbox", label = { it }, onSelect = {})
                 io.github.thecodingdad.gamelodge.ui.screens.settings.NavRow("Android home", {}, trailing = "Default (off)")

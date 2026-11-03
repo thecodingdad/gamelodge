@@ -95,7 +95,7 @@ private fun GameActionDialog(initial: GameAction?, onSave: (GameAction) -> Unit,
     var startWaits by remember { mutableStateOf(initial?.startWaits ?: true) }
     var hostStarts by remember { mutableStateOf(initial?.hostStarts ?: false) }
     var picking by remember { mutableStateOf(false) }
-    Modal(visible = true, onDismiss = onDismiss, title = stringResource(Res.string.game_action_title), maxWidth = 680.dp, closeButton = false) {
+    Modal(visible = true, onDismiss = onDismiss, title = stringResource(Res.string.game_action_title), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD, closeButton = false) {
         // Scrolls on small screens; the buttons below stay.
         androidx.compose.foundation.layout.Column(Modifier.weight(1f, fill = false).popupHeightIn(420.dp).controllerScroll(), verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)) {
         NavRow(
@@ -157,7 +157,7 @@ fun GameActionsDialog(entry: LibraryEntry?, onDismiss: () -> Unit) {
     fun save(change: (GameActionSettings) -> GameActionSettings) {
         scope.launch { c.settings.update { s -> s.copy(gameActions = GameActionSettings.encode(change(GameActionSettings.decode(s.gameActions)))) } }
     }
-    Modal(visible = entry != null, onDismiss = onDismiss, title = entry?.item?.title, maxWidth = 720.dp) {
+    Modal(visible = entry != null, onDismiss = onDismiss, title = entry?.item?.title, size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         val e = entry ?: return@Modal
         val own = all.games[e.item.id]
         // Scrolls when the game has many actions.

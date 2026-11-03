@@ -236,7 +236,7 @@ internal fun LoginDialog(settings: LauncherSettings, update: ((LauncherSettings)
         }
     }
     fun cancel() { job?.cancel(); job = null; phoneUrl = null }
-    Modal(visible = true, onDismiss = { cancel(); onDismiss() }, title = stringResource(Res.string.ha_login_title), maxWidth = 640.dp) {
+    Modal(visible = true, onDismiss = { cancel(); onDismiss() }, title = stringResource(Res.string.ha_login_title), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         LauncherTextField(
             stringResource(Res.string.ha_url), url, { url = it; update { s -> s.copy(haUrl = it) } },
             kind = TextKind.URL, placeholder = "http://homeassistant.local:8123",
@@ -323,7 +323,7 @@ fun HaTileList(enabled: Boolean) {
 /** The quick menu's Home Assistant tab: its tiles edited in a popup (like quick access). */
 @Composable
 fun HaTileEditor(visible: Boolean, onDismiss: () -> Unit) {
-    io.github.thecodingdad.gamelodge.ui.components.Modal(visible = visible, onDismiss = onDismiss, title = stringResource(Res.string.ha_tiles), maxWidth = 760.dp) {
+    io.github.thecodingdad.gamelodge.ui.components.Modal(visible = visible, onDismiss = onDismiss, title = stringResource(Res.string.ha_tiles), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         Column(
             Modifier.weight(1f, fill = false).popupHeightIn(640.dp).controllerScroll(),
             verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -335,7 +335,7 @@ fun HaTileEditor(visible: Boolean, onDismiss: () -> Unit) {
 @Composable
 private fun TileDialog(tile: HaTileEntity, entity: HaEntity?, ha: HaRepository, onDismiss: () -> Unit) {
     val scope = rememberCoroutineScope()
-    Modal(visible = true, onDismiss = onDismiss, title = entity?.name ?: tile.entityId, maxWidth = 620.dp) {
+    Modal(visible = true, onDismiss = onDismiss, title = entity?.name ?: tile.entityId, size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         Text(tile.entityId, style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
         SwitchRow(stringResource(Res.string.ha_tile_on_home), tile.showOnHome, { scope.launch { ha.setShowOnHome(tile, it) } }, icon = Icons.Filled.Home, initialFocus = true)
     }

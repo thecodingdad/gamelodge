@@ -338,7 +338,7 @@ fun EntryContextMenu(
     GameControllerDialog(controllerSettingsFor) { controllerSettingsFor = null }
     Modal(
         visible = entry != null || session != null, onDismiss = onDismiss,
-        title = entry?.item?.title ?: session?.appName, maxWidth = 520.dp,
+        title = entry?.item?.title ?: session?.appName, size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.COMPACT,
     ) {
         fun act(block: () -> Unit) = { onDismiss(); block() }
         Column(
@@ -425,7 +425,7 @@ private fun GameControllerDialog(item: io.github.thecodingdad.gamelodge.data.db.
     val settings by c.settings.settings.collectAsState(null)
     val scope = androidx.compose.runtime.rememberCoroutineScope()
     val platform = io.github.thecodingdad.gamelodge.ui.PlatformUi.current
-    Modal(visible = item != null, onDismiss = onDismiss, title = stringResource(Res.string.game_controller_settings), maxWidth = 620.dp) {
+    Modal(visible = item != null, onDismiss = onDismiss, title = stringResource(Res.string.game_controller_settings), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         val i = item ?: return@Modal
         val s = settings ?: return@Modal
         val pad = s.gamePads[i.id] ?: io.github.thecodingdad.gamelodge.data.settings.GamePadSettings()
@@ -478,7 +478,7 @@ private fun GameControllerDialog(item: io.github.thecodingdad.gamelodge.data.db.
  */
 @Composable
 fun GameEmulatorDialog(entry: LibraryEntry?, onDismiss: () -> Unit, onChoose: (LaunchTargetEntity, String?) -> Unit) {
-    Modal(visible = entry != null, onDismiss = onDismiss, title = entry?.item?.title, maxWidth = 560.dp) {
+    Modal(visible = entry != null, onDismiss = onDismiss, title = entry?.item?.title, size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         val e = entry ?: return@Modal
         val emulation = io.github.thecodingdad.gamelodge.LocalContainer.current.emulators
         val experimental = stringResource(Res.string.emu_experimental)
@@ -688,7 +688,7 @@ fun StreamProgressContent(
 /** Hiding a host game whose play data is shared: only on this device, or on every GameLodge of its host. */
 @Composable
 fun HideChoiceDialog(entry: LibraryEntry?, onChoice: (here: Boolean) -> Unit, onDismiss: () -> Unit) {
-    Modal(visible = entry != null, onDismiss = onDismiss, title = entry?.item?.title, maxWidth = 520.dp, closeButton = false) {
+    Modal(visible = entry != null, onDismiss = onDismiss, title = entry?.item?.title, size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.COMPACT, closeButton = false) {
         Text(stringResource(Res.string.hide_choice_text), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
         LauncherButton(stringResource(Res.string.hide_choice_here), { onChoice(true) }, Modifier.fillMaxWidth(), Icons.Filled.VisibilityOff, primary = true)
         LauncherButton(stringResource(Res.string.hide_choice_everywhere), { onChoice(false) }, Modifier.fillMaxWidth(), Icons.Filled.Devices)

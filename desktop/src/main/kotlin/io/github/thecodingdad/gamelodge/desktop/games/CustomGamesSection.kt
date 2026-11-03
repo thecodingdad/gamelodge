@@ -55,7 +55,7 @@ fun CustomGamesSection(settings: LauncherSettings, update: ((LauncherSettings) -
     }
     LauncherButton(stringResource(Res.string.custom_add), icon = Icons.Filled.Add, onClick = { editing = CustomGame("", "", "") })
 
-    Modal(visible = editing != null, onDismiss = { editing = null }, title = stringResource(Res.string.custom_title), maxWidth = 720.dp) {
+    Modal(visible = editing != null, onDismiss = { editing = null }, title = stringResource(Res.string.custom_title), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         val g = editing ?: return@Modal
         var name by remember(g) { mutableStateOf(g.name) }
         var path by remember(g) { mutableStateOf(g.path) }

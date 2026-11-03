@@ -42,7 +42,7 @@ fun PcVersionHint() {
     Text(stringResource(Res.string.pc_version_hint), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
     LauncherButton(stringResource(Res.string.pc_version_more), { open = true }, icon = Icons.Filled.Computer)
     if (!open) return
-    Modal(visible = true, onDismiss = { open = false }, title = stringResource(Res.string.pc_version_title), maxWidth = 760.dp) {
+    Modal(visible = true, onDismiss = { open = false }, title = stringResource(Res.string.pc_version_title), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         Column(Modifier.weight(1f, fill = false).popupHeightIn(520.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(stringResource(Res.string.pc_version_text), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurface)
             Text(stringResource(Res.string.pc_version_steps), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurface)

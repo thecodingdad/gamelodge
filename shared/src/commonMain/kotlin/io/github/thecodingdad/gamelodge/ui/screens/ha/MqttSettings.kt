@@ -83,7 +83,7 @@ fun MqttDialog(settings: LauncherSettings, update: ((LauncherSettings) -> Launch
     // A changed entry makes an earlier test result stale.
     androidx.compose.runtime.LaunchedEffect(host, port, tls, selfSigned, user, password) { testResult = null }
 
-    Modal(visible = true, onDismiss = onDismiss, title = stringResource(Res.string.mqtt_title), maxWidth = 680.dp, closeButton = false) {
+    Modal(visible = true, onDismiss = onDismiss, title = stringResource(Res.string.mqtt_title), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD, closeButton = false) {
         // Scrolls when it doesn't fit; the buttons below always stay in view.
         Column(Modifier.weight(1f, fill = false).popupHeightIn(460.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(stringResource(Res.string.mqtt_intro), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)

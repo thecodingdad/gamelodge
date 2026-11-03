@@ -509,7 +509,7 @@ private fun ChoiceValue(title: String, subtitle: String?, icon: ImageVector?, va
 @Composable
 private fun ChoiceList(title: String, labels: List<String>, selected: Int, icon: (@Composable (Int) -> Unit)?, onPick: (Int) -> Unit, onDismiss: () -> Unit) {
     val colors = LauncherTheme.colors
-    io.github.thecodingdad.gamelodge.ui.components.Modal(visible = true, onDismiss = onDismiss, title = title, maxWidth = 560.dp) {
+    io.github.thecodingdad.gamelodge.ui.components.Modal(visible = true, onDismiss = onDismiss, title = title, size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         Column(Modifier.weight(1f, fill = false).popupHeightIn(520.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             labels.forEachIndexed { i, text ->
                 val on = i == selected

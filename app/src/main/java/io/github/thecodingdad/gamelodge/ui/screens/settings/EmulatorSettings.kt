@@ -225,7 +225,7 @@ private fun FolderDialog(
     onSave: (RomFolder) -> Unit,
     onRemove: (RomFolder) -> Unit,
 ) {
-    Modal(visible = folder != null, onDismiss = onDismiss, title = folder?.name, maxWidth = 640.dp) {
+    Modal(visible = folder != null, onDismiss = onDismiss, title = folder?.name, size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         val f = folder ?: return@Modal
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             // null = one subfolder per system, recognised by name.
@@ -254,7 +254,7 @@ private fun CustomEmulatorDialog(
     onSave: (CustomEmulator) -> Unit,
     onRemove: (CustomEmulator) -> Unit,
 ) {
-    Modal(visible = emulator != null, onDismiss = onDismiss, title = stringResource(Res.string.emu_custom_title), maxWidth = 760.dp) {
+    Modal(visible = emulator != null, onDismiss = onDismiss, title = stringResource(Res.string.emu_custom_title), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         val e = emulator ?: return@Modal
         var name by remember(e.id) { mutableStateOf(e.name) }
         var pkg by remember(e.id) { mutableStateOf(e.packageName) }
