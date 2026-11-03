@@ -278,12 +278,11 @@ class DesktopPlatformUi(
                 onCombo = { a, keys -> save(own.copy(combos = if (keys == null) own.combos - a.name else own.combos + (a.name to keys.toList()))) },
                 onForward = { v -> save(own.copy(forward = v)) },
                 showForward = false,
-                actions = listOf(io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU, io.github.thecodingdad.gamelodge.input.ComboAction.MOUSE),
+                actions = listOf(io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU),
                 firstFocus = true,
                 subtitles = true,
             )
         }
-        io.github.thecodingdad.gamelodge.ui.screens.settings.MouseSettingsRows(settings, update)
     }
 
     @Composable

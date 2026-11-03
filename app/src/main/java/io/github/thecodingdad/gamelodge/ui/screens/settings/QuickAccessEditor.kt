@@ -121,7 +121,7 @@ fun QuickAccessEditor(visible: Boolean, onDismiss: () -> Unit) {
     }
 }
 
-/** The quick menu's settings tab: the button combination that opens it and opening it by touch. */
+/** The quick menu's settings tab: only how it opens (button combination, by touch). */
 @Composable
 fun QuickMenuSettingsTab() {
     val c = io.github.thecodingdad.gamelodge.LocalContainer.current
@@ -130,9 +130,9 @@ fun QuickMenuSettingsTab() {
     fun update(transform: (LauncherSettings) -> LauncherSettings) { scope.launch { c.settings.update(transform) } }
     val context = androidx.compose.ui.platform.LocalContext.current
 
-    // The combinations of the controller in use (each controller has its own).
-    ActiveControllerComboRows(listOf(io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU, io.github.thecodingdad.gamelodge.input.ComboAction.MOUSE), firstFocus = true)
-    MouseSettingsRows(settings, ::update)
+    // How the menu opens: the controller in use's combination (each controller has its own; the
+    // rest of the controller settings live in Settings › Controllers).
+    ActiveControllerComboRows(listOf(io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU), firstFocus = true, showForward = false)
     // Opening the menu by touch while another app is in front.
     SectionHeader(stringResource(Res.string.qm_touch_section))
     var tick by remember { androidx.compose.runtime.mutableIntStateOf(0) }

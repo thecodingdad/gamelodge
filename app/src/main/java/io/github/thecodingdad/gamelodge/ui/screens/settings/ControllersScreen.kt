@@ -123,7 +123,7 @@ fun rememberActiveController(): ControllerInfo? {
  * without a controller only a hint (combinations belong to a controller).
  */
 @Composable
-fun ActiveControllerComboRows(actions: List<io.github.thecodingdad.gamelodge.input.ComboAction>, firstFocus: Boolean = false) {
+fun ActiveControllerComboRows(actions: List<io.github.thecodingdad.gamelodge.input.ComboAction>, firstFocus: Boolean = false, showForward: Boolean = true) {
     val pad = rememberActiveController()
     if (pad == null) {
         Text(stringResource(Res.string.controller_combos_none), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
@@ -142,6 +142,7 @@ fun ActiveControllerComboRows(actions: List<io.github.thecodingdad.gamelodge.inp
         actions = actions,
         firstFocus = firstFocus,
         subtitles = true,
+        showForward = showForward,
     )
 }
 
