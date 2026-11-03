@@ -42,7 +42,9 @@ object Runner {
                     val http = OkHttpClient()
                     // Installed: the running launcher rescans at once (its library, the host's apps and
                     // what paired launchers see), not only at its next scan.
-                    val installed = GameLauncher.install(entry) { PcLibrary.installedNow(entry, http) }
+                    // The stream may end (and the host end this runner) long before the download
+                    // is done: the launcher watches the installation itself as well.
+                    val installed = GameLauncher.install(entry, started = { SingleInstance.reportInstalling(entry.id) }) { PcLibrary.installedNow(entry, http) }
                     if (installed) SingleInstance.reportInstalled(entry.id)
                     installed
                 } else {

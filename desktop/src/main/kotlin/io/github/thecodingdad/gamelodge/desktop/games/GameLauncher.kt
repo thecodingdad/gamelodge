@@ -68,10 +68,11 @@ object GameLauncher {
     }
 
     /** Opens the store's install page for an owned game; [isInstalled] is asked until it says yes (up to 8 h). */
-    suspend fun install(entry: GameEntry, isInstalled: suspend () -> Boolean): Boolean {
+    suspend fun install(entry: GameEntry, started: () -> Unit = {}, isInstalled: suspend () -> Boolean): Boolean {
         val uri = entry.install?.takeIf { it.isNotBlank() } ?: return false
         if (!withContext(Dispatchers.IO) { open(uri, null) }) return false
         Log.i("Installing ${entry.name} through its store")
+        started()
         val deadline = System.currentTimeMillis() + 8 * 3_600_000L
         while (System.currentTimeMillis() < deadline) {
             delay(20_000)

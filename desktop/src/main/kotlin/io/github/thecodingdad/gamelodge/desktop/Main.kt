@@ -109,6 +109,28 @@ fun main(args: Array<String>) {
         Log.i("Installed by the host's runner: $entryId")
         container.pcLibrary.rescan()
     }
+    // A store installation started by a runner: watched here until it's done (the runner ends with
+    // the stream, the download goes on), then the library rescans.
+    val installWatches = java.util.concurrent.ConcurrentHashMap<String, kotlinx.coroutines.Job>()
+    SingleInstance.onInstalling = { entryId ->
+        val entry = container.pcLibrary.entry(entryId)
+        if (entry != null) {
+            Log.i("Watching the installation of $entryId")
+            installWatches.remove(entryId)?.cancel()
+            installWatches[entryId] = container.scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                val deadline = System.currentTimeMillis() + INSTALL_WATCH_MS
+                while (System.currentTimeMillis() < deadline) {
+                    kotlinx.coroutines.delay(30_000)
+                    if (runCatching { container.pcLibrary.installedNow(entry) }.getOrDefault(false)) {
+                        Log.i("Installed: $entryId")
+                        container.pcLibrary.rescan()
+                        break
+                    }
+                }
+                installWatches.remove(entryId, coroutineContext[kotlinx.coroutines.Job])
+            }
+        }
+    }
     SingleInstance.onHostGame = { entryId, started ->
         hostGame = if (started) entryId else hostGame.takeIf { it != entryId }
         if (started) {
@@ -602,6 +624,9 @@ fun main(args: Array<String>) {
 
 /** Animations pause after this long without input. */
 private const val ANIMATION_IDLE_MS = 60_000L
+
+/** How long the launcher watches a store installation a runner started (big downloads). */
+private const val INSTALL_WATCH_MS = 8 * 3_600_000L
 
 /** Host pixels per second of the stream's mouse at full stick deflection and 100 % speed. */
 private const val STREAM_MOUSE_SPEED = 1200f

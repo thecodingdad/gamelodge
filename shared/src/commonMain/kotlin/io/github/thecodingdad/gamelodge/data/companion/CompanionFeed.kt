@@ -30,14 +30,20 @@ class CompanionFeed(
         list.games.filter { it.appUuid != null }.associateBy { it.appUuid!!.uppercase() }
     }
 
-    /** Like [games], but only when the list changed since the last fetch (null otherwise). */
+    /**
+     * Like [games], but only when the list changed since the last [changedGames] (null otherwise).
+     * Other fetches ([games]) don't count: they would hide a change from this check.
+     */
     suspend fun changedGames(hostUuid: String): Map<String, HostGame>? = withContext(Dispatchers.IO) {
         val server = companionFor(hostUuid) ?: return@withContext null
-        val before = cache[server.id]?.first
         val list = fetch(server) ?: return@withContext null
-        if (before != null && cache[server.id]?.first == before) return@withContext null
+        val tag = cache[server.id]?.first
+        val before = applied.put(server.id, tag ?: "")
+        if (before != null && tag != null && before == tag) return@withContext null
         list.games.filter { it.appUuid != null }.associateBy { it.appUuid!!.uppercase() }
     }
+
+    private val applied = ConcurrentHashMap<String, String>() // server id → etag last seen by changedGames
 
     private fun companionFor(hostUuid: String): PairedServer? = servers.companionFor(hostUuid)?.takeIf(isEnabled)
 
