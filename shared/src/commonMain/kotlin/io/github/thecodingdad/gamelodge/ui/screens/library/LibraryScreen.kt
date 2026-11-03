@@ -317,6 +317,8 @@ private fun LibraryFocusDependents(
             ButtonHint(PadButton.L2, stringResource(Res.string.hint_filters), onClick = onFilters, secondButton = PadButton.R2),
             ButtonHint(PadButton.SELECT, sortLabel, onClick = onSort),
             ButtonHint(PadButton.START, stringResource(Res.string.hint_search), onClick = onSearch),
+            // Last, as on the other tabs.
+            ButtonHint(PadButton.L1, stringResource(Res.string.hint_tabs), secondButton = PadButton.R1),
         ),
     )
 }

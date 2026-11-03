@@ -65,7 +65,11 @@ class AndroidPlatformUi(private val context: Context) : PlatformUi {
      * launcher's own language (an English launcher on a German device still shows 14:05).
      */
     override fun formatTime(millis: Long): String {
-        val locale = android.content.res.Resources.getSystem().configuration.locales[0]
+        // The device's language: with a language of its own for the launcher (Android 13+) the
+        // system resources follow the launcher, only the LocaleManager knows the device's.
+        val locale = (if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            context.getSystemService(android.app.LocaleManager::class.java)?.systemLocales?.takeIf { !it.isEmpty }?.get(0)
+        } else null) ?: android.content.res.Resources.getSystem().configuration.locales[0]
         val config = android.content.res.Configuration(context.resources.configuration).apply { setLocales(android.os.LocaleList(locale)) }
         val system = systemContext?.takeIf { it.first == locale }?.second
             ?: context.createConfigurationContext(config).also { systemContext = locale to it }

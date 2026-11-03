@@ -24,6 +24,15 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
 
     override fun onCreate() {
         super.onCreate()
+        // The launcher's own language (Android 13+) as the process default from the start: the
+        // shared texts follow the default locale, which a fresh process sometimes still had at the
+        // device's language (German texts with English chosen).
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            getSystemService(android.app.LocaleManager::class.java)?.applicationLocales?.takeIf { !it.isEmpty }?.let { locales ->
+                android.os.LocaleList.setDefault(locales)
+                java.util.Locale.setDefault(locales[0])
+            }
+        }
         registerActivityLifecycleCallbacks(CurrentActivity)
         container = AppContainer(this)
         // Always offered as a home app (earlier versions switched the alias off).

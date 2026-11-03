@@ -124,6 +124,8 @@ fun AppsScreen(
             ButtonHint(PadButton.L2, stringResource(Res.string.hint_filters), onClick = { stepFilter(1) }, secondButton = PadButton.R2),
             ButtonHint(PadButton.SELECT, sortLabel(sort), onClick = { sort = sort.next(manualSort) }),
             ButtonHint(PadButton.START, stringResource(Res.string.hint_search), onClick = ::openSearch),
+            // Last, as on the other tabs.
+            ButtonHint(PadButton.L1, stringResource(Res.string.hint_tabs), secondButton = PadButton.R1),
         ),
     )
 
