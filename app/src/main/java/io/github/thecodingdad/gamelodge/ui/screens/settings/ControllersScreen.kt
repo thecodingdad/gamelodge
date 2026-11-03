@@ -175,8 +175,20 @@ fun ControllersScreen() {
         val settingsRepo = context.container.settings
         val settings by settingsRepo.settings.collectAsState(io.github.thecodingdad.gamelodge.data.settings.LauncherSettings())
         val scope = androidx.compose.runtime.rememberCoroutineScope()
-        HintBarRow(settings) { t -> scope.launch { settingsRepo.update(t) } }
+        val update: ((io.github.thecodingdad.gamelodge.data.settings.LauncherSettings) -> io.github.thecodingdad.gamelodge.data.settings.LauncherSettings) -> Unit =
+            { t -> scope.launch { settingsRepo.update(t) } }
+        HintBarRow(settings, update)
         ComboServiceRows()
+        ControllerAttachRow(settings, update)
+        // Artemis' remaining gamepad option (its own USB driver for Xbox pads), the same for every profile.
+        val editing = remember { io.github.thecodingdad.gamelodge.stream.AndroidProfileEditing(context) }
+        val base = remember { io.github.thecodingdad.gamelodge.stream.ProfileStore(context, null) }
+        val options = remember { io.github.thecodingdad.gamelodge.stream.StreamSettingsSchema.gamepadOptions(context) }
+        var revision by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+        options.forEach { option ->
+            io.github.thecodingdad.gamelodge.ui.screens.profiles.OptionRow(option, base, revision, false, editing) { revision++ }
+        }
+        OdinMappingRows()
         ControllerSectionRows(ANDROID_CONTROLLER_SECTIONS)
         SeeAlso(
             SeeAlsoLink(stringResource(Res.string.settings_sounds), SettingsTarget.Page(SettingsPageId.SOUNDS)),
@@ -199,12 +211,6 @@ fun AndroidControllerDetailDialog(controller: ControllerInfo?, onDismiss: () -> 
             verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
         ) {
             ControllerOverrideRows(c)
-            Text(
-                stringResource(Res.string.controller_info_player_order),
-                style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted,
-                modifier = androidx.compose.ui.Modifier.padding(top = 6.dp),
-            )
-            if (c.external) OdinMappingRow(c)
             SectionHeader(stringResource(Res.string.controller_device_info))
             InfoRow(
                 stringResource(Res.string.controller_info_type),
@@ -245,7 +251,8 @@ private fun ControllerOverrideRows(c: ControllerInfo) {
     val off = stringResource(Res.string.ha_off)
     val tri = listOf<Boolean?>(null, true, false)
 
-    // Name and highlight colour, so this controller is easy to tell apart everywhere it appears.
+    Text(stringResource(Res.string.controller_overrides_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+    // Name, icon and its colour, so this controller is easy to tell apart everywhere it appears.
     SectionHeader(stringResource(Res.string.controller_identity_section))
     ControllerIdentityRows(
         deviceName = c.name,
@@ -290,15 +297,13 @@ private fun ControllerOverrideRows(c: ControllerInfo) {
     }
 
     val launcherSettings by LocalContext.current.container.settings.settings.collectAsState(null)
-    // In the launcher: layout and button combinations of this controller.
     val settingsRepo = LocalContext.current.container.settings
     val scope = androidx.compose.runtime.rememberCoroutineScope()
-    SectionHeader(stringResource(Res.string.controller_launcher_section))
+
+    // Buttons: layout (also swaps them for the host) and this controller's combinations.
+    SectionHeader(stringResource(Res.string.controller_section_buttons))
     launcherSettings?.let { ls ->
         ControllerLayoutOverrideRow(c, ls, update = { t -> scope.launch { settingsRepo.update(t) } })
-    }
-    // Button combinations of this controller (e.g. Guide on an Xbox pad, Select + Start elsewhere).
-    launcherSettings?.let { ls ->
         ControllerComboRows(
             combo = { a -> s.combo(a)?.toSet() },
             forward = s.comboForward,
@@ -308,19 +313,23 @@ private fun ControllerOverrideRows(c: ControllerInfo) {
         )
     }
 
-    SectionHeader(stringResource(Res.string.controller_stream_section))
-    Text(stringResource(Res.string.controller_overrides_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
-    ChoiceRow(
-        stringResource(Res.string.controller_auto_attach), listOf<Boolean?>(null, false), s.autoAttach?.takeIf { !it },
-        label = { v -> if (v == false) stringResource(Res.string.controller_auto_attach_off) else stringResource(Res.string.controller_auto_attach_auto) },
-        onSelect = { v -> save { it.copy(autoAttach = v) } },
-    )
+    // Sticks (and the touchpad of controllers that have one).
+    SectionHeader(stringResource(if (c.hasTouchpad) Res.string.controller_section_sticks_touchpad else Res.string.controller_section_sticks))
     ChoiceRow(
         stringResource(Res.string.controller_deadzone), listOf<Int?>(null, 0, 3, 5, 8, 10, 15, 20), s.deadzonePercent,
         label = { v -> v?.let { "$it %" } ?: default("${d.deadzonePercent} %") },
         onSelect = { v -> save { it.copy(deadzonePercent = v) } },
     )
-    // Where the rumble goes, and how strong it is (for the controller's motors and the device's).
+    if (c.hasTouchpad) {
+        ChoiceRow(
+            stringResource(Res.string.controller_touchpad_mouse), tri, s.touchpadAsMouse,
+            label = { v -> when (v) { null -> default(if (d.touchpadAsMouse) on else off); true -> on; false -> off } },
+            onSelect = { v -> save { it.copy(touchpadAsMouse = v) } },
+        )
+    }
+
+    // Where the rumble goes and how strong it is (the controller's motors and the device's), and motion.
+    SectionHeader(stringResource(Res.string.controller_section_feedback))
     ChoiceRow(
         stringResource(Res.string.controller_rumble), listOf<VibrationMode?>(null) + VibrationMode.entries, s.vibration,
         label = { v -> v?.let { vibrationLabel(it) } ?: default(vibrationLabel(d.vibration)) },
@@ -338,18 +347,25 @@ private fun ControllerOverrideRows(c: ControllerInfo) {
         label = { v -> v?.let { motionLabel(it) } ?: default(motionLabel(d.motion)) },
         onSelect = { v -> save { it.copy(motion = v) } },
     )
-    if (c.hasTouchpad) {
-        ChoiceRow(
-            stringResource(Res.string.controller_touchpad_mouse), tri, s.touchpadAsMouse,
-            label = { v -> when (v) { null -> default(if (d.touchpadAsMouse) on else off); true -> on; false -> off } },
-            onSelect = { v -> save { it.copy(touchpadAsMouse = v) } },
-        )
-    }
+
+    // Connection to the host: when it attaches, battery report, player order, Odin Mapping.
+    SectionHeader(stringResource(Res.string.controller_section_connection))
+    ChoiceRow(
+        stringResource(Res.string.controller_auto_attach), listOf<Boolean?>(null, false), s.autoAttach?.takeIf { !it },
+        label = { v -> if (v == false) stringResource(Res.string.controller_auto_attach_off) else stringResource(Res.string.controller_auto_attach_auto) },
+        onSelect = { v -> save { it.copy(autoAttach = v) } },
+    )
     ChoiceRow(
         stringResource(Res.string.controller_battery_report), tri, s.batteryReport,
         label = { v -> when (v) { null -> default(if (d.batteryReport) on else off); true -> on; false -> off } },
         onSelect = { v -> save { it.copy(batteryReport = v) } },
         subtitle = stringResource(Res.string.controller_battery_report_sub),
+    )
+    if (c.external) OdinMappingRow(c)
+    Text(
+        stringResource(Res.string.controller_info_player_order),
+        style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted,
+        modifier = androidx.compose.ui.Modifier.padding(top = 6.dp),
     )
 }
 
@@ -422,7 +438,6 @@ private fun OdinMappingRow(c: ControllerInfo) {
     androidx.compose.runtime.LaunchedEffect(Unit) { blacklist = odin.blacklist() }
     val list = blacklist ?: return
     val scope = androidx.compose.runtime.rememberCoroutineScope()
-    SectionHeader(stringResource(Res.string.odin_mapping_section))
     SwitchRow(
         stringResource(Res.string.odin_mapping_keep),
         c.name in list,
@@ -436,9 +451,12 @@ private fun OdinMappingRow(c: ControllerInfo) {
     )
 }
 
-/** AYN Odin only: keep all external controllers away from Odin Mapping, plus its name list. */
+/**
+ * AYN Odin only: keep all external controllers away from Odin Mapping. The row's switch turns it
+ * on; the row opens the list of excluded names (each removable).
+ */
 @Composable
-private fun OdinMappingSection() {
+private fun OdinMappingRows() {
     val context = LocalContext.current
     val odin = remember { io.github.thecodingdad.gamelodge.system.OdinMapping(context.applicationContext) }
     if (!remember { odin.isAvailable }) return
@@ -446,36 +464,49 @@ private fun OdinMappingSection() {
     val settings by repo.settings.collectAsState(null)
     val scope = androidx.compose.runtime.rememberCoroutineScope()
     var blacklist by remember { mutableStateOf<List<String>?>(null) }
+    var listShown by remember { mutableStateOf(false) }
     // Re-read when controllers change: the watcher may just have added a name.
     val controllers = rememberAndroidControllers()
-    androidx.compose.runtime.LaunchedEffect(controllers, settings?.odinKeepControllers) {
+    androidx.compose.runtime.LaunchedEffect(controllers, settings?.odinKeepControllers, listShown) {
         kotlinx.coroutines.delay(500)
         blacklist = odin.blacklist()
     }
     val s = settings ?: return
-    SectionHeader(stringResource(Res.string.odin_mapping_section))
-    SwitchRow(
+    SwitchNavRow(
         stringResource(Res.string.odin_mapping_all), s.odinKeepControllers,
         { on -> scope.launch { repo.update { it.copy(odinKeepControllers = on) } } },
-        subtitle = stringResource(Res.string.odin_mapping_all_sub),
+        onClick = { listShown = true },
+        subtitle = stringResource(Res.string.odin_mapping_all_row_sub),
     )
-    blacklist?.forEach { name ->
-        RemovableRow(
-            name,
-            stringResource(if (s.odinKeepControllers) Res.string.odin_mapping_remove_auto else Res.string.odin_mapping_remove),
-            androidx.compose.material.icons.Icons.Filled.Gamepad,
-            onRemove = {
-                scope.launch {
-                    odin.setBlacklisted(name, false)
-                    blacklist = odin.blacklist()
-                }
-            },
-        )
+    io.github.thecodingdad.gamelodge.ui.components.Modal(
+        visible = listShown, onDismiss = { listShown = false }, title = stringResource(Res.string.odin_mapping_list_title), maxWidth = 760.dp,
+    ) {
+        androidx.compose.foundation.layout.Column(
+            androidx.compose.ui.Modifier.weight(1f, fill = false).popupHeightIn(560.dp).controllerScroll(),
+            verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
+        ) {
+            Text(stringResource(Res.string.odin_mapping_all_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+            val names = blacklist.orEmpty()
+            if (names.isEmpty()) Text(stringResource(Res.string.odin_mapping_list_empty), color = LauncherTheme.colors.onSurface)
+            names.forEach { name ->
+                RemovableRow(
+                    name,
+                    stringResource(if (s.odinKeepControllers) Res.string.odin_mapping_remove_auto else Res.string.odin_mapping_remove),
+                    androidx.compose.material.icons.Icons.Filled.Gamepad,
+                    onRemove = {
+                        scope.launch {
+                            odin.setBlacklisted(name, false)
+                            blacklist = odin.blacklist()
+                        }
+                    },
+                )
+            }
+        }
     }
 }
 
 /** The controller settings' pages on Android. */
-val ANDROID_CONTROLLER_SECTIONS = listOf(ControllerSection.MOUSE, ControllerSection.STREAM)
+val ANDROID_CONTROLLER_SECTIONS = listOf(ControllerSection.MOUSE)
 
 /** One page of the controller settings (Settings › Controllers › …). */
 @Composable
@@ -488,25 +519,10 @@ fun ControllerSectionScreen(section: ControllerSection) {
         { t -> scope.launch { settingsRepo.update(t) } }
     val title = when (section) {
         ControllerSection.MOUSE -> Res.string.controller_section_mouse
-        ControllerSection.STREAM -> Res.string.controller_section_stream
     }
     SettingsPage(stringResource(title)) {
         when (section) {
             ControllerSection.MOUSE -> MouseSettingsRows(settings, update)
-            ControllerSection.STREAM -> {
-                // The stream's controller options, the same for every profile (single controllers and
-                // single games can still differ in their own settings).
-                ControllerAttachRow(settings, update)
-                Text(stringResource(Res.string.controllers_stream_defaults_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
-                val editing = remember { io.github.thecodingdad.gamelodge.stream.AndroidProfileEditing(context) }
-                val base = remember { io.github.thecodingdad.gamelodge.stream.ProfileStore(context, null) }
-                val options = remember { io.github.thecodingdad.gamelodge.stream.StreamSettingsSchema.gamepadOptions(context) }
-                var revision by remember { androidx.compose.runtime.mutableIntStateOf(0) }
-                options.forEachIndexed { i, option ->
-                    io.github.thecodingdad.gamelodge.ui.screens.profiles.OptionRow(option, base, revision, i == 0, editing) { revision++ }
-                }
-                OdinMappingSection()
-            }
         }
     }
 }

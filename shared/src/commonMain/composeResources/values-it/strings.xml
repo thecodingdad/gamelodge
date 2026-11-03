@@ -188,7 +188,6 @@
 
     <!-- Controls -->
     <string name="setting_button_layout">Disposizione dei tasti</string>
-    <string name="controllers_stream_defaults">Nello stream (tutti i controller, ogni profilo)</string>
     <string name="game_controller_settings">Impostazioni del controller</string>
     <string name="game_mouse">Emulazione del mouse all'avvio</string>
     <string name="game_mouse_sub">Attivo: lo stream parte con il controller come mouse, ad es. per i giochi point-and-click</string>
@@ -479,8 +478,6 @@
     <string name="controller_layout_default">Predefinito (%1$s)</string>
     <string name="controllers_defaults">Generale</string>
     <string name="controllers_defaults_sub">Per tutti i controller. Disposizione, combinazioni e impostazioni dello stream sono di ciascun controller: selezionalo sopra.</string>
-    <string name="controller_launcher_section">Nel launcher</string>
-    <string name="controller_stream_section">Nello stream</string>
     <string name="controllers_none">Nessun controller collegato.</string>
     <string name="controller_external">Esterno</string>
     <string name="controller_builtin">Interno</string>
@@ -728,7 +725,7 @@
     <string name="controller_info_battery">Batteria</string>
     <string name="controller_info_ids">Produttore:Prodotto</string>
     <string name="controller_info_vibration">Vibrazione</string>
-    <string name="controller_info_player_order">Senza un giocatore fisso, decide l'ordine della prima pressione di un tasto nello stream. I giocatori fissi richiedono che «Rilevamento automatico dei controller» sia attivo.</string>
+    <string name="controller_info_player_order">Senza un numero di giocatore fisso, decide l'ordine della prima pressione di un tasto nello stream.</string>
 
     <!-- Quick menu -->
     <string name="qm_system">Sistema</string>
@@ -743,13 +740,13 @@
 
     <!-- Controller overrides -->
     <string name="controller_overrides">Impostazioni di questo controller</string>
-    <string name="controller_overrides_sub">Vale dal prossimo stream; zona morta e vibrazione disattivata valgono anche in GameLodge. «Predefinito» è il valore per questo tipo di controller; un gioco può averne di propri.</string>
+    <string name="controller_overrides_sub">«Predefinito» è il valore per questo tipo di controller. Disposizione e combinazioni valgono ovunque, zona morta e vibrazione disattivata anche in GameLodge; il resto dal prossimo stream. Un gioco può averne di propri.</string>
     <string name="controller_auto_attach">Collega all'avvio dello stream</string>
     <string name="controller_auto_attach_auto">Automatico</string>
     <string name="controller_auto_attach_off">Mai</string>
-    <string name="controller_identity_section">Nome e colore</string>
+    <string name="controller_identity_section">Nome e icona</string>
     <string name="controller_name">Nome</string>
-    <string name="controller_color">Colore di evidenziazione</string>
+    <string name="controller_color">Colore dell'icona</string>
     <string name="controller_color_default">Colore predefinito</string>
     <string name="controller_icon">Icona</string>
     <string name="controller_icon_auto">Automatico</string>
@@ -773,6 +770,14 @@
     <string name="controller_motion">Sensori di movimento (giroscopio)</string>
     <string name="controller_touchpad_mouse">Touchpad come mouse</string>
     <string name="controller_default_value">Predefinito (%1$s)</string>
+    <string name="controller_section_buttons">Tasti</string>
+    <string name="controller_section_sticks">Stick</string>
+    <string name="controller_section_sticks_touchpad">Stick e touchpad</string>
+    <string name="controller_section_feedback">Vibrazione e movimento</string>
+    <string name="controller_section_connection">Connessione</string>
+    <string name="odin_mapping_all_row_sub">Altrimenti Odin sostituisce il primo controller esterno con una copia senza batteria né vibrazione. Seleziona per vedere i controller esclusi.</string>
+    <string name="odin_mapping_list_title">Esclusi da Odin Mapping</string>
+    <string name="odin_mapping_list_empty">Ancora nessun controller escluso.</string>
     <string name="controller_combos_of">Combinazioni di tasti di %1$s</string>
     <string name="controller_combos_none">Le combinazioni di tasti appartengono a un controller: collegane uno o premi uno dei suoi tasti per modificarle qui.</string>
     <string name="controller_vibration_strength">Intensità vibrazione</string>
@@ -1556,13 +1561,9 @@
     <string name="detail_playtime_other_clients">Altri client di streaming</string>
     <string name="controller_section_mouse">Emulazione del mouse</string>
     <string name="controller_section_mouse_sub">Velocità del puntatore e accelerazione con lo stick</string>
-    <string name="controller_section_stream">Nello stream</string>
-    <string name="controller_section_stream_sub">Connessione, driver USB Xbox, mappatura tasti Odin</string>
-    <string name="controller_section_stream_sub_pc">Connessione</string>
     <string name="setting_controller_attach">Collega i controller all'avvio dello stream</string>
     <string name="setting_controller_attach_sub">I controller collegati vengono segnalati all'host all'avvio dello stream, invece che alla prima pressione. Il controller che ha avviato lo stream diventa giocatore 1.</string>
     <string name="controller_starter_player_one_info">Il controller che avvia lo stream e il giocatore 1.</string>
-    <string name="controllers_stream_defaults_sub">Vale per tutti i controller. Zona morta, vibrazione, sensori di movimento e altro si impostano per controller (Controller › il controller).</string>
     <string name="qm_mouse">Modalità mouse</string>
     <string name="wizard_metadata_guide_hint">Entrambi sono gratuiti. Come ottenerli, passo per passo con un codice QR per il telefono: il pulsante nella finestra della chiave.</string>
     <string name="guide_button_sgdb">Come ottenere la chiave API</string>

@@ -142,7 +142,7 @@ class DesktopPlatformUi(
                 c.batteryPercent?.let { Text(stringResource(Res.string.controller_battery, it), color = LauncherTheme.colors.onSurfaceMuted) }
                 // As on Android: the launcher settings of this controller (Moonlight-Qt has no per-controller stream settings).
                 settingsState()?.let { (settings, update) ->
-                    SectionHeader(stringResource(Res.string.controller_launcher_section))
+                    SectionHeader(stringResource(Res.string.controller_section_buttons))
                     ControllerLayoutOverrideRow(c, settings, update)
                     // Own combinations of this controller (by name, like its layout). The game always
                     // gets the buttons on Windows, so there's no pass-through choice here.
@@ -401,7 +401,9 @@ class DesktopPlatformUi(
             SectionHeader(stringResource(Res.string.controllers_defaults))
             Text(stringResource(Res.string.controllers_defaults_sub), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
             settingsState()?.let { (settings, update) -> io.github.thecodingdad.gamelodge.ui.screens.settings.HintBarRow(settings, update) }
-            io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSectionRows(controllerSections, streamSub = Res.string.controller_section_stream_sub_pc)
+            // In the stream the pad that started it is player 1 (Moonlight-Qt has no more pad options).
+            Text(stringResource(Res.string.controller_starter_player_one_info), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+            io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSectionRows(controllerSections)
             SeeAlso(
                 SeeAlsoLink(stringResource(Res.string.settings_sounds), SettingsTarget.Page(SettingsPageId.SOUNDS)),
                 SeeAlsoLink(stringResource(Res.string.settings_profiles), SettingsTarget.Page(SettingsPageId.PROFILES)),
@@ -412,7 +414,6 @@ class DesktopPlatformUi(
 
     override val controllerSections = listOf(
         io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.MOUSE,
-        io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.STREAM,
     )
 
     @Composable
@@ -420,18 +421,11 @@ class DesktopPlatformUi(
         val (settings, update) = settingsState() ?: return
         val title = when (section) {
             io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.MOUSE -> Res.string.controller_section_mouse
-            io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.STREAM -> Res.string.controller_section_stream
         }
         SettingsPage(stringResource(title)) {
             when (section) {
                 io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.MOUSE ->
                     io.github.thecodingdad.gamelodge.ui.screens.settings.MouseSettingsRows(settings, update)
-                io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection.STREAM ->
-                    androidx.compose.material3.Text(
-                        org.jetbrains.compose.resources.stringResource(io.github.thecodingdad.gamelodge.resources.Res.string.controller_starter_player_one_info),
-                        style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,
-                        color = io.github.thecodingdad.gamelodge.ui.theme.LauncherTheme.colors.onSurfaceMuted,
-                    )
             }
         }
     }

@@ -186,7 +186,6 @@
 
     <!-- Controls -->
     <string name="setting_button_layout">Tastenbelegung</string>
-    <string name="controllers_stream_defaults">Im Stream (alle Controller, jedes Profil)</string>
     <string name="game_controller_settings">Controller-Einstellungen</string>
     <string name="game_mouse">Maus-Emulation beim Start</string>
     <string name="game_mouse_sub">An: Der Stream startet mit dem Controller als Maus, z. B. für Point-and-Click-Spiele</string>
@@ -477,8 +476,6 @@
     <string name="controller_layout_default">Standard (%1$s)</string>
     <string name="controllers_defaults">Allgemein</string>
     <string name="controllers_defaults_sub">Für alle Controller. Tastenbelegung, Tastenkombinationen und Stream-Einstellungen hat jeder Controller selbst: oben auswählen.</string>
-    <string name="controller_launcher_section">Im Launcher</string>
-    <string name="controller_stream_section">Im Stream</string>
     <string name="controllers_none">Keine Controller verbunden.</string>
     <string name="controller_external">Extern</string>
     <string name="controller_builtin">Intern</string>
@@ -726,7 +723,7 @@
     <string name="controller_info_battery">Akku</string>
     <string name="controller_info_ids">Hersteller:Produkt</string>
     <string name="controller_info_vibration">Vibration</string>
-    <string name="controller_info_player_order">Ohne feste Zuordnung entscheidet die Reihenfolge des ersten Tastendrucks im Stream. Feste Spieler brauchen eine aktive „Automatische Controller Erkennung“.</string>
+    <string name="controller_info_player_order">Ohne feste Spielernummer entscheidet die Reihenfolge des ersten Tastendrucks im Stream.</string>
 
     <!-- Quick menu -->
     <string name="qm_system">System</string>
@@ -741,15 +738,15 @@
 
     <!-- Controller overrides -->
     <string name="controller_overrides">Einstellungen für diesen Controller</string>
-    <string name="controller_overrides_sub">Gilt ab dem nächsten Stream; Deadzone und Vibration „Aus“ gelten auch in GameLodge. „Standard“ ist der Wert für diesen Controller-Typ; ein Spiel kann eigene Werte haben.</string>
+    <string name="controller_overrides_sub">„Standard“ ist der Wert für diesen Controller-Typ. Tastenbelegung und Kombinationen gelten überall, Deadzone und Vibration „Aus“ auch in GameLodge; der Rest gilt ab dem nächsten Stream. Ein Spiel kann eigene Werte haben.</string>
     <string name="controller_auto_attach">Bei Stream-Start verbinden</string>
     <string name="controller_auto_attach_auto">Automatisch</string>
     <string name="controller_auto_attach_off">Nie</string>
-    <string name="controller_identity_section">Name und Farbe</string>
+    <string name="controller_identity_section">Name &amp; Icon</string>
     <string name="controller_name">Name</string>
-    <string name="controller_color">Highlight-Farbe</string>
+    <string name="controller_color">Icon-Farbe</string>
     <string name="controller_color_default">Standardfarbe</string>
-    <string name="controller_icon">Symbol</string>
+    <string name="controller_icon">Icon</string>
     <string name="controller_icon_auto">Automatisch</string>
     <string name="controller_icon_generic">Standard</string>
     <string name="controller_icon_handheld">Handheld</string>
@@ -771,6 +768,14 @@
     <string name="controller_motion">Bewegungssensoren (Gyro)</string>
     <string name="controller_touchpad_mouse">Touchpad als Maus</string>
     <string name="controller_default_value">Standard (%1$s)</string>
+    <string name="controller_section_buttons">Tasten</string>
+    <string name="controller_section_sticks">Sticks</string>
+    <string name="controller_section_sticks_touchpad">Sticks &amp; Touchpad</string>
+    <string name="controller_section_feedback">Vibration &amp; Bewegung</string>
+    <string name="controller_section_connection">Verbindung</string>
+    <string name="odin_mapping_all_row_sub">Odin ersetzt sonst den ersten externen Controller durch eine Kopie ohne Akku und Vibration. Auswählen zeigt die ausgenommenen Controller.</string>
+    <string name="odin_mapping_list_title">Von Odin Mapping ausgenommen</string>
+    <string name="odin_mapping_list_empty">Noch kein Controller ausgenommen.</string>
     <string name="controller_combos_of">Tastenkombinationen von %1$s</string>
     <string name="controller_combos_none">Tastenkombinationen gehören zu einem Controller: Verbinde einen oder drück eine seiner Tasten, um sie hier zu ändern.</string>
     <string name="controller_vibration_strength">Vibrationsstärke</string>
@@ -1554,13 +1559,9 @@
     <string name="detail_playtime_other_clients">Andere Streaming-Clients</string>
     <string name="controller_section_mouse">Maus-Emulation</string>
     <string name="controller_section_mouse_sub">Zeigergeschwindigkeit und Beschleunigung mit dem Stick</string>
-    <string name="controller_section_stream">Im Stream</string>
-    <string name="controller_section_stream_sub">Verbindung, Xbox-USB-Treiber, Odin-Tastenbelegung</string>
-    <string name="controller_section_stream_sub_pc">Verbindung</string>
     <string name="setting_controller_attach">Controller bei Stream-Start verbinden</string>
     <string name="setting_controller_attach_sub">Die verbundenen Controller werden beim Stream-Start am Host angemeldet, statt erst beim ersten Tastendruck. Der Controller, der den Stream gestartet hat, wird Spieler 1.</string>
     <string name="controller_starter_player_one_info">Der Controller, der den Stream startet, ist Spieler 1.</string>
-    <string name="controllers_stream_defaults_sub">Gilt für alle Controller. Deadzone, Vibration, Bewegungssensoren usw. stellst du pro Controller ein (Controller › gewünschter Controller).</string>
     <string name="qm_mouse">Maus-Modus</string>
     <string name="wizard_metadata_guide_hint">Beide sind kostenlos. Wie du sie bekommst, Schritt für Schritt mit QR-Code fürs Handy: der Button im Eingabedialog.</string>
     <string name="guide_button_sgdb">So bekommst du den API-Schlüssel</string>

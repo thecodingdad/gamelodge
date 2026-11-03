@@ -188,7 +188,6 @@
 
     <!-- Controls -->
     <string name="setting_button_layout">Button layout</string>
-    <string name="controllers_stream_defaults">In the stream (all controllers, every profile)</string>
     <string name="game_controller_settings">Controller settings</string>
     <string name="game_mouse">Mouse emulation at start</string>
     <string name="game_mouse_sub">On: the stream starts with the controller as a mouse, e.g. for point-and-click games</string>
@@ -479,8 +478,6 @@
     <string name="controller_layout_default">Default (%1$s)</string>
     <string name="controllers_defaults">General</string>
     <string name="controllers_defaults_sub">For every controller. Button layout, combinations and stream settings are each controller's own: select it above.</string>
-    <string name="controller_launcher_section">In the launcher</string>
-    <string name="controller_stream_section">In the stream</string>
     <string name="controllers_none">No controllers connected.</string>
     <string name="controller_external">External</string>
     <string name="controller_builtin">Internal</string>
@@ -728,7 +725,7 @@
     <string name="controller_info_battery">Battery</string>
     <string name="controller_info_ids">Vendor:Product</string>
     <string name="controller_info_vibration">Vibration</string>
-    <string name="controller_info_player_order">Without a fixed player, the order of the first button press in the stream decides. Fixed players need „Automatic controller detection“ to be on.</string>
+    <string name="controller_info_player_order">Without a fixed player number, the order of the first button press in the stream decides.</string>
 
     <!-- Quick menu -->
     <string name="qm_system">System</string>
@@ -743,13 +740,13 @@
 
     <!-- Controller overrides -->
     <string name="controller_overrides">Settings for this controller</string>
-    <string name="controller_overrides_sub">Applied from the next stream on; the dead zone and vibration off also apply in GameLodge. “Default” is the value for this kind of controller; a game can still have its own.</string>
+    <string name="controller_overrides_sub">“Default” is the value for this kind of controller. Button layout and combinations apply everywhere, the dead zone and vibration off in GameLodge too; the rest applies from the next stream on. A game can still have its own.</string>
     <string name="controller_auto_attach">Connect at stream start</string>
     <string name="controller_auto_attach_auto">Automatic</string>
     <string name="controller_auto_attach_off">Never</string>
-    <string name="controller_identity_section">Name and colour</string>
+    <string name="controller_identity_section">Name &amp; icon</string>
     <string name="controller_name">Name</string>
-    <string name="controller_color">Highlight colour</string>
+    <string name="controller_color">Icon colour</string>
     <string name="controller_color_default">Default colour</string>
     <string name="controller_icon">Icon</string>
     <string name="controller_icon_auto">Automatic</string>
@@ -773,6 +770,14 @@
     <string name="controller_motion">Motion sensors (gyro)</string>
     <string name="controller_touchpad_mouse">Touchpad as mouse</string>
     <string name="controller_default_value">Standard (%1$s)</string>
+    <string name="controller_section_buttons">Buttons</string>
+    <string name="controller_section_sticks">Sticks</string>
+    <string name="controller_section_sticks_touchpad">Sticks &amp; touchpad</string>
+    <string name="controller_section_feedback">Vibration &amp; motion</string>
+    <string name="controller_section_connection">Connection</string>
+    <string name="odin_mapping_all_row_sub">Odin otherwise replaces the first external controller with a copy without battery and rumble. Select to see the excluded controllers.</string>
+    <string name="odin_mapping_list_title">Excluded from Odin Mapping</string>
+    <string name="odin_mapping_list_empty">No controller excluded yet.</string>
     <string name="controller_combos_of">Button combinations of %1$s</string>
     <string name="controller_combos_none">Button combinations belong to a controller: connect one or press one of its buttons to change them here.</string>
     <string name="controller_vibration_strength">Vibration strength</string>
@@ -1556,13 +1561,9 @@
     <string name="detail_playtime_other_clients">Other streaming clients</string>
     <string name="controller_section_mouse">Mouse emulation</string>
     <string name="controller_section_mouse_sub">Pointer speed and acceleration with the stick</string>
-    <string name="controller_section_stream">In the stream</string>
-    <string name="controller_section_stream_sub">Connection, Xbox USB driver, Odin button mapping</string>
-    <string name="controller_section_stream_sub_pc">Connection</string>
     <string name="setting_controller_attach">Connect controllers at stream start</string>
     <string name="setting_controller_attach_sub">The connected controllers reach the host when the stream starts, instead of on their first button press. The controller that started the stream becomes player 1.</string>
     <string name="controller_starter_player_one_info">The controller that starts the stream is player 1.</string>
-    <string name="controllers_stream_defaults_sub">Apply to all controllers. Dead zone, vibration, motion sensors and more are set per controller (Controllers › the controller).</string>
     <string name="qm_mouse">Mouse mode</string>
     <string name="wizard_metadata_guide_hint">Both are free. How to get them, step by step with a QR code for your phone: the button in the key dialog.</string>
     <string name="guide_button_sgdb">How to get the API key</string>

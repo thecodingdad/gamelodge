@@ -188,7 +188,6 @@
 
     <!-- Controls -->
     <string name="setting_button_layout">Disposition des boutons</string>
-    <string name="controllers_stream_defaults">Dans le stream (toutes les manettes, chaque profil)</string>
     <string name="game_controller_settings">Réglages de la manette</string>
     <string name="game_mouse">Émulation de souris au démarrage</string>
     <string name="game_mouse_sub">Activé : le stream démarre avec la manette en souris, p. ex. pour les jeux point-and-click</string>
@@ -479,8 +478,6 @@
     <string name="controller_layout_default">Par défaut (%1$s)</string>
     <string name="controllers_defaults">Général</string>
     <string name="controllers_defaults_sub">Pour toutes les manettes. Disposition, combinaisons et réglages du stream sont propres à chaque manette : sélectionnez-la ci-dessus.</string>
-    <string name="controller_launcher_section">Dans le lanceur</string>
-    <string name="controller_stream_section">Dans le stream</string>
     <string name="controllers_none">Aucune manette connectée.</string>
     <string name="controller_external">Externe</string>
     <string name="controller_builtin">Interne</string>
@@ -728,7 +725,7 @@
     <string name="controller_info_battery">Batterie</string>
     <string name="controller_info_ids">Fabricant:Produit</string>
     <string name="controller_info_vibration">Vibration</string>
-    <string name="controller_info_player_order">Sans joueur fixe, l'ordre de la première pression de bouton dans le stream décide. Les joueurs fixes nécessitent que « Détection automatique des manettes » soit activée.</string>
+    <string name="controller_info_player_order">Sans numéro de joueur fixe, l'ordre de la première pression de bouton dans le stream décide.</string>
 
     <!-- Quick menu -->
     <string name="qm_system">Système</string>
@@ -743,13 +740,13 @@
 
     <!-- Controller overrides -->
     <string name="controller_overrides">Réglages de cette manette</string>
-    <string name="controller_overrides_sub">S'applique dès le prochain stream ; la zone morte et la vibration désactivée valent aussi dans GameLodge. « Par défaut » est la valeur pour ce type de manette ; un jeu peut avoir les siennes.</string>
+    <string name="controller_overrides_sub">« Par défaut » est la valeur pour ce type de manette. La disposition et les combinaisons valent partout, la zone morte et la vibration désactivée aussi dans GameLodge ; le reste dès le prochain stream. Un jeu peut avoir les siennes.</string>
     <string name="controller_auto_attach">Connecter au demarrage du stream</string>
     <string name="controller_auto_attach_auto">Automatique</string>
     <string name="controller_auto_attach_off">Jamais</string>
-    <string name="controller_identity_section">Nom et couleur</string>
+    <string name="controller_identity_section">Nom et icône</string>
     <string name="controller_name">Nom</string>
-    <string name="controller_color">Couleur de surbrillance</string>
+    <string name="controller_color">Couleur de l'icône</string>
     <string name="controller_color_default">Couleur par defaut</string>
     <string name="controller_icon">Icone</string>
     <string name="controller_icon_auto">Automatique</string>
@@ -773,6 +770,14 @@
     <string name="controller_motion">Capteurs de mouvement (gyro)</string>
     <string name="controller_touchpad_mouse">Pavé tactile en souris</string>
     <string name="controller_default_value">Par défaut (%1$s)</string>
+    <string name="controller_section_buttons">Boutons</string>
+    <string name="controller_section_sticks">Sticks</string>
+    <string name="controller_section_sticks_touchpad">Sticks et pavé tactile</string>
+    <string name="controller_section_feedback">Vibration et mouvement</string>
+    <string name="controller_section_connection">Connexion</string>
+    <string name="odin_mapping_all_row_sub">Sinon, Odin remplace la première manette externe par une copie sans batterie ni vibration. Sélectionnez pour voir les manettes exclues.</string>
+    <string name="odin_mapping_list_title">Exclues d'Odin Mapping</string>
+    <string name="odin_mapping_list_empty">Aucune manette exclue pour l'instant.</string>
     <string name="controller_combos_of">Combinaisons de boutons de %1$s</string>
     <string name="controller_combos_none">Les combinaisons de boutons appartiennent à une manette : connectez-en une ou appuyez sur l'un de ses boutons pour les modifier ici.</string>
     <string name="controller_vibration_strength">Intensité de vibration</string>
@@ -1556,13 +1561,9 @@
     <string name="detail_playtime_other_clients">Autres clients de streaming</string>
     <string name="controller_section_mouse">Émulation de souris</string>
     <string name="controller_section_mouse_sub">Vitesse du pointeur et accélération au stick</string>
-    <string name="controller_section_stream">Dans le stream</string>
-    <string name="controller_section_stream_sub">Connexion, pilote USB Xbox, mappage des boutons Odin</string>
-    <string name="controller_section_stream_sub_pc">Connexion</string>
     <string name="setting_controller_attach">Connecter les manettes au demarrage du stream</string>
     <string name="setting_controller_attach_sub">Les manettes connectees sont signalees a l'hote au demarrage du stream, au lieu d'attendre leur premiere pression. La manette qui a lance le stream devient le joueur 1.</string>
     <string name="controller_starter_player_one_info">La manette qui lance le stream est le joueur 1.</string>
-    <string name="controllers_stream_defaults_sub">S'applique à toutes les manettes. Zone morte, vibration, capteurs de mouvement, etc. se règlent par manette (Manettes › la manette).</string>
     <string name="qm_mouse">Mode souris</string>
     <string name="wizard_metadata_guide_hint">Les deux sont gratuits. Comment les obtenir, étape par étape avec un code QR pour votre téléphone : le bouton dans la boîte de dialogue de la clé.</string>
     <string name="guide_button_sgdb">Comment obtenir la clé d'API</string>

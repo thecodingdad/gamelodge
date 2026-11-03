@@ -13,7 +13,7 @@ import org.jetbrains.compose.resources.StringResource
 
 /** Where a search hit leads: a settings page or the controllers screen. */
 /** Pages of the controller settings; [PlatformUi.controllerSections] says which a platform has. */
-enum class ControllerSection { MOUSE, STREAM }
+enum class ControllerSection { MOUSE }
 
 sealed interface SettingsTarget {
     data class Page(val id: SettingsPageId) : SettingsTarget
@@ -171,8 +171,8 @@ private val settingsIndex: List<SearchEntry> = buildList {
     listOf(Res.string.combo_section, Res.string.combo_home, Res.string.combo_quick_menu, Res.string.combo_forward, Res.string.combo_service)
         .forEach { add(SearchEntry(it, SettingsTarget.Controllers, combos = true)) }
     add(SearchEntry(Res.string.controller_section_mouse, SettingsTarget.ControllerPage(ControllerSection.MOUSE)))
-    listOf(Res.string.setting_controller_attach, Res.string.controllers_stream_defaults, Res.string.odin_mapping_section)
-        .forEach { add(SearchEntry(it, SettingsTarget.ControllerPage(ControllerSection.STREAM), Res.string.controller_section_stream)) }
+    listOf(Res.string.setting_controller_attach, Res.string.odin_mapping_section, Res.string.odin_mapping_all)
+        .forEach { add(SearchEntry(it, SettingsTarget.Controllers)) }
     addAll(page(
         SettingsPageId.SOUNDS, Res.string.setting_ui_sounds, Res.string.setting_ui_volume, Res.string.setting_sound_style,
         Res.string.setting_sound_pitch, Res.string.sounds_events, Res.string.setting_haptics, Res.string.setting_haptic_strength,

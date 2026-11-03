@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Mouse
-import androidx.compose.material.icons.filled.Cast
 import androidx.compose.material.icons.filled.FiberManualRecord
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material3.MaterialTheme
@@ -221,16 +220,11 @@ fun comboLabel(keys: Set<Int>?, default: Boolean = false): String {
 
 /** Rows of the controller settings' pages (Settings › Controllers), for the platform's [sections]. */
 @Composable
-fun ControllerSectionRows(
-    sections: List<ControllerSection>,
-    /** What the stream page holds here (the PC has fewer stream options). */
-    streamSub: org.jetbrains.compose.resources.StringResource = Res.string.controller_section_stream_sub,
-) {
+fun ControllerSectionRows(sections: List<ControllerSection>) {
     val navigate = LocalSettingsNavigator.current
     sections.forEach { section ->
         val (title, sub, icon) = when (section) {
             ControllerSection.MOUSE -> Triple(Res.string.controller_section_mouse, Res.string.controller_section_mouse_sub, Icons.Filled.Mouse)
-            ControllerSection.STREAM -> Triple(Res.string.controller_section_stream, streamSub, Icons.Filled.Cast)
         }
         val label = org.jetbrains.compose.resources.stringResource(title)
         NavRow(label, { navigate(SettingsTarget.ControllerPage(section), null) }, org.jetbrains.compose.resources.stringResource(sub), icon)

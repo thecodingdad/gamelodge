@@ -127,7 +127,10 @@ fun ProfilesList(
             onSelect = { mode -> scope.launch { container.settings.update { s -> s.copy(connectionWarnings = mode) } } },
             subtitle = stringResource(Res.string.conn_warnings_sub),
         )
-        io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlso(io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlsoLink(stringResource(Res.string.settings_hosts), io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Page(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId.HOSTS)))
+        io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlso(
+            io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlsoLink(stringResource(Res.string.settings_hosts), io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Page(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId.HOSTS)),
+            io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlsoLink(stringResource(Res.string.settings_controllers), io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Controllers),
+        )
     }
 }
 

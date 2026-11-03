@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -338,6 +339,58 @@ fun SwitchRow(
                 checked = checked, onCheckedChange = null, enabled = enabled,
                 colors = SwitchDefaults.colors(checkedTrackColor = LauncherTheme.colors.accent),
             )
+        }
+    }
+}
+
+/**
+ * A switch that also opens something (a list, a popup): the row opens it ([onClick]), the switch
+ * behind the vertical line toggles ([onChange]); both are their own focus targets (D-pad right
+ * reaches the switch), as in Android's settings.
+ */
+@Composable
+fun SwitchNavRow(
+    title: String,
+    checked: Boolean,
+    onChange: (Boolean) -> Unit,
+    onClick: () -> Unit,
+    subtitle: String? = null,
+    icon: ImageVector? = null,
+    initialFocus: Boolean = false,
+) {
+    val returnTitle = LocalReturnTitle.current
+    val radius = LauncherTheme.dimens.cornerRadius
+    val surface = io.github.thecodingdad.gamelodge.ui.components.LocalRowSurface.current ?: LauncherTheme.colors.surface
+    Row(
+        Modifier.fillMaxWidth().height(androidx.compose.foundation.layout.IntrinsicSize.Min).heightIn(min = 68.dp).searchHighlight(title),
+    ) {
+        FocusSurface(
+            onClick = { returnTitle?.value = title; onClick() },
+            modifier = Modifier.weight(1f).fillMaxHeight().restoreFocusIf(initialFocus),
+            shape = RoundedCornerShape(topStart = radius, bottomStart = radius),
+            color = surface,
+            focusScale = 1.02f,
+        ) {
+            Box(Modifier.align(Alignment.CenterStart).padding(horizontal = 20.dp, vertical = 12.dp).fillMaxWidth()) {
+                Texts(title, subtitle, icon)
+            }
+        }
+        FocusSurface(
+            onClick = { onChange(!checked) },
+            modifier = Modifier.fillMaxHeight(),
+            shape = RoundedCornerShape(topEnd = radius, bottomEnd = radius),
+            color = surface,
+            focusScale = 1.04f,
+            clickSound = io.github.thecodingdad.gamelodge.ui.feedback.UiSound.TOGGLE,
+        ) {
+            Row(Modifier.align(Alignment.Center).padding(end = 20.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.width(1.dp).height(36.dp).background(LauncherTheme.colors.onSurfaceMuted.copy(alpha = 0.4f)))
+                Spacer(Modifier.width(20.dp))
+                Switch(
+                    checked = checked, onCheckedChange = null,
+                    colors = SwitchDefaults.colors(checkedTrackColor = LauncherTheme.colors.accent),
+                )
+            }
         }
     }
 }
