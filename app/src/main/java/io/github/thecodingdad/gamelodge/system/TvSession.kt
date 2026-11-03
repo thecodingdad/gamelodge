@@ -78,6 +78,9 @@ object TvSession {
 
     val active: Boolean get() = tvActivity?.get() != null
 
+    /** The launcher on the TV, for input that reached the handheld's screen instead. */
+    val launcherOnTv: Activity? get() = tvActivity?.get()
+
     /** Gives the TV display the input focus (the launcher only handles keys while focused). */
     fun focusTv(context: Context) {
         val activity = tvActivity?.get() ?: return
