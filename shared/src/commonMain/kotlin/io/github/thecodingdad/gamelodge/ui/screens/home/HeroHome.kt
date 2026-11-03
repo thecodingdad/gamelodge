@@ -294,7 +294,9 @@ fun HeroHome(
                 if (rows.running.isNotEmpty()) {
                     item(key = "running") { pinned("running") {
                         RowTitle(stringResource(Res.string.home_running))
-                        val runningWidth = homeTileWidth(callbacks.layout.format)
+                        // As wide as the tiles below, but wide enough for its play button, title and host
+                        // (portrait or small tiles would squeeze them over each other).
+                        val runningWidth = homeTileWidth(callbacks.layout.format).coerceAtLeast(RUNNING_CARD_MIN_WIDTH)
                         val runningRow = androidx.compose.foundation.lazy.rememberLazyListState()
                         LazyRow(
                             state = runningRow,
@@ -311,7 +313,7 @@ fun HeroHome(
                                     onClick = { callbacks.onResume(session) },
                                     onLongClick = { callbacks.onRunningMenu(session) },
                                     onFocused = { focused = session.entry; focusedSession = session; callbacks.onFocusKey(key) },
-                                    // As wide as the tiles below, 16:9.
+                                    // 16:9.
                                     modifier = Modifier.width(runningWidth).height(runningWidth / io.github.thecodingdad.gamelodge.ui.components.APP_LANDSCAPE_RATIO)
                                         .restoreFocusIf(callbacks.lastFocusedKey == key || callbacks.lastFocusedKey == null),
                                 )
@@ -453,9 +455,13 @@ private fun HeroInfo(entry: LibraryEntry?, modifier: Modifier = Modifier) {
     }
 }
 
+/** Narrowest "running now" card: room for the play button, title and host side by side. */
+private val RUNNING_CARD_MIN_WIDTH = 240.dp
+
 /**
- * Width of every tile on the start tab in the chosen [format] (games, apps, running cards): only
- * the height differs between them. Landscape is as high as a 16:9 app tile of 1.6 covers.
+ * Width of every tile on the start tab in the chosen [format] (games, apps; running cards at least
+ * [RUNNING_CARD_MIN_WIDTH]): only the height differs between them. Landscape is as high as a 16:9
+ * app tile of 1.6 covers.
  */
 @Composable
 private fun homeTileWidth(format: io.github.thecodingdad.gamelodge.data.settings.TileFormat): androidx.compose.ui.unit.Dp =
