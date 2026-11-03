@@ -223,6 +223,7 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
                 // that started it: Moonlight-Qt swaps them for every pad alike).
                 val s = settings.settings.first()
                 val pad = s.gamePads[entry.item.id]
+                io.github.thecodingdad.gamelodge.desktop.stream.StreamPads.game = pad
                 // A game that wants the mouse emulation on (or off) starts with it (one state with the launcher's).
                 pad?.mouse?.let { io.github.thecodingdad.gamelodge.desktop.WindowsPointer.set(it) }
                 val starter = io.github.thecodingdad.gamelodge.ui.screens.settings.ActivePad.key

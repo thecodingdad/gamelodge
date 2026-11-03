@@ -140,7 +140,7 @@ class DesktopPlatformUi(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 c.batteryPercent?.let { Text(stringResource(Res.string.controller_battery, it), color = LauncherTheme.colors.onSurfaceMuted) }
-                // As on Android: the launcher settings of this controller (Moonlight-Qt has no per-controller stream settings).
+                // As on Android: this controller's buttons, combinations and stream settings.
                 settingsState()?.let { (settings, update) ->
                     SectionHeader(stringResource(Res.string.controller_section_buttons))
                     ControllerLayoutOverrideRow(c, settings, update)
@@ -160,6 +160,7 @@ class DesktopPlatformUi(
                         // Moonlight-Qt has no on-screen keyboard to show.
                         actions = io.github.thecodingdad.gamelodge.input.ComboAction.entries - io.github.thecodingdad.gamelodge.input.ComboAction.KEYBOARD,
                     )
+                    ControllerStreamRows(c, settings, update)
                 }
                 if (c.canVibrate) {
                     LauncherButton(
@@ -497,3 +498,71 @@ private object WindowsPower {
  */
 internal fun hostConfigured(h: HostServices): Boolean =
     h.sync != null && !h.secrets?.get(DesktopContainer.HOST_SECRET).isNullOrBlank()
+
+/**
+ * A controller's stream settings on the PC (Moonlight-Qt applies them per controller): sticks and
+ * touchpad, vibration and motion, connection. Unset values follow its model's defaults.
+ */
+@Composable
+private fun ControllerStreamRows(
+    c: ControllerInfo,
+    settings: io.github.thecodingdad.gamelodge.data.settings.LauncherSettings,
+    update: ((io.github.thecodingdad.gamelodge.data.settings.LauncherSettings) -> io.github.thecodingdad.gamelodge.data.settings.LauncherSettings) -> Unit,
+) {
+    val own = settings.controllerStream[c.key] ?: io.github.thecodingdad.gamelodge.data.settings.PadStreamSettings()
+    val d = c.modelIds.let { (v, p) -> io.github.thecodingdad.gamelodge.ui.screens.settings.controllerDefaults(v, p) }
+    fun save(t: (io.github.thecodingdad.gamelodge.data.settings.PadStreamSettings) -> io.github.thecodingdad.gamelodge.data.settings.PadStreamSettings) = update { s ->
+        val pad = t(s.controllerStream[c.key] ?: io.github.thecodingdad.gamelodge.data.settings.PadStreamSettings())
+        s.copy(controllerStream = if (pad.isEmpty) s.controllerStream - c.key else s.controllerStream + (c.key to pad))
+    }
+    val on = stringResource(Res.string.ha_on)
+    val off = stringResource(Res.string.ha_off)
+    val tri = listOf<Boolean?>(null, true, false)
+    @Composable
+    fun default(value: String) = stringResource(Res.string.controller_default_value, value)
+    @Composable
+    fun onOff(v: Boolean?, fallback: Boolean) = when (v) { null -> default(if (fallback) on else off); true -> on; false -> off }
+    // Sony pads have a touchpad (SDL tells Moonlight-Qt; the launcher knows the model by name).
+    val touchpad = c.hasTouchpad || c.modelIds.first == 0x054c
+
+    SectionHeader(stringResource(if (touchpad) Res.string.controller_section_sticks_touchpad else Res.string.controller_section_sticks))
+    io.github.thecodingdad.gamelodge.ui.screens.settings.ChoiceRow(
+        stringResource(Res.string.controller_deadzone), listOf<Int?>(null, 0, 3, 5, 8, 10, 15, 20), own.deadzonePercent,
+        label = { v -> v?.let { "$it %" } ?: default("${d.deadzonePercent} %") },
+        onSelect = { v -> save { it.copy(deadzonePercent = v) } },
+    )
+    if (touchpad) {
+        io.github.thecodingdad.gamelodge.ui.screens.settings.ChoiceRow(
+            stringResource(Res.string.controller_touchpad_mouse), tri, own.touchpadMouse,
+            label = { v -> onOff(v, d.touchpadAsMouse) },
+            onSelect = { v -> save { it.copy(touchpadMouse = v) } },
+        )
+    }
+
+    SectionHeader(stringResource(Res.string.controller_section_feedback))
+    if (c.canVibrate) {
+        io.github.thecodingdad.gamelodge.ui.screens.settings.ChoiceRow(
+            stringResource(Res.string.controller_vibration_strength), listOf<Int?>(null, 0, 25, 50, 75, 100), own.rumblePercent,
+            label = { v -> when (v) { null -> default("${d.vibrationStrength} %"); 0 -> off; else -> "$v %" } },
+            onSelect = { v -> save { it.copy(rumblePercent = v) } },
+        )
+    }
+    io.github.thecodingdad.gamelodge.ui.screens.settings.ChoiceRow(
+        stringResource(Res.string.controller_motion), tri, own.motion,
+        label = { v -> onOff(v, d.motion != io.github.thecodingdad.gamelodge.ui.screens.settings.MotionMode.OFF) },
+        onSelect = { v -> save { it.copy(motion = v) } },
+    )
+
+    SectionHeader(stringResource(Res.string.controller_section_connection))
+    io.github.thecodingdad.gamelodge.ui.screens.settings.ChoiceRow(
+        stringResource(Res.string.controller_auto_attach), listOf<Boolean?>(null, true), own.attachOnUse?.takeIf { it },
+        label = { v -> stringResource(if (v == true) Res.string.controller_auto_attach_off else Res.string.controller_auto_attach_auto) },
+        onSelect = { v -> save { it.copy(attachOnUse = v) } },
+    )
+    io.github.thecodingdad.gamelodge.ui.screens.settings.ChoiceRow(
+        stringResource(Res.string.controller_battery_report), tri, own.batteryReport,
+        label = { v -> onOff(v, d.batteryReport) },
+        onSelect = { v -> save { it.copy(batteryReport = v) } },
+        subtitle = stringResource(Res.string.controller_battery_report_sub),
+    )
+}

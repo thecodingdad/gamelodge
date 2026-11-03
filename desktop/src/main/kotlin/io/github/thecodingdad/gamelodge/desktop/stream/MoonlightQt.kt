@@ -56,6 +56,8 @@ class MoonlightQt(val dir: File) {
         builder.environment()["MOONLIGHT_LAUNCHER_MOUSE_SPEED"] = pointer.streamSpeed.toString()
         builder.environment()["MOONLIGHT_LAUNCHER_MOUSE_EXPONENT"] = pointer.exponent.toString()
         firstPad()?.let { builder.environment()["MOONLIGHT_LAUNCHER_FIRST_PAD"] = it }
+        // Each controller's own stream settings (dead zone, vibration, motion …).
+        padSettings()?.let { builder.environment()["MOONLIGHT_LAUNCHER_PADS"] = it }
         // The stream grabs the keyboard (Windows never sees Ctrl / Alt / Shift there, so the quick
         // menu hotkey can't fire): Moonlight-Qt catches it and reports "LAUNCHER-HOTKEY".
         builder.environment()["MOONLIGHT_LAUNCHER_HOTKEY"] = hotkeySpec(io.github.thecodingdad.gamelodge.input.KeyboardKeys.quickMenuShortcut)
@@ -144,6 +146,9 @@ class MoonlightQt(val dir: File) {
 
         /** The pad that starts a stream becomes player 1 ("<n>:<name>", see [Gamepads.starter]); null: the usual order. */
         @Volatile var firstPad: suspend () -> String? = { null }
+
+        /** The controllers' stream settings as JSON (see [StreamPads]); null: Moonlight-Qt's defaults. */
+        @Volatile var padSettings: suspend () -> String? = { null }
 
         /**
          * Next to the running launcher (lib/ → moonlight/). Moonlight-Qt keeps its settings next to

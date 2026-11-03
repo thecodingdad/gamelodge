@@ -4,6 +4,7 @@ import androidx.compose.ui.input.pointer.pointerHoverIcon
 import io.github.thecodingdad.gamelodge.data.settings.combo
 import io.github.thecodingdad.gamelodge.data.settings.hasControllerGlobals
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.distinctUntilChanged
 import io.github.thecodingdad.gamelodge.data.settings.withControllerGlobalsMoved
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -271,6 +272,17 @@ fun main(args: Array<String>) {
     }
     // The controller that starts the stream is player 1.
     io.github.thecodingdad.gamelodge.desktop.stream.MoonlightQt.firstPad = { gamepads.starter() }
+    // Each controller's own stream settings, also changed during the stream (quick menu, settings).
+    fun streamPads(settings: io.github.thecodingdad.gamelodge.data.settings.LauncherSettings, connected: List<String>) =
+        io.github.thecodingdad.gamelodge.desktop.stream.StreamPads.run { json(names(connected, settings), settings, game) }
+    io.github.thecodingdad.gamelodge.desktop.stream.MoonlightQt.padSettings = {
+        streamPads(container.settings.settings.first(), gamepads.controllers.value.map { it.name })
+    }
+    container.scope.launch {
+        kotlinx.coroutines.flow.combine(container.settings.settings, gamepads.controllers) { s, pads -> streamPads(s, pads.map { it.name }) }
+            .distinctUntilChanged()
+            .collect { json -> io.github.thecodingdad.gamelodge.desktop.stream.MoonlightQt.locate().running?.send("pads $json") }
+    }
     var mainWindow: java.awt.Frame? = null
     val windowControls = WindowControls()
     val hostServices by lazy { HostServices(container.hostRole, container.hostSync, container.secrets) }

@@ -105,6 +105,8 @@ data class LauncherSettings(
     val gamePads: Map<String, GamePadSettings> = emptyMap(),
     /** PC: button combinations of single controllers by name (Android keeps them per device). */
     val controllerCombos: Map<String, PadCombos> = emptyMap(),
+    /** PC: stream settings of single controllers by name (Android keeps them per device). */
+    val controllerStream: Map<String, PadStreamSettings> = emptyMap(),
     val uiSounds: Boolean = true,
     val uiSoundVolume: Int = 60,
     val haptics: Boolean = true,
@@ -297,6 +299,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val controllerLayouts = stringPreferencesKey("controller_layouts")
         val gamePads = stringPreferencesKey("game_pads")
         val controllerCombos = stringPreferencesKey("controller_combos")
+        val controllerStream = stringPreferencesKey("controller_stream")
         val uiSounds = booleanPreferencesKey("ui_sounds")
         val uiSoundVolume = intPreferencesKey("ui_sound_volume")
         val haptics = booleanPreferencesKey("haptics")
@@ -429,6 +432,9 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             controllerCombos = this[K.controllerCombos]?.let { text ->
                 runCatching { padCombosJson.decodeFromString<Map<String, PadCombos>>(text) }.getOrNull()
             } ?: d.controllerCombos,
+            controllerStream = this[K.controllerStream]?.let { text ->
+                runCatching { padCombosJson.decodeFromString<Map<String, PadStreamSettings>>(text) }.getOrNull()
+            } ?: d.controllerStream,
             controllerLayouts = this[K.controllerLayouts]?.lines()?.mapNotNull { line ->
                 val key = line.substringBeforeLast('\t', "").takeIf { it.isNotEmpty() } ?: return@mapNotNull null
                 runCatching { ButtonLayout.valueOf(line.substringAfterLast('\t')) }.getOrNull()?.let { key to it }
@@ -557,6 +563,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         this[K.homeRowOrder] = s.homeRowOrder.joinToString(",")
         this[K.buttonLayout] = s.buttonLayout.name
         this[K.controllerCombos] = padCombosJson.encodeToString(s.controllerCombos)
+        this[K.controllerStream] = padCombosJson.encodeToString(s.controllerStream)
         this[K.gamePads] = padCombosJson.encodeToString(s.gamePads)
         this[K.controllerLayouts] = s.controllerLayouts.entries.joinToString("\n") { "${it.key}\t${it.value.name}" }
         this[K.uiSounds] = s.uiSounds
@@ -669,6 +676,22 @@ data class GamePadSettings(
     val touchpadMouse: Boolean? = null,
 ) {
     val isEmpty: Boolean get() = this == GamePadSettings()
+}
+
+/**
+ * One controller's stream settings on the PC (null: the default of its model). [rumblePercent] 0
+ * is vibration off; [attachOnUse]: the host learns about it with its first input only.
+ */
+@kotlinx.serialization.Serializable
+data class PadStreamSettings(
+    val deadzonePercent: Int? = null,
+    val rumblePercent: Int? = null,
+    val motion: Boolean? = null,
+    val touchpadMouse: Boolean? = null,
+    val batteryReport: Boolean? = null,
+    val attachOnUse: Boolean? = null,
+) {
+    val isEmpty: Boolean get() = this == PadStreamSettings()
 }
 
 /** One controller's own button combinations (action name -> keys, empty = off) and pass-through. */
