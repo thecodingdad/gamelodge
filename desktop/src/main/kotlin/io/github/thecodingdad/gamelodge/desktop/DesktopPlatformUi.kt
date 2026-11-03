@@ -121,9 +121,9 @@ class DesktopPlatformUi(
     @Composable
     override fun rememberTopCutout() = TopCutout(TopCutout.Position.NONE, 0.dp)
 
+    /** Like the Windows clock: its short time format, not the launcher's language. */
     override fun formatTime(millis: Long): String =
-        DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(Locale.getDefault())
-            .format(Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()))
+        systemTimeFormat().format(Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()))
 
     @Composable
     override fun rememberControllers(): List<ControllerInfo> = gamepads.controllers.collectAsState().value
@@ -461,6 +461,29 @@ class DesktopPlatformUi(
         private val LAUNCHER_TILES = setOf(QuickTile.VPN)
         private val IMAGE_TYPES = setOf("png", "jpg", "jpeg", "webp", "gif", "bmp")
         private val systemLocale: Locale = Locale.getDefault()
+
+        @Volatile private var timeFormat: Pair<String?, DateTimeFormatter>? = null
+
+        /**
+         * Windows' short time format ("HH:mm", "h:mm tt" … in the region settings), read again when
+         * it changes; elsewhere (or unreadable) the system language's short time.
+         */
+        internal fun systemTimeFormat(): DateTimeFormatter {
+            val pattern = if (!isWindows) null else runCatching {
+                com.sun.jna.platform.win32.Advapi32Util.registryGetStringValue(
+                    com.sun.jna.platform.win32.WinReg.HKEY_CURRENT_USER, "Control Panel\\International", "sShortTime",
+                )
+            }.getOrNull()
+            timeFormat?.takeIf { it.first == pattern }?.let { return it.second }
+            val formatter = pattern?.let { windowsTimePattern(it) }?.let { runCatching { DateTimeFormatter.ofPattern(it, systemLocale) }.getOrNull() }
+                ?: DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(systemLocale)
+            timeFormat = pattern to formatter
+            return formatter
+        }
+
+        /** A Windows time pattern ("h:mm tt") as a java.time one ("h:mm a"). */
+        internal fun windowsTimePattern(windows: String): String =
+            windows.replace(Regex("t+"), "a")
 
         /** "system", "en" or "de" as the JVM's default locale (the resources follow it). */
         fun applyLocale(tag: String) {

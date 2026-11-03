@@ -60,7 +60,20 @@ class AndroidPlatformUi(private val context: Context) : PlatformUi {
     @Composable
     override fun rememberTopCutout(): TopCutout = io.github.thecodingdad.gamelodge.ui.shell.rememberAndroidTopCutout()
 
-    override fun formatTime(millis: Long): String = android.text.format.DateFormat.getTimeFormat(context).format(Date(millis))
+    /**
+     * Like the system clock: the device's language and its 12 / 24 hour setting, not the
+     * launcher's own language (an English launcher on a German device still shows 14:05).
+     */
+    override fun formatTime(millis: Long): String {
+        val locale = android.content.res.Resources.getSystem().configuration.locales[0]
+        val config = android.content.res.Configuration(context.resources.configuration).apply { setLocales(android.os.LocaleList(locale)) }
+        val system = systemContext?.takeIf { it.first == locale }?.second
+            ?: context.createConfigurationContext(config).also { systemContext = locale to it }
+        val pattern = android.text.format.DateFormat.getBestDateTimePattern(locale, if (android.text.format.DateFormat.is24HourFormat(system)) "Hm" else "hm")
+        return java.text.SimpleDateFormat(pattern, locale).format(Date(millis))
+    }
+
+    private var systemContext: Pair<java.util.Locale, android.content.Context>? = null
 
     @Composable
     override fun rememberControllers(): List<ControllerInfo> = io.github.thecodingdad.gamelodge.ui.screens.settings.rememberAndroidControllers()
