@@ -60,6 +60,13 @@ class PhoneScreenActivity : ComponentActivity() {
         TvSession.focusTv(this)
     }
 
+    // This window got the input focus (it appeared after the TV took it, or the handheld's screen
+    // was touched): straight back to the TV, so controllers drive the launcher there directly.
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) TvSession.focusTv(this)
+    }
+
     // Keys and controller sticks: to the launcher on the TV (which takes the focus again).
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         val tv = TvSession.launcherOnTv ?: return super.dispatchKeyEvent(event)

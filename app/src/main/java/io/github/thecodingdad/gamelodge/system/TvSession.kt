@@ -88,6 +88,9 @@ object TvSession {
         // options and the desktop mode would turn the full screen launcher back into a window.
         runCatching { context.getSystemService(android.app.ActivityManager::class.java)?.moveTaskToFront(activity.taskId, 0) }
             .onFailure { Log.w(TAG, "Focus to TV failed: ${it.message}") }
+        // The task is in front of the TV already, so that alone doesn't move the input focus to
+        // the TV's display: a start there does (an invisible activity that ends at once).
+        startOn(context, io.github.thecodingdad.gamelodge.TvFocusActivity::class.java, displayIdOf(activity), null)
         // Only the focused window may go full screen: ask again once the focus is back there.
         activity.window.decorView.postDelayed({ requestFullscreen(activity) }, 300)
     }

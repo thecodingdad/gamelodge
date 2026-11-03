@@ -66,6 +66,14 @@
             android:launchMode="singleTask"
             android:excludeFromRecents="true"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboard|keyboardHidden|navigation|uiMode" />
+        <!-- Started on the TV for a moment: makes the TV the display with the input focus. -->
+        <activity
+            android:name=".TvFocusActivity"
+            android:exported="false"
+            android:taskAffinity="${applicationId}.tvfocus"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:theme="@android:style/Theme.NoDisplay" />
         <activity
             android:name=".QuickMenuActivity"
             android:exported="false"
