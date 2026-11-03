@@ -808,6 +808,7 @@
     <string name="controller_deadzone">Zone morte du stick</string>
     <string name="controller_rumble">Vibration</string>
     <string name="controller_motion">Capteurs de mouvement (gyro)</string>
+    <string name="controller_motion_device_sub">« Appareil » fait émuler une manette PlayStation par l'hôte (les manettes Xbox n'y ont pas de gyroscope).</string>
     <string name="controller_touchpad_mouse">Pavé tactile en souris</string>
     <string name="controller_default_value">Par défaut (%1$s)</string>
     <string name="controller_section_buttons">Boutons</string>
@@ -917,7 +918,7 @@
     <string name="mouse_accel_low">Faible</string>
     <string name="mouse_accel_medium">Moyenne</string>
     <string name="mouse_accel_high">Élevée</string>
-    <string name="combo_forward">Transmettre les boutons</string>
+    <string name="combo_forward">Transmettre les boutons de combinaison au jeu</string>
     <string name="combo_forward_sub">Les boutons des combinaisons atteignent aussi le jeu, le stream ou l'app (dans chaque app avec le service système). Désactivé : ils n'exécutent que l'action ; une pression courte d'une combinaison maintenue atteint encore GameLodge et son stream.</string>
     <string name="combo_quick_menu_sub">Ouvre le menu rapide</string>
     <string name="combo_service">À l'échelle du système (accessibilité)</string>

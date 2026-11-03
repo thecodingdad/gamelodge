@@ -806,6 +806,7 @@
     <string name="controller_deadzone">Stick-Deadzone</string>
     <string name="controller_rumble">Vibration</string>
     <string name="controller_motion">Bewegungssensoren (Gyro)</string>
+    <string name="controller_motion_device_sub">„Gerät“ lässt den Host einen PlayStation-Controller emulieren (Xbox-Controller haben dort keinen Gyro).</string>
     <string name="controller_touchpad_mouse">Touchpad als Maus</string>
     <string name="controller_default_value">Standard (%1$s)</string>
     <string name="controller_section_buttons">Tasten</string>
@@ -915,7 +916,7 @@
     <string name="mouse_accel_low">Gering</string>
     <string name="mouse_accel_medium">Mittel</string>
     <string name="mouse_accel_high">Stark</string>
-    <string name="combo_forward">Tasten weiterleiten</string>
+    <string name="combo_forward">Kombi-Tasten ans Spiel durchreichen</string>
     <string name="combo_forward_sub">Die Tasten der Kombinationen kommen zusätzlich beim Spiel, Stream oder der App an (mit dem systemweiten Dienst in jeder App). Aus: sie lösen nur die Aktion aus; ein kurzer Druck einer Halte-Kombination kommt in GameLodge und im Stream trotzdem an.</string>
     <string name="combo_quick_menu_sub">Öffnet das Schnellmenü</string>
     <string name="combo_service">Systemweit (Bedienungshilfe)</string>

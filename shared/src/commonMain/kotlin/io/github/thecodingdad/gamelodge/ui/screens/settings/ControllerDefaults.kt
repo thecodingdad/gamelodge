@@ -41,7 +41,8 @@ fun controllerDefaults(vendorId: Int, productId: Int): ControllerDefaults {
     val base = ControllerDefaults(layout = buttonLayoutForVendor(vendorId) ?: ButtonLayout.XBOX)
     return when (controllerIconAuto(vendorId, productId)) {
         // Built-in controls of a handheld: no gyro or motors of their own, but the device has them.
-        ControllerIconKind.HANDHELD -> base.copy(vibration = VibrationMode.CONTROLLER_ELSE_DEVICE, motion = MotionMode.CONTROLLER_ELSE_DEVICE)
+        // Motion via the device's sensors makes the host emulate a PlayStation pad: only by choice.
+        ControllerIconKind.HANDHELD -> base.copy(vibration = VibrationMode.CONTROLLER_ELSE_DEVICE)
         // Joy-Cons: reporting their battery causes occasional stutter of touch/mouse input on Android.
         ControllerIconKind.JOYCON_L, ControllerIconKind.JOYCON_R -> base.copy(batteryReport = false)
         else -> base

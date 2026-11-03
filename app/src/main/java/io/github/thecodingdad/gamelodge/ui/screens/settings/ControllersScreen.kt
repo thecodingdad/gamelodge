@@ -347,6 +347,7 @@ private fun ControllerOverrideRows(c: ControllerInfo) {
         stringResource(Res.string.controller_motion), listOf<MotionMode?>(null) + MotionMode.entries, s.motion,
         label = { v -> v?.let { motionLabel(it) } ?: default(motionLabel(d.motion)) },
         onSelect = { v -> save { it.copy(motion = v) } },
+        subtitle = stringResource(Res.string.controller_motion_device_sub),
     )
 
     // Connection to the host: when it attaches, battery report, player order, Odin Mapping.

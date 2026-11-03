@@ -18,10 +18,10 @@ class ControllerDefaultsTest {
     }
 
     @Test
-    fun `handheld controls fall back to the device's motors and sensors`() {
+    fun `handheld controls fall back to the device's motors, not its sensors`() {
         val d = controllerDefaults(0x2020, 0x0112)
         assertEquals(VibrationMode.CONTROLLER_ELSE_DEVICE, d.vibration)
-        assertEquals(MotionMode.CONTROLLER_ELSE_DEVICE, d.motion)
+        assertEquals(MotionMode.CONTROLLER, d.motion)
     }
 
     @Test

@@ -808,6 +808,7 @@
     <string name="controller_deadzone">Stick dead zone</string>
     <string name="controller_rumble">Rumble</string>
     <string name="controller_motion">Motion sensors (gyro)</string>
+    <string name="controller_motion_device_sub">“Device” makes the host emulate a PlayStation controller (Xbox controllers have no gyro there).</string>
     <string name="controller_touchpad_mouse">Touchpad as mouse</string>
     <string name="controller_default_value">Standard (%1$s)</string>
     <string name="controller_section_buttons">Buttons</string>
@@ -917,7 +918,7 @@
     <string name="mouse_accel_low">Low</string>
     <string name="mouse_accel_medium">Medium</string>
     <string name="mouse_accel_high">High</string>
-    <string name="combo_forward">Pass the buttons on</string>
+    <string name="combo_forward">Pass combo buttons to the game</string>
     <string name="combo_forward_sub">The combinations’ buttons also reach the game, stream or app (in every app with the system-wide service). Off: they only run the action; a short press of a hold combination still reaches GameLodge and its stream.</string>
     <string name="combo_quick_menu_sub">Opens the quick menu</string>
     <string name="combo_service">System-wide (accessibility)</string>
