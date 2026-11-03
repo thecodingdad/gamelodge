@@ -11,7 +11,9 @@ object TitleNormalizer {
     private val diacritics = Regex("\\p{Mn}+")
     private val nonAlphaNum = Regex("[^a-z0-9]+")
     private val editionSuffix = Regex(
-        "\\b(goty|game of the year|definitive|deluxe|complete|ultimate|gold|remastered|enhanced|anniversary)( edition)?$",
+        // Editions of the same game. Remastered / Definitive / Enhanced / Anniversary stay: often
+        // separate games (Age of Empires II: Definitive Edition, Tomb Raider: Anniversary).
+        "\\b(goty|game of the year|deluxe|complete|ultimate|gold)( edition)?$",
     )
     private val romanNumerals = mapOf(
         "ii" to "2", "iii" to "3", "iv" to "4", "v" to "5",

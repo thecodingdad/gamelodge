@@ -167,6 +167,16 @@ class IgdbClient(
 
     fun byId(id: Long): IgdbGame? = post("games", "fields $GAME_FIELDS; where id = $id;").firstOrNull()
 
+    /**
+     * The games IGDB links to a store id ([source]: 1 Steam, 5 GOG, 15 Android; [uid]: app id,
+     * product id, package name), old and new field names alike.
+     */
+    fun byStoreId(source: Int, uid: String): List<Long> =
+        postRaw<IgdbGameRef>(
+            "external_games",
+            "fields game; where uid = \"${escape(uid)}\" & (category = $source | external_game_source = $source); limit 5;",
+        ).mapNotNull { it.game }.distinct()
+
     /** Times to beat of several games at once (main story and completely), 100 per request. */
     fun timesToBeat(ids: List<Long>): List<IgdbTimeToBeat> =
         if (ids.isEmpty()) emptyList()

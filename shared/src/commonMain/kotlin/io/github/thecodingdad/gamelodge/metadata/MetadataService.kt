@@ -387,6 +387,19 @@ class MetadataService(
         return if (PlatformResolver.mayReplace(item, PlatformSource.IGDB, platform)) platform!! to PlatformSource.IGDB else null
     }
 
+    /** A target of this device (installed app, PC game, ROM): host-only entries are matched on the host. */
+    private suspend fun hasOwnTarget(item: LibraryItemEntity): Boolean =
+        dao.getTargetsForItem(item.id).any { it.type != io.github.thecodingdad.gamelodge.data.db.TargetType.REMOTE }
+
+    /** An automatic match that the current rules wouldn't take as sure goes to the review list. */
+    private suspend fun recheckMatch(item: LibraryItemEntity) {
+        val decision = igdbDecide(item)
+        if (decision != null && decision.sure && decision.game.id == item.igdbId) return
+        val fresh = dao.getItem(item.id)?.takeIf { it.metadataState == MetadataState.OK } ?: return
+        Log.i("Match of ${item.title} not sure under the current rules: review")
+        dao.upsertItem(fresh.copy(metadataState = MetadataState.REVIEW))
+    }
+
     /** Processes every game that was never looked up. */
     fun refreshPending(byHand: Boolean = false) {
         scope.launch(Dispatchers.IO) {
@@ -401,7 +414,12 @@ class MetadataService(
                     dao.getItemsWithMetadataState(listOf(MetadataState.OK, MetadataState.REVIEW, MetadataState.NOT_FOUND, MetadataState.LOCKED))
                         .filter { it.kind == ItemKind.GAME && it.igdbId == null && it.metadataVersion < IGDB_LOOKUP_VERSION }
                 } else emptyList()
-                val total = pending.size + withoutIgdb.size
+                // "Fetch now" after stricter match rules: automatic matches of the device's own games
+                // are checked once more (only flagged for review, the data stays).
+                val recheck = if (byHand && igdb.isConfigured && settings.current().matchRuleVersion < MATCH_RULE_VERSION) {
+                    dao.getItemsWithMetadataState(listOf(MetadataState.OK)).filter { it.kind == ItemKind.GAME && it.igdbId != null && hasOwnTarget(it) }
+                } else emptyList()
+                val total = pending.size + withoutIgdb.size + recheck.size
                 pending.forEachIndexed { index, item ->
                     setProgress(MetadataProgress(index, total))
                     try {
@@ -426,6 +444,19 @@ class MetadataService(
                     }
                     delay(250)
                 }
+                recheck.forEachIndexed { index, item ->
+                    setProgress(MetadataProgress(pending.size + withoutIgdb.size + index, total))
+                    try {
+                        recheckMatch(item)
+                    } catch (e: MetadataAuthException) {
+                        _lastError.value = e.message
+                        return@launch
+                    } catch (e: Exception) {
+                        Log.w("Match check for ${item.title} failed", e)
+                    }
+                    delay(250)
+                }
+                if (byHand && igdb.isConfigured) settings.update { it.copy(matchRuleVersion = MATCH_RULE_VERSION) }
                 runCatching { refreshTimesToBeat() }.onFailure { Log.w("Time to beat lookup failed", it) }
             } finally {
                 setProgress(null)
@@ -453,10 +484,10 @@ class MetadataService(
      * hits only fill games nothing was found for (they go to the review list).
      */
     private suspend fun addIgdb(item: LibraryItemEntity) {
-        val query = searchQuery(item)
-        val best = igdbBest(query)
+        val decision = igdbDecide(item)
+        val best = decision?.let { it.game to it.score }
         val fresh = dao.getItem(item.id) ?: return
-        val confident = best != null && best.second >= MatchScorer.AUTO_ACCEPT
+        val confident = decision?.sure == true
         val usable = best != null && best.second >= MatchScorer.REVIEW && fresh.metadataState == MetadataState.NOT_FOUND
         if (best == null || !(confident || usable)) {
             // Tried once: don't search again on every start ("fetch all again" retries).
@@ -505,12 +536,30 @@ class MetadataService(
     private fun searchQuery(item: LibraryItemEntity) =
         item.metadataQuery ?: io.github.thecodingdad.gamelodge.data.library.TitleNormalizer.searchTerm(item.title)
 
-    private suspend fun igdbBest(query: String): Pair<IgdbGame, Float>? {
-        val regular = igdb.search(query).map { it to scoreAll(query, it) }.maxByOrNull { it.second }
-        if (regular != null && regular.second >= MatchScorer.AUTO_ACCEPT) return regular
+    /** Store ids of an item's own targets (Steam / GOG on the PC, the Android package) for IGDB. */
+    private suspend fun storeIds(item: LibraryItemEntity): List<Pair<Int, String>> =
+        dao.getTargetsForItem(item.id).filter { it.type == io.github.thecodingdad.gamelodge.data.db.TargetType.LOCAL }.mapNotNull { t ->
+            val id = t.packageName ?: return@mapNotNull null
+            MatchRules.storeId(id) ?: if (':' !in id && '.' in id) MatchRules.ANDROID to id else null
+        }.distinct()
+
+    /**
+     * The IGDB match of [item] and whether it is sure ([MatchRules]): a store id IGDB knows first,
+     * then the title search (regular, then alternative / localized titles).
+     */
+    private suspend fun igdbDecide(item: LibraryItemEntity, query: String = searchQuery(item)): MatchRules.Decision? {
+        for ((source, uid) in storeIds(item)) {
+            val ids = runCatching { igdb.byStoreId(source, uid) }.getOrDefault(emptyList())
+            if (ids.size == 1) igdb.byId(ids.single())?.let { return MatchRules.Decision(it, 1f, sure = true) }
+            delay(250)
+        }
+        val context = MatchRules.Context(query, item.platform, item.releaseYear)
+        val regular = igdb.search(query).map { it to scoreAll(query, it) }
+        val first = MatchRules.decide(context, regular)
+        if (first?.sure == true) return first
         delay(250)
-        val other = igdb.searchOtherTitles(query).map { it to scoreAll(query, it) }.maxByOrNull { it.second }
-        return listOfNotNull(regular, other).maxByOrNull { it.second }
+        val other = igdb.searchOtherTitles(query).map { it to scoreAll(query, it) }
+        return MatchRules.decide(context, regular + other)
     }
 
     /** Checks the IGDB keys with one tiny request: true = works, false = rejected, null = not set / offline. */
@@ -528,12 +577,15 @@ class MetadataService(
 
     private suspend fun lookupAndApply(item: LibraryItemEntity) {
         val query = searchQuery(item)
-        val igdbBest = if (igdb.isConfigured) {
-            igdbBest(query)
-        } else null
-        val sgdbBest = if (sgdb.isConfigured) {
-            sgdb.search(igdbBest?.first?.name ?: query).map { it to MatchScorer.score(query, it.name) }.maxByOrNull { it.second }
-        } else null
+        val decision = if (igdb.isConfigured) igdbDecide(item, query) else null
+        val igdbBest = decision?.let { it.game to it.score }
+        val sgdbScored = if (sgdb.isConfigured) {
+            sgdb.search(igdbBest?.first?.name ?: query).map { it to MatchScorer.score(query, it.name) }.sortedByDescending { it.second }
+        } else emptyList()
+        val sgdbBest = sgdbScored.firstOrNull()
+        // SteamGridDB alone (no IGDB): sure only for the exact title without a near twin.
+        val sgdbSure = sgdbBest != null && io.github.thecodingdad.gamelodge.data.library.TitleNormalizer.normalize(sgdbBest.first.name) == io.github.thecodingdad.gamelodge.data.library.TitleNormalizer.normalize(query) &&
+            sgdbScored.getOrNull(1)?.let { it.second < sgdbBest.second - 0.05f } != false
 
         // The lookups take a while: apply the result to the row as it is now (play time, favourite
         // or a restored backup may have changed meanwhile) and leave games that got metadata
@@ -544,7 +596,8 @@ class MetadataService(
             dao.upsertItem(fresh.copy(metadataState = MetadataState.NOT_FOUND, matchConfidence = confidence))
             return
         }
-        val state = if (confidence >= MatchScorer.AUTO_ACCEPT) MetadataState.OK else MetadataState.REVIEW
+        val sure = if (decision != null) decision.sure else sgdbSure
+        val state = if (sure) MetadataState.OK else MetadataState.REVIEW
         val withText = igdbBest?.first?.let { game ->
             val platform = platformFor(fresh, game)
             fresh.withIgdb(game).let { if (platform != null) it.copy(platform = platform.first, platformSource = platform.second) else it }
@@ -974,13 +1027,14 @@ class MetadataService(
         items.keys.chunked(100).forEach { ids ->
             igdb.details(ids).filter { it.isUnofficial }.forEach { game ->
                 val item = dao.getItem(items[game.id]?.id ?: return@forEach) ?: return@forEach
-                val best = igdbBest(searchQuery(item))
+                val decision = igdbDecide(item)
+                val best = decision?.let { it.game to it.score }
                 if (best != null && best.first.id != game.id && best.second >= MatchScorer.REVIEW) {
                     var updated = item.copy(platform = item.platform.takeIf { item.platformSource in setOf(PlatformSource.MANUAL, PlatformSource.PLAYNITE, PlatformSource.COMPANION) },
                         platformSource = item.platformSource.takeIf { it in setOf(PlatformSource.MANUAL, PlatformSource.PLAYNITE, PlatformSource.COMPANION) })
                     updated = updated.withIgdb(best.first, replace = true)
                     platformFor(updated, best.first)?.let { updated = updated.copy(platform = it.first, platformSource = it.second) }
-                    dao.upsertItem(updated.copy(matchConfidence = best.second, metadataState = if (best.second >= MatchScorer.AUTO_ACCEPT) MetadataState.OK else MetadataState.REVIEW))
+                    dao.upsertItem(updated.copy(matchConfidence = best.second, metadataState = if (decision.sure) MetadataState.OK else MetadataState.REVIEW))
                 }
                 delay(300)
             }
@@ -1028,6 +1082,8 @@ private const val TIME_TO_BEAT_RECHECK_MS = 30L * 24 * 60 * 60 * 1000
 
 /** Games with an IGDB match got the SteamGridDB gap fill via their IGDB titles (3). */
 private const val ART_FILL_VERSION = 3
+/** Version of [MatchRules]: "fetch now" checks the automatic matches again once it rises. */
+private const val MATCH_RULE_VERSION = 1
 
 /** Version of the automatic platform rules (1: only unambiguous platforms). */
 private const val PLATFORM_RULE = 1

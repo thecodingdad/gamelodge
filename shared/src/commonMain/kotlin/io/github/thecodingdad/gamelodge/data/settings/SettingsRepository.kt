@@ -236,6 +236,8 @@ data class LauncherSettings(
     val keyboardKeys: Map<String, String> = emptyMap(),
     /** System-wide shortcut that opens the quick menu ("Ctrl+Alt+M"), "" = off. */
     val keyboardQuickMenu: String = "",
+    /** Match rules the automatic metadata matches were last checked with (MetadataService). */
+    val matchRuleVersion: Int = 0,
     /** The on-screen keyboard of the stream (Android): Android's own or the client's PC keyboard. */
     val streamKeyboard: StreamKeyboard = StreamKeyboard.SYSTEM,
     /** What the mouse's side buttons do in GameLodge. */
@@ -369,6 +371,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val comboForward = booleanPreferencesKey("combo_forward")
         val keyboardKeys = stringPreferencesKey("keyboard_keys")
         val keyboardQuickMenu = stringPreferencesKey("keyboard_quick_menu")
+        val matchRuleVersion = intPreferencesKey("match_rule_version")
         val mouseSideButtons = stringPreferencesKey("mouse_side_buttons")
         val streamKeyboard = stringPreferencesKey("stream_keyboard")
         val comboMouse = stringPreferencesKey("combo_mouse")
@@ -498,6 +501,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
                 line.split('\t').takeIf { it.size == 2 }?.let { it[0] to it[1] }
             }?.toMap() ?: d.keyboardKeys,
             keyboardQuickMenu = this[K.keyboardQuickMenu] ?: d.keyboardQuickMenu,
+            matchRuleVersion = this[K.matchRuleVersion] ?: d.matchRuleVersion,
             mouseSideButtons = enumOr(this[K.mouseSideButtons], d.mouseSideButtons),
             streamKeyboard = enumOr(this[K.streamKeyboard], d.streamKeyboard),
             quickShowVolume = this[K.quickShowVolume] ?: d.quickShowVolume,
@@ -620,6 +624,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         this[K.comboForward] = s.comboForward
         this[K.keyboardKeys] = s.keyboardKeys.entries.joinToString("\n") { "${it.key}\t${it.value}" }
         this[K.keyboardQuickMenu] = s.keyboardQuickMenu
+        this[K.matchRuleVersion] = s.matchRuleVersion
         this[K.mouseSideButtons] = s.mouseSideButtons.name
         this[K.streamKeyboard] = s.streamKeyboard.name
         this[K.quickShowBrightness] = s.quickShowBrightness

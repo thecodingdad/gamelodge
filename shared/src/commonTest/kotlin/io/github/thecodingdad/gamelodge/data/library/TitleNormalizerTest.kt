@@ -23,7 +23,14 @@ class TitleNormalizerTest {
     @Test
     fun `edition suffixes are dropped`() {
         assertEquals("the witcher 3 wild hunt", TitleNormalizer.normalize("The Witcher 3: Wild Hunt - Game of the Year Edition"))
-        assertEquals("skyrim", TitleNormalizer.normalize("Skyrim Anniversary Edition"))
+        assertEquals("skyrim", TitleNormalizer.normalize("Skyrim Deluxe Edition"))
+    }
+
+    @Test
+    fun `editions that are often separate games stay`() {
+        // Tomb Raider: Anniversary, Age of Empires II: Definitive Edition, Dark Souls Remastered …
+        assertEquals("skyrim anniversary edition", TitleNormalizer.normalize("Skyrim Anniversary Edition"))
+        assertEquals("dark souls remastered", TitleNormalizer.normalize("Dark Souls Remastered"))
     }
 
     @Test

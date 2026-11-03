@@ -148,6 +148,8 @@ class MetadataProxy(
         private val IGDB_ENDPOINTS = setOf(
             "games", "alternative_names", "game_localizations", "covers", "artworks", "screenshots", "platforms", "genres",
             "involved_companies", "companies", "franchises", "collections", "game_modes", "age_ratings", "search", "game_time_to_beats",
+            // Store ids (Steam app id …) → IGDB game: sure matches.
+            "external_games",
         )
         private val SGDB_QUERY_KEYS = setOf("dimensions", "types", "nsfw", "humor", "styles", "mimes", "epilepsy", "limit", "page")
 
