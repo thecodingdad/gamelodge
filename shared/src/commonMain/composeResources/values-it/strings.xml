@@ -323,7 +323,7 @@
     <string name="setting_animated_tiles_sub">Copertine in movimento sui riquadri. Aumenta il carico di CPU e GPU, la batteria si scarica più in fretta.</string>
     <string name="setting_animated_hero">Sfondo animato</string>
     <string name="setting_animated_hero_sub">Immagine di sfondo in movimento nella scheda Home e nella pagina dei dettagli. Aumenta il carico di CPU e GPU, la batteria si scarica più in fretta.</string>
-    <string name="setting_reduce_motion_sub">Gli elementi a fuoco non crescono, la schermata Home non fa zoom, i colori cambiano senza transizione e il salvaschermo fa zoom solo a passi.</string>
+    <string name="setting_reduce_motion_sub">Gli elementi a fuoco non crescono, la scheda Home non fa zoom, i colori cambiano senza transizione e il salvaschermo fa zoom solo a passi.</string>
     <string name="section_screensaver">Salvaschermo</string>
     <string name="setting_ken_burns">Effetto Ken Burns</string>
     <string name="setting_ken_burns_sub">Le immagini fanno zoom lento e continuo. Consuma potenza di calcolo di continuo; senza, restano ferme e sfumano.</string>
@@ -416,7 +416,7 @@
     <string name="ha_login_phone_hint">Scansiona il codice con il telefono e accedi lì. Il telefono deve essere sulla stessa rete di questo dispositivo.</string>
     <string name="ha_login_phone_waiting">In attesa dell'accesso…</string>
     <string name="ha_tiles">Preferiti delle entità</string>
-    <string name="ha_entities_intro">Controlla queste entità da ovunque nella scheda Home Assistant del menu rapido e, quando attivata, come una riga nella schermata Home.</string>
+    <string name="ha_entities_intro">Controlla queste entità da ovunque nella scheda Home Assistant del menu rapido e, quando attivata, come una riga nella scheda Home.</string>
     <string name="ha_add_tile">Aggiungi entità</string>
     <string name="ha_events_help">Per le automazioni il launcher attiva gli eventi gamelodge_started e gamelodge_stopped con title, kind (game o app) e stream (true o false); gli stream portano anche host e profile, e gamelodge_stopped la durata in secondi.</string>
 
@@ -431,11 +431,11 @@
     <!-- HA additions -->
     <string name="ha_status_not_configured_sub">Accedi con l'indirizzo del tuo Home Assistant.</string>
     <string name="ha_login_title">Accedi a Home Assistant</string>
-    <string name="ha_tile_on_home">Mostra nella schermata Home</string>
+    <string name="ha_tile_on_home">Mostra nella scheda Home</string>
     <string name="ha_tile_move_up">Sposta su</string>
     <string name="ha_tile_move_down">Sposta giù</string>
     <string name="ha_tile_remove">Tieni premuto per rimuovere</string>
-    <string name="ha_tile_on_home_short">nella schermata Home</string>
+    <string name="ha_tile_on_home_short">nella scheda Home</string>
     <string name="ha_host_actions">Azioni dell'host</string>
     <string name="ha_host_actions_hint">Accensione, sospensione, spegnimento e riavvio di un host si impostano nelle sue impostazioni.</string>
     <string name="ha_host_actions_none">Nessuna azione configurata</string>
@@ -643,7 +643,7 @@
     <string name="filters_edit">Modifica filtri</string>
     <string name="settings_filters">Filtri e gruppi</string>
     <string name="settings_filters_sub">Filtri, gruppi e ordine dei chip propri per giochi e app</string>
-    <string name="filters_help">I filtri e i gruppi dei giochi appaiono come chip nella libreria e, opzionalmente, come righe nella schermata Home. L'occhio mostra o nasconde un chip, trascina la maniglia per cambiare l'ordine. I filtri predefiniti sono filtri normali: modificali, nascondili o eliminali come i tuoi.</string>
+    <string name="filters_help">I filtri e i gruppi dei giochi appaiono come chip nella libreria e, opzionalmente, come righe nella scheda Home. L’occhio mostra o nasconde un chip, trascina la maniglia per cambiare l’ordine. I filtri predefiniti sono filtri normali: modificali, nascondili o eliminali come i tuoi.</string>
     <string name="filter_new_smart">Nuovo filtro</string>
     <string name="filter_new_group">Nuovo gruppo</string>
     <string name="filters_restore">Ripristina i predefiniti</string>
@@ -656,7 +656,7 @@
     <string name="filter_kind_group">Gruppo (%1$d)</string>
     <string name="filter_name">Nome</string>
     <string name="filter_show_library">Mostra nella libreria</string>
-    <string name="filter_show_home">Mostra come riga nella Home</string>
+    <string name="filter_show_home">Mostra come riga nella scheda Home</string>
     <string name="filter_show_apps">Mostra nella scheda App</string>
     <string name="filter_rules">Regole</string>
     <string name="filter_group_by">Dividi per</string>
@@ -702,7 +702,7 @@
     <string name="setting_haptic_focus">Vibra durante la navigazione</string>
 
     <!-- App filters -->
-    <string name="app_filters_help">I filtri e i gruppi delle app appaiono come chip nella scheda App e, opzionalmente, come righe nella schermata Home. L'occhio mostra o nasconde un chip, trascina la maniglia per cambiare l'ordine. I filtri predefiniti sono filtri normali: modificali, nascondili o eliminali come i tuoi.</string>
+    <string name="app_filters_help">I filtri e i gruppi delle app appaiono come chip nella scheda App e, opzionalmente, come righe nella scheda Home. L’occhio mostra o nasconde un chip, trascina la maniglia per cambiare l’ordine. I filtri predefiniti sono filtri normali: modificali, nascondili o eliminali come i tuoi.</string>
     <string name="filter_match_count_apps">%1$d app corrispondono</string>
 
     <!-- Filter bar -->
@@ -960,7 +960,7 @@
 
     <!-- Filters -->
     <string name="filter_chip_show_name">Nome del filtro nel chip</string>
-    <string name="filter_row_show_name">Nome del filtro nell'intestazione della riga (home)</string>
+    <string name="filter_row_show_name">Nome del filtro nell’intestazione della riga (scheda Home)</string>
     <string name="filter_show_name_sub">Attivo: «Nome: Gruppo», disattivato: solo il gruppo</string>
     <string name="filter_sort">Ordine</string>
     <string name="filter_limit">Numero massimo</string>
@@ -1068,7 +1068,7 @@
     <string name="hint_prev_next">Precedente/successivo</string>
 
     <!-- Appearance -->
-    <string name="setting_start_tab">Schermata iniziale</string>
+    <string name="setting_start_tab">Scheda predefinita</string>
     <string name="setting_start_tab_sub">Mostrata all'avvio e quando si preme Home nel launcher</string>
 
     <!-- Host API -->

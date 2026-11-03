@@ -27,7 +27,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.dropShadow
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -93,6 +94,9 @@ object FocusSound {
     fun silence(durationMs: Long = 250) { quietUntil = now() + durationMs }
     fun silenced() = now() < quietUntil
 }
+
+/** Strength of the focus glow around the focused element. */
+private const val GLOW_ALPHA = 0.6f
 
 /** False when the hint bar is turned off or neither a controller nor a keyboard is connected. */
 val LocalShowHintBar = androidx.compose.runtime.compositionLocalOf { true }
@@ -166,11 +170,19 @@ fun FocusSurface(
     val ring = LauncherTheme.colors.focusRing
     Box(
         modifier = modifier
+            // In front of its neighbours, so the next element doesn't cover the glow.
+            .zIndex(if (focused) 1f else 0f)
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
             }
-            .then(if (focused && controllerMode && glow) Modifier.shadow(18.dp, shape, ambientColor = ring, spotColor = ring) else Modifier)
+            // A blurred glow all around (an elevation shadow follows the platform's light source and
+            // slides down the further down the screen the element is).
+            .then(
+                if (focused && controllerMode && glow) {
+                    Modifier.dropShadow(shape, androidx.compose.ui.graphics.shadow.Shadow(radius = 18.dp, color = ring.copy(alpha = GLOW_ALPHA)))
+                } else Modifier,
+            )
             .clip(shape)
             .background(color)
             .then(if (dpadFocusable) Modifier.focusRequester(requester) else Modifier.focusProperties { canFocus = false })

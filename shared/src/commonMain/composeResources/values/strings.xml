@@ -141,10 +141,10 @@
     <string name="settings_hosts_sub">Streaming PCs, pairing, wake-up</string>
     <string name="settings_profiles">Stream profiles</string>
     <string name="settings_profiles_sub">Resolution, frame rate, bitrate, HDR</string>
-    <string name="settings_home_screen">Start tab</string>
+    <string name="settings_home_screen">Home tab</string>
     <string name="settings_home_screen_sub">Tiles, rows</string>
-    <string name="home_rows_section">Rows on the start tab</string>
-    <string name="home_rows_help">The rows of the start tab and their order (independent of the library). Move a row with the handle: drag it, or select it and use up/down; ✕ removes it.</string>
+    <string name="home_rows_section">Rows on the Home tab</string>
+    <string name="home_rows_help">The rows of the Home tab and their order (independent of the library). Move a row with the handle: drag it, or select it and use up/down; ✕ removes it.</string>
     <string name="setting_home_rows_position">Rows</string>
     <string name="setting_home_rows_bottom">First at the bottom</string>
     <string name="setting_home_rows_top">From the top</string>
@@ -322,8 +322,8 @@
     <string name="setting_animated_mobile_sub">They are large (often 10–30 MB each); otherwise only over Wi-Fi.</string>
     <string name="setting_animated_tiles_sub">Moving covers on the tiles. Raises CPU and GPU load, the battery drains faster.</string>
     <string name="setting_animated_hero">Animated background</string>
-    <string name="setting_animated_hero_sub">Moving background image on the start tab and the detail page. Raises CPU and GPU load, the battery drains faster.</string>
-    <string name="setting_reduce_motion_sub">Focused elements don't grow, the start screen doesn't zoom, colours change without a transition and the screensaver zooms only in steps.</string>
+    <string name="setting_animated_hero_sub">Moving background image on the Home tab and the detail page. Raises CPU and GPU load, the battery drains faster.</string>
+    <string name="setting_reduce_motion_sub">Focused elements don’t grow, the Home tab doesn’t zoom, colours change without a transition and the screensaver zooms only in steps.</string>
     <string name="section_screensaver">Screensaver</string>
     <string name="setting_ken_burns">Ken Burns effect</string>
     <string name="setting_ken_burns_sub">The pictures zoom slowly and continuously. Costs processing power all the time; without it they stand still and cross-fade.</string>
@@ -416,7 +416,7 @@
     <string name="ha_login_phone_hint">Scan the code with your phone and sign in there. The phone has to be in the same network as this device.</string>
     <string name="ha_login_phone_waiting">Waiting for the sign-in…</string>
     <string name="ha_tiles">Entity favourites</string>
-    <string name="ha_entities_intro">Control these entities from anywhere in the quick menu’s Home Assistant tab and, when switched on, as a row on the home screen.</string>
+    <string name="ha_entities_intro">Control these entities from anywhere in the quick menu’s Home Assistant tab and, when switched on, as a row on the Home tab.</string>
     <string name="ha_add_tile">Add entity</string>
     <string name="ha_events_help">For automations the launcher fires the events gamelodge_started and gamelodge_stopped with title, kind (game or app) and stream (true or false); streams also bring host and profile, gamelodge_stopped the duration in seconds.</string>
 
@@ -431,11 +431,11 @@
     <!-- HA additions -->
     <string name="ha_status_not_configured_sub">Sign in with the address of your Home Assistant.</string>
     <string name="ha_login_title">Sign in to Home Assistant</string>
-    <string name="ha_tile_on_home">Show on the home screen</string>
+    <string name="ha_tile_on_home">Show on the Home tab</string>
     <string name="ha_tile_move_up">Move up</string>
     <string name="ha_tile_move_down">Move down</string>
     <string name="ha_tile_remove">Hold to remove</string>
-    <string name="ha_tile_on_home_short">on the home screen</string>
+    <string name="ha_tile_on_home_short">on the Home tab</string>
     <string name="ha_host_actions">Host actions</string>
     <string name="ha_host_actions_hint">Wake, sleep, shut down and restart of a host are set in its settings.</string>
     <string name="ha_host_actions_none">No actions set</string>
@@ -643,7 +643,7 @@
     <string name="filters_edit">Edit filters</string>
     <string name="settings_filters">Filters &amp; groups</string>
     <string name="settings_filters_sub">Own filters, groups and chip order for games and apps</string>
-    <string name="filters_help">Game filters and groups appear as chips in the library and optionally as rows on the home screen. The eye shows or hides a chip, drag the handle to change the order. Default filters are ordinary filters: edit, hide or delete them like your own.</string>
+    <string name="filters_help">Game filters and groups appear as chips in the library and optionally as rows on the Home tab. The eye shows or hides a chip, drag the handle to change the order. Default filters are ordinary filters: edit, hide or delete them like your own.</string>
     <string name="filter_new_smart">New filter</string>
     <string name="filter_new_group">New group</string>
     <string name="filters_restore">Restore defaults</string>
@@ -656,7 +656,7 @@
     <string name="filter_kind_group">Group (%1$d)</string>
     <string name="filter_name">Name</string>
     <string name="filter_show_library">Show in library</string>
-    <string name="filter_show_home">Show as row on home</string>
+    <string name="filter_show_home">Show as row on the Home tab</string>
     <string name="filter_show_apps">Show in Apps tab</string>
     <string name="filter_rules">Rules</string>
     <string name="filter_group_by">Split by</string>
@@ -702,7 +702,7 @@
     <string name="setting_haptic_focus">Vibrate while navigating</string>
 
     <!-- App filters -->
-    <string name="app_filters_help">App filters and groups appear as chips in the Apps tab and optionally as rows on the home screen. The eye shows or hides a chip, drag the handle to change the order. Default filters are ordinary filters: edit, hide or delete them like your own.</string>
+    <string name="app_filters_help">App filters and groups appear as chips in the Apps tab and optionally as rows on the Home tab. The eye shows or hides a chip, drag the handle to change the order. Default filters are ordinary filters: edit, hide or delete them like your own.</string>
     <string name="filter_match_count_apps">%1$d apps match</string>
 
     <!-- Filter bar -->
@@ -901,7 +901,7 @@
     <!-- Button combos -->
     <string name="combo_section">Button combinations</string>
     <string name="combo_home">Back to GameLodge</string>
-    <string name="combo_home_sub">Brings GameLodge to the front, e.g. from a game or the stream; in GameLodge it goes to the start tab</string>
+    <string name="combo_home_sub">Brings GameLodge to the front, e.g. from a game or the stream; in GameLodge it goes to the Home tab</string>
     <string name="combo_quick_menu">Open quick menu</string>
     <string name="combo_mouse">Mouse emulation</string>
     <string name="combo_mouse_sub">The controller moves a mouse pointer; in the stream the host’s mouse</string>
@@ -960,7 +960,7 @@
 
     <!-- Filters -->
     <string name="filter_chip_show_name">Filter name in chip</string>
-    <string name="filter_row_show_name">Filter name in row header (home)</string>
+    <string name="filter_row_show_name">Filter name in row header (Home tab)</string>
     <string name="filter_show_name_sub">On: "Name: Group", off: only the group</string>
     <string name="filter_sort">Order</string>
     <string name="filter_limit">Maximum number</string>
@@ -1068,7 +1068,7 @@
     <string name="hint_prev_next">Previous/next</string>
 
     <!-- Appearance -->
-    <string name="setting_start_tab">Start screen</string>
+    <string name="setting_start_tab">Default tab</string>
     <string name="setting_start_tab_sub">Shown after starting and when Home is pressed in the launcher</string>
 
     <!-- Host API -->
@@ -1144,7 +1144,7 @@
     <string name="settings_search">Search settings</string>
     <string name="see_also">See also</string>
     <string name="settings_search_none">No matching setting</string>
-    <string name="search_kw_home_screen">Start, rows, home, start tab, tiles, size, covers</string>
+    <string name="search_kw_home_screen">Start, rows, home, Home tab, start tab, tiles, size, covers</string>
     <string name="search_kw_theme">Colour, dark, light, black, OLED, accent, design, focus, zoom, animation</string>
     <string name="search_kw_display">Screen saver, TV, monitor, navigation bar</string>
     <string name="search_kw_filters">groups, collections, categories, chips, sort</string>
@@ -1304,8 +1304,8 @@
     <string name="host_progress_apps">Loading the app list…</string>
     <string name="host_progress_box_art">Loading covers: %1$d of %2$d</string>
     <string name="host_progress_metadata">Looking up metadata: %1$d of %2$d</string>
-    <string name="app_tile_title">Start tab tile</string>
-    <string name="app_tile_help">Shown when the app is in a row of the start tab.</string>
+    <string name="app_tile_title">Home tab tile</string>
+    <string name="app_tile_help">Shown when the app is in a row of the Home tab.</string>
     <string name="artwork_source_tv_banner">Android TV banner</string>
     <string name="artwork_source_generated">Generated</string>
     <string name="artwork_tile_auto">automatic: background with logo, else the cover</string>

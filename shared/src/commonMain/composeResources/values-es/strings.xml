@@ -141,10 +141,10 @@
     <string name="settings_hosts_sub">PC de streaming, emparejamiento, encendido</string>
     <string name="settings_profiles">Perfiles de streaming</string>
     <string name="settings_profiles_sub">Resolución, fotogramas, bitrate, HDR</string>
-    <string name="settings_home_screen">Pestaña de inicio</string>
+    <string name="settings_home_screen">Pestaña Inicio</string>
     <string name="settings_home_screen_sub">Mosaicos, filas</string>
-    <string name="home_rows_section">Filas de la pestaña de inicio</string>
-    <string name="home_rows_help">Las filas de la pestaña de inicio y su orden (independiente de la biblioteca). Mueve una fila con el tirador: arrástrala, o selecciónala y usa arriba/abajo; ✕ la quita.</string>
+    <string name="home_rows_section">Filas de la pestaña Inicio</string>
+    <string name="home_rows_help">Las filas de la pestaña Inicio y su orden (independiente de la biblioteca). Mueve una fila con el tirador: arrástrala, o selecciónala y usa arriba/abajo; ✕ la quita.</string>
     <string name="setting_home_rows_position">Filas</string>
     <string name="setting_home_rows_bottom">Primera abajo</string>
     <string name="setting_home_rows_top">Desde arriba</string>
@@ -322,8 +322,8 @@
     <string name="setting_animated_mobile_sub">Son grandes (a menudo 10–30 MB cada una); si no, solo por Wi-Fi.</string>
     <string name="setting_animated_tiles_sub">Covers en movimiento en los mosaicos. Aumenta la carga de CPU y GPU, la batería dura menos.</string>
     <string name="setting_animated_hero">Fondo animado</string>
-    <string name="setting_animated_hero_sub">Imagen de fondo en movimiento en la pestaña de inicio y en la página de detalle. Aumenta la carga de CPU y GPU, la batería dura menos.</string>
-    <string name="setting_reduce_motion_sub">Los elementos enfocados no crecen, la pantalla de inicio no hace zoom, los colores cambian sin transición y el salvapantallas solo hace zoom por pasos.</string>
+    <string name="setting_animated_hero_sub">Imagen de fondo en movimiento en la pestaña Inicio y en la página de detalle. Aumenta la carga de CPU y GPU, la batería dura menos.</string>
+    <string name="setting_reduce_motion_sub">Los elementos enfocados no crecen, la pestaña Inicio no hace zoom, los colores cambian sin transición y el salvapantallas solo hace zoom por pasos.</string>
     <string name="section_screensaver">Salvapantallas</string>
     <string name="setting_ken_burns">Efecto Ken Burns</string>
     <string name="setting_ken_burns_sub">Las imágenes hacen zoom lento y continuo. Consume procesador todo el tiempo; sin él se quedan quietas y hacen fundido.</string>
@@ -416,7 +416,7 @@
     <string name="ha_login_phone_hint">Escanea el código con tu móvil e inicia sesión allí. El móvil debe estar en la misma red que este dispositivo.</string>
     <string name="ha_login_phone_waiting">Esperando el inicio de sesión…</string>
     <string name="ha_tiles">Favoritos de entidades</string>
-    <string name="ha_entities_intro">Controla estas entidades desde cualquier sitio en la pestaña de Home Assistant del menú rápido y, cuando se activa, como una fila en la pantalla de inicio.</string>
+    <string name="ha_entities_intro">Controla estas entidades desde cualquier sitio en la pestaña de Home Assistant del menú rápido y, cuando se activa, como una fila en la pestaña Inicio.</string>
     <string name="ha_add_tile">Añadir entidad</string>
     <string name="ha_events_help">Para automatizaciones, el lanzador dispara los eventos gamelodge_started y gamelodge_stopped con title, kind (game o app) y stream (true o false); los streams también traen host y profile, y gamelodge_stopped la duración en segundos.</string>
 
@@ -431,11 +431,11 @@
     <!-- HA additions -->
     <string name="ha_status_not_configured_sub">Inicia sesión con la dirección de tu Home Assistant.</string>
     <string name="ha_login_title">Iniciar sesión en Home Assistant</string>
-    <string name="ha_tile_on_home">Mostrar en la pantalla de inicio</string>
+    <string name="ha_tile_on_home">Mostrar en la pestaña Inicio</string>
     <string name="ha_tile_move_up">Subir</string>
     <string name="ha_tile_move_down">Bajar</string>
     <string name="ha_tile_remove">Mantén para quitar</string>
-    <string name="ha_tile_on_home_short">en la pantalla de inicio</string>
+    <string name="ha_tile_on_home_short">en la pestaña Inicio</string>
     <string name="ha_host_actions">Acciones del host</string>
     <string name="ha_host_actions_hint">El encendido, la suspensión, el apagado y el reinicio de un host se configuran en sus ajustes.</string>
     <string name="ha_host_actions_none">Ninguna acción configurada</string>
@@ -643,7 +643,7 @@
     <string name="filters_edit">Editar filtros</string>
     <string name="settings_filters">Filtros y grupos</string>
     <string name="settings_filters_sub">Filtros, grupos y orden de chips propios para juegos y apps</string>
-    <string name="filters_help">Los filtros y grupos de juegos aparecen como chips en la biblioteca y opcionalmente como filas en la pantalla de inicio. El ojo muestra u oculta un chip, arrastra el tirador para cambiar el orden. Los filtros predeterminados son filtros normales: edítalos, ocúltalos o elimínalos como los propios.</string>
+    <string name="filters_help">Los filtros y grupos de juegos aparecen como chips en la biblioteca y opcionalmente como filas en la pestaña Inicio. El ojo muestra u oculta un chip, arrastra el tirador para cambiar el orden. Los filtros predeterminados son filtros normales: edítalos, ocúltalos o elimínalos como los propios.</string>
     <string name="filter_new_smart">Nuevo filtro</string>
     <string name="filter_new_group">Nuevo grupo</string>
     <string name="filters_restore">Restaurar predeterminados</string>
@@ -656,7 +656,7 @@
     <string name="filter_kind_group">Grupo (%1$d)</string>
     <string name="filter_name">Nombre</string>
     <string name="filter_show_library">Mostrar en la biblioteca</string>
-    <string name="filter_show_home">Mostrar como fila en inicio</string>
+    <string name="filter_show_home">Mostrar como fila en la pestaña Inicio</string>
     <string name="filter_show_apps">Mostrar en la pestaña Apps</string>
     <string name="filter_rules">Reglas</string>
     <string name="filter_group_by">Dividir por</string>
@@ -702,7 +702,7 @@
     <string name="setting_haptic_focus">Vibrar al navegar</string>
 
     <!-- App filters -->
-    <string name="app_filters_help">Los filtros y grupos de apps aparecen como chips en la pestaña Apps y opcionalmente como filas en la pantalla de inicio. El ojo muestra u oculta un chip, arrastra el tirador para cambiar el orden. Los filtros predeterminados son filtros normales: edítalos, ocúltalos o elimínalos como los propios.</string>
+    <string name="app_filters_help">Los filtros y grupos de apps aparecen como chips en la pestaña Apps y opcionalmente como filas en la pestaña Inicio. El ojo muestra u oculta un chip, arrastra el tirador para cambiar el orden. Los filtros predeterminados son filtros normales: edítalos, ocúltalos o elimínalos como los propios.</string>
     <string name="filter_match_count_apps">%1$d apps coinciden</string>
 
     <!-- Filter bar -->
@@ -901,7 +901,7 @@
     <!-- Button combos -->
     <string name="combo_section">Combinaciones de botones</string>
     <string name="combo_home">Volver a GameLodge</string>
-    <string name="combo_home_sub">Trae GameLodge al frente, p. ej. desde un juego o el stream; dentro de GameLodge va a la pestaña de inicio</string>
+    <string name="combo_home_sub">Trae GameLodge al frente, p. ej. desde un juego o el stream; dentro de GameLodge va a la pestaña Inicio</string>
     <string name="combo_quick_menu">Abrir el menú rápido</string>
     <string name="combo_mouse">Emulación de ratón</string>
     <string name="combo_mouse_sub">El mando mueve un puntero; en el stream, el ratón del host</string>
@@ -960,7 +960,7 @@
 
     <!-- Filters -->
     <string name="filter_chip_show_name">Nombre del filtro en el chip</string>
-    <string name="filter_row_show_name">Nombre del filtro en el encabezado de la fila (inicio)</string>
+    <string name="filter_row_show_name">Nombre del filtro en el encabezado de la fila (pestaña Inicio)</string>
     <string name="filter_show_name_sub">Activado: «Nombre: Grupo», desactivado: solo el grupo</string>
     <string name="filter_sort">Orden</string>
     <string name="filter_limit">Número máximo</string>
@@ -1068,7 +1068,7 @@
     <string name="hint_prev_next">Anterior/siguiente</string>
 
     <!-- Appearance -->
-    <string name="setting_start_tab">Pantalla de inicio</string>
+    <string name="setting_start_tab">Pestaña predeterminada</string>
     <string name="setting_start_tab_sub">Se muestra al iniciar y al pulsar Inicio en el lanzador</string>
 
     <!-- Host API -->
@@ -1304,8 +1304,8 @@
     <string name="host_progress_apps">Cargando la lista de apps…</string>
     <string name="host_progress_box_art">Cargando covers: %1$d de %2$d</string>
     <string name="host_progress_metadata">Buscando metadatos: %1$d de %2$d</string>
-    <string name="app_tile_title">Mosaico de la pestaña de inicio</string>
-    <string name="app_tile_help">Se muestra cuando la app está en una fila de la pestaña de inicio.</string>
+    <string name="app_tile_title">Mosaico de la pestaña Inicio</string>
+    <string name="app_tile_help">Se muestra cuando la app está en una fila de la pestaña Inicio.</string>
     <string name="artwork_source_tv_banner">Banner de Android TV</string>
     <string name="artwork_source_generated">Generada</string>
     <string name="artwork_tile_auto">automática: fondo con logo, si no el cover</string>

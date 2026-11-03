@@ -321,7 +321,7 @@
     <string name="setting_animated_tiles_sub">Bewegte Cover auf den Kacheln. Erhöht die CPU- und GPU-Last, der Akku leert sich schneller.</string>
     <string name="setting_animated_hero">Animierter Hintergrund</string>
     <string name="setting_animated_hero_sub">Bewegtes Hintergrundbild auf dem Start-Tab und in der Detailansicht. Erhöht die CPU- und GPU-Last, der Akku leert sich schneller.</string>
-    <string name="setting_reduce_motion_sub">Fokussierte Elemente werden nicht vergrößert, der Startbildschirm zoomt nicht, Farben wechseln ohne Übergang und der Bildschirmschoner zoomt nur in Stufen.</string>
+    <string name="setting_reduce_motion_sub">Fokussierte Elemente werden nicht vergrößert, der Start-Tab zoomt nicht, Farben wechseln ohne Übergang und der Bildschirmschoner zoomt nur in Stufen.</string>
     <string name="section_screensaver">Bildschirmschoner</string>
     <string name="setting_ken_burns">Ken-Burns-Effekt</string>
     <string name="setting_ken_burns_sub">Die Bilder zoomen langsam und fortlaufend. Kostet dauerhaft Rechenleistung; ohne den Effekt stehen die Bilder still und werden überblendet.</string>
@@ -414,7 +414,7 @@
     <string name="ha_login_phone_hint">Scanne den Code mit dem Smartphone und melde dich dort an. Das Smartphone muss im selben Netzwerk sein wie dieses Gerät.</string>
     <string name="ha_login_phone_waiting">Warte auf die Anmeldung …</string>
     <string name="ha_tiles">Entitäten-Favoriten</string>
-    <string name="ha_entities_intro">Diese Entitäten steuerst du von überall im Home-Assistant-Tab des Schnellmenüs und, wenn eingeschaltet, als Reihe auf dem Startbildschirm.</string>
+    <string name="ha_entities_intro">Diese Entitäten steuerst du von überall im Home-Assistant-Tab des Schnellmenüs und, wenn eingeschaltet, als Reihe im Start-Tab.</string>
     <string name="ha_add_tile">Entität hinzufügen</string>
     <string name="ha_events_help">Für Automationen sendet der Launcher die Events gamelodge_started und gamelodge_stopped mit title, kind (game oder app) und stream (true oder false); Streams zusätzlich mit host und profile, gamelodge_stopped mit der Dauer in Sekunden.</string>
 
@@ -429,11 +429,11 @@
     <!-- HA additions -->
     <string name="ha_status_not_configured_sub">Melde dich mit der Adresse deines Home Assistant an.</string>
     <string name="ha_login_title">Bei Home Assistant anmelden</string>
-    <string name="ha_tile_on_home">Auf dem Startbildschirm zeigen</string>
+    <string name="ha_tile_on_home">Im Start-Tab zeigen</string>
     <string name="ha_tile_move_up">Nach oben</string>
     <string name="ha_tile_move_down">Nach unten</string>
     <string name="ha_tile_remove">Halten zum Entfernen</string>
-    <string name="ha_tile_on_home_short">auf dem Startbildschirm</string>
+    <string name="ha_tile_on_home_short">im Start-Tab</string>
     <string name="ha_host_actions">Host-Aktionen</string>
     <string name="ha_host_actions_hint">Aufwecken, Schlafen, Herunterfahren und Neustart eines Hosts legst du in seinen Einstellungen fest.</string>
     <string name="ha_host_actions_none">Keine Aktionen festgelegt</string>
@@ -641,7 +641,7 @@
     <string name="filters_edit">Filter bearbeiten</string>
     <string name="settings_filters">Filter &amp; Gruppen</string>
     <string name="settings_filters_sub">Eigene Filter, Gruppen und Chip-Reihenfolge für Spiele und Apps</string>
-    <string name="filters_help">Spiele-Filter und -Gruppen erscheinen als Chips in der Bibliothek und optional als Reihe auf der Startseite. Das Auge blendet einen Chip ein oder aus, am Griff ziehst du die Reihenfolge. Standardfilter sind normale Filter: bearbeiten, ausblenden oder löschen wie eigene.</string>
+    <string name="filters_help">Spiele-Filter und -Gruppen erscheinen als Chips in der Bibliothek und optional als Reihe im Start-Tab. Das Auge blendet einen Chip ein oder aus, am Griff ziehst du die Reihenfolge. Standardfilter sind normale Filter: bearbeiten, ausblenden oder löschen wie eigene.</string>
     <string name="filter_new_smart">Neuer Filter</string>
     <string name="filter_new_group">Neue Gruppe</string>
     <string name="filters_restore">Standards wiederherstellen</string>
@@ -654,7 +654,7 @@
     <string name="filter_kind_group">Gruppe (%1$d)</string>
     <string name="filter_name">Name</string>
     <string name="filter_show_library">In der Bibliothek anzeigen</string>
-    <string name="filter_show_home">Als Reihe auf der Startseite</string>
+    <string name="filter_show_home">Als Reihe im Start-Tab</string>
     <string name="filter_show_apps">Im Apps-Tab anzeigen</string>
     <string name="filter_rules">Regeln</string>
     <string name="filter_group_by">Aufteilen nach</string>
@@ -700,7 +700,7 @@
     <string name="setting_haptic_focus">Beim Navigieren vibrieren</string>
 
     <!-- App filters -->
-    <string name="app_filters_help">App-Filter und -Gruppen erscheinen als Chips im Apps-Tab und optional als Reihe auf der Startseite. Das Auge blendet einen Chip ein oder aus, am Griff ziehst du die Reihenfolge. Standardfilter sind normale Filter: bearbeiten, ausblenden oder löschen wie eigene.</string>
+    <string name="app_filters_help">App-Filter und -Gruppen erscheinen als Chips im Apps-Tab und optional als Reihe im Start-Tab. Das Auge blendet einen Chip ein oder aus, am Griff ziehst du die Reihenfolge. Standardfilter sind normale Filter: bearbeiten, ausblenden oder löschen wie eigene.</string>
     <string name="filter_match_count_apps">%1$d Apps passen</string>
 
     <!-- Filter bar -->
@@ -958,7 +958,7 @@
 
     <!-- Filters -->
     <string name="filter_chip_show_name">Filtername im Chip</string>
-    <string name="filter_row_show_name">Filtername in der Reihenüberschrift (Start)</string>
+    <string name="filter_row_show_name">Filtername in der Reihenüberschrift (Start-Tab)</string>
     <string name="filter_show_name_sub">An: „Name: Gruppe“, aus: nur die Gruppe</string>
     <string name="filter_sort">Sortierung</string>
     <string name="filter_limit">Maximale Anzahl</string>
@@ -1066,7 +1066,7 @@
     <string name="hint_prev_next">Voriges/Nächstes</string>
 
     <!-- Appearance -->
-    <string name="setting_start_tab">Startbildschirm</string>
+    <string name="setting_start_tab">Standard-Tab</string>
     <string name="setting_start_tab_sub">Wird nach dem Start und bei Home im Launcher angezeigt</string>
 
     <!-- Host API -->

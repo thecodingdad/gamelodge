@@ -323,7 +323,7 @@
     <string name="setting_animated_tiles_sub">Capas em movimento nos blocos. Aumenta a carga de CPU e GPU, a bateria acaba mais rápido.</string>
     <string name="setting_animated_hero">Plano de fundo animado</string>
     <string name="setting_animated_hero_sub">Imagem de fundo em movimento na aba Início e na página de detalhes. Aumenta a carga de CPU e GPU, a bateria acaba mais rápido.</string>
-    <string name="setting_reduce_motion_sub">Os elementos em foco não crescem, a tela inicial não dá zoom, as cores mudam sem transição e o protetor de tela dá zoom só em etapas.</string>
+    <string name="setting_reduce_motion_sub">Os elementos em foco não crescem, a aba Início não dá zoom, as cores mudam sem transição e o protetor de tela dá zoom só em etapas.</string>
     <string name="section_screensaver">Protetor de tela</string>
     <string name="setting_ken_burns">Efeito Ken Burns</string>
     <string name="setting_ken_burns_sub">As imagens dão zoom lento e contínuo. Consome processamento o tempo todo; sem ele, ficam paradas e fazem transição suave.</string>
@@ -416,7 +416,7 @@
     <string name="ha_login_phone_hint">Escaneie o código com seu celular e entre lá. O celular precisa estar na mesma rede que este dispositivo.</string>
     <string name="ha_login_phone_waiting">Aguardando o login…</string>
     <string name="ha_tiles">Favoritos de entidades</string>
-    <string name="ha_entities_intro">Controle estas entidades de qualquer lugar na aba Home Assistant do menu rápido e, quando ativado, como uma fileira na tela inicial.</string>
+    <string name="ha_entities_intro">Controle estas entidades de qualquer lugar na aba Home Assistant do menu rápido e, quando ativado, como uma fileira na aba Início.</string>
     <string name="ha_add_tile">Adicionar entidade</string>
     <string name="ha_events_help">Para automações, o lançador dispara os eventos gamelodge_started e gamelodge_stopped com title, kind (game ou app) e stream (true ou false); os streams também trazem host e profile, e o gamelodge_stopped a duração em segundos.</string>
 
@@ -431,11 +431,11 @@
     <!-- HA additions -->
     <string name="ha_status_not_configured_sub">Entre com o endereço do seu Home Assistant.</string>
     <string name="ha_login_title">Entrar no Home Assistant</string>
-    <string name="ha_tile_on_home">Mostrar na tela inicial</string>
+    <string name="ha_tile_on_home">Mostrar na aba Início</string>
     <string name="ha_tile_move_up">Mover para cima</string>
     <string name="ha_tile_move_down">Mover para baixo</string>
     <string name="ha_tile_remove">Segure para remover</string>
-    <string name="ha_tile_on_home_short">na tela inicial</string>
+    <string name="ha_tile_on_home_short">na aba Início</string>
     <string name="ha_host_actions">Ações do host</string>
     <string name="ha_host_actions_hint">Ligar, suspender, desligar e reiniciar um host são configurados nas configurações dele.</string>
     <string name="ha_host_actions_none">Nenhuma ação configurada</string>
@@ -643,7 +643,7 @@
     <string name="filters_edit">Editar filtros</string>
     <string name="settings_filters">Filtros e grupos</string>
     <string name="settings_filters_sub">Filtros, grupos e ordem dos chips próprios para jogos e apps</string>
-    <string name="filters_help">Os filtros e grupos de jogos aparecem como chips na biblioteca e, opcionalmente, como fileiras na tela inicial. O olho mostra ou oculta um chip, arraste a alça para mudar a ordem. Os filtros padrão são filtros comuns: edite-os, oculte-os ou exclua-os como os seus.</string>
+    <string name="filters_help">Os filtros e grupos de jogos aparecem como chips na biblioteca e, opcionalmente, como fileiras na aba Início. O olho mostra ou oculta um chip, arraste a alça para mudar a ordem. Os filtros padrão são filtros comuns: edite-os, oculte-os ou exclua-os como os seus.</string>
     <string name="filter_new_smart">Novo filtro</string>
     <string name="filter_new_group">Novo grupo</string>
     <string name="filters_restore">Restaurar padrões</string>
@@ -656,7 +656,7 @@
     <string name="filter_kind_group">Grupo (%1$d)</string>
     <string name="filter_name">Nome</string>
     <string name="filter_show_library">Mostrar na biblioteca</string>
-    <string name="filter_show_home">Mostrar como fileira no início</string>
+    <string name="filter_show_home">Mostrar como fileira na aba Início</string>
     <string name="filter_show_apps">Mostrar na aba Apps</string>
     <string name="filter_rules">Regras</string>
     <string name="filter_group_by">Dividir por</string>
@@ -702,7 +702,7 @@
     <string name="setting_haptic_focus">Vibrar durante a navegação</string>
 
     <!-- App filters -->
-    <string name="app_filters_help">Os filtros e grupos de apps aparecem como chips na aba Apps e, opcionalmente, como fileiras na tela inicial. O olho mostra ou oculta um chip, arraste a alça para mudar a ordem. Os filtros padrão são filtros comuns: edite-os, oculte-os ou exclua-os como os seus.</string>
+    <string name="app_filters_help">Os filtros e grupos de apps aparecem como chips na aba Apps e, opcionalmente, como fileiras na aba Início. O olho mostra ou oculta um chip, arraste a alça para mudar a ordem. Os filtros padrão são filtros comuns: edite-os, oculte-os ou exclua-os como os seus.</string>
     <string name="filter_match_count_apps">%1$d apps correspondem</string>
 
     <!-- Filter bar -->
@@ -960,7 +960,7 @@
 
     <!-- Filters -->
     <string name="filter_chip_show_name">Nome do filtro no chip</string>
-    <string name="filter_row_show_name">Nome do filtro no cabeçalho da fileira (início)</string>
+    <string name="filter_row_show_name">Nome do filtro no cabeçalho da fileira (aba Início)</string>
     <string name="filter_show_name_sub">Ligado: «Nome: Grupo», desligado: só o grupo</string>
     <string name="filter_sort">Ordem</string>
     <string name="filter_limit">Número máximo</string>
@@ -1068,7 +1068,7 @@
     <string name="hint_prev_next">Anterior/próximo</string>
 
     <!-- Appearance -->
-    <string name="setting_start_tab">Tela inicial</string>
+    <string name="setting_start_tab">Aba padrão</string>
     <string name="setting_start_tab_sub">Mostrada ao iniciar e ao pressionar Início no lançador</string>
 
     <!-- Host API -->

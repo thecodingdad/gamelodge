@@ -323,7 +323,7 @@
     <string name="setting_animated_tiles_sub">Jaquettes animées sur les tuiles. Augmente la charge du CPU et du GPU, la batterie se vide plus vite.</string>
     <string name="setting_animated_hero">Arrière-plan animé</string>
     <string name="setting_animated_hero_sub">Image d'arrière-plan animée sur l'onglet Accueil et la page de détail. Augmente la charge du CPU et du GPU, la batterie se vide plus vite.</string>
-    <string name="setting_reduce_motion_sub">Les éléments focalisés ne grandissent pas, l'écran d'accueil ne zoome pas, les couleurs changent sans transition et l'économiseur d'écran ne zoome que par étapes.</string>
+    <string name="setting_reduce_motion_sub">Les éléments focalisés ne grandissent pas, l’onglet Accueil ne zoome pas, les couleurs changent sans transition et l’économiseur d’écran ne zoome que par étapes.</string>
     <string name="section_screensaver">Économiseur d'écran</string>
     <string name="setting_ken_burns">Effet Ken Burns</string>
     <string name="setting_ken_burns_sub">Les images zooment lentement et en continu. Consomme de la puissance en permanence ; sans lui, elles restent fixes et font un fondu.</string>
@@ -416,7 +416,7 @@
     <string name="ha_login_phone_hint">Scannez le code avec votre téléphone et connectez-vous là. Le téléphone doit être sur le même réseau que cet appareil.</string>
     <string name="ha_login_phone_waiting">En attente de la connexion…</string>
     <string name="ha_tiles">Favoris d'entités</string>
-    <string name="ha_entities_intro">Contrôlez ces entités depuis n'importe où dans l'onglet Home Assistant du menu rapide et, quand c'est activé, comme une rangée sur l'écran d'accueil.</string>
+    <string name="ha_entities_intro">Contrôlez ces entités depuis n’importe où dans l’onglet Home Assistant du menu rapide et, quand c’est activé, comme une rangée dans l’onglet Accueil.</string>
     <string name="ha_add_tile">Ajouter une entité</string>
     <string name="ha_events_help">Pour les automatisations, le lanceur déclenche les événements gamelodge_started et gamelodge_stopped avec title, kind (game ou app) et stream (true ou false) ; les streams apportent aussi host et profile, et gamelodge_stopped la durée en secondes.</string>
 
@@ -431,11 +431,11 @@
     <!-- HA additions -->
     <string name="ha_status_not_configured_sub">Connectez-vous avec l'adresse de votre Home Assistant.</string>
     <string name="ha_login_title">Se connecter à Home Assistant</string>
-    <string name="ha_tile_on_home">Afficher sur l'écran d'accueil</string>
+    <string name="ha_tile_on_home">Afficher dans l’onglet Accueil</string>
     <string name="ha_tile_move_up">Monter</string>
     <string name="ha_tile_move_down">Descendre</string>
     <string name="ha_tile_remove">Maintenir pour retirer</string>
-    <string name="ha_tile_on_home_short">sur l'écran d'accueil</string>
+    <string name="ha_tile_on_home_short">dans l’onglet Accueil</string>
     <string name="ha_host_actions">Actions de l'hôte</string>
     <string name="ha_host_actions_hint">Le réveil, la veille, l'extinction et le redémarrage d'un hôte se règlent dans ses réglages.</string>
     <string name="ha_host_actions_none">Aucune action configurée</string>
@@ -643,7 +643,7 @@
     <string name="filters_edit">Modifier les filtres</string>
     <string name="settings_filters">Filtres et groupes</string>
     <string name="settings_filters_sub">Filtres, groupes et ordre des chips personnels pour les jeux et apps</string>
-    <string name="filters_help">Les filtres et groupes de jeux apparaissent comme chips dans la bibliothèque et, en option, comme rangées sur l'écran d'accueil. L'œil affiche ou masque un chip, glissez la poignée pour changer l'ordre. Les filtres par défaut sont des filtres ordinaires : modifiez-les, masquez-les ou supprimez-les comme les vôtres.</string>
+    <string name="filters_help">Les filtres et groupes de jeux apparaissent comme chips dans la bibliothèque et, en option, comme rangées dans l’onglet Accueil. L’œil affiche ou masque un chip, glissez la poignée pour changer l’ordre. Les filtres par défaut sont des filtres ordinaires : modifiez-les, masquez-les ou supprimez-les comme les vôtres.</string>
     <string name="filter_new_smart">Nouveau filtre</string>
     <string name="filter_new_group">Nouveau groupe</string>
     <string name="filters_restore">Restaurer les valeurs par défaut</string>
@@ -656,7 +656,7 @@
     <string name="filter_kind_group">Groupe (%1$d)</string>
     <string name="filter_name">Nom</string>
     <string name="filter_show_library">Afficher dans la bibliothèque</string>
-    <string name="filter_show_home">Afficher comme rangée sur l'accueil</string>
+    <string name="filter_show_home">Afficher comme rangée dans l’onglet Accueil</string>
     <string name="filter_show_apps">Afficher dans l'onglet Apps</string>
     <string name="filter_rules">Règles</string>
     <string name="filter_group_by">Diviser par</string>
@@ -702,7 +702,7 @@
     <string name="setting_haptic_focus">Vibrer pendant la navigation</string>
 
     <!-- App filters -->
-    <string name="app_filters_help">Les filtres et groupes d'apps apparaissent comme chips dans l'onglet Apps et, en option, comme rangées sur l'écran d'accueil. L'œil affiche ou masque un chip, glissez la poignée pour changer l'ordre. Les filtres par défaut sont des filtres ordinaires : modifiez-les, masquez-les ou supprimez-les comme les vôtres.</string>
+    <string name="app_filters_help">Les filtres et groupes d’apps apparaissent comme chips dans l’onglet Apps et, en option, comme rangées dans l’onglet Accueil. L’œil affiche ou masque un chip, glissez la poignée pour changer l’ordre. Les filtres par défaut sont des filtres ordinaires : modifiez-les, masquez-les ou supprimez-les comme les vôtres.</string>
     <string name="filter_match_count_apps">%1$d apps correspondent</string>
 
     <!-- Filter bar -->
@@ -960,7 +960,7 @@
 
     <!-- Filters -->
     <string name="filter_chip_show_name">Nom du filtre dans le chip</string>
-    <string name="filter_row_show_name">Nom du filtre dans l'en-tête de rangée (accueil)</string>
+    <string name="filter_row_show_name">Nom du filtre dans l’en-tête de rangée (onglet Accueil)</string>
     <string name="filter_show_name_sub">Activé : « Nom : Groupe », désactivé : seulement le groupe</string>
     <string name="filter_sort">Ordre</string>
     <string name="filter_limit">Nombre maximum</string>
@@ -1068,7 +1068,7 @@
     <string name="hint_prev_next">Précédent/suivant</string>
 
     <!-- Appearance -->
-    <string name="setting_start_tab">Écran de démarrage</string>
+    <string name="setting_start_tab">Onglet par défaut</string>
     <string name="setting_start_tab_sub">Affiché au démarrage et quand on appuie sur Accueil dans le lanceur</string>
 
     <!-- Host API -->
