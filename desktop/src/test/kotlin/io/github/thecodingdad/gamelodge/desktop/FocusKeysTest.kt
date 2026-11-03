@@ -15,6 +15,7 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
+import io.github.thecodingdad.gamelodge.ui.components.keepHorizontalFocus
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -93,6 +94,45 @@ class FocusKeysTest {
             assertEquals(2, focused)
             press(Key.DirectionRight)
             assertEquals(2, focused)
+            scene.close()
+        }
+    }
+
+    @Test
+    fun rightAtRowEndDoesNotJumpUpAndAway() {
+        javax.swing.SwingUtilities.invokeAndWait {
+            var focused = -1
+            val first = FocusRequester()
+            val scene = ImageComposeScene(600, 300) {
+                val focusManager = LocalFocusManager.current
+                Column(Modifier.onKeyEvent { arrowFocus(it, focusManager, consumeAtEdge = true) }) {
+                    // Top right, like the window buttons.
+                    androidx.compose.foundation.layout.Row {
+                        Box(Modifier.size(width = 500.dp, height = 40.dp))
+                        Box(Modifier.size(40.dp).onFocusChanged { if (it.isFocused) focused = 99 }.focusable())
+                    }
+                    androidx.compose.foundation.lazy.LazyRow(Modifier.keepHorizontalFocus()) {
+                        items(3) { i ->
+                            Box(
+                                Modifier.size(40.dp).then(if (i == 0) Modifier.focusRequester(first) else Modifier)
+                                    .onFocusChanged { if (it.isFocused) focused = i }.focusable(),
+                            )
+                        }
+                    }
+                }
+            }
+            scene.render(0)
+            first.requestFocus()
+            scene.render(1)
+            fun press(key: Key) {
+                scene.sendKeyEvent(KeyEvent(key, KeyEventType.KeyDown))
+                scene.sendKeyEvent(KeyEvent(key, KeyEventType.KeyUp))
+                scene.render(2)
+            }
+            repeat(4) { press(Key.DirectionRight) }
+            assertEquals(2, focused)
+            press(Key.DirectionUp)
+            assertEquals(99, focused)
             scene.close()
         }
     }

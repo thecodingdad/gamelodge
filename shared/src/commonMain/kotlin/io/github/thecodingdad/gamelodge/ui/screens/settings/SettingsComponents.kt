@@ -1,5 +1,7 @@
 package io.github.thecodingdad.gamelodge.ui.screens.settings
 
+import io.github.thecodingdad.gamelodge.ui.components.keepHorizontalFocus
+
 import io.github.thecodingdad.gamelodge.ui.components.popupHeightIn
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.UnfoldMore
@@ -144,7 +146,8 @@ fun SettingsPage(title: String, content: @Composable ColumnScope.() -> Unit) {
         io.github.thecodingdad.gamelodge.ui.components.ScrollAreaColumn(
             modifier = Modifier.fillMaxWidth().weight(1f),
             horizontalAlignment = Alignment.CenterHorizontally,
-            inner = Modifier.padding(horizontal = horizontal).focusRestorer(),
+            // Left / right never leave a settings page (no jump to the window buttons).
+            inner = Modifier.padding(horizontal = horizontal).keepHorizontalFocus().focusRestorer(),
         ) {
             Column(Modifier.widthIn(max = 900.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 androidx.compose.runtime.CompositionLocalProvider(LocalReturnTitle provides returnTitle) { content() }

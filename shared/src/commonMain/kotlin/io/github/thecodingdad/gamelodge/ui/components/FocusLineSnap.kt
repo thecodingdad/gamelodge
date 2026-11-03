@@ -1,6 +1,8 @@
 package io.github.thecodingdad.gamelodge.ui.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.focusGroup
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.foundation.gestures.BringIntoViewSpec
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Composable
@@ -36,3 +38,18 @@ fun rememberFocusLineSnap(state: LazyGridState): (Int) -> Unit {
     val controller by androidx.compose.runtime.rememberUpdatedState(isControllerMode())
     return remember { { index -> if (controller) target = index } }
 }
+
+/**
+ * Left / right stay inside this row, grid or page: at its side the focus stays where it is instead
+ * of jumping to whatever lies further that way (filter chips, the window buttons). Up / down
+ * leave it as usual. Goes before the area's own focus handling (e.g. focusRestorer).
+ */
+fun androidx.compose.ui.Modifier.keepHorizontalFocus(): androidx.compose.ui.Modifier = this
+    .focusProperties {
+        onExit = {
+            if (requestedFocusDirection == androidx.compose.ui.focus.FocusDirection.Left ||
+                requestedFocusDirection == androidx.compose.ui.focus.FocusDirection.Right
+            ) cancelFocusChange()
+        }
+    }
+    .focusGroup()

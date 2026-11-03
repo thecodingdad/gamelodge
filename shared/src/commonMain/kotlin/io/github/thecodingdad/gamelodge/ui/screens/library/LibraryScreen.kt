@@ -1,5 +1,7 @@
 package io.github.thecodingdad.gamelodge.ui.screens.library
 
+import io.github.thecodingdad.gamelodge.ui.components.keepHorizontalFocus
+
 import io.github.thecodingdad.gamelodge.ui.components.fadingEdges
 import io.github.thecodingdad.gamelodge.ui.components.mouseDragScroll
 import kotlinx.coroutines.flow.first
@@ -268,7 +270,7 @@ fun LibraryScreen(
             contentPadding = PaddingValues(horizontal = if (io.github.thecodingdad.gamelodge.ui.components.LocalCompactWidth.current) 16.dp else 36.dp, vertical = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(if (io.github.thecodingdad.gamelodge.ui.components.LocalCompactWidth.current) 12.dp else 18.dp),
             verticalArrangement = Arrangement.spacedBy(22.dp),
-            modifier = Modifier.focusRestorer().onFocusChanged {
+            modifier = Modifier.keepHorizontalFocus().focusRestorer().onFocusChanged {
                 if (it.hasFocus) { gridFocused.value = true; gridEverFocused = true } else if (gridEverFocused) gridFocused.value = false
             }.fadingEdges(gridState).mouseDragScroll(gridState),
         ) {
