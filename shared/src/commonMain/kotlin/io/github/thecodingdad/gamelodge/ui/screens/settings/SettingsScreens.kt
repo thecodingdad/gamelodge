@@ -137,12 +137,7 @@ fun SettingsHome(
                 platform.pageStatus(SettingsPageId.STREAMING_HOST) ?: stringResource(Res.string.settings_streaming_host_sub), Icons.Filled.Cast,
             )
         }
-        if (platform.hasPage(SettingsPageId.HOST_ROLE)) {
-            NavRow(
-                stringResource(Res.string.settings_host_role), { open(SettingsPageId.HOST_ROLE) },
-                platform.pageStatus(SettingsPageId.HOST_ROLE) ?: stringResource(Res.string.settings_host_role_sub), Icons.Filled.Devices,
-            )
-        }
+        // Devices & pairing is part of the streaming host page (only with a configured host).
         NavRow(stringResource(Res.string.settings_home_assistant), { open(SettingsPageId.HOME_ASSISTANT) }, stringResource(Res.string.settings_home_assistant_sub), vectorResource(Res.drawable.ic_home_assistant))
 
         SectionHeader(stringResource(Res.string.settings_group_controls))

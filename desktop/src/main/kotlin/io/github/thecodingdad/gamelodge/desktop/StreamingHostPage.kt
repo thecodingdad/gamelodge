@@ -4,6 +4,9 @@ import io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId
 import io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget
 import io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlsoLink
 import io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlso
+import io.github.thecodingdad.gamelodge.ui.screens.settings.NavRow
+import io.github.thecodingdad.gamelodge.ui.screens.settings.SectionHeader
+import androidx.compose.material.icons.filled.Devices
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -101,6 +104,17 @@ fun StreamingHostPage(role: HostRole, sync: HostSync, secrets: SecretStore?) {
             stringResource(Res.string.host_sync_not_installed), settings.syncNotInstalled, { on -> role.update { it.copy(syncNotInstalled = on) } },
             subtitle = stringResource(Res.string.host_sync_not_installed_sub),
         )
+        // Devices & pairing: paired launchers get this PC's host games, play time and stream notices,
+        // so only once the connection to the host software is set up.
+        val platform = io.github.thecodingdad.gamelodge.ui.PlatformUi.current
+        if (platform.hasPage(SettingsPageId.HOST_ROLE)) {
+            val navigate = io.github.thecodingdad.gamelodge.ui.screens.settings.LocalSettingsNavigator.current
+            SectionHeader(stringResource(Res.string.settings_host_role))
+            NavRow(
+                stringResource(Res.string.settings_host_role), { navigate(SettingsTarget.Page(SettingsPageId.HOST_ROLE), null) },
+                platform.pageStatus(SettingsPageId.HOST_ROLE) ?: stringResource(Res.string.settings_host_role_sub), Icons.Filled.Devices,
+            )
+        }
         SeeAlso(
             SeeAlsoLink(stringResource(Res.string.settings_game_sources), SettingsTarget.Page(SettingsPageId.GAME_SOURCES)),
             SeeAlsoLink(stringResource(Res.string.startup_tray), SettingsTarget.Page(SettingsPageId.STARTUP), highlight = stringResource(Res.string.startup_tray), subtitle = stringResource(Res.string.settings_startup)),

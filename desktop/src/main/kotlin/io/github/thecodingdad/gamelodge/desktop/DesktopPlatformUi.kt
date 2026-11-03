@@ -323,7 +323,7 @@ class DesktopPlatformUi(
 
     override val deviceDisplayOptions: Boolean get() = false
 
-    override fun hasPage(id: SettingsPageId) = id == SettingsPageId.GAME_SOURCES || (id == SettingsPageId.EMULATORS && pcLibrary() != null) || (id == SettingsPageId.HOST_ROLE && host() != null) || (id == SettingsPageId.STREAMING_HOST && host()?.sync != null) ||
+    override fun hasPage(id: SettingsPageId) = id == SettingsPageId.GAME_SOURCES || (id == SettingsPageId.EMULATORS && pcLibrary() != null) || (id == SettingsPageId.HOST_ROLE && host()?.let { hostConfigured(it) } == true) || (id == SettingsPageId.STREAMING_HOST && host()?.sync != null) ||
         (id == SettingsPageId.STARTUP && startup != null) ||
         (id == SettingsPageId.PROFILES && profiles != null)
 
@@ -490,3 +490,10 @@ private object WindowsPower {
 
     val kernel: Kernel32Power by lazy { com.sun.jna.Native.load("kernel32", Kernel32Power::class.java) }
 }
+
+/**
+ * The connection to the streaming host software is set up: only then do devices & pairing make
+ * sense (paired launchers get this PC's host games, play time and stream notices).
+ */
+internal fun hostConfigured(h: HostServices): Boolean =
+    h.sync != null && !h.secrets?.get(DesktopContainer.HOST_SECRET).isNullOrBlank()
