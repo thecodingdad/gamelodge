@@ -107,6 +107,15 @@ fun InputSettings(settings: LauncherSettings, update: ((LauncherSettings) -> Lau
                 trailing = key?.let { keyDisplayName(it) } ?: off,
             )
         }
+        // Which on-screen keyboard the stream shows (quick menu, button combination).
+        if (platform.hasStreamKeyboard) {
+            ChoiceRow(
+                stringResource(Res.string.input_stream_keyboard), io.github.thecodingdad.gamelodge.data.settings.StreamKeyboard.entries, settings.streamKeyboard,
+                label = { stringResource(if (it == io.github.thecodingdad.gamelodge.data.settings.StreamKeyboard.SYSTEM) Res.string.input_stream_keyboard_system else Res.string.input_stream_keyboard_pc) },
+                onSelect = { v -> update { it.copy(streamKeyboard = v) } },
+                subtitle = stringResource(Res.string.input_stream_keyboard_sub),
+            )
+        }
         // The stream's keyboard options of this device (Android).
         platform.DeviceInputRows(io.github.thecodingdad.gamelodge.ui.DeviceInputGroup.KEYBOARD, initialFocus = false)
 

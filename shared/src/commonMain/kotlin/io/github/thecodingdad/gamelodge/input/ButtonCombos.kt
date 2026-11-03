@@ -9,7 +9,7 @@ import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 
 /** What a button combination does. */
-enum class ComboAction { HOME, QUICK_MENU, MOUSE, STATS }
+enum class ComboAction { HOME, QUICK_MENU, MOUSE, STATS, KEYBOARD }
 
 /** Controller buttons as Android key codes (also on the PC: the settings store them so). */
 object PadKeys {

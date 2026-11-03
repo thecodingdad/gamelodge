@@ -167,6 +167,10 @@
     <string name="input_mouse_side_back">Indietro</string>
     <string name="input_mouse_side_tabs">Cambia scheda</string>
     <string name="input_mouse_side_sub">In GameLodge. Un clic destro apre il menu contestuale (come X).</string>
+    <string name="input_stream_keyboard">Tastiera nello stream</string>
+    <string name="input_stream_keyboard_system">Android</string>
+    <string name="input_stream_keyboard_pc">Tastiera PC</string>
+    <string name="input_stream_keyboard_sub">La mostrano il menu rapido e la combinazione. Android: digitazione, scorrimento, dettatura; tastiera PC: Ctrl, Alt, tasti F.</string>
     <string name="input_mouse_nav_stream">Inoltra i tasti laterali nello stream</string>
     <string name="input_mouse_nav_stream_sub">Indietro / avanti arrivano al PC (es. il browser). Può disturbare il clic destro su alcuni dispositivi.</string>
     <string name="input_keyboard_section">Tastiera</string>
@@ -550,7 +554,6 @@
     <string name="qm_section_quick">Accesso rapido</string>
     <string name="qm_running_on_host">In corso su %1$s</string>
     <string name="qm_running_here">In corso su questo PC</string>
-    <string name="qm_disconnect">Disconnetti</string>
     <string name="qm_quitting">Chiusura…</string>
     <string name="task_quitting">Chiusura di %1$s</string>
     <string name="qm_quit_failed">Impossibile chiudere %1$s</string>
@@ -904,6 +907,8 @@
     <string name="combo_mouse_sub">Il controller muove un puntatore; nello stream, il mouse dell'host</string>
     <string name="combo_stats">Overlay prestazioni</string>
     <string name="combo_stats_sub">Mostra o nasconde i dati di prestazione dello stream</string>
+    <string name="combo_keyboard">Tastiera su schermo</string>
+    <string name="combo_keyboard_sub">Mostra o nasconde la tastiera nello stream (quale: Tocco, mouse e tastiera)</string>
     <string name="mouse_on">Emulazione del mouse attiva</string>
     <string name="mouse_off">Emulazione del mouse disattivata</string>
     <string name="mouse_speed">Velocità del mouse</string>
@@ -1603,7 +1608,6 @@
     <string name="controller_starter_player_one_info">Il controller che avvia lo stream e il giocatore 1.</string>
     <string name="qm_mouse">Modalità mouse</string>
     <string name="qm_keyboard">Tastiera</string>
-    <string name="qm_keyboard_full">Tastiera PC</string>
     <string name="qm_touch_mode">Modalità tocco</string>
     <string name="qm_touch_mode_sub">Solo per questo stream; il profilo mantiene il suo.</string>
     <string name="wizard_metadata_guide_hint">Entrambi sono gratuiti. Come ottenerli, passo per passo con un codice QR per il telefono: il pulsante nella finestra della chiave.</string>

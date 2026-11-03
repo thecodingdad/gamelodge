@@ -8,12 +8,10 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Icon
-import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Mouse
 import androidx.compose.material.icons.filled.Keyboard
-import androidx.compose.material.icons.filled.KeyboardAlt
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.Check
 import io.github.thecodingdad.gamelodge.ui.components.popupHeightIn
@@ -326,34 +324,34 @@ private fun RunningCard(session: RunningSession, initialFocus: Boolean, onResume
             )
         },
         // Back to the stream: the menu over it just closes; from the launcher the stream resumes.
-        extra = if (own) { { StreamControlsSection(c.streamControls, onQuit, backToStream = if (canResume) onResume else onDismiss) } } else null,
+        extra = if (own) { { StreamControlsSection(c.streamControls, backToStream = if (canResume) onResume else onDismiss) } } else null,
     )
 }
 
 /** Controls of the stream this launcher runs, as far as its client offers them. */
 @Composable
-private fun StreamControlsSection(controls: io.github.thecodingdad.gamelodge.stream.StreamControls, onLeave: () -> Unit, backToStream: () -> Unit) {
+private fun StreamControlsSection(controls: io.github.thecodingdad.gamelodge.stream.StreamControls, backToStream: () -> Unit) {
     val commands = remember { controls.serverCommands() }
     var commandList by remember { mutableStateOf(false) }
     var touchList by remember { mutableStateOf(false) }
     val touchModes = remember { controls.touchModes() }
-    io.github.thecodingdad.gamelodge.ui.components.ButtonRow(spacing = 10.dp) {
-        LauncherButton(stringResource(Res.string.qm_disconnect), { controls.disconnect(); onLeave() }, icon = Icons.Filled.LinkOff)
+    // Icon buttons to save room (their names show as tooltips on focus / hover). Leaving the stream
+    // without quitting is Home.
+    androidx.compose.foundation.layout.Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         // The stream's own performance overlay (shown in the stream, not here).
-        LauncherButton(stringResource(Res.string.qm_overlay), { controls.toggleOverlay() }, icon = Icons.Filled.Speed)
+        io.github.thecodingdad.gamelodge.ui.components.TooltipIconButton(Icons.Filled.Speed, stringResource(Res.string.qm_overlay), { controls.toggleOverlay() })
         // Mouse emulation of the stream's controllers, like its button combination.
-        LauncherButton(stringResource(Res.string.qm_mouse), { controls.toggleMouse() }, icon = Icons.Filled.Mouse)
-        // On-screen keyboard in the stream (opens once the stream is in front again).
+        io.github.thecodingdad.gamelodge.ui.components.TooltipIconButton(Icons.Filled.Mouse, stringResource(Res.string.qm_mouse), { controls.toggleMouse() })
+        // On-screen keyboard (the one chosen in the settings), once the stream is in front again.
         if (controls.hasKeyboard) {
-            LauncherButton(stringResource(Res.string.qm_keyboard), { controls.showKeyboard(false); backToStream() }, icon = Icons.Filled.Keyboard)
-            LauncherButton(stringResource(Res.string.qm_keyboard_full), { controls.showKeyboard(true); backToStream() }, icon = Icons.Filled.KeyboardAlt)
+            io.github.thecodingdad.gamelodge.ui.components.TooltipIconButton(Icons.Filled.Keyboard, stringResource(Res.string.qm_keyboard), { controls.toggleKeyboard(); backToStream() })
         }
         // Touch mode for this stream only (the profile keeps its own).
         if (touchModes.isNotEmpty()) {
-            LauncherButton(stringResource(Res.string.qm_touch_mode), { touchList = true }, icon = Icons.Filled.TouchApp)
+            io.github.thecodingdad.gamelodge.ui.components.TooltipIconButton(Icons.Filled.TouchApp, stringResource(Res.string.qm_touch_mode), { touchList = true })
         }
         if (commands.isNotEmpty()) {
-            LauncherButton(stringResource(Res.string.qm_server_commands), { commandList = true }, icon = Icons.Filled.Terminal)
+            io.github.thecodingdad.gamelodge.ui.components.TooltipIconButton(Icons.Filled.Terminal, stringResource(Res.string.qm_server_commands), { commandList = true })
         }
     }
     io.github.thecodingdad.gamelodge.ui.components.Modal(

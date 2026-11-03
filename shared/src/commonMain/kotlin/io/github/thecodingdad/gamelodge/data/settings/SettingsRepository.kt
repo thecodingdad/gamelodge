@@ -224,6 +224,8 @@ data class LauncherSettings(
     val comboMouse: Set<Int> = setOf(KEYCODE_START, COMBO_HOLD),
     /** Performance overlay in the stream on / off. */
     val comboStats: Set<Int> = setOf(KEYCODE_SELECT, KEYCODE_L1, KEYCODE_R1, KEYCODE_X),
+    /** On-screen keyboard in the stream on / off: none built in (each controller sets its own). */
+    val comboKeyboard: Set<Int> = emptySet(),
     /** Mouse emulation: pointer speed in percent of the default. */
     val mouseSpeed: Int = 100,
     /** Mouse emulation: how much slower the pointer is with the stick only slightly moved. */
@@ -234,6 +236,8 @@ data class LauncherSettings(
     val keyboardKeys: Map<String, String> = emptyMap(),
     /** System-wide shortcut that opens the quick menu ("Ctrl+Alt+M"), "" = off. */
     val keyboardQuickMenu: String = "",
+    /** The on-screen keyboard of the stream (Android): Android's own or the client's PC keyboard. */
+    val streamKeyboard: StreamKeyboard = StreamKeyboard.SYSTEM,
     /** What the mouse's side buttons do in GameLodge. */
     val mouseSideButtons: MouseSideButtons = MouseSideButtons.BACK,
     /** Shrink the UI while a TV/monitor is attached (the layout is sized for the handheld). */
@@ -366,6 +370,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val keyboardKeys = stringPreferencesKey("keyboard_keys")
         val keyboardQuickMenu = stringPreferencesKey("keyboard_quick_menu")
         val mouseSideButtons = stringPreferencesKey("mouse_side_buttons")
+        val streamKeyboard = stringPreferencesKey("stream_keyboard")
         val comboMouse = stringPreferencesKey("combo_mouse")
         val mouseSpeed = intPreferencesKey("mouse_speed")
         val mouseAcceleration = stringPreferencesKey("mouse_acceleration")
@@ -494,6 +499,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             }?.toMap() ?: d.keyboardKeys,
             keyboardQuickMenu = this[K.keyboardQuickMenu] ?: d.keyboardQuickMenu,
             mouseSideButtons = enumOr(this[K.mouseSideButtons], d.mouseSideButtons),
+            streamKeyboard = enumOr(this[K.streamKeyboard], d.streamKeyboard),
             quickShowVolume = this[K.quickShowVolume] ?: d.quickShowVolume,
             quickShowBrightness = this[K.quickShowBrightness] ?: d.quickShowBrightness,
             quickShowAudioOutput = this[K.quickShowAudioOutput] ?: d.quickShowAudioOutput,
@@ -615,6 +621,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         this[K.keyboardKeys] = s.keyboardKeys.entries.joinToString("\n") { "${it.key}\t${it.value}" }
         this[K.keyboardQuickMenu] = s.keyboardQuickMenu
         this[K.mouseSideButtons] = s.mouseSideButtons.name
+        this[K.streamKeyboard] = s.streamKeyboard.name
         this[K.quickShowBrightness] = s.quickShowBrightness
         this[K.quickShowAudioOutput] = s.quickShowAudioOutput
         this[K.metadataSources] = s.metadataSources.joinToString(",")
@@ -667,6 +674,9 @@ data class PadCombos(val combos: Map<String, List<Int>> = emptyMap(), val forwar
 
 private val padCombosJson = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
 
+/** On-screen keyboard in the stream: Android's own (typing, swipe, dictation) or a PC keyboard (Ctrl, Alt, F keys). */
+enum class StreamKeyboard { SYSTEM, PC }
+
 /** The mouse's side buttons: back (and nothing forward), or switch tabs (LB / RB). */
 enum class MouseSideButtons { BACK, TABS }
 
@@ -687,6 +697,7 @@ fun LauncherSettings.combo(action: io.github.thecodingdad.gamelodge.input.ComboA
     io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU -> comboQuickMenu
     io.github.thecodingdad.gamelodge.input.ComboAction.MOUSE -> comboMouse
     io.github.thecodingdad.gamelodge.input.ComboAction.STATS -> comboStats
+    io.github.thecodingdad.gamelodge.input.ComboAction.KEYBOARD -> comboKeyboard
 }
 
 /** These settings with [keys] as the combination of [action]. */
@@ -695,4 +706,5 @@ fun LauncherSettings.withCombo(action: io.github.thecodingdad.gamelodge.input.Co
     io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU -> copy(comboQuickMenu = keys)
     io.github.thecodingdad.gamelodge.input.ComboAction.MOUSE -> copy(comboMouse = keys)
     io.github.thecodingdad.gamelodge.input.ComboAction.STATS -> copy(comboStats = keys)
+    io.github.thecodingdad.gamelodge.input.ComboAction.KEYBOARD -> copy(comboKeyboard = keys)
 }

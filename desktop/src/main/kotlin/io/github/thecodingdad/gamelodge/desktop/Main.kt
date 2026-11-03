@@ -369,6 +369,7 @@ fun main(args: Array<String>) {
                     else if (inFront) vm.homePressed.tryEmit(Unit)
                 }
                 io.github.thecodingdad.gamelodge.input.ComboAction.STATS -> streams.toggleOverlay()
+                io.github.thecodingdad.gamelodge.input.ComboAction.KEYBOARD -> streams.toggleKeyboard()
                 // One state for both: GameLodge's pointer and the stream's mouse follow it.
                 io.github.thecodingdad.gamelodge.input.ComboAction.MOUSE -> {
                     WindowsPointer.toggle()

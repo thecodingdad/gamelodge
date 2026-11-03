@@ -113,6 +113,8 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
             container.settings.settings.collect {
                 currentSettings = it
                 io.github.thecodingdad.gamelodge.input.KeyboardKeys.mapping = it.keyboardKeys
+                (container.streamControls as? io.github.thecodingdad.gamelodge.stream.AndroidStreamControls)?.pcKeyboard =
+                    it.streamKeyboard == io.github.thecodingdad.gamelodge.data.settings.StreamKeyboard.PC
                 io.github.thecodingdad.gamelodge.input.KeyboardKeys.quickMenuShortcut = io.github.thecodingdad.gamelodge.input.KeyShortcut.parse(it.keyboardQuickMenu)
                 io.github.thecodingdad.gamelodge.input.PointerMode.speed = it.mouseSpeed / 100f
                 io.github.thecodingdad.gamelodge.input.PointerMode.exponent = it.mouseAcceleration.exponent

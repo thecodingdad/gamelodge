@@ -43,7 +43,10 @@ class AndroidStreamControls(
 
     override val hasKeyboard: Boolean get() = true
 
-    override fun showKeyboard(full: Boolean): Boolean = StreamControl.showKeyboard(full)
+    /** The keyboard the settings chose (Settings › Touch, mouse & keyboard), fed from the settings. */
+    @Volatile var pcKeyboard = false
+
+    override fun toggleKeyboard(): Boolean = StreamControl.showKeyboard(pcKeyboard)
 
     /** From the quick menu over the stream: the stream's own mouse (no pointer service needed). */
     override fun toggleMouse(): Boolean {

@@ -167,6 +167,10 @@
     <string name="input_mouse_side_back">Back</string>
     <string name="input_mouse_side_tabs">Switch tabs</string>
     <string name="input_mouse_side_sub">In GameLodge. A right click opens the context menu (like X).</string>
+    <string name="input_stream_keyboard">Keyboard in the stream</string>
+    <string name="input_stream_keyboard_system">Android</string>
+    <string name="input_stream_keyboard_pc">PC keyboard</string>
+    <string name="input_stream_keyboard_sub">Shown by the quick menu and the button combination. Android's: typing, swipe, dictation; PC keyboard: Ctrl, Alt, F keys.</string>
     <string name="input_mouse_nav_stream">Pass side buttons through in the stream</string>
     <string name="input_mouse_nav_stream_sub">Back / forward reach the PC (e.g. the browser). May break right clicks on some devices.</string>
     <string name="input_keyboard_section">Keyboard</string>
@@ -550,7 +554,6 @@
     <string name="qm_section_quick">Quick access</string>
     <string name="qm_running_on_host">Running on %1$s</string>
     <string name="qm_running_here">Running on this PC</string>
-    <string name="qm_disconnect">Disconnect</string>
     <string name="qm_quitting">Quitting…</string>
     <string name="task_quitting">Quitting %1$s</string>
     <string name="qm_quit_failed">%1$s could not be quit</string>
@@ -904,6 +907,8 @@
     <string name="combo_mouse_sub">The controller moves a mouse pointer; in the stream the host’s mouse</string>
     <string name="combo_stats">Performance overlay</string>
     <string name="combo_stats_sub">Shows or hides the stream’s performance figures</string>
+    <string name="combo_keyboard">On-screen keyboard</string>
+    <string name="combo_keyboard_sub">Shows or hides the keyboard in the stream (Touch, mouse &amp; keyboard says which)</string>
     <string name="mouse_on">Mouse emulation on</string>
     <string name="mouse_off">Mouse emulation off</string>
     <string name="mouse_speed">Mouse speed</string>
@@ -1603,7 +1608,6 @@
     <string name="controller_starter_player_one_info">The controller that starts the stream is player 1.</string>
     <string name="qm_mouse">Mouse mode</string>
     <string name="qm_keyboard">Keyboard</string>
-    <string name="qm_keyboard_full">PC keyboard</string>
     <string name="qm_touch_mode">Touch mode</string>
     <string name="qm_touch_mode_sub">For this stream only; the stream profile keeps its own.</string>
     <string name="wizard_metadata_guide_hint">Both are free. How to get them, step by step with a QR code for your phone: the button in the key dialog.</string>

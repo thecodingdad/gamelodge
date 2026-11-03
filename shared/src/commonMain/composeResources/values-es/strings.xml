@@ -167,6 +167,10 @@
     <string name="input_mouse_side_back">Atrás</string>
     <string name="input_mouse_side_tabs">Cambiar pestaña</string>
     <string name="input_mouse_side_sub">En GameLodge. Un clic derecho abre el menú contextual (como X).</string>
+    <string name="input_stream_keyboard">Teclado en el stream</string>
+    <string name="input_stream_keyboard_system">Android</string>
+    <string name="input_stream_keyboard_pc">Teclado de PC</string>
+    <string name="input_stream_keyboard_sub">La muestran el menú rápido y la combinación. Android: escribir, deslizar, dictar; teclado de PC: Ctrl, Alt, teclas F.</string>
     <string name="input_mouse_nav_stream">Pasar los botones laterales en el stream</string>
     <string name="input_mouse_nav_stream_sub">Atrás / adelante llegan al PC (p. ej. el navegador). Puede romper el clic derecho en algunos dispositivos.</string>
     <string name="input_keyboard_section">Teclado</string>
@@ -550,7 +554,6 @@
     <string name="qm_section_quick">Acceso rápido</string>
     <string name="qm_running_on_host">En marcha en %1$s</string>
     <string name="qm_running_here">En marcha en este PC</string>
-    <string name="qm_disconnect">Desconectar</string>
     <string name="qm_quitting">Cerrando…</string>
     <string name="task_quitting">Cerrando %1$s</string>
     <string name="qm_quit_failed">No se pudo cerrar %1$s</string>
@@ -904,6 +907,8 @@
     <string name="combo_mouse_sub">El mando mueve un puntero; en el stream, el ratón del host</string>
     <string name="combo_stats">Overlay de rendimiento</string>
     <string name="combo_stats_sub">Muestra u oculta los datos de rendimiento del stream</string>
+    <string name="combo_keyboard">Teclado en pantalla</string>
+    <string name="combo_keyboard_sub">Muestra u oculta el teclado en el stream (cuál: Táctil, ratón y teclado)</string>
     <string name="mouse_on">Emulación de ratón activada</string>
     <string name="mouse_off">Emulación de ratón desactivada</string>
     <string name="mouse_speed">Velocidad del ratón</string>
@@ -1603,7 +1608,6 @@
     <string name="controller_starter_player_one_info">El mando que inicia el stream es el jugador 1.</string>
     <string name="qm_mouse">Modo ratón</string>
     <string name="qm_keyboard">Teclado</string>
-    <string name="qm_keyboard_full">Teclado de PC</string>
     <string name="qm_touch_mode">Modo táctil</string>
     <string name="qm_touch_mode_sub">Solo para este stream; el perfil conserva el suyo.</string>
     <string name="wizard_metadata_guide_hint">Ambos son gratuitos. Cómo obtenerlos, paso a paso con un código QR para tu móvil: el botón del diálogo de la clave.</string>

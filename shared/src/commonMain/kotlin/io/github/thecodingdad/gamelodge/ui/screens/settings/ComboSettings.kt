@@ -39,6 +39,7 @@ fun comboTitle(action: ComboAction): StringResource = when (action) {
     ComboAction.QUICK_MENU -> Res.string.combo_quick_menu
     ComboAction.MOUSE -> Res.string.combo_mouse
     ComboAction.STATS -> Res.string.combo_stats
+    ComboAction.KEYBOARD -> Res.string.combo_keyboard
 }
 
 fun comboSubtitle(action: ComboAction): StringResource = when (action) {
@@ -46,6 +47,7 @@ fun comboSubtitle(action: ComboAction): StringResource = when (action) {
     ComboAction.QUICK_MENU -> Res.string.combo_quick_menu_sub
     ComboAction.MOUSE -> Res.string.combo_mouse_sub
     ComboAction.STATS -> Res.string.combo_stats_sub
+    ComboAction.KEYBOARD -> Res.string.combo_keyboard_sub
 }
 
 /** The built-in combinations and pass-through, used by every controller without its own. */

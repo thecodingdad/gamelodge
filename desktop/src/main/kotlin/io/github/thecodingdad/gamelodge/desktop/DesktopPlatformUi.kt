@@ -157,6 +157,8 @@ class DesktopPlatformUi(
                         onCombo = { a, keys -> save(own.copy(combos = if (keys == null) own.combos - a.name else own.combos + (a.name to keys.toList()))) },
                         onForward = { v -> save(own.copy(forward = v)) },
                         showForward = false,
+                        // Moonlight-Qt has no on-screen keyboard to show.
+                        actions = io.github.thecodingdad.gamelodge.input.ComboAction.entries - io.github.thecodingdad.gamelodge.input.ComboAction.KEYBOARD,
                     )
                 }
                 if (c.canVibrate) {

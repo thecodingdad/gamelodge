@@ -166,6 +166,8 @@ class AndroidPlatformUi(private val context: Context) : PlatformUi {
         }
     }
 
+    override val hasStreamKeyboard get() = true
+
     @Composable
     override fun DeviceInputRows(group: io.github.thecodingdad.gamelodge.ui.DeviceInputGroup, initialFocus: Boolean) {
         // Artemis' input options that depend on this device, the same for every profile (base settings).

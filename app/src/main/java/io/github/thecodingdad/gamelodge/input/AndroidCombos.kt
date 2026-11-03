@@ -71,6 +71,7 @@ object AndroidCombos {
                 }
             }
             ComboAction.STATS -> streams.toggleOverlay()
+            ComboAction.KEYBOARD -> streams.toggleKeyboard()
             ComboAction.MOUSE -> main.post { PointerMode.toggle(context) }
         }
     }

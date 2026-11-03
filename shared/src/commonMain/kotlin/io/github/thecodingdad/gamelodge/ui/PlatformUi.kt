@@ -134,6 +134,9 @@ interface PlatformUi {
     @androidx.compose.runtime.Composable
     fun DeviceInputRows(group: DeviceInputGroup, initialFocus: Boolean) = Unit
 
+    /** The stream client can show an on-screen keyboard (Android's or its PC keyboard). */
+    val hasStreamKeyboard: Boolean get() = false
+
     /** Settings pages only some platforms have (VPN, backup, emulators …). */
     fun hasPage(id: io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId): Boolean
 

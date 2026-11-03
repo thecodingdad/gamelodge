@@ -35,8 +35,11 @@ interface StreamControls {
     /** The client can show an on-screen keyboard in the stream. */
     val hasKeyboard: Boolean get() = false
 
-    /** Shows the system keyboard ([full]: the client's PC keyboard) once the stream is in front again. */
-    fun showKeyboard(full: Boolean): Boolean = false
+    /**
+     * Shows / hides the on-screen keyboard chosen in the settings (Android's own or the client's PC
+     * keyboard), once the stream is in front again; false without a stream.
+     */
+    fun toggleKeyboard(): Boolean = false
 
     /** The stream's performance overlay on / off; false without a stream. */
     fun toggleOverlay(): Boolean = false
