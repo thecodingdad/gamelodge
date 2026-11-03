@@ -683,6 +683,7 @@ fun LauncherApp(
                     openHaSettings = { quickMenu = false; nav.navigate(Routes.settings(SettingsPageId.HOME_ASSISTANT)) },
                 )
         io.github.thecodingdad.gamelodge.ui.shell.TasksPopup()
+                TvSlowHint(vm)
                 ControllerKeyboardHost(keyboard)
                 // Every popup and panel is drawn here, above the (blurred) launcher.
                 io.github.thecodingdad.gamelodge.ui.components.OverlayOutlet()
@@ -1237,5 +1238,26 @@ private fun SettingsPageContent(
         // Pages of platform features (VPN, backup, emulators …).
         else -> if (io.github.thecodingdad.gamelodge.ui.PlatformUi.current.hasPage(page)) io.github.thecodingdad.gamelodge.ui.PlatformUi.current.PlatformSettingsPage(page, vm, openProfile = openProfile, openStats = openStats)
         else SettingsPage(stringResource(Res.string.coming_soon)) {}
+    }
+}
+
+/** The TV stutters in the chosen mode: switch to automatic (smooth), not again, or later. */
+@Composable
+private fun TvSlowHint(vm: LauncherViewModel) {
+    val shown = vm.tvSlowHint.value
+    fun close() { vm.tvSlowHint.value = false }
+    io.github.thecodingdad.gamelodge.ui.components.Modal(
+        visible = shown, onDismiss = ::close, title = stringResource(Res.string.tv_slow_title),
+        size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.COMPACT, closeButton = false,
+    ) {
+        Text(stringResource(Res.string.tv_slow_text), style = MaterialTheme.typography.bodyMedium, color = io.github.thecodingdad.gamelodge.ui.theme.LauncherTheme.colors.onSurfaceMuted)
+        io.github.thecodingdad.gamelodge.ui.components.ButtonRow {
+            io.github.thecodingdad.gamelodge.ui.components.LauncherButton(stringResource(Res.string.tv_slow_auto), primary = true, onClick = {
+                vm.updateSettings { it.copy(tvMode = "") }; close()
+            })
+            io.github.thecodingdad.gamelodge.ui.components.LauncherButton(stringResource(Res.string.tv_slow_never), onClick = {
+                vm.updateSettings { it.copy(tvSlowHintOff = true) }; close()
+            })
+        }
     }
 }

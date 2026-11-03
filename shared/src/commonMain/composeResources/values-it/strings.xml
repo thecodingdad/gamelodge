@@ -1124,8 +1124,8 @@
     <string name="setting_tv_launcher">Mostra il launcher sulla TV</string>
     <string name="setting_tv_launcher_sub">Si esegue sulla TV stessa nella sua risoluzione mentre il dispositivo portatile mostra uno schermo nero. Duplica lo schermo se il dispositivo non lo consente</string>
     <string name="setting_tv_resolution">Risoluzione sulla TV</string>
-    <string name="setting_tv_resolution_auto">Automatica (nativa)</string>
-    <string name="setting_tv_resolution_sub">Modalità offerte dalla TV collegata</string>
+    <string name="setting_tv_resolution_auto">Automatica (fluida)</string>
+    <string name="setting_tv_resolution_sub">Automatica: fino a 1080p alla frequenza più alta, la TV scala l’immagine. Risoluzioni più alte possono scattare su un portatile.</string>
     <string name="setting_tv_resolution_none">Collega una TV per vedere le sue modalità</string>
 
     <!-- Filters -->
@@ -1643,4 +1643,10 @@
     <string name="sort_order">Ordine</string>
     <string name="sort_ascending">Crescente</string>
     <string name="sort_descending">Decrescente</string>
+    <string name="setting_tv_resolution_auto_mode">Automatica: %1$s</string>
+    <string name="tv_slow_title">La TV scatta</string>
+    <string name="tv_slow_text">Questo dispositivo non disegna il launcher in modo fluido nella risoluzione scelta per la TV (o la TV funziona sotto i 50 Hz). «Automatica» usa fino a 1080p con una frequenza alta; la TV scala in modo pulito. Si applica quando la TV viene ricollegata.</string>
+    <string name="tv_slow_auto">Usa automatica</string>
+    <string name="tv_slow_never">Non chiedere più</string>
+    <string name="setting_tv_resolution_pending">%1$s si applica quando la TV viene ricollegata (scollega e ricollega).</string>
 </resources>

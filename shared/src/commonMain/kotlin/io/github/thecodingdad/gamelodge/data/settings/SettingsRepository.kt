@@ -254,8 +254,10 @@ data class LauncherSettings(
     val tvScale: Int = 70,
     /** Run the launcher on the TV itself (native resolution) instead of mirroring the handheld. */
     val tvLauncher: Boolean = true,
-    /** Display mode requested on the TV; 0 = automatic (the TV's native mode). */
-    val tvModeId: Int = 0,
+    /** Display mode on the TV ([io.github.thecodingdad.gamelodge.system.TvMode.key]); "" = automatic (smooth, up to 1080p). */
+    val tvMode: String = "",
+    /** Don't offer to switch the TV to automatic when it stutters. */
+    val tvSlowHintOff: Boolean = false,
     /** UI size on the device's own display, percent. */
     val uiScale: Int = 100,
     /** Separate app filters were created (and shared filters turned into game filters). */
@@ -393,7 +395,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val tvScaleAuto = booleanPreferencesKey("tv_scale_auto")
         val tvScale = intPreferencesKey("tv_scale")
         val tvLauncher = booleanPreferencesKey("tv_launcher")
-        val tvModeId = intPreferencesKey("tv_mode_id")
+        val tvMode = stringPreferencesKey("tv_mode")
+        val tvSlowHintOff = booleanPreferencesKey("tv_slow_hint_off")
         val uiScale = intPreferencesKey("ui_scale")
         val appFiltersSeeded = booleanPreferencesKey("app_filters_seeded")
     }
@@ -536,7 +539,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             tvScaleAuto = this[K.tvScaleAuto] ?: d.tvScaleAuto,
             tvScale = this[K.tvScale] ?: d.tvScale,
             tvLauncher = this[K.tvLauncher] ?: d.tvLauncher,
-            tvModeId = this[K.tvModeId] ?: d.tvModeId,
+            tvMode = this[K.tvMode] ?: d.tvMode,
+            tvSlowHintOff = this[K.tvSlowHintOff] ?: d.tvSlowHintOff,
             uiScale = this[K.uiScale] ?: d.uiScale,
             appFiltersSeeded = this[K.appFiltersSeeded] ?: d.appFiltersSeeded,
         )
@@ -658,7 +662,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         this[K.tvScaleAuto] = s.tvScaleAuto
         this[K.tvScale] = s.tvScale
         this[K.tvLauncher] = s.tvLauncher
-        this[K.tvModeId] = s.tvModeId
+        this[K.tvMode] = s.tvMode
+        this[K.tvSlowHintOff] = s.tvSlowHintOff
         this[K.uiScale] = s.uiScale
         this[K.appFiltersSeeded] = s.appFiltersSeeded
     }

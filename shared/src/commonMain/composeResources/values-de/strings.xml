@@ -1122,8 +1122,8 @@
     <string name="setting_tv_launcher">Launcher auf dem TV anzeigen</string>
     <string name="setting_tv_launcher_sub">Läuft direkt auf dem TV in dessen Auflösung, das Handy zeigt dabei einen schwarzen Bildschirm. Erlaubt das Gerät das nicht, wird gespiegelt</string>
     <string name="setting_tv_resolution">Auflösung am TV</string>
-    <string name="setting_tv_resolution_auto">Automatisch (nativ)</string>
-    <string name="setting_tv_resolution_sub">Modi, die der angeschlossene TV anbietet</string>
+    <string name="setting_tv_resolution_auto">Automatisch (flüssig)</string>
+    <string name="setting_tv_resolution_sub">Automatisch: bis 1080p mit der höchsten Bildrate, der TV skaliert hoch. Höhere Auflösungen können auf einem Handheld ruckeln.</string>
     <string name="setting_tv_resolution_none">TV anschließen, um seine Modi zu sehen</string>
 
     <!-- Filters -->
@@ -1641,4 +1641,10 @@
     <string name="sort_order">Reihenfolge</string>
     <string name="sort_ascending">Aufsteigend</string>
     <string name="sort_descending">Absteigend</string>
+    <string name="setting_tv_resolution_auto_mode">Automatisch: %1$s</string>
+    <string name="tv_slow_title">Der TV ruckelt</string>
+    <string name="tv_slow_text">In der gewählten Auflösung schafft dieses Gerät den Launcher am TV nicht flüssig (oder der TV läuft mit unter 50 Hz). „Automatisch“ nutzt bis zu 1080p mit hoher Bildrate, der TV skaliert sauber hoch. Wirkt, sobald der TV neu angesteckt wird.</string>
+    <string name="tv_slow_auto">Automatisch verwenden</string>
+    <string name="tv_slow_never">Nicht mehr fragen</string>
+    <string name="setting_tv_resolution_pending">%1$s wird übernommen, sobald der TV neu verbunden wird (ab- und wieder anstecken).</string>
 </resources>

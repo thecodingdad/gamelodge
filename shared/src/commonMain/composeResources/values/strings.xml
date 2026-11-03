@@ -1124,8 +1124,8 @@
     <string name="setting_tv_launcher">Show the launcher on the TV</string>
     <string name="setting_tv_launcher_sub">Runs on the TV itself in its resolution while the handheld shows a black screen. Mirrors if the device does not allow it</string>
     <string name="setting_tv_resolution">Resolution on the TV</string>
-    <string name="setting_tv_resolution_auto">Automatic (native)</string>
-    <string name="setting_tv_resolution_sub">Modes the connected TV offers</string>
+    <string name="setting_tv_resolution_auto">Automatic (smooth)</string>
+    <string name="setting_tv_resolution_sub">Automatic: up to 1080p at the highest refresh rate, the TV scales it up. Higher resolutions can stutter on a handheld.</string>
     <string name="setting_tv_resolution_none">Connect a TV to see its modes</string>
 
     <!-- Filters -->
@@ -1643,4 +1643,10 @@
     <string name="sort_order">Order</string>
     <string name="sort_ascending">Ascending</string>
     <string name="sort_descending">Descending</string>
+    <string name="setting_tv_resolution_auto_mode">Automatic: %1$s</string>
+    <string name="tv_slow_title">The TV stutters</string>
+    <string name="tv_slow_text">This device can’t draw the launcher smoothly in the resolution chosen for the TV (or the TV runs below 50 Hz). “Automatic” uses up to 1080p at a high refresh rate; the TV scales it up cleanly. Takes effect once the TV is connected anew.</string>
+    <string name="tv_slow_auto">Use automatic</string>
+    <string name="tv_slow_never">Don’t ask again</string>
+    <string name="setting_tv_resolution_pending">%1$s is used once the TV is connected anew (unplug and plug in again).</string>
 </resources>

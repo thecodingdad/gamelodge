@@ -659,16 +659,25 @@ fun DisplaySettings(
         )
         if (settings.tvLauncher) {
             val modes = externalDisplay?.modes.orEmpty()
+            fun text(m: io.github.thecodingdad.gamelodge.system.TvMode) = "${m.width}×${m.height} @ ${m.refreshRate.roundToInt()} Hz"
+            val autoMode = io.github.thecodingdad.gamelodge.system.TvModes.auto(modes)
+            val autoLabel = autoMode?.let { stringResource(Res.string.setting_tv_resolution_auto_mode, text(it)) } ?: stringResource(Res.string.setting_tv_resolution_auto)
             ChoiceRow(
-                stringResource(Res.string.setting_tv_resolution), listOf(0) + modes.map { it.id }.filter { it != 0 },
-                settings.tvModeId.takeIf { id -> id == 0 || modes.any { it.id == id } } ?: 0,
-                label = { id ->
-                    modes.firstOrNull { it.id == id }?.let { "${it.width}×${it.height} @ ${it.refreshRate.roundToInt()} Hz" }
-                        ?: stringResource(Res.string.setting_tv_resolution_auto)
-                },
-                onSelect = { v -> update { it.copy(tvModeId = v) } },
+                stringResource(Res.string.setting_tv_resolution), listOf("") + modes.map { it.key }.distinct(),
+                settings.tvMode.takeIf { k -> k.isEmpty() || modes.any { it.key == k } } ?: "",
+                label = { k -> modes.firstOrNull { it.key == k }?.let(::text) ?: autoLabel },
+                onSelect = { v -> update { it.copy(tvMode = v) } },
                 subtitle = stringResource(if (externalDisplay == null) Res.string.setting_tv_resolution_none else Res.string.setting_tv_resolution_sub),
             )
+            // Many devices switch the TV's resolution only when it is connected anew.
+            val wanted = io.github.thecodingdad.gamelodge.system.TvModes.resolve(settings.tvMode, modes)
+            val tv = externalDisplay
+            if (tv != null && wanted != null && (wanted.width != tv.width || wanted.height != tv.height || wanted.refreshRate.roundToInt() != tv.refreshRate.roundToInt())) {
+                Text(
+                    stringResource(Res.string.setting_tv_resolution_pending, text(wanted)),
+                    style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.accentText,
+                )
+            }
         }
         SwitchRow(
             stringResource(Res.string.setting_tv_scale_auto), settings.tvScaleAuto, { v -> update { it.copy(tvScaleAuto = v) } },

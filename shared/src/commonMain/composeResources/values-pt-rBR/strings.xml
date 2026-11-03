@@ -1124,8 +1124,8 @@
     <string name="setting_tv_launcher">Mostrar o lançador na TV</string>
     <string name="setting_tv_launcher_sub">Roda na própria TV na resolução dela enquanto o portátil mostra uma tela preta. Espelha se o dispositivo não permitir</string>
     <string name="setting_tv_resolution">Resolução na TV</string>
-    <string name="setting_tv_resolution_auto">Automática (nativa)</string>
-    <string name="setting_tv_resolution_sub">Modos oferecidos pela TV conectada</string>
+    <string name="setting_tv_resolution_auto">Automática (fluida)</string>
+    <string name="setting_tv_resolution_sub">Automática: até 1080p na maior taxa de atualização, a TV amplia. Resoluções maiores podem travar num portátil.</string>
     <string name="setting_tv_resolution_none">Conecte uma TV para ver os modos dela</string>
 
     <!-- Filters -->
@@ -1643,4 +1643,10 @@
     <string name="sort_order">Ordem</string>
     <string name="sort_ascending">Crescente</string>
     <string name="sort_descending">Decrescente</string>
+    <string name="setting_tv_resolution_auto_mode">Automática: %1$s</string>
+    <string name="tv_slow_title">A TV está travando</string>
+    <string name="tv_slow_text">Este dispositivo não desenha o launcher com fluidez na resolução escolhida para a TV (ou a TV roda abaixo de 50 Hz). “Automática” usa até 1080p com taxa alta; a TV amplia de forma limpa. Vale quando a TV for conectada de novo.</string>
+    <string name="tv_slow_auto">Usar automática</string>
+    <string name="tv_slow_never">Não perguntar de novo</string>
+    <string name="setting_tv_resolution_pending">%1$s é aplicado quando a TV for conectada de novo (desconecte e conecte outra vez).</string>
 </resources>

@@ -21,8 +21,9 @@ object ExternalDisplay {
                 val mode = d.mode
                 ExternalDisplayInfo(
                     d.name, maxOf(mode.physicalWidth, mode.physicalHeight), minOf(mode.physicalWidth, mode.physicalHeight), d.displayId,
-                    d.supportedModes.map { TvMode(it.modeId, it.physicalWidth, it.physicalHeight, it.refreshRate) }
+                    d.supportedModes.map { TvMode(it.modeId, maxOf(it.physicalWidth, it.physicalHeight), minOf(it.physicalWidth, it.physicalHeight), it.refreshRate) }
                         .sortedWith(compareByDescending<TvMode> { it.width * it.height }.thenByDescending { it.refreshRate }),
+                    refreshRate = mode.refreshRate,
                 )
             }
         val listener = object : DisplayManager.DisplayListener {

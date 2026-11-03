@@ -80,7 +80,9 @@ class MainActivity : ComponentActivity() {
         }
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                vm.settings.map { it.tvModeId }.distinctUntilChanged().collect { checkTv() }
+                // The mode is looked up by resolution and rate: Android numbers the modes anew on every connect.
+                kotlinx.coroutines.flow.combine(vm.settings.map { it.tvMode }, vm.externalDisplay) { mode, tv -> mode to tv?.modes }
+                    .distinctUntilChanged().collect { checkTv() }
             }
         }
         // Player LEDs (Joy-Cons): re-apply when controllers connect/disconnect or their settings change.
@@ -117,7 +119,40 @@ class MainActivity : ComponentActivity() {
 
     /** On the TV display: full screen, chosen mode, handheld side; back on the handheld: release. */
     private fun checkTv() {
-        if (TvSession.isOnTv(this)) TvSession.onShownOnTv(this, vm.settings.value.tvModeId) else TvSession.onLeftTv(this)
+        if (TvSession.isOnTv(this)) {
+            val modes = vm.externalDisplay.value?.modes.orEmpty()
+            val mode = io.github.thecodingdad.gamelodge.system.TvModes.resolve(vm.settings.value.tvMode, modes)
+            TvSession.onShownOnTv(this, mode?.id ?: 0)
+            watchTvSmoothness()
+        } else {
+            TvSession.onLeftTv(this)
+            tvFrames.stop()
+        }
+    }
+
+    /**
+     * With a mode the user chose for the TV: offers automatic once when the launcher can't keep up
+     * there (most frames late) or the TV runs below 50 Hz.
+     */
+    private val tvFrames = io.github.thecodingdad.gamelodge.system.FrameWatch { slow ->
+        val s = vm.settings.value
+        if (slow && s.tvMode.isNotEmpty() && !s.tvSlowHintOff && !tvHintShown) {
+            tvHintShown = true
+            vm.tvSlowHint.value = true
+        }
+    }
+    private var tvHintShown = false
+
+    private fun watchTvSmoothness() {
+        val s = vm.settings.value
+        if (s.tvMode.isEmpty() || s.tvSlowHintOff || tvHintShown) return tvFrames.stop()
+        val rate = vm.externalDisplay.value?.refreshRate ?: 0f
+        if (rate in 1f..49f) {
+            tvHintShown = true
+            vm.tvSlowHint.value = true
+            return
+        }
+        tvFrames.start(window, rate.takeIf { it > 0f } ?: 60f)
     }
 
     override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {

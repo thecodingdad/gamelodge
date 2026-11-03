@@ -229,6 +229,9 @@ class LauncherViewModel(private val c: LauncherContainer) : ViewModel() {
     /** Text of the settings search; kept while a hit's page is open, so back shows the hits again. */
     val settingsQuery = androidx.compose.runtime.mutableStateOf("")
 
+    /** The TV stutters in the mode the user chose: offer automatic (set by the platform). */
+    val tvSlowHint = androidx.compose.runtime.mutableStateOf(false)
+
     /** Emits when the Home button is pressed while the launcher is the home app. */
     val homePressed = kotlinx.coroutines.flow.MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 

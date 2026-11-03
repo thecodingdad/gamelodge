@@ -1124,8 +1124,8 @@
     <string name="setting_tv_launcher">Afficher le lanceur sur la TV</string>
     <string name="setting_tv_launcher_sub">S'exécute sur la TV elle-même dans sa résolution tandis que l'appareil portable affiche un écran noir. Recopie l'image si l'appareil ne le permet pas</string>
     <string name="setting_tv_resolution">Résolution sur la TV</string>
-    <string name="setting_tv_resolution_auto">Automatique (native)</string>
-    <string name="setting_tv_resolution_sub">Modes proposés par la TV connectée</string>
+    <string name="setting_tv_resolution_auto">Automatique (fluide)</string>
+    <string name="setting_tv_resolution_sub">Automatique : jusqu’à 1080p à la fréquence la plus élevée, la TV met à l’échelle. Des résolutions plus élevées peuvent saccader sur une console portable.</string>
     <string name="setting_tv_resolution_none">Connectez une TV pour voir ses modes</string>
 
     <!-- Filters -->
@@ -1643,4 +1643,10 @@
     <string name="sort_order">Ordre</string>
     <string name="sort_ascending">Croissant</string>
     <string name="sort_descending">Décroissant</string>
+    <string name="setting_tv_resolution_auto_mode">Automatique : %1$s</string>
+    <string name="tv_slow_title">La TV saccade</string>
+    <string name="tv_slow_text">Cet appareil n’affiche pas le lanceur de façon fluide dans la résolution choisie pour la TV (ou la TV tourne à moins de 50 Hz). « Automatique » utilise jusqu’à 1080p à une fréquence élevée ; la TV met proprement à l’échelle. S’applique quand la TV est reconnectée.</string>
+    <string name="tv_slow_auto">Utiliser automatique</string>
+    <string name="tv_slow_never">Ne plus demander</string>
+    <string name="setting_tv_resolution_pending">%1$s s’applique dès que la TV est reconnectée (débrancher puis rebrancher).</string>
 </resources>
