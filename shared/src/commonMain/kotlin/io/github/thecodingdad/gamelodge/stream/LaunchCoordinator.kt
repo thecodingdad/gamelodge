@@ -422,6 +422,8 @@ class LaunchCoordinator(
         val host = start.host
         val resuming = start.resuming
         lastStart = start
+        // The start screen as it is now: a failure reported meanwhile (retry, error) keeps its own.
+        val starting = _state.value
         try {
             val profileName = profiles.active("").name.ifEmpty { null }
             playtime.start(entry.item.id, target.id, profileName)
@@ -435,7 +437,7 @@ class LaunchCoordinator(
             platform.startStream(entry, streamTarget, host)
             // A retry continues the start that is already reported as started.
             if (!retry) started(entry, target, profileName)
-            _state.value = LaunchState.Idle
+            _state.compareAndSet(starting, LaunchState.Idle)
         } catch (e: Exception) {
             Log.e("Stream start failed", e)
             restoreProfile()

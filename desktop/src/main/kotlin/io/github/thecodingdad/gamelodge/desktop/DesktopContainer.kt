@@ -231,6 +231,7 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
                     io.github.thecodingdad.gamelodge.data.settings.ButtonLayout.NINTENDO
                 profiles.activeOptions() + if (nintendo) "--swap-gamepad-buttons" else "--no-swap-gamepad-buttons"
             },
+            onStartFailed = { launcher.streamStartFailed(io.github.thecodingdad.gamelodge.stream.LaunchError.START_FAILED, it) },
             onStreamEnded = {
                 launcher.streamEnded()
                 launcher.restoreProfile()

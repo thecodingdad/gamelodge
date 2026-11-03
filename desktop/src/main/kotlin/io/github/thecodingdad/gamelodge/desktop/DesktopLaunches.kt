@@ -32,6 +32,8 @@ class DesktopLaunches(
     private val streamOptions: suspend (LibraryEntry) -> List<String> = { emptyList() },
     /** The stream window closed (play session, profile, host state). */
     private val onStreamEnded: () -> Unit = {},
+    /** The stream didn't get going (stage and error code): reported before [onStreamEnded], which retries it. */
+    private val onStartFailed: (String) -> Unit = {},
 ) : LaunchPlatform {
     override suspend fun launchLocal(entry: LibraryEntry, target: LaunchTargetEntity, action: String?): LaunchError? {
         val game = target.packageName?.let { library.entryFor(it, action) } ?: return LaunchError.APP_NOT_INSTALLED
@@ -95,6 +97,8 @@ class DesktopLaunches(
                 try {
                     client.stream(identity(), hosts.storedHosts.value, stored, appId, streamOptions(entry), apps, entry.item.title) {
                         if (it is io.github.thecodingdad.gamelodge.desktop.stream.MoonlightQt.Start.Streaming) hosts.markRunning(host.uuid, appId)
+                        val failure = (it as? io.github.thecodingdad.gamelodge.desktop.stream.MoonlightQt.Start.Failed)?.startFailure
+                        if (failure != null) onStartFailed(failure)
                         start.complete(it)
                     }
                 } finally {
@@ -107,7 +111,8 @@ class DesktopLaunches(
         }
         // The launcher's start overlay stays until the stream runs; Moonlight-Qt's errors show there.
         val result = start.await()
-        if (result is io.github.thecodingdad.gamelodge.desktop.stream.MoonlightQt.Start.Failed) {
+        // A start that didn't get going is retried (or reported) once the stream ended.
+        if (result is io.github.thecodingdad.gamelodge.desktop.stream.MoonlightQt.Start.Failed && result.startFailure == null) {
             error(result.message ?: "Moonlight-Qt")
         }
     }

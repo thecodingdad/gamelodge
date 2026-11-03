@@ -62,9 +62,10 @@ object ScreensaverControl {
 
 /**
  * Idle screen: slow artwork slideshow with clock. Content drifts a little on every slide so
- * nothing stays on the same OLED pixels. Any input only dismisses it. The slides stand still and
- * cross-fade; with [kenBurns] they zoom slowly all the time (in steps of ~100 ms with reduced
- * motion), which redraws the screen all the time.
+ * nothing stays on the same OLED pixels (the clock fades to its new place). Any input only
+ * dismisses it. The slides stand still and cross-fade; with [kenBurns] each one zooms slowly from
+ * its start until it has faded out (in steps of ~100 ms with reduced motion), which redraws the
+ * screen all the time.
  */
 @Composable
 fun Screensaver(games: List<LibraryEntry>, kenBurns: Boolean, onDismiss: () -> Unit) {
@@ -73,21 +74,12 @@ fun Screensaver(games: List<LibraryEntry>, kenBurns: Boolean, onDismiss: () -> U
     val withArt = remember(games) { games.filter { it.heroModel() != null }.shuffled() }
     var index by remember { mutableIntStateOf(0) }
     var drift by remember { mutableStateOf(0 to 0) }
-    val zoom = remember { Animatable(1f) }
     var now by remember { mutableStateOf(System.currentTimeMillis()) }
 
     LaunchedEffect(Unit) { io.github.thecodingdad.gamelodge.ui.components.FocusSound.silence(); runCatching { focus.requestFocus() } }
     LaunchedEffect(withArt, kenBurns, reduceMotion) {
         while (true) {
-            zoom.snapTo(1f)
-            when {
-                !kenBurns -> delay(SLIDE_MS.toLong())
-                reduceMotion -> for (step in 1..SLIDE_MS / STEP_MS) {
-                    delay(STEP_MS.toLong())
-                    zoom.snapTo(1f + ZOOM * step * STEP_MS / SLIDE_MS)
-                }
-                else -> zoom.animateTo(1f + ZOOM, tween(SLIDE_MS, easing = LinearEasing))
-            }
+            delay(SLIDE_MS.toLong())
             index = (index + 1) % withArt.size.coerceAtLeast(1)
             drift = Random.nextInt(-24, 25) to Random.nextInt(-16, 17)
         }
@@ -115,8 +107,18 @@ fun Screensaver(games: List<LibraryEntry>, kenBurns: Boolean, onDismiss: () -> U
             .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onDismiss),
     ) {
         val entry = withArt.getOrNull(index)
-        Crossfade(entry, animationSpec = tween(1500), label = "screensaver") { e ->
+        Crossfade(entry, animationSpec = tween(FADE_MS), label = "screensaver") { e ->
             if (e != null) {
+                // Its own zoom, on through its fade-out: the next slide's start doesn't reset it.
+                val zoom = remember { Animatable(1f) }
+                if (kenBurns) LaunchedEffect(Unit) {
+                    val total = SLIDE_MS + FADE_MS
+                    val end = 1f + ZOOM * total / SLIDE_MS
+                    if (reduceMotion) for (step in 1..total / STEP_MS) {
+                        delay(STEP_MS.toLong())
+                        zoom.snapTo(1f + (end - 1f) * step * STEP_MS / total)
+                    } else zoom.animateTo(end, tween(total, easing = LinearEasing))
+                }
                 ArtworkImage(
                     e.heroModel(), e.item.title,
                     // Only scaled in its layer: transparency there would draw it offscreen first, every frame.
@@ -131,20 +133,20 @@ fun Screensaver(games: List<LibraryEntry>, kenBurns: Boolean, onDismiss: () -> U
         // Dimmed by a plain black veil (as the 70 % opacity did), and darker towards the clock.
         Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f)))
         Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.5f to Color.Transparent, 1f to Color.Black)))
-        Column(
-            Modifier
-                .align(Alignment.BottomStart)
-                .offset(x = drift.first.dp, y = drift.second.dp)
-                .padding(56.dp),
-        ) {
-            Text(DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(now)), fontSize = 72.sp, color = Color.White.copy(alpha = 0.9f))
-            Text(DateFormat.getDateInstance(DateFormat.FULL).format(Date(now)), style = MaterialTheme.typography.titleLarge, color = Color.White.copy(alpha = 0.7f))
-            entry?.let { Text(it.item.title, style = MaterialTheme.typography.titleMedium, color = Color.White.copy(alpha = 0.5f), modifier = Modifier.padding(top = 12.dp)) }
+        // The clock moves with every slide (OLED): it fades out and in at its new place.
+        Crossfade(drift to entry, Modifier.align(Alignment.BottomStart), animationSpec = tween(FADE_MS), label = "screensaverClock") { (d, e) ->
+            Column(Modifier.offset(x = d.first.dp, y = d.second.dp).padding(56.dp)) {
+                Text(io.github.thecodingdad.gamelodge.ui.PlatformUi.current.formatTime(now), fontSize = 72.sp, color = Color.White.copy(alpha = 0.9f))
+                Text(DateFormat.getDateInstance(DateFormat.FULL).format(Date(now)), style = MaterialTheme.typography.titleLarge, color = Color.White.copy(alpha = 0.7f))
+                e?.let { Text(it.item.title, style = MaterialTheme.typography.titleMedium, color = Color.White.copy(alpha = 0.5f), modifier = Modifier.padding(top = 12.dp)) }
+            }
         }
     }
 }
 
 private const val SLIDE_MS = 12_000
+/** Cross-fade of slides and clock. */
+private const val FADE_MS = 1500
 /** How far a slide zooms in (Ken Burns), and the step with reduced motion. */
 private const val ZOOM = 0.12f
 private const val STEP_MS = 100

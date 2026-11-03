@@ -18,7 +18,8 @@ class MoonlightQt(val dir: File) {
     /** How a stream start went: the stream runs, or Moonlight-Qt ended with an error. */
     sealed interface Start {
         data object Streaming : Start
-        data class Failed(val message: String?, val appRunning: Boolean = false) : Start
+        /** [startFailure]: the connection didn't get going (stage and error code); a retry may help. */
+        data class Failed(val message: String?, val appRunning: Boolean = false, val startFailure: String? = null) : Start
     }
 
     /** The running stream: host uuid, app id and Moonlight-Qt's process. */
@@ -75,6 +76,7 @@ class MoonlightQt(val dir: File) {
         }
         var error: String? = null
         var appRunning = false
+        var startFailure: String? = null
         File(dir, "stream.log").printWriter().use { log ->
             process.inputStream.bufferedReader().forEachLine { line ->
                 val marker = line.substringAfter("LAUNCHER-", "")
@@ -95,6 +97,7 @@ class MoonlightQt(val dir: File) {
                     }, "first-frame").apply { isDaemon = true }.start()
                     marker.startsWith("ERROR: ") -> error = marker.removePrefix("ERROR: ").trim()
                     marker.startsWith("APP-RUNNING: ") -> appRunning = true
+                    marker.startsWith("STARTFAILED: ") -> startFailure = marker.removePrefix("STARTFAILED: ").trim()
                     marker == "HOTKEY" -> onHotkey()
                 }
             }
@@ -102,7 +105,7 @@ class MoonlightQt(val dir: File) {
         val code = process.waitFor()
         running = null
         Log.i("Stream ended ($code)${error?.let { ": $it" } ?: ""}")
-        report(Start.Failed(error, appRunning))
+        report(Start.Failed(error, appRunning, startFailure))
         code
     }
 
