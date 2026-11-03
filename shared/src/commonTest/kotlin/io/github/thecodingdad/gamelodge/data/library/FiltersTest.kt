@@ -66,8 +66,8 @@ class FiltersTest {
     @Test
     fun `platform builtin splits into one chip per platform`() {
         val r = FilterEngine.resolve(listOf(builtin(BuiltinFilter.PLATFORMS, 0)), FilterPlace.LIBRARY, entries, emptyMap(), emptyMap())
-        assertEquals(listOf("Android", "Nintendo Switch", "PC"), r.map { it.value })
-        assertEquals(listOf("a"), r.last().entries.map { it.item.id }) // hidden "d" excluded
+        assertEquals(listOf("Android", "PC", "Nintendo Switch"), r.map { it.value })
+        assertEquals(listOf("a"), r.first { it.value == "PC" }.entries.map { it.item.id }) // hidden "d" excluded
     }
 
     @Test
@@ -162,7 +162,7 @@ class FiltersTest {
         val f = FilterEntity("s", "Couch", FilterKind.SMART, rules = FilterRules.encode(rules))
         val parts = FilterEngine.resolve(listOf(f), FilterPlace.LIBRARY, entries, emptyMap(), emptyMap())
         assertTrue(parts.all { it.name == "Couch" && !it.chipShowName && it.rowShowName })
-        assertEquals(listOf("Android", "Nintendo Switch", "PC"), parts.map { it.valueLabel })
+        assertEquals(listOf("Android", "PC", "Switch"), parts.map { it.valueLabel })
     }
 
     @Test

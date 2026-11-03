@@ -264,7 +264,7 @@ private fun ColumnScope.EmulatorsStep() {
 
     SectionHeader(stringResource(Res.string.emu_folders))
     config.folders.forEach { f ->
-        WizardStatusRow(f.name, catalog.platform(f.platform)?.displayName ?: stringResource(Res.string.emu_folder_auto), done = true, icon = Icons.Filled.Folder)
+        WizardStatusRow(f.name, catalog.platform(f.platform)?.label ?: stringResource(Res.string.emu_folder_auto), done = true, icon = Icons.Filled.Folder)
     }
     WizardStatusRow(
         stringResource(Res.string.emu_folder_add), stringResource(Res.string.wizard_emu_folder_sub), done = false,
@@ -291,7 +291,7 @@ private fun ColumnScope.EmulatorsStep() {
         perPlatform.entries.sortedByDescending { it.value }.forEach { (id, count) ->
             val bios = if (id in needsBios) stringResource(Res.string.emu_bios_hint) else null
             WizardStatusRow(
-                catalog.platform(id)?.displayName ?: id,
+                catalog.platform(id)?.label ?: id,
                 listOfNotNull(pluralStringResource(Res.plurals.emu_found, count, count), bios).joinToString(" · "),
                 done = bios == null, icon = Icons.Filled.VideogameAsset,
                 // The icon of the emulator that runs this platform's games.

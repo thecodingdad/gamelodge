@@ -99,7 +99,7 @@ fun EmulatorsPage(
         }
         val missing = stringResource(Res.string.emu_pc_missing)
         config.emulators.forEachIndexed { index, emu ->
-            val consoles = emu.platforms.joinToString { PcPlatforms.byName(it.platform)?.displayName ?: it.platform }
+            val consoles = emu.platforms.joinToString { PcPlatforms.byName(it.platform)?.label ?: it.platform }
             NavRow(
                 emu.name, { editing = emu },
                 subtitle = if (present[emu.executable] != false) consoles else "$missing · $consoles",
@@ -126,7 +126,7 @@ fun EmulatorsPage(
         val auto = stringResource(Res.string.emu_folder_auto)
         val folderMissing = stringResource(Res.string.emu_pc_folder_missing)
         config.folders.forEach { folder ->
-            val platform = folder.platform?.let { PcPlatforms.byName(it)?.displayName ?: it } ?: auto
+            val platform = folder.platform?.let { PcPlatforms.byName(it)?.label ?: it } ?: auto
             NavRow(
                 folder.path, { editingFolder = folder },
                 subtitle = if (present[folder.path] != false) platform else "$folderMissing · $platform",
@@ -160,7 +160,7 @@ fun EmulatorsPage(
             shared.forEach { platform ->
                 val choices = config.emulators.filter { it.supports(platform) }
                 ChoiceRow(
-                    PcPlatforms.byName(platform)?.displayName ?: platform, choices.map { it.id },
+                    PcPlatforms.byName(platform)?.label ?: platform, choices.map { it.id },
                     config.emulatorFor(platform)?.id ?: choices.first().id,
                     label = { id -> choices.first { it.id == id }.name },
                     image = io.github.thecodingdad.gamelodge.ui.screens.settings.rememberAppIcon((config.emulatorFor(platform) ?: choices.first()).executable),
@@ -207,7 +207,7 @@ private fun PresetDialog(visible: Boolean, onDismiss: () -> Unit, onPick: (Emula
             EmulatorPresets.all.forEachIndexed { i, preset ->
                 NavRow(
                     preset.name, { onPick(preset) },
-                    subtitle = preset.platforms.joinToString { PcPlatforms.byName(it.platform)?.displayName ?: it.platform },
+                    subtitle = preset.platforms.joinToString { PcPlatforms.byName(it.platform)?.label ?: it.platform },
                     icon = Icons.Filled.SportsEsports, initialFocus = i == 0,
                 )
             }
@@ -245,7 +245,7 @@ private fun EmulatorDialog(emulator: PcEmulator?, onDismiss: () -> Unit, onSave:
             Text(stringResource(Res.string.emu_pc_platforms), style = MaterialTheme.typography.titleSmall, color = LauncherTheme.colors.onSurface)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 PcPlatforms.all.forEach { p ->
-                    Chip(p.displayName, selected = p.name in chosen, onClick = { chosen = if (p.name in chosen) chosen - p.name else chosen + p.name })
+                    Chip(p.label, selected = p.name in chosen, onClick = { chosen = if (p.name in chosen) chosen - p.name else chosen + p.name })
                 }
             }
             Spacer(Modifier.height(4.dp))
@@ -280,7 +280,7 @@ private fun FolderDialog(
             val auto = stringResource(Res.string.emu_folder_auto)
             ChoiceRow(
                 stringResource(Res.string.emu_folder_platform), listOf<String?>(null) + PcPlatforms.all.map { it.name }, f.platform,
-                label = { id -> PcPlatforms.byName(id)?.displayName ?: auto },
+                label = { id -> PcPlatforms.byName(id)?.label ?: auto },
                 onSelect = { onSave(f, f.copy(platform = it, emulator = null)) },
                 subtitle = stringResource(Res.string.emu_folder_platform_sub),
                 initialFocus = true,

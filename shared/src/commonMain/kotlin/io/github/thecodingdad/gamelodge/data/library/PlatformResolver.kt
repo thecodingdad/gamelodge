@@ -57,4 +57,37 @@ object PlatformResolver {
         // Same value from a more trusted source: only the source is upgraded.
         return if (candidate == item.platform) source.ordinal > current.ordinal else source.ordinal >= current.ordinal
     }
+
+    /**
+     * How a platform is shown: without the maker's name where the product name stands on its own
+     * ("Nintendo Switch" → "Switch", "Sega Saturn" → "Saturn"). Only for display: the library,
+     * filters, matching and sync keep IGDB's names.
+     */
+    fun displayName(name: String): String = DISPLAY[name] ?: when {
+        name.startsWith("Sony ") -> name.removePrefix("Sony ")
+        name.startsWith("Microsoft ") -> name.removePrefix("Microsoft ")
+        else -> name
+    }
+
+    private val DISPLAY = mapOf(
+        "Nintendo Switch" to "Switch",
+        "Nintendo Switch 2" to "Switch 2",
+        "Nintendo GameCube" to "GameCube",
+        "Nintendo 64" to "N64",
+        "Nintendo DS" to "DS",
+        "Nintendo DSi" to "DSi",
+        "Nintendo 3DS" to "3DS",
+        "New Nintendo 3DS" to "New 3DS",
+        "Nintendo 64DD" to "64DD",
+        "Sega Saturn" to "Saturn",
+        "Sega Dreamcast" to "Dreamcast",
+        "Sega Master System" to "Master System",
+        "Sega Master System/Mark III" to "Master System",
+        "Sega Game Gear" to "Game Gear",
+        "Sega Mega Drive/Genesis" to "Mega Drive",
+        "Sega Pico" to "Pico",
+        "Family Computer" to "Famicom",
+        "Family Computer Disk System" to "Famicom Disk System",
+        "Super Famicom" to "Super Famicom",
+    )
 }

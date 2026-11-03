@@ -320,7 +320,11 @@ object FilterEngine {
     }
 
     private fun label(value: String, by: GroupBy, hostNames: Map<String, String>) =
-        if (by == GroupBy.SOURCE || by == GroupBy.HOST) hostNames[value] ?: value else value
+        when (by) {
+            GroupBy.SOURCE, GroupBy.HOST -> hostNames[value] ?: value
+            GroupBy.PLATFORM -> PlatformResolver.displayName(value)
+            else -> value
+        }
 
     fun values(entry: LibraryEntry, by: GroupBy): List<String> = when (by) {
         GroupBy.PLATFORM -> values(entry, FilterField.PLATFORM)

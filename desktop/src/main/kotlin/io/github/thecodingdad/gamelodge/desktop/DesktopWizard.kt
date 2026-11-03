@@ -279,7 +279,7 @@ private fun ColumnScope.EmulatorsStep(library: PcLibrary, settings: LauncherSett
 
     SectionHeader(stringResource(Res.string.emu_folders))
     config.folders.forEach { f ->
-        WizardStatusRow(f.path, f.platform?.let { PcPlatforms.byName(it)?.displayName ?: it } ?: stringResource(Res.string.emu_folder_auto), done = true, icon = Icons.Filled.Folder)
+        WizardStatusRow(f.path, f.platform?.let { PcPlatforms.byName(it)?.label ?: it } ?: stringResource(Res.string.emu_folder_auto), done = true, icon = Icons.Filled.Folder)
     }
     WizardStatusRow(
         stringResource(Res.string.emu_folder_add), stringResource(Res.string.wizard_emu_folder_sub), done = false,
@@ -296,7 +296,7 @@ private fun ColumnScope.EmulatorsStep(library: PcLibrary, settings: LauncherSett
     SectionHeader(stringResource(Res.string.wizard_emu_detected))
     config.emulators.forEach { emu ->
         WizardStatusRow(
-            emu.name, emu.platforms.joinToString { PcPlatforms.byName(it.platform)?.displayName ?: it.platform }, done = true,
+            emu.name, emu.platforms.joinToString { PcPlatforms.byName(it.platform)?.label ?: it.platform }, done = true,
             icon = Icons.Filled.VideogameAsset, image = io.github.thecodingdad.gamelodge.ui.screens.settings.rememberAppIcon(emu.executable),
         )
     }
@@ -334,7 +334,7 @@ private fun ColumnScope.EmulatorsStep(library: PcLibrary, settings: LauncherSett
             // The icon of the emulator that runs this console's games.
             val emulator = PcPlatforms.all.firstOrNull { it.displayName == platform || it.name == platform }?.let { config.emulatorFor(it.name) }
             WizardStatusRow(
-                platform, listOfNotNull(stringResource(Res.string.emu_pc_found, count), bios).joinToString(" · "), done = bios == null,
+                io.github.thecodingdad.gamelodge.data.library.PlatformResolver.displayName(platform), listOfNotNull(stringResource(Res.string.emu_pc_found, count), bios).joinToString(" · "), done = bios == null,
                 icon = Icons.Filled.VideogameAsset, image = io.github.thecodingdad.gamelodge.ui.screens.settings.rememberAppIcon(emulator?.executable),
             )
         }

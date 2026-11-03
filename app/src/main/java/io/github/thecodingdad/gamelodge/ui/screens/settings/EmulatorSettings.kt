@@ -104,7 +104,7 @@ fun EmulatorSettings(vm: LauncherViewModel) {
             NavRow(
                 folder.name, { editingFolder = folder },
                 subtitle = if (missing) stringResource(Res.string.emu_folder_no_access)
-                else catalog.platform(folder.platform)?.displayName ?: stringResource(Res.string.emu_folder_auto),
+                else catalog.platform(folder.platform)?.label ?: stringResource(Res.string.emu_folder_auto),
                 icon = Icons.Filled.Folder,
             )
         }
@@ -199,7 +199,7 @@ internal fun PlatformEmulatorRow(platform: CatalogPlatform, tick: Int) {
     val bios = if (platform.id in needsBios) stringResource(Res.string.emu_bios_hint) else null
     if (choices.isEmpty()) {
         NavRow(
-            platform.displayName, {},
+            platform.label, {},
             subtitle = listOfNotNull(stringResource(Res.string.emu_none_installed), bios).joinToString(" · "),
             icon = Icons.Filled.SportsEsports,
         )
@@ -208,7 +208,7 @@ internal fun PlatformEmulatorRow(platform: CatalogPlatform, tick: Int) {
     val resolved = emulation.resolve(platform.id, null)
     val current = resolved?.key ?: choices.first().key
     ChoiceRow(
-        platform.displayName, choices.map { it.key }, current,
+        platform.label, choices.map { it.key }, current,
         // The icon of the emulator that starts this platform's games.
         image = rememberAppIcon((resolved ?: choices.first()).component.packageName),
         label = { key -> choices.first { it.key == key }.let { if (it.experimental) "${it.label} ($experimental)" else it.label } },
@@ -231,7 +231,7 @@ private fun FolderDialog(
             // null = one subfolder per system, recognised by name.
             ChoiceRow(
                 stringResource(Res.string.emu_folder_platform), listOf<String?>(null) + platforms.map { it.id }, f.platform,
-                label = { id -> platforms.firstOrNull { it.id == id }?.displayName ?: stringResource(Res.string.emu_folder_auto) },
+                label = { id -> platforms.firstOrNull { it.id == id }?.label ?: stringResource(Res.string.emu_folder_auto) },
                 onSelect = { onSave(f.copy(platform = it)) },
                 subtitle = stringResource(Res.string.emu_folder_platform_sub),
                 initialFocus = true,
@@ -276,7 +276,7 @@ private fun CustomEmulatorDialog(
             Text(stringResource(Res.string.emu_custom_platforms), style = MaterialTheme.typography.titleSmall, color = LauncherTheme.colors.onSurface)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 platforms.forEach { p ->
-                    Chip(p.displayName, selected = p.id in chosen, onClick = { chosen = if (p.id in chosen) chosen - p.id else chosen + p.id })
+                    Chip(p.label, selected = p.id in chosen, onClick = { chosen = if (p.id in chosen) chosen - p.id else chosen + p.id })
                 }
             }
         }

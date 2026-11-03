@@ -146,7 +146,7 @@ fun DetailScreen(
         val chips: @Composable () -> Unit = {
                     // Platform as a chip: shows the current value, opens the platform picker.
                     io.github.thecodingdad.gamelodge.ui.screens.library.Chip(
-                        label = entry.item.platform ?: stringResource(Res.string.platform_title),
+                        label = entry.item.platform?.let(io.github.thecodingdad.gamelodge.data.library.PlatformResolver::displayName) ?: stringResource(Res.string.platform_title),
                         selected = false,
                         onClick = onPlatform,
                         icon = {

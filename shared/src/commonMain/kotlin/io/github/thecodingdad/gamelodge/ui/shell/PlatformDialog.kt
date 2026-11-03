@@ -52,7 +52,7 @@ fun PlatformDialog(
             PlatformSource.SUGGESTED, null -> Res.string.platform_source_suggested
         }
         Text(
-            stringResource(Res.string.platform_current, e.item.platform ?: "–", stringResource(source)),
+            stringResource(Res.string.platform_current, e.item.platform?.let(io.github.thecodingdad.gamelodge.data.library.PlatformResolver::displayName) ?: "–", stringResource(source)),
             style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted,
         )
         Column(
@@ -63,10 +63,11 @@ fun PlatformDialog(
                 stringResource(Res.string.platform_auto), { onSelect(e, null); onDismiss() }, Modifier.fillMaxWidth(), Icons.Filled.AutoMode,
                 primary = e.item.platformSource == PlatformSource.MANUAL,
             )
+            // Shown short ("Switch"), stored as IGDB names it ("Nintendo Switch").
             (knownPlatforms + commonPlatforms).distinct().forEach { p ->
                 val current = p == e.item.platform
                 LauncherButton(
-                    p, { onSelect(e, p); onDismiss() }, Modifier.fillMaxWidth(),
+                    io.github.thecodingdad.gamelodge.data.library.PlatformResolver.displayName(p), { onSelect(e, p); onDismiss() }, Modifier.fillMaxWidth(),
                     if (current) Icons.Filled.RadioButtonChecked else Icons.Filled.RadioButtonUnchecked,
                 )
             }

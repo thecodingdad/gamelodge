@@ -10,6 +10,9 @@ import io.github.thecodingdad.gamelodge.data.library.PlatformResolver
 data class PcPlatform(val name: String, val folders: List<String>, val extensions: List<String>) {
     /** The launcher's short name (shown and filtered on). */
     val displayName: String get() = PlatformResolver.normalizeIgdb(name)
+
+    /** As shown: short, without the maker ([PlatformResolver.displayName]). */
+    val label: String get() = PlatformResolver.displayName(displayName)
 }
 
 object PcPlatforms {

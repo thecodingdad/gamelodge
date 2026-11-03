@@ -44,6 +44,9 @@ data class CatalogPlatform(
 ) {
     /** The launcher's name for the platform (as shown and filtered on). */
     val displayName: String get() = PlatformResolver.normalizeIgdb(name)
+
+    /** As shown: short, without the maker ([PlatformResolver.displayName]). */
+    val label: String get() = PlatformResolver.displayName(displayName)
 }
 
 @Serializable

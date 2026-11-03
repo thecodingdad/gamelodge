@@ -110,7 +110,7 @@ fun MetadataEditorDialog(
             )
             SectionHeader(stringResource(Res.string.filter_section_game))
             Row(EditRow.TITLE, Res.string.meta_name, item.title)
-            NavRow(stringResource(Res.string.filter_field_platform), { onPlatform(e) }, subtitle = item.platform ?: none)
+            NavRow(stringResource(Res.string.filter_field_platform), { onPlatform(e) }, subtitle = item.platform?.let(io.github.thecodingdad.gamelodge.data.library.PlatformResolver::displayName) ?: none)
             Row(EditRow.DESCRIPTION, Res.string.meta_description, item.description?.take(120))
             SectionHeader(stringResource(Res.string.filter_section_metadata))
             Row(EditRow.GENRES, Res.string.filter_field_genre, item.genres)
