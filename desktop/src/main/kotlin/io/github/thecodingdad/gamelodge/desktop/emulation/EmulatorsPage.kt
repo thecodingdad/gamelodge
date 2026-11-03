@@ -83,7 +83,8 @@ fun EmulatorsPage(
     var editing by remember { mutableStateOf<PcEmulator?>(null) }
     var editingFolder by remember { mutableStateOf<PcRomFolder?>(null) }
     var playniteResult by remember { mutableStateOf<String?>(null) }
-    val playnite = remember { PlayniteImport.locate() }
+    // The import only where Playnite is installed (its library alone may be left over).
+    val playnite = remember { PlayniteImport.locate().takeIf { it.second != null } ?: (null to null) }
     // Network drives can take long or hang: existence is checked off the UI thread (unknown = fine).
     val present by androidx.compose.runtime.produceState(emptyMap<String, Boolean>(), config) {
         val paths = config.emulators.map { it.executable } + config.folders.map { it.path }

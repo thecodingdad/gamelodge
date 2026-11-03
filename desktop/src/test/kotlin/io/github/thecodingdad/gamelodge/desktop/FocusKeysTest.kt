@@ -49,8 +49,50 @@ class FocusKeysTest {
             assertEquals(1, focused)
             press(Key.DirectionDown)
             assertEquals(2, focused)
+            // At the edge the focus stays (no jump back).
+            press(Key.DirectionDown)
+            assertEquals(2, focused)
+            press(Key.DirectionDown)
+            assertEquals(2, focused)
             press(Key.DirectionUp)
             assertEquals(1, focused)
+            scene.close()
+        }
+    }
+
+    @Test
+    fun lazyRowEdgeKeepsFocus() {
+        javax.swing.SwingUtilities.invokeAndWait {
+            var focused = -1
+            val first = FocusRequester()
+            val scene = ImageComposeScene(400, 200) {
+                val focusManager = LocalFocusManager.current
+                androidx.compose.foundation.lazy.LazyRow(Modifier.onKeyEvent { arrowFocus(it, focusManager) }) {
+                    items(3) { i ->
+                        Box(
+                            Modifier.size(40.dp).then(if (i == 0) Modifier.focusRequester(first) else Modifier)
+                                .onFocusChanged { if (it.isFocused) focused = i }.focusable(),
+                        )
+                    }
+                }
+            }
+            scene.render(0)
+            first.requestFocus()
+            scene.render(1)
+            fun press(key: Key) {
+                scene.sendKeyEvent(KeyEvent(key, KeyEventType.KeyDown))
+                scene.sendKeyEvent(KeyEvent(key, KeyEventType.KeyUp))
+                scene.render(2)
+            }
+            press(Key.DirectionLeft)
+            assertEquals(0, focused)
+            press(Key.DirectionRight)
+            press(Key.DirectionRight)
+            assertEquals(2, focused)
+            press(Key.DirectionRight)
+            assertEquals(2, focused)
+            press(Key.DirectionRight)
+            assertEquals(2, focused)
             scene.close()
         }
     }

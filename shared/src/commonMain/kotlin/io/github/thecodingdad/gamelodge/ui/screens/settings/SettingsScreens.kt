@@ -85,6 +85,7 @@ fun SettingsHome(
     isFirstVisit: Boolean,
     openControllers: () -> Unit = {},
     openWizard: () -> Unit = {},
+    openStats: (() -> Unit)? = null,
     query: String = "",
     onQueryChange: (String) -> Unit = {},
 ) {
@@ -109,12 +110,14 @@ fun SettingsHome(
                     is SettingsTarget.ControllerPage -> navigate(target, title)
                     SettingsTarget.Wizard -> openWizard()
                     is SettingsTarget.Host -> Unit
+                    SettingsTarget.Overview -> onQueryChange("")
                 }
             }
             return@SettingsPage
         }
         SectionHeader(stringResource(Res.string.settings_group_display))
-        NavRow(stringResource(Res.string.settings_home_screen), { open(SettingsPageId.HOME_SCREEN) }, stringResource(Res.string.settings_home_screen_sub), Icons.Filled.Home, initialFocus = isFirstVisit)
+        StartTabRow(initialFocus = isFirstVisit)
+        NavRow(stringResource(Res.string.settings_home_screen), { open(SettingsPageId.HOME_SCREEN) }, stringResource(Res.string.settings_home_screen_sub), Icons.Filled.Home)
         NavRow(stringResource(Res.string.settings_library_view), { open(SettingsPageId.LIBRARY_VIEW) }, stringResource(Res.string.settings_library_view_sub), Icons.Filled.GridView)
         NavRow(stringResource(Res.string.settings_apps_view), { open(SettingsPageId.APPS_VIEW) }, stringResource(Res.string.settings_apps_view_sub), Icons.Filled.Apps)
         NavRow(stringResource(Res.string.settings_theme), { open(SettingsPageId.THEME) }, stringResource(Res.string.settings_theme_sub), Icons.Filled.Palette)
@@ -122,10 +125,15 @@ fun SettingsHome(
 
         SectionHeader(stringResource(Res.string.settings_group_library))
         if (platform.hasPage(SettingsPageId.GAME_SOURCES)) NavRow(stringResource(Res.string.settings_game_sources), { open(SettingsPageId.GAME_SOURCES) }, stringResource(Res.string.settings_game_sources_sub), Icons.Filled.SportsEsports)
-        if (platform.hasPage(SettingsPageId.USAGE)) NavRow(stringResource(Res.string.settings_usage), { open(SettingsPageId.USAGE) }, stringResource(Res.string.settings_usage_sub), Icons.Filled.QueryStats)
         if (platform.hasPage(SettingsPageId.EMULATORS)) NavRow(stringResource(Res.string.settings_emulators), { open(SettingsPageId.EMULATORS) }, stringResource(Res.string.settings_emulators_sub), Icons.Filled.SportsEsports)
         NavRow(stringResource(Res.string.settings_metadata), { open(SettingsPageId.METADATA) }, stringResource(Res.string.settings_metadata_sub), Icons.Filled.Image)
         NavRow(stringResource(Res.string.settings_filters), { open(SettingsPageId.FILTERS) }, stringResource(Res.string.settings_filters_sub), Icons.Filled.FilterAlt)
+        // Play time and statistics last: Android's usage page (usage access + statistics), else the statistics directly.
+        if (platform.hasPage(SettingsPageId.USAGE)) {
+            NavRow(stringResource(Res.string.settings_usage), { open(SettingsPageId.USAGE) }, stringResource(Res.string.settings_usage_sub), Icons.Filled.QueryStats)
+        } else if (openStats != null) {
+            NavRow(stringResource(Res.string.stats_title), openStats, stringResource(Res.string.usage_stats_sub), Icons.Filled.QueryStats)
+        }
 
         SectionHeader(stringResource(Res.string.settings_group_streaming))
         NavRow(stringResource(Res.string.settings_hosts), { open(SettingsPageId.HOSTS) }, stringResource(Res.string.settings_hosts_sub), Icons.Filled.Computer)
@@ -408,7 +416,7 @@ fun AppsViewSettings(settings: LauncherSettings, update: ((LauncherSettings) -> 
     }
 }
 
-/** Which tab the launcher opens with (system pages: launcher / startup). */
+/** Which tab the launcher opens with (first row of the settings overview). */
 @Composable
 fun StartTabRow(initialFocus: Boolean = false) {
     val repo = io.github.thecodingdad.gamelodge.LocalContainer.current.settings

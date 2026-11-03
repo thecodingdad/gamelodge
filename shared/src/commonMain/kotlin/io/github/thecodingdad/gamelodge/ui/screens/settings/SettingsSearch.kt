@@ -24,6 +24,8 @@ sealed interface SettingsTarget {
     data object Wizard : SettingsTarget
     /** Settings of one streaming host. */
     data class Host(val uuid: String) : SettingsTarget
+    /** The settings overview itself (rows on it, e.g. the start tab). */
+    data object Overview : SettingsTarget
 }
 
 /** Whether [target] exists on this platform (platform-only pages). */
@@ -140,8 +142,7 @@ private val settingsIndex: List<SearchEntry> = buildList {
     addAll(page(SettingsPageId.LIBRARY_VIEW, Res.string.setting_tile_format, Res.string.setting_tile_info, section = Res.string.settings_library_view))
     addAll(page(SettingsPageId.APPS_VIEW, Res.string.setting_apps_style, section = Res.string.settings_apps_view))
     addAll(page(SettingsPageId.HOME_SCREEN, Res.string.home_rows_section, Res.string.home_row_ha, Res.string.setting_home_rows_position))
-    addAll(page(SettingsPageId.LAUNCHER, Res.string.setting_start_tab))
-    addAll(page(SettingsPageId.STARTUP, Res.string.setting_start_tab))
+    add(SearchEntry(Res.string.setting_start_tab, SettingsTarget.Overview, Res.string.settings_group_display))
     addAll(page(
         SettingsPageId.THEME, Res.string.setting_theme, Res.string.setting_accent, Res.string.setting_accent_color,
         Res.string.setting_focus_zoom, Res.string.setting_focus_glow, Res.string.setting_dim_not_installed, Res.string.setting_animated_tiles, Res.string.setting_animated_hero,
@@ -203,7 +204,8 @@ fun SettingsSearchResults(query: String, onOpen: (SettingsTarget, String?) -> Un
     val texts = (settingsIndex.flatMap { listOfNotNull(it.title, it.section) } + pageTitles.map { it.second } + pageKeywords.values).distinct()
         .associateWith { stringResource(it) }
     val q = TitleNormalizer.normalize(query)
-    fun pageTitle(target: SettingsTarget) = pageTitles.first { it.first == target }.second
+    // Rows on the overview itself have no page in their path, only their section.
+    fun pageTitle(target: SettingsTarget) = pageTitles.firstOrNull { it.first == target }?.second
     val platform = io.github.thecodingdad.gamelodge.ui.PlatformUi.current
     val hits = settingsIndex.withIndex().mapNotNull { (index, e) ->
         if (!settingsTargetAvailable(e.target)) return@mapNotNull null

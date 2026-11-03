@@ -18,7 +18,6 @@ import org.jetbrains.compose.resources.stringResource
 fun StartupPage(startup: Startup) {
     val settings by startup.settings.collectAsState()
     SettingsPage(stringResource(Res.string.settings_startup)) {
-        io.github.thecodingdad.gamelodge.ui.screens.settings.StartTabRow()
         SectionHeader(stringResource(Res.string.startup_window))
         SwitchRow(
             stringResource(Res.string.startup_fullscreen), settings.startFullscreen, { on -> startup.update { it.copy(startFullscreen = on) } },
@@ -33,10 +32,6 @@ fun StartupPage(startup: Startup) {
             stringResource(Res.string.startup_tray), settings.closeToTray, { on -> startup.update { it.copy(closeToTray = on) } },
             subtitle = stringResource(Res.string.startup_tray_sub),
         )
-        SeeAlso(
-            SeeAlsoLink(stringResource(Res.string.settings_streaming_host), SettingsTarget.Page(SettingsPageId.STREAMING_HOST)),
-            SeeAlsoLink(stringResource(Res.string.settings_streaming_host), SettingsTarget.Page(SettingsPageId.STREAMING_HOST)),
-        )
-        io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlso(io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlsoLink(stringResource(Res.string.settings_home_screen), io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Page(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId.HOME_SCREEN)))
+        SeeAlso(SeeAlsoLink(stringResource(Res.string.settings_streaming_host), SettingsTarget.Page(SettingsPageId.STREAMING_HOST)))
     }
 }

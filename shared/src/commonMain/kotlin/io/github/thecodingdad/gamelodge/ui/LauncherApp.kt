@@ -252,6 +252,7 @@ fun LauncherApp(
                 is io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.ControllerPage -> nav.navigate(Routes.controllerSection(target.section))
                 io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Wizard -> nav.navigate(Routes.wizard(manual = true))
                 is io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Host -> nav.navigate(Routes.host(target.uuid))
+                io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Overview -> nav.popBackStack(Routes.MAIN, inclusive = false)
             }
         }
     }
@@ -327,9 +328,10 @@ fun LauncherApp(
                     is io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Page -> nav.navigate(Routes.settings(target.id))
                     io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Controllers -> nav.navigate(Routes.CONTROLLERS)
                     is io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.ControllerPage -> nav.navigate(Routes.controllerSection(target.section))
-                is io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.ControllerPage -> nav.navigate(Routes.controllerSection(target.section))
                     io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Wizard -> nav.navigate(Routes.wizard(manual = true))
                     is io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Host -> nav.navigate(Routes.host(target.uuid))
+                    io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Overview -> nav.popBackStack(Routes.MAIN, inclusive = false)
+                io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Overview -> nav.popBackStack(Routes.MAIN, inclusive = false)
                 }
             },
         ) {
@@ -891,7 +893,7 @@ private fun MainShell(
                                 ButtonHint(PadButton.L1, stringResource(Res.string.hint_tabs), secondButton = PadButton.R1),
                             ),
                         )
-                        SettingsHome(open = { nav.navigate(Routes.settings(it)) }, isFirstVisit = true, openControllers = { nav.navigate(Routes.CONTROLLERS) }, openWizard = { nav.navigate(Routes.wizard(manual = true)) }, query = vm.settingsQuery.value, onQueryChange = { vm.settingsQuery.value = it })
+                        SettingsHome(open = { nav.navigate(Routes.settings(it)) }, isFirstVisit = true, openControllers = { nav.navigate(Routes.CONTROLLERS) }, openWizard = { nav.navigate(Routes.wizard(manual = true)) }, openStats = { nav.navigate(Routes.STATS) }, query = vm.settingsQuery.value, onQueryChange = { vm.settingsQuery.value = it })
                     }
                 }
                 }
