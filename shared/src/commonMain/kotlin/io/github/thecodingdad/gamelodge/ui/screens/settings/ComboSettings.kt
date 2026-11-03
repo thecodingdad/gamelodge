@@ -50,8 +50,11 @@ fun comboSubtitle(action: ComboAction): StringResource = when (action) {
     ComboAction.KEYBOARD -> Res.string.combo_keyboard_sub
 }
 
-/** The built-in combinations and pass-through, used by every controller without its own. */
-val DefaultCombos = LauncherSettings()
+/**
+ * The built-in combinations and pass-through, used by every controller without its own. A platform
+ * may set its own at start (the PC: Guide held is unreliable there).
+ */
+var DefaultCombos = LauncherSettings()
 
 /**
  * One controller's combinations and pass-through, each either its own or the built-in default.

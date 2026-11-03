@@ -93,6 +93,7 @@ private fun GameActionDialog(initial: GameAction?, onSave: (GameAction) -> Unit,
     var trigger by remember { mutableStateOf(initial?.trigger ?: GameActionTrigger.BEFORE_START) }
     var delay by remember { mutableStateOf(initial?.delaySeconds ?: 0) }
     var startWaits by remember { mutableStateOf(initial?.startWaits ?: true) }
+    var hostStarts by remember { mutableStateOf(initial?.hostStarts ?: false) }
     var picking by remember { mutableStateOf(false) }
     Modal(visible = true, onDismiss = onDismiss, title = stringResource(Res.string.game_action_title), maxWidth = 680.dp, closeButton = false) {
         // Scrolls on small screens; the buttons below stay.
@@ -120,10 +121,17 @@ private fun GameActionDialog(initial: GameAction?, onSave: (GameAction) -> Unit,
                 subtitle = stringResource(if (startWaits) Res.string.game_action_mode_sub_waits else Res.string.game_action_mode_sub_later),
             )
         }
+        // Only where this device is set up as a streaming host (the PC).
+        if (io.github.thecodingdad.gamelodge.ui.PlatformUi.current.hasPage(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId.HOST_ROLE)) {
+            io.github.thecodingdad.gamelodge.ui.screens.settings.SwitchRow(
+                stringResource(Res.string.ha_game_actions_host), hostStarts, { hostStarts = it },
+                subtitle = stringResource(Res.string.ha_game_actions_host_sub),
+            )
+        }
         }
         ButtonRow {
             LauncherButton(stringResource(Res.string.action_save), primary = true, enabled = action != null, onClick = {
-                action?.let { onSave(GameAction(it, trigger, delay, startWaits)) }
+                action?.let { onSave(GameAction(it, trigger, delay, startWaits, hostStarts)) }
             })
             LauncherButton(stringResource(Res.string.action_cancel), onClick = onDismiss)
         }

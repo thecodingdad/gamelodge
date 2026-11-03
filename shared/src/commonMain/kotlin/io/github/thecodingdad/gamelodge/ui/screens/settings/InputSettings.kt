@@ -72,6 +72,8 @@ fun InputSettings(settings: LauncherSettings, update: ((LauncherSettings) -> Lau
     val platform = io.github.thecodingdad.gamelodge.ui.PlatformUi.current
     var recordingAction by remember { mutableStateOf<KeyAction?>(null) }
     var recordingShortcut by remember { mutableStateOf(false) }
+    var recordingDisconnect by remember { mutableStateOf(false) }
+    val disconnect = KeyShortcut.parse(settings.keyboardDisconnect)
     val off = stringResource(Res.string.off)
     val shortcut = KeyShortcut.parse(settings.keyboardQuickMenu)
 
@@ -95,6 +97,13 @@ fun InputSettings(settings: LauncherSettings, update: ((LauncherSettings) -> Lau
             subtitle = stringResource(if (platform.hasButtonCombos) Res.string.input_shortcut_sub else Res.string.input_shortcut_sub_pc),
             trailing = shortcut?.let { shortcutDisplayName(it) } ?: off,
         )
+        if (platform.hasDisconnectShortcut) {
+            NavRow(
+                stringResource(Res.string.input_disconnect), { recordingDisconnect = true },
+                subtitle = stringResource(Res.string.input_disconnect_sub),
+                trailing = disconnect?.let { shortcutDisplayName(it) } ?: off,
+            )
+        }
         KeyAction.entries.forEach { action ->
             val key = KeyboardKeys.keyOf(action, settings.keyboardKeys)
             NavRow(
@@ -149,6 +158,17 @@ fun InputSettings(settings: LauncherSettings, update: ((LauncherSettings) -> Lau
         onDefault = null,
         onNone = { update { it.copy(keyboardQuickMenu = "") } },
         onDismiss = { recordingShortcut = false },
+    )
+    KeyRecordDialog(
+        title = if (recordingDisconnect) stringResource(Res.string.input_disconnect) else null,
+        help = stringResource(Res.string.input_record_shortcut_help),
+        current = disconnect?.let { shortcutDisplayName(it) },
+        isDefault = settings.keyboardDisconnect == io.github.thecodingdad.gamelodge.data.settings.DEFAULT_DISCONNECT_SHORTCUT,
+        start = { done -> KeyboardKeys.recordingShortcut = { s -> if (s != null) update { it.copy(keyboardDisconnect = s.toString()) }; done() } },
+        stop = { KeyboardKeys.recordingShortcut = null },
+        onDefault = { update { it.copy(keyboardDisconnect = io.github.thecodingdad.gamelodge.data.settings.DEFAULT_DISCONNECT_SHORTCUT) } },
+        onNone = { update { it.copy(keyboardDisconnect = "") } },
+        onDismiss = { recordingDisconnect = false },
     )
 }
 

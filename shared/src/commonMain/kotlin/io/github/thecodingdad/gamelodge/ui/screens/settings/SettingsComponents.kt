@@ -276,9 +276,16 @@ private fun RowShell(
 }
 
 @Composable
-private fun Texts(title: String, subtitle: String?, icon: ImageVector?, modifier: Modifier = Modifier, iconTint: androidx.compose.ui.graphics.Color? = null) {
+private fun Texts(
+    title: String, subtitle: String?, icon: ImageVector?, modifier: Modifier = Modifier,
+    iconTint: androidx.compose.ui.graphics.Color? = null, image: androidx.compose.ui.graphics.ImageBitmap? = null,
+) {
     Row(modifier, verticalAlignment = Alignment.CenterVertically) {
-        if (icon != null) {
+        if (image != null) {
+            // A program's own icon (emulators) in colour, instead of [icon].
+            androidx.compose.foundation.Image(image, null, modifier = Modifier.size(28.dp))
+            Spacer(Modifier.width(16.dp))
+        } else if (icon != null) {
             Icon(icon, null, tint = iconTint ?: LauncherTheme.colors.accent, modifier = Modifier.size(26.dp))
             Spacer(Modifier.width(16.dp))
         }
@@ -306,10 +313,12 @@ fun NavRow(
     highlightable: Boolean = true,
     /** Overrides the leading icon's colour (e.g. a controller's own highlight colour). */
     iconTint: androidx.compose.ui.graphics.Color? = null,
+    /** A program's own icon instead of [icon] (shown while loaded). */
+    image: androidx.compose.ui.graphics.ImageBitmap? = null,
 ) {
     RowShell(onClick, Modifier, initialFocus, title.takeIf { highlightable }) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Texts(title, subtitle, icon, Modifier.weight(1f), iconTint)
+            Texts(title, subtitle, icon, Modifier.weight(1f), iconTint, image)
             // Kept short so the title keeps its room.
             if (trailing != null) Text(
                 trailing, style = MaterialTheme.typography.labelLarge, color = LauncherTheme.colors.onSurfaceMuted,
@@ -416,6 +425,8 @@ fun <T> ChoiceRow(
     initialFocus: Boolean = false,
     /** A small picture per option (shape, colour …) in the segments and the list. */
     optionIcon: (@Composable (T) -> Unit)? = null,
+    /** A program's own icon instead of [icon]. */
+    image: androidx.compose.ui.graphics.ImageBitmap? = null,
 ) {
     val index = options.indexOf(selected).coerceAtLeast(0)
     val feedback = LocalUiFeedback.current
@@ -451,10 +462,10 @@ fun <T> ChoiceRow(
             val content = subcompose("content$mode") {
                 when (mode) {
                     0 -> Row(verticalAlignment = Alignment.CenterVertically) {
-                        Texts(title, subtitle, icon, Modifier.weight(1f))
+                        Texts(title, subtitle, icon, Modifier.weight(1f), image = image)
                         segments()
                     }
-                    else -> ChoiceValue(title, subtitle, icon, labels[index], narrow = width < NARROW_ROW.roundToPx())
+                    else -> ChoiceValue(title, subtitle, icon, labels[index], narrow = width < NARROW_ROW.roundToPx(), image = image)
                 }
             }.first().measure(constraints.copy(minHeight = 0))
             layout(content.width, content.height) { content.place(0, 0) }
@@ -467,7 +478,7 @@ fun <T> ChoiceRow(
 
 /** A [ChoiceRow] too narrow for its segments: the chosen value and a mark that a list opens. */
 @Composable
-private fun ChoiceValue(title: String, subtitle: String?, icon: ImageVector?, value: String, narrow: Boolean) {
+private fun ChoiceValue(title: String, subtitle: String?, icon: ImageVector?, value: String, narrow: Boolean, image: androidx.compose.ui.graphics.ImageBitmap? = null) {
     val control: @Composable () -> Unit = {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
@@ -480,12 +491,12 @@ private fun ChoiceValue(title: String, subtitle: String?, icon: ImageVector?, va
     }
     if (narrow) {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Texts(title, subtitle, icon)
+            Texts(title, subtitle, icon, image = image)
             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) { control() }
         }
     } else {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Texts(title, subtitle, icon, Modifier.weight(1f))
+            Texts(title, subtitle, icon, Modifier.weight(1f), image = image)
             control()
         }
     }
@@ -645,4 +656,20 @@ fun ActionRow(
     RowShell(if (enabled) onClick else ({}), if (enabled) Modifier else Modifier.alpha(0.45f), false, title) {
         Texts(title, subtitle, icon)
     }
+}
+
+/**
+ * The icon of an installed program ([app]: Android package, or a Windows program path), loaded in
+ * the background; null while loading or when there is none.
+ */
+@Composable
+fun rememberAppIcon(app: String?): androidx.compose.ui.graphics.ImageBitmap? {
+    val state = androidx.compose.runtime.produceState<androidx.compose.ui.graphics.ImageBitmap?>(null, app) {
+        value = app?.takeIf { it.isNotBlank() }?.let { a ->
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                runCatching { io.github.thecodingdad.gamelodge.ui.components.ArtworkPlatform.current.appIcon(a) }.getOrNull()
+            }
+        }
+    }
+    return state.value
 }

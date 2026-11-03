@@ -98,6 +98,8 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
         com.limelight.StreamControl.menuAction = Runnable { io.github.thecodingdad.gamelodge.QuickMenuActivity.toggle(this) }
         // Motion via the device's sensors is each controller's choice (Controllers › the controller): no toast about it.
         com.limelight.StreamControl.controllerTypeToast = false
+        // Button hints with keys also when only a keyboard is connected.
+        io.github.thecodingdad.gamelodge.input.KeyboardWatcher.start(this)
         // A game that wants the mouse emulation on (or off) gets it when its stream starts.
         container.scope.launch {
             container.launcher.activeStream.map { it?.entry?.item?.id }.distinctUntilChanged().collect { id ->

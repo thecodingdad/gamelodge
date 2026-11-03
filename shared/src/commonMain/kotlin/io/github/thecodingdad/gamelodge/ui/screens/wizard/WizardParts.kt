@@ -74,11 +74,16 @@ fun WizardStatusRow(
     action: String? = null,
     onClick: (() -> Unit)? = null,
     initialFocus: Boolean = false,
+    /** A program's own icon instead of [icon] (emulators). */
+    image: androidx.compose.ui.graphics.ImageBitmap? = null,
 ) {
     val colors = LauncherTheme.colors
     val content: @Composable () -> Unit = {
         Row(Modifier.padding(horizontal = 20.dp, vertical = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-            icon?.let {
+            if (image != null) {
+                androidx.compose.foundation.Image(image, null, modifier = Modifier.size(28.dp))
+                Spacer(Modifier.width(16.dp))
+            } else icon?.let {
                 Icon(it, null, tint = colors.onSurface, modifier = Modifier.size(28.dp))
                 Spacer(Modifier.width(16.dp))
             }

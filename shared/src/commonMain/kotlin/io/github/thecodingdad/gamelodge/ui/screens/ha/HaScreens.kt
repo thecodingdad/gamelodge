@@ -177,13 +177,6 @@ fun HaSettings(
         fun saveGameActions(change: (io.github.thecodingdad.gamelodge.ha.GameActionSettings) -> io.github.thecodingdad.gamelodge.ha.GameActionSettings) =
             update { s -> s.copy(gameActions = io.github.thecodingdad.gamelodge.ha.GameActionSettings.encode(change(io.github.thecodingdad.gamelodge.ha.GameActionSettings.decode(s.gameActions)))) }
         GameActionsList(gameActions.global, { list -> saveGameActions { it.copy(global = list) } }, enabled = loggedIn)
-        // Only where this device is a streaming host (the PC).
-        if (io.github.thecodingdad.gamelodge.ui.PlatformUi.current.hasPage(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId.STREAMING_HOST)) {
-            SwitchRow(
-                stringResource(Res.string.ha_game_actions_host), gameActions.hostStarts, { on -> saveGameActions { it.copy(hostStarts = on) } },
-                subtitle = stringResource(Res.string.ha_game_actions_host_sub), enabled = loggedIn,
-            )
-        }
 
         if (hosts.isNotEmpty()) {
             SectionHeader(stringResource(Res.string.ha_host_actions))

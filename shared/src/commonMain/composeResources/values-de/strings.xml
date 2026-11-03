@@ -836,7 +836,7 @@
 
     <!-- Hint bar -->
     <string name="setting_hint_bar">Tastenhinweise anzeigen</string>
-    <string name="setting_hint_bar_sub">Leiste unten mit den Controller-Tasten; erscheint nur, wenn ein Controller verbunden ist</string>
+    <string name="setting_hint_bar_sub">Leiste unten mit den Controller-Tasten (oder Tastatur-Tasten); erscheint nur, wenn ein Controller oder eine Tastatur verbunden ist</string>
 
     <!-- Settings groups -->
     <string name="settings_group_streaming">Streaming &amp; Verbindungen</string>
@@ -1468,7 +1468,7 @@
     <string name="wizard_companion_found">GameLodge gefunden</string>
     <string name="wizard_pair_by_address">Per Adresse koppeln</string>
     <string name="wizard_metadata_title">Cover &amp; Spielinfos</string>
-    <string name="wizard_metadata_text">Bilder und Beschreibungen kommen von SteamGridDB und IGDB. Einer der Wege unten genügt.</string>
+    <string name="wizard_metadata_text">Bilder und Beschreibungen kommen von SteamGridDB und IGDB. Einer der Wege genügt.</string>
     <string name="wizard_metadata_via_pc">Über den GameLodge-PC</string>
     <string name="wizard_metadata_via_pc_none">Kein GameLodge-PC mit Keys gekoppelt</string>
     <string name="wizard_metadata_via_pc_sub">Ein gekoppelter PC mit Keys stellt sie bereit – dann ist nichts weiter nötig.</string>
@@ -1624,4 +1624,6 @@
     <string name="guide_igdb_5">Client-ID und Secret hier eintragen und speichern.</string>
     <string name="guide_qr_hint">Scannen, um die Seite auf dem Handy zu öffnen, oder hier öffnen:</string>
     <string name="guide_open_page">Seite öffnen</string>
+    <string name="input_disconnect">Stream trennen (Tastatur)</string>
+    <string name="input_disconnect_sub">Trennt den Stream per Tastatur; das Spiel läuft auf dem Host weiter. Immer mit Strg, Alt oder Shift.</string>
 </resources>

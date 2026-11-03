@@ -16,7 +16,8 @@ enum class GameActionTrigger { BEFORE_START, AFTER_END }
  * A Home Assistant action ([HaAction] value: entity, for switches with on/off) around a game.
  * [delaySeconds]: before the start either the start waits that long after the action
  * ([startWaits]) or the action follows the start that much later; after the end the action
- * runs that much later (dropped if the next game starts first).
+ * runs that much later (dropped if the next game starts first). [hostStarts]: also when another
+ * device starts a game through this PC as streaming host.
  */
 @Serializable
 data class GameAction(
@@ -24,12 +25,13 @@ data class GameAction(
     val trigger: GameActionTrigger,
     val delaySeconds: Int = 0,
     val startWaits: Boolean = true,
+    val hostStarts: Boolean = false,
 )
 
 /**
  * Game actions of the launcher: [global] for every game; a game listed in [games] uses its own
- * list instead (also an empty one: no actions for it). [hostStarts]: also when another device
- * starts a game through this PC as streaming host.
+ * list instead (also an empty one: no actions for it). [hostStarts]: the old switch for all
+ * actions at once (read once into each action's own [GameAction.hostStarts]).
  */
 @Serializable
 data class GameActionSettings(
@@ -39,9 +41,20 @@ data class GameActionSettings(
 ) {
     fun actionsFor(itemId: String?): List<GameAction> = itemId?.let { games[it] } ?: global
 
+    /** Only the actions that also run for starts through this PC as streaming host. */
+    fun forHostStarts(): GameActionSettings =
+        copy(global = global.filter { it.hostStarts }, games = games.mapValues { (_, list) -> list.filter { it.hostStarts } })
+
     companion object {
         private val json = Json { ignoreUnknownKeys = true; encodeDefaults = false }
-        fun decode(text: String): GameActionSettings = if (text.isBlank()) GameActionSettings() else runCatching { json.decodeFromString<GameActionSettings>(text) }.getOrDefault(GameActionSettings())
+        fun decode(text: String): GameActionSettings = if (text.isBlank()) GameActionSettings() else runCatching {
+            val s = json.decodeFromString<GameActionSettings>(text)
+            // The old switch for all actions: each action gets it.
+            if (!s.hostStarts) s else GameActionSettings(
+                global = s.global.map { it.copy(hostStarts = true) },
+                games = s.games.mapValues { (_, list) -> list.map { it.copy(hostStarts = true) } },
+            )
+        }.getOrDefault(GameActionSettings())
         fun encode(settings: GameActionSettings): String = json.encodeToString(settings)
     }
 }

@@ -328,6 +328,8 @@ class DesktopPlatformUi(
 
     override val deviceDisplayOptions: Boolean get() = false
 
+    override val hasDisconnectShortcut: Boolean get() = true
+
     override fun hasPage(id: SettingsPageId) = id == SettingsPageId.GAME_SOURCES || (id == SettingsPageId.EMULATORS && pcLibrary() != null) || (id == SettingsPageId.HOST_ROLE && host()?.let { hostConfigured(it) } == true) || (id == SettingsPageId.STREAMING_HOST && host()?.sync != null) ||
         (id == SettingsPageId.STARTUP && startup != null) ||
         (id == SettingsPageId.PROFILES && profiles != null)

@@ -294,6 +294,8 @@ private fun ColumnScope.EmulatorsStep() {
                 catalog.platform(id)?.displayName ?: id,
                 listOfNotNull(pluralStringResource(Res.plurals.emu_found, count, count), bios).joinToString(" · "),
                 done = bios == null, icon = Icons.Filled.VideogameAsset,
+                // The icon of the emulator that runs this platform's games.
+                image = io.github.thecodingdad.gamelodge.ui.screens.settings.rememberAppIcon(remember(id, tick, config) { emulation.resolve(id, null)?.component?.packageName }),
             )
         }
     }

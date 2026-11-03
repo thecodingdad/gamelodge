@@ -838,7 +838,7 @@
 
     <!-- Hint bar -->
     <string name="setting_hint_bar">Afficher les aides de boutons</string>
-    <string name="setting_hint_bar_sub">Barre en bas avec les boutons de la manette ; affichée uniquement tant qu'une manette est connectée</string>
+    <string name="setting_hint_bar_sub">Barre en bas avec les boutons de la manette (ou les touches du clavier) ; affichée seulement avec une manette ou un clavier connecté</string>
 
     <!-- Settings groups -->
     <string name="settings_group_streaming">Streaming et connexions</string>
@@ -1470,7 +1470,7 @@
     <string name="wizard_companion_found">GameLodge trouvé</string>
     <string name="wizard_pair_by_address">Appairer par adresse</string>
     <string name="wizard_metadata_title">Jaquettes et infos de jeu</string>
-    <string name="wizard_metadata_text">Images et descriptions viennent de SteamGridDB et IGDB. Une des voies ci-dessous suffit.</string>
+    <string name="wizard_metadata_text">Images et descriptions viennent de SteamGridDB et IGDB. Une des voies suffit.</string>
     <string name="wizard_metadata_via_pc">Via le PC GameLodge</string>
     <string name="wizard_metadata_via_pc_none">Aucun PC GameLodge avec clés appairé</string>
     <string name="wizard_metadata_via_pc_sub">Un PC appairé qui a des clés les fournit — rien d'autre à faire alors.</string>
@@ -1626,4 +1626,6 @@
     <string name="guide_igdb_5">Saisissez ici le client ID et le secret et enregistrez.</string>
     <string name="guide_qr_hint">Scannez pour ouvrir la page sur votre téléphone, ou ouvrez-la ici :</string>
     <string name="guide_open_page">Ouvrir la page</string>
+    <string name="input_disconnect">Couper le stream (clavier)</string>
+    <string name="input_disconnect_sub">Coupe le stream au clavier ; le jeu continue sur l’hôte. Toujours avec Ctrl, Alt ou Maj.</string>
 </resources>

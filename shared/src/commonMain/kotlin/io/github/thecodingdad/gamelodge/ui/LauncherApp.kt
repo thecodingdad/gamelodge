@@ -341,7 +341,8 @@ fun LauncherApp(
             val hintControllers = io.github.thecodingdad.gamelodge.ui.screens.settings.rememberControllers()
             CompositionLocalProvider(
                 io.github.thecodingdad.gamelodge.ui.components.LocalCompactWidth provides (maxWidth < 720.dp),
-                io.github.thecodingdad.gamelodge.ui.components.LocalShowHintBar provides (settings.showHintBar && (hintControllers.isNotEmpty() || io.github.thecodingdad.gamelodge.input.KeyboardKeys.active)),
+                io.github.thecodingdad.gamelodge.ui.components.LocalShowHintBar provides io.github.thecodingdad.gamelodge.input.KeyboardKeys.hintsShown(settings.showHintBar, hintControllers.size),
+                io.github.thecodingdad.gamelodge.ui.components.LocalKeyHints provides io.github.thecodingdad.gamelodge.input.KeyboardKeys.showsKeys(hintControllers.size),
             ) {
             Box(Modifier.fillMaxSize().background(LauncherTheme.colors.background)) {
                 // Screensaver after the configured idle time (also protects the OLED panel).

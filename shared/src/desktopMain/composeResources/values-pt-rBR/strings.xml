@@ -250,4 +250,5 @@
     <string name="launch_options_processes_sub">Programas do jogo, separados por vírgulas (p. ex. game.exe): o lançador espera que terminem (tempo de jogo, streams).</string>
     <string name="launch_options_reset">Redefinir</string>
     <string name="controller_model_shared">O Windows não distingue controles do mesmo modelo que não informam número de série (por exemplo, os do Xbox): essas configurações valem então para todos eles.</string>
+    <string name="wizard_sources_manual">Outros jogos (qualquer programa deste PC) podem ser adicionados à mão depois em Configurações › Fontes de jogos.</string>
 </resources>

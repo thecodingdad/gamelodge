@@ -216,20 +216,38 @@ private fun ColumnScope.GameSourcesStep(library: PcLibrary, settings: LauncherSe
     scanning?.let { p ->
         LinearProgressIndicator(progress = { p.done.toFloat() / p.total.coerceAtLeast(1) }, modifier = Modifier.fillMaxWidth(), color = colors.accent)
     }
-    library.sources.filter { installed[it] != false }.forEachIndexed { index, source ->
+    @Composable
+    fun StoreRow(source: String, initialFocus: Boolean) {
+        val present = installed[source] != false
         val on = source !in settings.disabledGameSources
         val count = counts[source]
         SwitchRow(
-            storeLabel(source), on,
+            storeLabel(source), on && present,
             onChange = { enable -> nav.update { s -> s.copy(disabledGameSources = if (enable) s.disabledGameSources - source else s.disabledGameSources + source) } },
             subtitle = when {
+                !present -> stringResource(Res.string.game_source_not_installed)
                 !on -> null
                 count == null || count.first == 0 -> stringResource(Res.string.game_source_none)
                 else -> stringResource(Res.string.game_source_count, count.first, count.second)
             },
-            initialFocus = index == 0,
+            initialFocus = initialFocus,
+            enabled = present,
         )
     }
+    // Stores found on this PC; the other supported ones folded away (as in the settings).
+    val (present, missing) = library.sources.partition { installed[it] != false }
+    present.forEachIndexed { index, source -> StoreRow(source, index == 0) }
+    if (missing.isNotEmpty()) {
+        var showMissing by remember { mutableStateOf(false) }
+        io.github.thecodingdad.gamelodge.ui.screens.settings.ActionRow(
+            stringResource(Res.string.game_sources_not_installed, missing.size), { showMissing = !showMissing },
+            missing.joinToString { storeNames[it] ?: it },
+            if (showMissing) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+        )
+        if (showMissing) missing.forEach { StoreRow(it, false) }
+    }
+    WizardNote(stringResource(Res.string.wizard_sources_manual))
+    PlayniteRow(nav.update)
     SectionHeader(stringResource(Res.string.store_accounts))
     WizardStatusRow(
         if (steam.signedIn) stringResource(Res.string.steam_signed_in, steam.accountName ?: "Steam") else stringResource(Res.string.steam_sign_in),
@@ -277,11 +295,15 @@ private fun ColumnScope.EmulatorsStep(library: PcLibrary, settings: LauncherSett
 
     SectionHeader(stringResource(Res.string.wizard_emu_detected))
     config.emulators.forEach { emu ->
-        WizardStatusRow(emu.name, emu.platforms.joinToString { PcPlatforms.byName(it.platform)?.displayName ?: it.platform }, done = true, icon = Icons.Filled.VideogameAsset)
+        WizardStatusRow(
+            emu.name, emu.platforms.joinToString { PcPlatforms.byName(it.platform)?.displayName ?: it.platform }, done = true,
+            icon = Icons.Filled.VideogameAsset, image = io.github.thecodingdad.gamelodge.ui.screens.settings.rememberAppIcon(emu.executable),
+        )
     }
     detected.forEach { (preset, exe) ->
         WizardStatusRow(
             preset.name, exe, done = false, icon = Icons.Filled.VideogameAsset, action = stringResource(Res.string.wizard_add),
+            image = io.github.thecodingdad.gamelodge.ui.screens.settings.rememberAppIcon(exe),
             onClick = {
                 val emu = PcEmulator(
                     id = UUID.randomUUID().toString(), name = preset.name, executable = exe, arguments = preset.arguments,
@@ -294,6 +316,7 @@ private fun ColumnScope.EmulatorsStep(library: PcLibrary, settings: LauncherSett
         )
     }
     if (config.emulators.isEmpty() && detected.isEmpty()) WizardNote(stringResource(Res.string.emu_pc_none))
+    PlayniteRow(nav.update)
 
     if (config.folders.isNotEmpty()) {
         LauncherButton(
@@ -308,7 +331,32 @@ private fun ColumnScope.EmulatorsStep(library: PcLibrary, settings: LauncherSett
         SectionHeader(stringResource(Res.string.wizard_emu_found))
         perPlatform.entries.sortedByDescending { it.value }.forEach { (platform, count) ->
             val bios = if (needsBios.any { PcPlatforms.byName(it)?.displayName == platform || it == platform }) stringResource(Res.string.emu_bios_hint) else null
-            WizardStatusRow(platform, listOfNotNull(stringResource(Res.string.emu_pc_found, count), bios).joinToString(" · "), done = bios == null, icon = Icons.Filled.VideogameAsset)
+            // The icon of the emulator that runs this console's games.
+            val emulator = PcPlatforms.all.firstOrNull { it.displayName == platform || it.name == platform }?.let { config.emulatorFor(it.name) }
+            WizardStatusRow(
+                platform, listOfNotNull(stringResource(Res.string.emu_pc_found, count), bios).joinToString(" · "), done = bios == null,
+                icon = Icons.Filled.VideogameAsset, image = io.github.thecodingdad.gamelodge.ui.screens.settings.rememberAppIcon(emulator?.executable),
+            )
         }
     }
+}
+
+/**
+ * Takes emulators, ROM folders and games added by hand over from Playnite (only where Playnite is
+ * installed); the same in the game sources and the emulators step.
+ */
+@Composable
+private fun PlayniteRow(update: ((LauncherSettings) -> LauncherSettings) -> Unit) {
+    val playnite = remember { io.github.thecodingdad.gamelodge.desktop.emulation.playniteInstalled() } ?: return
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    var result by remember { mutableStateOf<String?>(null) }
+    WizardStatusRow(
+        stringResource(Res.string.emu_pc_playnite), result ?: stringResource(Res.string.emu_pc_playnite_sub),
+        done = result != null, icon = Icons.Filled.SystemUpdateAlt, action = stringResource(Res.string.wizard_add),
+        onClick = {
+            scope.launch {
+                result = io.github.thecodingdad.gamelodge.desktop.emulation.importFromPlaynite(playnite, File(dataDirectory(), "custom-covers"), update)
+            }
+        },
+    )
 }

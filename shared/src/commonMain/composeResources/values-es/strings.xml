@@ -838,7 +838,7 @@
 
     <!-- Hint bar -->
     <string name="setting_hint_bar">Mostrar pistas de botones</string>
-    <string name="setting_hint_bar_sub">Barra abajo con los botones del mando; solo se muestra mientras hay un mando conectado</string>
+    <string name="setting_hint_bar_sub">Barra inferior con los botones del mando (o teclas del teclado); solo aparece con un mando o teclado conectado</string>
 
     <!-- Settings groups -->
     <string name="settings_group_streaming">Streaming y conexiones</string>
@@ -1470,7 +1470,7 @@
     <string name="wizard_companion_found">GameLodge encontrado</string>
     <string name="wizard_pair_by_address">Emparejar por dirección</string>
     <string name="wizard_metadata_title">Covers e info del juego</string>
-    <string name="wizard_metadata_text">Las imágenes y descripciones vienen de SteamGridDB e IGDB. Con una de las vías de abajo basta.</string>
+    <string name="wizard_metadata_text">Las imágenes y descripciones vienen de SteamGridDB e IGDB. Con una de las vías basta.</string>
     <string name="wizard_metadata_via_pc">A través del PC con GameLodge</string>
     <string name="wizard_metadata_via_pc_none">Ningún PC con GameLodge y claves emparejado</string>
     <string name="wizard_metadata_via_pc_sub">Un PC emparejado que tiene claves las proporciona: entonces no hay nada más que hacer.</string>
@@ -1626,4 +1626,6 @@
     <string name="guide_igdb_5">Introduce aquí el client ID y el secret y guarda.</string>
     <string name="guide_qr_hint">Escanea para abrir la página en tu móvil, o ábrela aquí:</string>
     <string name="guide_open_page">Abrir página</string>
+    <string name="input_disconnect">Cerrar la transmisión (teclado)</string>
+    <string name="input_disconnect_sub">Cierra la transmisión con el teclado; el juego sigue en el host. Siempre con Ctrl, Alt o Mayús.</string>
 </resources>

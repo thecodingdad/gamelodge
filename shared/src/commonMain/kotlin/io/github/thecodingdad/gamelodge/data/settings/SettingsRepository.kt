@@ -238,6 +238,8 @@ data class LauncherSettings(
     val keyboardKeys: Map<String, String> = emptyMap(),
     /** System-wide shortcut that opens the quick menu ("Ctrl+Alt+M"), "" = off. */
     val keyboardQuickMenu: String = "",
+    /** PC: keyboard shortcut that ends the stream (the game keeps running); "" = none. */
+    val keyboardDisconnect: String = DEFAULT_DISCONNECT_SHORTCUT,
     /** Match rules the automatic metadata matches were last checked with (MetadataService). */
     val matchRuleVersion: Int = 0,
     /** The on-screen keyboard of the stream (Android): Android's own or the client's PC keyboard. */
@@ -374,6 +376,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val comboForward = booleanPreferencesKey("combo_forward")
         val keyboardKeys = stringPreferencesKey("keyboard_keys")
         val keyboardQuickMenu = stringPreferencesKey("keyboard_quick_menu")
+        val keyboardDisconnect = stringPreferencesKey("keyboard_disconnect")
         val matchRuleVersion = intPreferencesKey("match_rule_version")
         val mouseSideButtons = stringPreferencesKey("mouse_side_buttons")
         val streamKeyboard = stringPreferencesKey("stream_keyboard")
@@ -507,6 +510,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
                 line.split('\t').takeIf { it.size == 2 }?.let { it[0] to it[1] }
             }?.toMap() ?: d.keyboardKeys,
             keyboardQuickMenu = this[K.keyboardQuickMenu] ?: d.keyboardQuickMenu,
+            keyboardDisconnect = this[K.keyboardDisconnect] ?: d.keyboardDisconnect,
             matchRuleVersion = this[K.matchRuleVersion] ?: d.matchRuleVersion,
             mouseSideButtons = enumOr(this[K.mouseSideButtons], d.mouseSideButtons),
             streamKeyboard = enumOr(this[K.streamKeyboard], d.streamKeyboard),
@@ -631,6 +635,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         this[K.comboForward] = s.comboForward
         this[K.keyboardKeys] = s.keyboardKeys.entries.joinToString("\n") { "${it.key}\t${it.value}" }
         this[K.keyboardQuickMenu] = s.keyboardQuickMenu
+        this[K.keyboardDisconnect] = s.keyboardDisconnect
         this[K.matchRuleVersion] = s.matchRuleVersion
         this[K.mouseSideButtons] = s.mouseSideButtons.name
         this[K.streamKeyboard] = s.streamKeyboard.name
@@ -714,6 +719,9 @@ enum class MouseAcceleration(val exponent: Float) { LOW(1.6f), MEDIUM(2.4f), HIG
 const val KEYCODE_X = 99
 const val KEYCODE_L1 = 102
 const val KEYCODE_R1 = 103
+/** Moonlight's own shortcut for ending the stream, the default of [LauncherSettings.keyboardDisconnect]. */
+const val DEFAULT_DISCONNECT_SHORTCUT = "Ctrl+Alt+Shift+Q"
+
 const val KEYCODE_START = 108
 const val KEYCODE_SELECT = 109
 

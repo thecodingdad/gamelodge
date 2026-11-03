@@ -1,5 +1,7 @@
 package io.github.thecodingdad.gamelodge.desktop
 
+import androidx.compose.ui.graphics.toComposeImageBitmap
+
 import androidx.compose.ui.graphics.Color
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
@@ -83,6 +85,20 @@ class DesktopFeedbackOutput(private val gamepads: () -> Gamepads?) : FeedbackOut
 object DesktopArtwork : ArtworkPlatform {
     /** Store covers are web addresses, host box art and own images files. */
     override fun imageModel(value: String): Any = if (value.startsWith("http://") || value.startsWith("https://")) value else File(value)
+
+    /** A program's icon from Windows ([packageName]: the program's path, e.g. an emulator). */
+    override suspend fun appIcon(packageName: String): androidx.compose.ui.graphics.ImageBitmap? {
+        val file = File(packageName)
+        if (!isWindows || !file.isFile) return null
+        val icon = javax.swing.filechooser.FileSystemView.getFileSystemView().getSystemIcon(file, 64, 64) ?: return null
+        val image = java.awt.image.BufferedImage(icon.iconWidth, icon.iconHeight, java.awt.image.BufferedImage.TYPE_INT_ARGB)
+        image.createGraphics().apply {
+            setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_BICUBIC)
+            icon.paintIcon(null, this, 0, 0)
+            dispose()
+        }
+        return image.toComposeImageBitmap()
+    }
 
     /** Tiles generated from the cover / box art (no app icons or TV banners on Windows), in every fit. */
     override suspend fun localTiles(

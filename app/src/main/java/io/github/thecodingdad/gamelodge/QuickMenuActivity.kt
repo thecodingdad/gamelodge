@@ -164,7 +164,8 @@ class QuickMenuActivity : ComponentActivity() {
                     val controllers = rememberControllers()
                     CompositionLocalProvider(
                         LocalCompactWidth provides (maxWidth < 720.dp),
-                        LocalShowHintBar provides (settings.showHintBar && (controllers.isNotEmpty() || io.github.thecodingdad.gamelodge.input.KeyboardKeys.active)),
+                        LocalShowHintBar provides io.github.thecodingdad.gamelodge.input.KeyboardKeys.hintsShown(settings.showHintBar, controllers.size),
+                        io.github.thecodingdad.gamelodge.ui.components.LocalKeyHints provides io.github.thecodingdad.gamelodge.input.KeyboardKeys.showsKeys(controllers.size),
                     ) {
                         val running by vm.runningSessions.collectAsState()
                         QuickMenu(

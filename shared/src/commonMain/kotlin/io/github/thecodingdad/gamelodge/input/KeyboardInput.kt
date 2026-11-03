@@ -97,6 +97,18 @@ object KeyboardKeys {
 
     fun onKeyboard() { if (!active) active = true }
 
+    /** A real keyboard is connected (set by the platform; the PC always has one). */
+    var connected by mutableStateOf(false)
+
+    /**
+     * Whether hints show keys: the keyboard was used last, or there is a keyboard but no controller
+     * ([controllers]: connected controllers).
+     */
+    fun showsKeys(controllers: Int): Boolean = active || (connected && controllers == 0)
+
+    /** Hints at all: switched on and something to press them with ([controllers] connected). */
+    fun hintsShown(enabled: Boolean, controllers: Int): Boolean = enabled && (controllers > 0 || connected || active)
+
     fun onOtherInput() { if (active) active = false }
 
     private fun letterKey(c: Char): Key = when (c) {

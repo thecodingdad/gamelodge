@@ -43,14 +43,14 @@ data class ButtonHint(
 /** Bottom bar listing what each button does right now. Always visible, in every screen. */
 @Composable
 fun ButtonHintBar(hints: List<ButtonHint>, modifier: Modifier = Modifier, hideWhenCompact: Boolean = false, inPopup: Boolean = false) {
-    // Button hints only with a controller connected (and the hint bar switched on), popups too.
+    // Hints only with a controller or keyboard connected (and the hint bar switched on), popups too.
     if (!LocalShowHintBar.current) return
     // Portrait/phone is mostly touch: the main hint bars are hidden there (more room for content).
     if (hideWhenCompact && LocalCompactWidth.current) return
     val compact = LocalCompactWidth.current
     val feedback = io.github.thecodingdad.gamelodge.ui.feedback.LocalUiFeedback.current
-    // Keyboard used last: keys instead of buttons; a button without a key has no hint then.
-    val keyboard = io.github.thecodingdad.gamelodge.input.KeyboardKeys.active
+    // Keyboard used last (or no controller): keys instead of buttons; a button without a key has no hint then.
+    val keyboard = LocalKeyHints.current || io.github.thecodingdad.gamelodge.input.KeyboardKeys.active
     val shown = if (keyboard) hints.filter { keyLabel(it.button) != null } else hints
     // One line that never wraps; on narrow screens it scrolls instead.
     Row(
@@ -115,7 +115,7 @@ private fun KeyCap(label: String, modifier: Modifier) {
 /** Controller button glyph in the style of the configured layout (a key cap while the keyboard is used). */
 @Composable
 fun PadGlyph(button: PadButton, modifier: Modifier = Modifier, second: PadButton? = null) {
-    if (io.github.thecodingdad.gamelodge.input.KeyboardKeys.active) {
+    if (LocalKeyHints.current || io.github.thecodingdad.gamelodge.input.KeyboardKeys.active) {
         keyLabel(button)?.let { first ->
             val name = io.github.thecodingdad.gamelodge.ui.screens.settings.keyDisplayName(first)
             val secondName = second?.let { keyLabel(it) }?.let { io.github.thecodingdad.gamelodge.ui.screens.settings.keyDisplayName(it) }

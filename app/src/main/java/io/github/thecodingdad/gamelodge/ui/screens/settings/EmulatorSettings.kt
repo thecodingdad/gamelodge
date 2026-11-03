@@ -150,7 +150,7 @@ fun EmulatorSettings(vm: LauncherViewModel) {
         SectionHeader(stringResource(Res.string.emu_custom))
         Text(stringResource(Res.string.emu_custom_help), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
         config.custom.forEach { emu ->
-            NavRow(emu.name, { editingCustom = emu }, subtitle = emu.packageName, icon = Icons.Filled.SportsEsports)
+            NavRow(emu.name, { editingCustom = emu }, subtitle = emu.packageName, icon = Icons.Filled.SportsEsports, image = rememberAppIcon(emu.packageName))
         }
         LauncherButton(stringResource(Res.string.emu_custom_add), icon = Icons.Filled.Add, onClick = {
             editingCustom = CustomEmulator(id = java.util.UUID.randomUUID().toString(), name = "", packageName = "")
@@ -205,9 +205,12 @@ internal fun PlatformEmulatorRow(platform: CatalogPlatform, tick: Int) {
         )
         return
     }
-    val current = emulation.resolve(platform.id, null)?.key ?: choices.first().key
+    val resolved = emulation.resolve(platform.id, null)
+    val current = resolved?.key ?: choices.first().key
     ChoiceRow(
         platform.displayName, choices.map { it.key }, current,
+        // The icon of the emulator that starts this platform's games.
+        image = rememberAppIcon((resolved ?: choices.first()).component.packageName),
         label = { key -> choices.first { it.key == key }.let { if (it.experimental) "${it.label} ($experimental)" else it.label } },
         onSelect = { key -> scope.launch { emulation.update { it.copy(defaults = it.defaults + (platform.id to key)) } } },
         subtitle = bios,

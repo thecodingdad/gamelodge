@@ -250,4 +250,5 @@
     <string name="launch_options_processes_sub">Programmi del gioco, separati da virgole (ad es. game.exe): il launcher attende che terminino (tempo di gioco, stream).</string>
     <string name="launch_options_reset">Reimposta</string>
     <string name="controller_model_shared">Windows non distingue i controller dello stesso modello che non comunicano un numero di serie (ad esempio quelli Xbox): queste impostazioni valgono allora per tutti.</string>
+    <string name="wizard_sources_manual">Altri giochi (qualsiasi programma su questo PC) si possono aggiungere a mano più tardi in Impostazioni › Fonti di giochi.</string>
 </resources>

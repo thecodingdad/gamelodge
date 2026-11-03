@@ -94,8 +94,11 @@ object FocusSound {
     fun silenced() = now() < quietUntil
 }
 
-/** False when the hint bar is turned off or no controller is connected. */
+/** False when the hint bar is turned off or neither a controller nor a keyboard is connected. */
 val LocalShowHintBar = androidx.compose.runtime.compositionLocalOf { true }
+
+/** True when hints show keyboard keys instead of controller buttons ([io.github.thecodingdad.gamelodge.input.KeyboardKeys.showsKeys]). */
+val LocalKeyHints = androidx.compose.runtime.compositionLocalOf { false }
 
 /** True on narrow screens (portrait handheld, phone): layouts stack instead of sitting side by side. */
 val LocalCompactWidth = androidx.compose.runtime.compositionLocalOf { false }

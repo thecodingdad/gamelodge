@@ -87,9 +87,9 @@ fun main(args: Array<String>) {
     // Games installed here are PC games (IGDB platform choice, suggestions).
     io.github.thecodingdad.gamelodge.data.library.PlatformResolver.localPlatform = io.github.thecodingdad.gamelodge.data.library.PlatformResolver.PC
     val container = DesktopContainer(dataDir)
-    // Games another device starts through this PC as streaming host: their actions, when switched on.
+    // Games another device starts through this PC as streaming host: the actions switched on for that.
     val hostGameActions = io.github.thecodingdad.gamelodge.ha.GameActionRunner(
-        { container.ha.runAction(it) }, { io.github.thecodingdad.gamelodge.ha.GameActionSettings.decode(container.settings.current().gameActions) }, container.scope,
+        { container.ha.runAction(it) }, { io.github.thecodingdad.gamelodge.ha.GameActionSettings.decode(container.settings.current().gameActions).forHostStarts() }, container.scope,
     )
     // The game the streaming host runs through a runner right now (its window comes to the front
     // when a paired launcher resumes the stream).
@@ -147,7 +147,7 @@ fun main(args: Array<String>) {
                 container.library.syncPlayData()
             }
         }
-        if (io.github.thecodingdad.gamelodge.ha.GameActionSettings.decode(container.settings.current().gameActions).hostStarts) {
+        run {
             val itemId = container.database.libraryDao().getTarget(io.github.thecodingdad.gamelodge.data.library.SourceEntry.localId(entryId))?.itemId
             if (started) hostGameActions.beforeStart(itemId) else hostGameActions.ended()
         }
@@ -352,6 +352,14 @@ fun main(args: Array<String>) {
         val pads = kotlinx.coroutines.withTimeoutOrNull(60_000) { gamepads.controllers.first { it.isNotEmpty() } }.orEmpty()
         container.settings.update { it.withControllerGlobalsMoved(it.controllerCombos.keys + it.controllerLayouts.keys + pads.map { p -> p.key }) }
     }
+    // A PC has a keyboard: button hints stay with keys when no controller is connected.
+    io.github.thecodingdad.gamelodge.input.KeyboardKeys.connected = true
+    // The PC's built-in combinations: Guide held doesn't reach the launcher reliably on Windows (the
+    // Xbox Game Bar takes it), so the quick menu opens with Start held and the mouse with Select held.
+    io.github.thecodingdad.gamelodge.ui.screens.settings.DefaultCombos = io.github.thecodingdad.gamelodge.data.settings.LauncherSettings(
+        comboQuickMenu = setOf(io.github.thecodingdad.gamelodge.data.settings.KEYCODE_START, io.github.thecodingdad.gamelodge.data.settings.COMBO_HOLD),
+        comboMouse = setOf(io.github.thecodingdad.gamelodge.data.settings.KEYCODE_SELECT, io.github.thecodingdad.gamelodge.data.settings.COMBO_HOLD),
+    )
     // Pads without their own combinations use the built-in ones.
     io.github.thecodingdad.gamelodge.input.ButtonCombos.forward = io.github.thecodingdad.gamelodge.ui.screens.settings.DefaultCombos.comboForward
     io.github.thecodingdad.gamelodge.input.ButtonCombos.combos = io.github.thecodingdad.gamelodge.input.ComboAction.entries
@@ -369,6 +377,10 @@ fun main(args: Array<String>) {
             io.github.thecodingdad.gamelodge.desktop.stream.MoonlightQt.onHotkey = { gamepads.onCombo(io.github.thecodingdad.gamelodge.input.ComboAction.QUICK_MENU, -1) }
             io.github.thecodingdad.gamelodge.desktop.stream.MoonlightQt.locate().running
                 ?.send("hotkey " + io.github.thecodingdad.gamelodge.desktop.stream.MoonlightQt.hotkeySpec(shortcut))
+            val disconnect = io.github.thecodingdad.gamelodge.input.KeyShortcut.parse(it.keyboardDisconnect)
+            io.github.thecodingdad.gamelodge.desktop.stream.MoonlightQt.disconnectShortcut = disconnect
+            io.github.thecodingdad.gamelodge.desktop.stream.MoonlightQt.locate().running
+                ?.send("disconnectkey " + io.github.thecodingdad.gamelodge.desktop.stream.MoonlightQt.hotkeySpec(disconnect))
             WindowsPointer.speed = it.mouseSpeed / 100f
             WindowsPointer.exponent = it.mouseAcceleration.exponent
             WindowsPointer.streamSpeed = STREAM_MOUSE_SPEED * it.mouseSpeed / 100f

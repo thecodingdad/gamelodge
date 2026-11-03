@@ -83,8 +83,7 @@ fun EmulatorsPage(
     var editing by remember { mutableStateOf<PcEmulator?>(null) }
     var editingFolder by remember { mutableStateOf<PcRomFolder?>(null) }
     var playniteResult by remember { mutableStateOf<String?>(null) }
-    // The import only where Playnite is installed (its library alone may be left over).
-    val playnite = remember { PlayniteImport.locate().takeIf { it.second != null } ?: (null to null) }
+    val playnite = remember { playniteInstalled() }
     // Network drives can take long or hang: existence is checked off the UI thread (unknown = fine).
     val present by androidx.compose.runtime.produceState(emptyMap<String, Boolean>(), config) {
         val paths = config.emulators.map { it.executable } + config.folders.map { it.path }
@@ -105,28 +104,18 @@ fun EmulatorsPage(
                 emu.name, { editing = emu },
                 subtitle = if (present[emu.executable] != false) consoles else "$missing · $consoles",
                 icon = Icons.Filled.SportsEsports, initialFocus = index == 0,
+                image = io.github.thecodingdad.gamelodge.ui.screens.settings.rememberAppIcon(emu.executable),
             )
         }
         ButtonRow {
             LauncherButton(stringResource(Res.string.emu_pc_add), icon = Icons.Filled.Add, onClick = { choosingPreset = true })
-            if (playnite.first != null) {
+            if (playnite != null) {
                 LauncherButton(stringResource(Res.string.emu_pc_playnite), icon = Icons.Filled.SystemUpdateAlt, onClick = {
-                    scope.launch {
-                        val (lib, install) = playnite
-                        val result = withContext(Dispatchers.IO) { PlayniteImport(PlayniteLibrary.read(lib!!), lib, install, coverDir).run() }
-                        update { s ->
-                            val (emulation, games) = PlayniteImport.merge(PcEmulation.decode(s.pcEmulation), CustomGame.decode(s.pcCustomGames), result)
-                            s.copy(pcEmulation = emulation.encode(), pcCustomGames = CustomGame.encode(games))
-                        }
-                        playniteResult = org.jetbrains.compose.resources.getString(
-                            Res.string.emu_pc_playnite_done, result.emulators.size, result.folders.size, result.games.size,
-                        ) + if (result.skippedEmulators.isEmpty()) "" else "\n" +
-                            org.jetbrains.compose.resources.getString(Res.string.emu_pc_playnite_skipped, result.skippedEmulators.joinToString())
-                    }
+                    scope.launch { playniteResult = importFromPlaynite(playnite, coverDir, update) }
                 })
             }
         }
-        if (playnite.first != null) {
+        if (playnite != null) {
             Text(
                 playniteResult ?: stringResource(Res.string.emu_pc_playnite_sub), style = MaterialTheme.typography.bodySmall,
                 color = if (playniteResult != null) LauncherTheme.colors.accentText else LauncherTheme.colors.onSurfaceMuted,
@@ -174,6 +163,7 @@ fun EmulatorsPage(
                     PcPlatforms.byName(platform)?.displayName ?: platform, choices.map { it.id },
                     config.emulatorFor(platform)?.id ?: choices.first().id,
                     label = { id -> choices.first { it.id == id }.name },
+                    image = io.github.thecodingdad.gamelodge.ui.screens.settings.rememberAppIcon((config.emulatorFor(platform) ?: choices.first()).executable),
                     onSelect = { id -> save { it.copy(defaults = it.defaults + (platform to id)) } },
                 )
             }
@@ -310,4 +300,29 @@ private fun FolderDialog(
             HoldToConfirmButton(stringResource(Res.string.emu_folder_remove), icon = Icons.Filled.Delete, onConfirmed = { onRemove(f) })
         }
     }
+}
+
+/** Playnite's library and installation; null unless Playnite is installed (its library alone may be left over). */
+internal fun playniteInstalled(): Pair<File, File>? =
+    PlayniteImport.locate().let { (library, install) -> if (library != null && install != null) library to install else null }
+
+/**
+ * Takes the emulators, ROM folders and games added by hand over from Playnite ([found] from
+ * [playniteInstalled]); known ones stay. Returns what was taken over, for the user.
+ */
+internal suspend fun importFromPlaynite(
+    found: Pair<File, File>,
+    coverDir: File,
+    update: ((LauncherSettings) -> LauncherSettings) -> Unit,
+): String {
+    val (library, install) = found
+    val result = withContext(Dispatchers.IO) { PlayniteImport(PlayniteLibrary.read(library), library, install, coverDir).run() }
+    update { s ->
+        val (emulation, games) = PlayniteImport.merge(PcEmulation.decode(s.pcEmulation), CustomGame.decode(s.pcCustomGames), result)
+        s.copy(pcEmulation = emulation.encode(), pcCustomGames = CustomGame.encode(games))
+    }
+    return org.jetbrains.compose.resources.getString(
+        Res.string.emu_pc_playnite_done, result.emulators.size, result.folders.size, result.games.size,
+    ) + if (result.skippedEmulators.isEmpty()) "" else "\n" +
+        org.jetbrains.compose.resources.getString(Res.string.emu_pc_playnite_skipped, result.skippedEmulators.joinToString())
 }

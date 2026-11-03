@@ -61,6 +61,8 @@ class MoonlightQt(val dir: File) {
         // The stream grabs the keyboard (Windows never sees Ctrl / Alt / Shift there, so the quick
         // menu hotkey can't fire): Moonlight-Qt catches it and reports "LAUNCHER-HOTKEY".
         builder.environment()["MOONLIGHT_LAUNCHER_HOTKEY"] = hotkeySpec(io.github.thecodingdad.gamelodge.input.KeyboardKeys.quickMenuShortcut)
+        // The keyboard shortcut that ends the stream (Moonlight's own Ctrl+Alt+Shift+Q is off then).
+        builder.environment()["MOONLIGHT_LAUNCHER_DISCONNECT_KEY"] = hotkeySpec(disconnectShortcut)
         // Part of the launcher: its taskbar button, the game's name and the launcher's icon.
         builder.environment()["MOONLIGHT_LAUNCHER_APPID"] = io.github.thecodingdad.gamelodge.desktop.TaskbarIdentity.APP_ID
         title?.let { builder.environment()["MOONLIGHT_LAUNCHER_TITLE"] = "$it – GameLodge" }
@@ -143,6 +145,9 @@ class MoonlightQt(val dir: File) {
         fun hotkeySpec(shortcut: io.github.thecodingdad.gamelodge.input.KeyShortcut?): String = shortcut?.let { s ->
             listOfNotNull("ctrl".takeIf { s.ctrl }, "alt".takeIf { s.alt }, "shift".takeIf { s.shift }, s.key).joinToString("+")
         }.orEmpty()
+
+        /** The keyboard shortcut that ends the stream (null: none). */
+        @Volatile var disconnectShortcut: io.github.thecodingdad.gamelodge.input.KeyShortcut? = null
 
         /** The pad that starts a stream becomes player 1 ("<n>:<name>", see [Gamepads.starter]); null: the usual order. */
         @Volatile var firstPad: suspend () -> String? = { null }

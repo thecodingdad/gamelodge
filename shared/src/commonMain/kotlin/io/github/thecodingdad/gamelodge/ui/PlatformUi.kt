@@ -137,6 +137,9 @@ interface PlatformUi {
     /** The stream client can show an on-screen keyboard (Android's or its PC keyboard). */
     val hasStreamKeyboard: Boolean get() = false
 
+    /** The stream takes a keyboard shortcut that ends it (the PC's Moonlight-Qt). */
+    val hasDisconnectShortcut: Boolean get() = false
+
     /** Settings pages only some platforms have (VPN, backup, emulators …). */
     fun hasPage(id: io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId): Boolean
 

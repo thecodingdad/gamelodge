@@ -250,4 +250,5 @@
     <string name="launch_options_processes_sub">Programs of the game, separated by commas (e.g. game.exe): the launcher waits for them to end (play time, streams).</string>
     <string name="launch_options_reset">Reset</string>
     <string name="controller_model_shared">Windows can’t tell apart controllers of the same model that report no serial number (Xbox controllers, for example): these settings then apply to all of them.</string>
+    <string name="wizard_sources_manual">Other games (any program on this PC) can be added by hand later in Settings › Game sources.</string>
 </resources>

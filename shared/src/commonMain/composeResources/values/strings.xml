@@ -838,7 +838,7 @@
 
     <!-- Hint bar -->
     <string name="setting_hint_bar">Show button hints</string>
-    <string name="setting_hint_bar_sub">Bar at the bottom with the controller buttons; only shown while a controller is connected</string>
+    <string name="setting_hint_bar_sub">Bar at the bottom with the controller buttons (or keyboard keys); only shown while a controller or keyboard is connected</string>
 
     <!-- Settings groups -->
     <string name="settings_group_streaming">Streaming &amp; connections</string>
@@ -1470,7 +1470,7 @@
     <string name="wizard_companion_found">GameLodge found</string>
     <string name="wizard_pair_by_address">Pair by address</string>
     <string name="wizard_metadata_title">Covers &amp; game info</string>
-    <string name="wizard_metadata_text">Artwork and descriptions come from SteamGridDB and IGDB. One of the ways below is enough.</string>
+    <string name="wizard_metadata_text">Artwork and descriptions come from SteamGridDB and IGDB. One of the ways is enough.</string>
     <string name="wizard_metadata_via_pc">Through the GameLodge PC</string>
     <string name="wizard_metadata_via_pc_none">No GameLodge PC with keys paired</string>
     <string name="wizard_metadata_via_pc_sub">A paired PC that has keys provides them – nothing else to do then.</string>
@@ -1626,4 +1626,6 @@
     <string name="guide_igdb_5">Enter client ID and secret here and save.</string>
     <string name="guide_qr_hint">Scan to open the page on your phone, or open it here:</string>
     <string name="guide_open_page">Open page</string>
+    <string name="input_disconnect">End stream (keyboard)</string>
+    <string name="input_disconnect_sub">Ends the stream from the keyboard; the game keeps running on the host. Always with Ctrl, Alt or Shift.</string>
 </resources>

@@ -838,7 +838,7 @@
 
     <!-- Hint bar -->
     <string name="setting_hint_bar">Mostra i suggerimenti dei tasti</string>
-    <string name="setting_hint_bar_sub">Barra in basso con i tasti del controller; mostrata solo mentre un controller è collegato</string>
+    <string name="setting_hint_bar_sub">Barra in basso con i tasti del controller (o della tastiera); appare solo con un controller o una tastiera collegati</string>
 
     <!-- Settings groups -->
     <string name="settings_group_streaming">Streaming e connessioni</string>
@@ -1470,7 +1470,7 @@
     <string name="wizard_companion_found">GameLodge trovato</string>
     <string name="wizard_pair_by_address">Associa per indirizzo</string>
     <string name="wizard_metadata_title">Copertine e info di gioco</string>
-    <string name="wizard_metadata_text">Immagini e descrizioni vengono da SteamGridDB e IGDB. Basta una delle vie qui sotto.</string>
+    <string name="wizard_metadata_text">Immagini e descrizioni vengono da SteamGridDB e IGDB. Basta una delle vie.</string>
     <string name="wizard_metadata_via_pc">Tramite il PC GameLodge</string>
     <string name="wizard_metadata_via_pc_none">Nessun PC GameLodge con chiavi associato</string>
     <string name="wizard_metadata_via_pc_sub">Un PC associato che ha delle chiavi le fornisce: allora non c'è altro da fare.</string>
@@ -1626,4 +1626,6 @@
     <string name="guide_igdb_5">Inserisci qui client ID e secret e salva.</string>
     <string name="guide_qr_hint">Scansiona per aprire la pagina sul telefono, o aprila qui:</string>
     <string name="guide_open_page">Apri la pagina</string>
+    <string name="input_disconnect">Chiudi lo stream (tastiera)</string>
+    <string name="input_disconnect_sub">Chiude lo stream da tastiera; il gioco continua sull’host. Sempre con Ctrl, Alt o Maiusc.</string>
 </resources>
