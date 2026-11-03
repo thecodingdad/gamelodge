@@ -76,8 +76,13 @@ class MainActivity : ComponentActivity() {
         // TV attached: run on the TV itself (native resolution) when the setting allows it.
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                kotlinx.coroutines.flow.combine(vm.externalDisplay, vm.settings.map { it.tvLauncher }) { tv, on -> tv to on }
-                    .distinctUntilChanged().collect { (tv, on) -> TvSession.update(this@MainActivity, tv, on) }
+                // The stored settings, not the view model's defaults before they are loaded (the
+                // launcher went to the TV and back with "launcher on the TV" off).
+                kotlinx.coroutines.flow.combine(vm.externalDisplay, container.settings.settings.map { it.tvLauncher }) { tv, on -> tv to on }
+                    .distinctUntilChanged().collect { (tv, on) ->
+                        tvLauncherLoaded = on
+                        TvSession.update(this@MainActivity, tv, on)
+                    }
             }
         }
         lifecycleScope.launch {
@@ -135,8 +140,15 @@ class MainActivity : ComponentActivity() {
         } else {
             TvSession.onLeftTv(this)
             tvFrames.stop()
+            // Brought back to the handheld while the TV is still there (Home on the handheld's
+            // display, the restart after an update): over to the TV again.
+            val tv = vm.externalDisplay.value
+            if (tv != null && tvLauncherLoaded == true) TvSession.update(this, tv, true)
         }
     }
+
+    /** "Launcher on the TV" from the stored settings; null until they are loaded. */
+    private var tvLauncherLoaded: Boolean? = null
 
     /** The launcher is on the TV display (drawn at 1080p there, if wanted). */
     private val onTv = androidx.compose.runtime.mutableStateOf(false)
