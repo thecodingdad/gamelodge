@@ -119,6 +119,8 @@
     <string name="step_quitting">Laufendes Spiel wird beendet …</string>
     <string name="step_game_actions">Aktionen vor dem Start …</string>
     <string name="step_starts_in">Startet in %1$d s</string>
+    <string name="step_retry">Versuch %1$d von %2$d</string>
+    <string name="launch_failed_detail">Details: %1$s</string>
     <string name="step_starting">Stream wird gestartet …</string>
     <string name="error_host_offline">Der Host ist offline oder nicht erreichbar.</string>
     <string name="error_not_paired">Dieses Gerät ist noch nicht mit dem Host gekoppelt. Koppeln unter Einstellungen → Hosts.</string>

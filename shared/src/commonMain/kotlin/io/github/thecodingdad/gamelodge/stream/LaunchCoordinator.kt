@@ -24,11 +24,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import java.util.UUID
 
-/** What the launch overlay shows. */
+/** What the launch overlay shows ([LaunchState.Working.retry]: number of the start's retry, null on the first try). */
 sealed interface LaunchState {
     data object Idle : LaunchState
     /** [countdown]: seconds until the start goes on (game actions before the start). */
-    data class Working(val entry: LibraryEntry, val step: LaunchStep, val countdown: Int? = null) : LaunchState
+    data class Working(val entry: LibraryEntry, val step: LaunchStep, val countdown: Int? = null, val retry: Int? = null) : LaunchState
     data class Failed(val entry: LibraryEntry, val reason: LaunchError, val detail: String? = null) : LaunchState
     /** Another app runs on the host; the user must confirm quitting it. */
     data class ConfirmQuitRunning(val entry: LibraryEntry, val target: LaunchTargetEntity, val runningName: String, val override: StreamProfile?) : LaunchState
@@ -145,6 +145,8 @@ class LaunchCoordinator(
 
     /** The game, app or stream started here ended: runs the end actions; safe to call more than once. */
     fun ended() {
+        // A stream start that failed isn't over yet: it is retried (or reported) once its window closed.
+        if (failedStart != null || retryPending) return
         gameActions.ended()
         val was = _nowPlaying.getAndUpdate { it?.copy(running = false) }
         if (was?.running == true) fireEvent("stopped", was, (System.currentTimeMillis() - was.startedAt) / 1000)
@@ -196,6 +198,16 @@ class LaunchCoordinator(
 
     /** The stream ended (its window closed): a VPN connected for it goes again, if so set. Safe to call twice. */
     fun streamEnded() {
+        if (retryPending) return
+        val failed = failedStart
+        if (failed != null) {
+            failedStart = null
+            _activeStream.value = null
+            StreamQuality.reset()
+            streamNotices?.stopped()
+            afterFailedStart(failed)
+            return
+        }
         if (_activeStream.value != null) afterStream()
         _activeStream.value = null
         StreamQuality.reset()
@@ -217,7 +229,68 @@ class LaunchCoordinator(
         running?.cancel()
         running = null
         _state.value = LaunchState.Idle
+        if (retryPending) {
+            // A retry given up: what the failed start skipped happens now.
+            retryPending = false
+            startAttempt = 0
+            restoreProfile()
+            ended()
+        }
         dropStreamVpn()
+    }
+
+    /** The stream start that runs or ran last (a retry starts it again). */
+    private class StreamStart(
+        val entry: LibraryEntry,
+        val target: LaunchTargetEntity,
+        val host: HostState,
+        val resuming: Boolean,
+        val hostUuid: String,
+        val appId: Int,
+    )
+
+    private class FailedStart(val error: LaunchError, val detail: String?)
+
+    private var lastStart: StreamStart? = null
+
+    /** Retries of the current start so far. */
+    private var startAttempt = 0
+
+    /** A failed start that waits for its stream window to close. */
+    @Volatile private var failedStart: FailedStart? = null
+
+    /** A retry waits for its turn (its stream window not started yet). */
+    @Volatile private var retryPending = false
+
+    /**
+     * The streaming client reports that the stream didn't get going ([detail]: its stage and error
+     * code); its window closes then ([streamEnded]), and the start is retried or reported.
+     */
+    fun streamStartFailed(error: LaunchError, detail: String?) {
+        Log.w("Stream start failed ($detail), attempt ${startAttempt + 1}")
+        failedStart = FailedStart(error, detail)
+    }
+
+    private fun afterFailedStart(failed: FailedStart) {
+        val start = lastStart
+        if (start != null && failed.error == LaunchError.START_FAILED && startAttempt < MAX_START_RETRIES) {
+            startAttempt++
+            retryPending = true
+            _state.value = LaunchState.Working(start.entry, LaunchStep.STARTING, retry = startAttempt)
+            running = scope.launch {
+                kotlinx.coroutines.delay(RETRY_DELAY_MS)
+                // The stream window that closed planned the host's sleep: a new stream comes.
+                autoSleep().cancel(start.hostUuid)
+                retryPending = false
+                beginStream(start, retry = true)
+            }
+            return
+        }
+        // Given up: what the failed start skipped (profile, end actions) happens now.
+        startAttempt = 0
+        restoreProfile()
+        ended()
+        fail(start?.entry ?: return, failed.error, failed.detail)
     }
 
     /**
@@ -338,24 +411,39 @@ class LaunchCoordinator(
         if (override != null) applyOneOffProfile(override.uuid)
         autoSleep().cancel(hostUuid)
 
+        startAttempt = 0
+        beginStream(StreamStart(entry, target, host, resuming, hostUuid, appId), retry = false)
+    }
+
+    /** Hands the stream to the client ([retry]: again, after a start that didn't get going). */
+    private suspend fun beginStream(start: StreamStart, retry: Boolean) {
+        val entry = start.entry
+        val target = start.target
+        val host = start.host
+        val resuming = start.resuming
+        lastStart = start
         try {
             val profileName = profiles.active("").name.ifEmpty { null }
             playtime.start(entry.item.id, target.id, profileName)
             StreamQuality.reset()
-            _activeStream.value = ActiveStream(entry, hostUuid, appId)
+            _activeStream.value = ActiveStream(entry, start.hostUuid, start.appId)
             // The host's GameLodge learns which start action to run (its runner asks for it).
-            streamNotices?.started(hostUuid, resuming, target.appUuid, oneOffAction.takeUnless { resuming })
+            streamNotices?.started(start.hostUuid, resuming, target.appUuid, oneOffAction.takeUnless { resuming })
             // Another client's session (Vibepollo) is taken over through its copy of the game.
             val copy = host.foreignCopy?.takeIf { resuming }
             val streamTarget = if (copy != null) target.copy(appId = copy.appId, appUuid = copy.appUUID, name = copy.appName.trim()) else target
             platform.startStream(entry, streamTarget, host)
-            started(entry, target, profileName)
+            // A retry continues the start that is already reported as started.
+            if (!retry) started(entry, target, profileName)
             _state.value = LaunchState.Idle
         } catch (e: Exception) {
             Log.e("Stream start failed", e)
             restoreProfile()
             _activeStream.value = null
             streamNotices?.stopped()
+            // A retry's start already counts as started: it ends here.
+            if (retry) ended()
+            startAttempt = 0
             fail(entry, LaunchError.START_FAILED, e.message)
         }
     }
@@ -388,15 +476,23 @@ class LaunchCoordinator(
 
     /** Called when the launcher is visible again after a stream. */
     fun restoreProfile() {
+        // A failed start keeps its one-off profile for the retry.
+        if (failedStart != null || retryPending) return
         if (!profileToRestore.first) return
         profiles.setActive(profileToRestore.second)
         profileToRestore = false to null
     }
 
-    private companion object {
+    companion object {
+        /** A stream that didn't get going is started again this often before the error shows. */
+        private const val MAX_START_RETRIES = 2
+        /** Tries of a stream start in all (the first and its retries). */
+        const val MAX_START_ATTEMPTS = MAX_START_RETRIES + 1
         /** After connecting the VPN: how long to wait for the host before waking it. */
-        const val VPN_WAIT_MS = 15_000L
+        private const val VPN_WAIT_MS = 15_000L
         /** Longest wait for the host's current state before a start. */
-        const val REFRESH_WAIT_MS = 4_000L
+        private const val REFRESH_WAIT_MS = 4_000L
+        /** Pause before such a retry (the host tidies up the failed session). */
+        private const val RETRY_DELAY_MS = 2_000L
     }
 }

@@ -121,6 +121,8 @@
     <string name="step_quitting">Quitting the running game…</string>
     <string name="step_game_actions">Actions before the start …</string>
     <string name="step_starts_in">Starts in %1$d s</string>
+    <string name="step_retry">Attempt %1$d of %2$d</string>
+    <string name="launch_failed_detail">Details: %1$s</string>
     <string name="step_starting">Starting stream…</string>
     <string name="error_host_offline">The host is offline or not reachable.</string>
     <string name="error_not_paired">This device is not paired with the host yet. Pair it under Settings → Hosts.</string>

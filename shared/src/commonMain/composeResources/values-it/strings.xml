@@ -121,6 +121,8 @@
     <string name="step_quitting">Chiusura del gioco in corso…</string>
     <string name="step_game_actions">Azioni prima dell'avvio…</string>
     <string name="step_starts_in">Inizia tra %1$d s</string>
+    <string name="step_retry">Tentativo %1$d di %2$d</string>
+    <string name="launch_failed_detail">Dettagli: %1$s</string>
     <string name="step_starting">Avvio dello stream…</string>
     <string name="error_host_offline">L'host è spento o non raggiungibile.</string>
     <string name="error_not_paired">Questo dispositivo non è ancora associato all'host. Associalo in Impostazioni → Host.</string>

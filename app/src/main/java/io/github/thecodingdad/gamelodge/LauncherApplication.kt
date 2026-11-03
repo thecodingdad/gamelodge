@@ -105,6 +105,12 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
         io.github.thecodingdad.gamelodge.input.AndroidCombos.installReplay()
         // Back in the stream (and Artemis' other ways to its game menu) opens GameLodge's quick menu.
         com.limelight.StreamControl.menuAction = Runnable { io.github.thecodingdad.gamelodge.QuickMenuActivity.toggle(this) }
+        // A stream that didn't get going: the launcher retries it, then reports it in its own design.
+        com.limelight.StreamControl.startFailureListener = com.limelight.StreamControl.StartFailureListener { stage, code ->
+            val error = if (code == 403) io.github.thecodingdad.gamelodge.stream.LaunchError.NO_LAUNCH_PERMISSION
+            else io.github.thecodingdad.gamelodge.stream.LaunchError.START_FAILED
+            container.launcher.streamStartFailed(error, listOfNotNull(stage, code.toString()).joinToString(" · "))
+        }
         // Motion via the device's sensors is each controller's choice (Controllers › the controller): no toast about it.
         com.limelight.StreamControl.controllerTypeToast = false
         // Button hints with keys also when only a keyboard is connected.

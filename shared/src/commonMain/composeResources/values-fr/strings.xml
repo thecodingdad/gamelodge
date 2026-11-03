@@ -121,6 +121,8 @@
     <string name="step_quitting">Fermeture du jeu en cours…</string>
     <string name="step_game_actions">Actions avant le démarrage…</string>
     <string name="step_starts_in">Démarre dans %1$d s</string>
+    <string name="step_retry">Tentative %1$d sur %2$d</string>
+    <string name="launch_failed_detail">Détails : %1$s</string>
     <string name="step_starting">Démarrage du stream…</string>
     <string name="error_host_offline">L'hôte est éteint ou injoignable.</string>
     <string name="error_not_paired">Cet appareil n'est pas encore appairé avec l'hôte. Appairez-le dans Réglages → Hôtes.</string>

@@ -224,6 +224,10 @@ fun LaunchOverlay(
     Modal(visible = failed != null, onDismiss = onDismiss, title = stringResource(Res.string.launch_failed_title), closeButton = false) {
         if (failed == null) return@Modal
         Text(errorText(failed.reason), style = MaterialTheme.typography.bodyLarge, color = LauncherTheme.colors.onSurface)
+        if (failed.detail != null) {
+            Spacer(Modifier.height(8.dp))
+            Text(stringResource(Res.string.launch_failed_detail, failed.detail), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+        }
         Spacer(Modifier.height(24.dp))
         io.github.thecodingdad.gamelodge.ui.components.ButtonRow(spacing = 12.dp) {
             LauncherButton(stringResource(Res.string.action_retry), onClick = { onRetry(failed.entry) }, primary = true)
@@ -587,7 +591,9 @@ private fun LaunchProgressScreen(working: LaunchState.Working, onCancel: () -> U
     StreamProgressContent(
         entry = working.entry,
         step = stepText(working.step),
-        detail = working.countdown?.let { stringResource(Res.string.step_starts_in, it) },
+        detail = working.countdown?.let { stringResource(Res.string.step_starts_in, it) }
+            // The first try counts too: retry 1 is attempt 2.
+            ?: working.retry?.let { stringResource(Res.string.step_retry, it + 1, io.github.thecodingdad.gamelodge.stream.LaunchCoordinator.MAX_START_ATTEMPTS) },
         timerKey = working.step,
         showTimer = working.step == LaunchStep.WAKING_HOST,
         onCancel = onCancel,
