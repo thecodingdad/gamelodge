@@ -1,5 +1,9 @@
 package io.github.thecodingdad.gamelodge.data.backup
 
+import kotlinx.coroutines.ensureActive
+import io.github.thecodingdad.gamelodge.resources.Res
+import io.github.thecodingdad.gamelodge.resources.task_backup
+import io.github.thecodingdad.gamelodge.resources.task_restore
 import io.github.thecodingdad.gamelodge.data.db.CollectionEntity
 import io.github.thecodingdad.gamelodge.data.db.FilterEntity
 import io.github.thecodingdad.gamelodge.data.db.FilterKind
@@ -145,6 +149,12 @@ data class BackupFile(
 
 class WrongPasswordException : Exception("Wrong backup password")
 
+/** Another backup or restore is still running. */
+class BackupBusyException : IllegalStateException("A backup is already running")
+
+/** The user stopped the backup (or the restore while it was still unpacking). */
+class BackupCancelledException : kotlinx.coroutines.CancellationException("Backup cancelled")
+
 /** Stream settings live with the platform's streaming code (Artemis on Android, Moonlight-Qt on the PC). */
 interface StreamSettingsBackup {
     /** Base settings (option key → value) every profile starts from. */
@@ -257,7 +267,7 @@ class BackupManager(
      * [LauncherSettings.backupArtwork] / [LauncherSettings.backupAnimatedArtwork] settings.
      * Streamed into [out] (left open): with images it can be bigger than the app's memory.
      */
-    suspend fun export(password: String?, out: java.io.OutputStream) = withContext(Dispatchers.IO) {
+    suspend fun export(password: String?, out: java.io.OutputStream) = exclusive(Res.string.task_backup) { progress ->
         val backup = create(password)
         val s = settings.current()
         val own = LinkedHashMap<String, File>()
@@ -271,11 +281,15 @@ class BackupManager(
                 if (s.backupAnimatedArtwork) item.animatedValues().forEach { url -> ArtworkFiles.cachedFileForUrl(url)?.let { cache.putIfAbsent(it.name, it) } }
             }
         }
+        val total = own.size + cache.size
+        var done = 0
+        progress(done, total, true)
         val zip = java.util.zip.ZipOutputStream(java.io.BufferedOutputStream(NonClosing(out)))
         zip.use { zip ->
             zip.putNextEntry(java.util.zip.ZipEntry(MANIFEST)); zip.write(encode(backup).toByteArray()); zip.closeEntry()
-            fun add(prefix: String, files: Map<String, File>) = files.forEach { (name, file) ->
-                zip.putNextEntry(java.util.zip.ZipEntry("$prefix$name")); file.inputStream().use { it.copyTo(zip) }; zip.closeEntry()
+            suspend fun add(prefix: String, files: Map<String, File>) = files.forEach { (name, file) ->
+                zip.putNextEntry(java.util.zip.ZipEntry("$prefix$name")); file.inputStream().use { copyCancellable(it, zip) }; zip.closeEntry()
+                progress(++done, total, true)
             }
             add(OWN_PREFIX, own)
             add(CACHE_PREFIX, cache)
@@ -297,11 +311,14 @@ class BackupManager(
     }
 
     /** Restores from the backup [open] reads (ZIP with images, or legacy plain JSON). */
-    suspend fun import(open: () -> java.io.InputStream, password: String?) = withContext(Dispatchers.IO) {
+    suspend fun import(open: () -> java.io.InputStream, password: String?) = exclusive(Res.string.task_restore) { progress ->
         val input = java.io.BufferedInputStream(open())
         if (!input.use { isZip(it) }) {
-            return@withContext restore(java.io.BufferedInputStream(open()).use { decode(it.readBytes().decodeToString()) }, password)
+            val legacy = java.io.BufferedInputStream(open()).use { decode(it.readBytes().decodeToString()) }
+            progress(0, 0, false)
+            return@exclusive restore(legacy, password)
         }
+        var extracted = 0
         var manifest: String? = null
         val ownNames = HashSet<String>()
         val ownTarget = ownDir.apply { mkdirs() }
@@ -315,16 +332,67 @@ class BackupManager(
                     name == MANIFEST -> manifest = zip.readBytes().decodeToString()
                     // Flat basenames only: a name with a path separator is rejected (no zip-slip).
                     !entry.isDirectory && name.startsWith(OWN_PREFIX) -> safeName(name, OWN_PREFIX)?.let { bn ->
-                        File(ownTarget, bn).outputStream().use { zip.copyTo(it) }; ownNames += bn
+                        File(ownTarget, bn).outputStream().use { copyCancellable(zip, it) }; ownNames += bn
+                        progress(++extracted, 0, true)
                     }
                     !entry.isDirectory && name.startsWith(CACHE_PREFIX) -> safeName(name, CACHE_PREFIX)?.let { bn ->
-                        File(cacheTarget(), bn).outputStream().use { zip.copyTo(it) }; ArtworkFiles.registerCached(bn)
+                        File(cacheTarget(), bn).outputStream().use { copyCancellable(zip, it) }; ArtworkFiles.registerCached(bn)
+                        progress(++extracted, 0, true)
                     }
                 }
                 zip.closeEntry()
             }
         }
-        restore(decode(manifest ?: error("No $MANIFEST in the archive")), password, ownNames)
+        val parsed = decode(manifest ?: error("No $MANIFEST in the archive"))
+        // From here on the library is rewritten: stopping halfway would leave a mix.
+        progress(extracted, 0, false)
+        withContext(kotlinx.coroutines.NonCancellable) { restore(parsed, password, ownNames) }
+    }
+
+    private val running = kotlinx.coroutines.sync.Mutex()
+
+    /** A backup or restore is running (only one at a time). */
+    val busy: kotlinx.coroutines.flow.StateFlow<Boolean> get() = _busy
+    private val _busy = kotlinx.coroutines.flow.MutableStateFlow(false)
+
+    /**
+     * Runs [block] as the one backup task: shown in the task list with its progress (images done
+     * of total; total 0 = unknown) and a cancel button while [block] reports it as cancellable.
+     */
+    private suspend fun <T> exclusive(
+        title: org.jetbrains.compose.resources.StringResource,
+        block: suspend (progress: (done: Int, total: Int, cancellable: Boolean) -> Unit) -> T,
+    ): T {
+        if (!running.tryLock()) throw BackupBusyException()
+        _busy.value = true
+        val tasks = io.github.thecodingdad.gamelodge.data.tasks.BackgroundTasks
+        return try {
+            withContext(Dispatchers.IO) {
+                val job = coroutineContext[kotlinx.coroutines.Job]!!
+                val cancel = { job.cancel(BackupCancelledException()) }
+                fun report(done: Int, total: Int, cancellable: Boolean) = tasks.set(
+                    io.github.thecodingdad.gamelodge.data.tasks.BackgroundTask(
+                        TASK_ID, title, done = done, total = total, cancel = cancel.takeIf { cancellable },
+                    ),
+                )
+                report(0, 0, true)
+                block(::report)
+            }
+        } finally {
+            tasks.remove(TASK_ID)
+            _busy.value = false
+            running.unlock()
+        }
+    }
+
+    private suspend fun copyCancellable(from: java.io.InputStream, to: java.io.OutputStream) {
+        val buffer = ByteArray(64 * 1024)
+        while (true) {
+            kotlinx.coroutines.currentCoroutineContext().ensureActive()
+            val n = from.read(buffer)
+            if (n < 0) break
+            to.write(buffer, 0, n)
+        }
     }
 
     private fun isZip(input: java.io.BufferedInputStream): Boolean {
@@ -443,6 +511,9 @@ class BackupManager(
 
     companion object {
         const val FILE_PREFIX = "gamelodge-"
+
+        /** The backup's / restore's entry in the task list. */
+        const val TASK_ID = "backup"
 
         /** Entry names inside the backup ZIP. */
         private const val MANIFEST = "backup.json"

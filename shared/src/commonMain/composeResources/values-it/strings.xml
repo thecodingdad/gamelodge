@@ -589,6 +589,8 @@
     <string name="backup_restore">Ripristina</string>
     <string name="backup_done">Backup salvato.</string>
     <string name="backup_restored">Backup ripristinato.</string>
+    <string name="backup_cancelled">Backup annullato.</string>
+    <string name="backup_busy">È già in corso un backup.</string>
     <string name="backup_wrong_password">Password errata: le credenziali non sono state ripristinate.</string>
     <string name="settings_data">Dati</string>
     <string name="settings_data_sub">Archiviazione, pulizia e backup</string>
@@ -635,6 +637,8 @@
     <string name="task_artwork">Download delle immagini</string>
     <string name="task_pc_scan">Ricerca dei giochi del PC</string>
     <string name="task_host_sync">Aggiornamento dei giochi sull'host di streaming</string>
+    <string name="task_backup">Backup in corso</string>
+    <string name="task_restore">Ripristino del backup</string>
 
     <!-- Vibepollo -->
 

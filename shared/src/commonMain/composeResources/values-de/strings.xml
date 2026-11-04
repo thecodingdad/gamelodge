@@ -587,6 +587,8 @@
     <string name="backup_restore">Wiederherstellen</string>
     <string name="backup_done">Backup gespeichert.</string>
     <string name="backup_restored">Backup wiederhergestellt.</string>
+    <string name="backup_cancelled">Backup abgebrochen.</string>
+    <string name="backup_busy">Es läuft bereits ein Backup.</string>
     <string name="backup_wrong_password">Falsches Passwort – Zugangsdaten wurden nicht wiederhergestellt.</string>
     <string name="settings_data">Daten</string>
     <string name="settings_data_sub">Speicher, Aufräumen und Backups</string>
@@ -633,6 +635,8 @@
     <string name="task_artwork">Bilder herunterladen</string>
     <string name="task_pc_scan">PC-Spiele suchen</string>
     <string name="task_host_sync">Spiele im Streaming-Host eintragen</string>
+    <string name="task_backup">Backup wird erstellt</string>
+    <string name="task_restore">Backup wird wiederhergestellt</string>
 
     <!-- Vibepollo -->
 

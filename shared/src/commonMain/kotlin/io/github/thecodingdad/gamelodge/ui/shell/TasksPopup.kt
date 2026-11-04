@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
@@ -80,15 +81,22 @@ fun TasksPopup() {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             tasks.forEach { task ->
                 val target = settingsFor(task.id)
-                io.github.thecodingdad.gamelodge.ui.components.FocusSurface(
-                    onClick = {
-                        if (target != null) {
-                            BackgroundTasks.popupOpen = false
-                            navigate(target, null)
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(), color = LauncherTheme.colors.surfaceRaised, focusScale = 1.02f,
-                ) { Box(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) { TaskLine(task) } }
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    io.github.thecodingdad.gamelodge.ui.components.FocusSurface(
+                        onClick = {
+                            if (target != null) {
+                                BackgroundTasks.popupOpen = false
+                                navigate(target, null)
+                            }
+                        },
+                        modifier = Modifier.weight(1f), color = LauncherTheme.colors.surfaceRaised, focusScale = 1.02f,
+                    ) { Box(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) { TaskLine(task) } }
+                    task.cancel?.let { cancel ->
+                        io.github.thecodingdad.gamelodge.ui.components.TooltipIconButton(
+                            androidx.compose.material.icons.Icons.Filled.Close, stringResource(Res.string.action_cancel), cancel,
+                        )
+                    }
+                }
             }
         }
     }
@@ -101,6 +109,7 @@ private fun settingsFor(taskId: String): io.github.thecodingdad.gamelodge.ui.scr
         taskId == "metadata" || taskId == "artwork" -> to(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId.METADATA)
         taskId == "host-sync" -> to(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId.STREAMING_HOST)
         taskId == "pc-scan" -> to(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId.GAME_SOURCES)
+        taskId == io.github.thecodingdad.gamelodge.data.backup.BackupManager.TASK_ID -> to(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId.DATA)
         taskId.startsWith("applist-") || taskId.startsWith("boxart-") ->
             io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Host(taskId.substringAfter('-'))
         else -> null
@@ -112,7 +121,7 @@ private fun taskTitle(task: BackgroundTask): String =
     if (task.args.isEmpty()) stringResource(task.title) else stringResource(task.title, *task.args.toTypedArray())
 
 @Composable
-private fun TaskLine(task: BackgroundTask) {
+internal fun TaskLine(task: BackgroundTask) {
     val colors = LauncherTheme.colors
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {

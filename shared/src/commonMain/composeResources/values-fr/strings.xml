@@ -589,6 +589,8 @@
     <string name="backup_restore">Restaurer</string>
     <string name="backup_done">Sauvegarde enregistrée.</string>
     <string name="backup_restored">Sauvegarde restaurée.</string>
+    <string name="backup_cancelled">Sauvegarde annulée.</string>
+    <string name="backup_busy">Une sauvegarde est déjà en cours.</string>
     <string name="backup_wrong_password">Mot de passe incorrect — les identifiants n'ont pas été restaurés.</string>
     <string name="settings_data">Données</string>
     <string name="settings_data_sub">Stockage, nettoyage et sauvegardes</string>
@@ -635,6 +637,8 @@
     <string name="task_artwork">Téléchargement des images</string>
     <string name="task_pc_scan">Recherche des jeux du PC</string>
     <string name="task_host_sync">Mise à jour des jeux sur l'hôte de streaming</string>
+    <string name="task_backup">Sauvegarde en cours</string>
+    <string name="task_restore">Restauration de la sauvegarde</string>
 
     <!-- Vibepollo -->
 

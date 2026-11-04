@@ -15,6 +15,8 @@ data class BackgroundTask(
     val total: Int = 0,
     /** Detail line, e.g. the store being scanned. */
     val detail: String? = null,
+    /** Stops the work; null: it can't be stopped (now). */
+    val cancel: (() -> Unit)? = null,
 )
 
 /**

@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.ui.screens.settings
 
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Storage
 import io.github.thecodingdad.gamelodge.ui.components.StatusCard
 import androidx.compose.foundation.background
@@ -254,19 +255,30 @@ private fun BackupSection(settings: LauncherSettings, update: ((LauncherSettings
     val okMsg = stringResource(Res.string.backup_done)
     val restoredMsg = stringResource(Res.string.backup_restored)
     val wrongPwMsg = stringResource(Res.string.backup_wrong_password)
+    val cancelledMsg = stringResource(Res.string.backup_cancelled)
+    val busyMsg = stringResource(Res.string.backup_busy)
+    fun failure(e: Throwable): String? = when (e) {
+        is kotlinx.coroutines.CancellationException -> cancelledMsg
+        is io.github.thecodingdad.gamelodge.data.backup.BackupBusyException -> busyMsg
+        is WrongPasswordException -> wrongPwMsg
+        else -> e.message
+    }
+    val busy by backup.busy.collectAsState()
+    val tasks by io.github.thecodingdad.gamelodge.data.tasks.BackgroundTasks.tasks.collectAsState()
+    val task = tasks.firstOrNull { it.id == BackupManager.TASK_ID }
     val pwTitle = stringResource(Res.string.backup_password)
     val folder = settings.backupFolderUri.ifEmpty { storage.defaultFolder.orEmpty() }
 
     val pickFolder = storage.rememberFolderPicker { picked -> update { it.copy(backupFolderUri = picked) } }
     val createFile = storage.rememberCreateFile { target ->
-        scope.launch { message = runCatching { storage.write(target) { backup.export(exportPassword, it) } }.fold({ okMsg }, { it.message }) }
+        scope.launch { message = runCatching { storage.write(target) { backup.export(exportPassword, it) } }.fold({ okMsg }, ::failure) }
     }
     // After the dialog: write to the folder, or pick a file (which then uses [exportPassword]).
     fun runBackup(pw: String?) {
         exportPassword = pw
         if (folder.isNotEmpty()) {
             scope.launch {
-                message = runCatching { storage.writeToFolder(folder, settings.backupKeepCount) { backup.export(pw, it) } }.fold({ okMsg }, { it.message })
+                message = runCatching { storage.writeToFolder(folder, settings.backupKeepCount) { backup.export(pw, it) } }.fold({ okMsg }, ::failure)
             }
         } else {
             createFile(BackupManager.fileName())
@@ -275,10 +287,7 @@ private fun BackupSection(settings: LauncherSettings, update: ((LauncherSettings
     fun doRestore(address: String, pw: String?) {
         pending = null
         scope.launch {
-            message = runCatching { backup.import({ storage.open(address) }, pw) }.fold(
-                { restoredMsg },
-                { if (it is WrongPasswordException) wrongPwMsg else it.message },
-            )
+            message = runCatching { backup.import({ storage.open(address) }, pw) }.fold({ restoredMsg }, ::failure)
             storage.scheduleAuto(container.settings.current().autoBackup)
         }
     }
@@ -316,9 +325,21 @@ private fun BackupSection(settings: LauncherSettings, update: ((LauncherSettings
             label = { "$it" }, onSelect = { v -> update { it.copy(backupKeepCount = v) } },
         )
     }
-    ActionRow(stringResource(Res.string.backup_now), { showBackup = true }, folder.takeIf { it.isNotEmpty() }?.let(storage::folderLabel), Icons.Filled.Save)
-    ActionRow(stringResource(Res.string.backup_restore), ::restore, stringResource(Res.string.backup_restore_hint), Icons.Filled.Restore)
-    message?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurface) }
+    // One backup or restore at a time: both wait while one runs (its progress below, with cancel).
+    ActionRow(stringResource(Res.string.backup_now), { message = null; showBackup = true }, folder.takeIf { it.isNotEmpty() }?.let(storage::folderLabel), Icons.Filled.Save, enabled = !busy)
+    ActionRow(stringResource(Res.string.backup_restore), { message = null; restore() }, stringResource(Res.string.backup_restore_hint), Icons.Filled.Restore, enabled = !busy)
+    task?.let { t ->
+        androidx.compose.foundation.layout.Row(
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            androidx.compose.foundation.layout.Box(Modifier.weight(1f).padding(horizontal = 16.dp)) { io.github.thecodingdad.gamelodge.ui.shell.TaskLine(t) }
+            t.cancel?.let { cancel ->
+                io.github.thecodingdad.gamelodge.ui.components.TooltipIconButton(Icons.Filled.Close, stringResource(Res.string.action_cancel), cancel)
+            }
+        }
+    }
+    if (task == null) message?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurface) }
 
     if (showBackup) BackupNowDialog(settings, update, onDismiss = { showBackup = false }, onConfirm = { pw -> showBackup = false; runBackup(pw) })
     pending?.let { (address, manifest) ->

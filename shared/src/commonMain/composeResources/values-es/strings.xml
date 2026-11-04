@@ -589,6 +589,8 @@
     <string name="backup_restore">Restaurar</string>
     <string name="backup_done">Copia guardada.</string>
     <string name="backup_restored">Copia restaurada.</string>
+    <string name="backup_cancelled">Copia de seguridad cancelada.</string>
+    <string name="backup_busy">Ya hay una copia de seguridad en curso.</string>
     <string name="backup_wrong_password">Contraseña incorrecta: las credenciales no se restauraron.</string>
     <string name="settings_data">Datos</string>
     <string name="settings_data_sub">Almacenamiento, limpieza y copias</string>
@@ -635,6 +637,8 @@
     <string name="task_artwork">Descargando imágenes</string>
     <string name="task_pc_scan">Buscando juegos del PC</string>
     <string name="task_host_sync">Actualizando juegos en el host de streaming</string>
+    <string name="task_backup">Creando copia de seguridad</string>
+    <string name="task_restore">Restaurando copia de seguridad</string>
 
     <!-- Vibepollo -->
 
