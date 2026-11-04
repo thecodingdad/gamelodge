@@ -104,32 +104,42 @@ jobs:
           QT_PATH: ${{ github.workspace }}\..\Qt\${{ env.QT_VERSION }}\msvc2022_64\bin
 
       # --- native starter and the runtime's javaw.exe with the app's icon and version ---
-      - name: Build starter
+      - name: Runtime starter (javaw.exe with the app's icon and version)
         shell: pwsh
         run: |
           $version = (Select-String -Path gradle.properties -Pattern '^launcher.versionName=(.*)$').Matches[0].Groups[1].Value
-          $parts = $version.Split('.')
           ./gradlew :desktop:downloadWindowsJdk --console=plain
           $gradleHome = if ($env:GRADLE_USER_HOME) { $env:GRADLE_USER_HOME } else { "$env:USERPROFILE\.gradle" }
           $jdk = Get-ChildItem "$gradleHome\caches\gamelodge\OpenJDK21U-jdk_x64_windows_*.zip" | Select-Object -First 1
           if (-not $jdk) { throw "Windows JDK not found in $gradleHome" }
-          $work = "build\windows-launcher"
-          New-Item -ItemType Directory $work -Force | Out-Null
+          $out = "build\windows-launcher"
+          New-Item -ItemType Directory $out -Force | Out-Null
           Add-Type -AssemblyName System.IO.Compression.FileSystem
           $zip = [IO.Compression.ZipFile]::OpenRead($jdk.FullName)
           $entry = $zip.Entries | Where-Object { $_.FullName -like '*/bin/javaw.exe' } | Select-Object -First 1
-          [IO.Compression.ZipFileExtensions]::ExtractToFile($entry, "$work\runtime-GameLodge.exe", $true)
+          [IO.Compression.ZipFileExtensions]::ExtractToFile($entry, "$out\runtime-GameLodge.exe", $true)
           $zip.Dispose()
           Invoke-WebRequest -UseBasicParsing $env:RCEDIT_URL -OutFile "$env:RUNNER_TEMP\rcedit.exe"
           if ((Get-FileHash "$env:RUNNER_TEMP\rcedit.exe" -Algorithm SHA256).Hash -ne $env:RCEDIT_SHA256) { throw 'rcedit checksum mismatch' }
-          Push-Location tools\windows\launcher
-          rc /nologo "/dVER_COMMA=$($parts[0]),$($parts[1]),$($parts[2]),0" "/dVER_TEXT=\`"$version\`"" /fo launcher.res launcher.rc
-          if ($LASTEXITCODE -ne 0) { throw 'rc failed' }
-          cl /nologo /O2 /MT /W3 /DUNICODE /D_UNICODE launcher.c launcher.res /link /SUBSYSTEM:WINDOWS user32.lib /OUT:..\..\..\build\windows-launcher\GameLodge.exe
-          if ($LASTEXITCODE -ne 0) { throw 'cl failed' }
-          Pop-Location
-          & "$env:RUNNER_TEMP\rcedit.exe" "$work\runtime-GameLodge.exe" --set-icon desktop\windows\icon.ico --set-version-string FileDescription GameLodge --set-version-string ProductName GameLodge --set-version-string CompanyName thecodingdad --set-version-string OriginalFilename GameLodge.exe --set-version-string InternalName GameLodge --set-file-version $version --set-product-version $version
+          & "$env:RUNNER_TEMP\rcedit.exe" "$out\runtime-GameLodge.exe" --set-icon desktop\windows\icon.ico --set-version-string FileDescription GameLodge --set-version-string ProductName GameLodge --set-version-string CompanyName thecodingdad --set-version-string OriginalFilename GameLodge.exe --set-version-string InternalName GameLodge --set-file-version $version --set-product-version $version
           if ($LASTEXITCODE -ne 0) { throw 'rcedit failed' }
+
+      # Same steps as tools/windows/launcher/build.bat, in a work folder with the icon next to the resources.
+      - name: Native starter (GameLodge.exe)
+        shell: cmd
+        run: |
+          for /f "tokens=2 delims==" %%a in ('findstr /b "launcher.versionName=" gradle.properties') do set "VER=%%a"
+          for /f "tokens=1-3 delims=." %%a in ("%VER%") do set "VERC=%%a,%%b,%%c,0"
+          set "W=%RUNNER_TEMP%\launcher"
+          mkdir "%W%"
+          copy /y tools\windows\launcher\launcher.c "%W%" >nul || exit /b 1
+          copy /y tools\windows\launcher\launcher.rc "%W%" >nul || exit /b 1
+          copy /y desktop\windows\icon.ico "%W%" >nul || exit /b 1
+          pushd "%W%"
+          rc /nologo /dVER_COMMA=%VERC% /dVER_TEXT=\"%VER%\" /fo launcher.res launcher.rc || exit /b 1
+          cl /nologo /O2 /MT /W3 /DUNICODE /D_UNICODE launcher.c launcher.res /link /SUBSYSTEM:WINDOWS user32.lib /OUT:GameLodge.exe || exit /b 1
+          popd
+          copy /y "%W%\GameLodge.exe" build\windows-launcher\GameLodge.exe >nul || exit /b 1
 
       # --- app package and installer ---
       - name: Package app
