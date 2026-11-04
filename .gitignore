@@ -12,3 +12,4 @@ captures/
 *.jks
 /bin/
 CLAUDE.md
+/release-key/
