@@ -15,15 +15,18 @@ private fun isGamepadKey(event: KeyEvent): Boolean =
         (event.source and InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD &&
         event.keyCode in setOf(KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT)
 
-/** Android key events into the combinations; true when [event] must not reach the app. */
-fun ButtonCombos.handle(event: KeyEvent, onAction: (ComboAction, Int) -> Unit): Boolean {
+/**
+ * Android key events into the combinations; true when [event] must not reach the app.
+ * [canHoldBack]: see [ButtonCombos.handle] (false in other apps: no app may inject keys there).
+ */
+fun ButtonCombos.handle(event: KeyEvent, canHoldBack: Boolean = true, onAction: (ComboAction, Int) -> Unit): Boolean {
     if (!isGamepadKey(event)) return false
     val isDown = when (event.action) {
         KeyEvent.ACTION_DOWN -> true
         KeyEvent.ACTION_UP -> false
         else -> return false
     }
-    return handle(event.deviceId, event.keyCode, isDown, event.repeatCount, event.eventTime, event.device?.descriptor, KeyEvent(event), onAction)
+    return handle(event.deviceId, event.keyCode, isDown, event.repeatCount, event.eventTime, event.device?.descriptor, KeyEvent(event), canHoldBack, onAction)
 }
 
 /** What the combinations do on Android, wherever they were pressed. */

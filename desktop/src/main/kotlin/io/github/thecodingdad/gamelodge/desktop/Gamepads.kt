@@ -173,11 +173,11 @@ class Gamepads(private val dispatcher: InputDispatcher) {
             comboKeys[i] = keys
             val taken = hidden.getOrPut(i) { HashSet() }
             for (code in before - keys) {
-                ButtonCombos.handle(i, code, false, 0, now, this.keys[i], code, onCombo)
+                ButtonCombos.handle(i, code, false, 0, now, this.keys[i], code, onAction = onCombo)
                 taken -= code
             }
             for (code in keys - before) {
-                if (ButtonCombos.handle(i, code, true, 0, now, this.keys[i], code, onCombo)) taken += code
+                if (ButtonCombos.handle(i, code, true, 0, now, this.keys[i], code, onAction = onCombo)) taken += code
             }
         }
     }

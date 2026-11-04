@@ -123,10 +123,13 @@ object ButtonCombos {
      * One button of controller [device] went down or up ([code] an Android key code, [event] the
      * platform's event for a later [replay]). Returns true when the button belongs to a combination
      * (or a recording) and must not reach the app. [onAction] gets the action and the controller.
+     * [canHoldBack] false: a press that may become a hold reaches the app at once (where a held-back
+     * press couldn't be handed on later), the hold's action runs in addition.
      */
     @Synchronized
     fun handle(
         device: Int, code: Int, isDown: Boolean, repeat: Int, time: Long, descriptor: String?, event: Any,
+        canHoldBack: Boolean = true,
         onAction: (ComboAction, Int) -> Unit,
     ): Boolean {
         if (replaying) return false
@@ -167,7 +170,7 @@ object ButtonCombos {
                     val fire = synchronized(this) { pending?.takeIf { it === p }?.also { pending = null } }
                     fire?.onAction?.invoke(fire.hold, fire.device)
                 }, HOLD_MS, TimeUnit.MILLISECONDS)
-                if (forwardFor(descriptor)) return false
+                if (!canHoldBack || forwardFor(descriptor)) return false
                 swallowed += code
                 return true
             }
