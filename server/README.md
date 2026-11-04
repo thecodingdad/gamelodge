@@ -5,7 +5,9 @@ Same client API, pairing and web admin as the Windows launcher's host role.
 
 ## Run with Docker
 
-Build on the Docker host (amd64 or arm64) from the repository root:
+Each release publishes the image for amd64 and arm64:
+`ghcr.io/thecodingdad/gamelodge-metadata-server` (tags `latest`, `<version>`, `<major>.<minor>`).
+To build it yourself instead, from the repository root:
 
 ```sh
 docker build -f server/Dockerfile -t gamelodge-metadata-server .
@@ -16,7 +18,7 @@ docker build -f server/Dockerfile -t gamelodge-metadata-server .
 ```yaml
 services:
   metadata-server:
-    image: gamelodge-metadata-server
+    image: ghcr.io/thecodingdad/gamelodge-metadata-server:latest
     restart: unless-stopped
     ports:
       - "47900:47900"   # client API (mutual TLS)
