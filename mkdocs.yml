@@ -1,0 +1,64 @@
+site_name: GameLodge
+site_description: All your games in one controller-first launcher – local, streamed and emulated.
+site_url: https://thecodingdad.github.io/gamelodge/
+repo_url: https://github.com/thecodingdad/gamelodge
+repo_name: thecodingdad/gamelodge
+edit_uri: edit/main/docs/
+copyright: GameLodge is licensed under GPL-3.0. Game titles and artwork belong to their owners.
+
+theme:
+  name: material
+  logo: assets/icon.svg
+  favicon: assets/icon.svg
+  palette:
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue grey
+      accent: light blue
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue grey
+      accent: light blue
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.keys
+
+nav:
+  - Home: index.md
+  - Getting started: getting-started.md
+  - Using GameLodge:
+      - Library: library.md
+      - Metadata & artwork: metadata.md
+      - Streaming: streaming.md
+      - Controllers & shortcuts: controllers.md
+      - Quick menu: quick-menu.md
+      - Home Assistant: home-assistant.md
+      - Appearance & display: appearance.md
+      - Backup & restore: backup.md
+  - Platforms:
+      - Android: android.md
+      - Windows: windows.md
+  - FAQ & troubleshooting: faq.md
