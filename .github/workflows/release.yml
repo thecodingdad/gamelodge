@@ -110,7 +110,9 @@ jobs:
           $version = (Select-String -Path gradle.properties -Pattern '^launcher.versionName=(.*)$').Matches[0].Groups[1].Value
           $parts = $version.Split('.')
           ./gradlew :desktop:downloadWindowsJdk --console=plain
-          $jdk = Get-ChildItem "$env:USERPROFILE\.gradle\caches\gamelodge\OpenJDK21U-jdk_x64_windows_*.zip" | Select-Object -First 1
+          $gradleHome = if ($env:GRADLE_USER_HOME) { $env:GRADLE_USER_HOME } else { "$env:USERPROFILE\.gradle" }
+          $jdk = Get-ChildItem "$gradleHome\caches\gamelodge\OpenJDK21U-jdk_x64_windows_*.zip" | Select-Object -First 1
+          if (-not $jdk) { throw "Windows JDK not found in $gradleHome" }
           $work = "build\windows-launcher"
           New-Item -ItemType Directory $work -Force | Out-Null
           Add-Type -AssemblyName System.IO.Compression.FileSystem
