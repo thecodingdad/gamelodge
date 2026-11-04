@@ -69,6 +69,21 @@ object PointerMode {
         }
     }
 
+    /**
+     * The pointer's window takes the focus (it gets the stick and buttons), and the focused window
+     * decides the system bars: it hides them like GameLodge's window when that's in front, so a
+     * hidden navigation bar stays hidden.
+     */
+    private fun matchSystemBars(pointer: View) {
+        if (android.os.Build.VERSION.SDK_INT < 30) return
+        val launcher = io.github.thecodingdad.gamelodge.CurrentActivity.resumed()?.window?.decorView?.rootWindowInsets ?: return
+        val controller = pointer.windowInsetsController ?: return
+        controller.systemBarsBehavior = android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        listOf(android.view.WindowInsets.Type.statusBars(), android.view.WindowInsets.Type.navigationBars()).forEach { type ->
+            if (!launcher.isVisible(type)) controller.hide(type)
+        }
+    }
+
     private fun start() {
         if (view != null) return
         val service = ComboAccessibilityService.instance ?: return
@@ -87,6 +102,7 @@ object PointerMode {
         }
         runCatching { wm.addView(pointer, params) }.onFailure { return }
         pointer.requestFocus()
+        matchSystemBars(pointer)
         view = pointer
     }
 

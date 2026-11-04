@@ -93,6 +93,7 @@ fun StatsScreen(entries: List<LibraryEntry>, sessions: List<PlaySessionEntity>) 
 
         Text(stringResource(Res.string.stats_last_days), style = MaterialTheme.typography.titleLarge, color = colors.onSurface)
         val maxDay = stats.perDay.maxOf { it.second }.coerceAtLeast(1)
+        val dayFormat = remember { dayMonthFormat() }
         Row(Modifier.fillMaxWidth().height(160.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Bottom) {
             stats.perDay.forEach { (day, secs) ->
                 Column(Modifier.weight(1f).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Bottom) {
@@ -101,7 +102,7 @@ fun StatsScreen(entries: List<LibraryEntry>, sessions: List<PlaySessionEntity>) 
                             .background(colors.accent, RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)),
                     )
                     Text(
-                        DateFormat.getDateInstance(DateFormat.SHORT).format(Date(day)).substringBeforeLast('.').take(6),
+                        dayFormat.format(Date(day)),
                         style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceMuted, modifier = Modifier.padding(top = 4.dp),
                     )
                 }
@@ -144,4 +145,16 @@ private fun StatTile(label: String, value: String, modifier: Modifier = Modifier
         Text(label, style = MaterialTheme.typography.labelLarge, color = LauncherTheme.colors.onSurfaceMuted)
         Text(value, style = MaterialTheme.typography.headlineSmall, color = LauncherTheme.colors.onSurface)
     }
+}
+
+/**
+ * Day and month in the order and with the separators of the current language ("10/29", "29.10."),
+ * from its short date pattern without the year.
+ */
+internal fun dayMonthFormat(locale: java.util.Locale = java.util.Locale.getDefault()): java.text.SimpleDateFormat {
+    val full = java.time.format.DateTimeFormatterBuilder.getLocalizedDateTimePattern(
+        java.time.format.FormatStyle.SHORT, null, java.time.chrono.IsoChronology.INSTANCE, locale,
+    )
+    val pattern = full.replace(Regex("[^dM]*y+[^dM]*"), "").ifBlank { "d.M." }
+    return java.text.SimpleDateFormat(pattern, locale)
 }

@@ -426,7 +426,7 @@ internal fun ColumnScope.HomeAssistantStep(settings: LauncherSettings) {
         SectionHeader(stringResource(Res.string.ha_tiles))
         WizardNote(stringResource(Res.string.ha_entities_intro))
         tiles.forEach { t ->
-            WizardStatusRow(entities[t.entityId]?.name ?: t.entityId, t.entityId, done = true, icon = Icons.Filled.Star)
+            WizardStatusRow(t.label ?: entities[t.entityId]?.name ?: t.entityId, t.entityId, done = true, icon = Icons.Filled.Star)
         }
         LauncherButton(
             stringResource(Res.string.ha_add_tile), icon = Icons.Filled.Add, primary = tiles.isEmpty(),
