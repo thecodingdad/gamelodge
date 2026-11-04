@@ -109,7 +109,7 @@ GameLodge stands on the work of [Moonlight](https://moonlight-stream.org),
 [Artemis](https://github.com/ClassicOldSong/moonlight-android),
 [Nonary's Moonlight PC](https://github.com/Nonary/moonlight-qt),
 [Sunshine](https://github.com/LizardByte/Sunshine), [Apollo](https://github.com/ClassicOldSong/Apollo)
-and Vibepollo. Artwork and metadata come from [SteamGridDB](https://www.steamgriddb.com) and
+and [Vibepollo](https://github.com/Nonary/Vibepollo). Artwork and metadata come from [SteamGridDB](https://www.steamgriddb.com) and
 [IGDB](https://www.igdb.com).
 
 ## License

@@ -1,47 +1,69 @@
 # Controllers & shortcuts
 
-GameLodge is made to be used with a controller. Every setting is per controller – the built-in controls
-of a handheld, an Xbox, PlayStation, Nintendo or other pad each keep their own – and starts from defaults
-for its model.
+GameLodge is made to be used with a controller. Every controller – the built-in controls of a handheld, an
+Xbox, PlayStation, Nintendo or other pad – keeps its own settings, starting from defaults for its model.
 
-## Per controller
+![Controllers](assets/screenshots/controllers.jpg)
 
-Under **Settings → Controllers** (or the quick menu's controller tab), select a controller:
+## The controllers page
 
-- **Button layout**: Xbox (A below) or Nintendo (A right), detected for known Nintendo pads
-- **Player order** for streams
-- **Dead zone**, **vibration** (the controller's motors, the device's, or the device when the controller
-  has none) and **vibration strength**
-- **Motion**: the controller's gyro, or the device's when the controller has none
-- **Touchpad as mouse** and the **battery report**
-- **Button shortcuts** and whether their buttons also reach the game
+**Settings → Controllers** lists the connected controllers. In a stream every controller is passed to the
+host as its own gamepad.
+
+General settings for all controllers:
+
+![General controller settings](assets/screenshots/controllers-general.jpg)
+
+- **Show button hints** – the bar at the bottom, only while a controller (or keyboard) is connected
+- **System-wide (accessibility)** – shortcuts in other apps too (see [Android](android.md#shortcuts-in-every-app))
+- **Connect controllers at stream start** – all controllers join the host when the stream starts, not on
+  their first button press; the controller that starts the stream is always player 1
+- **USB gamepad driver** for Xbox 360 / One / Nintendo Pro pads without native support (Android)
+- **Mouse emulation** – pointer speed and acceleration, see [Mouse emulation](mouse.md)
+
+## A controller's own settings
+
+Select a controller:
+
+![Controller settings](assets/screenshots/controller-settings.jpg){ width="600" }
+
+- **Name**, **icon** and **icon colour** – how it appears in GameLodge
+- **Button layout** – Xbox (A below) or Nintendo (A right)
+- **Button shortcuts** (below)
+- **Stick dead zone**, **rumble** (the controller's motors, or the device's when the controller has none),
+  **vibration strength** and **motion sensors** (the controller's gyro or the device's)
+- **Player number** in streams
+
+![Vibration & motion](assets/screenshots/controller-vibration.jpg){ width="600" }
+
+"Default" is the value for this kind of controller. Layout and shortcuts apply everywhere; the dead zone and
+vibration also in GameLodge; the rest applies from the next stream on.
 
 ## Button shortcuts
 
-| Action | Default |
-|---|---|
-| Back to GameLodge | Guide |
-| Quick menu | Start (hold) |
-| Mouse emulation | Select (hold) |
-| Performance overlay (stream) | Start + Select (hold) |
-| On-screen keyboard (stream) | LB + Select (hold) |
+![Button shortcuts](assets/screenshots/controller-shortcuts.jpg){ width="600" }
 
-Record your own: a single button or a combination, held for a moment to record a hold combination.
-A, B and the D-pad alone are kept for navigation.
+| Action | Default | Does |
+|---|---|---|
+| Back to GameLodge | Guide | Brings GameLodge to the front from a game or stream; in GameLodge it goes to the Home tab |
+| Open quick menu | Start (hold) | Opens the [quick menu](quick-menu.md) |
+| Mouse emulation | Select (hold) | Switches the [mouse pointer](mouse.md) on or off |
+| Performance overlay | Start + Select (hold) | Shows the stream's performance figures |
+| On-screen keyboard | LB + Select (hold) | Shows the keyboard in the stream |
+
+Select an action to record your own: press a single button or a combination; keep it held for a moment
+to record a **hold** combination. A, B and the D-pad alone stay reserved for navigation, and a combination
+can only be used once.
+
+**Pass combo buttons to the game**: off (default), the shortcut's buttons only run the action; on, they
+also reach the game.
 
 !!! info "Short presses of hold buttons"
-    In GameLodge and in the stream a short press of a button with a hold shortcut still reaches the
-    game. In other Android apps it is passed on at once and the shortcut runs in addition when held
-    (Android doesn't let an app hand on a press later).
-
-## Mouse emulation
-
-The left stick moves a pointer, the right stick scrolls; A clicks, B right-clicks, X middle-clicks, LB / RB
-go back and forward. In a stream it controls the host's mouse, elsewhere GameLodge's own pointer. Speed and
-acceleration are set under **Settings → Controllers → Mouse emulation**.
+    In GameLodge and in the stream a short press of a button with a hold shortcut still reaches the game.
+    In other Android apps it is passed on at once and the shortcut runs in addition when held – Android
+    doesn't let an app hand on a press later.
 
 ## Touch, mouse & keyboard
 
-Everything also works with touch, a mouse (side buttons can switch tabs) and a keyboard (assignable keys
-and a system-wide quick menu shortcut). Button hints at the bottom show only while a controller is
-connected.
+**Settings → Touch, mouse & keyboard**: everything also works with touch, a mouse (side buttons can switch
+tabs) and a keyboard – keys for confirm, back, quick menu and home, and a system-wide quick menu shortcut.

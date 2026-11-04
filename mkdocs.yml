@@ -48,16 +48,29 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - Getting started: getting-started.md
-  - Using GameLodge:
-      - Library: library.md
+  - Getting started:
+      - Installation: getting-started.md
+      - Setup wizard: wizard.md
+  - Library:
+      - Overview: library.md
+      - Filters, groups & collections: filters.md
       - Metadata & artwork: metadata.md
-      - Streaming: streaming.md
+      - Play time & statistics: playtime.md
+      - Emulators & ROMs: emulators.md
+  - Streaming:
+      - Overview: streaming.md
+      - Hosts & pairing: hosts.md
+      - Stream profiles: profiles.md
+      - VPN (WireGuard): vpn.md
+  - Controls:
       - Controllers & shortcuts: controllers.md
+      - Mouse emulation: mouse.md
       - Quick menu: quick-menu.md
-      - Home Assistant: home-assistant.md
-      - Appearance & display: appearance.md
-      - Backup & restore: backup.md
+  - Look & feel:
+      - Home tab & tiles: appearance.md
+      - TV mode & screensaver: tv.md
+  - Home Assistant: home-assistant.md
+  - Backup & restore: backup.md
   - Platforms:
       - Android: android.md
       - Windows: windows.md
