@@ -14,14 +14,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # The artemis submodule is a separate private repo that GITHUB_TOKEN cannot read;
-      # SUBMODULE_TOKEN is a fine-grained read-only token for that repo only.
-      - name: Checkout submodules
-        env:
-          SUBMODULE_TOKEN: ${{ secrets.SUBMODULE_TOKEN }}
-        run: |
-          git config --global url."https://x-access-token:${SUBMODULE_TOKEN}@github.com/thecodingdad/moonlight-android".insteadOf "https://github.com/thecodingdad/moonlight-android"
-          git submodule update --init --recursive --depth 1
+      # Only Artemis: moonlight-qt (Windows streaming client) isn't part of the Android build.
+      - name: Checkout Artemis
+        run: git submodule update --init --recursive --depth 1 artemis
 
       - uses: actions/setup-java@v4
         with:

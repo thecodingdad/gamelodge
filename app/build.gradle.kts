@@ -18,6 +18,18 @@ android {
 
     }
 
+    // Public releases are signed with the release key from the environment (CI secrets); local
+    // builds keep the debug key so they install over the debug builds on the test devices.
+    val releaseKeystore = System.getenv("GAMELODGE_KEYSTORE")?.let { file(it) }?.takeIf { it.exists() }
+    signingConfigs {
+        if (releaseKeystore != null) create("release") {
+            storeFile = releaseKeystore
+            storePassword = System.getenv("GAMELODGE_KEYSTORE_PASSWORD")
+            keyAlias = System.getenv("GAMELODGE_KEY_ALIAS")
+            keyPassword = System.getenv("GAMELODGE_KEYSTORE_PASSWORD")
+        }
+    }
+
     buildTypes {
         // arm64 for devices; debug builds also x86_64 for the emulator.
         debug {
@@ -28,8 +40,7 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            // Same key as the debug builds: installs over them without losing data or pairings.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
         }
     }
 
