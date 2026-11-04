@@ -22,18 +22,47 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
     lateinit var container: AppContainer
         private set
 
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+        super.onConfigurationChanged(newConfig)
+        applyDefaultLocale()
+    }
+
+    /**
+     * The launcher's own language as the process default: the shared texts follow the default
+     * locale, which Android resets to the device's language on configuration changes and which a
+     * fresh process sometimes still has at the device's (German texts with English chosen).
+     */
+    private fun applyDefaultLocale() {
+        val tag = getSharedPreferences(io.github.thecodingdad.gamelodge.util.AppLanguage.PREFS, MODE_PRIVATE)
+            .getString(io.github.thecodingdad.gamelodge.util.AppLanguage.KEY, null)
+        val locales = when {
+            tag == "system" -> if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                getSystemService(android.app.LocaleManager::class.java)?.systemLocales
+            } else return
+            tag != null -> android.os.LocaleList.forLanguageTags(tag)
+            android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU ->
+                getSystemService(android.app.LocaleManager::class.java)?.applicationLocales
+            else -> null
+        }?.takeIf { !it.isEmpty } ?: return
+        if (java.util.Locale.getDefault() == locales[0]) return
+        android.os.LocaleList.setDefault(locales)
+        java.util.Locale.setDefault(locales[0])
+    }
+
     override fun onCreate() {
         super.onCreate()
-        // The launcher's own language (Android 13+) as the process default from the start: the
-        // shared texts follow the default locale, which a fresh process sometimes still had at the
-        // device's language (German texts with English chosen).
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-            getSystemService(android.app.LocaleManager::class.java)?.applicationLocales?.takeIf { !it.isEmpty }?.let { locales ->
-                android.os.LocaleList.setDefault(locales)
-                java.util.Locale.setDefault(locales[0])
-            }
-        }
+        applyDefaultLocale()
         registerActivityLifecycleCallbacks(CurrentActivity)
+        registerActivityLifecycleCallbacks(object : android.app.Application.ActivityLifecycleCallbacks {
+            override fun onActivityPreCreated(activity: android.app.Activity, savedInstanceState: android.os.Bundle?) = applyDefaultLocale()
+            override fun onActivityResumed(activity: android.app.Activity) = applyDefaultLocale()
+            override fun onActivityCreated(activity: android.app.Activity, savedInstanceState: android.os.Bundle?) = Unit
+            override fun onActivityStarted(activity: android.app.Activity) = Unit
+            override fun onActivityPaused(activity: android.app.Activity) = Unit
+            override fun onActivityStopped(activity: android.app.Activity) = Unit
+            override fun onActivitySaveInstanceState(activity: android.app.Activity, outState: android.os.Bundle) = Unit
+            override fun onActivityDestroyed(activity: android.app.Activity) = Unit
+        })
         container = AppContainer(this)
         // Always offered as a home app (earlier versions switched the alias off).
         io.github.thecodingdad.gamelodge.system.LauncherMode(this).ensureOffered()
