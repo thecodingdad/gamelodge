@@ -1,9 +1,10 @@
 name: Build
 
+# Only for pull requests, release tags and by hand: pushes don't use up the Actions minutes.
 on:
-  push:
-    branches: [main]
   pull_request:
+  push:
+    tags: ['v*']
   workflow_dispatch:
 
 jobs:
