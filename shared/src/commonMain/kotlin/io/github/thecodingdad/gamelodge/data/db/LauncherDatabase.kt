@@ -74,7 +74,7 @@ object SchemaChanges {
         "ALTER TABLE library_items ADD COLUMN userRating INTEGER",
     )
 
-    /** v14: play data shared through a host (docs/PLAYDATA_SYNC_PLAN.md), hidden on this device only. */
+    /** v14: play data shared through a host, hidden on this device only. */
     val V13_TO_V14 = listOf(
         "ALTER TABLE library_items ADD COLUMN hiddenHere INTEGER NOT NULL DEFAULT 0",
         "CREATE TABLE IF NOT EXISTS `hub_sessions` (`id` TEXT NOT NULL, `gameId` TEXT NOT NULL, `deviceId` TEXT NOT NULL, `deviceName` TEXT NOT NULL, `startedAt` INTEGER NOT NULL, `seconds` INTEGER NOT NULL, `kind` TEXT NOT NULL, `seq` INTEGER NOT NULL, PRIMARY KEY(`id`))",

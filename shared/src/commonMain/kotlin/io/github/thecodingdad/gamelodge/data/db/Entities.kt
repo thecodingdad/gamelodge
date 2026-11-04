@@ -307,7 +307,7 @@ fun LibraryItemEntity.clearedMetadata(): LibraryItemEntity {
 }
 
 
-// --- Play data shared through a host (docs/PLAYDATA_SYNC_PLAN.md) ---------------------------------
+// --- Play data shared through a host --------------------------------------------------------------
 
 /** The host's play sessions of its games, from every paired GameLodge and itself ([seq]: change order). */
 @Entity(tableName = "hub_sessions", indices = [Index("seq"), Index("gameId")])

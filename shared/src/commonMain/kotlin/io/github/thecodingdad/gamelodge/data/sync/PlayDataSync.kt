@@ -36,7 +36,7 @@ class SyncHost(
 )
 
 /**
- * Keeps this device's play data of host games in step with the hosts (docs/PLAYDATA_SYNC_PLAN.md):
+ * Keeps this device's play data of host games in step with the hosts:
  * sends new sessions and changed flags / collection memberships, reads everything the other devices
  * sent, and sets playtime and last played of those items to the total of all devices.
  */

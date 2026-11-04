@@ -118,7 +118,7 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
         }
     }
 
-    /** Play data of the PC's games, shared with its paired launchers (docs/PLAYDATA_SYNC_PLAN.md). */
+    /** Play data of the PC's games, shared with its paired launchers. */
     val playDataHub: io.github.thecodingdad.gamelodge.data.sync.PlayDataHub by lazy {
         io.github.thecodingdad.gamelodge.data.sync.PlayDataHub(database, { hostGameIds() })
     }

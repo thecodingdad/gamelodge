@@ -13,7 +13,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 /**
- * The host's store of its games' play data (docs/PLAYDATA_SYNC_PLAN.md): what its paired GameLodges
+ * The host's store of its games' play data: what its paired GameLodges
  * and the host itself send, handed out by change order ([changesAfter]). Sessions are kept once per
  * id; flags and memberships keep the newest change. Only the host's own games are accepted.
  */
