@@ -1,10 +1,8 @@
 name: Build
 
-# Only for pull requests, release tags and by hand: pushes don't use up the Actions minutes.
+# Only for pull requests and by hand (release tags build in release.yml).
 on:
   pull_request:
-  push:
-    tags: ['v*']
   workflow_dispatch:
 
 jobs:

@@ -1,0 +1,166 @@
+name: Release
+
+# A version tag builds the signed APK and the Windows setup and puts them into a draft release
+# (published by hand after checking the notes).
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout Artemis
+        run: git submodule update --init --recursive --depth 1 artemis
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install NDK
+        run: |
+          SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKM" --licenses > /dev/null || true
+          "$SDKM" --install "ndk;27.0.12077973" "platforms;android-36" > /dev/null
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build signed APK
+        env:
+          KEYSTORE_BASE64: ${{ secrets.GAMELODGE_KEYSTORE_BASE64 }}
+          GAMELODGE_KEYSTORE_PASSWORD: ${{ secrets.GAMELODGE_KEYSTORE_PASSWORD }}
+          GAMELODGE_KEY_ALIAS: ${{ secrets.GAMELODGE_KEY_ALIAS }}
+        run: |
+          export GAMELODGE_KEYSTORE="$RUNNER_TEMP/release.jks"
+          echo "$KEYSTORE_BASE64" | base64 -d > "$GAMELODGE_KEYSTORE"
+          ./gradlew :app:assembleRelease --console=plain
+          rm -f "$GAMELODGE_KEYSTORE"
+          version=$(sed -n 's/^launcher.versionName=//p' gradle.properties)
+          mkdir -p out && cp app/build/outputs/apk/release/app-release.apk "out/GameLodge-$version.apk"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android
+          path: out/*.apk
+
+  windows:
+    runs-on: windows-2025
+    timeout-minutes: 120
+    env:
+      QT_VERSION: '6.11.1'
+      RCEDIT_URL: https://github.com/electron/rcedit/releases/download/v2.0.0/rcedit-x64.exe
+      RCEDIT_SHA256: 3E7801DB1A5EDBEC91B49A24A094AAD776CB4515488EA5A4CA2289C400EADE2A
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      # --- the bundled streaming client (moonlight-qt fork) ---
+      - name: Patch moonlight-common-c
+        working-directory: moonlight-qt
+        run: python moonlight-common-c\patches\apollo-server-commands.py moonlight-common-c\moonlight-common-c\src
+
+      - name: Moonlight dependencies
+        working-directory: moonlight-qt
+        run: powershell ./setup-deps.ps1
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          cache: true
+          set-env: false
+          add-tools-to-path: false
+          version: ${{ env.QT_VERSION }}
+          aqtsource: 'git+https://github.com/miurahr/aqtinstall.git@073e34d7c2ab4ae6961ed7cca690b3abd5ba5a7e'
+
+      - name: Build Moonlight
+        working-directory: moonlight-qt
+        shell: cmd
+        run: |
+          set "PATH=%QT_PATH%;%PATH%"
+          call scripts\build-arch.bat Release x64 || exit /b 1
+          mkdir ..\build\moonlight
+          for %%f in (build\installer-x64-Release\MoonlightPortable-x64-*.zip) do copy /y "%%f" ..\build\moonlight\MoonlightPortable-x64.zip
+        env:
+          QT_PATH: ${{ github.workspace }}\..\Qt\${{ env.QT_VERSION }}\msvc2022_64\bin
+
+      # --- native starter and the runtime's javaw.exe with the app's icon and version ---
+      - name: Build starter
+        shell: pwsh
+        run: |
+          $version = (Select-String -Path gradle.properties -Pattern '^launcher.versionName=(.*)$').Matches[0].Groups[1].Value
+          $parts = $version.Split('.')
+          ./gradlew :desktop:downloadWindowsJdk --console=plain
+          $jdk = Get-ChildItem "$env:USERPROFILE\.gradle\caches\gamelodge\OpenJDK21U-jdk_x64_windows_*.zip" | Select-Object -First 1
+          $work = "build\windows-launcher"
+          New-Item -ItemType Directory $work -Force | Out-Null
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $zip = [IO.Compression.ZipFile]::OpenRead($jdk.FullName)
+          $entry = $zip.Entries | Where-Object { $_.FullName -like '*/bin/javaw.exe' } | Select-Object -First 1
+          [IO.Compression.ZipFileExtensions]::ExtractToFile($entry, "$work\runtime-GameLodge.exe", $true)
+          $zip.Dispose()
+          Invoke-WebRequest -UseBasicParsing $env:RCEDIT_URL -OutFile "$env:RUNNER_TEMP\rcedit.exe"
+          if ((Get-FileHash "$env:RUNNER_TEMP\rcedit.exe" -Algorithm SHA256).Hash -ne $env:RCEDIT_SHA256) { throw 'rcedit checksum mismatch' }
+          Push-Location tools\windows\launcher
+          rc /nologo "/dVER_COMMA=$($parts[0]),$($parts[1]),$($parts[2]),0" "/dVER_TEXT=\`"$version\`"" /fo launcher.res launcher.rc
+          if ($LASTEXITCODE -ne 0) { throw 'rc failed' }
+          cl /nologo /O2 /MT /W3 /DUNICODE /D_UNICODE launcher.c launcher.res /link /SUBSYSTEM:WINDOWS user32.lib /OUT:..\..\..\build\windows-launcher\GameLodge.exe
+          if ($LASTEXITCODE -ne 0) { throw 'cl failed' }
+          Pop-Location
+          & "$env:RUNNER_TEMP\rcedit.exe" "$work\runtime-GameLodge.exe" --set-icon desktop\windows\icon.ico --set-version-string FileDescription GameLodge --set-version-string ProductName GameLodge --set-version-string CompanyName thecodingdad --set-version-string OriginalFilename GameLodge.exe --set-version-string InternalName GameLodge --set-file-version $version --set-product-version $version
+          if ($LASTEXITCODE -ne 0) { throw 'rcedit failed' }
+
+      # --- app package and installer ---
+      - name: Package app
+        run: ./gradlew :desktop:windowsApp --console=plain
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          choco install innosetup --no-progress -y | Out-Null
+          $version = (Select-String -Path gradle.properties -Pattern '^launcher.versionName=(.*)$').Matches[0].Groups[1].Value
+          $stage = Resolve-Path desktop\build\windows\GameLodge
+          New-Item -ItemType Directory out -Force | Out-Null
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" /Q "/DAppVersion=$version" "/DSourceDir=$stage" "/DOutputDir=$PWD\out" desktop\windows\GameLodge.iss
+          if ($LASTEXITCODE -ne 0) { throw 'ISCC failed' }
+          Rename-Item out\GameLodge-Setup.exe "GameLodge-Setup-$version.exe"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: out/*.exe
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [android, windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: assets
+          merge-multiple: true
+      - name: Draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release create "$TAG" assets/* -R "$GITHUB_REPOSITORY" --draft --title "GameLodge ${TAG#v}" --notes "Release notes follow."
