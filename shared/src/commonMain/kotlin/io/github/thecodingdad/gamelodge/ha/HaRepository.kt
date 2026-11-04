@@ -22,6 +22,12 @@ class HaRepository(
 
     suspend fun removeTile(entityId: String) = db.haTileDao().delete(entityId)
 
+    /** The tile's name in GameLodge; blank = the entity's name from Home Assistant. */
+    suspend fun setLabel(entityId: String, label: String) {
+        val tile = db.haTileDao().getAll().firstOrNull { it.entityId == entityId } ?: return
+        db.haTileDao().upsert(listOf(tile.copy(label = label.trim().ifEmpty { null })))
+    }
+
     suspend fun setShowOnHome(tile: HaTileEntity, show: Boolean) = db.haTileDao().upsert(listOf(tile.copy(showOnHome = show)))
 
     /** The tiles in the order of [entityIds] (dragged or moved in the settings). */

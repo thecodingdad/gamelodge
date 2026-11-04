@@ -37,6 +37,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -296,7 +297,7 @@ fun HaTileList(enabled: Boolean) {
         val entity = entities[tile.entityId]
         val group = EntityGroup.of(tile.entityId.substringBefore('.'))
         io.github.thecodingdad.gamelodge.ui.screens.settings.RemovableRow(
-            entity?.name ?: tile.entityId,
+            tile.label ?: entity?.name ?: tile.entityId,
             subtitle = listOfNotNull(group?.let { stringResource(it.label) }, if (tile.showOnHome) stringResource(Res.string.ha_tile_on_home_short) else null).joinToString(" · "),
             icon = group?.icon,
             onRemove = { scope.launch { ha.removeTile(tile.entityId) } },
@@ -331,12 +332,24 @@ fun HaTileEditor(visible: Boolean, onDismiss: () -> Unit) {
     }
 }
 
-/** One tile's own setting: shown on the start tab or not (its place and removal are in the list). */
+/**
+ * One tile's own settings: its name in GameLodge (empty = Home Assistant's) and whether it shows on
+ * the start tab (its place and removal are in the list).
+ */
 @Composable
 private fun TileDialog(tile: HaTileEntity, entity: HaEntity?, ha: HaRepository, onDismiss: () -> Unit) {
     val scope = rememberCoroutineScope()
-    Modal(visible = true, onDismiss = onDismiss, title = entity?.name ?: tile.entityId, size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
+    val haName = entity?.name ?: tile.entityId
+    var name by remember { mutableStateOf(tile.label.orEmpty()) }
+    // Restarted per keystroke: the last name typed is the one stored.
+    LaunchedEffect(name) { if (name != tile.label.orEmpty()) ha.setLabel(tile.entityId, name) }
+    Modal(visible = true, onDismiss = onDismiss, title = name.ifBlank { haName }, size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         Text(tile.entityId, style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+        LauncherTextField(
+            stringResource(Res.string.ha_tile_name), name,
+            { name = it },
+            placeholder = haName,
+        )
         SwitchRow(stringResource(Res.string.ha_tile_on_home), tile.showOnHome, { scope.launch { ha.setShowOnHome(tile, it) } }, icon = Icons.Filled.Home, initialFocus = true)
     }
 }
