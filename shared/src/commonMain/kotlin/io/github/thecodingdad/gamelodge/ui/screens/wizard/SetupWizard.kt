@@ -64,7 +64,7 @@ enum class WizardStep(val mandatory: Boolean = false) {
     BACKUP,
     HOST_ROLE,
     CONTROLLER(mandatory = true),
-    GUIDE,
+    SHORTCUTS,
     APPEARANCE,
     LAUNCHER_MODE,
     PERMISSIONS,

@@ -432,6 +432,7 @@
     <string name="ha_status_not_configured_sub">Melde dich mit der Adresse deines Home Assistant an.</string>
     <string name="ha_login_title">Bei Home Assistant anmelden</string>
     <string name="ha_tile_on_home">Im Start-Tab zeigen</string>
+    <string name="ha_tile_name">Name</string>
     <string name="ha_tile_move_up">Nach oben</string>
     <string name="ha_tile_move_down">Nach unten</string>
     <string name="ha_tile_remove">Halten zum Entfernen</string>
@@ -1440,8 +1441,8 @@
     <string name="wizard_controller_text">Welche Taste bestätigt? Xbox-Pads bestätigen mit der unteren Taste, Nintendo-Pads mit der rechten.</string>
     <string name="wizard_controller_test">Tastentest</string>
     <string name="wizard_controller_test_hint">Drück Tasten: Sie leuchten auf und lösen nichts aus. Leuchtet bei der unteren Taste „A“ (Xbox) bzw. bei der rechten (Nintendo), passt das Layout. Beenden: B 2 Sekunden halten oder „Fertig“ wählen.</string>
-    <string name="wizard_guide_title">Guide-Taste</string>
-    <string name="wizard_guide_text">Die Xbox-/PS-Taste bringt dich aus Spielen und Streams zurück zu GameLodge; gedrückt gehalten öffnet sie das Schnellmenü.</string>
+    <string name="wizard_shortcuts_title">Tastenkürzel</string>
+    <string name="wizard_shortcuts_text">Controller-Kürzel für GameLodge, Schnellmenü, Maus-Emulation, Leistungsanzeige und Bildschirmtastatur. Hier oder später in den Einstellungen des Controllers änderbar.</string>
     <string name="wizard_appearance_title">Darstellung</string>
     <string name="wizard_appearance_text">Farben und Größe der Oberfläche. Die Vorschau zeigt deine Wahl sofort.</string>
     <string name="wizard_appearance_preview">Vorschau</string>
@@ -1494,9 +1495,7 @@
     <string name="wizard_finish_ready">Alles geladen.</string>
     <string name="wizard_change">Ändern</string>
     <string name="wizard_allow">Erlauben</string>
-    <string name="wizard_guide_press">Zurück zu GameLodge</string>
-    <string name="wizard_guide_hold">Schnellmenü</string>
-    <string name="wizard_guide_other_apps">In anderen Apps</string>
+    <string name="wizard_shortcuts_other_apps">In anderen Apps</string>
     <string name="wizard_launcher_set">Als Home-App festlegen</string>
     <string name="wizard_launcher_set_short">Festlegen</string>
     <string name="wizard_launcher_done">GameLodge ist die Home-App</string>

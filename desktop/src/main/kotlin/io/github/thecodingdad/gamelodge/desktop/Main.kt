@@ -354,12 +354,9 @@ fun main(args: Array<String>) {
     }
     // A PC has a keyboard: button hints stay with keys when no controller is connected.
     io.github.thecodingdad.gamelodge.input.KeyboardKeys.connected = true
-    // The PC's built-in combinations: Guide held doesn't reach the launcher reliably on Windows (the
-    // Xbox Game Bar takes it), so the quick menu opens with Start held and the mouse with Select held.
-    io.github.thecodingdad.gamelodge.ui.screens.settings.DefaultCombos = io.github.thecodingdad.gamelodge.data.settings.LauncherSettings(
-        comboQuickMenu = setOf(io.github.thecodingdad.gamelodge.data.settings.KEYCODE_START, io.github.thecodingdad.gamelodge.data.settings.COMBO_HOLD),
-        comboMouse = setOf(io.github.thecodingdad.gamelodge.data.settings.KEYCODE_SELECT, io.github.thecodingdad.gamelodge.data.settings.COMBO_HOLD),
-    )
+    // The PC's built-in combinations: no on-screen keyboard combination (the PC has none to show).
+    io.github.thecodingdad.gamelodge.ui.screens.settings.DefaultCombos =
+        io.github.thecodingdad.gamelodge.data.settings.LauncherSettings(comboKeyboard = emptySet())
     // Pads without their own combinations use the built-in ones.
     io.github.thecodingdad.gamelodge.input.ButtonCombos.forward = io.github.thecodingdad.gamelodge.ui.screens.settings.DefaultCombos.comboForward
     io.github.thecodingdad.gamelodge.input.ButtonCombos.combos = io.github.thecodingdad.gamelodge.input.ComboAction.entries

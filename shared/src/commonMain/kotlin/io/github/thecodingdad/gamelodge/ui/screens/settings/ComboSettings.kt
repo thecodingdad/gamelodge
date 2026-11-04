@@ -52,7 +52,7 @@ fun comboSubtitle(action: ComboAction): StringResource = when (action) {
 
 /**
  * The built-in combinations and pass-through, used by every controller without its own. A platform
- * may set its own at start (the PC: Guide held is unreliable there).
+ * may set its own at start.
  */
 var DefaultCombos = LauncherSettings()
 

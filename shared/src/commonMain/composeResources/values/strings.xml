@@ -434,6 +434,7 @@
     <string name="ha_status_not_configured_sub">Sign in with the address of your Home Assistant.</string>
     <string name="ha_login_title">Sign in to Home Assistant</string>
     <string name="ha_tile_on_home">Show on the Home tab</string>
+    <string name="ha_tile_name">Name</string>
     <string name="ha_tile_move_up">Move up</string>
     <string name="ha_tile_move_down">Move down</string>
     <string name="ha_tile_remove">Hold to remove</string>
@@ -1442,8 +1443,8 @@
     <string name="wizard_controller_text">Which button confirms? Xbox pads confirm with the lower button, Nintendo pads with the right one.</string>
     <string name="wizard_controller_test">Button test</string>
     <string name="wizard_controller_test_hint">Press buttons: they light up and do nothing else. If the lower face button lights up "A" (Xbox) or the right one (Nintendo), the layout fits. To end: hold B for 2 seconds or select Done.</string>
-    <string name="wizard_guide_title">Guide button</string>
-    <string name="wizard_guide_text">The Xbox/PS button takes you back to GameLodge from games and streams; held, it opens the quick menu.</string>
+    <string name="wizard_shortcuts_title">Button shortcuts</string>
+    <string name="wizard_shortcuts_text">Controller shortcuts for GameLodge, the quick menu, mouse emulation, the performance overlay and the on-screen keyboard. Change them here or later in each controller's settings.</string>
     <string name="wizard_appearance_title">Appearance</string>
     <string name="wizard_appearance_text">Colors and size of the interface. The preview shows your choice right away.</string>
     <string name="wizard_appearance_preview">Preview</string>
@@ -1496,9 +1497,7 @@
     <string name="wizard_finish_ready">Everything is loaded.</string>
     <string name="wizard_change">Change</string>
     <string name="wizard_allow">Allow</string>
-    <string name="wizard_guide_press">Back to GameLodge</string>
-    <string name="wizard_guide_hold">Quick menu</string>
-    <string name="wizard_guide_other_apps">In other apps</string>
+    <string name="wizard_shortcuts_other_apps">In other apps</string>
     <string name="wizard_launcher_set">Set as home app</string>
     <string name="wizard_launcher_set_short">Set</string>
     <string name="wizard_launcher_done">GameLodge is the home app</string>

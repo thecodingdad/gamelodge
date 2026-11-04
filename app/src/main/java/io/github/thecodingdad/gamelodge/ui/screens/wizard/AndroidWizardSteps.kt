@@ -42,6 +42,7 @@ import io.github.thecodingdad.gamelodge.ui.screens.settings.PlatformEmulatorRow
 import io.github.thecodingdad.gamelodge.ui.screens.settings.SectionHeader
 import io.github.thecodingdad.gamelodge.ui.screens.settings.SwitchRow
 import io.github.thecodingdad.gamelodge.ui.screens.settings.comboLabel
+import io.github.thecodingdad.gamelodge.ui.screens.settings.comboTitle
 import io.github.thecodingdad.gamelodge.ui.screens.settings.folderName
 import io.github.thecodingdad.gamelodge.ui.screens.settings.needsBios
 import io.github.thecodingdad.gamelodge.ui.theme.LauncherTheme
@@ -52,20 +53,20 @@ import org.jetbrains.compose.resources.stringResource
 /** The setup wizard's steps on Android. */
 object AndroidWizard {
     val steps = listOf(
-        WizardStep.WELCOME, WizardStep.BACKUP, WizardStep.CONTROLLER, WizardStep.GUIDE, WizardStep.APPEARANCE,
+        WizardStep.WELCOME, WizardStep.BACKUP, WizardStep.CONTROLLER, WizardStep.SHORTCUTS, WizardStep.APPEARANCE,
         WizardStep.LAUNCHER_MODE, WizardStep.PERMISSIONS, WizardStep.EMULATORS, WizardStep.HOSTS, WizardStep.COMPANION,
         WizardStep.METADATA, WizardStep.HOME_ASSISTANT, WizardStep.VPN, WizardStep.FINISH,
     )
 
     /** What a backup doesn't bring to a new device. */
-    val deviceSteps = listOf(WizardStep.GUIDE, WizardStep.LAUNCHER_MODE, WizardStep.PERMISSIONS)
+    val deviceSteps = listOf(WizardStep.SHORTCUTS, WizardStep.LAUNCHER_MODE, WizardStep.PERMISSIONS)
 
     @Composable
     fun Content(step: WizardStep) {
         val settings by LocalContext.current.container.settings.settings.collectAsState(LauncherSettings())
         androidx.compose.foundation.layout.Column(verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)) {
             when (step) {
-                WizardStep.GUIDE -> GuideStep(settings)
+                WizardStep.SHORTCUTS -> ShortcutsStep(settings)
                 WizardStep.LAUNCHER_MODE -> LauncherModeStep()
                 WizardStep.PERMISSIONS -> PermissionsStep()
                 WizardStep.EMULATORS -> EmulatorsStep()
@@ -89,10 +90,10 @@ private fun android.content.Context.open(intent: Intent, fallback: Intent? = nul
         .onFailure { fallback?.let { f -> runCatching { startActivity(f.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) } } }
 }
 
-// ---- Guide & accessibility service ----
+// ---- Button shortcuts & accessibility service ----
 
 @Composable
-private fun ColumnScope.GuideStep(settings: LauncherSettings) {
+private fun ColumnScope.ShortcutsStep(settings: LauncherSettings) {
     val context = LocalContext.current
     val tick = rememberResumeTick()
     val serviceOn = remember(tick) { ComboAccessibilityService.isEnabled(context) }
@@ -106,17 +107,15 @@ private fun ColumnScope.GuideStep(settings: LauncherSettings) {
     fun effective(a: ComboAction) = ownCombo(a) ?: DefaultCombos.combo(a)
 
     if (pad != null) {
-        WizardStatusRow(
-            stringResource(Res.string.wizard_guide_press), comboLabel(effective(ComboAction.HOME)), done = false,
-            icon = Icons.Filled.Home, action = stringResource(Res.string.wizard_change), onClick = { editing = ComboAction.HOME },
-            initialFocus = true,
-        )
-        WizardStatusRow(
-            stringResource(Res.string.wizard_guide_hold), comboLabel(effective(ComboAction.QUICK_MENU)), done = false,
-            icon = Icons.Filled.Tune, action = stringResource(Res.string.wizard_change), onClick = { editing = ComboAction.QUICK_MENU },
-        )
+        ComboAction.entries.forEachIndexed { i, a ->
+            WizardStatusRow(
+                stringResource(comboTitle(a)), comboLabel(effective(a)), done = false,
+                icon = comboIcon(a), action = stringResource(Res.string.wizard_change), onClick = { editing = a },
+                initialFocus = i == 0,
+            )
+        }
     }
-    SectionHeader(stringResource(Res.string.wizard_guide_other_apps))
+    SectionHeader(stringResource(Res.string.wizard_shortcuts_other_apps))
     // Only the general list could be opened: say what to look for there.
     var generalList by remember { mutableStateOf(false) }
     WizardStatusRow(
@@ -357,4 +356,12 @@ private fun ColumnScope.VpnStep(settings: LauncherSettings) {
         } else stringResource(Res.string.wizard_vpn_only_outside_sub),
         icon = Icons.Filled.Home,
     )
+}
+
+private fun comboIcon(action: ComboAction) = when (action) {
+    ComboAction.HOME -> Icons.Filled.Home
+    ComboAction.QUICK_MENU -> Icons.Filled.Tune
+    ComboAction.MOUSE -> Icons.Filled.Mouse
+    ComboAction.STATS -> Icons.Filled.Speed
+    ComboAction.KEYBOARD -> Icons.Filled.Keyboard
 }

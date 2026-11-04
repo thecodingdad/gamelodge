@@ -78,7 +78,7 @@ internal fun stepInfo(step: WizardStep): StepInfo = when (step) {
     WizardStep.BACKUP -> StepInfo(Icons.Filled.Restore, Res.string.wizard_backup_title, Res.string.wizard_backup_text)
     WizardStep.HOST_ROLE -> StepInfo(Icons.Filled.Dns, Res.string.wizard_host_role_title, Res.string.wizard_host_role_text)
     WizardStep.CONTROLLER -> StepInfo(Icons.Filled.SportsEsports, Res.string.wizard_controller_title, Res.string.wizard_controller_text)
-    WizardStep.GUIDE -> StepInfo(Icons.Filled.Gamepad, Res.string.wizard_guide_title, Res.string.wizard_guide_text)
+    WizardStep.SHORTCUTS -> StepInfo(Icons.Filled.Gamepad, Res.string.wizard_shortcuts_title, Res.string.wizard_shortcuts_text)
     WizardStep.APPEARANCE -> StepInfo(Icons.Filled.Palette, Res.string.wizard_appearance_title, Res.string.wizard_appearance_text)
     WizardStep.LAUNCHER_MODE -> StepInfo(Icons.Filled.Home, Res.string.wizard_launcher_title, Res.string.wizard_launcher_text)
     WizardStep.PERMISSIONS -> StepInfo(Icons.Filled.VerifiedUser, Res.string.wizard_permissions_title, Res.string.wizard_permissions_text)

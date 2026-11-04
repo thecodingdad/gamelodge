@@ -220,16 +220,16 @@ data class LauncherSettings(
     val disabledGameSources: Set<String> = emptySet(),
     /**
      * Controller button combinations (Android key codes, [COMBO_HOLD] = held) to bring the launcher
-     * to the front and for the quick menu; empty = off. Default: Guide pressed / Guide held.
+     * to the front and for the quick menu; empty = off. Default: Guide pressed / Start held.
      */
     val comboHome: Set<Int> = setOf(KEYCODE_GUIDE),
-    val comboQuickMenu: Set<Int> = setOf(KEYCODE_GUIDE, COMBO_HOLD),
+    val comboQuickMenu: Set<Int> = setOf(KEYCODE_START, COMBO_HOLD),
     /** Mouse emulation on / off (in the stream: the client's; elsewhere GameLodge's own). */
-    val comboMouse: Set<Int> = setOf(KEYCODE_START, COMBO_HOLD),
+    val comboMouse: Set<Int> = setOf(KEYCODE_SELECT, COMBO_HOLD),
     /** Performance overlay in the stream on / off. */
-    val comboStats: Set<Int> = setOf(KEYCODE_SELECT, KEYCODE_L1, KEYCODE_R1, KEYCODE_X),
-    /** On-screen keyboard in the stream on / off: none built in (each controller sets its own). */
-    val comboKeyboard: Set<Int> = emptySet(),
+    val comboStats: Set<Int> = setOf(KEYCODE_START, KEYCODE_SELECT, COMBO_HOLD),
+    /** On-screen keyboard in the stream on / off. */
+    val comboKeyboard: Set<Int> = setOf(KEYCODE_L1, KEYCODE_SELECT, COMBO_HOLD),
     /** Mouse emulation: pointer speed in percent of the default. */
     val mouseSpeed: Int = 100,
     /** Mouse emulation: how much slower the pointer is with the stick only slightly moved. */

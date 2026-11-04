@@ -109,13 +109,13 @@ Windows:
 - **Live button test:** a pad graphic for the controller used last. Pressed buttons light up, with A/B/X/Y labelled according to the chosen layout, so a wrong layout is obvious at once.
 - Next once confirmed. Presets: Xbox everywhere; a Nintendo pad is preset to Nintendo when recognised.
 
-### 4 · Guide & accessibility service (Android)
-- Explanation graphic: Guide pressed = back to GameLodge, Guide held = quick menu (works in GameLodge and in the stream).
+### 4 · Button shortcuts & accessibility service (Android)
+- One row per shortcut with its current buttons: Guide = back to GameLodge, Start (hold) = quick menu, Select (hold) = mouse emulation, Start + Select (hold) = performance overlay, LB + Select (hold) = on-screen keyboard (works in GameLodge and in the stream).
 - **Status row "In other apps":**
   - "Enable service" opens the accessibility settings.
   - After coming back the row shows "On ✓" or stays "Off".
   - Text: without the service it works only in GameLodge and the stream.
-- Link "Change buttons" opens the existing recording dialog for both actions (current values shown, e.g. "Guide" / "Guide (hold)").
+- "Change" on a row opens the existing recording dialog for that shortcut.
 
 ### 5 · Appearance
 - Theme: Dark / Black (OLED) / Light as big cards.
