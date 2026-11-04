@@ -255,8 +255,9 @@ class BackupManager(
      * The backup as a ZIP: `backup.json` plus the image files it refers to. Own (hand-picked)
      * images are always included; the downloaded cache and the animated images follow the
      * [LauncherSettings.backupArtwork] / [LauncherSettings.backupAnimatedArtwork] settings.
+     * Streamed into [out] (left open): with images it can be bigger than the app's memory.
      */
-    suspend fun export(password: String?): ByteArray = withContext(Dispatchers.IO) {
+    suspend fun export(password: String?, out: java.io.OutputStream) = withContext(Dispatchers.IO) {
         val backup = create(password)
         val s = settings.current()
         val own = LinkedHashMap<String, File>()
@@ -270,8 +271,8 @@ class BackupManager(
                 if (s.backupAnimatedArtwork) item.animatedValues().forEach { url -> ArtworkFiles.cachedFileForUrl(url)?.let { cache.putIfAbsent(it.name, it) } }
             }
         }
-        val out = java.io.ByteArrayOutputStream()
-        java.util.zip.ZipOutputStream(out).use { zip ->
+        val zip = java.util.zip.ZipOutputStream(java.io.BufferedOutputStream(NonClosing(out)))
+        zip.use { zip ->
             zip.putNextEntry(java.util.zip.ZipEntry(MANIFEST)); zip.write(encode(backup).toByteArray()); zip.closeEntry()
             fun add(prefix: String, files: Map<String, File>) = files.forEach { (name, file) ->
                 zip.putNextEntry(java.util.zip.ZipEntry("$prefix$name")); file.inputStream().use { it.copyTo(zip) }; zip.closeEntry()
@@ -279,30 +280,34 @@ class BackupManager(
             add(OWN_PREFIX, own)
             add(CACHE_PREFIX, cache)
         }
-        out.toByteArray()
     }
 
-    /** The manifest of [bytes] (ZIP or legacy plain JSON), to check for a password before restoring. */
-    fun readManifest(bytes: ByteArray): BackupFile =
-        if (isZip(bytes)) {
-            java.util.zip.ZipInputStream(bytes.inputStream()).use { zip ->
-                generateSequence { zip.nextEntry }.firstOrNull { it.name == MANIFEST }
-                    ?: error("No $MANIFEST in the archive")
-                decode(zip.readBytes().decodeToString())
-            }
-        } else {
-            decode(bytes.decodeToString())
+    /**
+     * The manifest of the backup [open] reads (ZIP or legacy plain JSON), to check for a password
+     * before restoring. The manifest is the archive's first entry: the images aren't read.
+     */
+    suspend fun readManifest(open: () -> java.io.InputStream): BackupFile = withContext(Dispatchers.IO) {
+        java.io.BufferedInputStream(open()).use { input ->
+            if (!isZip(input)) return@use decode(input.readBytes().decodeToString())
+            val zip = java.util.zip.ZipInputStream(input)
+            generateSequence { zip.nextEntry }.firstOrNull { it.name == MANIFEST }
+                ?: error("No $MANIFEST in the archive")
+            decode(zip.readBytes().decodeToString())
         }
+    }
 
-    /** Restores from [bytes] (ZIP with images, or legacy plain JSON). */
-    suspend fun import(bytes: ByteArray, password: String?) = withContext(Dispatchers.IO) {
-        if (!isZip(bytes)) return@withContext restore(decode(bytes.decodeToString()), password)
+    /** Restores from the backup [open] reads (ZIP with images, or legacy plain JSON). */
+    suspend fun import(open: () -> java.io.InputStream, password: String?) = withContext(Dispatchers.IO) {
+        val input = java.io.BufferedInputStream(open())
+        if (!input.use { isZip(it) }) {
+            return@withContext restore(java.io.BufferedInputStream(open()).use { decode(it.readBytes().decodeToString()) }, password)
+        }
         var manifest: String? = null
         val ownNames = HashSet<String>()
         val ownTarget = ownDir.apply { mkdirs() }
         // The cache dir is only touched when the archive actually carries cached images.
         fun cacheTarget() = ArtworkFiles.cacheDir().apply { mkdirs() }
-        java.util.zip.ZipInputStream(bytes.inputStream()).use { zip ->
+        java.util.zip.ZipInputStream(java.io.BufferedInputStream(open())).use { zip ->
             while (true) {
                 val entry = zip.nextEntry ?: break
                 val name = entry.name
@@ -322,7 +327,18 @@ class BackupManager(
         restore(decode(manifest ?: error("No $MANIFEST in the archive")), password, ownNames)
     }
 
-    private fun isZip(bytes: ByteArray) = bytes.size >= 4 && bytes[0] == 'P'.code.toByte() && bytes[1] == 'K'.code.toByte()
+    private fun isZip(input: java.io.BufferedInputStream): Boolean {
+        input.mark(2)
+        val magic = ByteArray(2).let { it.copyOf(input.read(it).coerceAtLeast(0)) }
+        input.reset()
+        return magic.contentEquals(byteArrayOf('P'.code.toByte(), 'K'.code.toByte()))
+    }
+
+    // Closing the ZIP finishes it without closing the caller's stream.
+    private class NonClosing(out: java.io.OutputStream) : java.io.FilterOutputStream(out) {
+        override fun write(b: ByteArray, off: Int, len: Int) = out.write(b, off, len)
+        override fun close() = flush()
+    }
 
     private fun safeName(name: String, prefix: String): String? =
         name.removePrefix(prefix).takeIf { it.isNotEmpty() && '/' !in it && '\\' !in it && it != ".." }

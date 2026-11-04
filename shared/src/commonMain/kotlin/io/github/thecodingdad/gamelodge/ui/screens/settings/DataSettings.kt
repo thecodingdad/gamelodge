@@ -249,7 +249,7 @@ private fun BackupSection(settings: LauncherSettings, update: ((LauncherSettings
     // The backup dialog ("what goes in") and, for a chosen file, its loaded bytes + preview.
     var showBackup by remember { mutableStateOf(false) }
     var exportPassword by remember { mutableStateOf<String?>(null) }
-    var pending by remember { mutableStateOf<Pair<ByteArray, io.github.thecodingdad.gamelodge.data.backup.BackupFile>?>(null) }
+    var pending by remember { mutableStateOf<Pair<String, io.github.thecodingdad.gamelodge.data.backup.BackupFile>?>(null) }
     var choosing by remember { mutableStateOf<List<BackupEntry>?>(null) }
     val okMsg = stringResource(Res.string.backup_done)
     val restoredMsg = stringResource(Res.string.backup_restored)
@@ -259,23 +259,23 @@ private fun BackupSection(settings: LauncherSettings, update: ((LauncherSettings
 
     val pickFolder = storage.rememberFolderPicker { picked -> update { it.copy(backupFolderUri = picked) } }
     val createFile = storage.rememberCreateFile { target ->
-        scope.launch { message = runCatching { storage.write(target, backup.export(exportPassword)) }.fold({ okMsg }, { it.message }) }
+        scope.launch { message = runCatching { storage.write(target) { backup.export(exportPassword, it) } }.fold({ okMsg }, { it.message }) }
     }
     // After the dialog: write to the folder, or pick a file (which then uses [exportPassword]).
     fun runBackup(pw: String?) {
         exportPassword = pw
         if (folder.isNotEmpty()) {
             scope.launch {
-                message = runCatching { storage.writeToFolder(folder, backup.export(pw), settings.backupKeepCount) }.fold({ okMsg }, { it.message })
+                message = runCatching { storage.writeToFolder(folder, settings.backupKeepCount) { backup.export(pw, it) } }.fold({ okMsg }, { it.message })
             }
         } else {
             createFile(BackupManager.fileName())
         }
     }
-    fun doRestore(bytes: ByteArray, pw: String?) {
+    fun doRestore(address: String, pw: String?) {
         pending = null
         scope.launch {
-            message = runCatching { backup.import(bytes, pw) }.fold(
+            message = runCatching { backup.import({ storage.open(address) }, pw) }.fold(
                 { restoredMsg },
                 { if (it is WrongPasswordException) wrongPwMsg else it.message },
             )
@@ -286,9 +286,8 @@ private fun BackupSection(settings: LauncherSettings, update: ((LauncherSettings
     fun restoreFrom(address: String) {
         choosing = null
         scope.launch {
-            val bytes = runCatching { storage.read(address) }.getOrElse { message = it.message; return@launch }
-            val manifest = runCatching { backup.readManifest(bytes) }.getOrElse { message = it.message; return@launch }
-            pending = bytes to manifest
+            val manifest = runCatching { backup.readManifest { storage.open(address) } }.getOrElse { message = it.message; return@launch }
+            pending = address to manifest
         }
     }
     val openFile = storage.rememberOpenFile(::restoreFrom)
@@ -322,8 +321,8 @@ private fun BackupSection(settings: LauncherSettings, update: ((LauncherSettings
     message?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurface) }
 
     if (showBackup) BackupNowDialog(settings, update, onDismiss = { showBackup = false }, onConfirm = { pw -> showBackup = false; runBackup(pw) })
-    pending?.let { (bytes, manifest) ->
-        RestoreConfirmDialog(manifest, onDismiss = { pending = null }, onConfirm = { pw -> doRestore(bytes, pw) })
+    pending?.let { (address, manifest) ->
+        RestoreConfirmDialog(manifest, onDismiss = { pending = null }, onConfirm = { pw -> doRestore(address, pw) })
     }
 
     // Backups of the folder, newest first; restoring needs holding A (it overwrites settings).

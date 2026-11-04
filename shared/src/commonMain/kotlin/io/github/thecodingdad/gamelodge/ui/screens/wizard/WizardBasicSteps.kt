@@ -149,7 +149,7 @@ internal fun ColumnScope.BackupStep(settings: LauncherSettings) {
         checking = true
         error = null
         scope.launch {
-            val ok = runCatching { container.backup.readManifest(storage.read(address)) }.isSuccess
+            val ok = runCatching { container.backup.readManifest { storage.open(address) } }.isSuccess
             checking = false
             if (ok) nav.chooseBackup(address) else error = unreadable
         }
@@ -214,16 +214,17 @@ internal fun ColumnScope.RestoreStep(settings: LauncherSettings) {
         busy = true
         message = null
         scope.launch {
-            val bytes = runCatching { container.backupStorage.read(settings.setupRestore) }.getOrNull()
-            val manifest = bytes?.let { runCatching { container.backup.readManifest(it) }.getOrNull() }
-            if (bytes == null || manifest == null) {
+            val address = settings.setupRestore
+            val open = { container.backupStorage.open(address) }
+            val manifest = runCatching { container.backup.readManifest(open) }.getOrNull()
+            if (manifest == null) {
                 busy = false
                 state = false
                 message = unreadable
                 return@launch
             }
             suspend fun run(pw: String?) {
-                val result = runCatching { container.backup.import(bytes, pw) }
+                val result = runCatching { container.backup.import(open, pw) }
                 busy = false
                 state = result.isSuccess || result.exceptionOrNull() is WrongPasswordException
                 message = when (val e = result.exceptionOrNull()) {

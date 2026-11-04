@@ -108,13 +108,13 @@ class BackupManagerTest {
         val elden = dao.getAllItems().first { it.title == "Elden Ring" }
         dao.upsertItem(elden.copy(favorite = true, coverUrl = img.absolutePath))
 
-        val bytes = manager.export(password = null)
+        val bytes = java.io.ByteArrayOutputStream().also { manager.export(password = null, out = it) }.toByteArray()
         assertEquals('P'.code.toByte(), bytes[0]) // a ZIP, not plain JSON
 
         // A fresh install with its own files dir: the own image is extracted and the path repointed.
         val targetFiles = java.io.File(context.cacheDir, "tgt-${System.nanoTime()}")
         seedLibrary(target)
-        BackupManager(target, settings, secrets, ArtemisStreamBackup(context), targetFiles).import(bytes, null)
+        BackupManager(target, settings, secrets, ArtemisStreamBackup(context), targetFiles).import({ bytes.inputStream() }, null)
 
         val cover = target.libraryDao().getAllItems().first { it.title == "Elden Ring" }.coverUrl!!
         assertTrue("repointed into the new files dir", cover.startsWith(java.io.File(targetFiles, "own-artwork").absolutePath))

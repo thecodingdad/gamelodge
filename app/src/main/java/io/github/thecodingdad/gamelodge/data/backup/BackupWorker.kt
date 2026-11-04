@@ -16,7 +16,7 @@ class BackupWorker(context: Context, params: WorkerParameters) : CoroutineWorker
         val c = applicationContext.container
         val s = c.settings.current()
         if (!s.autoBackup || s.backupFolderUri.isEmpty()) return Result.success()
-        return runCatching { c.backupStorage.writeToFolder(s.backupFolderUri, c.backup.export(null), s.backupKeepCount) }
+        return runCatching { c.backupStorage.writeToFolder(s.backupFolderUri, s.backupKeepCount) { c.backup.export(null, it) } }
             .onFailure { Log.w("Auto backup failed", it) }
             .fold({ Result.success() }, { Result.retry() })
     }

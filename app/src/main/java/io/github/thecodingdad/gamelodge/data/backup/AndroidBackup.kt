@@ -53,10 +53,15 @@ class ArtemisStreamBackup(private val context: Context) : StreamSettingsBackup {
 class SafBackupStorage(private val context: Context) : BackupStorage {
     override fun folderLabel(folder: String): String = Uri.decode(folder).substringAfterLast(':')
 
-    override suspend fun writeToFolder(folder: String, bytes: ByteArray, keep: Int) = withContext(Dispatchers.IO) {
+    override suspend fun writeToFolder(folder: String, keep: Int, content: suspend (java.io.OutputStream) -> Unit) = withContext(Dispatchers.IO) {
         val dir = DocumentFile.fromTreeUri(context, Uri.parse(folder)) ?: error("Backup folder not accessible")
         val file = dir.createFile("application/zip", BackupManager.fileName()) ?: error("Cannot create backup file")
-        context.contentResolver.openOutputStream(file.uri)?.use { it.write(bytes) }
+        try {
+            (context.contentResolver.openOutputStream(file.uri) ?: error("Cannot write backup file")).use { content(it) }
+        } catch (e: Throwable) {
+            file.delete()
+            throw e
+        }
         dir.listFiles()
             .filter { it.name?.let(BackupManager::isBackupName) == true }
             .sortedByDescending { it.name }
@@ -71,13 +76,12 @@ class SafBackupStorage(private val context: Context) : BackupStorage {
             .sortedByDescending { it.name }
     }
 
-    override suspend fun write(address: String, bytes: ByteArray) = withContext(Dispatchers.IO) {
-        context.contentResolver.openOutputStream(Uri.parse(address), "wt")?.use { it.write(bytes) } ?: error("Cannot write file")
+    override suspend fun write(address: String, content: suspend (java.io.OutputStream) -> Unit) = withContext(Dispatchers.IO) {
+        (context.contentResolver.openOutputStream(Uri.parse(address), "wt") ?: error("Cannot write file")).use { content(it) }
     }
 
-    override suspend fun read(address: String): ByteArray = withContext(Dispatchers.IO) {
-        context.contentResolver.openInputStream(Uri.parse(address))?.use { it.readBytes() } ?: error("Cannot read file")
-    }
+    override fun open(address: String): java.io.InputStream =
+        context.contentResolver.openInputStream(Uri.parse(address)) ?: error("Cannot read file")
 
     override fun scheduleAuto(enabled: Boolean) = BackupWorker.schedule(context, enabled)
 

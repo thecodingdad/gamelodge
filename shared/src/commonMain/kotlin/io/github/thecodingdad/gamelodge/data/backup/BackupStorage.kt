@@ -16,15 +16,19 @@ interface BackupStorage {
     /** Short name of [folder] for the settings row. */
     fun folderLabel(folder: String): String
 
-    /** Writes [bytes] as a new backup into [folder] and keeps only the newest [keep]. */
-    suspend fun writeToFolder(folder: String, bytes: ByteArray, keep: Int)
+    /**
+     * Writes a new backup into [folder] ([content] streams it, a backup with images can be bigger
+     * than the app's memory) and keeps only the newest [keep]. A failed write leaves no file.
+     */
+    suspend fun writeToFolder(folder: String, keep: Int, content: suspend (java.io.OutputStream) -> Unit)
 
     /** Backups in [folder], newest first. */
     suspend fun list(folder: String): List<BackupEntry>
 
-    suspend fun write(address: String, bytes: ByteArray)
+    suspend fun write(address: String, content: suspend (java.io.OutputStream) -> Unit)
 
-    suspend fun read(address: String): ByteArray
+    /** Opens the backup at [address] for reading (blocking: call it off the main thread). */
+    fun open(address: String): java.io.InputStream
 
     /** Daily automatic backups on/off (the folder and count come from the settings). */
     fun scheduleAuto(enabled: Boolean)
