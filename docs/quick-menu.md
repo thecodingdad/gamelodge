@@ -12,6 +12,10 @@ The quick menu opens over everything – GameLodge, a game or a stream – with 
     Toggles (Wi-Fi, VPN, Bluetooth, airplane mode …), volume and brightness. Running background tasks show
     here too.
 
+    - **Android**: Wi-Fi, Bluetooth, airplane mode and the [VPN](vpn.md); volume and brightness. On the
+      AYN Odin the TV output mode is in the Odin settings ("Video output mode").
+    - **Windows**: volume, the audio output device and – where the display can be dimmed – brightness.
+
 === "Hosts"
 
     ![Hosts](assets/screenshots/quick-menu-hosts.jpg)

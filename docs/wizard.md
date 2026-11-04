@@ -46,7 +46,7 @@ Make GameLodge the home app: the Home button then always leads to it. You can sw
 
 Optional, each for one feature: usage data (play time of apps started outside GameLodge), display over other
 apps (the quick menu over games), modify system settings (brightness), quick menu tiles (Bluetooth, Wi-Fi
-name …). See [Android](android.md#permissions).
+name …). See [Getting started](getting-started.md#permissions-android).
 
 ## 7 · Emulators & ROMs
 
@@ -76,6 +76,8 @@ Where artwork and descriptions come from: through the GameLodge PC, a metadata s
 SteamGridDB / IGDB keys – one of them is enough. Each key has a guide with a QR code.
 
 ## 11 · Home Assistant
+
+![Home Assistant](assets/screenshots/wizard-11.jpg)
 
 Sign in and pick the first entity tiles. See [Home Assistant](home-assistant.md).
 

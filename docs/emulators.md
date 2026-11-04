@@ -1,7 +1,8 @@
 # Emulators & ROMs
 
-On Android, GameLodge turns your ROM folders into library entries that start with an installed emulator –
-with the same artwork, metadata, play time and controller handling as every other game.
+GameLodge turns your ROM folders into library entries that start with an installed emulator –
+with the same artwork, metadata, play time and controller handling as every other game. Most of this page
+is about Android; the Windows app has its own [section below](#on-windows).
 
 ![Emulator settings](assets/screenshots/emulators.jpg)
 
@@ -105,3 +106,19 @@ extension). Own emulators are always marked experimental.
 Start a ROM like any other game. GameLodge starts the emulator with the ROM, measures the play time and
 brings you back with your **Back to GameLodge** shortcut. In-game controls are the emulator's own; set them
 up there once.
+
+## On Windows
+
+**Settings → Emulators** on the PC works the other way round: you add your **emulators** first, then the
+folders with your games.
+
+- **Add emulator** picks a known emulator – Dolphin, Cemu, Ryujinx, Eden / Citron / Sudachi, PCSX2, RPCS3,
+  DuckStation, PPSSPP, Azahar / Lime3DS / Citra, Vita3K, melonDS, xemu, Xenia Canary, Flycast, RetroArch –
+  and finds its program in the usual install folders. **Other emulator** sets up any other one.
+- **Arguments** use placeholders: `{rom}` (the ROM file, put it in quotes), `{romName}`, `{romDir}`,
+  `{emuDir}` (the emulator's folder) and `{core}` (the RetroArch core). Playnite's `{ImagePath}` works too.
+- **Emulator per console** chooses which emulator starts which platform.
+- **Take over from Playnite** copies your Playnite emulators, ROM folders and games added by hand. Playnite
+  isn't needed afterwards.
+
+ROM games are recognised and get their artwork the same way as on Android.

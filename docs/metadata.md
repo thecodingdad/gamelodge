@@ -26,6 +26,14 @@ Your own keys are used first, then metadata servers, then hosts; when one can't 
 asked. Host games always take the data of their host. Each key dialog has a **step-by-step guide with a QR
 code**, so you can create the key on your phone.
 
+<div class="grid" markdown>
+
+![SteamGridDB key](assets/screenshots/metadata-key.jpg)
+
+![Key guide with QR code](assets/screenshots/metadata-key-guide.jpg)
+
+</div>
+
 **Send keys to hosts** shares your keys with GameLodge hosts that allow it (on the host: *Devices &
 pairing*), so you only enter them once.
 

@@ -47,3 +47,45 @@ settings. Language and controller layout are the only required steps.
     Choose **Restore a backup** on the welcome page. The wizard first pairs your hosts and then restores
     favourites, play time and settings, so everything finds its games again. Pairings themselves are never
     part of a backup (see [Backup & restore](backup.md)).
+
+## Home screen (Android)
+
+**Settings → Launcher mode** makes GameLodge the home app: the Home button and the device start lead to
+it. You can switch back at any time; GameLodge also works as a normal app.
+
+![Launcher mode](assets/screenshots/launcher-mode.jpg)
+
+Switching it on asks Android; switching it off opens Android's home app choice – GameLodge stays the home
+app until you pick another one there.
+
+## Permissions (Android)
+
+Each permission is optional and only needed for one feature. The setup wizard asks for them; Android's app
+info for GameLodge changes them later.
+
+| Permission | Used for |
+|---|---|
+| Usage access | Play time of apps and games started outside GameLodge |
+| Display over other apps | The quick menu over games and streams |
+| Modify system settings | Brightness in the quick menu |
+| Nearby devices / location | Bluetooth controllers and the Wi-Fi name in quick access |
+| Notifications | Status notifications (e.g. while the VPN is connected) |
+| Accessibility | Button shortcuts in other apps, see [Controllers](controllers.md#shortcuts-in-other-apps-android) |
+| Access to all files | Optional: faster ROM scans and ES-DE covers, see [Emulators](emulators.md) |
+
+## Window & startup (Windows)
+
+**Settings → Window & startup**:
+
+![Window & startup](assets/screenshots/windows-startup.jpg)
+
+- **Start in full screen** – like a console; **F11** switches between full screen and window at any time
+- **Start with Windows** – starts when you sign in; with the tray switched on it starts there, without a
+  window
+- **Keep running in the tray** – closing the window keeps GameLodge running, so paired devices, the web
+  interface and the game sync keep working. The tray icon opens it again, opens the web interface or quits.
+
+!!! info "Xbox Game Bar"
+    While GameLodge runs, the Guide button belongs to it (back to GameLodge, quick menu). Windows' option
+    *Open Xbox Game Bar using this button on a controller* is switched off meanwhile and restored when
+    GameLodge quits.

@@ -13,6 +13,8 @@ couch, to power your PCs on and off, and to let your home react to your games.
 - **Sign in on the phone** – scan the QR code and sign in there (handy on a TV or handheld; the phone has to
   be in the same network).
 
+![Home Assistant connection](assets/screenshots/ha-connection.jpg)
+
 GameLodge uses Home Assistant's normal login (OAuth); no token needs to be copied.
 
 ## Entity tiles

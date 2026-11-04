@@ -24,7 +24,7 @@ and a desk PC.
 - **[Streaming](streaming.md)** – hosts, pairing, wake-up, profiles and the VPN
 - **[Controllers & shortcuts](controllers.md)** – layouts, button shortcuts and mouse emulation
 - **[Home Assistant](home-assistant.md)** – tiles, game actions and MQTT status
-- **[Android](android.md)** and **[Windows](windows.md)** – what's special on each platform
+- **[PC games](pc-games.md)** and **[Sharing this PC](sharing.md)** – the Windows app's stores and host role
 
 </div>
 
@@ -33,7 +33,7 @@ and a desk PC.
 | | Android | Windows |
 |---|---|---|
 | Version | Android 10 or newer | Windows 10 or 11 (x64) |
-| Local games | Android apps and games, emulated ROMs | Steam, Epic, GOG, Xbox, EA, Ubisoft, Battle.net, Amazon, Playnite, your own games |
+| Local games | Android apps and games, emulated ROMs | Steam, Epic, GOG, Xbox, EA, Ubisoft, Battle.net, Amazon and more, emulated ROMs, your own games |
 | Streaming client | Built in (Artemis) | Built in (Moonlight) |
 | Streaming host | – | The PC shares its games with your other devices |
 | Home screen | Can replace the Android home app | Full-screen launcher, tray, autostart |

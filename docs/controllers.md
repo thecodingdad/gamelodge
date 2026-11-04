@@ -15,7 +15,7 @@ General settings for all controllers:
 ![General controller settings](assets/screenshots/controllers-general.jpg)
 
 - **Show button hints** – the bar at the bottom, only while a controller (or keyboard) is connected
-- **System-wide (accessibility)** – shortcuts in other apps too (see [Android](android.md#shortcuts-in-every-app))
+- **System-wide (accessibility)** – shortcuts in other apps too (Android, see [below](#shortcuts-in-other-apps-android))
 - **Connect controllers at stream start** – all controllers join the host when the stream starts, not on
   their first button press; the controller that starts the stream is always player 1
 - **USB gamepad driver** for Xbox 360 / One / Nintendo Pro pads without native support (Android)
@@ -52,7 +52,12 @@ vibration also in GameLodge; the rest applies from the next stream on.
 | On-screen keyboard | LB + Select (hold) | Shows the keyboard in the stream |
 
 Select an action to record your own: press a single button or a combination; keep it held for a moment
-to record a **hold** combination. A, B and the D-pad alone stay reserved for navigation, and a combination
+to record a **hold** combination. **Use default** goes back to the controller's default, **Off** removes the
+shortcut.
+
+![Record a shortcut](assets/screenshots/shortcut-dialog.jpg){ width="600" }
+
+The same shortcuts work in GameLodge, in streams and – on Windows – system-wide while GameLodge runs. A, B and the D-pad alone stay reserved for navigation, and a combination
 can only be used once.
 
 **Pass combo buttons to the game**: off (default), the shortcut's buttons only run the action; on, they
@@ -63,7 +68,25 @@ also reach the game.
     In other Android apps it is passed on at once and the shortcut runs in addition when held – Android
     doesn't let an app hand on a press later.
 
+## Shortcuts in other apps (Android)
+
+In GameLodge and in the stream the shortcuts work right away. For other apps – Android games, a browser, an
+emulator – switch on **System-wide (accessibility)** under **Settings → Controllers**. It opens Android's
+accessibility settings:
+
+![Accessibility services](assets/screenshots/accessibility.jpg)
+
+- **GameLodge combos** – the button shortcuts in every app. The service only reads controller buttons,
+  nothing on the screen.
+- **GameLodge keyboard in the stream** – optional: passes keys of a hardware keyboard that Android would
+  otherwise use itself (e.g. Alt+Tab, the Windows key) to the streamed PC.
+
+!!! note "Installed outside an app store"
+    Android greys these services out until restricted settings are allowed: open GameLodge's app info,
+    menu (⋮) → **Allow restricted settings**, then enable the service.
+
 ## Touch, mouse & keyboard
 
 **Settings → Touch, mouse & keyboard**: everything also works with touch, a mouse (side buttons can switch
-tabs) and a keyboard – keys for confirm, back, quick menu and home, and a system-wide quick menu shortcut.
+tabs) and a keyboard – keys for confirm, back, quick menu and home, and a quick menu shortcut. On Windows
+the shortcut (always with Ctrl, Alt or Shift) works system-wide, also with a game or stream in front.

@@ -57,11 +57,13 @@ nav:
       - Metadata & artwork: metadata.md
       - Play time & statistics: playtime.md
       - Emulators & ROMs: emulators.md
+      - PC games (Windows): pc-games.md
   - Streaming:
       - Overview: streaming.md
       - Hosts & pairing: hosts.md
       - Stream profiles: profiles.md
       - VPN (WireGuard): vpn.md
+      - Sharing this PC (Windows): sharing.md
   - Controls:
       - Controllers & shortcuts: controllers.md
       - Mouse emulation: mouse.md
@@ -71,7 +73,4 @@ nav:
       - TV mode & screensaver: tv.md
   - Home Assistant: home-assistant.md
   - Backup & restore: backup.md
-  - Platforms:
-      - Android: android.md
-      - Windows: windows.md
   - FAQ & troubleshooting: faq.md

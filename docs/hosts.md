@@ -20,7 +20,7 @@ The host card shows whether it's online and paired, with **Host settings**, **Re
 !!! tip "GameLodge on the PC too"
     If the PC also runs GameLodge for Windows, pair it under **Settings → Metadata & artwork → Add source**
     (or in the wizard's *GameLodge on the PC* step). The library then gets the PC's games with artwork,
-    platform and play data, see [Windows](windows.md#this-pc-as-a-streaming-host).
+    platform and play data, see [Sharing this PC](sharing.md).
 
 ## Host settings
 
@@ -41,6 +41,8 @@ tunnel; or a fixed tunnel, or no VPN. See [VPN](vpn.md).
 
 Wake up, sleep, shut down and restart can each run a Home Assistant action – for PCs without Wake-on-LAN
 or a VM on a hypervisor. They are also offered in the quick menu's *Hosts* tab.
+
+![Home Assistant actions of a host](assets/screenshots/host-ha-actions.jpg){ width="600" }
 
 ### After streaming
 
