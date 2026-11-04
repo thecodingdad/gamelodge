@@ -591,6 +591,8 @@
     <string name="backup_restored">Sauvegarde restaurée.</string>
     <string name="backup_cancelled">Sauvegarde annulée.</string>
     <string name="backup_busy">Une sauvegarde est déjà en cours.</string>
+    <string name="backup_merge">Conserver les entrées actuelles</string>
+    <string name="backup_merge_sub">Ajoute la sauvegarde à l’état actuel (favoris, collections, tuiles, profils) au lieu de le remplacer</string>
     <string name="backup_wrong_password">Mot de passe incorrect — les identifiants n'ont pas été restaurés.</string>
     <string name="settings_data">Données</string>
     <string name="settings_data_sub">Stockage, nettoyage et sauvegardes</string>

@@ -26,7 +26,7 @@ class ArtemisStreamBackup(private val context: Context) : StreamSettingsBackup {
         return manager.profiles.map { ProfileBackup(it.name, it.options.orEmpty().toJsonMap(), manager.active?.uuid == it.uuid) }
     }
 
-    override fun restore(base: Map<String, JsonElement>, profiles: List<ProfileBackup>) {
+    override fun restore(base: Map<String, JsonElement>, profiles: List<ProfileBackup>, replace: Boolean) {
         prefs.edit().apply {
             base.forEach { (key, value) ->
                 when (val v = value.toAny()) {
@@ -39,11 +39,18 @@ class ArtemisStreamBackup(private val context: Context) : StreamSettingsBackup {
             }
         }.apply()
         val manager = ProfilesManager.getInstance()
-        val existingNames = manager.profiles.map { it.name }.toSet()
-        profiles.filter { it.name !in existingNames }.forEach { p ->
+        fun options(p: ProfileBackup) = HashMap(p.options.mapNotNull { (k, v) -> v.toAny()?.let { k to it } }.toMap())
+        val wanted = profiles.mapTo(HashSet()) { it.name }
+        if (replace) manager.profiles.filter { it.name !in wanted }.forEach { manager.delete(it.uuid) }
+        val existing = manager.profiles.associateBy { it.name }
+        profiles.forEach { p ->
             val now = System.currentTimeMillis()
-            val profile = SettingsProfile(UUID.randomUUID(), p.name, now, now, HashMap(p.options.mapNotNull { (k, v) -> v.toAny()?.let { k to it } }.toMap()))
-            manager.add(profile)
+            val current = existing[p.name]
+            val profile = when {
+                current == null -> SettingsProfile(UUID.randomUUID(), p.name, now, now, options(p)).also(manager::add)
+                replace -> SettingsProfile(current.uuid, p.name, current.createdUtc, now, options(p)).also(manager::update)
+                else -> return@forEach
+            }
             if (p.active) manager.setActive(profile.uuid)
         }
     }

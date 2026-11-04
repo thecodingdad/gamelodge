@@ -284,10 +284,10 @@ private fun BackupSection(settings: LauncherSettings, update: ((LauncherSettings
             createFile(BackupManager.fileName())
         }
     }
-    fun doRestore(address: String, pw: String?) {
+    fun doRestore(address: String, pw: String?, merge: Boolean) {
         pending = null
         scope.launch {
-            message = runCatching { backup.import({ storage.open(address) }, pw) }.fold({ restoredMsg }, ::failure)
+            message = runCatching { backup.import({ storage.open(address) }, pw, replace = !merge) }.fold({ restoredMsg }, ::failure)
             storage.scheduleAuto(container.settings.current().autoBackup)
         }
     }
@@ -343,7 +343,7 @@ private fun BackupSection(settings: LauncherSettings, update: ((LauncherSettings
 
     if (showBackup) BackupNowDialog(settings, update, onDismiss = { showBackup = false }, onConfirm = { pw -> showBackup = false; runBackup(pw) })
     pending?.let { (address, manifest) ->
-        RestoreConfirmDialog(manifest, onDismiss = { pending = null }, onConfirm = { pw -> doRestore(address, pw) })
+        RestoreConfirmDialog(manifest, onDismiss = { pending = null }, onConfirm = { pw, merge -> doRestore(address, pw, merge) })
     }
 
     // Backups of the folder, newest first; restoring needs holding A (it overwrites settings).
@@ -430,10 +430,11 @@ private fun BackupNowDialog(
 private fun RestoreConfirmDialog(
     manifest: io.github.thecodingdad.gamelodge.data.backup.BackupFile,
     onDismiss: () -> Unit,
-    onConfirm: (password: String?) -> Unit,
+    onConfirm: (password: String?, merge: Boolean) -> Unit,
 ) {
     val s = remember(manifest) { manifest.summary() }
     var pw by remember { mutableStateOf("") }
+    var merge by remember { mutableStateOf(false) }
     val format = remember { DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT) }
     io.github.thecodingdad.gamelodge.ui.components.Modal(
         visible = true, onDismiss = onDismiss, title = stringResource(Res.string.backup_restore), size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD, closeButton = false,
@@ -447,11 +448,12 @@ private fun RestoreConfirmDialog(
                 Text(stringResource(Res.string.backup_has_credentials), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
                 LauncherTextField(stringResource(Res.string.backup_password), pw, { pw = it }, kind = TextKind.PASSWORD)
             }
+            SwitchRow(stringResource(Res.string.backup_merge), merge, { merge = it }, subtitle = stringResource(Res.string.backup_merge_sub))
         }
         ButtonRow {
             LauncherButton(
                 stringResource(Res.string.backup_restore), primary = true, icon = Icons.Filled.Restore,
-                enabled = !s.hasCredentials || pw.isNotEmpty(), onClick = { onConfirm(if (s.hasCredentials) pw else null) },
+                enabled = !s.hasCredentials || pw.isNotEmpty(), onClick = { onConfirm(if (s.hasCredentials) pw else null, merge) },
             )
             LauncherButton(stringResource(Res.string.action_cancel), onClick = onDismiss)
         }

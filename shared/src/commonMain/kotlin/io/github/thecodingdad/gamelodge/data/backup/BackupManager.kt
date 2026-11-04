@@ -162,8 +162,11 @@ interface StreamSettingsBackup {
 
     fun profiles(): List<ProfileBackup>
 
-    /** Applies [base] and adds the [profiles] not there yet (by name). */
-    fun restore(base: Map<String, JsonElement>, profiles: List<ProfileBackup>)
+    /**
+     * Applies [base] and the [profiles] (by name). [replace]: profiles not in the backup are
+     * removed and same-named ones take the backup's values; otherwise only missing ones are added.
+     */
+    fun restore(base: Map<String, JsonElement>, profiles: List<ProfileBackup>, replace: Boolean)
 }
 
 /** Export/import of the launcher setup as JSON, optionally with password-encrypted credentials. */
@@ -312,13 +315,16 @@ class BackupManager(
         }
     }
 
-    /** Restores from the backup [open] reads (ZIP with images, or legacy plain JSON). */
-    suspend fun import(open: () -> java.io.InputStream, password: String?) = exclusive(Res.string.task_restore) { progress ->
+    /**
+     * Restores from the backup [open] reads (ZIP with images, or legacy plain JSON). [replace]:
+     * the backup's state replaces the current one (see [restore]); otherwise it's merged in.
+     */
+    suspend fun import(open: () -> java.io.InputStream, password: String?, replace: Boolean = true) = exclusive(Res.string.task_restore) { progress ->
         val input = java.io.BufferedInputStream(open())
         if (!input.use { isZip(it) }) {
             val legacy = java.io.BufferedInputStream(open()).use { decode(it.readBytes().decodeToString()) }
             progress(0, 0, false)
-            return@exclusive restore(legacy, password)
+            return@exclusive restore(legacy, password, replace = replace)
         }
         var extracted = 0
         var manifest: String? = null
@@ -348,7 +354,7 @@ class BackupManager(
         val parsed = decode(manifest ?: error("No $MANIFEST in the archive"))
         // From here on the library is rewritten: stopping halfway would leave a mix.
         progress(extracted, 0, false)
-        withContext(kotlinx.coroutines.NonCancellable) { restore(parsed, password, ownNames) }
+        withContext(kotlinx.coroutines.NonCancellable) { restore(parsed, password, ownNames, replace) }
     }
 
     private val running = kotlinx.coroutines.sync.Mutex()
@@ -413,7 +419,14 @@ class BackupManager(
     private fun safeName(name: String, prefix: String): String? =
         name.removePrefix(prefix).takeIf { it.isNotEmpty() && '/' !in it && '\\' !in it && it != ".." }
 
-    suspend fun restore(backup: BackupFile, password: String?, ownNames: Set<String> = emptySet()) = withContext(Dispatchers.IO) {
+    /**
+     * Applies [backup]. [replace] (the default): what the backup doesn't have is removed or reset
+     * (favourites, hidden flags and ratings of other games, collections, Home Assistant tiles, host
+     * settings, stream profiles); otherwise the backup is merged into the current state. Play time
+     * keeps the higher value either way (it's measured, the host has it too), and credentials not
+     * in the backup stay.
+     */
+    suspend fun restore(backup: BackupFile, password: String?, ownNames: Set<String> = emptySet(), replace: Boolean = true) = withContext(Dispatchers.IO) {
         // Own images extracted from a backup live in this device's own-artwork folder; the paths
         // in the backup come from the source device and are repointed to it here (by file name).
         fun repoint(value: String?): String? = value?.let {
@@ -434,6 +447,12 @@ class BackupManager(
         val dao = db.libraryDao()
         val items = dao.getAllItems()
         val byTitle = items.associateBy { it.normalizedTitle }
+        if (replace) {
+            val inBackup = backup.items.mapTo(HashSet()) { it.normalizedTitle }
+            items.filter { it.normalizedTitle !in inBackup && (it.favorite || it.hidden || it.userRating != null) }.forEach {
+                dao.upsertItem(it.copy(favorite = false, hidden = false, hiddenHere = false, userRating = null))
+            }
+        }
         backup.items.forEach { b ->
             val existing = byTitle[b.normalizedTitle] ?: return@forEach
             dao.upsertItem(
@@ -458,6 +477,12 @@ class BackupManager(
         }
 
         val collectionDao = db.collectionDao()
+        if (replace) {
+            val names = backup.collections.mapTo(HashSet()) { it.name }
+            val kept = collectionDao.getCollections().filter { it.name in names }.mapTo(HashSet()) { it.id }
+            collectionDao.getCollections().filter { it.id !in kept }.forEach { collectionDao.delete(it) }
+            collectionDao.getMemberships().filter { it.collectionId in kept }.forEach { collectionDao.removeItem(it) }
+        }
         val existingCollections = collectionDao.observeCollections().first().associateBy { it.name }
         backup.collections.forEachIndexed { index, c ->
             val id = existingCollections[c.name]?.id ?: UUID.randomUUID().toString().also {
@@ -467,6 +492,12 @@ class BackupManager(
         }
         restoreFilters(backup)
 
+        if (replace) {
+            val tiles = backup.haTiles.mapTo(HashSet()) { it.entityId }
+            db.haTileDao().getAll().filter { it.entityId !in tiles }.forEach { db.haTileDao().delete(it.entityId) }
+            val hosts = backup.hostConfigs.mapTo(HashSet()) { it.hostUuid }
+            db.hostConfigDao().getAll().filter { it.hostUuid !in hosts }.forEach { db.hostConfigDao().delete(it.hostUuid) }
+        }
         db.haTileDao().upsert(backup.haTiles.mapIndexed { i, t -> HaTileEntity(t.entityId, t.type, t.label, i, t.showOnHome) })
         backup.hostConfigs.forEach {
             db.hostConfigDao().upsert(
@@ -478,7 +509,7 @@ class BackupManager(
         val playData = db.playDataDao()
         backup.playSync.forEach { if (playData.state(it.hostKey) == null) playData.upsertState(SyncStateEntity(it.hostKey, it.syncStart, 0)) }
 
-        stream.restore(backup.baseStreamSettings, backup.profiles)
+        stream.restore(backup.baseStreamSettings, backup.profiles, replace)
     }
 
     // --- credentials, encrypted with a key derived from the user's password ---

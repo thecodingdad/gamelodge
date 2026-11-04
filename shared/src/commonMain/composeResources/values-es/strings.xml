@@ -591,6 +591,8 @@
     <string name="backup_restored">Copia restaurada.</string>
     <string name="backup_cancelled">Copia de seguridad cancelada.</string>
     <string name="backup_busy">Ya hay una copia de seguridad en curso.</string>
+    <string name="backup_merge">Conservar las entradas actuales</string>
+    <string name="backup_merge_sub">Añade la copia al estado actual (favoritos, colecciones, mosaicos, perfiles) en lugar de reemplazarlo</string>
     <string name="backup_wrong_password">Contraseña incorrecta: las credenciales no se restauraron.</string>
     <string name="settings_data">Datos</string>
     <string name="settings_data_sub">Almacenamiento, limpieza y copias</string>

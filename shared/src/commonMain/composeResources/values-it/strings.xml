@@ -591,6 +591,8 @@
     <string name="backup_restored">Backup ripristinato.</string>
     <string name="backup_cancelled">Backup annullato.</string>
     <string name="backup_busy">È già in corso un backup.</string>
+    <string name="backup_merge">Mantieni le voci attuali</string>
+    <string name="backup_merge_sub">Aggiunge il backup allo stato attuale (preferiti, raccolte, riquadri, profili) invece di sostituirlo</string>
     <string name="backup_wrong_password">Password errata: le credenziali non sono state ripristinate.</string>
     <string name="settings_data">Dati</string>
     <string name="settings_data_sub">Archiviazione, pulizia e backup</string>

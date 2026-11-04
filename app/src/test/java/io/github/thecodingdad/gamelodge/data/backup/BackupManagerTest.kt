@@ -96,6 +96,30 @@ class BackupManagerTest {
     }
 
     @Test
+    fun `restore replaces the current state unless merging`() = runTest {
+        val settings = io.github.thecodingdad.gamelodge.platform.AndroidStores.settings(context)
+        fun manager(db: LauncherDatabase) = BackupManager(db, settings, io.github.thecodingdad.gamelodge.platform.AndroidStores.secrets(context), io.github.thecodingdad.gamelodge.data.backup.ArtemisStreamBackup(context), context.filesDir)
+        seedLibrary(source)
+        source.haTileDao().upsert(listOf(HaTileEntity("light.desk", HaTileType.LIGHT, null, 0, showOnHome = false)))
+        val backup = manager(source).decode(manager(source).encode(manager(source).create(password = null)))
+
+        // The device since then: another tile and another favourite.
+        seedLibrary(target)
+        val dao = target.libraryDao()
+        val other = dao.getAllItems().first { it.title == "Desktop" }
+        dao.setFavorite(other.id, true)
+        target.haTileDao().upsert(listOf(HaTileEntity("cover.awning", HaTileType.COVER, null, 1, showOnHome = false)))
+
+        manager(target).restore(backup, null, replace = false)
+        assertEquals(setOf("light.desk", "cover.awning"), target.haTileDao().getAll().map { it.entityId }.toSet())
+        assertTrue(dao.getAllItems().first { it.title == "Desktop" }.favorite)
+
+        manager(target).restore(backup, null)
+        assertEquals(listOf("light.desk"), target.haTileDao().getAll().map { it.entityId })
+        assertEquals(false, dao.getAllItems().first { it.title == "Desktop" }.favorite)
+    }
+
+    @Test
     fun `own images are packed into the zip and repointed on restore`() = runTest {
         val secrets = io.github.thecodingdad.gamelodge.platform.AndroidStores.secrets(context)
         val settings = io.github.thecodingdad.gamelodge.platform.AndroidStores.settings(context)

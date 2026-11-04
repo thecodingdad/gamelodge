@@ -589,6 +589,8 @@
     <string name="backup_restored">Backup wiederhergestellt.</string>
     <string name="backup_cancelled">Backup abgebrochen.</string>
     <string name="backup_busy">Es läuft bereits ein Backup.</string>
+    <string name="backup_merge">Aktuelle Einträge behalten</string>
+    <string name="backup_merge_sub">Fügt das Backup zum aktuellen Stand hinzu (Favoriten, Sammlungen, Kacheln, Profile), statt ihn zu ersetzen</string>
     <string name="backup_wrong_password">Falsches Passwort – Zugangsdaten wurden nicht wiederhergestellt.</string>
     <string name="settings_data">Daten</string>
     <string name="settings_data_sub">Speicher, Aufräumen und Backups</string>

@@ -208,13 +208,24 @@ class DesktopProfiles(dataDir: File) : StreamProfiles, ProfileEditing, StreamSet
         state.value.profiles.map { p -> ProfileBackup(p.name, p.values.mapValues { JsonPrimitive(it.value) }, p.uuid == state.value.active) }
 
     /** Values are kept as text, like the editor stores them (backups from Android carry typed values). */
-    override fun restore(base: Map<String, JsonElement>, profiles: List<ProfileBackup>) {
+    override fun restore(base: Map<String, JsonElement>, profiles: List<ProfileBackup>, replace: Boolean) {
         fun Map<String, JsonElement>.texts() = mapNotNull { (k, v) -> v.toAny()?.let { k to it.toString() } }.toMap()
         val current = state.value
-        val names = current.profiles.map { it.name }.toSet()
-        val added = profiles.filter { it.name !in names }.map { DesktopProfile(UUID.randomUUID().toString(), it.name, it.options.texts()) }
-        val active = profiles.firstOrNull { it.active }?.let { a -> added.firstOrNull { it.name == a.name }?.uuid } ?: current.active
-        save(current.copy(base = current.base + base.texts(), profiles = current.profiles + added, active = active))
+        val byName = current.profiles.associateBy { it.name }
+        val restored = profiles.map { p ->
+            val own = byName[p.name]
+            when {
+                own == null -> DesktopProfile(UUID.randomUUID().toString(), p.name, p.options.texts())
+                replace -> own.copy(values = p.options.texts())
+                else -> own
+            }
+        }
+        val names = profiles.mapTo(HashSet()) { it.name }
+        val kept = if (replace) emptyList() else current.profiles.filter { it.name !in names }
+        val all = kept + restored
+        val active = profiles.firstOrNull { it.active }?.let { a -> restored.firstOrNull { it.name == a.name }?.uuid }
+            ?: current.active?.takeIf { a -> all.any { it.uuid == a } }
+        save(current.copy(base = current.base + base.texts(), profiles = all, active = active))
     }
 
     // ---- storage ----

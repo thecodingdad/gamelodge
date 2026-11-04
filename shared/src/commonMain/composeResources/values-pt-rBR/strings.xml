@@ -591,6 +591,8 @@
     <string name="backup_restored">Backup restaurado.</string>
     <string name="backup_cancelled">Backup cancelado.</string>
     <string name="backup_busy">Já há um backup em andamento.</string>
+    <string name="backup_merge">Manter as entradas atuais</string>
+    <string name="backup_merge_sub">Adiciona o backup ao estado atual (favoritos, coleções, blocos, perfis) em vez de substituí-lo</string>
     <string name="backup_wrong_password">Senha errada — as credenciais não foram restauradas.</string>
     <string name="settings_data">Dados</string>
     <string name="settings_data_sub">Armazenamento, limpeza e backups</string>

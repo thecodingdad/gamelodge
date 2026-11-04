@@ -252,6 +252,12 @@ interface HostConfigDao {
     @Query("SELECT * FROM host_config WHERE hostUuid = :uuid")
     suspend fun get(uuid: String): HostConfigEntity?
 
+    @Query("SELECT * FROM host_config")
+    suspend fun getAll(): List<HostConfigEntity>
+
+    @Query("DELETE FROM host_config WHERE hostUuid = :uuid")
+    suspend fun delete(uuid: String)
+
     @Upsert
     suspend fun upsert(config: HostConfigEntity)
 }
