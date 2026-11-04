@@ -142,7 +142,7 @@ fun QuickMenu(
                         },
                     ),
                     style = MaterialTheme.typography.titleLarge, color = LauncherTheme.colors.onSurface,
-                    modifier = Modifier.weight(1f).padding(start = 18.dp, top = 18.dp, bottom = 6.dp),
+                    modifier = Modifier.weight(1f).padding(start = 18.dp, top = 18.dp),
                 )
                 if (tab == QuickMenuTab.QUICK && platform.hasQuickAccessEditor) {
                     EditButton(Modifier.padding(top = 12.dp, end = 14.dp)) { editing = true }
@@ -156,8 +156,9 @@ fun QuickMenu(
                 androidx.compose.runtime.key(tab) {
                 androidx.compose.runtime.CompositionLocalProvider(io.github.thecodingdad.gamelodge.ui.screens.ha.LocalHaTileFocus provides haFocus) {
                     Column(
+                        // Top padding inside the scroll area: room for the first row's focus glow.
                         Modifier.weight(1f).fillMaxWidth().controllerScroll(rememberScrollState())
-                            .padding(start = 18.dp, end = 14.dp, top = 10.dp, bottom = 18.dp),
+                            .padding(start = 18.dp, end = 14.dp, top = 18.dp, bottom = 18.dp),
                         verticalArrangement = Arrangement.spacedBy(14.dp),
                     ) {
                         when (tab) {

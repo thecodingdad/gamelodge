@@ -180,7 +180,7 @@ fun FocusSurface(
             // slides down the further down the screen the element is).
             .then(
                 if (focused && controllerMode && glow) {
-                    Modifier.dropShadow(shape, androidx.compose.ui.graphics.shadow.Shadow(radius = 18.dp, color = ring.copy(alpha = GLOW_ALPHA)))
+                    Modifier.dropShadow(shape, androidx.compose.ui.graphics.shadow.Shadow(radius = 12.dp, color = ring.copy(alpha = GLOW_ALPHA)))
                 } else Modifier,
             )
             .clip(shape)
