@@ -281,15 +281,17 @@ class BackupManager(
                 if (s.backupAnimatedArtwork) item.animatedValues().forEach { url -> ArtworkFiles.cachedFileForUrl(url)?.let { cache.putIfAbsent(it.name, it) } }
             }
         }
-        val total = own.size + cache.size
-        var done = 0
-        progress(done, total, true)
+        // Progress by size (KiB): one animated image can outweigh hundreds of covers.
+        val total = ((own.values + cache.values).sumOf { it.length() } / 1024).toInt().coerceAtLeast(1)
+        var done = 0L
+        progress(0, total, true)
         val zip = java.util.zip.ZipOutputStream(java.io.BufferedOutputStream(NonClosing(out)))
         zip.use { zip ->
             zip.putNextEntry(java.util.zip.ZipEntry(MANIFEST)); zip.write(encode(backup).toByteArray()); zip.closeEntry()
             suspend fun add(prefix: String, files: Map<String, File>) = files.forEach { (name, file) ->
                 zip.putNextEntry(java.util.zip.ZipEntry("$prefix$name")); file.inputStream().use { copyCancellable(it, zip) }; zip.closeEntry()
-                progress(++done, total, true)
+                done += file.length()
+                progress((done / 1024).toInt(), total, true)
             }
             add(OWN_PREFIX, own)
             add(CACHE_PREFIX, cache)
@@ -372,7 +374,7 @@ class BackupManager(
                 val cancel = { job.cancel(BackupCancelledException()) }
                 fun report(done: Int, total: Int, cancellable: Boolean) = tasks.set(
                     io.github.thecodingdad.gamelodge.data.tasks.BackgroundTask(
-                        TASK_ID, title, done = done, total = total, cancel = cancel.takeIf { cancellable },
+                        TASK_ID, title, done = done, total = total, percent = true, cancel = cancel.takeIf { cancellable },
                     ),
                 )
                 report(0, 0, true)

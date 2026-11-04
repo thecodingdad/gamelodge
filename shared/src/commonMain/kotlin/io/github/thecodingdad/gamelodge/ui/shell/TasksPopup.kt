@@ -127,7 +127,11 @@ internal fun TaskLine(task: BackgroundTask) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(taskTitle(task), style = MaterialTheme.typography.titleSmall, color = colors.onSurface, modifier = Modifier.weight(1f))
             if (task.total > 0) {
-                Text(stringResource(Res.string.task_count, task.done, task.total), style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceMuted)
+                Text(
+                    if (task.percent) java.text.NumberFormat.getPercentInstance().format(task.done.toDouble() / task.total)
+                    else stringResource(Res.string.task_count, task.done, task.total),
+                    style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceMuted,
+                )
             }
         }
         task.detail?.takeIf { it.isNotEmpty() }?.let {
