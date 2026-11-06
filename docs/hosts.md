@@ -20,7 +20,7 @@ The host card shows whether it's online and paired, with **Host settings**, **Re
 !!! tip "GameLodge on the PC too"
     If the PC also runs GameLodge for Windows, pair it under **Settings → Metadata & artwork → Add source**
     (or in the wizard's *GameLodge on the PC* step). The library then gets the PC's games with artwork,
-    platform and play data, see [Sharing this PC](sharing.md).
+    platform and play data, see [Your PC as host](pc-host.md).
 
 ## Host settings
 
@@ -51,7 +51,14 @@ or a VM on a hypervisor. They are also offered in the quick menu's *Hosts* tab.
 **Put host to sleep after streaming**: some time after the last stream ended, GameLodge runs the host's
 sleep (or shut down) action. Starting another stream in time cancels it.
 
-## Vibepollo
+## Apollo & Vibepollo
 
-With [Vibepollo](https://github.com/Nonary/Vibepollo) and its API token, GameLodge can start apps directly,
-quit them reliably and bring the running game's window to the front when you resume.
+**Permissions.** Apollo and Vibepollo set per client what it may do. GameLodge needs **Launch apps** and
+**Controller input**; when one is missing it says so on the host card. Allow it for this device in the host's
+web interface under **Clients**.
+
+**A game another device started.** Vibepollo shows a running game only to the device that started it. GameLodge
+recognises such a session and shows the game as running, so you can take it over from the handheld.
+
+**Games of the PC.** To fill Vibepollo, Apollo or Sunshine with the PC's games – with the right start
+command, artwork and play time – set up GameLodge on the PC as [streaming host](streaming-host.md).

@@ -25,9 +25,9 @@ and a desk PC.
 - **[Getting started](getting-started.md)** – install GameLodge and walk through the setup wizard
 - **[Library](library.md)** – where your games come from, filters, groups and collections
 - **[Streaming](streaming.md)** – hosts, pairing, wake-up, profiles and the VPN
-- **[Controllers & shortcuts](controllers.md)** – layouts, button shortcuts and mouse emulation
+- **[Controls](controls.md)** – controllers, button shortcuts, mouse emulation and the quick menu
 - **[Home Assistant](home-assistant.md)** – tiles, game actions and MQTT status
-- **[PC games](pc-games.md)** and **[Sharing this PC](sharing.md)** – the Windows app's stores and host role
+- **[PC games](pc-games.md)** and **[Your PC as host](pc-host.md)** – the Windows app's stores, streaming host and pairing
 
 </div>
 

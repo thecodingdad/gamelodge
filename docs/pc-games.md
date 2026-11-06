@@ -8,7 +8,7 @@ and ROMs – one full-screen library for the whole PC.
 !!! note "Windows only"
     This page is about the Windows app. On Android the library holds the device's apps and games, your
     [ROMs](emulators.md) and the games of your [streaming hosts](hosts.md) – which can be exactly these PC
-    games, see [Sharing this PC](sharing.md).
+    games, see [Your PC as host](pc-host.md).
 
 ## Game sources
 

@@ -1,28 +1,12 @@
-# Sharing this PC
+# Devices & web interface
 
 A Windows PC with GameLodge can share its games with your other GameLodge devices – a handheld, a tablet, a
-TV. The PC becomes a **GameLodge host**: it puts its games on its streaming server and hands their artwork,
-metadata and play data to every paired device.
+TV. Paired devices get the PC's games with their artwork, metadata and play data, and stream them from the
+PC's [streaming host](streaming-host.md).
 
 !!! note "Windows only"
-    The host role needs the Windows app on the PC that streams. Devices that use it can be Android or
+    Pairing happens on the Windows app of the PC that streams. Devices that pair with it can be Android or
     Windows.
-
-## Streaming host
-
-If the PC runs [Vibepollo](https://github.com/Nonary/Vibepollo), [Apollo](https://github.com/ClassicOldSong/Apollo)
-or [Sunshine](https://github.com/LizardByte/Sunshine), **Settings → Streaming host** puts the PC's games
-on it as apps – so every Moonlight client can start them, with or without GameLodge. GameLodge starts the
-game and the stream ends with it.
-
-![Streaming host](assets/screenshots/windows-streaming-host.jpg)
-
-- **Connection** – the address of the streaming server's web interface and its login (`https://localhost:47990` by default)
-- **Sync games** – new, changed and removed games are synced automatically; **Sync now** does it at once
-- **Also games that aren't installed** – starting one opens its store's installation
-
-With Vibepollo, the Windows app also runs your Home Assistant [game actions](home-assistant.md#game-actions)
-when *another* device starts a game on the PC.
 
 ## Devices & pairing
 

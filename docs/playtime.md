@@ -18,7 +18,7 @@ only measures what it starts itself.
 
 ### Shared between devices
 
-With a GameLodge host (the Windows app as [host](sharing.md)), every device
+With a GameLodge host (the Windows app as [host](pc-host.md)), every device
 sends its sessions of the host's games to the host and reads the others' – so the handheld, the tablet and
 the PC all show the same total, and sessions recorded offline are sent later. Ratings, favourites,
 hidden flags and groups travel the same way.

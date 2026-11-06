@@ -63,12 +63,17 @@ nav:
       - Hosts & pairing: hosts.md
       - Stream profiles: profiles.md
       - VPN (WireGuard): vpn.md
-      - Sharing this PC (Windows): sharing.md
+  - Your PC as host (Windows):
+      - Overview: pc-host.md
+      - Streaming host: streaming-host.md
+      - Devices & web interface: sharing.md
   - Controls:
+      - Overview: controls.md
       - Controllers & shortcuts: controllers.md
       - Mouse emulation: mouse.md
       - Quick menu: quick-menu.md
   - Look & feel:
+      - Overview: look-and-feel.md
       - Home tab & tiles: appearance.md
       - TV mode & screensaver: tv.md
   - Home Assistant: home-assistant.md

@@ -7,11 +7,13 @@ leave GameLodge's interface.
 
 | Page | What it covers |
 |---|---|
-| [Hosts & pairing](hosts.md) | Finding and pairing hosts, wake-up, sleep, host actions, Vibepollo |
+| [Hosts & pairing](hosts.md) | Finding and pairing hosts, wake-up, sleep, host actions, Apollo & Vibepollo permissions |
 | [Stream profiles](profiles.md) | Resolution, frame rate, bitrate, HDR, per-launch profiles |
 | [VPN (WireGuard)](vpn.md) | Streaming away from home, Android only |
-| [Controllers & shortcuts](controllers.md) | Every controller as its own gamepad, shortcuts in the stream |
-| [Quick menu](quick-menu.md) | Stream controls over the running game |
+
+Setting up the PC you stream from – its games on Vibepollo, Apollo or Sunshine, and pairing your devices with
+it – is under [Your PC as host](pc-host.md). Controllers and the quick menu in a stream are under
+[Controls](controls.md).
 
 ## Starting a stream
 

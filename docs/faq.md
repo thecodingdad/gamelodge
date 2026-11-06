@@ -27,7 +27,7 @@
 
 ??? question "The browser warns about the web interface's certificate"
     The web interface of a Windows PC uses the PC's own certificate, which no public authority signed.
-    Check that the address is your PC's and trust it once (see [Sharing this PC](sharing.md#web-interface)).
+    Check that the address is your PC's and trust it once (see [Devices & web interface](sharing.md#web-interface)).
 
 ??? question "My handheld doesn't find the GameLodge PC"
     On the PC, **Settings → Streaming host → Devices & pairing → Connection for launchers** must be on, and
