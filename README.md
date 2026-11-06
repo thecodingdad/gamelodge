@@ -11,6 +11,7 @@
   <a href="https://github.com/thecodingdad/gamelodge/releases"><img src="https://img.shields.io/github/downloads/thecodingdad/gamelodge/total" alt="Downloads"></a>
   <a href="https://github.com/thecodingdad/gamelodge/actions/workflows/build.yml"><img src="https://img.shields.io/github/actions/workflow/status/thecodingdad/gamelodge/build.yml?label=build" alt="Build"></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/thecodingdad/gamelodge" alt="License: GPL-3.0"></a>
+  <a href="https://ko-fi.com/thecodingdad"><img src="https://img.shields.io/badge/Ko--fi-support-FF5E5B?logo=ko-fi&logoColor=white" alt="Support on Ko-fi"></a>
   <br>
   <img src="https://img.shields.io/badge/Android-10%2B-3DDC84?logo=android&logoColor=white" alt="Android 10+">
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?logo=windows&logoColor=white" alt="Windows 10 | 11">
