@@ -108,13 +108,13 @@ class MainActivity : ComponentActivity() {
         }
         feedback = UiFeedback(cacheDir, io.github.thecodingdad.gamelodge.ui.feedback.AndroidFeedbackOutput(this)).also { it.load() }
         handleQuickMenuExtra(intent)
-        setContent {
+        setContent { io.github.thecodingdad.gamelodge.util.ActivityLocale {
             val settings by vm.settings.collectAsState()
             // On a TV above 1080p: drawn at 1080p and scaled up (a handheld GPU can't draw 4K smoothly).
             io.github.thecodingdad.gamelodge.ui.components.RenderAtMost(enabled = onTv.value && settings.tvRender1080) {
                 androidx.compose.runtime.CompositionLocalProvider(LocalContainer provides container) { LauncherApp(vm, dispatcher, feedback) }
             }
-        }
+        } }
     }
 
     /** Status bar always hidden; navigation bar (gesture handle) optionally. Swipe shows both briefly. */

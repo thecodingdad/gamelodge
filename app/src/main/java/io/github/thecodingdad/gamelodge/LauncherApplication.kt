@@ -33,17 +33,18 @@ class LauncherApplication : ArtemisApplication(), SingletonImageLoader.Factory {
      * fresh process sometimes still has at the device's (German texts with English chosen).
      */
     private fun applyDefaultLocale() {
-        val tag = getSharedPreferences(io.github.thecodingdad.gamelodge.util.AppLanguage.PREFS, MODE_PRIVATE)
-            .getString(io.github.thecodingdad.gamelodge.util.AppLanguage.KEY, null)
-        val locales = when {
-            tag == "system" -> if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-                getSystemService(android.app.LocaleManager::class.java)?.systemLocales
-            } else return
-            tag != null -> android.os.LocaleList.forLanguageTags(tag)
-            android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU ->
-                getSystemService(android.app.LocaleManager::class.java)?.applicationLocales
-            else -> null
-        }?.takeIf { !it.isEmpty } ?: return
+        val locales = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            // Android 13+: the per-app language is what Android gives the activities' resources
+            // (also when it was changed in the system's app language setting), so the default
+            // follows it; the launcher's own setting may be older ("system" with English set there).
+            val manager = getSystemService(android.app.LocaleManager::class.java) ?: return
+            manager.applicationLocales.takeIf { !it.isEmpty } ?: manager.systemLocales
+        } else {
+            val tag = getSharedPreferences(io.github.thecodingdad.gamelodge.util.AppLanguage.PREFS, MODE_PRIVATE)
+                .getString(io.github.thecodingdad.gamelodge.util.AppLanguage.KEY, null)
+            if (tag == null || tag == "system") return
+            android.os.LocaleList.forLanguageTags(tag)
+        }.takeIf { !it.isEmpty } ?: return
         if (java.util.Locale.getDefault() == locales[0]) return
         android.os.LocaleList.setDefault(locales)
         java.util.Locale.setDefault(locales[0])

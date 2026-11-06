@@ -83,7 +83,7 @@ class QuickMenuActivity : ComponentActivity() {
         }
         feedback = UiFeedback(cacheDir, io.github.thecodingdad.gamelodge.ui.feedback.AndroidFeedbackOutput(this)).also { it.load() }
         setContent {
-            CompositionLocalProvider(LocalContainer provides container) { Content() }
+            io.github.thecodingdad.gamelodge.util.ActivityLocale { CompositionLocalProvider(LocalContainer provides container) { Content() } }
         }
     }
 

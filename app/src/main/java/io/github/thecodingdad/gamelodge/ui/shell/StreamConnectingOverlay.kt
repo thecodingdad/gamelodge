@@ -42,7 +42,7 @@ object StreamConnectingOverlay {
         dialog.setOnCancelListener { onCancel.run() }
         dialog.setContentView(
             ComposeView(activity).apply {
-                setContent {
+                setContent { io.github.thecodingdad.gamelodge.util.ActivityLocale {
                     val settings by container.settings.settings.collectAsState(LauncherSettings())
                     LauncherTheme(settings) {
                         StreamProgressContent(
@@ -54,7 +54,7 @@ object StreamConnectingOverlay {
                             onCancel = if (cancelable) ({ dialog.cancel() }) else null,
                         )
                     }
-                }
+                } }
             },
             ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT),
         )

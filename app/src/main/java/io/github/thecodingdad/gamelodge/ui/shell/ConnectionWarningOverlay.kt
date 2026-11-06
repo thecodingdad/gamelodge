@@ -61,13 +61,13 @@ object ConnectionWarningOverlay {
         val d = ComponentDialog(game, android.R.style.Theme_Translucent_NoTitleBar)
         d.setContentView(
             ComposeView(game).apply {
-                setContent {
+                setContent { io.github.thecodingdad.gamelodge.util.ActivityLocale {
                     val settings by container.settings.settings.collectAsState(LauncherSettings())
                     val warning by StreamQuality.warning.collectAsState()
                     LauncherTheme(settings) {
                         warning?.let { ConnectionWarningPill(it, Modifier.padding(top = 12.dp)) }
                     }
-                }
+                } }
             },
             ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT),
         )
