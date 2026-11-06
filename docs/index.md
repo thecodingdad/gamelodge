@@ -7,7 +7,10 @@ installed on the device, the games of your streaming PCs and your emulated games
 artwork and metadata, and starts each one the right way: locally, through an emulator or as a stream from
 Sunshine, Apollo or Vibepollo.
 
-![Home tab](assets/screenshots/android-home.jpg)
+<video controls muted playsinline preload="metadata" poster="assets/video/trailer-poster.jpg" style="width:100%;border-radius:8px">
+  <source src="assets/video/gamelodge-trailer-vp9.mp4" type='video/mp4; codecs="vp09.00.40.08"'>
+  <source src="assets/video/gamelodge-trailer.mp4" type="video/mp4">
+</video>
 
 ## Built for the controller
 

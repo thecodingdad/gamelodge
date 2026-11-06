@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="branding/gamelodge-banner.svg" alt="GameLodge" width="480">
+  <a href="https://thecodingdad.github.io/gamelodge/"><img src="docs/assets/video/trailer-banner.jpg" alt="GameLodge – watch the trailer" width="480"></a>
 </p>
 
 <p align="center">
