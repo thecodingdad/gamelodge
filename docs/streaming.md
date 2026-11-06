@@ -22,5 +22,9 @@ Select a host game and press **A** (or **Play** on its details page). GameLodge
 3. attaches your controllers in player order,
 4. measures the play time and runs your Home Assistant [game actions](home-assistant.md#game-actions).
 
+![Connecting to the stream](assets/screenshots/stream-connecting.jpg)
+
 **Back to GameLodge** (Guide) leaves the stream running in the background; selecting the game again
 resumes it. The quick menu's *Running* tab resumes or quits it.
+
+![Details of a running game](assets/screenshots/details-running.jpg)
