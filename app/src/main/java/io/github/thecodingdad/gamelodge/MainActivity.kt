@@ -65,6 +65,23 @@ class MainActivity : ComponentActivity() {
                 if (idle) container.hosts.stopPolling() else if (started) container.hosts.startPolling()
             }
         }
+        // One language everywhere: the launcher's setting, the activities and Android's app language.
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                val language = io.github.thecodingdad.gamelodge.util.AppLanguage
+                // Changed in Android's app language setting meanwhile: the launcher's setting follows.
+                language.systemTag(this@MainActivity)?.let { system ->
+                    if (container.settings.current().language != system) container.settings.update { it.copy(language = system) }
+                }
+                // Changed in the launcher (also by a restored backup): Android and the activities follow.
+                container.settings.settings.map { it.language }.distinctUntilChanged().collect { tag ->
+                    if (!language.isApplied(this@MainActivity, tag)) {
+                        language.apply(this@MainActivity, tag)
+                        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.TIRAMISU) recreate()
+                    }
+                }
+            }
+        }
         enableEdgeToEdge()
         applySystemBars()
         lifecycleScope.launch {

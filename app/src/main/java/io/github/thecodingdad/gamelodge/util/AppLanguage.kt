@@ -25,6 +25,27 @@ object AppLanguage {
         }
     }
 
+    /**
+     * Android 13+: the per-app language Android holds, as one of the launcher's choices
+     * ("system" when none is set); null before Android 13, where only the launcher keeps it.
+     */
+    fun systemTag(context: Context): String? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return null
+        val locales = context.getSystemService(LocaleManager::class.java)?.applicationLocales ?: return null
+        if (locales.isEmpty) return "system"
+        val locale = locales[0]
+        val choices = io.github.thecodingdad.gamelodge.ui.screens.settings.LanguageTags
+        return choices.firstOrNull { it.equals(locale.toLanguageTag(), ignoreCase = true) }
+            ?: choices.firstOrNull { it == locale.language }
+            ?: locale.toLanguageTag()
+    }
+
+    /** Whether [tag] is what the activities already get. */
+    fun isApplied(context: Context, tag: String): Boolean {
+        val stored = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY, null)
+        return stored == tag && (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || systemTag(context) == tag)
+    }
+
     /** Before Android 13: [base] with the chosen language (for attachBaseContext). */
     fun wrap(base: Context, tag: String): Context {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU || tag == "system") return base
