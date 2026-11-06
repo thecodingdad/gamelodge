@@ -72,3 +72,9 @@ when *another* device starts a game on this PC – also a plain Moonlight client
 
 Pair your handheld, tablet or TV with this PC to give them the PC's artwork, metadata and play data:
 [Devices & web interface](sharing.md).
+
+## See also
+
+- [Hosts & pairing](hosts.md) – streaming from the PC on your devices
+- [PC games](pc-games.md) – game sources and start actions
+- [Home Assistant](home-assistant.md) – game actions on the host

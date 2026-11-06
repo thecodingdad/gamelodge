@@ -68,3 +68,9 @@ itself, or the game's known processes.
 The details page shows the store, genres, release year and play time like on Android; artwork and metadata
 come from the same [sources](metadata.md). Play time is measured while the game's processes run, see
 [Play time & statistics](playtime.md).
+
+## See also
+
+- [Emulators & ROMs](emulators.md) – emulators and ROM folders on Windows
+- [Streaming host](streaming-host.md) – these games on Vibepollo, Apollo or Sunshine
+- [Metadata & artwork](metadata.md)

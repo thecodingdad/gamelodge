@@ -122,3 +122,9 @@ folders with your games.
   isn't needed afterwards.
 
 ROM games are recognised and get their artwork the same way as on Android.
+
+## See also
+
+- [Metadata & artwork](metadata.md) – covers for ROMs
+- [Filters, groups & collections](filters.md) – split by platform
+- [PC games](pc-games.md) – emulators on Windows next to the stores

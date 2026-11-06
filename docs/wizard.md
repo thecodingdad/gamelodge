@@ -93,3 +93,10 @@ Optional: a WireGuard tunnel for streaming away from home. See [VPN](vpn.md).
 
 Your library is being filled. *Next up* links to the settings worth a look next: tiles, filters and groups,
 controllers and buttons.
+
+## See also
+
+- [Getting started](getting-started.md) – install, home app, permissions
+- [Hosts & pairing](hosts.md)
+- [Metadata & artwork](metadata.md) – SteamGridDB and IGDB keys
+- [Backup & restore](backup.md) – restoring on a new device

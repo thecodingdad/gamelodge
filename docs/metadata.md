@@ -72,3 +72,10 @@ networks unless you allow it.
 
 - **Re-fetch all** looks up all automatically found metadata again; your corrections stay.
 - **Settings → Data** shows the storage used by artwork and can delete and download it again.
+
+## See also
+
+- [Library](library.md)
+- [Your PC as host](pc-host.md) – artwork through the PC's keys
+- [Backup & restore](backup.md) – what happens to artwork in a backup
+- [Setup wizard](wizard.md) – key guides with QR codes

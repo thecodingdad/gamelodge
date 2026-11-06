@@ -89,3 +89,10 @@ info for GameLodge changes them later.
     While GameLodge runs, the Guide button belongs to it (back to GameLodge, quick menu). Windows' option
     *Open Xbox Game Bar using this button on a controller* is switched off meanwhile and restored when
     GameLodge quits.
+
+## See also
+
+- [Setup wizard](wizard.md) – every step in detail
+- [Controllers & shortcuts](controllers.md) – shortcuts in other apps on Android
+- [Backup & restore](backup.md) – moving to a new device
+- [FAQ & troubleshooting](faq.md)

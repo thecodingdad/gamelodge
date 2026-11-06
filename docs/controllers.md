@@ -90,3 +90,10 @@ accessibility settings:
 **Settings → Touch, mouse & keyboard**: everything also works with touch, a mouse (side buttons can switch
 tabs) and a keyboard – keys for confirm, back, quick menu and home, and a quick menu shortcut. On Windows
 the shortcut (always with Ctrl, Alt or Shift) works system-wide, also with a game or stream in front.
+
+## See also
+
+- [Quick menu](quick-menu.md)
+- [Mouse emulation](mouse.md)
+- [Stream profiles](profiles.md) – controllers in the stream
+- [Getting started](getting-started.md) – permissions on Android

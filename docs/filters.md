@@ -63,3 +63,9 @@ host they are shared with your other devices.
 
 **X → Hide** removes an entry from all filters; it only shows under the **Hidden** chip. For host games you
 choose whether hiding applies only on this device or on all your devices.
+
+## See also
+
+- [Library](library.md)
+- [Home tab & tiles](appearance.md) – Home rows and tiles
+- [Metadata & artwork](metadata.md) – platforms and genres the filters use

@@ -35,3 +35,9 @@ hidden flags and groups travel the same way.
 
 The details page of a game shows its play time and when you played it last; tiles can show it as extra
 info (*Library tab* settings → *Extra info*).
+
+## See also
+
+- [Your PC as host](pc-host.md) – play time shared between devices
+- [Home Assistant](home-assistant.md) – play time and running game via MQTT
+- [Backup & restore](backup.md)

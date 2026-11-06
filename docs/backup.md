@@ -61,3 +61,9 @@ library it finishes.
 
 Back up on the old device, then choose **Restore a backup** on the first page of the [setup wizard](wizard.md)
 on the new one: it pairs your hosts first and then restores.
+
+## See also
+
+- [Setup wizard](wizard.md) – restoring a backup on a new device
+- [Hosts & pairing](hosts.md) – pairing again after a restore
+- [Metadata & artwork](metadata.md)

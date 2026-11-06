@@ -62,3 +62,9 @@ you to trust it once.
 !!! tip "Keep GameLodge running"
     Host features need GameLodge to run on the PC. With **Keep running in the tray** (see
     [Getting started](getting-started.md#window-startup-windows)) it keeps working with the window closed.
+
+## See also
+
+- [Streaming host](streaming-host.md)
+- [Metadata & artwork](metadata.md) – sending keys to the PC
+- [Play time & statistics](playtime.md) – shared between devices

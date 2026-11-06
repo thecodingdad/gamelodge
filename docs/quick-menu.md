@@ -63,3 +63,10 @@ Remove tiles with ✕, reorder them with the handle, **Add tile** for more, **Re
 Metadata lookups, artwork downloads, scans, backups and restores run in the background. The status bar shows
 a spinner while any runs; the task list shows each with its progress. A backup (and a restore while it still
 unpacks) can be cancelled there.
+
+## See also
+
+- [Controllers & shortcuts](controllers.md) – the quick menu shortcut
+- [Home Assistant](home-assistant.md) – entity tiles
+- [Hosts & pairing](hosts.md) – host actions
+- [VPN (WireGuard)](vpn.md)

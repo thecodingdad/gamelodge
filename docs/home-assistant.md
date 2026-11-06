@@ -74,3 +74,10 @@ running or last played title with its images. Every device appears as its own de
 - **TLS**: the broker's certificate must be valid for its address; a **self-signed** certificate is pinned
   by its fingerprint, which you confirm on the first connection – a changed certificate is refused until
   you confirm it again.
+
+## See also
+
+- [Hosts & pairing](hosts.md) – host actions: wake up, sleep, shut down
+- [Quick menu](quick-menu.md) – tiles over every game
+- [Streaming host](streaming-host.md) – game actions on the PC
+- [Play time & statistics](playtime.md)

@@ -51,3 +51,9 @@ UI sounds with volume and style, which events play a sound, and the vibration st
 
 English, German, French, Spanish, Italian and Portuguese (Brazil), or the device's language
 (**Settings → Language**).
+
+## See also
+
+- [Filters, groups & collections](filters.md) – Home rows
+- [TV mode & screensaver](tv.md)
+- [Library](library.md)

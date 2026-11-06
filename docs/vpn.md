@@ -35,3 +35,9 @@ cover the host's address, else the default one), a fixed tunnel, or none.
 !!! tip "Waking a host through the VPN"
     Wake-on-LAN packets usually don't pass a VPN. Use a Home Assistant entity as wake method for hosts you
     stream from away from home.
+
+## See also
+
+- [Hosts & pairing](hosts.md) – tunnel per host, wake-up
+- [Quick menu](quick-menu.md) – VPN toggle in quick access
+- [FAQ & troubleshooting](faq.md) – streaming away from home

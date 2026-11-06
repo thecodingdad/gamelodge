@@ -30,3 +30,8 @@ to switch it off. It's also in the quick menu's stream controls.
   full speed stays the same
 
 The pointer uses at least a 15 % dead zone, so it doesn't drift with worn sticks.
+
+## See also
+
+- [Controllers & shortcuts](controllers.md) – the mouse shortcut
+- [Quick menu](quick-menu.md) – mouse in the running stream

@@ -37,3 +37,9 @@ Connect the handheld to a TV or monitor (USB-C / HDMI, a dock):
 
 !!! tip "AYN Odin"
     The TV's output mode is set in the Odin settings, *Video output mode*; connect the TV again afterwards.
+
+## See also
+
+- [Home tab & tiles](appearance.md) – UI size, animations
+- [Stream profiles](profiles.md) – stream resolution on a TV
+- [Controllers & shortcuts](controllers.md)

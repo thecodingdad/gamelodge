@@ -45,9 +45,10 @@ you added as apps. Chips split them by source; **X → This is a game** moves an
 The Windows app looks and works the same; keyboard and mouse work alongside the controller (button hints
 show the keys). Its local games come from the PC's stores, see [PC games](pc-games.md).
 
-## More
+## See also
 
-- [Filters, groups & collections](filters.md) – chips, smart filters, split by platform, Home rows
-- [Metadata & artwork](metadata.md) – sources, the editor, choosing artwork
-- [Play time & statistics](playtime.md) – where play time comes from, shared between devices
-- [Home tab & tiles](appearance.md) – layouts, tile shapes and sizes per tab
+- [Filters, groups & collections](filters.md) – chips, smart filters, Home rows
+- [Metadata & artwork](metadata.md) – sources, editor, artwork
+- [Play time & statistics](playtime.md)
+- [Home tab & tiles](appearance.md) – tile size, shape and badges per tab
+- [Hosts & pairing](hosts.md) – games of your streaming PCs

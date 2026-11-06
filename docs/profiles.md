@@ -32,3 +32,10 @@ streaming client.
 
 **Connection warnings** show a small notice over the stream when the connection loses frames, wavers or
 lags – always, only with the performance overlay, or never.
+
+## See also
+
+- [Hosts & pairing](hosts.md)
+- [Controllers & shortcuts](controllers.md) – controllers in the stream
+- [Quick menu](quick-menu.md) – stream controls during the game
+- [TV mode & screensaver](tv.md) – resolution on a TV

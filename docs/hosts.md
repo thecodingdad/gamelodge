@@ -62,3 +62,10 @@ recognises such a session and shows the game as running, so you can take it over
 
 **Games of the PC.** To fill Vibepollo, Apollo or Sunshine with the PC's games – with the right start
 command, artwork and play time – set up GameLodge on the PC as [streaming host](streaming-host.md).
+
+## See also
+
+- [Streaming host](streaming-host.md) – the PC's games on Vibepollo, Apollo or Sunshine
+- [Stream profiles](profiles.md)
+- [VPN (WireGuard)](vpn.md) – streaming away from home
+- [Home Assistant](home-assistant.md) – wake up and sleep through Home Assistant
