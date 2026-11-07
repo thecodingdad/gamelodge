@@ -82,7 +82,7 @@ private sealed interface XboxAddUi {
 
 /** Xbox consoles on the hosts page: the Microsoft account, the added consoles and adding more. */
 @Composable
-fun XboxHostsSection(openHostConfig: (HostState) -> Unit) {
+fun XboxHostsSection(openHostConfig: ((HostState) -> Unit)?) {
     val c = io.github.thecodingdad.gamelodge.LocalContainer.current
     val xbox = c.xbox
     val scope = rememberCoroutineScope()
@@ -126,7 +126,7 @@ fun XboxHostsSection(openHostConfig: (HostState) -> Unit) {
         XboxCard(
             host = host,
             note = notes[host.console.id],
-            onConfig = { openHostConfig(host.asHostState()) },
+            onConfig = openHostConfig?.let { open -> { open(host.asHostState()) } },
             onWake = {
                 notes[host.console.id] = wakeSentMsg
                 scope.launch {
@@ -226,7 +226,8 @@ private fun consoleType(type: String): String =
 private fun XboxCard(
     host: XboxHost,
     note: String?,
-    onConfig: () -> Unit,
+    /** Null where the settings page can't open (setup wizard). */
+    onConfig: (() -> Unit)?,
     onWake: () -> Unit,
     onTurnOff: () -> Unit,
     onRemove: () -> Unit,
@@ -267,7 +268,7 @@ private fun XboxCard(
             }
         }
         io.github.thecodingdad.gamelodge.ui.components.ButtonRow(spacing = 10.dp) {
-            LauncherButton(stringResource(Res.string.host_settings), icon = Icons.Filled.Settings, onClick = onConfig)
+            if (onConfig != null) LauncherButton(stringResource(Res.string.host_settings), icon = Icons.Filled.Settings, onClick = onConfig)
             if (power != XboxPower.ON) LauncherButton(stringResource(Res.string.host_wake), icon = Icons.Filled.Power, onClick = onWake)
             if (power == XboxPower.ON) HoldToConfirmButton(stringResource(Res.string.xbox_turn_off), onTurnOff, icon = Icons.Filled.PowerSettingsNew)
             HoldToConfirmButton(stringResource(Res.string.host_remove), onConfirmed = onRemove, icon = Icons.Filled.Delete)

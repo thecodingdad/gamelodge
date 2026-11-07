@@ -66,6 +66,7 @@ command, artwork and play time – set up GameLodge on the PC as [streaming host
 ## See also
 
 - [Streaming host](streaming-host.md) – the PC's games on Vibepollo, Apollo or Sunshine
+- [Xbox consoles](xbox.md) – an Xbox as host
 - [Stream profiles](profiles.md)
 - [VPN (WireGuard)](vpn.md) – streaming away from home
 - [Home Assistant](home-assistant.md) – wake up and sleep through Home Assistant

@@ -61,6 +61,7 @@ nav:
   - Streaming:
       - Overview: streaming.md
       - Hosts & pairing: hosts.md
+      - Xbox consoles: xbox.md
       - Stream profiles: profiles.md
       - VPN (WireGuard): vpn.md
   - Your PC as host (Windows):

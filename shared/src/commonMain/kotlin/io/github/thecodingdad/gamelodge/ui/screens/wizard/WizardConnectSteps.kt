@@ -142,6 +142,8 @@ internal fun ColumnScope.HostsStep() {
     if (adding) CircularProgressIndicator(color = LauncherTheme.colors.accent)
     message?.let { WizardNote(it) }
     WizardNote(stringResource(Res.string.hosts_discovery_hint))
+    // Xbox consoles: sign in and add them here too (their settings later on the hosts page).
+    io.github.thecodingdad.gamelodge.ui.screens.settings.XboxHostsSection(openHostConfig = null)
 
     val p = pairing
     Modal(visible = p != null, onDismiss = { pairing = null }, title = stringResource(Res.string.pair_title), closeButton = false) {

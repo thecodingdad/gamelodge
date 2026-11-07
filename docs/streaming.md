@@ -1,6 +1,6 @@
 # Streaming
 
-GameLodge streams games from PCs running [Sunshine](https://github.com/LizardByte/Sunshine),
+GameLodge streams games from [Xbox consoles](xbox.md) and from PCs running [Sunshine](https://github.com/LizardByte/Sunshine),
 [Apollo](https://github.com/ClassicOldSong/Apollo) or [Vibepollo](https://github.com/Nonary/Vibepollo). The streaming client is built in:
 [Artemis](https://github.com/ClassicOldSong/moonlight-android) on Android, Moonlight on Windows – you never
 leave GameLodge's interface.
@@ -8,6 +8,7 @@ leave GameLodge's interface.
 | Page | What it covers |
 |---|---|
 | [Hosts & pairing](hosts.md) | Finding and pairing hosts, wake-up, sleep, host actions, Apollo & Vibepollo permissions |
+| [Xbox consoles](xbox.md) | Microsoft sign-in, the console's games, wake-up and sleep, quitting games on the console |
 | [Stream profiles](profiles.md) | Resolution, frame rate, bitrate, HDR, per-launch profiles |
 | [VPN (WireGuard)](vpn.md) | Streaming away from home, Android only |
 

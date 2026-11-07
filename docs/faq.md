@@ -32,3 +32,11 @@
 ??? question "My handheld doesn't find the GameLodge PC"
     On the PC, **Settings → Streaming host → Devices & pairing → Connection for launchers** must be on, and
     GameLodge has to run (the tray is enough). Start pairing on the PC first, then on the device.
+
+??? question "An Xbox game waits at the profile selection or doesn't start"
+    The console needs a profile that signs in automatically and its power mode on *Sleep* to be woken. See
+    [Xbox consoles → Prepare the console](xbox.md#prepare-the-console).
+
+??? question "The Xbox stream doesn't connect"
+    Check that remote features and streaming are on at the console. Away from home, your router may block the
+    connection: forward the console's UDP ports 3074 and 9002 to it. See [Xbox consoles](xbox.md#away-from-home).
