@@ -105,6 +105,9 @@ fun HeroHome(
     val actions = LocalEntryActions.current
     var focused by remember { mutableStateOf<LibraryEntry?>(null) }
     var focusedSession by remember { mutableStateOf<RunningSession?>(null) }
+    // Games running on Xbox consoles (in the running row next to the hosts' sessions).
+    val xboxRunning = io.github.thecodingdad.gamelodge.xbox.rememberXboxRunning().filter { it.entry != null && it.target != null }
+    val container = io.github.thecodingdad.gamelodge.LocalContainer.current
     // Row of the focused card, for the context menu's "Details" (pages through the row).
     var focusedList by remember { mutableStateOf<List<LibraryEntry>?>(null) }
     var focusedListKey by remember { mutableStateOf<String?>(null) }
@@ -183,6 +186,7 @@ fun HeroHome(
             val atStart = listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0 && when {
                 focused == null && focusedSession == null -> true
                 rows.running.isNotEmpty() -> focusedSession === rows.running.first()
+                xboxRunning.isNotEmpty() -> focusedSession == null && focused?.item?.id == xboxRunning.first().entry?.item?.id
                 else -> focusedRow == firstFilled?.let { "row:${it.key}" } && focused?.item?.id == firstFilled?.entries?.first()?.item?.id
             }
             LaunchedEffect(atStart) { callbacks.onAtStart(atStart) }
@@ -294,7 +298,7 @@ fun HeroHome(
                     val height = if (firstRowHeight == 0) 0 else geometry.spacer
                     androidx.compose.foundation.layout.Spacer(Modifier.fillMaxWidth().height(with(density) { height.toDp() }))
                 }
-                if (rows.running.isNotEmpty()) {
+                if (rows.running.isNotEmpty() || xboxRunning.isNotEmpty()) {
                     item(key = "running") { pinned("running") {
                         RowTitle(stringResource(Res.string.home_running))
                         // As wide as the tiles below, but wide enough for its play button, title and host
@@ -320,6 +324,21 @@ fun HeroHome(
                                     // 16:9.
                                     modifier = Modifier.width(runningWidth).height(runningWidth / io.github.thecodingdad.gamelodge.ui.components.APP_LANDSCAPE_RATIO)
                                         .restoreFocusIf(callbacks.lastFocusedKey == key || callbacks.lastFocusedKey == null),
+                                )
+                            }
+                            items(xboxRunning, key = { "xbox:${it.consoleId}" }) { game ->
+                                val entry = game.entry!!
+                                val key = "running:xbox:${game.consoleId}"
+                                WideCard(
+                                    title = entry.item.title,
+                                    subtitle = stringResource(Res.string.running_on, game.consoleName),
+                                    image = entry.heroModel(),
+                                    onClick = { io.github.thecodingdad.gamelodge.ui.components.resumeXbox(container, game) },
+                                    onLongClick = { actions.context(entry, listOf(entry)) { callbacks.onFocusKey(key) } },
+                                    onFocused = { focused = entry; focusedSession = null; focusedList = listOf(entry); focusedListKey = null; callbacks.onFocusKey(key) },
+                                    overlay = { QuitHoldBar(entry.item.id) },
+                                    modifier = Modifier.width(runningWidth).height(runningWidth / io.github.thecodingdad.gamelodge.ui.components.APP_LANDSCAPE_RATIO)
+                                        .restoreFocusIf(callbacks.lastFocusedKey == key || (callbacks.lastFocusedKey == null && rows.running.isEmpty())),
                                 )
                             }
                         }
