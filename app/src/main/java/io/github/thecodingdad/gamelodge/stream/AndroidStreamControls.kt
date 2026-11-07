@@ -24,11 +24,14 @@ class AndroidStreamControls(
     }
 
     override fun disconnect() {
+        if (io.github.thecodingdad.gamelodge.xbox.XboxStreams.current != null) return XboxStreamActivity.finishRunning()
         val g = game ?: return
         main.post { g.disconnect() }
     }
 
-    override fun inFront(): Boolean = game.let { it != null && io.github.thecodingdad.gamelodge.CurrentActivity.resumed() === it }
+    override fun inFront(): Boolean = io.github.thecodingdad.gamelodge.CurrentActivity.resumed().let {
+        it is XboxStreamActivity || (game != null && it === game)
+    }
 
     override fun toggleOverlay(): Boolean = game != null && StreamControl.togglePerformanceOverlay()
 

@@ -224,6 +224,15 @@ class LaunchCoordinator(
         scope.launch { runCatching { if (vpn.disconnectAfterStream()) vpn.disconnect() } }
     }
 
+    /** The stream window reports a stream that never got going (Xbox): shown like a failed start. */
+    fun reportFailure(error: LaunchError, detail: String?) {
+        val entry = lastXboxEntry ?: return
+        ended()
+        fail(entry, error, detail)
+    }
+
+    @Volatile private var lastXboxEntry: LibraryEntry? = null
+
     private fun fail(entry: LibraryEntry, error: LaunchError, detail: String? = null) {
         _state.value = LaunchState.Failed(entry, error, detail)
         dropStreamVpn()
@@ -378,6 +387,7 @@ class LaunchCoordinator(
             StreamQuality.reset()
             _activeStream.value = ActiveStream(entry, hostUuid, target.appId ?: 0)
             io.github.thecodingdad.gamelodge.xbox.XboxStreams.current = controller
+            lastXboxEntry = entry
             platform.startXboxStream(entry, target, controller)
             started(entry, target, profileName)
             _state.value = LaunchState.Idle

@@ -32,7 +32,7 @@ class HostPower(
         if (console == null && (config.wakeMethod == WakeMethod.WOL || config.wakeMethod == WakeMethod.BOTH)) {
             hosts.hosts.value[hostUuid]?.let { sent = actions.wakeOnLan(it) || sent }
         }
-        if (config.wakeMethod == WakeMethod.HOME_ASSISTANT || config.wakeMethod == WakeMethod.BOTH) {
+        if (console != null || config.wakeMethod == WakeMethod.HOME_ASSISTANT || config.wakeMethod == WakeMethod.BOTH) {
             config.haWakeEntity?.let { action ->
                 // Once more on a fresh connection: the one at hand may be from another network (VPN just up).
                 val done = ha.runAction(action) || run {

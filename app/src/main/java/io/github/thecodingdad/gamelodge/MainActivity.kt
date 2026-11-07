@@ -62,7 +62,7 @@ class MainActivity : ComponentActivity() {
         // Nobody looks at the hosts while the screensaver shows: no polling meanwhile, right away again after it.
         lifecycleScope.launch {
             io.github.thecodingdad.gamelodge.ui.shell.ScreensaverControl.active.collect { idle ->
-                if (idle) container.hosts.stopPolling() else if (started) container.hosts.startPolling()
+                if (idle) { container.hosts.stopPolling(); container.xbox.stopPolling() } else if (started) { container.hosts.startPolling(); container.xbox.startPolling() }
             }
         }
         // One language everywhere: the launcher's setting, the activities and Android's app language.
@@ -260,7 +260,7 @@ class MainActivity : ComponentActivity() {
     override fun onStart() {
         super.onStart()
         started = true
-        if (!io.github.thecodingdad.gamelodge.ui.shell.ScreensaverControl.active.value) container.hosts.startPolling()
+        if (!io.github.thecodingdad.gamelodge.ui.shell.ScreensaverControl.active.value) { container.hosts.startPolling(); container.xbox.startPolling() }
         container.ha.client.start()
     }
 
@@ -291,6 +291,7 @@ class MainActivity : ComponentActivity() {
         // An older instance stopping after the new one started must not stop the new one's polling.
         if (current?.get() === this) {
             container.hosts.stopPolling()
+            container.xbox.stopPolling()
             container.ha.client.stop()
         }
         super.onStop()
@@ -326,7 +327,7 @@ class MainActivity : ComponentActivity() {
             container.usage.sync()
             // A game or stream ended: its session goes to the host right away (also brings the others' news).
             if (closed != null) launch { container.library.syncPlayData() }
-            if (closed != null && closed.targetId.startsWith("remote:")) {
+            if (closed != null && (closed.targetId.startsWith("remote:") || closed.targetId.startsWith("xbox:"))) {
                 val target = container.database.libraryDao().getTarget(closed.targetId)
                 target?.hostUuid?.let { container.autoSleep.scheduleAfterStream(it) }
                 container.launcher.streamEnded()

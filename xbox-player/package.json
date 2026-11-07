@@ -1,0 +1,16 @@
+{
+  "name": "gamelodge-xbox-player",
+  "private": true,
+  "description": "The page that plays Xbox home streams in GameLodge (Android WebView, WebView2 on Windows).",
+  "license": "GPL-3.0-only",
+  "scripts": {
+    "build": "esbuild src/glue.js --bundle --minify --format=iife --target=chrome100 --legal-comments=none --outfile=dist/xbox-player/player.js && cp src/index.html src/NOTICE.txt dist/xbox-player/"
+  },
+  "dependencies": {
+    "events": "3.3.0",
+    "xstreaming-player": "0.3.4"
+  },
+  "devDependencies": {
+    "esbuild": "0.23.1"
+  }
+}

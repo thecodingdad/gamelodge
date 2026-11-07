@@ -619,7 +619,7 @@ fun StreamProgressContent(
 ) {
     val colors = LauncherTheme.colors
     val reduceMotion = io.github.thecodingdad.gamelodge.ui.theme.LocalReduceMotion.current
-    val host = entry.remoteTargets.firstOrNull()?.hostName
+    val host = entry.streamTargets.firstOrNull()?.hostName
 
     // Slow zoom on the artwork so the wait feels alive.
     val zoom = if (reduceMotion) 1f else {

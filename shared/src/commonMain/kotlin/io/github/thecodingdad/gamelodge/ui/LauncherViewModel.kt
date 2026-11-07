@@ -125,7 +125,7 @@ class LauncherViewModel(private val c: LauncherContainer) : ViewModel() {
 
     /** Host UUID → name, from live hosts and (for offline/removed ones) the stored targets. */
     private val hostNames = combine(hosts, allEntries) { live, list ->
-        val stored = list.flatMap { it.remoteTargets }.mapNotNull { t -> t.hostUuid?.let { it to (t.hostName ?: it) } }.toMap()
+        val stored = list.flatMap { it.streamTargets }.mapNotNull { t -> t.hostUuid?.let { it to (t.hostName ?: it) } }.toMap()
         stored + live.mapValues { it.value.name } + (FilterRules.SOURCE_LOCAL to org.jetbrains.compose.resources.getString(Res.string.filter_local)) +
             (FilterRules.SOURCE_EMULATOR to org.jetbrains.compose.resources.getString(Res.string.filter_emulation))
     }

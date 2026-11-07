@@ -53,7 +53,7 @@ fun MetaLine(entry: LibraryEntry, modifier: Modifier = Modifier) {
             minutes > 0 -> add(pluralStringResource(if (app) Res.plurals.usage_minutes else Res.plurals.playtime_minutes, minutes.toInt(), minutes))
             entry.item.lastPlayedAt == null -> add(stringResource(if (app) Res.string.never_used else Res.string.never_played))
         }
-        entry.remoteTargets.firstOrNull()?.hostName?.let { add(it) }
+        entry.streamTargets.firstOrNull()?.hostName?.let { add(it) }
         if (entry.notInstalled) add(stringResource(Res.string.not_installed))
     }
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {

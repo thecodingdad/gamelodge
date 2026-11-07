@@ -214,7 +214,22 @@ class XboxRepository(
         }
         sync.syncXbox(host.hostUuid, entries)
         lastGamesSync[consoleId] = now
+        suggestPlatform(host)
         applyStoreInfo(entries.mapNotNull { it.appUuid })
+    }
+
+    /** Games only on Xbox consoles without a platform yet get the console's (a metadata match may correct it). */
+    private suspend fun suggestPlatform(host: XboxHost) {
+        val dao = db.libraryDao()
+        val platform = if (host.console.isSeries) "Xbox Series X|S" else "Xbox One"
+        val itemIds = dao.getAllTargets().filter { it.type == TargetType.XBOX && it.hostUuid == host.hostUuid }.map { it.itemId }.distinct()
+        for (id in itemIds) {
+            val item = dao.getItem(id) ?: continue
+            if (item.platform != null || dao.getTargetsForItem(id).any { it.type != TargetType.XBOX }) continue
+            if (io.github.thecodingdad.gamelodge.data.library.PlatformResolver.mayReplace(item, io.github.thecodingdad.gamelodge.data.db.PlatformSource.SUGGESTED, platform)) {
+                dao.setPlatform(id, platform, io.github.thecodingdad.gamelodge.data.db.PlatformSource.SUGGESTED)
+            }
+        }
     }
 
     /** Store artwork and texts for items that have none yet (fields set once or by hand stay). */

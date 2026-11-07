@@ -1161,7 +1161,7 @@
     <string name="search_kw_usage">tempo de jogo, estatísticas, acesso de uso</string>
     <string name="search_kw_game_sources">Steam, Epic, GOG, Xbox, EA, Ubisoft, Battle.net, Amazon, loja, Playnite, jogos próprios, escanear</string>
     <string name="search_kw_emulators">ROMs, RetroArch, console, Dolphin, Cemu, Eden, Xenia</string>
-    <string name="search_kw_hosts">PC, Sunshine, Apollo, Vibepollo, parear, pareamento, Wake-on-LAN, WoL, ligar, Moonlight</string>
+    <string name="search_kw_hosts">PC, Sunshine, Apollo, Vibepollo, parear, pareamento, Wake-on-LAN, WoL, ligar, Moonlight, Xbox, Microsoft, Game Pass</string>
     <string name="search_kw_profiles">resolução, bitrate, FPS, taxa de quadros, HDR, qualidade, Moonlight, stream</string>
     <string name="search_kw_vpn">WireGuard, fora de casa, túnel, remoto</string>
     <string name="search_kw_streaming_host">Vibepollo, Apollo, Sunshine, sincronização, token de API, Moonlight</string>
@@ -1668,4 +1668,26 @@
     <string name="error_xbox_signed_out">Entre novamente na sua conta Xbox (Streaming → Hosts).</string>
     <string name="error_xbox_unreachable">O console não está conectado à Xbox Live. Verifique se está ligado, online e com os recursos remotos ativados.</string>
     <string name="error_xbox_busy">Outro dispositivo está transmitindo do console.</string>
+    <string name="xbox_section">Consoles Xbox</string>
+    <string name="xbox_intro">Transmita os jogos instalados no seu Xbox: o GameLodge liga o console, inicia o jogo e abre a transmissão. Entre com a conta Microsoft do console.</string>
+    <string name="xbox_add">Adicionar console Xbox</string>
+    <string name="xbox_sign_out">Sair do Xbox</string>
+    <string name="xbox_signed_in_as">Conectado como %1$s</string>
+    <string name="xbox_sign_in_title">Entrar no Xbox</string>
+    <string name="xbox_sign_in_steps">Escaneie o código com o celular ou abra %1$s em qualquer dispositivo e digite este código:</string>
+    <string name="xbox_sign_in_waiting">Aguardando o login …</string>
+    <string name="xbox_sign_in_failed">O login não funcionou. Tente novamente.</string>
+    <string name="xbox_no_consoles">Nenhum outro console encontrado nesta conta. Ative os recursos remotos no console (Configurações → Dispositivos e conexões → Recursos remotos).</string>
+    <string name="xbox_pick_title">Escolha um console</string>
+    <string name="xbox_pick_text">Estes consoles pertencem à sua conta:</string>
+    <string name="xbox_streaming_off">O streaming está desativado neste console (Configurações → Dispositivos e conexões → Recursos remotos).</string>
+    <string name="xbox_status_standby">Em espera</string>
+    <string name="xbox_missing">não está mais na conta</string>
+    <string name="xbox_turn_off">Desligar</string>
+    <string name="xbox_unlicensed">Jogos sem licença</string>
+    <string name="xbox_unlicensed_sub">Jogos instalados que só podem ser jogados com Game Pass ou EA Play.</string>
+    <string name="xbox_unlicensed_hide">Ocultar</string>
+    <string name="xbox_unlicensed_dim">Esmaecidos</string>
+    <string name="xbox_wake_hint">Em espera, o GameLodge liga o console pela Xbox Live. No modo de economia de energia, só uma ação do Home Assistant consegue (ex.: HDMI-CEC da TV).</string>
+    <string name="xbox_auto_sleep_sub">Desliga o console (em espera) este tempo após a última transmissão; se houver uma ação do Home Assistant para suspender ou desligar, ela é usada.</string>
 </resources>

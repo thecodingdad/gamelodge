@@ -60,6 +60,8 @@ android {
 
     // Exported Room schemas for the migration tests (Robolectric reads debug assets).
     sourceSets.getByName("debug").assets.srcDir("${rootProject.projectDir}/shared/schemas")
+    // The Xbox player page (built by tools/build-xbox-player.sh, committed): assets/xbox-player/.
+    sourceSets.getByName("main").assets.srcDir("${rootProject.projectDir}/xbox-player/dist")
 
     packaging {
         resources {

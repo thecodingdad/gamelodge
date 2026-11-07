@@ -107,9 +107,12 @@ fun QuickMenu(
     val c = io.github.thecodingdad.gamelodge.LocalContainer.current
     val platform = io.github.thecodingdad.gamelodge.ui.PlatformUi.current
     val local by io.github.thecodingdad.gamelodge.stream.LocalSessions.running.collectAsState()
+    val activeStream by c.launcher.activeStream.collectAsState()
+    // The Xbox stream this launcher runs (its window behind the menu).
+    val xboxStream = activeStream?.takeIf { it.hostUuid.startsWith("xbox:") && io.github.thecodingdad.gamelodge.xbox.XboxStreams.current != null }
 
     SidePanel(visible = visible, onDismiss = onDismiss, width = 600.dp) {
-        val hasRunning = running.isNotEmpty() || local != null
+        val hasRunning = running.isNotEmpty() || local != null || xboxStream != null
         val tabs = remember(hasRunning) { QuickMenuTab.entries.filter {
             (it != QuickMenuTab.RUNNING || hasRunning) && (it != QuickMenuTab.SETTINGS || platform.hasQuickMenuSettings)
         } }
@@ -164,6 +167,7 @@ fun QuickMenu(
                         when (tab) {
                             QuickMenuTab.RUNNING -> {
                                 local?.let { LocalRunningCard(it, onDismiss) }
+                                xboxStream?.let { XboxRunningCard(it, initialFocus = local == null, onDismiss) }
                                 running.forEachIndexed { i, session ->
                                     RunningCard(
                                         session, initialFocus = local == null && i == 0,
@@ -410,6 +414,24 @@ private fun LocalRunningCard(session: io.github.thecodingdad.gamelodge.stream.Lo
                 running = { io.github.thecodingdad.gamelodge.stream.LocalSessions.running.value?.entry?.item?.id == session.entry.item.id },
                 onDone = { onDismiss(); platform.bringToFront() },
             )
+        },
+    )
+}
+
+/** The Xbox stream: back to it, or end it (the game keeps running on the console). */
+@Composable
+private fun XboxRunningCard(stream: io.github.thecodingdad.gamelodge.stream.LaunchCoordinator.ActiveStream, initialFocus: Boolean, onDismiss: () -> Unit) {
+    val c = io.github.thecodingdad.gamelodge.LocalContainer.current
+    val target = stream.entry.xboxTargets.firstOrNull { it.hostUuid == stream.hostUuid }
+    RunningCardLayout(
+        entry = stream.entry,
+        title = stream.entry.item.title,
+        where = stringResource(Res.string.qm_running_on_host, target?.hostName ?: "Xbox"),
+        onResume = onDismiss,
+        initialFocus = initialFocus,
+        onQuit = {
+            c.streamControls.disconnect()
+            onDismiss()
         },
     )
 }

@@ -335,7 +335,7 @@ object FilterEngine {
         GroupBy.GENRE -> values(entry, FilterField.GENRE)
         GroupBy.CATEGORY -> values(entry, FilterField.CATEGORY)
         GroupBy.SOURCE -> values(entry, FilterField.SOURCE)
-        GroupBy.HOST -> entry.remoteTargets.mapNotNull { it.hostUuid }.distinct()
+        GroupBy.HOST -> entry.streamTargets.mapNotNull { it.hostUuid }.distinct()
         GroupBy.LIBRARY -> values(entry, FilterField.LIBRARY)
         GroupBy.DEVELOPER -> values(entry, FilterField.DEVELOPER)
         GroupBy.PUBLISHER -> values(entry, FilterField.PUBLISHER)
@@ -355,7 +355,7 @@ object FilterEngine {
             FilterField.SOURCE -> buildList {
                 if (entry.localTarget != null) add(FilterRules.SOURCE_LOCAL)
                 if (entry.romTargets.isNotEmpty()) add(FilterRules.SOURCE_EMULATOR)
-                entry.remoteTargets.mapNotNull { it.hostUuid }.distinct().forEach(::add)
+                entry.streamTargets.mapNotNull { it.hostUuid }.distinct().forEach(::add)
             }
             FilterField.LIBRARY -> listOfNotNull(item.playnitePlugin?.takeIf { it.isNotBlank() })
             FilterField.DEVELOPER -> listOfNotNull(item.developer?.takeIf { it.isNotBlank() })

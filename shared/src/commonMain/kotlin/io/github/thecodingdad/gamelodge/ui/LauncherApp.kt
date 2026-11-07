@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.ui
 
+import io.github.thecodingdad.gamelodge.ui.screens.settings.asHostState
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.ui.layout.layout
 import io.github.thecodingdad.gamelodge.ui.components.BackHandler
@@ -487,7 +488,12 @@ fun LauncherApp(
                             vm, nav, hints, MainTab.SETTINGS,
                             listOf(tabCrumb(vm, nav, MainTab.SETTINGS), pageCrumb(vm, nav, Res.string.settings_hosts, SettingsPageId.HOSTS)),
                             { openQuickMenu(io.github.thecodingdad.gamelodge.ui.shell.QuickMenuTab.HOSTS) }, { openQuickMenu(io.github.thecodingdad.gamelodge.ui.shell.QuickMenuTab.CONTROLLERS) },
-                        ) { hosts[uuid]?.let { HostConfigScreen(it, openHaSettings = { nav.navigate(Routes.settings(SettingsPageId.HOME_ASSISTANT)) }) } }
+                        ) {
+                            val consoles by io.github.thecodingdad.gamelodge.LocalContainer.current.xbox.hosts.collectAsState()
+                            val host = hosts[uuid] ?: io.github.thecodingdad.gamelodge.xbox.XboxRepository.consoleId(uuid)?.let { id ->
+                                consoles[id]?.asHostState()
+                            }
+                            host?.let { HostConfigScreen(it, openHaSettings = { nav.navigate(Routes.settings(SettingsPageId.HOME_ASSISTANT)) }) } }
                     }
                     composable(Routes.WIZARD) { backStack ->
                         val manual = backStack.arguments?.read { getStringOrNull("manual") } == "true"

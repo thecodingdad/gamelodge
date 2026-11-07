@@ -84,6 +84,18 @@
             android:noHistory="true"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboard|keyboardHidden|navigation|uiMode" />
 
+        <!-- Xbox home streams (like Artemis' stream window: leaving it ends the stream, the game keeps running). -->
+        <activity
+            android:name=".stream.XboxStreamActivity"
+            android:exported="false"
+            android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen"
+            android:launchMode="singleTask"
+            android:noHistory="true"
+            android:excludeFromRecents="true"
+            android:resizeableActivity="true"
+            android:preferMinimalPostProcessing="true"
+            android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize|layoutDirection" />
+
         <!-- Launcher mode: enabled at runtime from Settings -> Launcher mode. -->
         <activity-alias
             android:name=".HomeAlias"

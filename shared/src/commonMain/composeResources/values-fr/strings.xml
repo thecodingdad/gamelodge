@@ -1161,7 +1161,7 @@
     <string name="search_kw_usage">temps de jeu, statistiques, accès à l'usage</string>
     <string name="search_kw_game_sources">Steam, Epic, GOG, Xbox, EA, Ubisoft, Battle.net, Amazon, boutique, Playnite, jeux personnels, scan</string>
     <string name="search_kw_emulators">ROMs, RetroArch, console, Dolphin, Cemu, Eden, Xenia</string>
-    <string name="search_kw_hosts">PC, Sunshine, Apollo, Vibepollo, appairer, appairage, Wake-on-LAN, WoL, réveil, Moonlight</string>
+    <string name="search_kw_hosts">PC, Sunshine, Apollo, Vibepollo, appairer, appairage, Wake-on-LAN, WoL, réveil, Moonlight, Xbox, Microsoft, Game Pass</string>
     <string name="search_kw_profiles">résolution, débit, FPS, images/s, HDR, qualité, Moonlight, stream</string>
     <string name="search_kw_vpn">WireGuard, en déplacement, tunnel, à distance</string>
     <string name="search_kw_streaming_host">Vibepollo, Apollo, Sunshine, synchronisation, jeton d'API, Moonlight</string>
@@ -1668,4 +1668,26 @@
     <string name="error_xbox_signed_out">Reconnectez-vous à votre compte Xbox (Streaming → Hôtes).</string>
     <string name="error_xbox_unreachable">La console n'est pas connectée à Xbox Live. Vérifiez qu'elle est allumée, en ligne et que les fonctionnalités à distance sont activées.</string>
     <string name="error_xbox_busy">Un autre appareil diffuse depuis la console.</string>
+    <string name="xbox_section">Consoles Xbox</string>
+    <string name="xbox_intro">Streamez les jeux installés sur votre Xbox : GameLodge réveille la console, lance le jeu et ouvre le stream. Connectez-vous avec le compte Microsoft de la console.</string>
+    <string name="xbox_add">Ajouter une console Xbox</string>
+    <string name="xbox_sign_out">Se déconnecter de Xbox</string>
+    <string name="xbox_signed_in_as">Connecté en tant que %1$s</string>
+    <string name="xbox_sign_in_title">Se connecter à Xbox</string>
+    <string name="xbox_sign_in_steps">Scannez le code avec votre téléphone ou ouvrez %1$s sur n'importe quel appareil et saisissez ce code :</string>
+    <string name="xbox_sign_in_waiting">En attente de la connexion …</string>
+    <string name="xbox_sign_in_failed">La connexion n'a pas abouti. Réessayez.</string>
+    <string name="xbox_no_consoles">Aucune autre console trouvée sur ce compte. Activez les fonctionnalités à distance sur la console (Paramètres → Appareils et connexions → Fonctionnalités à distance).</string>
+    <string name="xbox_pick_title">Choisir une console</string>
+    <string name="xbox_pick_text">Ces consoles appartiennent à votre compte :</string>
+    <string name="xbox_streaming_off">Le streaming est désactivé sur cette console (Paramètres → Appareils et connexions → Fonctionnalités à distance).</string>
+    <string name="xbox_status_standby">Veille</string>
+    <string name="xbox_missing">n'est plus dans le compte</string>
+    <string name="xbox_turn_off">Éteindre</string>
+    <string name="xbox_unlicensed">Jeux sans licence</string>
+    <string name="xbox_unlicensed_sub">Jeux installés jouables uniquement avec le Game Pass ou EA Play.</string>
+    <string name="xbox_unlicensed_hide">Masquer</string>
+    <string name="xbox_unlicensed_dim">Grisés</string>
+    <string name="xbox_wake_hint">En veille, GameLodge réveille la console via Xbox Live. En mode économie d'énergie, seule une action Home Assistant le peut (p. ex. HDMI-CEC du téléviseur).</string>
+    <string name="xbox_auto_sleep_sub">Éteint la console (veille) ce délai après le dernier stream ; si une action Home Assistant de veille ou d'arrêt est définie, elle est utilisée.</string>
 </resources>

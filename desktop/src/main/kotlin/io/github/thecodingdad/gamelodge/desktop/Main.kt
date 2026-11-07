@@ -326,7 +326,7 @@ fun main(args: Array<String>) {
     // Streaming hosts are polled while the window is shown (not while the screensaver shows).
     container.scope.launch {
         kotlinx.coroutines.flow.combine(windowVisible, io.github.thecodingdad.gamelodge.ui.shell.ScreensaverControl.active) { visible, idle -> visible && !idle }
-            .collect { if (it) container.hosts.startPolling() else container.hosts.stopPolling() }
+            .collect { if (it) { container.hosts.startPolling(); container.xbox.startPolling() } else { container.hosts.stopPolling(); container.xbox.stopPolling() } }
     }
     container.scope.launch { container.filters.ensureDefaults() }
     FilePickers.window = { mainWindow }

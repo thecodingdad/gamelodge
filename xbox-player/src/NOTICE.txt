@@ -1,0 +1,8 @@
+GameLodge Xbox player – third-party components bundled in player.js
+
+xstreaming-player 0.3.4 – MIT License – Copyright (c) Geocld – https://github.com/Geocld/XStreaming-player
+  (based on xbox-xcloud-player by UnknownSKL, MIT License)
+three.js – MIT License – Copyright 2010-2023 Three.js Authors – https://threejs.org
+events 3.3.0 – MIT License – Copyright Joyent, Inc. and other Node contributors
+
+Xbox is a trademark of Microsoft. GameLodge is not affiliated with Microsoft.

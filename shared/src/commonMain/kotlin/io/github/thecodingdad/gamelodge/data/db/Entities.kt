@@ -292,6 +292,9 @@ data class LibraryEntry(
 
     val xboxTargets: List<LaunchTargetEntity> get() = targets.filter { it.type == TargetType.XBOX }
 
+    /** Streamed from a PC host or an Xbox console. */
+    val streamTargets: List<LaunchTargetEntity> get() = targets.filter { it.type == TargetType.REMOTE || it.type == TargetType.XBOX }
+
     /** Every way to play it needs a subscription (Xbox games without a license of their own). */
     val needsSubscription: Boolean get() = targets.isNotEmpty() && targets.all { it.type == TargetType.XBOX && it.subscription }
 }

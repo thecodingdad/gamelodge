@@ -83,10 +83,13 @@ fun HostConfigScreen(host: HostState, openHaSettings: () -> Unit) {
         scope.launch { c.hostPower.save(new) }
     }
 
+    val isXbox = io.github.thecodingdad.gamelodge.xbox.XboxRepository.consoleId(host.uuid) != null
     SettingsPage(host.name) {
         MissingPermissionsNote(host)
         SectionHeader(stringResource(Res.string.host_wake_section))
-        ChoiceRow(
+        // Consoles wake through Xbox Live (standby) and the Home Assistant action below, if set.
+        if (isXbox) Text(stringResource(Res.string.xbox_wake_hint), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+        if (!isXbox) ChoiceRow(
             stringResource(Res.string.host_wake_method), WakeMethod.entries, cfg.wakeMethod,
             label = {
                 stringResource(
@@ -102,7 +105,7 @@ fun HostConfigScreen(host: HostState, openHaSettings: () -> Unit) {
             subtitle = stringResource(Res.string.host_wake_method_sub),
             initialFocus = true,
         )
-        if (cfg.wakeMethod != WakeMethod.NONE) {
+        if (isXbox || cfg.wakeMethod != WakeMethod.NONE) {
             val waits = listOf(60, 120, 180, 300, 600)
             ChoiceRow(
                 stringResource(Res.string.host_wake_timeout_setting), (waits + cfg.wakeTimeoutSeconds).distinct().sorted(), cfg.wakeTimeoutSeconds,
@@ -114,7 +117,7 @@ fun HostConfigScreen(host: HostState, openHaSettings: () -> Unit) {
 
         // Only where the launcher has VPN tunnels of its own (Android).
         val tunnels by c.vpn.tunnels.collectAsState()
-        if (tunnels.isNotEmpty()) {
+        if (tunnels.isNotEmpty() && !isXbox) {
             SectionHeader(stringResource(Res.string.settings_vpn))
             val auto = c.vpn.autoTunnelFor(host.uuid)
             ChoiceRow(
@@ -160,9 +163,9 @@ fun HostConfigScreen(host: HostState, openHaSettings: () -> Unit) {
             stringResource(Res.string.host_auto_sleep), listOf<Int?>(null, 5, 10, 15, 30, 60), cfg.autoSleepMinutes,
             label = { it?.let { m -> stringResource(Res.string.minutes_short, m) } ?: stringResource(Res.string.off) },
             onSelect = { save(cfg.copy(autoSleepMinutes = it)) },
-            subtitle = stringResource(Res.string.host_auto_sleep_sub),
+            subtitle = stringResource(if (isXbox) Res.string.xbox_auto_sleep_sub else Res.string.host_auto_sleep_sub),
         )
-        CompanionSection(host)
+        if (!isXbox) CompanionSection(host)
         SeeAlso(
             SeeAlsoLink(stringResource(Res.string.settings_profiles), SettingsTarget.Page(SettingsPageId.PROFILES)),
             SeeAlsoLink(stringResource(Res.string.settings_home_assistant), SettingsTarget.Page(SettingsPageId.HOME_ASSISTANT)),

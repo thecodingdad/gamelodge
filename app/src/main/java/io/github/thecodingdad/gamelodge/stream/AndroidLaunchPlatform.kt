@@ -51,6 +51,11 @@ class AndroidLaunchPlatform(private val container: AppContainer) : LaunchPlatfor
 
     override suspend fun measureNetwork(host: HostState) = NetworkCheck.measure(container.hosts, host)
 
+    override suspend fun startXboxStream(entry: LibraryEntry, target: LaunchTargetEntity, stream: io.github.thecodingdad.gamelodge.xbox.XboxStreamController) {
+        io.github.thecodingdad.gamelodge.input.StarterPad.capture(true)
+        XboxStreamActivity.start(activity())
+    }
+
     override suspend fun startStream(entry: LibraryEntry, target: LaunchTargetEntity, host: HostState) {
         val activity = activity()
         val details = container.hosts.details(host.uuid) ?: error("Host ${host.name} unknown")

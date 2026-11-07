@@ -541,7 +541,7 @@ private fun conditionValueLabel(
     return { field, value ->
         when (field) {
             FilterField.SOURCE -> if (value == FilterRules.SOURCE_LOCAL) localLabel else if (value == FilterRules.SOURCE_EMULATOR) emulatorLabel else hostNames[value]
-                ?: entries.firstNotNullOfOrNull { e -> e.remoteTargets.firstOrNull { t -> t.hostUuid == value }?.hostName } ?: value
+                ?: entries.firstNotNullOfOrNull { e -> e.streamTargets.firstOrNull { t -> t.hostUuid == value }?.hostName } ?: value
             FilterField.GROUP -> groupNames[value] ?: value
             FilterField.PLATFORM -> io.github.thecodingdad.gamelodge.data.library.PlatformResolver.displayName(value)
             else -> if (field.type == FieldType.BUCKET) bucketLabels[field to value] ?: value else value

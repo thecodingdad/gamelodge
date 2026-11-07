@@ -163,6 +163,7 @@ fun HostsSettings(hosts: List<HostState>, openHostConfig: (HostState) -> Unit) {
         message?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted) }
         Text(stringResource(Res.string.hosts_discovery_hint), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
         PcVersionHint()
+        XboxHostsSection(openHostConfig)
         SeeAlso(
             SeeAlsoLink(stringResource(Res.string.settings_profiles), SettingsTarget.Page(SettingsPageId.PROFILES)),
             SeeAlsoLink(stringResource(Res.string.ha_host_actions), SettingsTarget.Page(SettingsPageId.HOME_ASSISTANT), highlight = stringResource(Res.string.ha_host_actions), subtitle = stringResource(Res.string.settings_home_assistant)),

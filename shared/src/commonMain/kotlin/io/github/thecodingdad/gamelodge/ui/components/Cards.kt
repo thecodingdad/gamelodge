@@ -105,7 +105,8 @@ fun CoverCard(
             // A placeholder names the game only while no title shows elsewhere.
             TileImage(entry, format, Modifier.fillMaxSize(), animated = play, showTitleOnPlaceholder = layout.title == TileTitle.OFF)
             // Owned but not installed on the host: dimmed, playing it starts the installation.
-            if (entry.notInstalled && style.dimNotInstalled) Box(Modifier.fillMaxSize().background(Color(0x99000000)))
+            // Xbox games only playable with a subscription (shown at all only when set to dimmed).
+            if ((entry.notInstalled && style.dimNotInstalled) || entry.needsSubscription) Box(Modifier.fillMaxSize().background(Color(0x99000000)))
             TileOverlay(entry, layout)
             RunningMark(entry, layout.corners.shape)
         }
@@ -298,7 +299,7 @@ fun SourceBadges(entry: LibraryEntry, modifier: Modifier = Modifier, badges: Set
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         if (TileBadge.LOCAL in badges && entry.localTarget != null) Badge(io.github.thecodingdad.gamelodge.ui.PlatformUi.current.localIcon)
         if (TileBadge.ROM in badges && entry.romTargets.isNotEmpty()) Badge(Icons.Filled.SportsEsports)
-        if (TileBadge.HOST in badges && entry.remoteTargets.isNotEmpty()) Badge(Icons.Filled.Cloud)
+        if (TileBadge.HOST in badges && entry.streamTargets.isNotEmpty()) Badge(Icons.Filled.Cloud)
         if (TileBadge.NOT_INSTALLED in badges && entry.notInstalled) Badge(Icons.Filled.Download)
     }
 }
