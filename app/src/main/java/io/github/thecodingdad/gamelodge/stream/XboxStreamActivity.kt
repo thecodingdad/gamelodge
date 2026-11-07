@@ -78,7 +78,7 @@ class XboxStreamActivity : Activity() {
                 down = KeyEvent.KEYCODE_DPAD_DOWN in buttons || hatY > 0.5f,
                 left = KeyEvent.KEYCODE_DPAD_LEFT in buttons || hatX < -0.5f,
                 right = KeyEvent.KEYCODE_DPAD_RIGHT in buttons || hatX > 0.5f,
-                lx = lx, ly = -ly, rx = rx, ry = -ry,
+                lx = lx, ly = ly, rx = rx, ry = ry,
                 lt = maxOf(lt, if (KeyEvent.KEYCODE_BUTTON_L2 in buttons) 1f else 0f),
                 rt = maxOf(rt, if (KeyEvent.KEYCODE_BUTTON_R2 in buttons) 1f else 0f),
             )

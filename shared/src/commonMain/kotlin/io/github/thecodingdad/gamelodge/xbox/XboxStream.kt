@@ -17,7 +17,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
 
-/** One controller's state in the player's terms (buttons 0/1, sticks -1..1 with up positive, triggers 0..1). */
+/** One controller's state in the player's terms (buttons 0/1, sticks -1..1 with down positive as Android, SDL and browsers report them, triggers 0..1). */
 data class XboxPadState(
     val index: Int,
     val a: Boolean = false, val b: Boolean = false, val x: Boolean = false, val y: Boolean = false,

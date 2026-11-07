@@ -76,7 +76,8 @@ fun rememberRunningItems(sessions: List<RunningSession>): RunningItems {
     val c = io.github.thecodingdad.gamelodge.LocalContainer.current
     val local by LocalSessions.running.collectAsState()
     val keys by Quitting.keys.collectAsState()
-    return remember(sessions, local, keys) {
+    val xbox = io.github.thecodingdad.gamelodge.xbox.rememberXboxRunning()
+    return remember(sessions, local, keys, xbox) {
         val quits = HashMap<String, () -> Unit>()
         val quitting = HashSet<String>()
         sessions.forEach { s ->
@@ -96,8 +97,26 @@ fun rememberRunningItems(sessions: List<RunningSession>): RunningItems {
             }
             if (key in keys) quitting += id
         }
+        xbox.forEach { g ->
+            val id = g.entry?.item?.id ?: return@forEach
+            val key = "xbox:${g.consoleId}"
+            quits[id] = {
+                Quitting.start(
+                    c.scope, key, g.entry.item.title,
+                    quit = { quitXbox(c, g) },
+                    running = { c.xbox.running.value[g.consoleId] == g.titleId },
+                )
+            }
+            if (key in keys) quitting += id
+        }
         RunningItems(quits, quitting)
     }
+}
+
+/** Quits a game on an Xbox console: our stream of it ends, the game on the console too. */
+suspend fun quitXbox(c: io.github.thecodingdad.gamelodge.LauncherContainer, game: io.github.thecodingdad.gamelodge.xbox.XboxRunningGame) {
+    if (game.streamed) c.streamControls.disconnect()
+    c.xbox.quitGame(game.consoleId, game.target?.appUuid)
 }
 
 /** The tile being held to quit (Y) and how far: the tile shows it. */

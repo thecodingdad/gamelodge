@@ -165,6 +165,15 @@ class XboxClient(
         buildJsonArray { add(buildJsonObject { put("oneStoreProductId", productId) }) },
     )
 
+    /** Ends a running game ([aumid] from [installedApps]). */
+    suspend fun terminate(consoleId: String, aumid: String) = command(
+        consoleId, "Shell", "TerminateApplication",
+        buildJsonArray { add(buildJsonObject { put("aumid", aumid) }) },
+    )
+
+    /** Back to the console's home screen (the game keeps running in the background). */
+    suspend fun goHome(consoleId: String) = command(consoleId, "Shell", "GoHome")
+
     /** Title id of the game in front on the account's console (Xbox Live presence), null when none. */
     suspend fun activeTitle(): Long? {
         val o = call("GET", "${endpoints.presence}/users/me?level=all", mapOf(

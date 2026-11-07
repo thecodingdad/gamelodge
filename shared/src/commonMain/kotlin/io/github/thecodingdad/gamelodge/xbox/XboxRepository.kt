@@ -61,6 +61,15 @@ class XboxRepository(
     /** Added consoles by console id. */
     val hosts: StateFlow<Map<String, XboxHost>> = _hosts.asStateFlow()
 
+    private val _running = MutableStateFlow<Map<String, Long>>(emptyMap())
+    /** Title id of the game running on a console (console id), from the account's presence. */
+    val running: StateFlow<Map<String, Long>> = _running.asStateFlow()
+
+    /** The game [titleId] runs on [consoleId] now (started here), before the presence says so. */
+    fun markRunning(consoleId: String, titleId: Long?) {
+        _running.value = if (titleId == null) _running.value - consoleId else _running.value + (consoleId to titleId)
+    }
+
     /** Owned products (license of their own) with the time they were looked up. */
     private val owned = HashMap<String, Pair<Boolean, Long>>()
     private val gamesMutex = Mutex()
@@ -135,6 +144,10 @@ class XboxRepository(
         _hosts.value = _hosts.value.mapValues { (id, host) ->
             byId[id]?.let { XboxHost(it) } ?: host.copy(missing = true, console = host.console.copy(power = XboxPower.UNKNOWN))
         }
+        // The account's presence names the game in front: it runs on the console that is on.
+        val on = _hosts.value.values.filter { !it.missing && it.console.power == XboxPower.ON }
+        val title = if (on.isEmpty()) null else activeTitle()
+        _running.value = on.firstOrNull()?.takeIf { title != null }?.let { mapOf(it.console.id to title!!) } ?: emptyMap()
         _hosts.value.values.filter { !it.missing && it.console.power == XboxPower.ON }.forEach { host ->
             if (clock() - (lastGamesSync[host.console.id] ?: 0) > GAMES_INTERVAL_MS) {
                 scope.launch { runCatching { syncGames(host.console.id) }.onFailure { Log.w("Xbox games: ${it.message}") } }
@@ -169,6 +182,15 @@ class XboxRepository(
 
     suspend fun launch(consoleId: String, productId: String): Boolean =
         runCatching { client.launch(consoleId, productId) }.onFailure(::onAuthError).getOrDefault(false)
+
+    /**
+     * Ends the game [productId] on the console (quit from the quick menu); without its app id the
+     * console goes back to its home screen at least.
+     */
+    suspend fun quitGame(consoleId: String, productId: String?): Boolean = runCatching {
+        val aumid = productId?.let { id -> client.installedApps(consoleId).firstOrNull { it.productId.equals(id, true) }?.aumid }
+        (if (aumid != null) client.terminate(consoleId, aumid) else client.goHome(consoleId)).also { if (it) markRunning(consoleId, null) }
+    }.onFailure(::onAuthError).getOrDefault(false)
 
     /** Title id of the game in front on the account's console, null when none (or unknown). */
     suspend fun activeTitle(): Long? = runCatching { client.activeTitle() }.getOrNull()

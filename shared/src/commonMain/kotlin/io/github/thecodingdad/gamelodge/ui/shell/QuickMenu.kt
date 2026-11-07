@@ -107,12 +107,11 @@ fun QuickMenu(
     val c = io.github.thecodingdad.gamelodge.LocalContainer.current
     val platform = io.github.thecodingdad.gamelodge.ui.PlatformUi.current
     val local by io.github.thecodingdad.gamelodge.stream.LocalSessions.running.collectAsState()
-    val activeStream by c.launcher.activeStream.collectAsState()
-    // The Xbox stream this launcher runs (its window behind the menu).
-    val xboxStream = activeStream?.takeIf { it.hostUuid.startsWith("xbox:") && io.github.thecodingdad.gamelodge.xbox.XboxStreams.current != null }
+    // Games running on Xbox consoles (also the one this launcher streams).
+    val xboxRunning = io.github.thecodingdad.gamelodge.xbox.rememberXboxRunning()
 
     SidePanel(visible = visible, onDismiss = onDismiss, width = 600.dp) {
-        val hasRunning = running.isNotEmpty() || local != null || xboxStream != null
+        val hasRunning = running.isNotEmpty() || local != null || xboxRunning.isNotEmpty()
         val tabs = remember(hasRunning) { QuickMenuTab.entries.filter {
             (it != QuickMenuTab.RUNNING || hasRunning) && (it != QuickMenuTab.SETTINGS || platform.hasQuickMenuSettings)
         } }
@@ -167,7 +166,7 @@ fun QuickMenu(
                         when (tab) {
                             QuickMenuTab.RUNNING -> {
                                 local?.let { LocalRunningCard(it, onDismiss) }
-                                xboxStream?.let { XboxRunningCard(it, initialFocus = local == null, onDismiss) }
+                                xboxRunning.forEachIndexed { i, g -> XboxRunningCard(g, initialFocus = local == null && i == 0, onDismiss) }
                                 running.forEachIndexed { i, session ->
                                     RunningCard(
                                         session, initialFocus = local == null && i == 0,
@@ -418,20 +417,35 @@ private fun LocalRunningCard(session: io.github.thecodingdad.gamelodge.stream.Lo
     )
 }
 
-/** The Xbox stream: back to it, or end it (the game keeps running on the console). */
+/**
+ * A game running on an Xbox console: resume (back to our stream, or stream it now) or quit it
+ * there (our stream ends too).
+ */
 @Composable
-private fun XboxRunningCard(stream: io.github.thecodingdad.gamelodge.stream.LaunchCoordinator.ActiveStream, initialFocus: Boolean, onDismiss: () -> Unit) {
+private fun XboxRunningCard(game: io.github.thecodingdad.gamelodge.xbox.XboxRunningGame, initialFocus: Boolean, onDismiss: () -> Unit) {
     val c = io.github.thecodingdad.gamelodge.LocalContainer.current
-    val target = stream.entry.xboxTargets.firstOrNull { it.hostUuid == stream.hostUuid }
+    val quitting by io.github.thecodingdad.gamelodge.stream.Quitting.keys.collectAsState()
+    val key = "xbox:${game.consoleId}"
+    val entry = game.entry
+    val target = game.target
     RunningCardLayout(
-        entry = stream.entry,
-        title = stream.entry.item.title,
-        where = stringResource(Res.string.qm_running_on_host, target?.hostName ?: "Xbox"),
-        onResume = onDismiss,
+        entry = entry,
+        title = entry?.item?.title ?: game.consoleName,
+        where = stringResource(Res.string.qm_running_on_host, game.consoleName),
+        onResume = when {
+            game.streamed -> onDismiss
+            entry != null && target != null -> { -> onDismiss(); c.scope.launch { c.launcher.launch(entry, target) }; Unit }
+            else -> null
+        },
         initialFocus = initialFocus,
+        quitting = key in quitting,
         onQuit = {
-            c.streamControls.disconnect()
-            onDismiss()
+            io.github.thecodingdad.gamelodge.stream.Quitting.start(
+                c.scope, key, entry?.item?.title ?: game.consoleName,
+                quit = { io.github.thecodingdad.gamelodge.ui.components.quitXbox(c, game) },
+                running = { c.xbox.running.value[game.consoleId] == game.titleId },
+            )
+            if (game.streamed) onDismiss()
         },
     )
 }

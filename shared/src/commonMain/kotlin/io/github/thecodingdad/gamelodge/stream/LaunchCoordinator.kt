@@ -388,6 +388,7 @@ class LaunchCoordinator(
             _activeStream.value = ActiveStream(entry, hostUuid, target.appId ?: 0)
             io.github.thecodingdad.gamelodge.xbox.XboxStreams.current = controller
             lastXboxEntry = entry
+            titleId?.let { xbox.markRunning(consoleId, it) }
             platform.startXboxStream(entry, target, controller)
             started(entry, target, profileName)
             _state.value = LaunchState.Idle
