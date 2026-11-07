@@ -416,12 +416,15 @@ fun LauncherApp(
                                 val detailLocal by io.github.thecodingdad.gamelodge.stream.LocalSessions.running.collectAsState()
                                 val localSession = detailLocal?.takeIf { it.entry.item.id == e.item.id }
                                 val localKey = "local:${e.item.id}"
+                                // Or running on an Xbox console.
+                                val xboxGame = io.github.thecodingdad.gamelodge.xbox.rememberXboxRunning().firstOrNull { it.entry?.item?.id == e.item.id && it.target != null }
                                 val detailQuitting by io.github.thecodingdad.gamelodge.stream.Quitting.keys.collectAsState()
                                 DetailScreen(
                                     e, sessions, settings.animatedTiles, settings.animatedHero, onFavorite = { vm.setFavorite(e, it) }, onPlatform = { platformFor = e },
-                                    running = runningSession != null || localSession != null,
+                                    running = runningSession != null || localSession != null || xboxGame != null,
                                     onResume = {
                                         localSession?.let { it.resume(); return@DetailScreen }
+                                        xboxGame?.let { io.github.thecodingdad.gamelodge.ui.components.resumeXbox(container, it); return@DetailScreen }
                                         val s = runningSession ?: return@DetailScreen
                                         e.remoteTargets.firstOrNull { it.hostUuid == s.host.uuid && it.appId == s.host.runningAppId }?.let { vm.launch(e, it) }
                                     },
@@ -433,11 +436,13 @@ fun LauncherApp(
                                             )
                                             return@DetailScreen
                                         }
+                                        xboxGame?.let { io.github.thecodingdad.gamelodge.ui.components.startXboxQuit(container, it); return@DetailScreen }
                                         val s = runningSession ?: return@DetailScreen
                                         io.github.thecodingdad.gamelodge.stream.Quitting.quitHost(container, s.host, e.item.title)
                                     },
                                     onRate = { vm.setUserRating(e, it) },
                                     quitting = if (localSession != null) localKey in detailQuitting
+                                    else if (xboxGame != null) "xbox:${xboxGame.consoleId}" in detailQuitting
                                     else runningSession?.let { io.github.thecodingdad.gamelodge.stream.Quitting.hostKey(it.host) in detailQuitting } == true,
                                     profiles = detailProfiles, activeProfile = detailActive, onProfile = vm::setActiveProfile,
                                     onEditProfiles = { nav.navigate(Routes.settings(SettingsPageId.PROFILES)) },

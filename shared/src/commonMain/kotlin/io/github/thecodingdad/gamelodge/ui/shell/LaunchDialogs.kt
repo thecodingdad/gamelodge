@@ -359,9 +359,13 @@ fun EntryContextMenu(
             val localRunning by io.github.thecodingdad.gamelodge.stream.LocalSessions.running.collectAsState()
             val local = localRunning?.takeIf { session == null && it.entry.item.id == e.item.id }
             if (local != null) LocalSessionActions(local, onResume = act { local.resume() }, onDone = onDismiss)
+            // Running on an Xbox console.
+            val xboxGame = io.github.thecodingdad.gamelodge.xbox.rememberXboxRunning()
+                .firstOrNull { session == null && local == null && it.entry?.item?.id == e.item.id && it.target != null }
+            if (xboxGame != null) XboxSessionActions(xboxGame, onDone = onDismiss)
             val isApp = e.item.kind == ItemKind.APP
             if (!inDetail) {
-                if (session == null && local == null) {
+                if (session == null && local == null && xboxGame == null) {
                     LauncherButton(
                         stringResource(
                             when {
@@ -542,6 +546,30 @@ private fun LocalSessionActions(
                 )
                 onDone()
             },
+            modifier = Modifier.fillMaxWidth(),
+            icon = Icons.Filled.StopCircle,
+        )
+    }
+    androidx.compose.foundation.layout.Spacer(Modifier.height(6.dp))
+}
+
+/** Resume and quit of a game running on an Xbox console (context menu). */
+@Composable
+private fun XboxSessionActions(game: io.github.thecodingdad.gamelodge.xbox.XboxRunningGame, onDone: () -> Unit) {
+    val c = io.github.thecodingdad.gamelodge.LocalContainer.current
+    Text(stringResource(Res.string.qm_running_on_host, game.consoleName), style = MaterialTheme.typography.labelLarge, color = LauncherTheme.colors.accent)
+    val quitting by io.github.thecodingdad.gamelodge.stream.Quitting.keys.collectAsState()
+    val busy = "xbox:${game.consoleId}" in quitting
+    LauncherButton(
+        stringResource(Res.string.qm_resume), { onDone(); io.github.thecodingdad.gamelodge.ui.components.resumeXbox(c, game) },
+        Modifier.fillMaxWidth(), Icons.Filled.PlayArrow, primary = true, enabled = !busy,
+    )
+    if (busy) {
+        LauncherButton(stringResource(Res.string.qm_quitting), {}, Modifier.fillMaxWidth(), busy = true)
+    } else {
+        HoldToConfirmButton(
+            stringResource(Res.string.qm_quit_game),
+            onConfirmed = { io.github.thecodingdad.gamelodge.ui.components.startXboxQuit(c, game); onDone() },
             modifier = Modifier.fillMaxWidth(),
             icon = Icons.Filled.StopCircle,
         )

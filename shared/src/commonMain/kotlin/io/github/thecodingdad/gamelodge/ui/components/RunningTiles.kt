@@ -113,6 +113,22 @@ fun rememberRunningItems(sessions: List<RunningSession>): RunningItems {
     }
 }
 
+/** Starts quitting [game] (its key shows the progress until the console no longer runs it). */
+fun startXboxQuit(c: io.github.thecodingdad.gamelodge.LauncherContainer, game: io.github.thecodingdad.gamelodge.xbox.XboxRunningGame) {
+    Quitting.start(
+        c.scope, "xbox:${game.consoleId}", game.entry?.item?.title ?: game.consoleName,
+        quit = { quitXbox(c, game) },
+        running = { c.xbox.running.value[game.consoleId] == game.titleId },
+    )
+}
+
+/** Resumes [game]: streams it (again), or back to the stream window that still runs. */
+fun resumeXbox(c: io.github.thecodingdad.gamelodge.LauncherContainer, game: io.github.thecodingdad.gamelodge.xbox.XboxRunningGame) {
+    val entry = game.entry ?: return
+    val target = game.target ?: return
+    c.scope.launch { c.launcher.launch(entry, target) }
+}
+
 /** Quits a game on an Xbox console: our stream of it ends, the game on the console too. */
 suspend fun quitXbox(c: io.github.thecodingdad.gamelodge.LauncherContainer, game: io.github.thecodingdad.gamelodge.xbox.XboxRunningGame) {
     if (game.streamed) c.streamControls.disconnect()
