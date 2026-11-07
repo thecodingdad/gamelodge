@@ -33,7 +33,31 @@ window.ReactNativeWebView = {
   },
 };
 
+// The video stays hidden (no browser placeholder) until its first frame is there; GameLodge shows
+// its own start screen until then.
+const NO_POSTER = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=';
+let shown = false;
+function watchVideo() {
+  const holder = document.getElementById('videoHolder');
+  const hook = (video) => {
+    if (video.dataset.gl) return;
+    video.dataset.gl = '1';
+    video.poster = NO_POSTER;
+    const live = () => {
+      if (shown) return;
+      shown = true;
+      video.style.visibility = 'visible';
+      post({ t: 'video' });
+    };
+    if (video.requestVideoFrameCallback) video.requestVideoFrameCallback(() => live());
+    video.addEventListener('playing', () => setTimeout(live, 150));
+  };
+  new MutationObserver(() => holder.querySelectorAll('video').forEach(hook)).observe(holder, { childList: true, subtree: true });
+  holder.querySelectorAll('video').forEach(hook);
+}
+
 function start(config) {
+  watchVideo();
   player = new xStreamingPlayer('videoHolder', {
     input_touch: false,
     ui_touchenabled: false,

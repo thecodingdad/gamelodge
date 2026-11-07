@@ -2,6 +2,9 @@ package io.github.thecodingdad.gamelodge.stream
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import io.github.thecodingdad.gamelodge.resources.*
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
@@ -45,11 +48,11 @@ import org.json.JSONObject
  * Guide and the launcher's button combinations work as in PC streams (Guide: back to GameLodge,
  * hold Start: quick menu); View + Menu together press the Xbox button on the console.
  */
-class XboxStreamActivity : Activity() {
+class XboxStreamActivity : androidx.activity.ComponentActivity() {
     private val main = Handler(Looper.getMainLooper())
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private lateinit var web: WebView
-    private lateinit var progress: ProgressBar
+    private lateinit var progress: android.view.View
     private var stream: XboxStreamController? = null
     private var everConnected = false
 
@@ -109,11 +112,31 @@ class XboxStreamActivity : Activity() {
             isFocusableInTouchMode = false
             addJavascriptInterface(Bridge(), "GameLodgeBridge")
         }
-        progress = ProgressBar(this).apply { isIndeterminate = true }
+        // The launcher's start screen (artwork, step) until the stream's first frame is there.
+        val entry = container.launcher.streamingEntry
+        progress = if (entry == null) ProgressBar(this).apply { isIndeterminate = true } else androidx.compose.ui.platform.ComposeView(this).apply {
+            setContent {
+                io.github.thecodingdad.gamelodge.util.ActivityLocale {
+                    val settings by container.settings.settings.collectAsState(io.github.thecodingdad.gamelodge.data.settings.LauncherSettings())
+                    io.github.thecodingdad.gamelodge.ui.theme.LauncherTheme(settings) {
+                        io.github.thecodingdad.gamelodge.ui.shell.StreamProgressContent(
+                            entry = entry,
+                            step = org.jetbrains.compose.resources.stringResource(Res.string.step_connecting_stream),
+                            detail = null,
+                            timerKey = Unit,
+                            showTimer = true,
+                            onCancel = { finish() },
+                        )
+                    }
+                }
+            }
+        }
         val root = FrameLayout(this).apply {
             setBackgroundColor(Color.BLACK)
             addView(web, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
-            addView(progress, FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT, android.view.Gravity.CENTER))
+            val full = progress !is ProgressBar
+            addView(progress, if (full) FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
+            else FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT, android.view.Gravity.CENTER))
         }
         setContentView(root)
         hideSystemBars()
@@ -123,10 +146,7 @@ class XboxStreamActivity : Activity() {
         scope.launch {
             controller.state.collect { state ->
                 when (state) {
-                    XboxStreamState.Connected -> {
-                        everConnected = true
-                        progress.visibility = View.GONE
-                    }
+                    XboxStreamState.Connected -> everConnected = true
                     is XboxStreamState.Failed -> {
                         if (!everConnected) container.launcher.reportFailure(LaunchError.START_FAILED, state.message)
                         finish()
@@ -136,6 +156,7 @@ class XboxStreamActivity : Activity() {
                 }
             }
         }
+        scope.launch { controller.live.collect { if (it) progress.visibility = View.GONE } }
         web.loadUrl("file:///android_asset/xbox-player/index.html")
     }
 
@@ -185,6 +206,11 @@ class XboxStreamActivity : Activity() {
         }
         // GameLodge's combinations first (Guide: back to GameLodge, hold Start: quick menu).
         if (io.github.thecodingdad.gamelodge.input.ButtonCombos.handle(event) { action, controller -> AndroidCombos.run(this, action, controller) }) return true
+        // While the start screen shows, B cancels the start (as on the launcher's start screen).
+        if (progress.visibility == View.VISIBLE) {
+            if (event.keyCode == KeyEvent.KEYCODE_BUTTON_B && event.action == KeyEvent.ACTION_UP) finish()
+            return true
+        }
         if (event.keyCode == KeyEvent.KEYCODE_BUTTON_MODE) return true
         val p = pad(event.deviceId) ?: return true
         val changed = when (event.action) {

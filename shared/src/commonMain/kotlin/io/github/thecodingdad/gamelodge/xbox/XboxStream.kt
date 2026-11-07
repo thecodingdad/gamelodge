@@ -77,6 +77,10 @@ class XboxStreamController(
     private val _state = MutableStateFlow<XboxStreamState>(XboxStreamState.Connecting)
     val state: StateFlow<XboxStreamState> = _state.asStateFlow()
 
+    private val _live = MutableStateFlow(false)
+    /** The stream's first frame is on screen (the start screen can go). */
+    val live: StateFlow<Boolean> = _live.asStateFlow()
+
     /** Statistics line of the player (resolution, fps, latency …) for the performance overlay. */
     private val _stats = MutableStateFlow<Map<String, String>>(emptyMap())
     val stats: StateFlow<Map<String, String>> = _stats.asStateFlow()
@@ -125,6 +129,7 @@ class XboxStreamController(
                 o.str("weak")?.toFloatOrNull() ?: 0f,
                 o.str("durationMs")?.toFloatOrNull()?.toInt() ?: 0,
             )
+            "video" -> _live.value = true
             "stats" -> _stats.value = o.filterKeys { it != "t" }.mapValues { (_, v) -> (v as? kotlinx.serialization.json.JsonPrimitive)?.content ?: v.toString() }
             "log" -> Log.i("Xbox player: ${o.str("message")}")
         }
