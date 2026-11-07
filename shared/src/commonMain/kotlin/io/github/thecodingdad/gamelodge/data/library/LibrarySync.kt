@@ -35,11 +35,15 @@ data class SourceEntry(
     val platform: String? = null,
     /** Fallback cover: an image next to the ROM or from ES-DE's media folder (URI or path). */
     val boxArt: String? = null,
+    /** Xbox: only playable with a subscription. */
+    val subscription: Boolean = false,
 ) {
     companion object {
         fun localId(packageName: String) = "local:$packageName"
         fun remoteId(hostUuid: String, appId: Int) = "remote:$hostUuid:$appId"
         fun romId(uri: String) = "rom:$uri"
+        fun xboxHost(consoleId: String) = "xbox:$consoleId"
+        fun xboxId(consoleId: String, productId: String) = "xbox:$consoleId:$productId"
     }
 }
 
@@ -67,9 +71,13 @@ class LibrarySync(
     suspend fun syncRoms(entries: List<SourceEntry>, keepUnder: List<String> = emptyList()) =
         sync(entries) { t -> t.type == TargetType.ROM && keepUnder.none { t.romUri.orEmpty().startsWith(it) } }
 
+    /** The games of one Xbox console ([hostUuid] = `xbox:<console id>`). */
+    suspend fun syncXbox(hostUuid: String, entries: List<SourceEntry>) =
+        sync(entries) { it.type == TargetType.XBOX && it.hostUuid == hostUuid }
+
     /** Drops everything that belongs to a removed host. */
     suspend fun removeHost(hostUuid: String) = sync(emptyList()) {
-        it.type == TargetType.REMOTE && it.hostUuid == hostUuid
+        (it.type == TargetType.REMOTE || it.type == TargetType.XBOX) && it.hostUuid == hostUuid
     }
 
     private suspend fun sync(
@@ -213,7 +221,7 @@ class LibrarySync(
 
     private fun SourceEntry.toClassificationInput() = ClassificationInput(
         title = name,
-        isRemote = type == TargetType.REMOTE,
+        isRemote = type == TargetType.REMOTE || type == TargetType.XBOX,
         remoteAppUuid = appUuid,
         androidGameFlag = androidGameFlag,
         // A ROM is a game by definition.
@@ -241,5 +249,6 @@ class LibrarySync(
         romPlatform = romPlatform,
         // Chosen by the user: kept across rescans.
         emulatorKey = known?.emulatorKey,
+        subscription = subscription,
     )
 }

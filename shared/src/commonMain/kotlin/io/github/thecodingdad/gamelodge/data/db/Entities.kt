@@ -25,8 +25,12 @@ enum class MetadataState {
     LOCKED,
 }
 
-/** LOCAL: installed Android app, REMOTE: app on a streaming host, ROM: game file for an emulator. */
-enum class TargetType { LOCAL, REMOTE, ROM }
+/**
+ * LOCAL: installed Android app, REMOTE: app on a streaming host, ROM: game file for an emulator,
+ * XBOX: game installed on an Xbox console (hostUuid `xbox:<console id>`, appUuid = store product id,
+ * appId = title id as unsigned 32 bit value).
+ */
+enum class TargetType { LOCAL, REMOTE, ROM, XBOX }
 
 @Entity(
     tableName = "library_items",
@@ -192,6 +196,10 @@ data class LaunchTargetEntity(
     val romPlatform: String? = null,
     /** Emulator chosen for this game; null = the platform's default. */
     val emulatorKey: String? = null,
+    // --- added in schema v15 (Xbox) ---
+    /** Xbox: playable only with a subscription (Game Pass, EA Play), no license of its own. */
+    @androidx.room.ColumnInfo(defaultValue = "0")
+    val subscription: Boolean = false,
 )
 
 @Entity(
@@ -281,6 +289,11 @@ data class LibraryEntry(
 
     /** "Start with…" only makes sense when the game can start in more than one way (app, ROM, host). */
     val hasTargetChoice: Boolean get() = targets.count { it.type == TargetType.ROM || it.installed } > 1
+
+    val xboxTargets: List<LaunchTargetEntity> get() = targets.filter { it.type == TargetType.XBOX }
+
+    /** Every way to play it needs a subscription (Xbox games without a license of their own). */
+    val needsSubscription: Boolean get() = targets.isNotEmpty() && targets.all { it.type == TargetType.XBOX && it.subscription }
 }
 
 /** Item without its automatic metadata (fields the user edited stay), ready for a new lookup. */

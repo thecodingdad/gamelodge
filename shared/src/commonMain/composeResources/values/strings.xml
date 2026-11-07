@@ -1664,4 +1664,8 @@
     <string name="controller_deadzone_sub">Stick movements below this are ignored. The mouse emulation always uses at least 15 %.</string>
     <string name="controller_auto_attach_sub">Never: this controller joins the host only on its first button press – e.g. the built-in controls, so an external controller stays player 1.</string>
     <string name="metadata_auto_sub">Fills in missing covers and texts, e.g. of new games. Existing data stays; re-fetching everything only by hand.</string>
+    <string name="target_xbox">Stream from %1$s (Xbox)</string>
+    <string name="error_xbox_signed_out">Sign in to your Xbox account again (Streaming → Hosts).</string>
+    <string name="error_xbox_unreachable">The console isn't connected to Xbox Live. Check that it is on, online and that remote features are on.</string>
+    <string name="error_xbox_busy">Another device is streaming from the console.</string>
 </resources>

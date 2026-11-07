@@ -31,6 +31,6 @@ class StartActionSource(
                 ?.let { game -> game.actions.map { StartAction(it.id, it.name, isDefault = it.id == (game.defaultAction ?: StartAction.PLAY)) } }
                 .orEmpty()
         }
-        TargetType.ROM -> emptyList()
+        TargetType.ROM, TargetType.XBOX -> emptyList()
     }.takeIf { it.size > 1 }.orEmpty()
 }

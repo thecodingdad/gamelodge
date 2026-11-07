@@ -297,7 +297,7 @@ class MqttBridge(private val c: LauncherContainer) {
             ?.let { NowPlaying(it, it.targets.firstOrNull() ?: return@let null, it.item.lastPlayedAt!!, running = false) }
         val running = current?.running == true
         val status = when {
-            running && current!!.target.type == TargetType.REMOTE -> "streaming"
+            running && (current!!.target.type == TargetType.REMOTE || current.target.type == TargetType.XBOX) -> "streaming"
             running -> "playing"
             screensaver -> "screensaver"
             else -> "idle"
@@ -309,7 +309,7 @@ class MqttBridge(private val c: LauncherContainer) {
             put("kind", if (entry.item.kind == ItemKind.GAME) "game" else "app")
             // Only known for what this launcher started.
             if (now != null) {
-                put("source", when (current.target.type) { TargetType.LOCAL -> "local"; TargetType.ROM -> "emulator"; TargetType.REMOTE -> "host" })
+                put("source", when (current.target.type) { TargetType.LOCAL -> "local"; TargetType.ROM -> "emulator"; TargetType.REMOTE -> "host"; TargetType.XBOX -> "xbox" })
                 current.target.hostName?.let { put("host", it) }
             }
             entry.item.platform?.let { put("platform", it) }

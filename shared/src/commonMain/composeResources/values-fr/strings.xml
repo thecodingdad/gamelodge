@@ -1664,4 +1664,8 @@
     <string name="controller_deadzone_sub">Les mouvements du stick en dessous de cette valeur sont ignorés. L'émulation de souris utilise toujours au moins 15 %.</string>
     <string name="controller_auto_attach_sub">Jamais : cette manette ne rejoint l'hôte qu'à sa première pression de bouton – p. ex. les commandes intégrées, pour qu'une manette externe reste le joueur 1.</string>
     <string name="metadata_auto_sub">Complète les jaquettes et textes manquants, p. ex. des nouveaux jeux. Les données existantes restent ; tout récupérer à nouveau uniquement à la main.</string>
+    <string name="target_xbox">Streamer depuis %1$s (Xbox)</string>
+    <string name="error_xbox_signed_out">Reconnectez-vous à votre compte Xbox (Streaming → Hôtes).</string>
+    <string name="error_xbox_unreachable">La console n'est pas connectée à Xbox Live. Vérifiez qu'elle est allumée, en ligne et que les fonctionnalités à distance sont activées.</string>
+    <string name="error_xbox_busy">Un autre appareil diffuse depuis la console.</string>
 </resources>

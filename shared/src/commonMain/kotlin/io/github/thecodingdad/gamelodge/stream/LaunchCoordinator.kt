@@ -38,7 +38,7 @@ sealed interface LaunchState {
 
 enum class LaunchStep { WAKING_HOST, CONNECTING_VPN, CHECKING_NETWORK, QUITTING_RUNNING, RUNNING_ACTIONS, STARTING }
 
-enum class LaunchError { HOST_OFFLINE, WAKE_FAILED, NOT_PAIRED, NO_LAUNCH_PERMISSION, APP_NOT_INSTALLED, START_FAILED, QUIT_FAILED, NO_EMULATOR, ROM_NEEDS_PATH }
+enum class LaunchError { XBOX_SIGNED_OUT, XBOX_UNREACHABLE, XBOX_BUSY, HOST_OFFLINE, WAKE_FAILED, NOT_PAIRED, NO_LAUNCH_PERMISSION, APP_NOT_INSTALLED, START_FAILED, QUIT_FAILED, NO_EMULATOR, ROM_NEEDS_PATH }
 
 /** The VPN as a stream start uses it, filled by the VPN module (platforms without one never connect). */
 interface StreamVpn {
@@ -82,6 +82,10 @@ interface LaunchPlatform {
 
     /** Hands the stream of [target] on [host] to the streaming client; throws when that fails. */
     suspend fun startStream(entry: LibraryEntry, target: LaunchTargetEntity, host: HostState)
+
+    /** Opens the Xbox player for [stream] (session already set up); throws when that fails. */
+    suspend fun startXboxStream(entry: LibraryEntry, target: LaunchTargetEntity, stream: io.github.thecodingdad.gamelodge.xbox.XboxStreamController): Unit =
+        throw UnsupportedOperationException("No Xbox player on this platform")
 }
 
 /**
@@ -110,6 +114,9 @@ class LaunchCoordinator(
     private var profileToRestore: Pair<Boolean, UUID?> = false to null
 
     var vpn: StreamVpn = StreamVpn.None
+
+    /** Xbox consoles; null where the platform has none. */
+    var xbox: io.github.thecodingdad.gamelodge.xbox.XboxRepository? = null
 
     /** Tells a paired GameLodge on the host's PC about the stream (Guide, game window on resume). */
     var streamNotices: io.github.thecodingdad.gamelodge.data.companion.StreamNotices? = null
@@ -154,7 +161,7 @@ class LaunchCoordinator(
 
     /** Home Assistant events "gamelodge_started" / "gamelodge_stopped" for automations. */
     private fun fireEvent(name: String, np: NowPlaying, durationSeconds: Long?) {
-        val stream = np.target.type == TargetType.REMOTE
+        val stream = np.target.type == TargetType.REMOTE || np.target.type == TargetType.XBOX
         val data = mapOf(
             "title" to np.entry.item.title,
             "kind" to if (np.entry.item.kind == io.github.thecodingdad.gamelodge.data.db.ItemKind.GAME) "game" else "app",
@@ -315,6 +322,71 @@ class LaunchCoordinator(
             TargetType.LOCAL -> { runStartActions(entry); finish(entry, target, platform.launchLocal(entry, target, oneOffAction)) }
             TargetType.REMOTE -> launchRemote(entry, target, override, quitRunning, skipNetworkCheck)
             TargetType.ROM -> { runStartActions(entry); finish(entry, target, platform.launchRom(entry, target, emulatorKey)) }
+            TargetType.XBOX -> launchXbox(entry, target)
+        }
+    }
+
+    /**
+     * An Xbox game: the console is woken if needed (Xbox Live in standby, else the host's Home
+     * Assistant action), the game started on it unless it already runs, then the stream opens.
+     */
+    private suspend fun launchXbox(entry: LibraryEntry, target: LaunchTargetEntity) {
+        val xbox = xbox ?: return fail(entry, LaunchError.START_FAILED)
+        val hostUuid = target.hostUuid ?: return
+        val consoleId = io.github.thecodingdad.gamelodge.xbox.XboxRepository.consoleId(hostUuid) ?: return
+        if (!xbox.auth.isSignedIn) return fail(entry, LaunchError.XBOX_SIGNED_OUT)
+
+        if (xbox.power(consoleId) != io.github.thecodingdad.gamelodge.xbox.XboxPower.ON) {
+            _state.value = LaunchState.Working(entry, LaunchStep.WAKING_HOST)
+            if (!hostPower().wake(hostUuid)) Log.w("Xbox: no wake signal sent")
+            val timeout = hostPower().config(hostUuid).wakeTimeoutSeconds * 1000L
+            if (!xbox.waitOn(consoleId, timeout)) return fail(entry, LaunchError.HOST_OFFLINE)
+        }
+        runStartActions(entry)
+        _state.value = LaunchState.Working(entry, LaunchStep.STARTING)
+        autoSleep().cancel(hostUuid)
+
+        // The game in front on the console: started only when another (or none) runs.
+        val titleId = target.appId?.toUInt()?.toLong()
+        val productId = target.appUuid
+        if (productId != null && (titleId == null || xbox.activeTitle() != titleId)) {
+            if (!xbox.launch(consoleId, productId)) Log.w("Xbox: start of ${target.name} not confirmed")
+        }
+
+        val session = xbox.newSession(consoleId)
+        try {
+            session.start()
+        } catch (e: io.github.thecodingdad.gamelodge.xbox.XhomeException) {
+            Log.w("Xbox session: ${e.message}")
+            return fail(entry, when (e.reason) {
+                io.github.thecodingdad.gamelodge.xbox.XhomeException.Reason.CONSOLE_UNREACHABLE -> LaunchError.XBOX_UNREACHABLE
+                io.github.thecodingdad.gamelodge.xbox.XhomeException.Reason.BUSY -> LaunchError.XBOX_BUSY
+                else -> LaunchError.START_FAILED
+            }, e.message)
+        } catch (e: io.github.thecodingdad.gamelodge.xbox.XboxAuthException) {
+            return fail(entry, if (e.signedOut) LaunchError.XBOX_SIGNED_OUT else LaunchError.START_FAILED, e.message)
+        } catch (e: Exception) {
+            Log.e("Xbox session", e)
+            return fail(entry, LaunchError.START_FAILED, e.message)
+        }
+        val controller = io.github.thecodingdad.gamelodge.xbox.XboxStreamController(
+            session, scope, io.github.thecodingdad.gamelodge.xbox.XboxStreamController.Config(),
+        )
+        try {
+            val profileName = profiles.active("").name.ifEmpty { null }
+            playtime.start(entry.item.id, target.id, profileName)
+            StreamQuality.reset()
+            _activeStream.value = ActiveStream(entry, hostUuid, target.appId ?: 0)
+            io.github.thecodingdad.gamelodge.xbox.XboxStreams.current = controller
+            platform.startXboxStream(entry, target, controller)
+            started(entry, target, profileName)
+            _state.value = LaunchState.Idle
+        } catch (e: Exception) {
+            Log.e("Xbox stream start failed", e)
+            io.github.thecodingdad.gamelodge.xbox.XboxStreams.current = null
+            _activeStream.value = null
+            controller.end()
+            fail(entry, LaunchError.START_FAILED, e.message)
         }
     }
 

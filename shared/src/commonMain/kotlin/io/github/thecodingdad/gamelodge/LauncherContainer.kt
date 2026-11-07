@@ -47,6 +47,8 @@ interface LauncherContainer {
     val ha: HaRepository
     val haAuth: HaAuth
     val launcher: LaunchCoordinator
+    /** Xbox consoles and the Microsoft account behind them. */
+    val xbox: io.github.thecodingdad.gamelodge.xbox.XboxRepository
     /** Status sent to Home Assistant over MQTT (started once at launch). */
     val mqtt: io.github.thecodingdad.gamelodge.ha.mqtt.MqttBridge
 

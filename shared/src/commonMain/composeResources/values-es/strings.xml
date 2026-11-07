@@ -1664,4 +1664,8 @@
     <string name="controller_deadzone_sub">Se ignoran los movimientos del stick por debajo de este valor. La emulación de ratón usa siempre al menos un 15 %.</string>
     <string name="controller_auto_attach_sub">Nunca: este mando se conecta al host solo al pulsar su primer botón; p. ej., los controles integrados, para que un mando externo siga siendo el jugador 1.</string>
     <string name="metadata_auto_sub">Completa las portadas y textos que faltan, p. ej. de juegos nuevos. Los datos existentes se mantienen; volver a obtenerlo todo solo a mano.</string>
+    <string name="target_xbox">Transmitir desde %1$s (Xbox)</string>
+    <string name="error_xbox_signed_out">Vuelve a iniciar sesión en tu cuenta de Xbox (Streaming → Hosts).</string>
+    <string name="error_xbox_unreachable">La consola no está conectada a Xbox Live. Comprueba que esté encendida, en línea y con las funciones remotas activadas.</string>
+    <string name="error_xbox_busy">Otro dispositivo está transmitiendo desde la consola.</string>
 </resources>

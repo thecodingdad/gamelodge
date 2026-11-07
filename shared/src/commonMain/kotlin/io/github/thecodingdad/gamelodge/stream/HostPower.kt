@@ -15,6 +15,8 @@ class HostPower(
     private val hosts: HostRepository,
     private val actions: HostActions,
     private val ha: HaRepository,
+    /** Xbox consoles (`xbox:<id>` hosts) are woken and turned off through Xbox Live. */
+    private val xbox: () -> io.github.thecodingdad.gamelodge.xbox.XboxRepository? = { null },
 ) {
     suspend fun config(hostUuid: String): HostConfigEntity = configs.get(hostUuid) ?: HostConfigEntity(hostUuid)
 
@@ -24,7 +26,10 @@ class HostPower(
     suspend fun wake(hostUuid: String): Boolean {
         val config = config(hostUuid)
         var sent = false
-        if (config.wakeMethod == WakeMethod.WOL || config.wakeMethod == WakeMethod.BOTH) {
+        val console = io.github.thecodingdad.gamelodge.xbox.XboxRepository.consoleId(hostUuid)
+        // A console in standby wakes through Xbox Live (in energy saving mode only Home Assistant can, e.g. by HDMI-CEC).
+        if (console != null) sent = xbox()?.wakeUp(console) == true
+        if (console == null && (config.wakeMethod == WakeMethod.WOL || config.wakeMethod == WakeMethod.BOTH)) {
             hosts.hosts.value[hostUuid]?.let { sent = actions.wakeOnLan(it) || sent }
         }
         if (config.wakeMethod == WakeMethod.HOME_ASSISTANT || config.wakeMethod == WakeMethod.BOTH) {
@@ -47,9 +52,17 @@ class HostPower(
     }
 
     suspend fun power(hostUuid: String, action: PowerAction): Boolean {
-        val entity = haActionFor(config(hostUuid), action) ?: return false
-        return ha.runAction(entity)
+        val entity = haActionFor(config(hostUuid), action)
+        val console = io.github.thecodingdad.gamelodge.xbox.XboxRepository.consoleId(hostUuid)
+        // Consoles turn off to standby through Xbox Live when no Home Assistant action is set.
+        if (entity == null && console != null && action != PowerAction.RESTART) return xbox()?.turnOff(console) == true
+        return entity != null && ha.runAction(entity)
     }
+
+    /** The host can be put to sleep after a stream (a Home Assistant action, or a console). */
+    fun canSleep(config: HostConfigEntity): Boolean =
+        config.haSleepEntity != null || config.haShutdownEntity != null ||
+            io.github.thecodingdad.gamelodge.xbox.XboxRepository.consoleId(config.hostUuid) != null
 }
 
 /** Puts a host to sleep some minutes after the last stream ended (survives the launcher being closed). */

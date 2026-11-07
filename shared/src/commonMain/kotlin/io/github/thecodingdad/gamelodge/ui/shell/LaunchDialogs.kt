@@ -93,6 +93,7 @@ import io.github.thecodingdad.gamelodge.resources.*
 fun targetLabel(target: LaunchTargetEntity): String = when (target.type) {
     TargetType.LOCAL -> stringResource(Res.string.target_local)
     TargetType.REMOTE -> stringResource(Res.string.target_remote, target.hostName ?: "?")
+    TargetType.XBOX -> stringResource(Res.string.target_xbox, target.hostName ?: "?")
     TargetType.ROM -> {
         // The emulator the game starts with.
         val emulation = io.github.thecodingdad.gamelodge.LocalContainer.current.emulators
@@ -184,7 +185,7 @@ fun TargetPickerDialog(
                     icon = when (option.target.type) {
                         TargetType.LOCAL -> io.github.thecodingdad.gamelodge.ui.PlatformUi.current.localIcon
                         TargetType.ROM -> Icons.Filled.SportsEsports
-                        TargetType.REMOTE -> Icons.Filled.Cloud
+                        TargetType.REMOTE, TargetType.XBOX -> Icons.Filled.Cloud
                     },
                     primary = true,
                     onClick = { onLaunch(p.entry, option.target, if (showProfiles) chosenProfile else null, option.emulatorKey, option.action) },
@@ -309,6 +310,9 @@ private fun errorText(error: LaunchError) = stringResource(
         LaunchError.QUIT_FAILED -> Res.string.error_quit_failed
         LaunchError.NO_EMULATOR -> Res.string.error_no_emulator
         LaunchError.ROM_NEEDS_PATH -> Res.string.error_rom_needs_path
+        LaunchError.XBOX_SIGNED_OUT -> Res.string.error_xbox_signed_out
+        LaunchError.XBOX_UNREACHABLE -> Res.string.error_xbox_unreachable
+        LaunchError.XBOX_BUSY -> Res.string.error_xbox_busy
     },
 )
 

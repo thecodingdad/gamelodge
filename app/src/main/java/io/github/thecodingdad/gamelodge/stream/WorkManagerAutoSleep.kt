@@ -16,7 +16,7 @@ class WorkManagerAutoSleep(private val context: Context, private val configs: Ho
     override suspend fun scheduleAfterStream(hostUuid: String) {
         val config = configs.get(hostUuid) ?: return
         val minutes = config.autoSleepMinutes ?: return
-        if (config.haSleepEntity == null && config.haShutdownEntity == null) return
+        if (config.haSleepEntity == null && config.haShutdownEntity == null && !hostUuid.startsWith("xbox:")) return
         val request = OneTimeWorkRequestBuilder<AutoSleepWorker>()
             .setInitialDelay(minutes.toLong(), TimeUnit.MINUTES)
             .setInputData(workDataOf(KEY_HOST to hostUuid))
@@ -41,6 +41,7 @@ class AutoSleepWorker(context: Context, params: WorkerParameters) : CoroutineWor
         val c = applicationContext.container
         // Someone started streaming again in the meantime: leave the host alone.
         if (c.hosts.hosts.value[hostUuid]?.isStreaming == true) return Result.success()
+        if (hostUuid.startsWith("xbox:") && io.github.thecodingdad.gamelodge.xbox.XboxStreams.current != null) return Result.success()
         val config = c.hostPower.config(hostUuid)
         val action = if (config.haSleepEntity != null) PowerAction.SLEEP else PowerAction.SHUTDOWN
         return if (c.hostPower.power(hostUuid, action)) Result.success() else Result.retry()

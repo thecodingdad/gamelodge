@@ -59,7 +59,7 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
         Room.databaseBuilder<LauncherDatabase>(File(dataDir, "launcher.db").absolutePath)
             .setDriver(BundledSQLiteDriver())
             .setQueryCoroutineContext(Dispatchers.IO)
-            .addMigrations(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14)
+            .addMigrations(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15)
             .build()
     }
     override val settings: SettingsRepository by lazy {
@@ -178,8 +178,13 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
     override val companionFeed: CompanionFeed by lazy {
         CompanionFeed(dataDir, servers) { metadata.isEnabled(MetadataSources.idOf(it)) }
     }
+    /** One for all sources: it serializes their changes. */
+    private val librarySync: LibrarySync by lazy { LibrarySync(database) }
+    override val xbox: io.github.thecodingdad.gamelodge.xbox.XboxRepository by lazy {
+        io.github.thecodingdad.gamelodge.xbox.XboxRepository(http, io.github.thecodingdad.gamelodge.xbox.XboxAuth(http, secrets), database, librarySync, settings, scope)
+    }
     override val library: LibraryRepository by lazy {
-        LibraryRepository(database, LibrarySync(database), pcLibrary, hosts, scope, companionFeed, settings).also {
+        LibraryRepository(database, librarySync, pcLibrary, hosts, scope, companionFeed, settings).also {
             it.playData = io.github.thecodingdad.gamelodge.data.sync.PlayDataSync.create(database, secrets, { platform.deviceName }) { filters }
             it.keySync = keySync
             it.ownPlayDataHost = ::ownPlayDataHost
@@ -201,7 +206,7 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
         val wsHttp = http.newBuilder().pingInterval(30, TimeUnit.SECONDS).build()
         HaRepository(HaClient(wsHttp, haAuth, { haAuth.baseUrl }, scope), haAuth, database)
     }
-    override val hostPower: HostPower by lazy { HostPower(database.hostConfigDao(), hosts, hostActions, ha) }
+    override val hostPower: HostPower by lazy { HostPower(database.hostConfigDao(), hosts, hostActions, ha) { xbox } }
     override val startActions: io.github.thecodingdad.gamelodge.stream.StartActionSource by lazy {
         io.github.thecodingdad.gamelodge.stream.StartActionSource({ companionFeed }) { _, target ->
             target.packageName?.let(pcLibrary::actions).orEmpty()
@@ -242,6 +247,7 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
                 }
             },
         )).also {
+            it.xbox = xbox
             it.streamNotices = io.github.thecodingdad.gamelodge.data.companion.StreamNotices(servers, scope)
             // A stream ended: maybe a game was installed on the host; its list changes soon.
             it.afterStream = { library.checkHostChangesSoon() }
@@ -347,6 +353,14 @@ internal val MIGRATION_12_13 = object : androidx.room.migration.Migration(12, 13
 internal val MIGRATION_13_14 = object : androidx.room.migration.Migration(13, 14) {
     override fun migrate(connection: androidx.sqlite.SQLiteConnection) {
         io.github.thecodingdad.gamelodge.data.db.SchemaChanges.V13_TO_V14.forEach { sql ->
+            connection.prepare(sql).use { it.step() }
+        }
+    }
+}
+
+internal val MIGRATION_14_15 = object : androidx.room.migration.Migration(14, 15) {
+    override fun migrate(connection: androidx.sqlite.SQLiteConnection) {
+        io.github.thecodingdad.gamelodge.data.db.SchemaChanges.V14_TO_V15.forEach { sql ->
             connection.prepare(sql).use { it.step() }
         }
     }

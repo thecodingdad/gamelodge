@@ -23,7 +23,7 @@ import androidx.room.RoomDatabaseConstructor
         SyncMemberEntity::class,
         SyncStateEntity::class,
     ],
-    version = 14,
+    version = 15,
     exportSchema = true,
 )
 @ConstructedBy(LauncherDatabaseConstructor::class)
@@ -90,5 +90,10 @@ object SchemaChanges {
         "CREATE TABLE IF NOT EXISTS `sync_flags` (`hostKey` TEXT NOT NULL, `gameId` TEXT NOT NULL, `field` TEXT NOT NULL, `value` TEXT, PRIMARY KEY(`hostKey`, `gameId`, `field`))",
         "CREATE TABLE IF NOT EXISTS `sync_members` (`hostKey` TEXT NOT NULL, `collection` TEXT NOT NULL, `gameId` TEXT NOT NULL, `member` INTEGER NOT NULL, PRIMARY KEY(`hostKey`, `collection`, `gameId`))",
         "CREATE TABLE IF NOT EXISTS `sync_state` (`hostKey` TEXT NOT NULL, `syncStart` INTEGER NOT NULL, `lastSeq` INTEGER NOT NULL, PRIMARY KEY(`hostKey`))",
+    )
+
+    /** v15: Xbox games that need a subscription. */
+    val V14_TO_V15 = listOf(
+        "ALTER TABLE launch_targets ADD COLUMN subscription INTEGER NOT NULL DEFAULT 0",
     )
 }

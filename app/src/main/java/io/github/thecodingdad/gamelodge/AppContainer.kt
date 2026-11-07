@@ -44,8 +44,13 @@ class AppContainer(context: Context) : LauncherContainer {
             metadata.isEnabled(io.github.thecodingdad.gamelodge.metadata.MetadataSources.idOf(it))
         }
     }
+    /** One for all sources: it serializes their changes. */
+    private val librarySync: LibrarySync by lazy { LibrarySync(database, emulatorPackages = ::emulatorPackages) }
+    override val xbox: io.github.thecodingdad.gamelodge.xbox.XboxRepository by lazy {
+        io.github.thecodingdad.gamelodge.xbox.XboxRepository(http, io.github.thecodingdad.gamelodge.xbox.XboxAuth(http, secrets), database, librarySync, settings, scope)
+    }
     override val library: LibraryRepository by lazy {
-        LibraryRepository(database, LibrarySync(database, emulatorPackages = ::emulatorPackages), localApps, hosts, scope, companionFeed, settings).also {
+        LibraryRepository(database, librarySync, localApps, hosts, scope, companionFeed, settings).also {
             it.playData = io.github.thecodingdad.gamelodge.data.sync.PlayDataSync.create(database, secrets, { platform.deviceName }) { filters }
             it.keySync = keySync
         }
@@ -89,6 +94,7 @@ class AppContainer(context: Context) : LauncherContainer {
             io.github.thecodingdad.gamelodge.stream.AndroidLaunchPlatform(this),
         ).also {
             it.vpn = vpn
+            it.xbox = xbox
             it.gameActions.delayed = io.github.thecodingdad.gamelodge.stream.WorkManagerGameActions(appContext)
             it.streamNotices = io.github.thecodingdad.gamelodge.data.companion.StreamNotices(servers, scope)
             // A stream ended: maybe a game was installed on the host; its list changes soon.
@@ -123,7 +129,7 @@ class AppContainer(context: Context) : LauncherContainer {
         val wsHttp = http.newBuilder().pingInterval(30, TimeUnit.SECONDS).build()
         HaRepository(HaClient(wsHttp, haAuth, { haAuth.baseUrl }, scope), haAuth, database)
     }
-    override val hostPower: HostPower by lazy { HostPower(database.hostConfigDao(), hosts, hostActions, ha) }
+    override val hostPower: HostPower by lazy { HostPower(database.hostConfigDao(), hosts, hostActions, ha) { xbox } }
     val autoSleep: AutoSleep by lazy { io.github.thecodingdad.gamelodge.stream.WorkManagerAutoSleep(appContext, database.hostConfigDao()) }
     override val backup: BackupManager by lazy {
         BackupManager(database, settings, secrets, io.github.thecodingdad.gamelodge.data.backup.ArtemisStreamBackup(appContext), appContext.filesDir)

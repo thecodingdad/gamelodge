@@ -1664,4 +1664,8 @@
     <string name="controller_deadzone_sub">I movimenti dello stick al di sotto di questo valore vengono ignorati. L'emulazione del mouse usa sempre almeno il 15 %.</string>
     <string name="controller_auto_attach_sub">Mai: questo controller si collega all'host solo alla prima pressione di un tasto – ad es. i comandi integrati, così un controller esterno resta il giocatore 1.</string>
     <string name="metadata_auto_sub">Completa copertine e testi mancanti, ad es. dei nuovi giochi. I dati esistenti restano; riscaricare tutto solo a mano.</string>
+    <string name="target_xbox">Streaming da %1$s (Xbox)</string>
+    <string name="error_xbox_signed_out">Accedi di nuovo al tuo account Xbox (Streaming → Host).</string>
+    <string name="error_xbox_unreachable">La console non è connessa a Xbox Live. Controlla che sia accesa, online e con le funzionalità remote attive.</string>
+    <string name="error_xbox_busy">Un altro dispositivo sta trasmettendo dalla console.</string>
 </resources>
