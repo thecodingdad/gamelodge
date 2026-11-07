@@ -219,8 +219,10 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
 
     override val mqtt by lazy { io.github.thecodingdad.gamelodge.ha.mqtt.MqttBridge(this) }
 
+    private val xboxAutoSleep by lazy { XboxAutoSleep(scope) { hostPower } }
+
     override val launcher: LaunchCoordinator by lazy {
-        LaunchCoordinator(hosts, hostActions, { hostPower }, { NoAutoSleep }, profiles, playtime, settings, { ha }, scope, DesktopLaunches(
+        LaunchCoordinator(hosts, hostActions, { hostPower }, { xboxAutoSleep }, profiles, playtime, settings, { ha }, scope, DesktopLaunches(
             pcLibrary, playtime, scope, { launcher.ended(); onGameEnded(); scope.launch { library.syncPlayData() } }, desktopHosts,
             identity = { streamIdentity },
             streamOptions = { entry ->
@@ -237,6 +239,8 @@ class DesktopContainer(dataDir: File) : LauncherContainer {
                 profiles.activeOptions() + if (nintendo) "--swap-gamepad-buttons" else "--no-swap-gamepad-buttons"
             },
             onStartFailed = { launcher.streamStartFailed(io.github.thecodingdad.gamelodge.stream.LaunchError.START_FAILED, it) },
+            xboxPlayer = io.github.thecodingdad.gamelodge.desktop.stream.XboxPlayer(scope),
+            onXboxEnded = { uuid -> scope.launch { xboxAutoSleep.scheduleAfterStream(uuid) } },
             onStreamEnded = {
                 launcher.streamEnded()
                 launcher.restoreProfile()

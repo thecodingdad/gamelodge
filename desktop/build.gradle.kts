@@ -184,6 +184,15 @@ val windowsApp by tasks.registering(Sync::class) {
     } else {
         logger.warn("build/moonlight/MoonlightPortable-x64.zip missing: package without streaming client (tools/build-moonlight.sh)")
     }
+    // The Xbox player: its page (xbox-player/dist, committed) and the WebView2 window around it (built on
+    // Windows by tools/build-xbox-player-exe.sh).
+    into("xbox") { from(rootProject.layout.projectDirectory.dir("xbox-player/dist/xbox-player")) }
+    val xboxPlayer = rootProject.layout.projectDirectory.file("build/xbox-player/gamelodge-xbox-player.exe").asFile
+    if (xboxPlayer.exists()) {
+        into("xbox") { from(xboxPlayer) }
+    } else {
+        logger.warn("build/xbox-player/gamelodge-xbox-player.exe missing: package without Xbox player (tools/build-xbox-player-exe.sh)")
+    }
     // The native starter and the runtime under the app's name (built on Windows by
     // tools/build-windows-launcher.sh); without them the package starts with the .cmd file.
     val starter = rootProject.layout.projectDirectory.dir("build/windows-launcher").asFile

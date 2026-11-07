@@ -86,6 +86,9 @@ interface LaunchPlatform {
     /** Opens the Xbox player for [stream] (session already set up); throws when that fails. */
     suspend fun startXboxStream(entry: LibraryEntry, target: LaunchTargetEntity, stream: io.github.thecodingdad.gamelodge.xbox.XboxStreamController): Unit =
         throw UnsupportedOperationException("No Xbox player on this platform")
+
+    /** The Xbox stream still runs behind the launcher (Windows): its window comes to the front; false when gone. */
+    fun resumeXboxStream(): Boolean = false
 }
 
 /**
@@ -344,6 +347,11 @@ class LaunchCoordinator(
         val hostUuid = target.hostUuid ?: return
         val consoleId = io.github.thecodingdad.gamelodge.xbox.XboxRepository.consoleId(hostUuid) ?: return
         if (!xbox.auth.isSignedIn) return fail(entry, LaunchError.XBOX_SIGNED_OUT)
+        // Still streaming from this console (Guide brought the launcher to the front): back to that window.
+        if (_activeStream.value?.hostUuid == hostUuid && io.github.thecodingdad.gamelodge.xbox.XboxStreams.current != null && platform.resumeXboxStream()) {
+            _state.value = LaunchState.Idle
+            return
+        }
 
         if (xbox.power(consoleId) != io.github.thecodingdad.gamelodge.xbox.XboxPower.ON) {
             _state.value = LaunchState.Working(entry, LaunchStep.WAKING_HOST)

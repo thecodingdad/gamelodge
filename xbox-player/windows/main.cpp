@@ -12,6 +12,7 @@
 #include <thread>
 #include <cstdio>
 #include "WebView2.h"
+#include "WebView2EnvironmentOptions.h"
 
 #pragma comment(lib, "shcore.lib")
 

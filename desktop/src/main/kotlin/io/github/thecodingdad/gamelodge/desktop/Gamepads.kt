@@ -103,6 +103,7 @@ class Gamepads(private val dispatcher: InputDispatcher) {
         started = true
         // A short press a hold combination held back from the launcher's UI reaches it after all.
         ButtonCombos.replay = { press, _ -> if (overlay != null || window.isActive) replayToUi(press as Int) }
+        io.github.thecodingdad.gamelodge.desktop.stream.XboxPadFeed.vibrate = { slot, strength, millis -> vibrate(slot, strength, millis) }
         Thread({ loop() }, "gamepads").apply { isDaemon = true }.start()
     }
 
@@ -139,6 +140,10 @@ class Gamepads(private val dispatcher: InputDispatcher) {
                         lastList = now
                     }
                     combos(now)
+                    // An Xbox stream gets every pad, also in the background (its window has the focus).
+                    io.github.thecodingdad.gamelodge.desktop.stream.XboxPadFeed.sink?.let { sink ->
+                        sink((0 until manager.count).map { i -> manager.state(i)?.let { it to hidden[i].orEmpty().toSet() } })
+                    }
                     if (WindowsPointer.enabled && now - streamCheckedAt > 500) {
                         streamCheckedAt = now
                         val front = streamInFront()
@@ -159,7 +164,7 @@ class Gamepads(private val dispatcher: InputDispatcher) {
                 Log.w("Gamepad poll failed", e)
             }
             // In the background often enough to catch a short Guide press.
-            Thread.sleep(if (focused || WindowsPointer.enabled) 16 else 50)
+            Thread.sleep(if (io.github.thecodingdad.gamelodge.desktop.stream.XboxPadFeed.sink != null) 8 else if (focused || WindowsPointer.enabled) 16 else 50)
         }
     }
 

@@ -23,6 +23,7 @@ class DesktopStreamControls(private val hostActions: HostActions, private val ho
     }
 
     override fun disconnect() {
+        io.github.thecodingdad.gamelodge.xbox.XboxStreams.current?.let { return it.end() }
         val r = running ?: return
         Thread({
             if (!r.send("disconnect") || !r.process.waitFor(GRACE_SECONDS, TimeUnit.SECONDS)) end(r.process)

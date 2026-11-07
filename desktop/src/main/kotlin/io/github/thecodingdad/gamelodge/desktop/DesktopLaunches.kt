@@ -34,7 +34,21 @@ class DesktopLaunches(
     private val onStreamEnded: () -> Unit = {},
     /** The stream didn't get going (stage and error code): reported before [onStreamEnded], which retries it. */
     private val onStartFailed: (String) -> Unit = {},
+    private val xboxPlayer: io.github.thecodingdad.gamelodge.desktop.stream.XboxPlayer? = null,
+    /** An Xbox stream window closed (its console may go to sleep later). */
+    private val onXboxEnded: (hostUuid: String) -> Unit = {},
 ) : LaunchPlatform {
+    override suspend fun startXboxStream(entry: LibraryEntry, target: LaunchTargetEntity, stream: io.github.thecodingdad.gamelodge.xbox.XboxStreamController) {
+        val player = xboxPlayer ?: error("No Xbox player")
+        player.start(stream) {
+            target.hostUuid?.let(onXboxEnded)
+            onStreamEnded()
+            onGameEnded()
+        }
+    }
+
+    override fun resumeXboxStream(): Boolean = xboxPlayer?.focus() == true
+
     override suspend fun launchLocal(entry: LibraryEntry, target: LaunchTargetEntity, action: String?): LaunchError? {
         val game = target.packageName?.let { library.entryFor(it, action) } ?: return LaunchError.APP_NOT_INSTALLED
         if (!game.installed) {
