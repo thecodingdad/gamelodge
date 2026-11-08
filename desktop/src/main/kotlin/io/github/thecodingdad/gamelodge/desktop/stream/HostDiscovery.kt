@@ -18,6 +18,8 @@ class HostDiscovery(private val found: (address: String, port: Int) -> Unit) {
     @Synchronized
     fun start() {
         if (instances.isNotEmpty()) return
+        // Off in the tests (desktop/build.gradle.kts): they must not poll the real hosts.
+        if (System.getProperty("gamelodge.hostDiscovery") == "off") return
         // JmDNS takes a moment per interface: off the caller's thread.
         thread(isDaemon = true, name = "host-discovery") {
             val addresses = runCatching {

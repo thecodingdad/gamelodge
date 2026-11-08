@@ -213,3 +213,9 @@ val windowsZip by tasks.registering(Zip::class) {
     archiveFileName.set("GameLodge-windows.zip")
     destinationDirectory.set(rootProject.layout.projectDirectory.dir("bin"))
 }
+
+// The render tests build many launchers that show the hosts page: without this each one would
+// find the real hosts in the network by mDNS and keep polling them while the tests run.
+tasks.withType<Test>().configureEach {
+    systemProperty("gamelodge.hostDiscovery", "off")
+}
