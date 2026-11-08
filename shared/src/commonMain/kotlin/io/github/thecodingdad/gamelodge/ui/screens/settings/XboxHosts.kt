@@ -54,8 +54,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 
-/** A console as host for the screens that take one (its settings page). */
-fun XboxHost.asHostState(): HostState = HostState(
+/** A console as host for the screens that take one (its settings page, host cards, status bar). */
+fun XboxHost.asHostState(runningTitle: Long? = null): HostState = HostState(
     uuid = hostUuid,
     name = console.name,
     status = when (console.power) {
@@ -64,13 +64,24 @@ fun XboxHost.asHostState(): HostState = HostState(
         XboxPower.UNKNOWN -> HostStatus.UNKNOWN
     },
     paired = true,
-    runningAppId = 0,
+    runningAppId = runningTitle?.toInt() ?: 0,
     address = null,
     macAddress = null,
     virtualDisplaySupported = false,
     serverCommands = emptyList(),
     permission = -1,
 )
+
+/** The added consoles as hosts, a running game as their running app. */
+@Composable
+fun rememberXboxHostStates(): List<HostState> {
+    val c = io.github.thecodingdad.gamelodge.LocalContainer.current
+    val hosts by c.xbox.hosts.collectAsState()
+    val running by c.xbox.running.collectAsState()
+    return androidx.compose.runtime.remember(hosts, running) {
+        hosts.values.sortedBy { it.console.name.lowercase() }.map { it.asHostState(running[it.console.id]) }
+    }
+}
 
 private sealed interface XboxAddUi {
     data object Starting : XboxAddUi

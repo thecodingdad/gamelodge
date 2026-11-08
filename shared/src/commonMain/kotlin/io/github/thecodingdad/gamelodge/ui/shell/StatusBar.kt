@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.BatteryFull
+import androidx.compose.material.icons.filled.VideogameAsset
 import androidx.compose.material.icons.filled.Battery3Bar
 import androidx.compose.material.icons.filled.Battery1Bar
 import androidx.compose.material.icons.filled.Computer
@@ -132,7 +133,7 @@ fun StatusCluster(
         }
         // One icon per paired host; from two on a single one with their number (tap: list of all).
         // Hosts found but not paired don't show here (pairing is in the settings).
-        val paired = hosts.filter { it.paired }
+        val paired = hosts.filter { it.paired } + io.github.thecodingdad.gamelodge.ui.screens.settings.rememberXboxHostStates()
         val combined = showHostsCombined(paired)
         (if (combined) listOf(paired) else paired.map { listOf(it) }).forEach { group ->
             // Touch target for the host popup; like the other status icons not in D-pad navigation.
@@ -148,7 +149,7 @@ fun StatusCluster(
             ) {
                 // The icon itself carries the state: blue = streaming, green = online, red = offline.
                 Icon(
-                    Icons.Filled.Computer, group.singleOrNull()?.name,
+                    if (group.singleOrNull()?.uuid?.startsWith("xbox:") == true) Icons.Filled.VideogameAsset else Icons.Filled.Computer, group.singleOrNull()?.name,
                     tint = hostTint(group, HostStreamingColor, colors.success, colors.danger, colors.onSurfaceMuted),
                     modifier = Modifier.size(22.dp),
                 )

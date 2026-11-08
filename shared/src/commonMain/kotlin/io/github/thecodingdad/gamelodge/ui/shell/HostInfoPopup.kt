@@ -112,6 +112,12 @@ fun HostCard(
                             stringResource(Res.string.power_shutdown), { scope.launch { c.hostPower.power(h.uuid, PowerAction.SHUTDOWN) } },
                             icon = Icons.Filled.PowerSettingsNew,
                         )
+                    } else if (cfg.haSleepEntity == null && h.uuid.startsWith("xbox:")) {
+                        // A console turns off (standby) through Xbox Live.
+                        HoldToConfirmButton(
+                            stringResource(Res.string.xbox_turn_off), { scope.launch { c.hostPower.power(h.uuid, PowerAction.SHUTDOWN) } },
+                            Modifier.restoreFocusIf(initialFocus), Icons.Filled.PowerSettingsNew,
+                        )
                     }
                 }
             }
@@ -133,7 +139,7 @@ fun HostCard(
                     scope.launch { c.hostPower.save(updated) }
                 },
                 icon = Icons.Filled.Bedtime,
-                subtitle = stringResource(Res.string.host_auto_sleep_sub),
+                subtitle = stringResource(if (h.uuid.startsWith("xbox:")) Res.string.xbox_auto_sleep_sub else Res.string.host_auto_sleep_sub),
             )
         }
         message?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceMuted) }

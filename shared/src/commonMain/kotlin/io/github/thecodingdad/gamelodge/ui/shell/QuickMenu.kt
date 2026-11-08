@@ -237,11 +237,17 @@ private fun HostsTab(running: List<RunningSession>, openSettings: (io.github.the
     val c = io.github.thecodingdad.gamelodge.LocalContainer.current
     val all by c.hosts.hosts.collectAsState()
     val paired = remember(all) { all.values.filter { it.paired }.sortedBy { it.name.lowercase() } }
-    if (paired.isEmpty()) {
+    val consoles = io.github.thecodingdad.gamelodge.ui.screens.settings.rememberXboxHostStates()
+    val xboxGames = io.github.thecodingdad.gamelodge.xbox.rememberXboxRunning()
+    if (paired.isEmpty() && consoles.isEmpty()) {
         Text(stringResource(Res.string.hosts_none_paired), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
     }
     paired.forEachIndexed { i, host ->
         HostCard(host, running.firstOrNull { it.host.uuid == host.uuid }?.appName, openSettings, initialFocus = i == 0)
+    }
+    consoles.forEachIndexed { i, host ->
+        val game = xboxGames.firstOrNull { "xbox:${it.consoleId}" == host.uuid }
+        HostCard(host, game?.entry?.item?.title, openSettings, initialFocus = paired.isEmpty() && i == 0)
     }
 }
 
