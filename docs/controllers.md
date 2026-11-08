@@ -71,7 +71,8 @@ also reach the game.
 ## Shortcuts in other apps (Android)
 
 In GameLodge and in the stream the shortcuts work right away. For other apps – Android games, a browser, an
-emulator – switch on **System-wide (accessibility)** under **Settings → Controllers**. It opens Android's
+emulator – switch on **System-wide (accessibility)** under **Settings → Controllers** (handheld edition only,
+see [Install](getting-started.md#install)). It opens Android's
 accessibility settings:
 
 ![Accessibility services](assets/screenshots/accessibility.jpg)

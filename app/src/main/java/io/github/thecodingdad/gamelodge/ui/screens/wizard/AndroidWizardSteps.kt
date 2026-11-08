@@ -115,6 +115,8 @@ private fun ColumnScope.ShortcutsStep(settings: LauncherSettings) {
             )
         }
     }
+    // Only the handheld edition has the accessibility service for other apps.
+    if (io.github.thecodingdad.gamelodge.BuildConfig.COMBO_SERVICE) {
     SectionHeader(stringResource(Res.string.wizard_shortcuts_other_apps))
     // Only the general list could be opened: say what to look for there.
     var generalList by remember { mutableStateOf(false) }
@@ -140,6 +142,7 @@ private fun ColumnScope.ShortcutsStep(settings: LauncherSettings) {
             action = stringResource(Res.string.combo_service_app_info),
             onClick = { ComboAccessibilityService.openAppInfo(context) },
         )
+    }
     }
     val action = editing
     if (pad != null) {

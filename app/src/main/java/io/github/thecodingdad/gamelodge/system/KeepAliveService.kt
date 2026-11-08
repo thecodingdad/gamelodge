@@ -20,6 +20,8 @@ import java.util.concurrent.ConcurrentHashMap
 class KeepAliveService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
+    // The type is in the manifest; lint misses it once the app has product flavors.
+    @android.annotation.SuppressLint("ForegroundServiceType")
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val text = holds.values.lastOrNull()
         if (text == null) {

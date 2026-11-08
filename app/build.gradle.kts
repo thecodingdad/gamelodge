@@ -44,6 +44,21 @@ android {
         }
     }
 
+    // Two editions with the same app id (and data): "standard" for phones and tablets has no
+    // accessibility service, so Play Protect lets it install from a file; "handheld" (Odin and the
+    // like) declares it for button combinations in every app (src/handheld/AndroidManifest.xml).
+    flavorDimensions += "edition"
+    productFlavors {
+        create("standard") {
+            dimension = "edition"
+            buildConfigField("boolean", "COMBO_SERVICE", "false")
+        }
+        create("handheld") {
+            dimension = "edition"
+            buildConfigField("boolean", "COMBO_SERVICE", "true")
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17

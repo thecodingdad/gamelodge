@@ -7,12 +7,16 @@ Download the latest version from the
 
 === "Android"
 
-    1. Download `GameLodge-<version>.apk` on the device (or copy it there).
+    1. Download the APK for your device (or copy it there):
+        - **Handhelds** (AYN Odin 2 Portal and the like): `GameLodge-Handheld-<version>.apk`
+        - **Phones, tablets, Android TV**: `GameLodge-<version>.apk`
     2. Open it and allow installing apps from this source when Android asks.
     3. Start GameLodge – the setup wizard opens.
 
-    Android 10 or newer. GameLodge is built on the AYN Odin 2 Portal and runs on other handhelds,
-    tablets, phones and Android TV devices as well.
+    Android 10 or newer. Both are the same app with the same data; only the handheld edition has the
+    accessibility service that makes [button shortcuts work in other apps](controllers.md#shortcuts-in-other-apps-android).
+    Google Play Protect blocks apps with such a service when they are installed from a file ("App blocked
+    to protect your device") – the edition for phones and tablets leaves it out.
 
 === "Windows"
 

@@ -75,7 +75,9 @@ See the [documentation](https://thecodingdad.github.io/gamelodge/) for every fea
 
 Get the latest version from the [releases](https://github.com/thecodingdad/gamelodge/releases/latest):
 
-- **Android**: `GameLodge-<version>.apk` – Android 10 or newer (built for the AYN Odin 2 Portal, runs on other handhelds, tablets and TVs)
+- **Android** (Android 10 or newer):
+  - `GameLodge-Handheld-<version>.apk` – gaming handhelds like the AYN Odin 2 Portal: controller button combinations work in every app (accessibility service)
+  - `GameLodge-<version>.apk` – phones, tablets and TVs: the same app without the accessibility service, which Google Play Protect blocks in apps installed from a file; button combinations work in GameLodge and its streams
 - **Windows**: `GameLodge-Setup-<version>.exe` – Windows 10 or 11 (x64)
 
 The setup wizard on first start walks you through controllers, hosts, metadata keys and the rest.
@@ -87,7 +89,7 @@ Requirements: JDK 21, Android SDK 36, NDK 27.0.12077973.
 ```bash
 git clone --recurse-submodules https://github.com/thecodingdad/gamelodge.git
 cd gamelodge
-./gradlew :app:assembleRelease          # Android APK
+./gradlew :app:assembleHandheldRelease :app:assembleStandardRelease   # Android APKs
 ./gradlew :desktop:windowsZip           # Windows build (jars + runtime)
 ```
 
