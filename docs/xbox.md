@@ -59,8 +59,17 @@ console. Play time counts while you stream.
 Controllers come from GameLodge, as many as four, with rumble. Touch controls for phones without a controller
 are not there yet.
 
-!!! info "Resolution"
-    Xbox One consoles stream 720p, Xbox Series consoles up to 1080p. The console chooses the bitrate itself.
+## Stream settings
+
+Per console under **Host settings → Stream**:
+
+| Setting | |
+|---|---|
+| **Resolution** | Series consoles: *Automatic* (1080p), 720p, 1080p or *1080p HQ* (higher bitrate, needs a strong network). Xbox One consoles always stream 720p at 60 fps. |
+| **Bitrate limit** | The console picks the bitrate itself; this caps it, e.g. on mobile data |
+| **Sharpen picture** | Upscales and sharpens the stream (FSR) – the most visible help for 720p on a large screen |
+| **Picture** | Fit, stretch or zoom to the screen |
+| **Vibration** | The game's rumble on your controller |
 
 ## Wake up and sleep
 
