@@ -86,8 +86,8 @@ class DesktopHosts(
     /** Last HTTPS problem per host (logged when it changes). */
     private val httpsTrouble = java.util.concurrent.ConcurrentHashMap<String, String?>()
 
-    /** Polls in a row a host didn't answer (it goes offline only after [OFFLINE_AFTER_MISSES]). */
-    private val missed = java.util.concurrent.ConcurrentHashMap<String, Int>()
+    /** Since when a host hasn't answered (it goes offline only after [OFFLINE_AFTER_MS]). */
+    private val firstMissAt = java.util.concurrent.ConcurrentHashMap<String, Long>()
 
     /** Cover requests running now. */
     private val boxArtRunning = java.util.concurrent.atomic.AtomicInteger(0)
@@ -320,11 +320,11 @@ class DesktopHosts(
         val info = result.getOrNull()
         if (result.isSuccess && viaHttps && httpsTrouble.remove(s.uuid) != null) Log.i("Host ${s.name}: HTTPS answers again")
         if (info == null || info.uuid != s.uuid) {
-            // A host that just answered gets a second chance: one slow answer (the host busy, a
-            // timeout) must not make it blink offline. A different host at the address counts at once.
-            val misses = (missed[s.uuid] ?: 0) + 1
-            missed[s.uuid] = misses
-            if (info == null && misses < OFFLINE_AFTER_MISSES && _hosts.value[s.uuid]?.status == HostStatus.ONLINE) {
+            // A host that was online stays so until it hasn't answered for a while: a slow answer
+            // (the host busy, a timeout) or a network blip must not make it blink offline.
+            // A different host at the address counts at once.
+            val firstMiss = firstMissAt.getOrPut(s.uuid) { System.currentTimeMillis() }
+            if (info == null && System.currentTimeMillis() - firstMiss < OFFLINE_AFTER_MS && _hosts.value[s.uuid]?.status == HostStatus.ONLINE) {
                 Log.d("Host ${s.name} didn't answer (${result.exceptionOrNull()?.let { "${it::class.simpleName}: ${it.message}" }}), asking again")
                 return
             }
@@ -334,7 +334,7 @@ class DesktopHosts(
             _hosts.update { it + (s.uuid to offline(s)) }
             return
         }
-        missed.remove(s.uuid)
+        firstMissAt.remove(s.uuid)
         val paired = (info.paired || keepPaired) && s.serverCert != null
         val before = _hosts.value[s.uuid]
         // Just came online: its app list right away (otherwise every 30 s).
@@ -416,7 +416,8 @@ class DesktopHosts(
 
     companion object {
         private const val POLL_MS = 3_000L
-        private const val OFFLINE_AFTER_MISSES = 2
+        /** How long a host that was online may not answer before it shows offline. */
+        private const val OFFLINE_AFTER_MS = 15_000L
         private const val APP_LIST_MS = 30_000L
         private const val EMPTY_RETRY_MS = 5_000L
         private const val BOX_ART_QUIET_MS = 5_000L

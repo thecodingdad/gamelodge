@@ -87,6 +87,7 @@ class ArtemisHostRepository(
     /** Call when the launcher becomes visible; polling costs battery, so it stops in background. */
     override fun startPolling() {
         polling = true
+        pollingStartedAt = android.os.SystemClock.elapsedRealtime()
         binder?.let { startPollingInternal(it) }
     }
 
@@ -141,8 +142,12 @@ class ArtemisHostRepository(
      * between access points, Android switching the default network) and on a couple of missed
      * polls, even when the host never actually went away. Hold a non-online state this long before
      * showing it, so a blip that recovers never appears as offline; a real outage still shows after.
+     * Right after polling (re)starts (screen on, launcher back in front) Artemis resets every host to
+     * UNKNOWN and gives it only two tries while the Wi-Fi is often still waking: longer then.
      */
-    private val offlineGraceMs = 6000L
+    private val offlineGraceMs = 15_000L
+    private val offlineGraceAfterStartMs = 30_000L
+    @Volatile private var pollingStartedAt = 0L
     private val offlineDebounce = mutableMapOf<String, kotlinx.coroutines.Job>()
 
     private fun hostStateFrom(details: ComputerDetails): HostState {
@@ -178,11 +183,22 @@ class ArtemisHostRepository(
         if (state.status != HostStatus.ONLINE && wasOnline) {
             synchronized(offlineDebounce) {
                 if (offlineDebounce.containsKey(uuid)) return
+                val sinceStart = android.os.SystemClock.elapsedRealtime() - pollingStartedAt
+                val grace = maxOf(offlineGraceMs, offlineGraceAfterStartMs - sinceStart)
                 offlineDebounce[uuid] = scope.launch {
-                    kotlinx.coroutines.delay(offlineGraceMs)
+                    kotlinx.coroutines.delay(grace)
+                    // Not answered yet at all (UNKNOWN): wait for the poll's verdict rather than guess.
+                    var waited = 0L
+                    while (this@ArtemisHostRepository.details[uuid]?.state == ComputerDetails.State.UNKNOWN && waited < offlineGraceMs) {
+                        kotlinx.coroutines.delay(1_000)
+                        waited += 1_000
+                    }
                     synchronized(offlineDebounce) { offlineDebounce.remove(uuid) }
                     val live = this@ArtemisHostRepository.details[uuid]
-                    if (live != null && live.state != ComputerDetails.State.ONLINE) publishHost(uuid, hostStateFrom(live), live)
+                    if (live != null && live.state != ComputerDetails.State.ONLINE) {
+                        Log.i("Host ${live.name} offline after ${(grace + waited) / 1000} s without an answer")
+                        publishHost(uuid, hostStateFrom(live), live)
+                    }
                 }
             }
             return
