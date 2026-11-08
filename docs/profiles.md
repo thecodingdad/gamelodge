@@ -38,8 +38,8 @@ picture fit and vibration. Profiles from before the Xbox tab take these from **S
 
 ## During the stream
 
-**Connection warnings** show a small notice over the stream when the connection loses frames, wavers or
-lags – always, only with the performance overlay, or never.
+**Connection warnings** (per profile, PC tab) show a small notice over the stream when the connection loses
+frames, wavers or lags – always (default), only with the performance overlay, or never.
 
 ## See also
 
