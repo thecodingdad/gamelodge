@@ -272,7 +272,8 @@ private fun HostCard(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            StatusDot(
+            io.github.thecodingdad.gamelodge.ui.components.HostIcon(
+                false,
                 when {
                     host.isStreaming -> colors.accent
                     host.status == HostStatus.ONLINE -> colors.success

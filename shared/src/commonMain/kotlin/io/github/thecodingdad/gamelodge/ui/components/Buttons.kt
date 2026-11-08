@@ -1,5 +1,7 @@
 package io.github.thecodingdad.gamelodge.ui.components
 
+import androidx.compose.material.icons.filled.Monitor
+import io.github.thecodingdad.gamelodge.resources.ic_xbox
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
@@ -238,6 +240,16 @@ fun HoldToConfirmButton(
 @Composable
 fun StatusDot(color: Color, modifier: Modifier = Modifier) {
     Box(modifier.size(10.dp).clip(CircleShape).background(color))
+}
+
+/** A host's kind as an icon in its state's colour: a monitor for a PC, the Xbox logo for a console. */
+@Composable
+fun HostIcon(xbox: Boolean, color: Color, modifier: Modifier = Modifier, size: androidx.compose.ui.unit.Dp = 28.dp) {
+    androidx.compose.material3.Icon(
+        if (xbox) org.jetbrains.compose.resources.vectorResource(io.github.thecodingdad.gamelodge.resources.Res.drawable.ic_xbox)
+        else androidx.compose.material.icons.Icons.Filled.Monitor,
+        contentDescription = null, tint = color, modifier = modifier.size(size),
+    )
 }
 
 /**

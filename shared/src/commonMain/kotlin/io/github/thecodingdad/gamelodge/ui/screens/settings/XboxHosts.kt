@@ -286,7 +286,8 @@ private fun XboxCard(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            StatusDot(
+            io.github.thecodingdad.gamelodge.ui.components.HostIcon(
+                true,
                 when (power) {
                     XboxPower.ON -> colors.success
                     XboxPower.STANDBY -> colors.onSurfaceMuted

@@ -70,7 +70,7 @@ fun HostCard(
             .background(colors.surfaceRaised).padding(14.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            StatusDot(hostTint(listOf(h), HostStreamingColor, colors.success, colors.danger, colors.onSurfaceMuted))
+            io.github.thecodingdad.gamelodge.ui.components.HostIcon(h.uuid.startsWith("xbox:"), hostTint(listOf(h), HostStreamingColor, colors.success, colors.danger, colors.onSurfaceMuted), size = 24.dp)
             Column(Modifier.weight(1f)) {
                 Text(h.name, style = MaterialTheme.typography.titleMedium, color = colors.onSurface, maxLines = 1)
                 Text(

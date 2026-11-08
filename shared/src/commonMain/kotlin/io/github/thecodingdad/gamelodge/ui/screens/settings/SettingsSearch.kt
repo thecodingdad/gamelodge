@@ -165,7 +165,6 @@ private val settingsIndex: List<SearchEntry> = buildList {
         SettingsPageId.VPN, Res.string.vpn_tunnels, Res.string.vpn_default_tunnel, Res.string.vpn_auto, Res.string.vpn_on_stream,
         Res.string.vpn_only_outside, Res.string.vpn_home_networks, Res.string.vpn_disconnect_after,
     ))
-    addAll(page(SettingsPageId.HOSTS, Res.string.conn_warnings))
     addAll(page(SettingsPageId.HOME_ASSISTANT, Res.string.ha_tiles, Res.string.ha_add_tile, Res.string.ha_host_actions, Res.string.mqtt_title))
     addAll(page(SettingsPageId.HOME_SCREEN, Res.string.setting_games_direct_start))
     addAll(page(SettingsPageId.LIBRARY_VIEW, Res.string.setting_games_direct_start))

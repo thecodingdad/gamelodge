@@ -87,7 +87,8 @@ class ConnectionQualityMonitor {
 
 /**
  * The connection warning of the running stream: the streaming client reports [sample] once a
- * second, the stream window shows [warning]. [mode] follows the launcher setting ([follow]).
+ * second, the stream window shows [warning]. [mode] is the stream profile's setting, set at the
+ * stream's start ([modeOf]).
  */
 object StreamQuality {
     private val monitor = ConnectionQualityMonitor()
@@ -96,8 +97,13 @@ object StreamQuality {
 
     @Volatile var mode: ConnectionWarnings = ConnectionWarnings.ALWAYS
 
-    fun follow(settings: SettingsRepository, scope: CoroutineScope) {
-        scope.launch { settings.settings.map { it.connectionWarnings }.distinctUntilChanged().collect { mode = it } }
+    /** Key of the setting in a stream profile's values. */
+    const val PROFILE_KEY = "gamelodge_connection_warnings"
+
+    /** A profile's setting; profiles without one take the base settings' ([base]), else [ConnectionWarnings.ALWAYS]. */
+    fun modeOf(values: ProfileValues, base: ProfileValues?): ConnectionWarnings {
+        val name = values.getString(PROFILE_KEY, null) ?: base?.getString(PROFILE_KEY, null)
+        return ConnectionWarnings.entries.firstOrNull { it.name == name } ?: ConnectionWarnings.ALWAYS
     }
 
     @Synchronized

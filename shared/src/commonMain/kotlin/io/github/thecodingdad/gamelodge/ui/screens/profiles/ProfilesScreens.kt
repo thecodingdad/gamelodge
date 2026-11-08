@@ -67,7 +67,7 @@ fun ProfilesList(
 
 /**
  * The stream profiles as a group (Settings → Streaming hosts): the active one ticked, A edits,
- * X makes the focused one active; a new profile, and the connection warnings during a stream.
+ * X makes the focused one active, and a new profile.
  */
 @Composable
 fun ProfilesGroup(
@@ -112,23 +112,6 @@ fun ProfilesGroup(
     LauncherButton(
         stringResource(Res.string.profile_new), icon = Icons.Filled.Add,
         onClick = { keyboard.open(newTitle, "") { name -> if (name.isNotBlank()) openProfile(editing.create(name.trim())) } },
-    )
-    val container = io.github.thecodingdad.gamelodge.LocalContainer.current
-    val settings by container.settings.settings.collectAsState(io.github.thecodingdad.gamelodge.data.settings.LauncherSettings())
-    val scope = androidx.compose.runtime.rememberCoroutineScope()
-    io.github.thecodingdad.gamelodge.ui.screens.settings.ChoiceRow(
-        stringResource(Res.string.conn_warnings), io.github.thecodingdad.gamelodge.data.settings.ConnectionWarnings.entries, settings.connectionWarnings,
-        label = {
-            stringResource(
-                when (it) {
-                    io.github.thecodingdad.gamelodge.data.settings.ConnectionWarnings.OFF -> Res.string.conn_warnings_off
-                    io.github.thecodingdad.gamelodge.data.settings.ConnectionWarnings.PERF_OVERLAY -> Res.string.conn_warnings_perf
-                    io.github.thecodingdad.gamelodge.data.settings.ConnectionWarnings.ALWAYS -> Res.string.conn_warnings_always
-                },
-            )
-        },
-        onSelect = { mode -> scope.launch { container.settings.update { s -> s.copy(connectionWarnings = mode) } } },
-        subtitle = stringResource(Res.string.conn_warnings_sub),
     )
 }
 
@@ -180,12 +163,12 @@ fun ProfileEditor(editing: ProfileEditing, uuid: UUID?, name: String, onDeleted:
             Row(Modifier.padding(vertical = 4.dp, horizontal = 2.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 io.github.thecodingdad.gamelodge.ui.screens.library.Chip(
                     stringResource(Res.string.profile_tab_pc), selected = !xboxTab, onClick = { switchTo(false) },
-                    icon = { androidx.compose.material3.Icon(Icons.Filled.Computer, null, Modifier.padding(end = 8.dp).size(20.dp)) },
+                    icon = { io.github.thecodingdad.gamelodge.ui.components.HostIcon(false, androidx.compose.material3.LocalContentColor.current, Modifier.padding(end = 8.dp), size = 20.dp) },
                     modifier = Modifier.focusRequester(tabFocus[0]),
                 )
                 io.github.thecodingdad.gamelodge.ui.screens.library.Chip(
                     stringResource(Res.string.profile_tab_xbox), selected = xboxTab, onClick = { switchTo(true) },
-                    icon = { androidx.compose.material3.Icon(Icons.Filled.VideogameAsset, null, Modifier.padding(end = 8.dp).size(20.dp)) },
+                    icon = { io.github.thecodingdad.gamelodge.ui.components.HostIcon(true, androidx.compose.material3.LocalContentColor.current, Modifier.padding(end = 8.dp), size = 20.dp) },
                     modifier = Modifier.focusRequester(tabFocus[1]),
                 )
             }
@@ -228,6 +211,24 @@ private fun PcOptions(editing: ProfileEditing, store: ProfileValues, schema: Lis
                 }
             }
         }
+        // GameLodge's own: a notice over the stream when the connection gets bad.
+        SectionHeader(stringResource(Res.string.conn_warnings_section))
+        val base = remember(uuid) { if (uuid != null) editing.values(null) else null }
+        var warnings by remember(store) { androidx.compose.runtime.mutableStateOf(io.github.thecodingdad.gamelodge.stream.StreamQuality.modeOf(store, base)) }
+        ChoiceRow(
+            stringResource(Res.string.conn_warnings), io.github.thecodingdad.gamelodge.data.settings.ConnectionWarnings.entries, warnings,
+            label = {
+                stringResource(
+                    when (it) {
+                        io.github.thecodingdad.gamelodge.data.settings.ConnectionWarnings.OFF -> Res.string.conn_warnings_off
+                        io.github.thecodingdad.gamelodge.data.settings.ConnectionWarnings.PERF_OVERLAY -> Res.string.conn_warnings_perf
+                        io.github.thecodingdad.gamelodge.data.settings.ConnectionWarnings.ALWAYS -> Res.string.conn_warnings_always
+                    },
+                )
+            },
+            onSelect = { mode -> store.set(io.github.thecodingdad.gamelodge.stream.StreamQuality.PROFILE_KEY, mode.name); warnings = mode },
+            subtitle = stringResource(Res.string.conn_warnings_sub),
+        )
     }
 }
 

@@ -30,7 +30,6 @@ object ConnectionWarningOverlay {
     private var owner: Game? = null
 
     fun install(container: AppContainer) {
-        StreamQuality.follow(container.settings, container.scope)
         // Called on the main thread.
         StreamControl.qualityListener = StreamControl.QualityListener { rtt, variance, frameLoss, audioDrops, perfOverlay ->
             StreamQuality.sample(ConnectionSample(rtt, variance, frameLoss, audioDrops, perfOverlay))

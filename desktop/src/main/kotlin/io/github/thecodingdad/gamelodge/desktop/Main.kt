@@ -321,7 +321,6 @@ fun main(args: Array<String>) {
         container.servers.start()
         container.metadata.start()
         container.mqtt.start()
-        io.github.thecodingdad.gamelodge.stream.StreamQuality.follow(container.settings, container.scope)
     }
     // Streaming hosts are polled while the window is shown (not while the screensaver shows).
     container.scope.launch {

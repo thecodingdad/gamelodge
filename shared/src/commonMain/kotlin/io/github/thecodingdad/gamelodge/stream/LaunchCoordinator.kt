@@ -508,6 +508,8 @@ class LaunchCoordinator(
         runStartActions(entry)
         _state.value = LaunchState.Working(entry, LaunchStep.STARTING)
         if (override != null) applyOneOffProfile(override.uuid)
+        // The connection warning as the stream's profile says.
+        profiles.active("").uuid.let { uuid -> StreamQuality.mode = StreamQuality.modeOf(profiles.values(uuid), uuid?.let { profiles.values(null) }) }
         autoSleep().cancel(hostUuid)
 
         startAttempt = 0
