@@ -409,8 +409,9 @@ private fun androidx.compose.foundation.lazy.LazyListScope.homeRow(
                     // Apps on the start tab: landscape tiles.
                     io.github.thecodingdad.gamelodge.ui.components.AppTileCard(
                         entry = entry,
-                        // As wide as the game tiles; only the height follows the app's 16:9.
-                        width = homeTileWidth(callbacks.layout.format),
+                        // Always the size they have with landscape tiles (as wide as those game tiles,
+                        // 16:9): portrait or square game tiles would make them far too small.
+                        width = homeTileWidth(io.github.thecodingdad.gamelodge.data.settings.TileFormat.LANDSCAPE),
                         layout = callbacks.layout,
                         onClick = { actions.open(entry, entries) },
                         onLongClick = { actions.context(entry, entries) { id -> callbacks.onFocusKey("$key:$id") } },
@@ -482,8 +483,8 @@ private fun HeroInfo(entry: LibraryEntry?, modifier: Modifier = Modifier) {
 private val RUNNING_CARD_MIN_WIDTH = 240.dp
 
 /**
- * Width of every tile on the start tab in the chosen [format] (games, apps; running cards at least
- * [RUNNING_CARD_MIN_WIDTH]): only the height differs between them. Landscape is as high as a 16:9
+ * Width of the start tab's game tiles in the chosen [format] (running cards at least
+ * [RUNNING_CARD_MIN_WIDTH]; apps always take the landscape width). Landscape is as high as a 16:9
  * app tile of 1.6 covers.
  */
 @Composable
