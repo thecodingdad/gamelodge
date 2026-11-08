@@ -79,8 +79,6 @@ data class LauncherSettings(
     val xboxConsoles: Set<String> = emptySet(),
     /** Xbox games without a license of their own: left out or shown dimmed. */
     val xboxUnlicensed: XboxUnlicensed = XboxUnlicensed.HIDE,
-    /** Stream settings per console id. */
-    val xboxStream: Map<String, io.github.thecodingdad.gamelodge.xbox.XboxStreamSettings> = emptyMap(),
     /** Tiles per tab: the start tab shows no titles (the hero above names the game). */
     val homeLayout: TabLayout = TabLayout(title = TileTitle.OFF),
     val libraryLayout: TabLayout = TabLayout(),
@@ -292,7 +290,6 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val detachedHosts = stringSetPreferencesKey("detached_hosts")
         val xboxConsoles = stringSetPreferencesKey("xbox_consoles")
         val xboxUnlicensed = stringPreferencesKey("xbox_unlicensed")
-        val xboxStream = stringPreferencesKey("xbox_stream")
         /** Before the per tab layouts: one card size for all, a tile format for start and library. */
         val cardSize = stringPreferencesKey("card_size")
         val homeTileFormat = stringPreferencesKey("home_tile_format")
@@ -438,7 +435,6 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             detachedHosts = this[K.detachedHosts] ?: d.detachedHosts,
             xboxConsoles = this[K.xboxConsoles] ?: d.xboxConsoles,
             xboxUnlicensed = enumOr(this[K.xboxUnlicensed], d.xboxUnlicensed),
-            xboxStream = io.github.thecodingdad.gamelodge.xbox.XboxStreamSettings.decode(this[K.xboxStream]),
             homeLayout = TabLayout.decode(this[K.homeLayout], this[K.tileCorners])
                 ?: d.homeLayout.copy(corners = enumOr(this[K.tileCorners], TileCorners.SLIGHT), cardSize = enumOr(this[K.cardSize], CardSize.MEDIUM), format = enumOr(this[K.homeTileFormat], TileFormat.PORTRAIT)),
             libraryLayout = TabLayout.decode(this[K.libraryLayout], this[K.tileCorners])
@@ -578,7 +574,6 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         this[K.detachedHosts] = s.detachedHosts
         this[K.xboxConsoles] = s.xboxConsoles
         this[K.xboxUnlicensed] = s.xboxUnlicensed.name
-        this[K.xboxStream] = io.github.thecodingdad.gamelodge.xbox.XboxStreamSettings.encode(s.xboxStream)
         this[K.homeLayout] = TabLayout.encode(s.homeLayout)
         this[K.libraryLayout] = TabLayout.encode(s.libraryLayout)
         this[K.appsLayout] = TabLayout.encode(s.appsLayout)

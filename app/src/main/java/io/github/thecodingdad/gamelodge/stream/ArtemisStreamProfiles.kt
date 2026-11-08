@@ -41,4 +41,6 @@ class ArtemisStreamProfiles(private val context: android.content.Context) : Stre
         val mbit = if (kbps % 1000 == 0) "${kbps / 1000}" else "%.1f".format(kbps / 1000f)
         return "$height · $fps fps · $mbit Mbit"
     }
+
+    override fun values(uuid: UUID?): ProfileValues = ProfileStore(context, uuid)
 }

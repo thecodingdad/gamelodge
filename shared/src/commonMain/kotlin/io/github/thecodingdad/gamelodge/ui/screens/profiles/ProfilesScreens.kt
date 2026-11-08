@@ -8,6 +8,11 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.filled.Computer
+import androidx.compose.material.icons.filled.VideogameAsset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import io.github.thecodingdad.gamelodge.stream.ProfileEditing
 import io.github.thecodingdad.gamelodge.stream.ProfileValues
 import io.github.thecodingdad.gamelodge.stream.StreamOption
+import io.github.thecodingdad.gamelodge.stream.StreamOptionCategory
 import io.github.thecodingdad.gamelodge.stream.StreamProfile
 import io.github.thecodingdad.gamelodge.stream.StreamProfiles
 import io.github.thecodingdad.gamelodge.ui.components.ButtonHint
@@ -117,13 +123,8 @@ fun ProfileEditor(editing: ProfileEditing, uuid: UUID?, name: String, onDeleted:
     val store = remember(uuid) { editing.values(uuid) }
     val schema = editing.rememberSchema()
     val keyboard = LocalKeyboardController.current
-    // Bumped after every write so rows re-read the store.
-    var revision by remember { mutableIntStateOf(0) }
     val renameTitle = stringResource(Res.string.profile_rename)
     val profileStore = io.github.thecodingdad.gamelodge.LocalContainer.current.profiles
-
-    val byKey = remember(schema) { schema.flatMap { it.options }.associateBy { it.key } }
-    val essentials = editing.essentialKeys.mapNotNull { byKey[it] }
 
     SettingsPage(name) {
         if (uuid != null) {
@@ -135,6 +136,60 @@ fun ProfileEditor(editing: ProfileEditing, uuid: UUID?, name: String, onDeleted:
                 HoldToConfirmButton(stringResource(Res.string.profile_delete), onConfirmed = { editing.delete(uuid); onDeleted() }, icon = Icons.Filled.Delete)
             }
         }
+        // PC and Xbox parts of the profile as tabs (Xbox only once a console is added).
+        val container = io.github.thecodingdad.gamelodge.LocalContainer.current
+        val settings by container.settings.settings.collectAsState(null)
+        val withXbox = settings?.xboxConsoles?.isNotEmpty() == true
+        var xboxTab by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(false) }
+        if (withXbox) {
+            val tabFocus = remember { List(2) { androidx.compose.ui.focus.FocusRequester() } }
+            var refocus by remember { androidx.compose.runtime.mutableStateOf(false) }
+            fun switchTo(xbox: Boolean) {
+                xboxTab = xbox
+                refocus = true
+            }
+            // LT/RT: LB/RB stay with the main tabs.
+            io.github.thecodingdad.gamelodge.ui.input.PadAction(PadButton.L2) { switchTo(!xboxTab) }
+            io.github.thecodingdad.gamelodge.ui.input.PadAction(PadButton.R2) { switchTo(!xboxTab) }
+            ScreenHints(
+                listOf(
+                    ButtonHint(PadButton.A, stringResource(Res.string.hint_select)),
+                    ButtonHint(PadButton.L2, stringResource(Res.string.profile_tabs_hint), secondButton = PadButton.R2),
+                    ButtonHint(PadButton.B, stringResource(Res.string.hint_back)),
+                ),
+            )
+            androidx.compose.runtime.LaunchedEffect(xboxTab, refocus) {
+                if (!refocus) return@LaunchedEffect
+                refocus = false
+                runCatching { tabFocus[if (xboxTab) 1 else 0].requestFocus() }
+            }
+            Row(Modifier.padding(vertical = 4.dp, horizontal = 2.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                io.github.thecodingdad.gamelodge.ui.screens.library.Chip(
+                    stringResource(Res.string.profile_tab_pc), selected = !xboxTab, onClick = { switchTo(false) },
+                    icon = { androidx.compose.material3.Icon(Icons.Filled.Computer, null, Modifier.padding(end = 8.dp).size(20.dp)) },
+                    modifier = Modifier.focusRequester(tabFocus[0]),
+                )
+                io.github.thecodingdad.gamelodge.ui.screens.library.Chip(
+                    stringResource(Res.string.profile_tab_xbox), selected = xboxTab, onClick = { switchTo(true) },
+                    icon = { androidx.compose.material3.Icon(Icons.Filled.VideogameAsset, null, Modifier.padding(end = 8.dp).size(20.dp)) },
+                    modifier = Modifier.focusRequester(tabFocus[1]),
+                )
+            }
+        }
+        if (withXbox && xboxTab) {
+            io.github.thecodingdad.gamelodge.ui.screens.settings.XboxStreamSection(store, if (uuid != null) editing.values(null) else null)
+        } else PcOptions(editing, store, schema, uuid)
+    }
+}
+
+/** The PC part of a profile: the important options, then the rest in popups by topic. */
+@Composable
+private fun PcOptions(editing: ProfileEditing, store: ProfileValues, schema: List<StreamOptionCategory>, uuid: UUID?) {
+    // Bumped after every write so rows re-read the store.
+    var revision by remember { mutableIntStateOf(0) }
+    val byKey = remember(schema) { schema.flatMap { it.options }.associateBy { it.key } }
+    val essentials = editing.essentialKeys.mapNotNull { byKey[it] }
+    androidx.compose.foundation.layout.Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         SectionHeader(stringResource(Res.string.profile_essentials))
         essentials.forEachIndexed { i, option -> OptionRow(option, store, revision, i == 0 && uuid == null, editing) { revision++ } }
         // Everything else is rarely changed: one popup per topic (the list in one piece was too long).

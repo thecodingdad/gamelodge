@@ -131,29 +131,30 @@ fun StatusCluster(
                 Text(" $controllerCount", style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceMuted)
             }
         }
-        // One icon per paired host; from two on a single one with their number (tap: list of all).
+        // One icon for all paired hosts, like the controllers: the number of online ones from two on,
+        // red without a number when all are offline (tap: the host, or the list of them).
         // Hosts found but not paired don't show here (pairing is in the settings).
         val paired = hosts.filter { it.paired } + io.github.thecodingdad.gamelodge.ui.screens.settings.rememberXboxHostStates()
-        val combined = showHostsCombined(paired)
-        (if (combined) listOf(paired) else paired.map { listOf(it) }).forEach { group ->
+        if (paired.isNotEmpty()) {
+            val single = paired.singleOrNull()
+            val online = paired.count { it.isStreaming || it.status == HostStatus.ONLINE }
             // Touch target for the host popup; like the other status icons not in D-pad navigation.
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
                 modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))
                     .focusProperties { canFocus = false }
                     .handCursor()
-                    .clickable { if (combined) onHostsClick() else onHostClick(group.first()) }
+                    .clickable { if (single != null) onHostClick(single) else onHostsClick() }
                     .padding(horizontal = 6.dp, vertical = 4.dp),
             ) {
                 // The icon itself carries the state: blue = streaming, green = online, red = offline.
                 Icon(
-                    if (group.singleOrNull()?.uuid?.startsWith("xbox:") == true) Icons.Filled.VideogameAsset else Icons.Filled.Computer, group.singleOrNull()?.name,
-                    tint = hostTint(group, HostStreamingColor, colors.success, colors.danger, colors.onSurfaceMuted),
+                    if (single?.uuid?.startsWith("xbox:") == true) Icons.Filled.VideogameAsset else Icons.Filled.Computer, single?.name,
+                    tint = hostTint(paired, HostStreamingColor, colors.success, colors.danger, colors.onSurfaceMuted),
                     modifier = Modifier.size(22.dp),
                 )
-                if (combined) Text("${group.size}", style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceMuted)
+                if (online > 1) Text(" $online", style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceMuted)
             }
         }
         val launcherContainer = io.github.thecodingdad.gamelodge.LocalContainer.current

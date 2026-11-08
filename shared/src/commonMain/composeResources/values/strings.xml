@@ -1691,11 +1691,9 @@
     <string name="xbox_wake_hint">In standby GameLodge wakes the console through Xbox Live. In energy saving mode only a Home Assistant action can (e.g. HDMI-CEC of the TV).</string>
     <string name="xbox_auto_sleep_sub">Turns the console off (standby) this long after the last stream; a Home Assistant action for sleep or shutdown is used instead when set.</string>
     <string name="hosts_section_pcs">PCs</string>
-    <string name="xbox_stream_section">Stream</string>
     <string name="xbox_resolution">Resolution</string>
     <string name="xbox_resolution_auto">Automatic</string>
     <string name="xbox_resolution_hq">1080p HQ</string>
-    <string name="xbox_resolution_sub">The console sends at most what it manages and what its own display output is set to. 1080p HQ streams at a higher bitrate (a strong network needed).</string>
     <string name="xbox_bitrate">Bitrate limit</string>
     <string name="xbox_bitrate_auto">None</string>
     <string name="xbox_bitrate_sub">The console picks the bitrate itself, at most this much (e.g. on mobile data).</string>
@@ -1710,4 +1708,8 @@
     <string name="xbox_fit_zoom">Zoom</string>
     <string name="xbox_vibration">Vibration</string>
     <string name="xbox_vibration_sub">The game's rumble on your controller.</string>
+    <string name="profile_tab_pc">PC</string>
+    <string name="profile_tab_xbox">Xbox</string>
+    <string name="profile_tabs_hint">PC / Xbox</string>
+    <string name="xbox_resolution_sub">The console sends at most what it manages – Xbox One consoles often only 720p. 1080p HQ streams at a higher bitrate (a strong network needed).</string>
 </resources>

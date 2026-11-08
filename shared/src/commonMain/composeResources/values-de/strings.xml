@@ -1689,11 +1689,9 @@
     <string name="xbox_wake_hint">Im Standby weckt GameLodge die Konsole über Xbox Live. Im Modus Energiesparen geht das nur über eine Home-Assistant-Aktion (z. B. HDMI-CEC des Fernsehers).</string>
     <string name="xbox_auto_sleep_sub">Schaltet die Konsole so lange nach dem letzten Stream aus (Standby); ist eine Home-Assistant-Aktion für Schlafen oder Herunterfahren gesetzt, wird diese genutzt.</string>
     <string name="hosts_section_pcs">PCs</string>
-    <string name="xbox_stream_section">Stream</string>
     <string name="xbox_resolution">Auflösung</string>
     <string name="xbox_resolution_auto">Automatisch</string>
     <string name="xbox_resolution_hq">1080p HQ</string>
-    <string name="xbox_resolution_sub">Die Konsole liefert höchstens, was sie schafft und worauf ihre eigene Bildausgabe eingestellt ist. 1080p HQ streamt mit höherer Bitrate (braucht ein starkes Netz).</string>
     <string name="xbox_bitrate">Bitrate-Grenze</string>
     <string name="xbox_bitrate_auto">Keine</string>
     <string name="xbox_bitrate_sub">Die Konsole wählt die Bitrate selbst, höchstens so viel (z. B. bei mobilen Daten).</string>
@@ -1708,4 +1706,8 @@
     <string name="xbox_fit_zoom">Zoomen</string>
     <string name="xbox_vibration">Vibration</string>
     <string name="xbox_vibration_sub">Die Vibration des Spiels am Controller.</string>
+    <string name="profile_tab_pc">PC</string>
+    <string name="profile_tab_xbox">Xbox</string>
+    <string name="profile_tabs_hint">PC / Xbox</string>
+    <string name="xbox_resolution_sub">Die Konsole liefert höchstens, was sie schafft – Xbox-One-Konsolen oft nur 720p. 1080p HQ streamt mit höherer Bitrate (braucht ein starkes Netz).</string>
 </resources>

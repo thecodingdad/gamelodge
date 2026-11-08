@@ -100,7 +100,7 @@ fun DetailScreen(
 ) {
     val actions = LocalEntryActions.current
     val colors = LauncherTheme.colors
-    val hasRemote = entry.remoteTargets.isNotEmpty()
+    val hasRemote = entry.streamTargets.isNotEmpty()
     val hasTargetChoice = entry.hasTargetChoice
     if (active) PublishAccentFrom(entry.coverModel())
 

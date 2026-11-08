@@ -120,7 +120,7 @@ fun TargetPickerDialog(
     val startFocus = remember { FocusRequester() }
     Modal(visible = pick != null, onDismiss = onDismiss, title = pick?.entry?.item?.title, initialFocus = startFocus) {
         val p = pick ?: return@Modal
-        val hasRemote = p.entry.remoteTargets.isNotEmpty()
+        val hasRemote = p.entry.streamTargets.isNotEmpty()
         var profileIndex by remember(p) {
             mutableIntStateOf(profiles.indexOfFirst { it.uuid == activeProfile.uuid }.coerceAtLeast(0))
         }

@@ -61,11 +61,12 @@ are not there yet.
 
 ## Stream settings
 
-Per console under **Host settings → Stream**:
+In the [stream profiles](profiles.md), tab **Xbox** – like the PC settings, the active profile counts, and
+**Start with…** picks another one for a single launch:
 
 | Setting | |
 |---|---|
-| **Resolution** | *Automatic* (1080p), 720p, 1080p or *1080p HQ* (higher bitrate, needs a strong network). The console sends at most what it manages and what its own display output is set to (**Settings → General → TV & display options**). |
+| **Resolution** | *Automatic* (1080p), 720p, 1080p or *1080p HQ* (higher bitrate, needs a strong network). The console sends at most what it manages – Xbox One consoles often stay at 720p. |
 | **Bitrate limit** | The console picks the bitrate itself; this caps it, e.g. on mobile data |
 | **Sharpen picture** | Upscales and sharpens the stream (FSR) – the most visible help for 720p on a large screen |
 | **Picture** | Fit, stretch or zoom to the screen |

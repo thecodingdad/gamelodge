@@ -155,14 +155,10 @@ fun HostCard(
     }
 }
 
-
-/** From two hosts on, the status bar and the quick menu show one combined icon for all of them. */
-fun showHostsCombined(hosts: Collection<HostState>): Boolean = hosts.size >= 2
-
-/** Colour of a host icon; combined, the "best" state wins (streaming, then online, then offline). */
 /** Host streaming: blue in every theme (red = offline, green = online; not the accent colour). */
 val HostStreamingColor = Color(0xFF42A5F5)
 
+/** Colour of the hosts' icon: the "best" state wins (streaming, then online, then offline). */
 fun hostTint(hosts: Collection<HostState>, streaming: Color, online: Color, offline: Color, unknown: Color): Color = when {
     hosts.any { it.isStreaming } -> streaming
     hosts.any { it.status == HostStatus.ONLINE } -> online

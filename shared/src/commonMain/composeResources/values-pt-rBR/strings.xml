@@ -1691,11 +1691,9 @@
     <string name="xbox_wake_hint">Em espera, o GameLodge liga o console pela Xbox Live. No modo de economia de energia, só uma ação do Home Assistant consegue (ex.: HDMI-CEC da TV).</string>
     <string name="xbox_auto_sleep_sub">Desliga o console (em espera) este tempo após a última transmissão; se houver uma ação do Home Assistant para suspender ou desligar, ela é usada.</string>
     <string name="hosts_section_pcs">PCs</string>
-    <string name="xbox_stream_section">Transmissão</string>
     <string name="xbox_resolution">Resolução</string>
     <string name="xbox_resolution_auto">Automática</string>
     <string name="xbox_resolution_hq">1080p HQ</string>
-    <string name="xbox_resolution_sub">O console envia no máximo o que consegue e o que a sua própria saída de vídeo permite. 1080p HQ transmite com taxa de bits maior (requer uma rede forte).</string>
     <string name="xbox_bitrate">Limite de taxa de bits</string>
     <string name="xbox_bitrate_auto">Nenhum</string>
     <string name="xbox_bitrate_sub">O console escolhe a taxa de bits, no máximo esta (ex.: em dados móveis).</string>
@@ -1710,4 +1708,8 @@
     <string name="xbox_fit_zoom">Zoom</string>
     <string name="xbox_vibration">Vibração</string>
     <string name="xbox_vibration_sub">A vibração do jogo no seu controle.</string>
+    <string name="profile_tab_pc">PC</string>
+    <string name="profile_tab_xbox">Xbox</string>
+    <string name="profile_tabs_hint">PC / Xbox</string>
+    <string name="xbox_resolution_sub">O console envia no máximo o que consegue – consoles Xbox One muitas vezes só 720p. 1080p HQ transmite com taxa de bits maior (requer uma rede forte).</string>
 </resources>

@@ -288,17 +288,14 @@ private fun XboxCard(
     }
 }
 
-/** A console's stream settings (its host settings page). */
+/** The Xbox part of a stream profile (profile editor, Xbox tab); [base]: the base settings, for profiles without own values. */
 @Composable
-fun XboxStreamSection(consoleId: String) {
-    val c = io.github.thecodingdad.gamelodge.LocalContainer.current
-    val scope = rememberCoroutineScope()
-    val settings by c.settings.settings.collectAsState(null)
-    val s = settings?.xboxStream?.get(consoleId) ?: io.github.thecodingdad.gamelodge.xbox.XboxStreamSettings()
+fun XboxStreamSection(values: io.github.thecodingdad.gamelodge.stream.ProfileValues, base: io.github.thecodingdad.gamelodge.stream.ProfileValues?) {
+    var s by remember(values) { mutableStateOf(io.github.thecodingdad.gamelodge.xbox.XboxStreamSettings.of(values, base)) }
     fun save(new: io.github.thecodingdad.gamelodge.xbox.XboxStreamSettings) {
-        scope.launch { c.settings.update { it.copy(xboxStream = it.xboxStream + (consoleId to new)) } }
+        new.writeTo(values, s)
+        s = new
     }
-    SectionHeader(stringResource(Res.string.xbox_stream_section))
     run {
         ChoiceRow(
             stringResource(Res.string.xbox_resolution), io.github.thecodingdad.gamelodge.xbox.XboxResolution.entries, s.resolution,

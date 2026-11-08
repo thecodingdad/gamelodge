@@ -198,6 +198,8 @@ class XboxStreamActivity : androidx.activity.ComponentActivity() {
         return Pad(free).also { pads[free] = it }
     }
 
+    // RestrictedApi: lint takes the super call for androidx.core's restricted overload (it's Activity's).
+    @android.annotation.SuppressLint("RestrictedApi")
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         if (!isPad(event.device) && !KeyEvent.isGamepadButton(event.keyCode)) {
             // Back (touch gesture, remote) leaves the stream.

@@ -19,4 +19,7 @@ interface StreamProfiles {
 
     /** "1080p · 60 fps · 20 Mbit": the key values of a profile (unset values come from the base). */
     fun summary(uuid: UUID?): String
+
+    /** A profile's values ([uuid] null: the base settings), e.g. its Xbox part. */
+    fun values(uuid: UUID?): ProfileValues
 }

@@ -334,7 +334,7 @@ class LaunchCoordinator(
             TargetType.LOCAL -> { runStartActions(entry); finish(entry, target, platform.launchLocal(entry, target, oneOffAction)) }
             TargetType.REMOTE -> launchRemote(entry, target, override, quitRunning, skipNetworkCheck)
             TargetType.ROM -> { runStartActions(entry); finish(entry, target, platform.launchRom(entry, target, emulatorKey)) }
-            TargetType.XBOX -> launchXbox(entry, target)
+            TargetType.XBOX -> launchXbox(entry, target, override)
         }
     }
 
@@ -342,7 +342,7 @@ class LaunchCoordinator(
      * An Xbox game: the console is woken if needed (Xbox Live in standby, else the host's Home
      * Assistant action), the game started on it unless it already runs, then the stream opens.
      */
-    private suspend fun launchXbox(entry: LibraryEntry, target: LaunchTargetEntity) {
+    private suspend fun launchXbox(entry: LibraryEntry, target: LaunchTargetEntity, override: StreamProfile?) {
         val xbox = xbox ?: return fail(entry, LaunchError.START_FAILED)
         val hostUuid = target.hostUuid ?: return
         val consoleId = io.github.thecodingdad.gamelodge.xbox.XboxRepository.consoleId(hostUuid) ?: return
@@ -370,7 +370,9 @@ class LaunchCoordinator(
             if (!xbox.launch(consoleId, productId)) Log.w("Xbox: start of ${target.name} not confirmed")
         }
 
-        val streamSettings = settings.current().xboxStream[consoleId] ?: io.github.thecodingdad.gamelodge.xbox.XboxStreamSettings()
+        // The profile's Xbox part: the one picked for this start, else the active profile.
+        val profile = override ?: profiles.active("")
+        val streamSettings = io.github.thecodingdad.gamelodge.xbox.XboxStreamSettings.of(profiles.values(profile.uuid), profile.uuid?.let { profiles.values(null) })
         val session = xbox.newSession(consoleId, streamSettings.resolution)
         try {
             session.start()
@@ -396,7 +398,7 @@ class LaunchCoordinator(
             ),
         )
         try {
-            val profileName = profiles.active("").name.ifEmpty { null }
+            val profileName = profile.name.ifEmpty { null }
             playtime.start(entry.item.id, target.id, profileName)
             StreamQuality.reset()
             _activeStream.value = ActiveStream(entry, hostUuid, target.appId ?: 0)

@@ -1,6 +1,8 @@
 # Stream profiles
 
-A stream profile is a set of stream settings: resolution, frame rate, bitrate, codec, HDR and more.
+A stream profile is a set of stream settings: resolution, frame rate, bitrate, codec, HDR and more. Each profile
+has a **PC** part and – once an [Xbox console](xbox.md) is added – an **Xbox** part; the profile editor shows them
+as tabs (LT/RT switch them).
 
 ![Stream profiles](assets/screenshots/profiles.jpg)
 
@@ -9,7 +11,8 @@ A stream profile is a set of stream settings: resolution, frame rate, bitrate, c
 - **Standard** holds the base settings; new profiles start from it.
 - **New profile** creates another one, e.g. *TV 4K HDR* or *Mobile data*.
 - The **active** profile (X: *Set active*) is used for every stream.
-- **Start with…** (X on a tile) picks another profile for a single launch.
+- **Start with…** (X on a tile) picks another profile for a single launch; LB/RB in a game's details switch the
+  active one. This works the same for PC and Xbox games.
 
 ## The most important settings
 
@@ -28,6 +31,11 @@ A stream profile is a set of stream settings: resolution, frame rate, bitrate, c
 Further down: audio, touch and mouse behaviour, on-screen controls and more – the full set of the built-in
 streaming client.
 
+## Xbox
+
+The Xbox tab holds the settings for [Xbox streams](xbox.md#stream-settings): resolution, bitrate limit, sharpening,
+picture fit and vibration. Profiles from before the Xbox tab take these from **Standard** until you change them.
+
 ## During the stream
 
 **Connection warnings** show a small notice over the stream when the connection loses frames, wavers or
@@ -36,6 +44,7 @@ lags – always, only with the performance overlay, or never.
 ## See also
 
 - [Hosts & pairing](hosts.md)
+- [Xbox consoles](xbox.md)
 - [Controllers & shortcuts](controllers.md) – controllers in the stream
 - [Quick menu](quick-menu.md) – stream controls during the game
 - [TV mode & screensaver](tv.md) – resolution on a TV
