@@ -130,7 +130,7 @@ fun InputSettings(settings: LauncherSettings, update: ((LauncherSettings) -> Lau
 
         SeeAlso(
             SeeAlsoLink(stringResource(Res.string.settings_controllers), SettingsTarget.Controllers),
-            SeeAlsoLink(stringResource(Res.string.settings_profiles), SettingsTarget.Page(SettingsPageId.PROFILES)),
+            SeeAlsoLink(stringResource(Res.string.settings_profiles), SettingsTarget.Page(SettingsPageId.HOSTS), highlight = stringResource(Res.string.settings_profiles), subtitle = stringResource(Res.string.settings_hosts)),
         )
     }
 

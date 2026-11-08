@@ -173,6 +173,13 @@ class AndroidPlatformUi(private val context: Context) : PlatformUi {
     override val hasButtonCombos = true
 
     @Composable
+    override fun ProfilesGroup(vm: io.github.thecodingdad.gamelodge.ui.LauncherViewModel, openProfile: (UUID?) -> Unit) {
+        val profiles by vm.profiles.collectAsState()
+        val active by vm.activeProfile.collectAsState()
+        io.github.thecodingdad.gamelodge.ui.screens.profiles.ProfilesGroup(profileEditing, profiles, active, openProfile)
+    }
+
+    @Composable
     override fun PlatformSettingsPage(id: SettingsPageId, vm: LauncherViewModel, openProfile: (UUID?) -> Unit, openStats: () -> Unit) {
         val settings by vm.settings.collectAsState()
         when (id) {

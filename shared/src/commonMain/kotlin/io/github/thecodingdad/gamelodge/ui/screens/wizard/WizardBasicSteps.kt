@@ -528,7 +528,7 @@ private fun NextSteps(games: Int, review: Int) {
     if (paired && platform.hasPage(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId.PROFILES)) {
         WizardStatusRow(
             stringResource(Res.string.wizard_next_profiles), stringResource(Res.string.wizard_next_profiles_sub), done = false,
-            icon = Icons.Filled.Tune, onClick = { open(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Page(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId.PROFILES)) },
+            icon = Icons.Filled.Tune, onClick = { open(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Page(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId.HOSTS)) },
         )
     }
 }

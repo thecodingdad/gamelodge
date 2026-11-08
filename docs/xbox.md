@@ -22,7 +22,7 @@ started remotely otherwise waits at the profile selection.
 
 ## Add the console
 
-**Settings → Hosts → Xbox consoles → Add Xbox console** (also in the [setup wizard](wizard.md#8-streaming-hosts)):
+**Settings → Streaming hosts → Add Xbox** (also in the [setup wizard](wizard.md#8-streaming-hosts)):
 
 ![Sign in to Xbox](assets/screenshots/xbox-sign-in.jpg)
 
@@ -41,7 +41,9 @@ in again; the console and its games are found again.
 ### Games without a license
 
 Installed games you can only play through Game Pass or EA Play have no license of their own. **Games without a
-license** chooses whether they are **hidden** (default) or shown **dimmed**.
+license** chooses whether they are **hidden** (default) or shown **dimmed**. It sits in a console's **Host settings**
+under **Xbox account**, next to the signed-in gamertag and **Sign out of Xbox** – licenses belong to the Microsoft
+account, so the choice applies to all its consoles.
 
 ## Playing
 

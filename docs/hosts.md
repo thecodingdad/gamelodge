@@ -7,8 +7,9 @@ them.
 
 ## Add and pair a host
 
-**Settings → Hosts** finds hosts in the same network while the page is open. For a host in another network
-choose **Add host** and enter its address.
+**Settings → Streaming hosts** lists your PCs and [Xbox consoles](xbox.md) in one list and finds PCs in the same
+network while the page is open. For a PC in another network choose **Add PC** and enter its address; **Add Xbox**
+adds a console. The page also holds the [stream profiles](profiles.md).
 
 1. Select the host and choose **Pair**.
 2. GameLodge shows a **PIN**. Open the host's web interface (Sunshine / Apollo / Vibepollo) and enter it.

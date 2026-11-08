@@ -139,8 +139,6 @@
     <string name="keyboard_symbols">Symboles</string>
 
     <!-- Settings overview -->
-    <string name="settings_hosts">Hôtes</string>
-    <string name="settings_hosts_sub">PC de streaming, appairage, réveil</string>
     <string name="settings_profiles">Profils de streaming</string>
     <string name="settings_profiles_sub">Résolution, images/s, débit, HDR</string>
     <string name="settings_home_screen">Onglet Accueil</string>
@@ -261,14 +259,14 @@
     <!-- Hosts -->
     <string name="hosts_empty">Aucun hôte pour l'instant. Les hôtes de votre réseau apparaissent automatiquement.</string>
     <string name="hosts_refresh">Actualiser</string>
-    <string name="hosts_discovery_hint">Les hôtes avec Sunshine, Apollo ou Vibepollo sur le même réseau sont trouvés automatiquement tant que cet écran est ouvert. Utilisez « Ajouter un hôte » pour les hôtes d'autres réseaux.</string>
+    <string name="hosts_discovery_hint">Les PC avec Sunshine, Apollo ou Vibepollo sur le même réseau sont trouvés automatiquement tant que cet écran est ouvert. Utilisez « Ajouter un PC » pour les PC d'autres réseaux.</string>
     <string name="pc_version_hint">Astuce : GameLodge fonctionne aussi sous Windows. Installé sur votre PC de streaming, il en fait plus pour vous ici.</string>
     <string name="pc_version_more">GameLodge pour Windows</string>
     <string name="pc_version_title">GameLodge pour Windows</string>
     <string name="pc_version_text">Sur le PC de streaming, GameLodge ajoute : les jeux du PC avec images et métadonnées, le temps de jeu, les notes, les favoris et les collections partagés entre vos appareils ; le bouton Guide reste sur cet appareil pendant le stream, et Reprendre ramène la fenêtre du jeu au premier plan. Sur le PC lui-même, c'est aussi un lanceur.</string>
     <string name="pc_version_steps">Téléchargez l'installateur sur le PC depuis la page ci-dessous et installez-le. Appairez ensuite cet appareil avec lui : l'assistant de configuration le trouve, ou plus tard dans Réglages → Métadonnées et images → Ajouter une source → Hôte.</string>
     <string name="pc_version_qr_hint">Scannez pour ouvrir la page sur le téléphone, ou saisissez-la sur le PC :</string>
-    <string name="host_add">Ajouter un hôte</string>
+    <string name="host_add">Ajouter un PC</string>
     <string name="host_add_title">Adresse de l'hôte (IP ou nom)</string>
     <string name="host_added">Hôte ajouté.</string>
     <string name="host_invalid_address">Cela ne ressemble pas à une adresse valide.</string>
@@ -359,7 +357,6 @@
     <string name="profile_new_name">Nom du profil</string>
     <string name="profile_edit">Modifier</string>
     <string name="profile_set_active">Activer</string>
-    <string name="profiles_intro">Le profil actif est utilisé pour chaque stream. « Démarrer avec… » (X) en choisit un autre pour un seul lancement.</string>
     <string name="profile_base_sub">Réglages de base ; les nouveaux profils partent d'ici</string>
     <string name="profile_active">Actif</string>
     <string name="profile_new">Nouveau profil</string>
@@ -850,7 +847,6 @@
     <string name="setting_hint_bar_sub">Barre en bas avec les boutons de la manette (ou les touches du clavier) ; affichée seulement avec une manette ou un clavier connecté</string>
 
     <!-- Settings groups -->
-    <string name="settings_group_streaming">Streaming et connexions</string>
     <string name="settings_group_library">Bibliothèque</string>
     <string name="settings_group_controls">Commandes</string>
     <string name="settings_group_display">Affichage</string>
@@ -1294,7 +1290,6 @@
     <string name="settings_game_sources_sub">Steam, Epic, GOG, Xbox et autres boutiques sur ce PC</string>
     <string name="settings_host_role">Appareils et appairage</string>
     <string name="settings_host_role_sub">D'autres lanceurs utilisent les jeux et métadonnées de ce PC</string>
-    <string name="settings_streaming_host">Hôte de streaming</string>
     <string name="settings_streaming_host_sub">Les jeux de ce PC dans Vibepollo, Apollo ou Sunshine</string>
     <string name="settings_startup">Fenêtre et démarrage</string>
     <string name="settings_startup_sub">Plein écran, démarrer avec Windows, zone de notification</string>
@@ -1670,9 +1665,8 @@
     <string name="error_xbox_busy">Un autre appareil diffuse depuis la console.</string>
     <string name="xbox_section">Consoles Xbox</string>
     <string name="xbox_intro">Streamez les jeux installés sur votre Xbox : GameLodge réveille la console, lance le jeu et ouvre le stream. Connectez-vous avec le compte Microsoft de la console.</string>
-    <string name="xbox_add">Ajouter une console Xbox</string>
+    <string name="xbox_add">Ajouter une Xbox</string>
     <string name="xbox_sign_out">Se déconnecter de Xbox</string>
-    <string name="xbox_signed_in_as">Connecté en tant que %1$s</string>
     <string name="xbox_sign_in_title">Se connecter à Xbox</string>
     <string name="xbox_sign_in_steps">Scannez le code avec votre téléphone ou ouvrez %1$s sur n'importe quel appareil et saisissez ce code :</string>
     <string name="xbox_sign_in_waiting">En attente de la connexion …</string>
@@ -1690,7 +1684,6 @@
     <string name="xbox_unlicensed_dim">Grisés</string>
     <string name="xbox_wake_hint">En veille, GameLodge réveille la console via Xbox Live. En mode économie d'énergie, seule une action Home Assistant le peut (p. ex. HDMI-CEC du téléviseur).</string>
     <string name="xbox_auto_sleep_sub">Éteint la console (veille) ce délai après le dernier stream ; si une action Home Assistant de veille ou d'arrêt est définie, elle est utilisée.</string>
-    <string name="hosts_section_pcs">PC</string>
     <string name="xbox_resolution">Résolution</string>
     <string name="xbox_resolution_auto">Automatique</string>
     <string name="xbox_resolution_hq">1080p HQ</string>
@@ -1712,4 +1705,13 @@
     <string name="profile_tab_xbox">Xbox</string>
     <string name="profile_tabs_hint">PC / Xbox</string>
     <string name="xbox_resolution_sub">La console envoie au maximum ce qu'elle peut – les consoles Xbox One souvent seulement 720p. 1080p HQ diffuse avec un débit plus élevé (réseau puissant nécessaire).</string>
+    <string name="settings_hosts">Hôtes de streaming</string>
+    <string name="settings_hosts_sub">PC et consoles Xbox, appairage, profils de streaming</string>
+    <string name="settings_group_streaming">Connexions</string>
+    <string name="hosts_section_pcs">PC et consoles Xbox</string>
+    <string name="settings_streaming_host">Ce PC comme hôte</string>
+    <string name="xbox_account_section">Compte Xbox</string>
+    <string name="xbox_account_note">S'applique à toutes les consoles de ce compte.</string>
+    <string name="xbox_signed_in">Connecté en tant que</string>
+    <string name="profiles_intro">Le profil actif est utilisé pour chaque stream. Avant de lancer un jeu, vous pouvez le changer dans les détails du jeu (bouton de profil ou LB/RB).</string>
 </resources>

@@ -172,6 +172,10 @@ interface PlatformUi {
     @Composable
     fun ControllerSectionScreen(section: io.github.thecodingdad.gamelodge.ui.screens.settings.ControllerSection)
 
+    /** The stream profiles as a group of the streaming hosts page (nothing where the platform has no profiles). */
+    @Composable
+    fun ProfilesGroup(vm: LauncherViewModel, openProfile: (java.util.UUID?) -> Unit) {}
+
     /** Editor of one stream profile. */
     @Composable
     fun ProfileEditor(uuid: java.util.UUID?, name: String, onDeleted: () -> Unit)

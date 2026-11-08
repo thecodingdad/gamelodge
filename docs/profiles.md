@@ -2,7 +2,7 @@
 
 A stream profile is a set of stream settings: resolution, frame rate, bitrate, codec, HDR and more. Each profile
 has a **PC** part and – once an [Xbox console](xbox.md) is added – an **Xbox** part; the profile editor shows them
-as tabs (LT/RT switch them).
+as tabs (LT/RT switch them). The profiles are a group of **Settings → Streaming hosts**.
 
 ![Stream profiles](assets/screenshots/profiles.jpg)
 
@@ -11,8 +11,8 @@ as tabs (LT/RT switch them).
 - **Standard** holds the base settings; new profiles start from it.
 - **New profile** creates another one, e.g. *TV 4K HDR* or *Mobile data*.
 - The **active** profile (X: *Set active*) is used for every stream.
-- **Start with…** (X on a tile) picks another profile for a single launch; LB/RB in a game's details switch the
-  active one. This works the same for PC and Xbox games.
+- Before starting a game, switch the active profile in the game's details (profile button or LB/RB).
+  **Start with…** (X on a tile) picks another profile for a single launch. Both work the same for PC and Xbox games.
 
 ## The most important settings
 

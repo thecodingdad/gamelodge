@@ -138,7 +138,6 @@ fun SettingsHome(
 
         SectionHeader(stringResource(Res.string.settings_group_streaming))
         NavRow(stringResource(Res.string.settings_hosts), { open(SettingsPageId.HOSTS) }, stringResource(Res.string.settings_hosts_sub), Icons.Filled.Computer)
-        if (platform.hasPage(SettingsPageId.PROFILES)) NavRow(stringResource(Res.string.settings_profiles), { open(SettingsPageId.PROFILES) }, stringResource(Res.string.settings_profiles_sub), Icons.Filled.Tune)
         if (platform.hasPage(SettingsPageId.VPN)) NavRow(stringResource(Res.string.settings_vpn), { open(SettingsPageId.VPN) }, stringResource(Res.string.settings_vpn_sub), Icons.Filled.VpnLock)
         if (platform.hasPage(SettingsPageId.STREAMING_HOST)) {
             NavRow(

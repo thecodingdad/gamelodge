@@ -363,6 +363,14 @@ class DesktopPlatformUi(
     }
 
     @Composable
+    override fun ProfilesGroup(vm: LauncherViewModel, openProfile: (UUID?) -> Unit) {
+        val store = profiles ?: return
+        val all by vm.profiles.collectAsState()
+        val active by vm.activeProfile.collectAsState()
+        io.github.thecodingdad.gamelodge.ui.screens.profiles.ProfilesGroup(store, all, active, openProfile)
+    }
+
+    @Composable
     override fun PlatformSettingsPage(id: SettingsPageId, vm: LauncherViewModel, openProfile: (UUID?) -> Unit, openStats: () -> Unit) {
         val settings by vm.settings.collectAsState()
         when (id) {

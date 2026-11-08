@@ -1,7 +1,7 @@
 # FAQ & troubleshooting
 
 ??? question "My host games don't show up"
-    Check that the host is paired (**Settings → Hosts**) and online. Games appear a few seconds after
+    Check that the host is paired (**Settings → Streaming hosts**) and online. Games appear a few seconds after
     pairing; the task list shows when GameLodge loads a host's game list.
 
 ??? question "Shortcuts don't work in other Android apps"
@@ -30,7 +30,7 @@
     Check that the address is your PC's and trust it once (see [Devices & web interface](sharing.md#web-interface)).
 
 ??? question "My handheld doesn't find the GameLodge PC"
-    On the PC, **Settings → Streaming host → Devices & pairing → Connection for launchers** must be on, and
+    On the PC, **Settings → This PC as host → Devices & pairing → Connection for launchers** must be on, and
     GameLodge has to run (the tray is enough). Start pairing on the PC first, then on the device.
 
 ??? question "An Xbox game waits at the profile selection or doesn't start"

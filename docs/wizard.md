@@ -58,8 +58,8 @@ Add your ROM folders; GameLodge finds the installed emulators. See [Emulators & 
 
 ![Streaming hosts](assets/screenshots/wizard-08.jpg)
 
-Found hosts with **Pair**, or **Add host** by address. Per host: the wake method. See
-[Hosts & pairing](hosts.md). **Add Xbox console** signs in with your Microsoft account and adds your Xbox, see
+Found hosts with **Pair**, or **Add PC** by address. Per host: the wake method. See
+[Hosts & pairing](hosts.md). **Add Xbox** signs in with your Microsoft account and adds your Xbox, see
 [Xbox consoles](xbox.md).
 
 ## 9 · GameLodge on the PC

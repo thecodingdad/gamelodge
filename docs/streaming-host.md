@@ -1,6 +1,6 @@
 # Streaming host
 
-**Settings → Streaming host** puts the games of this PC on its streaming server – Vibepollo, Apollo or
+**Settings → This PC as host** puts the games of this PC on its streaming server – Vibepollo, Apollo or
 Sunshine – as apps. Every Moonlight client can then start them, with or without GameLodge: the app entry
 starts the game through GameLodge, and the stream ends when the game ends.
 

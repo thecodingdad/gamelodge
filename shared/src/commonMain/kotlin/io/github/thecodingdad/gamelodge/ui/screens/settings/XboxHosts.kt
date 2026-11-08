@@ -83,7 +83,7 @@ fun rememberXboxHostStates(): List<HostState> {
     }
 }
 
-private sealed interface XboxAddUi {
+internal sealed interface XboxAddUi {
     data object Starting : XboxAddUi
     data class Code(val code: XboxDeviceCode) : XboxAddUi
     data object Loading : XboxAddUi
@@ -91,95 +91,131 @@ private sealed interface XboxAddUi {
     data class Failed(val message: String) : XboxAddUi
 }
 
-/** Xbox consoles on the hosts page: the Microsoft account, the added consoles and adding more. */
+/** Adding a console: sign-in with the Microsoft account if needed, then the console choice ([XboxAddDialog] shows it). */
+class XboxAdder internal constructor(private val begin: () -> Unit) {
+    internal var ui by mutableStateOf<XboxAddUi?>(null)
+    internal var job: Job? = null
+
+    fun start() = begin()
+}
+
 @Composable
-fun XboxHostsSection(openHostConfig: ((HostState) -> Unit)?) {
+fun rememberXboxAdder(): XboxAdder {
     val c = io.github.thecodingdad.gamelodge.LocalContainer.current
     val xbox = c.xbox
     val scope = rememberCoroutineScope()
-    val account by xbox.account.collectAsState()
-    val hosts by xbox.hosts.collectAsState()
-    val settings by c.settings.settings.collectAsState(null)
-    var addUi by remember { mutableStateOf<XboxAddUi?>(null) }
-    var job by remember { mutableStateOf<Job?>(null) }
-    val notes = remember { androidx.compose.runtime.mutableStateMapOf<String, String>() }
     val failedMsg = stringResource(Res.string.xbox_sign_in_failed)
     val noConsolesMsg = stringResource(Res.string.xbox_no_consoles)
+    val holder = remember { arrayOfNulls<XboxAdder>(1) }
+    val adder = remember {
+        XboxAdder {
+            val a = holder[0]!!
+            suspend fun loadConsoles() {
+                a.ui = XboxAddUi.Loading
+                val list = runCatching { xbox.accountConsoles() }.getOrNull()
+                val added = xbox.hosts.value.keys
+                a.ui = when {
+                    list == null -> XboxAddUi.Failed(failedMsg)
+                    else -> list.filter { it.id !in added }.let { if (it.isEmpty()) XboxAddUi.Failed(noConsolesMsg) else XboxAddUi.Pick(it) }
+                }
+            }
+            a.job?.cancel()
+            a.job = scope.launch {
+                if (xbox.account.value is XboxAccount.SignedIn) return@launch loadConsoles()
+                a.ui = XboxAddUi.Starting
+                val code = runCatching { xbox.startSignIn() }.getOrElse { a.ui = XboxAddUi.Failed(failedMsg); return@launch }
+                a.ui = XboxAddUi.Code(code)
+                if (xbox.awaitSignIn(code)) loadConsoles() else a.ui = XboxAddUi.Failed(failedMsg)
+            }
+        }.also { holder[0] = it }
+    }
+    XboxAddDialog(adder)
+    return adder
+}
+
+/** One added console as a card (hosts page, setup wizard). [onConfig] null: no settings button (wizard). */
+@Composable
+fun XboxHostCard(host: XboxHost, onConfig: (() -> Unit)?) {
+    val c = io.github.thecodingdad.gamelodge.LocalContainer.current
+    val xbox = c.xbox
+    val scope = rememberCoroutineScope()
+    var note by remember(host.console.id) { mutableStateOf<String?>(null) }
     val wakeSentMsg = stringResource(Res.string.host_wake_sending)
     val wakeOnlineMsg = stringResource(Res.string.host_wake_online)
     val wakeTimeoutMsg = stringResource(Res.string.host_wake_timeout)
+    XboxCard(
+        host = host,
+        note = note,
+        onConfig = onConfig,
+        onWake = {
+            note = wakeSentMsg
+            scope.launch {
+                c.hostPower.wake(host.hostUuid)
+                val timeout = c.hostPower.config(host.hostUuid).wakeTimeoutSeconds * 1000L
+                note = if (xbox.waitOn(host.console.id, timeout)) wakeOnlineMsg else wakeTimeoutMsg
+            }
+        },
+        onTurnOff = { scope.launch { xbox.turnOff(host.console.id); xbox.refresh() } },
+        onRemove = { scope.launch { xbox.remove(host.console.id) } },
+    )
+}
 
-    suspend fun loadConsoles() {
-        addUi = XboxAddUi.Loading
-        val list = runCatching { xbox.accountConsoles() }.getOrNull()
-        addUi = when {
-            list == null -> XboxAddUi.Failed(failedMsg)
-            else -> list.filter { it.id !in hosts.keys }.let { if (it.isEmpty()) XboxAddUi.Failed(noConsolesMsg) else XboxAddUi.Pick(it) }
-        }
-    }
-
-    fun add() {
-        job?.cancel()
-        job = scope.launch {
-            if (account is XboxAccount.SignedIn) return@launch loadConsoles()
-            addUi = XboxAddUi.Starting
-            val code = runCatching { xbox.startSignIn() }.getOrElse { addUi = XboxAddUi.Failed(failedMsg); return@launch }
-            addUi = XboxAddUi.Code(code)
-            if (xbox.awaitSignIn(code)) loadConsoles() else addUi = XboxAddUi.Failed(failedMsg)
-        }
-    }
-
+/** Xbox consoles in the setup wizard: the added ones and adding more. */
+@Composable
+fun XboxHostsSection(openHostConfig: ((HostState) -> Unit)?) {
+    val hosts by io.github.thecodingdad.gamelodge.LocalContainer.current.xbox.hosts.collectAsState()
+    val adder = rememberXboxAdder()
     SectionHeader(stringResource(Res.string.xbox_section))
     if (hosts.isEmpty()) {
         Text(stringResource(Res.string.xbox_intro), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
     }
     hosts.values.sortedBy { it.console.name }.forEach { host ->
-        XboxCard(
-            host = host,
-            note = notes[host.console.id],
-            onConfig = openHostConfig?.let { open -> { open(host.asHostState()) } },
-            onWake = {
-                notes[host.console.id] = wakeSentMsg
-                scope.launch {
-                    c.hostPower.wake(host.hostUuid)
-                    val timeout = c.hostPower.config(host.hostUuid).wakeTimeoutSeconds * 1000L
-                    notes[host.console.id] = if (xbox.waitOn(host.console.id, timeout)) wakeOnlineMsg else wakeTimeoutMsg
-                }
-            },
-            onTurnOff = { scope.launch { xbox.turnOff(host.console.id); xbox.refresh() } },
-            onRemove = { scope.launch { xbox.remove(host.console.id) } },
-        )
+        XboxHostCard(host, openHostConfig?.let { open -> { open(host.asHostState()) } })
     }
-    io.github.thecodingdad.gamelodge.ui.components.ButtonRow(spacing = 12.dp) {
-        LauncherButton(stringResource(Res.string.xbox_add), icon = Icons.Filled.Add, primary = hosts.isEmpty(), onClick = ::add)
-        val signedIn = account as? XboxAccount.SignedIn
-        if (signedIn != null) {
-            HoldToConfirmButton(
-                stringResource(Res.string.xbox_sign_out), onConfirmed = { scope.launch { xbox.signOut() } }, icon = Icons.Filled.Logout,
-            )
-        }
-    }
-    (account as? XboxAccount.SignedIn)?.let {
-        Text(
-            stringResource(Res.string.xbox_signed_in_as, it.gamertag ?: "–"),
-            style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted,
-        )
-    }
-    if (hosts.isNotEmpty()) {
-        settings?.let { s ->
-            ChoiceRow(
-                stringResource(Res.string.xbox_unlicensed), XboxUnlicensed.entries, s.xboxUnlicensed,
-                label = { stringResource(if (it == XboxUnlicensed.HIDE) Res.string.xbox_unlicensed_hide else Res.string.xbox_unlicensed_dim) },
-                onSelect = { v -> scope.launch { c.settings.update { it.copy(xboxUnlicensed = v) } } },
-                subtitle = stringResource(Res.string.xbox_unlicensed_sub),
-            )
-        }
-    }
+    LauncherButton(stringResource(Res.string.xbox_add), icon = Icons.Filled.Add, primary = hosts.isEmpty(), onClick = adder::start)
+}
 
-    val ui = addUi
+/** The Microsoft account behind the consoles (a console's settings page): who is signed in, sign-out, games without a license. */
+@Composable
+fun XboxAccountSection() {
+    val c = io.github.thecodingdad.gamelodge.LocalContainer.current
+    val xbox = c.xbox
+    val scope = rememberCoroutineScope()
+    val account by xbox.account.collectAsState()
+    val settings by c.settings.settings.collectAsState(null)
+    SectionHeader(stringResource(Res.string.xbox_account_section))
+    Text(stringResource(Res.string.xbox_account_note), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+    (account as? XboxAccount.SignedIn)?.let { signedIn ->
+        Row(
+            Modifier.fillMaxWidth().background(LauncherTheme.colors.surface, RoundedCornerShape(16.dp)).padding(horizontal = 20.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(stringResource(Res.string.xbox_signed_in), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
+                Text(signedIn.gamertag ?: "–", style = MaterialTheme.typography.titleMedium, color = LauncherTheme.colors.onSurface)
+            }
+            HoldToConfirmButton(stringResource(Res.string.xbox_sign_out), onConfirmed = { scope.launch { xbox.signOut() } }, icon = Icons.Filled.Logout)
+        }
+    }
+    settings?.let { s ->
+        ChoiceRow(
+            stringResource(Res.string.xbox_unlicensed), XboxUnlicensed.entries, s.xboxUnlicensed,
+            label = { stringResource(if (it == XboxUnlicensed.HIDE) Res.string.xbox_unlicensed_hide else Res.string.xbox_unlicensed_dim) },
+            onSelect = { v -> scope.launch { c.settings.update { it.copy(xboxUnlicensed = v) } } },
+            subtitle = stringResource(Res.string.xbox_unlicensed_sub),
+        )
+    }
+}
+
+@Composable
+private fun XboxAddDialog(adder: XboxAdder) {
+    val xbox = io.github.thecodingdad.gamelodge.LocalContainer.current.xbox
+    val scope = rememberCoroutineScope()
+    val ui = adder.ui
+    fun close() { adder.job?.cancel(); adder.ui = null }
     Modal(
         visible = ui != null,
-        onDismiss = { job?.cancel(); addUi = null },
+        onDismiss = ::close,
         title = stringResource(if (ui is XboxAddUi.Pick) Res.string.xbox_pick_title else Res.string.xbox_sign_in_title),
         closeButton = false,
     ) {
@@ -202,7 +238,7 @@ fun XboxHostsSection(openHostConfig: ((HostState) -> Unit)?) {
                     }
                 }
                 Spacer(Modifier.height(16.dp))
-                LauncherButton(stringResource(Res.string.action_cancel), onClick = { job?.cancel(); addUi = null })
+                LauncherButton(stringResource(Res.string.action_cancel), onClick = ::close)
             }
             is XboxAddUi.Pick -> {
                 Text(stringResource(Res.string.xbox_pick_text), style = MaterialTheme.typography.bodyLarge, color = LauncherTheme.colors.onSurface)
@@ -211,18 +247,18 @@ fun XboxHostsSection(openHostConfig: ((HostState) -> Unit)?) {
                     LauncherButton(
                         "${console.name}  ·  ${consoleType(console.type)}", icon = Icons.Filled.SportsEsports, primary = i == 0,
                         enabled = console.streaming,
-                        onClick = { addUi = null; scope.launch { xbox.add(listOf(console)) } },
+                        onClick = { adder.ui = null; scope.launch { xbox.add(listOf(console)) } },
                         modifier = Modifier.fillMaxWidth(),
                     )
                     if (!console.streaming) Text(stringResource(Res.string.xbox_streaming_off), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.warning)
                     Spacer(Modifier.height(8.dp))
                 }
-                LauncherButton(stringResource(Res.string.action_cancel), onClick = { addUi = null })
+                LauncherButton(stringResource(Res.string.action_cancel), onClick = { adder.ui = null })
             }
             is XboxAddUi.Failed -> {
                 Text(ui.message, style = MaterialTheme.typography.bodyLarge, color = LauncherTheme.colors.onSurface)
                 Spacer(Modifier.height(16.dp))
-                LauncherButton(stringResource(Res.string.action_close), primary = true, onClick = { addUi = null })
+                LauncherButton(stringResource(Res.string.action_close), primary = true, onClick = { adder.ui = null })
             }
             null -> Unit
         }

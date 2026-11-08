@@ -60,7 +60,12 @@ private sealed interface PairUi {
 }
 
 @Composable
-fun HostsSettings(hosts: List<HostState>, openHostConfig: (HostState) -> Unit) {
+fun HostsSettings(
+    hosts: List<HostState>,
+    openHostConfig: (HostState) -> Unit,
+    /** The stream profiles' group below the hosts (platform part; nothing in previews). */
+    profiles: @Composable () -> Unit = {},
+) {
     val launcherContainer = io.github.thecodingdad.gamelodge.LocalContainer.current
     val actions = launcherContainer.hostActions
     val scope = rememberCoroutineScope()
@@ -104,10 +109,19 @@ fun HostsSettings(hosts: List<HostState>, openHostConfig: (HostState) -> Unit) {
 
     SettingsPage(stringResource(Res.string.settings_hosts)) {
         SectionHeader(stringResource(Res.string.hosts_section_pcs))
-        if (hosts.isEmpty()) {
+        val xboxHosts by launcherContainer.xbox.hosts.collectAsState()
+        val xboxAdder = rememberXboxAdder()
+        if (hosts.isEmpty() && xboxHosts.isEmpty()) {
             Text(stringResource(Res.string.hosts_empty), style = MaterialTheme.typography.bodyLarge, color = LauncherTheme.colors.onSurfaceMuted)
         }
-        hosts.sortedBy { it.name }.forEachIndexed { index, host ->
+        // PCs and consoles in one list, by name.
+        val all: List<Pair<String, Any>> = (hosts.map { it.name to it } + xboxHosts.values.map { it.console.name to it }).sortedBy { it.first.lowercase() }
+        all.forEachIndexed { index, (_, item) ->
+            if (item is io.github.thecodingdad.gamelodge.xbox.XboxHost) {
+                XboxHostCard(item, onConfig = { openHostConfig(item.asHostState()) })
+                return@forEachIndexed
+            }
+            val host = item as HostState
             HostCard(
                 host = host,
                 initialFocus = index == 0,
@@ -143,7 +157,7 @@ fun HostsSettings(hosts: List<HostState>, openHostConfig: (HostState) -> Unit) {
         }
         io.github.thecodingdad.gamelodge.ui.components.ButtonRow(spacing = 12.dp) {
             LauncherButton(
-                stringResource(Res.string.host_add), icon = Icons.Filled.Add, primary = hosts.isEmpty(),
+                stringResource(Res.string.host_add), icon = Icons.Filled.Add, primary = hosts.isEmpty() && xboxHosts.isEmpty(),
                 onClick = {
                     keyboard.open(addTitle, "", TextKind.URL) { address ->
                         adding = true
@@ -158,15 +172,18 @@ fun HostsSettings(hosts: List<HostState>, openHostConfig: (HostState) -> Unit) {
                     }
                 },
             )
-            LauncherButton(stringResource(Res.string.hosts_refresh), icon = Icons.Filled.Refresh, onClick = { launcherContainer.hosts.refreshAppLists() })
+            LauncherButton(stringResource(Res.string.xbox_add), icon = Icons.Filled.Add, primary = hosts.isEmpty() && xboxHosts.isEmpty(), onClick = xboxAdder::start)
+            LauncherButton(stringResource(Res.string.hosts_refresh), icon = Icons.Filled.Refresh, onClick = {
+                launcherContainer.hosts.refreshAppLists()
+                scope.launch { launcherContainer.xbox.refresh() }
+            })
         }
         if (adding) CircularProgressIndicator(color = LauncherTheme.colors.accent)
         message?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted) }
         Text(stringResource(Res.string.hosts_discovery_hint), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
         PcVersionHint()
-        XboxHostsSection(openHostConfig)
+        profiles()
         SeeAlso(
-            SeeAlsoLink(stringResource(Res.string.settings_profiles), SettingsTarget.Page(SettingsPageId.PROFILES)),
             SeeAlsoLink(stringResource(Res.string.ha_host_actions), SettingsTarget.Page(SettingsPageId.HOME_ASSISTANT), highlight = stringResource(Res.string.ha_host_actions), subtitle = stringResource(Res.string.settings_home_assistant)),
         )
     }

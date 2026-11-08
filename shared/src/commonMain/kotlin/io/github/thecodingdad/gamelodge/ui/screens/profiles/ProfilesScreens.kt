@@ -52,6 +52,7 @@ import io.github.thecodingdad.gamelodge.ui.theme.LauncherTheme
 import java.util.UUID
 import io.github.thecodingdad.gamelodge.resources.*
 
+/** The stream profiles page (only reached by old links; the profiles are a group on the streaming hosts page). */
 @Composable
 fun ProfilesList(
     editing: ProfileEditing,
@@ -59,63 +60,76 @@ fun ProfilesList(
     active: StreamProfile,
     openProfile: (UUID?) -> Unit,
 ) {
+    SettingsPage(stringResource(Res.string.settings_profiles)) {
+        ProfilesGroup(editing, profiles, active, openProfile, header = false)
+    }
+}
+
+/**
+ * The stream profiles as a group (Settings → Streaming hosts): the active one ticked, A edits,
+ * X makes the focused one active; a new profile, and the connection warnings during a stream.
+ */
+@Composable
+fun ProfilesGroup(
+    editing: ProfileEditing,
+    profiles: List<StreamProfile>,
+    active: StreamProfile,
+    openProfile: (UUID?) -> Unit,
+    header: Boolean = true,
+) {
     val keyboard = LocalKeyboardController.current
-    var focusedIndex by remember { mutableIntStateOf(0) }
+    // The focused profile row; null while the focus is elsewhere on the page (X does nothing then).
+    var focusedIndex by remember { androidx.compose.runtime.mutableStateOf<Int?>(null) }
     val newTitle = stringResource(Res.string.profile_new_name)
     val profileStore = io.github.thecodingdad.gamelodge.LocalContainer.current.profiles
 
-    PadAction(PadButton.X) { profiles.getOrNull(focusedIndex)?.let { profileStore.setActive(it.uuid) } }
-    ScreenHints(
-        listOf(
-            ButtonHint(PadButton.A, stringResource(Res.string.profile_edit)),
-            ButtonHint(PadButton.X, stringResource(Res.string.profile_set_active)),
-            ButtonHint(PadButton.B, stringResource(Res.string.hint_back)),
-        ),
-    )
-
-    SettingsPage(stringResource(Res.string.settings_profiles)) {
-        Text(stringResource(Res.string.profiles_intro), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
-        profiles.forEachIndexed { index, profile ->
-            val isActive = profile.uuid == active.uuid
-            Box(Modifier.onFocusEvent { if (it.hasFocus) focusedIndex = index }) {
-                NavRow(
-                    title = profile.name,
-                    onClick = { openProfile(profile.uuid) },
-                    subtitle = if (profile.uuid == null) stringResource(Res.string.profile_base_sub) else null,
-                    icon = if (isActive) Icons.Filled.CheckCircle else Icons.Filled.Tune,
-                    initialFocus = index == 0,
-                    trailing = if (isActive) stringResource(Res.string.profile_active) else null,
-                )
-            }
-        }
-        LauncherButton(
-            stringResource(Res.string.profile_new), icon = Icons.Filled.Add,
-            onClick = { keyboard.open(newTitle, "") { name -> if (name.isNotBlank()) openProfile(editing.create(name.trim())) } },
-        )
-        SectionHeader(stringResource(Res.string.conn_warnings_section))
-        val container = io.github.thecodingdad.gamelodge.LocalContainer.current
-        val settings by container.settings.settings.collectAsState(io.github.thecodingdad.gamelodge.data.settings.LauncherSettings())
-        val scope = androidx.compose.runtime.rememberCoroutineScope()
-        io.github.thecodingdad.gamelodge.ui.screens.settings.ChoiceRow(
-            stringResource(Res.string.conn_warnings), io.github.thecodingdad.gamelodge.data.settings.ConnectionWarnings.entries, settings.connectionWarnings,
-            label = {
-                stringResource(
-                    when (it) {
-                        io.github.thecodingdad.gamelodge.data.settings.ConnectionWarnings.OFF -> Res.string.conn_warnings_off
-                        io.github.thecodingdad.gamelodge.data.settings.ConnectionWarnings.PERF_OVERLAY -> Res.string.conn_warnings_perf
-                        io.github.thecodingdad.gamelodge.data.settings.ConnectionWarnings.ALWAYS -> Res.string.conn_warnings_always
-                    },
-                )
-            },
-            onSelect = { mode -> scope.launch { container.settings.update { s -> s.copy(connectionWarnings = mode) } } },
-            subtitle = stringResource(Res.string.conn_warnings_sub),
-        )
-        io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlso(
-            io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlsoLink(stringResource(Res.string.settings_hosts), io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Page(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId.HOSTS)),
-            io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlsoLink(stringResource(Res.string.settings_controllers), io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Controllers),
-            io.github.thecodingdad.gamelodge.ui.screens.settings.SeeAlsoLink(stringResource(Res.string.settings_input), io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsTarget.Page(io.github.thecodingdad.gamelodge.ui.screens.settings.SettingsPageId.INPUT)),
+    if (focusedIndex != null) {
+        PadAction(PadButton.X) { focusedIndex?.let { profiles.getOrNull(it) }?.let { profileStore.setActive(it.uuid) } }
+        ScreenHints(
+            listOf(
+                ButtonHint(PadButton.A, stringResource(Res.string.profile_edit)),
+                ButtonHint(PadButton.X, stringResource(Res.string.profile_set_active)),
+                ButtonHint(PadButton.B, stringResource(Res.string.hint_back)),
+            ),
         )
     }
+
+    if (header) SectionHeader(stringResource(Res.string.settings_profiles))
+    Text(stringResource(Res.string.profiles_intro), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+    profiles.forEachIndexed { index, profile ->
+        val isActive = profile.uuid == active.uuid
+        Box(Modifier.onFocusEvent { if (it.hasFocus) focusedIndex = index else if (focusedIndex == index) focusedIndex = null }) {
+            NavRow(
+                title = profile.name,
+                onClick = { openProfile(profile.uuid) },
+                subtitle = if (profile.uuid == null) stringResource(Res.string.profile_base_sub) else null,
+                icon = if (isActive) Icons.Filled.CheckCircle else Icons.Filled.Tune,
+                initialFocus = !header && index == 0,
+                trailing = if (isActive) stringResource(Res.string.profile_active) else null,
+            )
+        }
+    }
+    LauncherButton(
+        stringResource(Res.string.profile_new), icon = Icons.Filled.Add,
+        onClick = { keyboard.open(newTitle, "") { name -> if (name.isNotBlank()) openProfile(editing.create(name.trim())) } },
+    )
+    val container = io.github.thecodingdad.gamelodge.LocalContainer.current
+    val settings by container.settings.settings.collectAsState(io.github.thecodingdad.gamelodge.data.settings.LauncherSettings())
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    io.github.thecodingdad.gamelodge.ui.screens.settings.ChoiceRow(
+        stringResource(Res.string.conn_warnings), io.github.thecodingdad.gamelodge.data.settings.ConnectionWarnings.entries, settings.connectionWarnings,
+        label = {
+            stringResource(
+                when (it) {
+                    io.github.thecodingdad.gamelodge.data.settings.ConnectionWarnings.OFF -> Res.string.conn_warnings_off
+                    io.github.thecodingdad.gamelodge.data.settings.ConnectionWarnings.PERF_OVERLAY -> Res.string.conn_warnings_perf
+                    io.github.thecodingdad.gamelodge.data.settings.ConnectionWarnings.ALWAYS -> Res.string.conn_warnings_always
+                },
+            )
+        },
+        onSelect = { mode -> scope.launch { container.settings.update { s -> s.copy(connectionWarnings = mode) } } },
+        subtitle = stringResource(Res.string.conn_warnings_sub),
+    )
 }
 
 @Composable

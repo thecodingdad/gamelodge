@@ -166,9 +166,9 @@ fun HostConfigScreen(host: HostState, openHaSettings: () -> Unit) {
             onSelect = { save(cfg.copy(autoSleepMinutes = it)) },
             subtitle = stringResource(if (isXbox) Res.string.xbox_auto_sleep_sub else Res.string.host_auto_sleep_sub),
         )
-        if (!isXbox) CompanionSection(host)
+        if (!isXbox) CompanionSection(host) else XboxAccountSection()
         SeeAlso(
-            SeeAlsoLink(stringResource(Res.string.settings_profiles), SettingsTarget.Page(SettingsPageId.PROFILES)),
+            SeeAlsoLink(stringResource(Res.string.settings_profiles), SettingsTarget.Page(SettingsPageId.HOSTS), highlight = stringResource(Res.string.settings_profiles), subtitle = stringResource(Res.string.settings_hosts)),
             SeeAlsoLink(stringResource(Res.string.settings_home_assistant), SettingsTarget.Page(SettingsPageId.HOME_ASSISTANT)),
         )
     }

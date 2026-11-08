@@ -10,7 +10,7 @@ PC's [streaming host](streaming-host.md).
 
 ## Devices & pairing
 
-**Settings → Streaming host → Devices & pairing** pairs your other GameLodge devices with this PC:
+**Settings → This PC as host → Devices & pairing** pairs your other GameLodge devices with this PC:
 
 ![Devices & pairing](assets/screenshots/windows-devices.jpg)
 

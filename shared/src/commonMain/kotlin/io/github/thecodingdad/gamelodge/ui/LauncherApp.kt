@@ -445,7 +445,7 @@ fun LauncherApp(
                                     else if (xboxGame != null) "xbox:${xboxGame.consoleId}" in detailQuitting
                                     else runningSession?.let { io.github.thecodingdad.gamelodge.stream.Quitting.hostKey(it.host) in detailQuitting } == true,
                                     profiles = detailProfiles, activeProfile = detailActive, onProfile = vm::setActiveProfile,
-                                    onEditProfiles = { nav.navigate(Routes.settings(SettingsPageId.PROFILES)) },
+                                    onEditProfiles = { nav.navigate(Routes.settings(SettingsPageId.HOSTS)) },
                                     onBrowse = onBrowse,
                                     active = pageActive,
                                 ) {
@@ -541,7 +541,7 @@ fun LauncherApp(
                         val name = profiles.firstOrNull { it.uuid == uuid }?.name ?: stringResource(Res.string.profile_default)
                         SubpageFrame(
                             vm, nav, hints, MainTab.SETTINGS,
-                            listOf(tabCrumb(vm, nav, MainTab.SETTINGS), pageCrumb(vm, nav, Res.string.settings_profiles, SettingsPageId.PROFILES)),
+                            listOf(tabCrumb(vm, nav, MainTab.SETTINGS), pageCrumb(vm, nav, Res.string.settings_hosts, SettingsPageId.HOSTS)),
                             { openQuickMenu(io.github.thecodingdad.gamelodge.ui.shell.QuickMenuTab.HOSTS) }, { openQuickMenu(io.github.thecodingdad.gamelodge.ui.shell.QuickMenuTab.CONTROLLERS) },
                         ) { io.github.thecodingdad.gamelodge.ui.PlatformUi.current.ProfileEditor(uuid, name, onDeleted = { nav.popBackStack() }) }
                     }
@@ -1229,7 +1229,9 @@ private fun SettingsPageContent(
                     it.item.metadataState in setOf(MetadataState.OK, MetadataState.LOCKED, MetadataState.REVIEW)
             },
         )
-        SettingsPageId.HOSTS -> HostsSettings(hosts.values.toList(), openHostConfig = { openHost(it.uuid) })
+        SettingsPageId.HOSTS -> HostsSettings(hosts.values.toList(), openHostConfig = { openHost(it.uuid) }) {
+            io.github.thecodingdad.gamelodge.ui.PlatformUi.current.ProfilesGroup(vm, openProfile)
+        }
         SettingsPageId.HOME_SCREEN -> io.github.thecodingdad.gamelodge.ui.screens.settings.HomeScreenSettings(settings, vm::updateSettings, vm)
         SettingsPageId.LIBRARY_VIEW -> io.github.thecodingdad.gamelodge.ui.screens.settings.LibraryViewSettings(settings, vm::updateSettings)
         SettingsPageId.APPS_VIEW -> io.github.thecodingdad.gamelodge.ui.screens.settings.AppsViewSettings(settings, vm::updateSettings)
