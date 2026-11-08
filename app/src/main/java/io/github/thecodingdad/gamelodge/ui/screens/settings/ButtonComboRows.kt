@@ -44,7 +44,7 @@ import io.github.thecodingdad.gamelodge.resources.*
  */
 @Composable
 fun ComboServiceRows() {
-    // Only the handheld edition has the service (the standard one: combinations in GameLodge and the stream).
+    // Only the systemwide edition has the service (the standard one: combinations in GameLodge and the stream).
     if (!io.github.thecodingdad.gamelodge.BuildConfig.COMBO_SERVICE) return
     val context = LocalContext.current
     var tick by remember { mutableIntStateOf(0) }

@@ -6,11 +6,11 @@
 
 ??? question "Shortcuts don't work in other Android apps"
     Enable the **GameLodge combos** accessibility service (see [Controllers & shortcuts](controllers.md#shortcuts-in-other-apps-android)).
-    It is part of the handheld edition (`GameLodge-Handheld-<version>.apk`) only.
+    It is part of the systemwide edition (`GameLodge-Systemwide-<version>.apk`) only.
 
 ??? question "Installing fails: App blocked to protect your device"
-    Google Play Protect blocks apps with an accessibility service that are installed from a file. On phones,
-    tablets and TVs install `GameLodge-<version>.apk`, which has none (see [Install](getting-started.md#install)).
+    Google Play Protect blocks apps with an accessibility service that are installed from a file. Install
+    `GameLodge-<version>.apk`, which has none (see [Install](getting-started.md#install)).
 
 ??? question "No artwork or descriptions"
     Add a SteamGridDB key and IGDB credentials under **Settings → Metadata & artwork**. Uncertain matches

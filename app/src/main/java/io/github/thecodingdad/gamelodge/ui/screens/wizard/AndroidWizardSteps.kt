@@ -115,7 +115,7 @@ private fun ColumnScope.ShortcutsStep(settings: LauncherSettings) {
             )
         }
     }
-    // Only the handheld edition has the accessibility service for other apps.
+    // Only the systemwide edition has the accessibility service for other apps.
     if (io.github.thecodingdad.gamelodge.BuildConfig.COMBO_SERVICE) {
     SectionHeader(stringResource(Res.string.wizard_shortcuts_other_apps))
     // Only the general list could be opened: say what to look for there.

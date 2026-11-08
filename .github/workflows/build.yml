@@ -31,7 +31,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
 
       - name: Build, lint and test
-        run: ./gradlew assembleStandardDebug assembleHandheldDebug lintStandardDebug lintHandheldDebug testStandardDebugUnitTest --console=plain
+        run: ./gradlew assembleStandardDebug assembleSystemwideDebug lintStandardDebug lintSystemwideDebug testStandardDebugUnitTest --console=plain
 
       - uses: actions/upload-artifact@v4
         with:

@@ -44,16 +44,16 @@ android {
         }
     }
 
-    // Two editions with the same app id (and data): "standard" for phones and tablets has no
-    // accessibility service, so Play Protect lets it install from a file; "handheld" (Odin and the
-    // like) declares it for button combinations in every app (src/handheld/AndroidManifest.xml).
+    // Two editions with the same app id (and data): "standard" has no
+    // accessibility service, so Play Protect lets it install from a file; "systemwide" (Odin and the
+    // like) declares it for button combinations in every app (src/systemwide/AndroidManifest.xml).
     flavorDimensions += "edition"
     productFlavors {
         create("standard") {
             dimension = "edition"
             buildConfigField("boolean", "COMBO_SERVICE", "false")
         }
-        create("handheld") {
+        create("systemwide") {
             dimension = "edition"
             buildConfigField("boolean", "COMBO_SERVICE", "true")
         }
