@@ -37,6 +37,7 @@ window.ReactNativeWebView = {
 // its own start screen until then.
 const NO_POSTER = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=';
 let shown = false;
+let sharpness = 0;
 function watchVideo() {
   const holder = document.getElementById('videoHolder');
   const hook = (video) => {
@@ -46,7 +47,8 @@ function watchVideo() {
     const live = () => {
       if (shown) return;
       shown = true;
-      video.style.visibility = 'visible';
+      if (sharpness > 0) startSharpening(video);
+      else video.style.visibility = 'visible';
       post({ t: 'video' });
     };
     if (video.requestVideoFrameCallback) video.requestVideoFrameCallback(() => live());
@@ -56,7 +58,25 @@ function watchVideo() {
   holder.querySelectorAll('video').forEach(hook);
 }
 
+// FSR: the player draws the video sharpened into #canvas (WebGL); without WebGL the plain video shows.
+function startSharpening(video) {
+  try {
+    player.startFSR(() => {});
+    if (player._isFSR) {
+      document.getElementById('fsr').style.display = 'flex';
+      log('sharpening on (' + sharpness + ')');
+      return;
+    }
+    log('sharpening not available');
+  } catch (e) {
+    log('FSR: ' + e);
+  }
+  video.style.visibility = 'visible';
+}
+
 function start(config) {
+  sharpness = config.sharpness || 0;
+  if (config.fitCss) document.documentElement.style.setProperty('--fit', config.fitCss);
   watchVideo();
   player = new xStreamingPlayer('videoHolder', {
     input_touch: false,
@@ -71,6 +91,8 @@ function start(config) {
   player.setGamepadIndex(0);
   player.setVibration(config.vibration !== false);
   player.setVibrationMode('Device');
+  player.setVideoFormat(config.fit || '');
+  if (sharpness > 0) player.setFsrSharpness(sharpness);
   if (config.maxBitrateKbps > 0) player.setVideoBitrate(config.maxBitrateKbps);
   player.setConnectFailHandler(() => post({ t: 'state', state: 'failed', detail: 'No connection to the console (NAT)' }));
   player.setSdpHandler((client, offer) => post({ t: 'chatOffer', sdp: offer.sdp }));

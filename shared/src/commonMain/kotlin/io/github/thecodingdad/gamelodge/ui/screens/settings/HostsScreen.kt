@@ -103,6 +103,7 @@ fun HostsSettings(hosts: List<HostState>, openHostConfig: (HostState) -> Unit) {
     val metadataProgress by launcherContainer.metadata.progress.collectAsState()
 
     SettingsPage(stringResource(Res.string.settings_hosts)) {
+        SectionHeader(stringResource(Res.string.hosts_section_pcs))
         if (hosts.isEmpty()) {
             Text(stringResource(Res.string.hosts_empty), style = MaterialTheme.typography.bodyLarge, color = LauncherTheme.colors.onSurfaceMuted)
         }

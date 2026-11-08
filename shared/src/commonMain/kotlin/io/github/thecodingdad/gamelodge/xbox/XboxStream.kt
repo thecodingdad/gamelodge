@@ -71,6 +71,9 @@ class XboxStreamController(
         /** Upper limit for the video bitrate in kbit/s (0: the console decides). */
         val maxBitrateKbps: Int = 0,
         val vibration: Boolean = true,
+        /** FSR sharpening 1–10, 0 = off. */
+        val sharpness: Int = 0,
+        val fit: XboxFit = XboxFit.FIT,
     )
 
     private val json = Json { ignoreUnknownKeys = true }
@@ -100,6 +103,9 @@ class XboxStreamController(
                 put("t", "config")
                 put("maxBitrateKbps", config.maxBitrateKbps)
                 put("vibration", config.vibration)
+                put("sharpness", config.sharpness)
+                put("fit", config.fit.player)
+                put("fitCss", config.fit.css)
             }.toString())
             "offer", "chatOffer" -> {
                 val chat = o.str("t") == "chatOffer"

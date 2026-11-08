@@ -7,11 +7,14 @@
 <style>
   html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
   #videoHolder { position: fixed; inset: 0; }
-  #videoHolder video { width: 100%; height: 100%; object-fit: contain; background: #000; visibility: hidden; }
+  #videoHolder video { width: 100%; height: 100%; object-fit: var(--fit, contain); background: #000; visibility: hidden; }
+  /* Sharpened picture (FSR): drawn here instead of the video. */
+  #fsr { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; }
 </style>
 </head>
 <body>
 <div id="videoHolder"></div>
+<div id="fsr"><canvas id="canvas"></canvas></div>
 <script src="player.js"></script>
 </body>
 </html>

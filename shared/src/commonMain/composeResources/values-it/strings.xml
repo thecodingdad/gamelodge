@@ -1690,4 +1690,25 @@
     <string name="xbox_unlicensed_dim">Attenuati</string>
     <string name="xbox_wake_hint">In standby GameLodge accende la console tramite Xbox Live. In modalità risparmio energetico può farlo solo un'azione di Home Assistant (ad es. HDMI-CEC del televisore).</string>
     <string name="xbox_auto_sleep_sub">Spegne la console (standby) dopo questo tempo dall'ultimo streaming; se è impostata un'azione di Home Assistant per sospensione o spegnimento, viene usata quella.</string>
+    <string name="hosts_section_pcs">PC</string>
+    <string name="xbox_stream_section">Streaming</string>
+    <string name="xbox_resolution">Risoluzione</string>
+    <string name="xbox_resolution_auto">Automatica</string>
+    <string name="xbox_resolution_hq">1080p HQ</string>
+    <string name="xbox_resolution_sub">1080p HQ trasmette con un bitrate più alto (serve una rete potente).</string>
+    <string name="xbox_resolution_one">Le console Xbox One trasmettono in 720p.</string>
+    <string name="xbox_bitrate">Limite di bitrate</string>
+    <string name="xbox_bitrate_auto">Nessuno</string>
+    <string name="xbox_bitrate_sub">La console sceglie il bitrate da sola, al massimo questo (ad es. con dati mobili).</string>
+    <string name="xbox_sharpness">Nitidezza immagine</string>
+    <string name="xbox_sharpness_low">Bassa</string>
+    <string name="xbox_sharpness_medium">Media</string>
+    <string name="xbox_sharpness_high">Alta</string>
+    <string name="xbox_sharpness_sub">Scala e rende più nitida l'immagine (FSR): utile con 720p su schermi grandi.</string>
+    <string name="xbox_fit">Immagine</string>
+    <string name="xbox_fit_fit">Adatta</string>
+    <string name="xbox_fit_stretch">Allunga</string>
+    <string name="xbox_fit_zoom">Zoom</string>
+    <string name="xbox_vibration">Vibrazione</string>
+    <string name="xbox_vibration_sub">La vibrazione del gioco sul controller.</string>
 </resources>

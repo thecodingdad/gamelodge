@@ -136,6 +136,8 @@ fun HostConfigScreen(host: HostState, openHaSettings: () -> Unit) {
             )
         }
 
+        if (isXbox) XboxStreamSection(io.github.thecodingdad.gamelodge.xbox.XboxRepository.consoleId(host.uuid)!!)
+
         SectionHeader(stringResource(Res.string.host_ha_actions))
         if (!c.ha.auth.isLoggedIn) {
             Text(stringResource(Res.string.host_ha_actions_needs_ha), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)

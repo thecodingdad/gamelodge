@@ -41,8 +41,8 @@ class XhomeSession(
     private val http: OkHttpClient,
     private val auth: XboxAuth,
     private val consoleId: String,
-    /** 720p for Xbox One consoles, 1080p for Series consoles. */
-    private val fullHd: Boolean,
+    /** Client platform the stream is sized for ([XboxResolution.osName]): android 720p, windows 1080p, tizen 1080p HQ. */
+    private val osName: String,
     private val locale: String = "en-US",
 ) {
     private val json = Json { ignoreUnknownKeys = true }
@@ -53,7 +53,6 @@ class XhomeSession(
     /** Starts the session and waits until the console is ready to connect. */
     suspend fun start() = withContext(Dispatchers.IO) {
         val token = auth.xhome()
-        val osName = if (fullHd) "windows" else "android"
         val body = buildJsonObject {
             put("clientSessionId", "")
             put("titleId", "")

@@ -287,3 +287,70 @@ private fun XboxCard(
         note?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceMuted) }
     }
 }
+
+/** A console's stream settings (its host settings page). */
+@Composable
+fun XboxStreamSection(consoleId: String) {
+    val c = io.github.thecodingdad.gamelodge.LocalContainer.current
+    val scope = rememberCoroutineScope()
+    val settings by c.settings.settings.collectAsState(null)
+    val hosts by c.xbox.hosts.collectAsState()
+    val s = settings?.xboxStream?.get(consoleId) ?: io.github.thecodingdad.gamelodge.xbox.XboxStreamSettings()
+    fun save(new: io.github.thecodingdad.gamelodge.xbox.XboxStreamSettings) {
+        scope.launch { c.settings.update { it.copy(xboxStream = it.xboxStream + (consoleId to new)) } }
+    }
+    SectionHeader(stringResource(Res.string.xbox_stream_section))
+    // Xbox One consoles always send 720p: the choice only for Series consoles.
+    if (hosts[consoleId]?.console?.isSeries == true) {
+        ChoiceRow(
+            stringResource(Res.string.xbox_resolution), io.github.thecodingdad.gamelodge.xbox.XboxResolution.entries, s.resolution,
+            label = {
+                when (it) {
+                    io.github.thecodingdad.gamelodge.xbox.XboxResolution.AUTO -> stringResource(Res.string.xbox_resolution_auto)
+                    io.github.thecodingdad.gamelodge.xbox.XboxResolution.P720 -> "720p"
+                    io.github.thecodingdad.gamelodge.xbox.XboxResolution.P1080 -> "1080p"
+                    io.github.thecodingdad.gamelodge.xbox.XboxResolution.P1080_HQ -> stringResource(Res.string.xbox_resolution_hq)
+                }
+            },
+            onSelect = { save(s.copy(resolution = it)) },
+            subtitle = stringResource(Res.string.xbox_resolution_sub),
+        )
+    } else {
+        Text(stringResource(Res.string.xbox_resolution_one), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
+    }
+    ChoiceRow(
+        stringResource(Res.string.xbox_bitrate), listOf(0, 5, 10, 15, 20, 30), s.maxBitrateMbps,
+        label = { if (it == 0) stringResource(Res.string.xbox_bitrate_auto) else "$it Mbit/s" },
+        onSelect = { save(s.copy(maxBitrateMbps = it)) },
+        subtitle = stringResource(Res.string.xbox_bitrate_sub),
+    )
+    ChoiceRow(
+        stringResource(Res.string.xbox_sharpness), listOf(0, 2, 5, 8), s.sharpness,
+        label = {
+            stringResource(
+                when (it) {
+                    0 -> Res.string.off
+                    2 -> Res.string.xbox_sharpness_low
+                    5 -> Res.string.xbox_sharpness_medium
+                    else -> Res.string.xbox_sharpness_high
+                },
+            )
+        },
+        onSelect = { save(s.copy(sharpness = it)) },
+        subtitle = stringResource(Res.string.xbox_sharpness_sub),
+    )
+    ChoiceRow(
+        stringResource(Res.string.xbox_fit), io.github.thecodingdad.gamelodge.xbox.XboxFit.entries, s.fit,
+        label = {
+            stringResource(
+                when (it) {
+                    io.github.thecodingdad.gamelodge.xbox.XboxFit.FIT -> Res.string.xbox_fit_fit
+                    io.github.thecodingdad.gamelodge.xbox.XboxFit.STRETCH -> Res.string.xbox_fit_stretch
+                    io.github.thecodingdad.gamelodge.xbox.XboxFit.ZOOM -> Res.string.xbox_fit_zoom
+                },
+            )
+        },
+        onSelect = { save(s.copy(fit = it)) },
+    )
+    SwitchRow(stringResource(Res.string.xbox_vibration), s.vibration, { save(s.copy(vibration = it)) }, subtitle = stringResource(Res.string.xbox_vibration_sub))
+}

@@ -67,8 +67,16 @@ class XboxRepository(
 
     /** The game [titleId] runs on [consoleId] now (started here), before the presence says so. */
     fun markRunning(consoleId: String, titleId: Long?) {
+        if (titleId == null) started.remove(consoleId) else started[consoleId] = titleId to clock()
         _running.value = if (titleId == null) _running.value - consoleId else _running.value + (consoleId to titleId)
     }
+
+    /** Games started here (title id, when): the presence names a game only up to a minute later. */
+    private val started = java.util.concurrent.ConcurrentHashMap<String, Pair<Long, Long>>()
+
+    /** [titleId] runs on [consoleId] right now: started here moments ago, or in the account's presence. */
+    suspend fun isRunning(consoleId: String, titleId: Long): Boolean =
+        _running.value[consoleId] == titleId || activeTitle() == titleId
 
     /** Owned products (license of their own) with the time they were looked up. */
     private val owned = HashMap<String, Pair<Boolean, Long>>()
@@ -147,7 +155,14 @@ class XboxRepository(
         // The account's presence names the game in front: it runs on the console that is on.
         val on = _hosts.value.values.filter { !it.missing && it.console.power == XboxPower.ON }
         val title = if (on.isEmpty()) null else activeTitle()
-        _running.value = on.firstOrNull()?.takeIf { title != null }?.let { mapOf(it.console.id to title!!) } ?: emptyMap()
+        val now = clock()
+        _running.value = buildMap {
+            on.firstOrNull()?.let { host -> title?.let { put(host.console.id, it) } }
+            // Started here moments ago and not in the presence yet: still running.
+            started.forEach { (id, s) ->
+                if (id !in this && now - s.second < PRESENCE_DELAY_MS && on.any { it.console.id == id }) put(id, s.first)
+            }
+        }
         _hosts.value.values.filter { !it.missing && it.console.power == XboxPower.ON }.forEach { host ->
             if (clock() - (lastGamesSync[host.console.id] ?: 0) > GAMES_INTERVAL_MS) {
                 scope.launch { runCatching { syncGames(host.console.id) }.onFailure { Log.w("Xbox games: ${it.message}") } }
@@ -282,14 +297,17 @@ class XboxRepository(
         }
     }
 
-    /** A new XhomeSession for streaming from [consoleId]. */
-    fun newSession(consoleId: String): XhomeSession {
+    /** A new XhomeSession for streaming from [consoleId] at [resolution]. */
+    fun newSession(consoleId: String, resolution: XboxResolution = XboxResolution.AUTO): XhomeSession {
         val series = _hosts.value[consoleId]?.console?.isSeries == true
-        return XhomeSession(http, auth, consoleId, fullHd = series, locale = Locale.getDefault().toLanguageTag())
+        val osName = resolution.osName.ifEmpty { if (series) XboxResolution.P1080.osName else XboxResolution.P720.osName }
+        return XhomeSession(http, auth, consoleId, osName, locale = Locale.getDefault().toLanguageTag())
     }
 
     companion object {
         private const val POLL_MS = 30_000L
+        /** How long the presence may take to name a game started here. */
+        private const val PRESENCE_DELAY_MS = 3 * 60_000L
         private const val GAMES_INTERVAL_MS = 15 * 60_000L
         private const val LICENSE_TTL_MS = 24 * 3_600_000L
 

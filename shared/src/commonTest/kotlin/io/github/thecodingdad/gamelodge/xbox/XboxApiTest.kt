@@ -161,7 +161,7 @@ class XboxApiTest {
 
     @Test
     fun sessionSignalingAndTeredo() = runBlocking {
-        val session = XhomeSession(http, signedIn(), "FD01", fullHd = false)
+        val session = XhomeSession(http, signedIn(), "FD01", XboxResolution.P720.osName)
         session.start()
         assertTrue(session.started)
         val play = requests.first { it.path!!.endsWith("/home/play") }
@@ -190,7 +190,7 @@ class XboxApiTest {
 
     @Test
     fun streamControllerAnswersThePage() = runBlocking {
-        val session = XhomeSession(http, signedIn(), "FD01", fullHd = true)
+        val session = XhomeSession(http, signedIn(), "FD01", XboxResolution.P1080.osName)
         session.start()
         val sent = CopyOnWriteArrayList<String>()
         val controller = XboxStreamController(session, this, XboxStreamController.Config(maxBitrateKbps = 12000))

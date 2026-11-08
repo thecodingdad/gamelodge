@@ -366,11 +366,12 @@ class LaunchCoordinator(
         // The game in front on the console: started only when another (or none) runs.
         val titleId = target.appId?.toUInt()?.toLong()
         val productId = target.appUuid
-        if (productId != null && (titleId == null || xbox.activeTitle() != titleId)) {
+        if (productId != null && (titleId == null || !xbox.isRunning(consoleId, titleId))) {
             if (!xbox.launch(consoleId, productId)) Log.w("Xbox: start of ${target.name} not confirmed")
         }
 
-        val session = xbox.newSession(consoleId)
+        val streamSettings = settings.current().xboxStream[consoleId] ?: io.github.thecodingdad.gamelodge.xbox.XboxStreamSettings()
+        val session = xbox.newSession(consoleId, streamSettings.resolution)
         try {
             session.start()
         } catch (e: io.github.thecodingdad.gamelodge.xbox.XhomeException) {
@@ -387,7 +388,12 @@ class LaunchCoordinator(
             return fail(entry, LaunchError.START_FAILED, e.message)
         }
         val controller = io.github.thecodingdad.gamelodge.xbox.XboxStreamController(
-            session, scope, io.github.thecodingdad.gamelodge.xbox.XboxStreamController.Config(),
+            session, scope, io.github.thecodingdad.gamelodge.xbox.XboxStreamController.Config(
+                maxBitrateKbps = streamSettings.maxBitrateMbps * 1000,
+                vibration = streamSettings.vibration,
+                sharpness = streamSettings.sharpness,
+                fit = streamSettings.fit,
+            ),
         )
         try {
             val profileName = profiles.active("").name.ifEmpty { null }
