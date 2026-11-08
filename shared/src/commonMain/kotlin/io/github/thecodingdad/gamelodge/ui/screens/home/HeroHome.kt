@@ -122,7 +122,7 @@ fun HeroHome(
     val lastId = callbacks.lastFocusedKey?.substringAfterLast(':')
     val remembered = lastId?.let { id -> filterRows.firstNotNullOfOrNull { row -> row.entries.firstOrNull { it.item.id == id } } }
     // Avoid reloading artwork for every item while the user scrolls fast.
-    val fallback = remembered ?: rows.running.firstOrNull()?.entry ?: filterRows.firstOrNull()?.entries?.firstOrNull()
+    val fallback = remembered ?: rows.running.firstOrNull()?.entry ?: xboxRunning.firstOrNull()?.entry ?: filterRows.firstOrNull()?.entries?.firstOrNull()
         ?: rows.continuePlaying.firstOrNull() ?: rows.recentlyAdded.firstOrNull()
     LaunchedEffect(focused, hovered, fallback) {
         if (focused != null || hovered != null) delay(140)
@@ -152,7 +152,7 @@ fun HeroHome(
         )))
 
         val insets = LocalShellInsets.current
-        if (rows.isEmpty && rows.running.isEmpty()) {
+        if (rows.isEmpty && rows.running.isEmpty() && xboxRunning.isEmpty()) {
             Box(Modifier.padding(insets)) { emptyContent() }
             return@Box
         }
@@ -169,7 +169,7 @@ fun HeroHome(
             io.github.thecodingdad.gamelodge.ui.input.RegisterStickScroll(listState)
             var focusedRow by remember { mutableStateOf<String?>(null) }
             val rowKeys = buildList {
-                if (rows.running.isNotEmpty()) add("running")
+                if (rows.running.isNotEmpty() || xboxRunning.isNotEmpty()) add("running")
                 filterRows.forEachIndexed { index, row ->
                     if (index == haIndex && haRow != null) add("ha")
                     if (row.entries.isNotEmpty()) add("row:${row.key}")
@@ -349,7 +349,7 @@ fun HeroHome(
                     if (index == haIndex && haRow != null) item(key = "ha") { pinned("ha") { haRow() } }
                     homeRow(
                         "row:${row.key}", null, row.entries, callbacks, pinned,
-                        firstRow = rows.running.isEmpty() && index == firstFilled,
+                        firstRow = rows.running.isEmpty() && xboxRunning.isEmpty() && index == firstFilled,
                         onFocus = { entry, list -> focused = entry; focusedSession = null; focusedList = list; focusedListKey = "row:${row.key}" },
                         onHover = { entry, on -> if (on) hovered = entry },
                         actions = actions,
@@ -397,7 +397,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.homeRow(
         LazyRow(
             state = rowState,
             contentPadding = PaddingValues(horizontal = 40.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(TILE_GAP),
             modifier = Modifier.keepHorizontalFocus().focusRestorer().bringIntoViewRequester(rowBringIntoView).mouseDragScroll(rowState, androidx.compose.foundation.gestures.Orientation.Horizontal),
         ) {
             items(entries, key = { it.item.id }) { entry ->
@@ -409,9 +409,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.homeRow(
                     // Apps on the start tab: landscape tiles.
                     io.github.thecodingdad.gamelodge.ui.components.AppTileCard(
                         entry = entry,
-                        // Always the size they have with landscape tiles (as wide as those game tiles,
-                        // 16:9): portrait or square game tiles would make them far too small.
-                        width = homeTileWidth(io.github.thecodingdad.gamelodge.data.settings.TileFormat.LANDSCAPE),
+                        width = homeAppTileWidth(callbacks.layout.format),
                         layout = callbacks.layout,
                         onClick = { actions.open(entry, entries) },
                         onLongClick = { actions.context(entry, entries) { id -> callbacks.onFocusKey("$key:$id") } },
@@ -481,6 +479,19 @@ private fun HeroInfo(entry: LibraryEntry?, modifier: Modifier = Modifier) {
 
 /** Narrowest "running now" card: room for the play button, title and host side by side. */
 private val RUNNING_CARD_MIN_WIDTH = 240.dp
+
+/** Gap between the tiles of a row. */
+private val TILE_GAP = 16.dp
+
+/**
+ * Width of the start tab's app tiles (16:9): with portrait game tiles as wide as two of them and
+ * the gap between (calmest to the eye), otherwise as wide as landscape game tiles (portrait or
+ * square game tiles alone would make them far too small).
+ */
+@Composable
+private fun homeAppTileWidth(format: io.github.thecodingdad.gamelodge.data.settings.TileFormat): androidx.compose.ui.unit.Dp =
+    if (format == io.github.thecodingdad.gamelodge.data.settings.TileFormat.PORTRAIT) homeTileWidth(format) * 2 + TILE_GAP
+    else homeTileWidth(io.github.thecodingdad.gamelodge.data.settings.TileFormat.LANDSCAPE)
 
 /**
  * Width of the start tab's game tiles in the chosen [format] (running cards at least
