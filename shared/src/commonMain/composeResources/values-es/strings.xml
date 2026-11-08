@@ -1714,4 +1714,5 @@
     <string name="xbox_account_note">Se aplica a todas las consolas de esta cuenta.</string>
     <string name="xbox_signed_in">Sesión iniciada como</string>
     <string name="profiles_intro">El perfil activo se usa en cada transmisión. Antes de iniciar un juego puedes cambiarlo en los detalles del juego (botón de perfil o LB/RB).</string>
+    <string name="xbox_dashboard_hint">Aquí Guide es el botón Xbox. Mantén Start para el menú rápido (volver a GameLodge).</string>
 </resources>

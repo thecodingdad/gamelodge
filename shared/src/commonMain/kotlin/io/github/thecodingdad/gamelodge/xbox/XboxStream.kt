@@ -74,7 +74,14 @@ class XboxStreamController(
         /** FSR sharpening 1–10, 0 = off. */
         val sharpness: Int = 0,
         val fit: XboxFit = XboxFit.FIT,
+        /** The console's dashboard: the Guide button goes to the console (no GameLodge combination takes it). */
+        val dashboard: Boolean = false,
+        /** Shown briefly once the picture is there (e.g. what the Guide button does), or null. */
+        val hint: String? = null,
     )
+
+    /** The Guide button is the console's Xbox button in this stream. */
+    val guideToConsole: Boolean get() = config.dashboard
 
     private val json = Json { ignoreUnknownKeys = true }
     private val _state = MutableStateFlow<XboxStreamState>(XboxStreamState.Connecting)
@@ -106,6 +113,7 @@ class XboxStreamController(
                 put("sharpness", config.sharpness)
                 put("fit", config.fit.player)
                 put("fitCss", config.fit.css)
+                config.hint?.let { put("hint", it) }
             }.toString())
             "offer", "chatOffer" -> {
                 val chat = o.str("t") == "chatOffer"

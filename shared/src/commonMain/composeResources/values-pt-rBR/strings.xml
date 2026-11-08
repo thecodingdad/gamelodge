@@ -1714,4 +1714,5 @@
     <string name="xbox_account_note">Vale para todos os consoles desta conta.</string>
     <string name="xbox_signed_in">Conectado como</string>
     <string name="profiles_intro">O perfil ativo é usado em cada transmissão. Antes de iniciar um jogo, você pode trocá-lo nos detalhes do jogo (botão de perfil ou LB/RB).</string>
+    <string name="xbox_dashboard_hint">Aqui Guide é o botão Xbox. Segure Start para o menu rápido (voltar ao GameLodge).</string>
 </resources>

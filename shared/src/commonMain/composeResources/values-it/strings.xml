@@ -1714,4 +1714,5 @@
     <string name="xbox_account_note">Vale per tutte le console di questo account.</string>
     <string name="xbox_signed_in">Accesso eseguito come</string>
     <string name="profiles_intro">Il profilo attivo vale per ogni streaming. Prima di avviare un gioco puoi cambiarlo nei dettagli del gioco (pulsante profilo o LB/RB).</string>
+    <string name="xbox_dashboard_hint">Qui Guide è il tasto Xbox. Tieni premuto Start per il menu rapido (torna a GameLodge).</string>
 </resources>

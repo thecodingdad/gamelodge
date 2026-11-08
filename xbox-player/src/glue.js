@@ -38,6 +38,16 @@ window.ReactNativeWebView = {
 const NO_POSTER = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=';
 let shown = false;
 let sharpness = 0;
+let hint = '';
+
+/** Shows the start notice for a few seconds once the picture is there. */
+function showHint() {
+  const el = document.getElementById('hint');
+  if (!hint || !el) return;
+  el.textContent = hint;
+  el.classList.add('on');
+  setTimeout(() => el.classList.remove('on'), 6000);
+}
 function watchVideo() {
   const holder = document.getElementById('videoHolder');
   const hook = (video) => {
@@ -50,6 +60,7 @@ function watchVideo() {
       if (sharpness > 0) startSharpening(video);
       else video.style.visibility = 'visible';
       post({ t: 'video' });
+      showHint();
     };
     if (video.requestVideoFrameCallback) video.requestVideoFrameCallback(() => live());
     video.addEventListener('playing', () => setTimeout(live, 150));
@@ -76,6 +87,7 @@ function startSharpening(video) {
 
 function start(config) {
   sharpness = config.sharpness || 0;
+  hint = config.hint || '';
   if (config.fitCss) document.documentElement.style.setProperty('--fit', config.fitCss);
   watchVideo();
   player = new xStreamingPlayer('videoHolder', {

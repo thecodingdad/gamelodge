@@ -68,8 +68,8 @@ class XboxStreamActivity : androidx.activity.ComponentActivity() {
         fun state(): XboxPadState {
             val view = KeyEvent.KEYCODE_BUTTON_SELECT in buttons
             val menu = KeyEvent.KEYCODE_BUTTON_START in buttons
-            // View + Menu together: the Xbox button on the console (the Guide stays GameLodge's).
-            val nexus = view && menu
+            // View + Menu together: the Xbox button on the console; in the dashboard's stream also Guide.
+            val nexus = (view && menu) || KeyEvent.KEYCODE_BUTTON_MODE in buttons
             return XboxPadState(
                 index = index,
                 a = KeyEvent.KEYCODE_BUTTON_A in buttons, b = KeyEvent.KEYCODE_BUTTON_B in buttons,
@@ -213,7 +213,8 @@ class XboxStreamActivity : androidx.activity.ComponentActivity() {
             if (event.keyCode == KeyEvent.KEYCODE_BUTTON_B && event.action == KeyEvent.ACTION_UP) finish()
             return true
         }
-        if (event.keyCode == KeyEvent.KEYCODE_BUTTON_MODE) return true
+        // Guide: GameLodge's in game streams; the console's Xbox button in the dashboard's.
+        if (event.keyCode == KeyEvent.KEYCODE_BUTTON_MODE && stream?.guideToConsole != true) return true
         val p = pad(event.deviceId) ?: return true
         val changed = when (event.action) {
             KeyEvent.ACTION_DOWN -> p.buttons.add(event.keyCode)
@@ -259,6 +260,17 @@ class XboxStreamActivity : androidx.activity.ComponentActivity() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) device.vibratorManager.defaultVibrator.vibrate(effect)
             else @Suppress("DEPRECATION") device.vibrator.vibrate(effect)
         }.onFailure { Log.w("Rumble: ${it.message}") }
+    }
+
+    // The dashboard's stream takes the Guide button for the console while it is in front.
+    override fun onResume() {
+        super.onResume()
+        io.github.thecodingdad.gamelodge.input.ButtonCombos.guidePassThrough = stream?.guideToConsole == true
+    }
+
+    override fun onPause() {
+        io.github.thecodingdad.gamelodge.input.ButtonCombos.guidePassThrough = false
+        super.onPause()
     }
 
     override fun onDestroy() {

@@ -1,5 +1,7 @@
 package io.github.thecodingdad.gamelodge.ui.components
 
+import io.github.thecodingdad.gamelodge.resources.ic_xbox
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -267,6 +269,10 @@ fun AppTileImage(entry: LibraryEntry, modifier: Modifier = Modifier) {
         ArtworkImage(it, entry.item.title, modifier)
         return
     }
+    if (entry.isXboxDashboardWithoutArt()) {
+        XboxDashboardArt(modifier)
+        return
+    }
     val pkg = entry.localTarget?.packageName
     val source = if (pkg == null) entry.coverModel() else null
     val key = pkg ?: "remote:${entry.item.id}:$source"
@@ -288,6 +294,10 @@ fun AppTileImage(entry: LibraryEntry, modifier: Modifier = Modifier) {
  */
 @Composable
 fun CoverImage(entry: LibraryEntry, modifier: Modifier = Modifier, animated: Boolean = false, showTitleOnPlaceholder: Boolean = true) {
+    if (entry.isXboxDashboardWithoutArt()) {
+        XboxDashboardArt(modifier)
+        return
+    }
     val model = entry.coverModel()
     val pkg = entry.localTarget?.packageName
     if (model != null || pkg == null) {
@@ -421,3 +431,21 @@ private fun BlurredCover(model: Any, title: String, modifier: Modifier) {
     }
 }
 
+
+/** An Xbox console's dashboard app that has no artwork of its own (set by hand). */
+fun LibraryEntry.isXboxDashboardWithoutArt(): Boolean =
+    item.coverUrl == null && item.tileUrl == null && xboxTargets.any { io.github.thecodingdad.gamelodge.xbox.XboxRepository.isDashboard(it) }
+
+/** Artwork of an Xbox dashboard app: the Xbox logo on Xbox green. */
+@Composable
+fun XboxDashboardArt(modifier: Modifier = Modifier) {
+    androidx.compose.foundation.layout.BoxWithConstraints(
+        modifier.background(androidx.compose.ui.graphics.Brush.linearGradient(listOf(androidx.compose.ui.graphics.Color(0xFF1E9E1E), androidx.compose.ui.graphics.Color(0xFF0B5A0B)))),
+        contentAlignment = androidx.compose.ui.Alignment.Center,
+    ) {
+        androidx.compose.material3.Icon(
+            org.jetbrains.compose.resources.vectorResource(io.github.thecodingdad.gamelodge.resources.Res.drawable.ic_xbox), null,
+            tint = androidx.compose.ui.graphics.Color.White, modifier = Modifier.size(minOf(maxWidth, maxHeight) * 0.5f),
+        )
+    }
+}

@@ -141,7 +141,7 @@ fun AppsScreen(
     val sorted = remember(source, sort, ascending, search) { FilterEngine.query(source, sort, search, ascending) }
     val local = if (flat) sorted else sorted.filter { it.localTarget != null }
     val byHost = if (flat) emptyMap() else sorted.filter { it.localTarget == null }
-        .groupBy { it.remoteTargets.firstOrNull()?.hostName.orEmpty() }
+        .groupBy { it.streamTargets.firstOrNull()?.hostName.orEmpty() }
 
     Column(Modifier.fillMaxSize()) {
     FilterBar(

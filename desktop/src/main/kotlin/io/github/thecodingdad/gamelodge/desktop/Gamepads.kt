@@ -123,6 +123,10 @@ class Gamepads(private val dispatcher: InputDispatcher) {
         while (true) {
             val shownOver = overlay
             val focused = shownOver != null || window?.let { it.isActive || it.isFocused } == true
+            // The Xbox dashboard's stream in front: its Guide goes to the console, no combination takes it.
+            io.github.thecodingdad.gamelodge.desktop.stream.XboxPadFeed.launcherFocused = focused
+            ButtonCombos.guidePassThrough = io.github.thecodingdad.gamelodge.desktop.stream.XboxPadFeed.guideToConsole &&
+                io.github.thecodingdad.gamelodge.desktop.stream.XboxPadFeed.sink != null && !focused
             try {
                 synchronized(manager) {
                     // Switched between the launcher and the overlay: start over (nothing held carries across).

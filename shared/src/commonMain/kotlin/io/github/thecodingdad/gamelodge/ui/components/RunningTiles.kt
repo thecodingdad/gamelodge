@@ -118,7 +118,7 @@ fun startXboxQuit(c: io.github.thecodingdad.gamelodge.LauncherContainer, game: i
     Quitting.start(
         c.scope, "xbox:${game.consoleId}", game.entry?.item?.title ?: game.consoleName,
         quit = { quitXbox(c, game) },
-        running = { c.xbox.running.value[game.consoleId] == game.titleId },
+        running = { if (game.dashboard) io.github.thecodingdad.gamelodge.xbox.XboxStreams.current != null else c.xbox.running.value[game.consoleId] == game.titleId },
     )
 }
 
@@ -132,7 +132,8 @@ fun resumeXbox(c: io.github.thecodingdad.gamelodge.LauncherContainer, game: io.g
 /** Quits a game on an Xbox console: our stream of it ends, the game on the console too. */
 suspend fun quitXbox(c: io.github.thecodingdad.gamelodge.LauncherContainer, game: io.github.thecodingdad.gamelodge.xbox.XboxRunningGame) {
     if (game.streamed) c.streamControls.disconnect()
-    c.xbox.quitGame(game.consoleId, game.target?.appUuid)
+    // The dashboard: only the stream ends (a game left in the background keeps running).
+    if (!game.dashboard) c.xbox.quitGame(game.consoleId, game.target?.appUuid)
 }
 
 /** The tile being held to quit (Y) and how far: the tile shows it. */

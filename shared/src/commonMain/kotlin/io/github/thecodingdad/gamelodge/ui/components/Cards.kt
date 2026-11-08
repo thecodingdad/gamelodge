@@ -353,6 +353,8 @@ fun AppTile(
                         modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(horizontal = 6.dp, vertical = 8.dp),
                     )
                 }
+            } else if (entry.isXboxDashboardWithoutArt()) {
+                XboxDashboardArt(Modifier.fillMaxSize())
             } else {
                 ArtworkImage(entry.coverModel(), entry.item.title, Modifier.fillMaxSize(), showTitleOnPlaceholder = true)
                 if (onTile) TileOverlay(entry, layout.copy(info = TileInfo.NONE))

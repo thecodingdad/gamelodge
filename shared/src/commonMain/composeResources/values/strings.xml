@@ -1714,4 +1714,5 @@
     <string name="xbox_account_note">Applies to all consoles of this account.</string>
     <string name="xbox_signed_in">Signed in as</string>
     <string name="profiles_intro">The active profile is used for every stream. Before starting a game, you can switch it in the game's details (profile button or LB/RB).</string>
+    <string name="xbox_dashboard_hint">Guide is the Xbox button here. Hold Start for the quick menu (back to GameLodge).</string>
 </resources>

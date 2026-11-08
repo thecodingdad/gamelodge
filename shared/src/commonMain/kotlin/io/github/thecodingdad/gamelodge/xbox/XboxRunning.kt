@@ -16,6 +16,8 @@ data class XboxRunningGame(
     val target: LaunchTargetEntity?,
     /** This launcher streams it right now. */
     val streamed: Boolean,
+    /** The console's dashboard streamed from here (no game): ending it only ends the stream. */
+    val dashboard: Boolean = false,
 )
 
 /** The games running on the added consoles right now. */
@@ -36,6 +38,13 @@ fun rememberXboxRunning(): List<XboxRunningGame> {
             }
             val streamed = active?.hostUuid == hostUuid && XboxStreams.current != null
             XboxRunningGame(consoleId, host.console.name, titleId, entry, target, streamed)
-        }
+        } + listOfNotNull(
+            // The dashboard streamed from here: shown like a running game, so it can be resumed and ended.
+            active?.takeIf { XboxStreams.current?.guideToConsole == true }?.let { a ->
+                val target = a.entry.xboxTargets.firstOrNull { XboxRepository.isDashboard(it) } ?: return@let null
+                val host = hosts.values.firstOrNull { it.hostUuid == a.hostUuid } ?: return@let null
+                XboxRunningGame(host.console.id, host.console.name, 0, a.entry, target, streamed = true, dashboard = true)
+            },
+        )
     }
 }

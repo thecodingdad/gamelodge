@@ -61,6 +61,13 @@ console. Play time counts while you stream.
 Controllers come from GameLodge, as many as four, with rumble. Touch controls for phones without a controller
 are not there yet.
 
+### The console's dashboard
+
+Every added console also appears as the app **Xbox Dashboard** in the Apps tab. It streams the
+console's home screen – to change its settings or install a game from afar. A game left running on the
+console stays there, minimized. In this stream **Guide** is the console's Xbox button; **hold Start** for the
+quick menu, which also ends the stream (**Quit** ends only the stream, not the console).
+
 ## Stream settings
 
 In the [stream profiles](profiles.md), tab **Xbox** – like the PC settings, the active profile counts, and

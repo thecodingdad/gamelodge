@@ -21,6 +21,10 @@ object XboxPadFeed {
     /** Every slot's state and the buttons held back by the launcher's combinations; null: no stream. */
     @Volatile var sink: ((List<Pair<SdlPads.State, Set<Int>>?>) -> Unit)? = null
     @Volatile var vibrate: (slot: Int, strength: Float, millis: Int) -> Unit = { _, _, _ -> }
+    /** The stream takes the Guide button as the console's Xbox button (the dashboard). */
+    @Volatile var guideToConsole = false
+    /** The launcher's window is in front (the Guide is GameLodge's then). */
+    @Volatile var launcherFocused = false
 }
 
 /**
@@ -61,6 +65,7 @@ class XboxPlayer(private val scope: CoroutineScope) {
             }
         }, "xbox-player-out").apply { isDaemon = true }.start()
         slots.clear()
+        XboxPadFeed.guideToConsole = stream.guideToConsole
         XboxPadFeed.sink = { states -> stream.pads(padStates(states)) }
         // The stream ended (console, failure, quick menu): the window closes with the end of its input.
         scope.launch {
@@ -70,6 +75,7 @@ class XboxPlayer(private val scope: CoroutineScope) {
         }
         p.onExit().thenRun {
             XboxPadFeed.sink = null
+            XboxPadFeed.guideToConsole = false
             process = null
             stream.end()
             if (XboxStreams.current === stream) XboxStreams.current = null
@@ -87,8 +93,9 @@ class XboxPlayer(private val scope: CoroutineScope) {
         fun on(v: Boolean, code: Int) = v && code !in held
         val view = on(s.back, PadKeys.SELECT)
         val menu = on(s.start, PadKeys.START)
-        // View + Menu together: the Xbox button on the console (the Guide stays GameLodge's).
-        val nexus = view && menu
+        // View + Menu together: the Xbox button on the console; in the dashboard's stream also Guide
+        // (while the player, not the launcher, is in front).
+        val nexus = (view && menu) || (XboxPadFeed.guideToConsole && !XboxPadFeed.launcherFocused && s.guide)
         XboxPadState(
             index = index,
             a = on(s.a, PadKeys.A), b = on(s.b, PadKeys.B), x = on(s.x, PadKeys.X), y = on(s.y, PadKeys.Y),

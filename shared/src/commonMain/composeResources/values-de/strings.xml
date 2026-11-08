@@ -1712,4 +1712,5 @@
     <string name="xbox_account_note">Gilt für alle Konsolen dieses Kontos.</string>
     <string name="xbox_signed_in">Angemeldet als</string>
     <string name="profiles_intro">Das aktive Profil gilt für jeden Stream. Vor dem Spielstart kannst du es in der Detailansicht des Spiels wechseln (Profil-Button oder LB/RB).</string>
+    <string name="xbox_dashboard_hint">Guide ist hier die Xbox-Taste. Start gedrückt halten für das Schnellmenü (zurück zu GameLodge).</string>
 </resources>

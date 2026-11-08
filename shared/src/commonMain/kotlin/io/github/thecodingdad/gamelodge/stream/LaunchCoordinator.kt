@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.stream
 
+import io.github.thecodingdad.gamelodge.resources.xbox_dashboard_hint
 import io.github.thecodingdad.gamelodge.data.db.LaunchTargetEntity
 import io.github.thecodingdad.gamelodge.data.db.LibraryEntry
 import io.github.thecodingdad.gamelodge.data.db.TargetType
@@ -363,10 +364,14 @@ class LaunchCoordinator(
         _state.value = LaunchState.Working(entry, LaunchStep.STARTING)
         autoSleep().cancel(hostUuid)
 
-        // The game in front on the console: started only when another (or none) runs.
+        // The game in front on the console: started only when another (or none) runs. The
+        // dashboard: the console's home screen (a running game stays, minimized).
+        val dashboard = io.github.thecodingdad.gamelodge.xbox.XboxRepository.isDashboard(target)
         val titleId = target.appId?.toUInt()?.toLong()
         val productId = target.appUuid
-        if (productId != null && (titleId == null || !xbox.isRunning(consoleId, titleId))) {
+        if (dashboard) {
+            if (!xbox.goHome(consoleId)) Log.w("Xbox: home screen not confirmed")
+        } else if (productId != null && (titleId == null || !xbox.isRunning(consoleId, titleId))) {
             if (!xbox.launch(consoleId, productId)) Log.w("Xbox: start of ${target.name} not confirmed")
         }
 
@@ -395,6 +400,8 @@ class LaunchCoordinator(
                 vibration = streamSettings.vibration,
                 sharpness = streamSettings.sharpness,
                 fit = streamSettings.fit,
+                dashboard = dashboard,
+                hint = if (dashboard) org.jetbrains.compose.resources.getString(io.github.thecodingdad.gamelodge.resources.Res.string.xbox_dashboard_hint) else null,
             ),
         )
         try {
@@ -404,7 +411,7 @@ class LaunchCoordinator(
             _activeStream.value = ActiveStream(entry, hostUuid, target.appId ?: 0)
             io.github.thecodingdad.gamelodge.xbox.XboxStreams.current = controller
             lastXboxEntry = entry
-            titleId?.let { xbox.markRunning(consoleId, it) }
+            if (!dashboard) titleId?.let { xbox.markRunning(consoleId, it) }
             platform.startXboxStream(entry, target, controller)
             started(entry, target, profileName)
             _state.value = LaunchState.Idle

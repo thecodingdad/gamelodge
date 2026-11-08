@@ -65,6 +65,12 @@ object ButtonCombos {
     /** Set by the platform while it delivers a [replay]: those events pass untouched. */
     @Volatile var replaying = false
 
+    /**
+     * A stream in front wants the Guide button for itself (the Xbox dashboard: the console's Xbox
+     * button): no combination takes it, it goes on to the stream.
+     */
+    @Volatile var guidePassThrough = false
+
     fun combosFor(descriptor: String?): Map<ComboAction, Set<Int>> =
         descriptor?.let { overrides[it] }?.let { combos + it } ?: combos
 
@@ -133,6 +139,7 @@ object ButtonCombos {
         onAction: (ComboAction, Int) -> Unit,
     ): Boolean {
         if (replaying) return false
+        if (guidePassThrough && code == PadKeys.MODE) return false
         val held = down.getOrPut(device) { LinkedHashSet() }
         val swallowed = consuming.getOrPut(device) { HashSet() }
         val recordsThis = recorder != null && (recordDescriptor == null || recordDescriptor == descriptor)

@@ -2,6 +2,7 @@ package io.github.thecodingdad.gamelodge.xbox
 
 import io.github.thecodingdad.gamelodge.data.db.LauncherDatabase
 import io.github.thecodingdad.gamelodge.data.db.MetaField
+import io.github.thecodingdad.gamelodge.data.db.LaunchTargetEntity
 import io.github.thecodingdad.gamelodge.data.db.TargetType
 import io.github.thecodingdad.gamelodge.data.library.LibrarySync
 import io.github.thecodingdad.gamelodge.data.library.SourceEntry
@@ -210,6 +211,9 @@ class XboxRepository(
         (if (aumid != null) client.terminate(consoleId, aumid) else client.goHome(consoleId)).also { if (it) markRunning(consoleId, null) }
     }.onFailure(::onAuthError).getOrDefault(false)
 
+    /** The console's home screen in front (a running game stays, minimized). */
+    suspend fun goHome(consoleId: String): Boolean = runCatching { client.goHome(consoleId) }.onFailure(::onAuthError).getOrDefault(false)
+
     /** Title id of the game in front on the account's console, null when none (or unknown). */
     suspend fun activeTitle(): Long? = runCatching { client.activeTitle() }.getOrNull()
 
@@ -271,7 +275,16 @@ class XboxRepository(
                 subscription = subscription,
             )
         }
-        sync.syncXbox(host.hostUuid, entries)
+        // The console's dashboard as an app: streams the console's home screen (settings, installs).
+        val dashboard = SourceEntry(
+            targetId = SourceEntry.xboxId(consoleId, DASHBOARD),
+            type = TargetType.XBOX,
+            name = if (_hosts.value.size > 1) "Xbox Dashboard (${host.console.name})" else "Xbox Dashboard",
+            hostUuid = host.hostUuid,
+            hostName = host.console.name,
+            companionGame = false,
+        )
+        sync.syncXbox(host.hostUuid, entries + dashboard)
         lastGamesSync[consoleId] = now
         val info = storeInfo(entries.mapNotNull { it.appUuid })
         suggestPlatform(host, info)
@@ -301,7 +314,7 @@ class XboxRepository(
         val dao = db.libraryDao()
         val generation = if (host.console.isSeries) "Xbox Series X|S" else "Xbox One"
         val targets = dao.getAllTargets().filter { it.type == TargetType.XBOX && it.hostUuid == host.hostUuid }
-        for ((id, own) in targets.groupBy { it.itemId }) {
+        for ((id, own) in targets.filter { !isDashboard(it) }.groupBy { it.itemId }) {
             val item = dao.getItem(id) ?: continue
             if (dao.getTargetsForItem(id).any { it.type != TargetType.XBOX }) continue
             val is360 = own.any { t -> info[t.appUuid]?.xbox360 == true }
@@ -358,6 +371,12 @@ class XboxRepository(
         private const val LICENSE_TTL_MS = 24 * 3_600_000L
 
         /** Console id of a host uuid `xbox:<id>`, null for other hosts. */
+        /** Product id slot of a console's dashboard app ([isDashboard]). */
+        const val DASHBOARD = "dashboard"
+
+        /** The target streams the console's dashboard, not a game. */
+        fun isDashboard(target: LaunchTargetEntity): Boolean = target.type == TargetType.XBOX && target.id.endsWith(":$DASHBOARD")
+
         fun consoleId(hostUuid: String?): String? = hostUuid?.takeIf { it.startsWith("xbox:") }?.removePrefix("xbox:")
     }
 }
