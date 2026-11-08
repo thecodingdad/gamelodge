@@ -273,34 +273,56 @@ class XboxRepository(
         }
         sync.syncXbox(host.hostUuid, entries)
         lastGamesSync[consoleId] = now
-        suggestPlatform(host)
-        applyStoreInfo(entries.mapNotNull { it.appUuid })
+        val info = storeInfo(entries.mapNotNull { it.appUuid })
+        suggestPlatform(host, info)
+        applyStoreInfo(info)
     }
 
-    /** Games only on Xbox consoles without a platform yet get the console's (a metadata match may correct it). */
-    private suspend fun suggestPlatform(host: XboxHost) {
+    /** Store entries of the console games, once per launcher run (artwork, texts, Xbox 360 or not). */
+    private val storeInfoCache = java.util.concurrent.ConcurrentHashMap<String, XboxProductInfo>()
+
+    private suspend fun storeInfo(productIds: List<String>): Map<String, XboxProductInfo> {
+        val missing = productIds.filter { !storeInfoCache.containsKey(it) }
+        if (missing.isNotEmpty()) {
+            val locale = Locale.getDefault()
+            runCatching { client.productInfo(missing, locale.country.ifEmpty { "US" }, locale.toLanguageTag()) }
+                .onSuccess { storeInfoCache.putAll(it) }
+                .onFailure { Log.w("Xbox store info: ${it.message}") }
+        }
+        return productIds.mapNotNull { id -> storeInfoCache[id]?.let { id to it } }.toMap()
+    }
+
+    /**
+     * Platform of games only on Xbox consoles: Xbox 360 games (the store says so) get "Xbox 360" like
+     * a host's word, so it also corrects a metadata match; the others the console's generation as a
+     * suggestion, when they have none yet (a metadata match may correct that).
+     */
+    private suspend fun suggestPlatform(host: XboxHost, info: Map<String, XboxProductInfo>) {
         val dao = db.libraryDao()
-        val platform = if (host.console.isSeries) "Xbox Series X|S" else "Xbox One"
-        val itemIds = dao.getAllTargets().filter { it.type == TargetType.XBOX && it.hostUuid == host.hostUuid }.map { it.itemId }.distinct()
-        for (id in itemIds) {
+        val generation = if (host.console.isSeries) "Xbox Series X|S" else "Xbox One"
+        val targets = dao.getAllTargets().filter { it.type == TargetType.XBOX && it.hostUuid == host.hostUuid }
+        for ((id, own) in targets.groupBy { it.itemId }) {
             val item = dao.getItem(id) ?: continue
-            if (item.platform != null || dao.getTargetsForItem(id).any { it.type != TargetType.XBOX }) continue
-            if (io.github.thecodingdad.gamelodge.data.library.PlatformResolver.mayReplace(item, io.github.thecodingdad.gamelodge.data.db.PlatformSource.SUGGESTED, platform)) {
-                dao.setPlatform(id, platform, io.github.thecodingdad.gamelodge.data.db.PlatformSource.SUGGESTED)
+            if (dao.getTargetsForItem(id).any { it.type != TargetType.XBOX }) continue
+            val is360 = own.any { t -> info[t.appUuid]?.xbox360 == true }
+            val (platform, source) = if (is360) {
+                "Xbox 360" to io.github.thecodingdad.gamelodge.data.db.PlatformSource.COMPANION
+            } else {
+                if (item.platform != null) continue
+                generation to io.github.thecodingdad.gamelodge.data.db.PlatformSource.SUGGESTED
+            }
+            if (io.github.thecodingdad.gamelodge.data.library.PlatformResolver.mayReplace(item, source, platform)) {
+                dao.setPlatform(id, platform, source)
             }
         }
     }
 
     /** Store artwork and texts for items that have none yet (fields set once or by hand stay). */
-    private suspend fun applyStoreInfo(productIds: List<String>) {
+    private suspend fun applyStoreInfo(info: Map<String, XboxProductInfo>) {
         val dao = db.libraryDao()
-        val targets = dao.getAllTargets().filter { it.type == TargetType.XBOX && it.appUuid in productIds }
+        val targets = dao.getAllTargets().filter { it.type == TargetType.XBOX && it.appUuid in info.keys }
         val needed = targets.filter { t -> dao.getItem(t.itemId)?.let { it.coverUrl == null || it.heroUrl == null || it.description == null } == true }
         if (needed.isEmpty()) return
-        val locale = Locale.getDefault()
-        val info = runCatching {
-            client.productInfo(needed.mapNotNull { it.appUuid }, locale.country.ifEmpty { "US" }, locale.toLanguageTag())
-        }.getOrElse { Log.w("Xbox store info: ${it.message}"); return }
         for (t in needed) {
             val p = info[t.appUuid] ?: continue
             val item = dao.getItem(t.itemId) ?: continue

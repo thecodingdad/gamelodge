@@ -78,6 +78,11 @@ data class XboxProductInfo(
     val description: String?,
     val developer: String?,
     val publisher: String?,
+    /**
+     * An Xbox 360 game (backward compatible): its licenses include a 360 content offer
+     * ("xbx:ContentOffer:…-0000<360 title id>"), which Xbox One and Series games never have.
+     */
+    val xbox360: Boolean = false,
 )
 
 class XboxApiException(message: String, val code: Int = 0) : Exception(message)
@@ -243,6 +248,7 @@ class XboxClient(
                     description = loc.str("ProductDescription") ?: loc.str("ShortDescription"),
                     developer = loc.str("DeveloperName")?.takeIf { it.isNotBlank() },
                     publisher = loc.str("PublisherName")?.takeIf { it.isNotBlank() },
+                    xbox360 = p.toString().contains("\"xbx:ContentOffer:"),
                 )
             }
         }
