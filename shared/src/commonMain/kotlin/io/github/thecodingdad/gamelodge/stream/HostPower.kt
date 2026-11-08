@@ -42,6 +42,8 @@ class HostPower(
                 sent = done || sent
             }
         }
+        // The state shows within seconds instead of at the next 30 s poll.
+        if (console != null && sent) xbox()?.watchPower(console, on = true)
         return sent
     }
 
@@ -55,8 +57,12 @@ class HostPower(
         val entity = haActionFor(config(hostUuid), action)
         val console = io.github.thecodingdad.gamelodge.xbox.XboxRepository.consoleId(hostUuid)
         // Consoles turn off to standby through Xbox Live when no Home Assistant action is set.
-        if (entity == null && console != null && action != PowerAction.RESTART) return xbox()?.turnOff(console) == true
-        return entity != null && ha.runAction(entity)
+        if (entity == null && console != null && action != PowerAction.RESTART) {
+            return (xbox()?.turnOff(console) == true).also { if (it) xbox()?.watchPower(console, on = false) }
+        }
+        return (entity != null && ha.runAction(entity)).also { done ->
+            if (done && console != null) xbox()?.watchPower(console, on = action == PowerAction.RESTART)
+        }
     }
 
     /** The host can be put to sleep after a stream (a Home Assistant action, or a console). */

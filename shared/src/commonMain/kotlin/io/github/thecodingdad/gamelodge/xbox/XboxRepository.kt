@@ -210,12 +210,31 @@ class XboxRepository(
     /** Title id of the game in front on the account's console, null when none (or unknown). */
     suspend fun activeTitle(): Long? = runCatching { client.activeTitle() }.getOrNull()
 
+    private val powerWatches = java.util.concurrent.ConcurrentHashMap<String, Job>()
+
+    /**
+     * After a wake-up or turn-off: asks for the console's state every few seconds until it is
+     * [on] (or not), instead of waiting for the next regular poll; then everything else once.
+     */
+    fun watchPower(consoleId: String, on: Boolean) {
+        powerWatches.remove(consoleId)?.cancel()
+        powerWatches[consoleId] = scope.launch {
+            val until = clock() + WATCH_MS
+            while (clock() < until) {
+                delay(WATCH_STEP_MS)
+                if ((power(consoleId) == XboxPower.ON) == on) break
+            }
+            refresh()
+            powerWatches.remove(consoleId)
+        }
+    }
+
     /** Waits until the console is on (polls its state); false after [timeoutMs]. */
     suspend fun waitOn(consoleId: String, timeoutMs: Long): Boolean {
         val until = clock() + timeoutMs
         while (clock() < until) {
             if (power(consoleId) == XboxPower.ON) return true
-            delay(3_000)
+            delay(WATCH_STEP_MS)
         }
         return false
     }
@@ -305,6 +324,9 @@ class XboxRepository(
 
     companion object {
         private const val POLL_MS = 30_000L
+        /** Fast state polls after a power action: this often, at most this long. */
+        private const val WATCH_STEP_MS = 2_000L
+        private const val WATCH_MS = 90_000L
         /** How long the presence may take to name a game started here. */
         private const val PRESENCE_DELAY_MS = 3 * 60_000L
         private const val GAMES_INTERVAL_MS = 15 * 60_000L

@@ -155,7 +155,7 @@ fun XboxHostCard(host: XboxHost, onConfig: (() -> Unit)?) {
                 note = if (xbox.waitOn(host.console.id, timeout)) wakeOnlineMsg else wakeTimeoutMsg
             }
         },
-        onTurnOff = { scope.launch { xbox.turnOff(host.console.id); xbox.refresh() } },
+        onTurnOff = { scope.launch { if (xbox.turnOff(host.console.id)) xbox.watchPower(host.console.id, on = false) } },
         onRemove = { scope.launch { xbox.remove(host.console.id) } },
     )
 }
