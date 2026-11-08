@@ -299,8 +299,7 @@ class XboxRepository(
 
     /** A new XhomeSession for streaming from [consoleId] at [resolution]. */
     fun newSession(consoleId: String, resolution: XboxResolution = XboxResolution.AUTO): XhomeSession {
-        val series = _hosts.value[consoleId]?.console?.isSeries == true
-        val osName = resolution.osName.ifEmpty { if (series) XboxResolution.P1080.osName else XboxResolution.P720.osName }
+        val osName = resolution.osName.ifEmpty { XboxResolution.P1080.osName }
         return XhomeSession(http, auth, consoleId, osName, locale = Locale.getDefault().toLanguageTag())
     }
 

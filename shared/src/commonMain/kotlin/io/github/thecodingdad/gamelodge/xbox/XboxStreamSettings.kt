@@ -3,12 +3,12 @@ package io.github.thecodingdad.gamelodge.xbox
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
-/** Resolution asked of the console (Xbox One consoles always send 720p). */
+/** Resolution asked of the console; it sends at most what it can (and what its own display output allows). */
 enum class XboxResolution(
     /** The client platform the console's streaming service sizes the stream for. */
     val osName: String,
 ) {
-    /** 1080p on Series consoles, 720p on Xbox One. */
+    /** 1080p (the console sends less where it can't). */
     AUTO(""),
     P720("android"),
     P1080("windows"),

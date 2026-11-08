@@ -294,14 +294,12 @@ fun XboxStreamSection(consoleId: String) {
     val c = io.github.thecodingdad.gamelodge.LocalContainer.current
     val scope = rememberCoroutineScope()
     val settings by c.settings.settings.collectAsState(null)
-    val hosts by c.xbox.hosts.collectAsState()
     val s = settings?.xboxStream?.get(consoleId) ?: io.github.thecodingdad.gamelodge.xbox.XboxStreamSettings()
     fun save(new: io.github.thecodingdad.gamelodge.xbox.XboxStreamSettings) {
         scope.launch { c.settings.update { it.copy(xboxStream = it.xboxStream + (consoleId to new)) } }
     }
     SectionHeader(stringResource(Res.string.xbox_stream_section))
-    // Xbox One consoles always send 720p: the choice only for Series consoles.
-    if (hosts[consoleId]?.console?.isSeries == true) {
+    run {
         ChoiceRow(
             stringResource(Res.string.xbox_resolution), io.github.thecodingdad.gamelodge.xbox.XboxResolution.entries, s.resolution,
             label = {
@@ -315,8 +313,6 @@ fun XboxStreamSection(consoleId: String) {
             onSelect = { save(s.copy(resolution = it)) },
             subtitle = stringResource(Res.string.xbox_resolution_sub),
         )
-    } else {
-        Text(stringResource(Res.string.xbox_resolution_one), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
     }
     ChoiceRow(
         stringResource(Res.string.xbox_bitrate), listOf(0, 5, 10, 15, 20, 30), s.maxBitrateMbps,

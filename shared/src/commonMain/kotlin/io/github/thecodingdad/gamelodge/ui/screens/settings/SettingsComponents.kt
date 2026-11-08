@@ -505,9 +505,9 @@ private fun ChoiceValue(title: String, subtitle: String?, icon: ImageVector?, va
     }
 }
 
-/** All options of a [ChoiceRow] in a popup, the chosen one ticked and focused. */
+/** All options of a [ChoiceRow] in a popup, the chosen one ticked and focused (also for buttons that pick a value). */
 @Composable
-private fun ChoiceList(title: String, labels: List<String>, selected: Int, icon: (@Composable (Int) -> Unit)?, onPick: (Int) -> Unit, onDismiss: () -> Unit) {
+fun ChoiceList(title: String, labels: List<String>, selected: Int, icon: (@Composable (Int) -> Unit)?, onPick: (Int) -> Unit, onDismiss: () -> Unit) {
     val colors = LauncherTheme.colors
     io.github.thecodingdad.gamelodge.ui.components.Modal(visible = true, onDismiss = onDismiss, title = title, size = io.github.thecodingdad.gamelodge.ui.components.PopupSize.STANDARD) {
         Column(Modifier.weight(1f, fill = false).popupHeightIn(520.dp).controllerScroll(), verticalArrangement = Arrangement.spacedBy(8.dp)) {

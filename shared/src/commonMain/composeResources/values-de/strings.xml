@@ -1693,8 +1693,7 @@
     <string name="xbox_resolution">Auflösung</string>
     <string name="xbox_resolution_auto">Automatisch</string>
     <string name="xbox_resolution_hq">1080p HQ</string>
-    <string name="xbox_resolution_sub">1080p HQ streamt mit höherer Bitrate (braucht ein starkes Netz).</string>
-    <string name="xbox_resolution_one">Xbox-One-Konsolen streamen in 720p.</string>
+    <string name="xbox_resolution_sub">Die Konsole liefert höchstens, was sie schafft und worauf ihre eigene Bildausgabe eingestellt ist. 1080p HQ streamt mit höherer Bitrate (braucht ein starkes Netz).</string>
     <string name="xbox_bitrate">Bitrate-Grenze</string>
     <string name="xbox_bitrate_auto">Keine</string>
     <string name="xbox_bitrate_sub">Die Konsole wählt die Bitrate selbst, höchstens so viel (z. B. bei mobilen Daten).</string>

@@ -57,6 +57,7 @@ fun HostCard(
     val scope = rememberCoroutineScope()
     var config by remember { mutableStateOf<HostConfigEntity?>(null) }
     var message by remember { mutableStateOf<String?>(null) }
+    var pickSleep by remember { mutableStateOf(false) }
     LaunchedEffect(host.uuid) {
         message = null
         config = c.hostPower.config(host.uuid)
@@ -121,26 +122,34 @@ fun HostCard(
                     }
                 }
             }
-            LauncherButton(
-                stringResource(Res.string.host_settings), icon = Icons.Filled.Settings,
-                modifier = Modifier.restoreFocusIf(initialFocus && h.status == HostStatus.ONLINE && config?.haSleepEntity == null),
-                onClick = { openSettings(h) },
+            // Auto sleep after a stream: its value on the button, the choice in a popup.
+            config?.let { cfg ->
+                LauncherButton(
+                    cfg.autoSleepMinutes?.let { m -> stringResource(Res.string.minutes_short, m) } ?: stringResource(Res.string.off),
+                    icon = Icons.Filled.Bedtime,
+                    onClick = { pickSleep = true },
+                )
+            }
+            io.github.thecodingdad.gamelodge.ui.components.TooltipIconButton(
+                Icons.Filled.Settings, stringResource(Res.string.host_settings), { openSettings(h) },
+                Modifier.restoreFocusIf(initialFocus && h.status == HostStatus.ONLINE && config?.haSleepEntity == null && config?.haShutdownEntity == null && !h.uuid.startsWith("xbox:")),
             )
         }
-        // Auto sleep after a stream, editable right here (same options as in the host settings).
-        config?.let { cfg ->
-            Spacer(Modifier.height(12.dp))
-            io.github.thecodingdad.gamelodge.ui.screens.settings.ChoiceRow(
-                stringResource(Res.string.host_auto_sleep), listOf<Int?>(null, 5, 10, 15, 30, 60), cfg.autoSleepMinutes,
-                label = { it?.let { m -> stringResource(Res.string.minutes_short, m) } ?: stringResource(Res.string.off) },
-                onSelect = { minutes ->
-                    val updated = cfg.copy(autoSleepMinutes = minutes)
+        // The same choice list as the settings' (compact, scrolls with every input).
+        val cfg = config
+        if (pickSleep && cfg != null) {
+            val options = listOf<Int?>(null, 5, 10, 15, 30, 60)
+            val off = stringResource(Res.string.off)
+            val labels = options.map { m -> m?.let { stringResource(Res.string.minutes_short, it) } ?: off }
+            io.github.thecodingdad.gamelodge.ui.screens.settings.ChoiceList(
+                stringResource(Res.string.host_auto_sleep), labels, options.indexOf(cfg.autoSleepMinutes).coerceAtLeast(0), null,
+                onPick = { i ->
+                    val updated = cfg.copy(autoSleepMinutes = options[i])
                     config = updated
+                    pickSleep = false
                     scope.launch { c.hostPower.save(updated) }
                 },
-                icon = Icons.Filled.Bedtime,
-                subtitle = stringResource(if (h.uuid.startsWith("xbox:")) Res.string.xbox_auto_sleep_sub else Res.string.host_auto_sleep_sub),
-            )
+            ) { pickSleep = false }
         }
         message?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceMuted) }
     }

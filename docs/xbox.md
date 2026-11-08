@@ -65,7 +65,7 @@ Per console under **Host settings → Stream**:
 
 | Setting | |
 |---|---|
-| **Resolution** | Series consoles: *Automatic* (1080p), 720p, 1080p or *1080p HQ* (higher bitrate, needs a strong network). Xbox One consoles always stream 720p at 60 fps. |
+| **Resolution** | *Automatic* (1080p), 720p, 1080p or *1080p HQ* (higher bitrate, needs a strong network). The console sends at most what it manages and what its own display output is set to (**Settings → General → TV & display options**). |
 | **Bitrate limit** | The console picks the bitrate itself; this caps it, e.g. on mobile data |
 | **Sharpen picture** | Upscales and sharpens the stream (FSR) – the most visible help for 720p on a large screen |
 | **Picture** | Fit, stretch or zoom to the screen |

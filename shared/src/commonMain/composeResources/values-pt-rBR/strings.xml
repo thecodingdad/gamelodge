@@ -1695,8 +1695,7 @@
     <string name="xbox_resolution">Resolução</string>
     <string name="xbox_resolution_auto">Automática</string>
     <string name="xbox_resolution_hq">1080p HQ</string>
-    <string name="xbox_resolution_sub">1080p HQ transmite com taxa de bits maior (requer uma rede forte).</string>
-    <string name="xbox_resolution_one">Os consoles Xbox One transmitem em 720p.</string>
+    <string name="xbox_resolution_sub">O console envia no máximo o que consegue e o que a sua própria saída de vídeo permite. 1080p HQ transmite com taxa de bits maior (requer uma rede forte).</string>
     <string name="xbox_bitrate">Limite de taxa de bits</string>
     <string name="xbox_bitrate_auto">Nenhum</string>
     <string name="xbox_bitrate_sub">O console escolhe a taxa de bits, no máximo esta (ex.: em dados móveis).</string>
