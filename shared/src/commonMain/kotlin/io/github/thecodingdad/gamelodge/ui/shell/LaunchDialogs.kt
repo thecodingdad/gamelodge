@@ -185,7 +185,8 @@ fun TargetPickerDialog(
                     icon = when (option.target.type) {
                         TargetType.LOCAL -> io.github.thecodingdad.gamelodge.ui.PlatformUi.current.localIcon
                         TargetType.ROM -> Icons.Filled.SportsEsports
-                        TargetType.REMOTE, TargetType.XBOX -> Icons.Filled.Cloud
+                        TargetType.REMOTE -> Icons.Filled.Cloud
+                        TargetType.XBOX -> org.jetbrains.compose.resources.vectorResource(io.github.thecodingdad.gamelodge.resources.Res.drawable.ic_xbox)
                     },
                     primary = true,
                     onClick = { onLaunch(p.entry, option.target, if (showProfiles) chosenProfile else null, option.emulatorKey, option.action) },

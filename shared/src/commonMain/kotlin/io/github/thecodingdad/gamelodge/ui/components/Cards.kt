@@ -299,7 +299,9 @@ fun SourceBadges(entry: LibraryEntry, modifier: Modifier = Modifier, badges: Set
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         if (TileBadge.LOCAL in badges && entry.localTarget != null) Badge(io.github.thecodingdad.gamelodge.ui.PlatformUi.current.localIcon)
         if (TileBadge.ROM in badges && entry.romTargets.isNotEmpty()) Badge(Icons.Filled.SportsEsports)
-        if (TileBadge.HOST in badges && entry.streamTargets.isNotEmpty()) Badge(Icons.Filled.Cloud)
+        // Streamed: from a PC (cloud) and/or from an Xbox (its logo).
+        if (TileBadge.HOST in badges && entry.remoteTargets.isNotEmpty()) Badge(Icons.Filled.Cloud)
+        if (TileBadge.HOST in badges && entry.xboxTargets.isNotEmpty()) Badge(org.jetbrains.compose.resources.vectorResource(io.github.thecodingdad.gamelodge.resources.Res.drawable.ic_xbox))
         if (TileBadge.NOT_INSTALLED in badges && entry.notInstalled) Badge(Icons.Filled.Download)
     }
 }
