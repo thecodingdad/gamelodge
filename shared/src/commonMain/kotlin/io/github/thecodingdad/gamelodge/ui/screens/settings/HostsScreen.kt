@@ -175,7 +175,7 @@ fun HostsSettings(
             LauncherButton(stringResource(Res.string.xbox_add), icon = Icons.Filled.Add, primary = hosts.isEmpty() && xboxHosts.isEmpty(), onClick = xboxAdder::start)
             LauncherButton(stringResource(Res.string.hosts_refresh), icon = Icons.Filled.Refresh, onClick = {
                 launcherContainer.hosts.refreshAppLists()
-                scope.launch { launcherContainer.xbox.refresh() }
+                scope.launch { launcherContainer.xbox.refresh(games = true) }
             })
         }
         if (adding) CircularProgressIndicator(color = LauncherTheme.colors.accent)

@@ -141,8 +141,11 @@ class XboxRepository(
         sync.removeHost(SourceEntry.xboxHost(consoleId))
     }
 
-    /** Asks Xbox Live for the consoles' state now; their games are looked at again after a while. */
-    suspend fun refresh() {
+    /**
+     * Asks Xbox Live for the consoles' state now; their games are looked at again after a while,
+     * or right away with [games] (the hosts page's refresh).
+     */
+    suspend fun refresh(games: Boolean = false) {
         if (!auth.isSignedIn || _hosts.value.isEmpty()) return
         val list = runCatching { client.consoles() }.onFailure(::onAuthError).getOrElse {
             Log.w("Xbox consoles: ${it.message}")
@@ -164,7 +167,7 @@ class XboxRepository(
             }
         }
         _hosts.value.values.filter { !it.missing && it.console.power == XboxPower.ON }.forEach { host ->
-            if (clock() - (lastGamesSync[host.console.id] ?: 0) > GAMES_INTERVAL_MS) {
+            if (games || clock() - (lastGamesSync[host.console.id] ?: 0) > GAMES_INTERVAL_MS) {
                 scope.launch { runCatching { syncGames(host.console.id) }.onFailure { Log.w("Xbox games: ${it.message}") } }
             }
         }
