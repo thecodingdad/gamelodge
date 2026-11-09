@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.ui.screens.wizard
 
+import androidx.compose.material.icons.filled.Monitor
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -211,7 +212,7 @@ private fun HostEntry(host: HostState, settings: LauncherSettings, initialFocus:
         val online = host.status == HostStatus.ONLINE
         if (host.paired) {
             WizardStatusRow(
-                host.name, stringResource(Res.string.wizard_hosts_paired, host.address.orEmpty()), done = true, icon = Icons.Filled.Computer,
+                host.name, stringResource(Res.string.wizard_hosts_paired, host.address.orEmpty()), done = true, icon = Icons.Filled.Monitor,
             )
         } else {
             WizardStatusRow(
@@ -220,7 +221,7 @@ private fun HostEntry(host: HostState, settings: LauncherSettings, initialFocus:
                     stringResource(if (online) Res.string.host_status_online else Res.string.host_status_offline),
                     host.address,
                 ).joinToString(" · "),
-                done = false, icon = Icons.Filled.Computer,
+                done = false, icon = Icons.Filled.Monitor,
                 action = if (online) stringResource(Res.string.host_pair) else null,
                 onClick = if (online) onPair else null,
                 initialFocus = initialFocus,

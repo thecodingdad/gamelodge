@@ -1419,7 +1419,6 @@
     <string name="wizard_welcome_title">Bienvenido a GameLodge</string>
     <string name="wizard_welcome_text">Unos pocos pasos y tus juegos estarán listos. Todo se puede cambiar después en los ajustes.</string>
     <string name="wizard_welcome_library">Biblioteca: todos tus juegos y apps en un solo sitio</string>
-    <string name="wizard_welcome_streaming">Streaming: juega a los juegos de tu PC</string>
     <string name="wizard_welcome_smart_home">Domótica: Home Assistant a mano</string>
     <string name="wizard_backup_title">Nuevo o desde una copia</string>
     <string name="wizard_backup_text">Configura desde cero, o trae tus ajustes, favoritos y tiempo de juego desde una copia.</string>
@@ -1709,4 +1708,5 @@
     <string name="xbox_dashboard_hint">Aquí Guide es el botón Xbox. Mantén Start para el menú rápido (volver a GameLodge).</string>
     <string name="host_power_no_response">%1$s no respondió a tiempo</string>
     <string name="wizard_hosts_text">PC con Sunshine, Apollo o Vibepollo y consolas Xbox cuyos juegos transmites. Empareja cada PC una vez; una Xbox necesita tu cuenta de Microsoft.</string>
+    <string name="wizard_welcome_streaming">Streaming: juega a los juegos de tu PC y tu Xbox</string>
 </resources>
