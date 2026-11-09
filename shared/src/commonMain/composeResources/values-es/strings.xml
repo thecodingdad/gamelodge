@@ -1458,7 +1458,6 @@
     <string name="wizard_emulators_title">Emuladores y ROMs</string>
     <string name="wizard_emulators_text">Tu carpeta de ROM y los emuladores que inician los juegos.</string>
     <string name="wizard_hosts_title">Hosts de streaming</string>
-    <string name="wizard_hosts_text">PC con Sunshine, Apollo o Vibepollo cuyos juegos transmites. Empareja cada uno una vez.</string>
     <string name="wizard_hosts_searching">Buscando hosts en la red…</string>
     <string name="wizard_hosts_paired">Emparejado · %1$s</string>
     <string name="wizard_hosts_pin_where">Introduce el PIN en la interfaz web de Vibepollo, Apollo o Sunshine (página del PIN).</string>
@@ -1658,8 +1657,6 @@
     <string name="error_xbox_signed_out">Vuelve a iniciar sesión en tu cuenta de Xbox (Streaming → Hosts).</string>
     <string name="error_xbox_unreachable">La consola no está conectada a Xbox Live. Comprueba que esté encendida, en línea y con las funciones remotas activadas.</string>
     <string name="error_xbox_busy">Otro dispositivo está transmitiendo desde la consola.</string>
-    <string name="xbox_section">Consolas Xbox</string>
-    <string name="xbox_intro">Transmite los juegos instalados en tu Xbox: GameLodge enciende la consola, inicia el juego y abre la transmisión. Inicia sesión con la cuenta Microsoft de la consola.</string>
     <string name="xbox_add">Añadir Xbox</string>
     <string name="xbox_sign_out">Cerrar sesión de Xbox</string>
     <string name="xbox_sign_in_title">Iniciar sesión en Xbox</string>
@@ -1711,4 +1708,5 @@
     <string name="profiles_intro">El perfil activo se usa en cada transmisión. Antes de iniciar un juego puedes cambiarlo en los detalles del juego (botón de perfil o LB/RB).</string>
     <string name="xbox_dashboard_hint">Aquí Guide es el botón Xbox. Mantén Start para el menú rápido (volver a GameLodge).</string>
     <string name="host_power_no_response">%1$s no respondió a tiempo</string>
+    <string name="wizard_hosts_text">PC con Sunshine, Apollo o Vibepollo y consolas Xbox cuyos juegos transmites. Empareja cada PC una vez; una Xbox necesita tu cuenta de Microsoft.</string>
 </resources>

@@ -158,21 +158,6 @@ fun XboxHostCard(host: XboxHost, onConfig: (() -> Unit)?) {
     )
 }
 
-/** Xbox consoles in the setup wizard: the added ones and adding more. */
-@Composable
-fun XboxHostsSection(openHostConfig: ((HostState) -> Unit)?) {
-    val hosts by io.github.thecodingdad.gamelodge.LocalContainer.current.xbox.hosts.collectAsState()
-    val adder = rememberXboxAdder()
-    SectionHeader(stringResource(Res.string.xbox_section))
-    if (hosts.isEmpty()) {
-        Text(stringResource(Res.string.xbox_intro), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
-    }
-    hosts.values.sortedBy { it.console.name }.forEach { host ->
-        XboxHostCard(host, openHostConfig?.let { open -> { open(host.asHostState()) } })
-    }
-    LauncherButton(stringResource(Res.string.xbox_add), icon = Icons.Filled.Add, primary = hosts.isEmpty(), onClick = adder::start)
-}
-
 /** The Microsoft account behind the consoles (a console's settings page): who is signed in, sign-out, games without a license. */
 @Composable
 fun XboxAccountSection() {

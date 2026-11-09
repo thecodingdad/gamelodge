@@ -1458,7 +1458,6 @@
     <string name="wizard_emulators_title">Emulators &amp; ROMs</string>
     <string name="wizard_emulators_text">Your ROM folder and the emulators that start the games.</string>
     <string name="wizard_hosts_title">Streaming hosts</string>
-    <string name="wizard_hosts_text">PCs with Sunshine, Apollo or Vibepollo whose games you stream. Pair each one once.</string>
     <string name="wizard_hosts_searching">Looking for hosts in the network…</string>
     <string name="wizard_hosts_paired">Paired · %1$s</string>
     <string name="wizard_hosts_pin_where">Enter the PIN in the web interface of Vibepollo, Apollo or Sunshine (PIN page).</string>
@@ -1658,8 +1657,6 @@
     <string name="error_xbox_signed_out">Sign in to your Xbox account again (Streaming → Hosts).</string>
     <string name="error_xbox_unreachable">The console isn't connected to Xbox Live. Check that it is on, online and that remote features are on.</string>
     <string name="error_xbox_busy">Another device is streaming from the console.</string>
-    <string name="xbox_section">Xbox consoles</string>
-    <string name="xbox_intro">Stream the games installed on your Xbox: GameLodge wakes the console, starts the game and opens the stream. Sign in with the Microsoft account of the console.</string>
     <string name="xbox_add">Add Xbox</string>
     <string name="xbox_sign_out">Sign out of Xbox</string>
     <string name="xbox_sign_in_title">Sign in to Xbox</string>
@@ -1711,4 +1708,5 @@
     <string name="profiles_intro">The active profile is used for every stream. Before starting a game, you can switch it in the game's details (profile button or LB/RB).</string>
     <string name="xbox_dashboard_hint">Guide is the Xbox button here. Hold Start for the quick menu (back to GameLodge).</string>
     <string name="host_power_no_response">%1$s did not respond in time</string>
+    <string name="wizard_hosts_text">PCs with Sunshine, Apollo or Vibepollo and Xbox consoles whose games you stream. Pair each PC once; an Xbox needs your Microsoft account.</string>
 </resources>

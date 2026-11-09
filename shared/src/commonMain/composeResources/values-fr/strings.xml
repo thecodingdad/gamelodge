@@ -1458,7 +1458,6 @@
     <string name="wizard_emulators_title">Émulateurs et ROMs</string>
     <string name="wizard_emulators_text">Votre dossier ROM et les émulateurs qui démarrent les jeux.</string>
     <string name="wizard_hosts_title">Hôtes de streaming</string>
-    <string name="wizard_hosts_text">PC avec Sunshine, Apollo ou Vibepollo dont vous streamez les jeux. Appairez chacun une fois.</string>
     <string name="wizard_hosts_searching">Recherche d'hôtes sur le réseau…</string>
     <string name="wizard_hosts_paired">Appairé · %1$s</string>
     <string name="wizard_hosts_pin_where">Saisissez le PIN dans l'interface web de Vibepollo, Apollo ou Sunshine (page du PIN).</string>
@@ -1658,8 +1657,6 @@
     <string name="error_xbox_signed_out">Reconnectez-vous à votre compte Xbox (Streaming → Hôtes).</string>
     <string name="error_xbox_unreachable">La console n'est pas connectée à Xbox Live. Vérifiez qu'elle est allumée, en ligne et que les fonctionnalités à distance sont activées.</string>
     <string name="error_xbox_busy">Un autre appareil diffuse depuis la console.</string>
-    <string name="xbox_section">Consoles Xbox</string>
-    <string name="xbox_intro">Streamez les jeux installés sur votre Xbox : GameLodge réveille la console, lance le jeu et ouvre le stream. Connectez-vous avec le compte Microsoft de la console.</string>
     <string name="xbox_add">Ajouter une Xbox</string>
     <string name="xbox_sign_out">Se déconnecter de Xbox</string>
     <string name="xbox_sign_in_title">Se connecter à Xbox</string>
@@ -1711,4 +1708,5 @@
     <string name="profiles_intro">Le profil actif est utilisé pour chaque stream. Avant de lancer un jeu, vous pouvez le changer dans les détails du jeu (bouton de profil ou LB/RB).</string>
     <string name="xbox_dashboard_hint">Ici, Guide est la touche Xbox. Maintenez Start pour le menu rapide (retour à GameLodge).</string>
     <string name="host_power_no_response">%1$s n'a pas répondu à temps</string>
+    <string name="wizard_hosts_text">PC avec Sunshine, Apollo ou Vibepollo et consoles Xbox dont vous streamez les jeux. Appairez chaque PC une fois ; une Xbox nécessite votre compte Microsoft.</string>
 </resources>

@@ -1456,7 +1456,6 @@
     <string name="wizard_emulators_title">Emulatoren &amp; ROMs</string>
     <string name="wizard_emulators_text">Dein ROM-Ordner und die Emulatoren, die die Spiele starten.</string>
     <string name="wizard_hosts_title">Streaming-Hosts</string>
-    <string name="wizard_hosts_text">PCs mit Sunshine, Apollo oder Vibepollo, deren Spiele du streamst. Jeden einmal koppeln.</string>
     <string name="wizard_hosts_searching">Suche Hosts im Netzwerk…</string>
     <string name="wizard_hosts_paired">Gekoppelt · %1$s</string>
     <string name="wizard_hosts_pin_where">Gib die PIN in der Weboberfläche von Vibepollo, Apollo oder Sunshine ein (PIN-Seite).</string>
@@ -1656,8 +1655,6 @@
     <string name="error_xbox_signed_out">Melde dich erneut bei deinem Xbox-Konto an (Streaming → Hosts).</string>
     <string name="error_xbox_unreachable">Die Konsole ist nicht mit Xbox Live verbunden. Prüfe, ob sie an und online ist und die Remote-Features aktiviert sind.</string>
     <string name="error_xbox_busy">Ein anderes Gerät streamt gerade von der Konsole.</string>
-    <string name="xbox_section">Xbox-Konsolen</string>
-    <string name="xbox_intro">Streame die Spiele auf deiner Xbox: GameLodge weckt die Konsole, startet das Spiel und öffnet den Stream. Melde dich mit dem Microsoft-Konto der Konsole an.</string>
     <string name="xbox_add">Xbox hinzufügen</string>
     <string name="xbox_sign_out">Von Xbox abmelden</string>
     <string name="xbox_sign_in_title">Bei Xbox anmelden</string>
@@ -1709,4 +1706,5 @@
     <string name="profiles_intro">Das aktive Profil gilt für jeden Stream. Vor dem Spielstart kannst du es in der Detailansicht des Spiels wechseln (Profil-Button oder LB/RB).</string>
     <string name="xbox_dashboard_hint">Guide ist hier die Xbox-Taste. Start gedrückt halten für das Schnellmenü (zurück zu GameLodge).</string>
     <string name="host_power_no_response">%1$s hat nicht rechtzeitig reagiert</string>
+    <string name="wizard_hosts_text">PCs mit Sunshine, Apollo oder Vibepollo und Xbox-Konsolen, deren Spiele du streamst. Jeden PC einmal koppeln; eine Xbox braucht dein Microsoft-Konto.</string>
 </resources>

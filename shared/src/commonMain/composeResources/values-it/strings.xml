@@ -1458,7 +1458,6 @@
     <string name="wizard_emulators_title">Emulatori e ROM</string>
     <string name="wizard_emulators_text">La tua cartella ROM e gli emulatori che avviano i giochi.</string>
     <string name="wizard_hosts_title">Host di streaming</string>
-    <string name="wizard_hosts_text">PC con Sunshine, Apollo o Vibepollo i cui giochi trasmetti. Associa ognuno una volta.</string>
     <string name="wizard_hosts_searching">Ricerca di host sulla rete…</string>
     <string name="wizard_hosts_paired">Associato · %1$s</string>
     <string name="wizard_hosts_pin_where">Inserisci il PIN nell'interfaccia web di Vibepollo, Apollo o Sunshine (pagina del PIN).</string>
@@ -1658,8 +1657,6 @@
     <string name="error_xbox_signed_out">Accedi di nuovo al tuo account Xbox (Streaming → Host).</string>
     <string name="error_xbox_unreachable">La console non è connessa a Xbox Live. Controlla che sia accesa, online e con le funzionalità remote attive.</string>
     <string name="error_xbox_busy">Un altro dispositivo sta trasmettendo dalla console.</string>
-    <string name="xbox_section">Console Xbox</string>
-    <string name="xbox_intro">Trasmetti i giochi installati sulla tua Xbox: GameLodge accende la console, avvia il gioco e apre lo streaming. Accedi con l'account Microsoft della console.</string>
     <string name="xbox_add">Aggiungi Xbox</string>
     <string name="xbox_sign_out">Esci da Xbox</string>
     <string name="xbox_sign_in_title">Accedi a Xbox</string>
@@ -1711,4 +1708,5 @@
     <string name="profiles_intro">Il profilo attivo vale per ogni streaming. Prima di avviare un gioco puoi cambiarlo nei dettagli del gioco (pulsante profilo o LB/RB).</string>
     <string name="xbox_dashboard_hint">Qui Guide è il tasto Xbox. Tieni premuto Start per il menu rapido (torna a GameLodge).</string>
     <string name="host_power_no_response">%1$s non ha risposto in tempo</string>
+    <string name="wizard_hosts_text">PC con Sunshine, Apollo o Vibepollo e console Xbox i cui giochi trasmetti. Associa ogni PC una volta; una Xbox richiede il tuo account Microsoft.</string>
 </resources>

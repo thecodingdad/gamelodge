@@ -119,9 +119,15 @@ internal fun ColumnScope.HostsStep() {
             },
         )
     }
+    // Xbox consoles in the same list, as on the streaming hosts page (their settings later there).
+    val xboxHosts by io.github.thecodingdad.gamelodge.LocalContainer.current.xbox.hosts.collectAsState()
+    val xboxAdder = io.github.thecodingdad.gamelodge.ui.screens.settings.rememberXboxAdder()
+    xboxHosts.values.sortedBy { it.console.name.lowercase() }.forEach { host ->
+        io.github.thecodingdad.gamelodge.ui.screens.settings.XboxHostCard(host, onConfig = null)
+    }
     ButtonRow(spacing = 12.dp) {
         LauncherButton(
-            stringResource(Res.string.host_add), icon = Icons.Filled.Add, primary = sorted.isEmpty(),
+            stringResource(Res.string.host_add), icon = Icons.Filled.Add, primary = sorted.isEmpty() && xboxHosts.isEmpty(),
             modifier = Modifier.restoreFocusIf(sorted.isEmpty()),
             onClick = {
                 keyboard.open(addTitle, "", TextKind.URL) { address ->
@@ -137,13 +143,12 @@ internal fun ColumnScope.HostsStep() {
                 }
             },
         )
+        LauncherButton(stringResource(Res.string.xbox_add), icon = Icons.Filled.Add, primary = sorted.isEmpty() && xboxHosts.isEmpty(), onClick = xboxAdder::start)
     }
     io.github.thecodingdad.gamelodge.ui.screens.settings.PcVersionHint()
     if (adding) CircularProgressIndicator(color = LauncherTheme.colors.accent)
     message?.let { WizardNote(it) }
     WizardNote(stringResource(Res.string.hosts_discovery_hint))
-    // Xbox consoles: sign in and add them here too (their settings later on the hosts page).
-    io.github.thecodingdad.gamelodge.ui.screens.settings.XboxHostsSection(openHostConfig = null)
 
     val p = pairing
     Modal(visible = p != null, onDismiss = { pairing = null }, title = stringResource(Res.string.pair_title), closeButton = false) {
