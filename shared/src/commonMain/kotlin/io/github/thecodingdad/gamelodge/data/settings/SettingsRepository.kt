@@ -64,6 +64,9 @@ enum class NetworkCheckMode { OFF, OUTSIDE_HOME, ALWAYS }
 /** Warnings about the connection during a stream: never, only while the performance overlay shows, always. */
 enum class ConnectionWarnings { OFF, PERF_OVERLAY, ALWAYS }
 
+/** How focus moves within a start tab row: PINNED keeps it at the left and moves the tiles, EDGE moves the focus first. */
+enum class RowFocus { PINNED, EDGE }
+
 @kotlinx.serialization.Serializable
 data class LauncherSettings(
     // Appearance
@@ -192,6 +195,8 @@ data class LauncherSettings(
     val libraryDirectStart: Boolean = false,
     /** Start tab: the rows start at the top (only whole rows in view) instead of the first row at the bottom. */
     val homeRowsTop: Boolean = false,
+    /** Start tab rows: the focus stays at the left and the tiles move (until the row's end), or the focus moves first. */
+    val homeRowFocus: RowFocus = RowFocus.PINNED,
     /** Connect the controllers to the host at stream start instead of on their first button press. */
     val controllerAttachAtStart: Boolean = true,
     /** Send this device's SteamGridDB / IGDB keys to the hosts that allow sharing them. */
@@ -371,6 +376,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val homeDirectStart = booleanPreferencesKey("home_direct_start")
         val libraryDirectStart = booleanPreferencesKey("library_direct_start")
         val homeRowsTop = booleanPreferencesKey("home_rows_top")
+        val homeRowFocus = stringPreferencesKey("home_row_focus")
         val controllerAttachAtStart = booleanPreferencesKey("controller_attach_at_start")
         val sendKeysToHost = booleanPreferencesKey("send_keys_to_host")
         val quickMenuEdgeHandle = booleanPreferencesKey("quick_menu_edge_handle")
@@ -514,6 +520,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             homeDirectStart = this[K.homeDirectStart] ?: this[K.gamesDirectStart] ?: d.homeDirectStart,
             libraryDirectStart = this[K.libraryDirectStart] ?: this[K.gamesDirectStart] ?: d.libraryDirectStart,
             homeRowsTop = this[K.homeRowsTop] ?: d.homeRowsTop,
+            homeRowFocus = enumOr(this[K.homeRowFocus], d.homeRowFocus),
             controllerAttachAtStart = this[K.controllerAttachAtStart] ?: d.controllerAttachAtStart,
             sendKeysToHost = this[K.sendKeysToHost] ?: d.sendKeysToHost,
             quickMenuEdgeHandle = this[K.quickMenuEdgeHandle] ?: d.quickMenuEdgeHandle,
@@ -646,6 +653,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         this[K.homeDirectStart] = s.homeDirectStart
         this[K.libraryDirectStart] = s.libraryDirectStart
         this[K.homeRowsTop] = s.homeRowsTop
+        this[K.homeRowFocus] = s.homeRowFocus.name
         this[K.controllerAttachAtStart] = s.controllerAttachAtStart
         this[K.sendKeysToHost] = s.sendKeysToHost
         this[K.quickMenuEdgeHandle] = s.quickMenuEdgeHandle

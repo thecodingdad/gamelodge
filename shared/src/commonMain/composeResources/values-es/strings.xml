@@ -1709,4 +1709,8 @@
     <string name="host_power_no_response">%1$s no respondió a tiempo</string>
     <string name="wizard_hosts_text">PC con Sunshine, Apollo o Vibepollo y consolas Xbox cuyos juegos transmites. Empareja cada PC una vez; una Xbox necesita tu cuenta de Microsoft.</string>
     <string name="wizard_welcome_streaming">Streaming: juega a los juegos de tu PC y tu Xbox</string>
+    <string name="setting_home_row_focus">Foco en una fila</string>
+    <string name="setting_home_row_focus_pinned">Fijo</string>
+    <string name="setting_home_row_focus_edge">Se mueve</string>
+    <string name="setting_home_row_focus_sub">Fijo: el foco queda a la izquierda y se mueven los mosaicos, hasta el final de la fila. Se mueve: primero se mueve el foco, los mosaicos solo en el borde.</string>
 </resources>

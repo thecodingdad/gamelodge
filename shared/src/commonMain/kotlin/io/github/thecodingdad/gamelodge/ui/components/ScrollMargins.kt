@@ -28,3 +28,12 @@ class MarginBringIntoViewSpec(density: Density, margin: Dp = 72.dp, trailingMarg
         }
     }
 }
+
+/**
+ * Keeps the focused element at [startPx] from the container's start: the content moves under a
+ * fixed focus. At the end the list can't scroll further, so from there the focus moves on.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+class PinnedStartBringIntoViewSpec(private val startPx: Float) : BringIntoViewSpec {
+    override fun calculateScrollDistance(offset: Float, size: Float, containerSize: Float): Float = offset - startPx
+}

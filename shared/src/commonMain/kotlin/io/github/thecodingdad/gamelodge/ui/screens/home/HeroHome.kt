@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.ui.screens.home
 
+import androidx.compose.runtime.collectAsState
 import io.github.thecodingdad.gamelodge.ui.components.QuitHoldBar
 import io.github.thecodingdad.gamelodge.ui.components.keepHorizontalFocus
 
@@ -164,7 +165,13 @@ fun HeroHome(
             // (like TV home screens): moving sideways never scrolls vertically, so rows don't jump.
             // The list itself ignores bring-into-view; the rows inside keep the normal spec.
             val density = androidx.compose.ui.platform.LocalDensity.current
-            val outerSpec = androidx.compose.foundation.gestures.LocalBringIntoViewSpec.current
+            // Within a row: the focus stays at the left and the tiles move (setting), or the focus moves first.
+            val rowFocus = io.github.thecodingdad.gamelodge.LocalContainer.current.settings.settings
+                .collectAsState(io.github.thecodingdad.gamelodge.data.settings.LauncherSettings()).value.homeRowFocus
+            val edgeSpec = androidx.compose.foundation.gestures.LocalBringIntoViewSpec.current
+            // The rows' start padding (40dp): the first tile's own position.
+            val pinnedSpec = remember(density) { io.github.thecodingdad.gamelodge.ui.components.PinnedStartBringIntoViewSpec(with(density) { 40.dp.toPx() }) }
+            val outerSpec = if (rowFocus == io.github.thecodingdad.gamelodge.data.settings.RowFocus.PINNED) pinnedSpec else edgeSpec
             val listState = androidx.compose.foundation.lazy.rememberLazyListState()
             io.github.thecodingdad.gamelodge.ui.input.RegisterStickScroll(listState)
             var focusedRow by remember { mutableStateOf<String?>(null) }

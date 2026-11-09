@@ -1709,4 +1709,8 @@
     <string name="host_power_no_response">%1$s did not respond in time</string>
     <string name="wizard_hosts_text">PCs with Sunshine, Apollo or Vibepollo and Xbox consoles whose games you stream. Pair each PC once; an Xbox needs your Microsoft account.</string>
     <string name="wizard_welcome_streaming">Streaming: play the games of your PC and Xbox</string>
+    <string name="setting_home_row_focus">Focus in a row</string>
+    <string name="setting_home_row_focus_pinned">Fixed</string>
+    <string name="setting_home_row_focus_edge">Moves</string>
+    <string name="setting_home_row_focus_sub">Fixed: the focus stays at the left and the tiles move, until the row's end. Moves: the focus moves first, the tiles only at the edge.</string>
 </resources>

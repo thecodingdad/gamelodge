@@ -182,6 +182,12 @@ fun HomeScreenSettings(
             onSelect = { v -> update { it.copy(homeRowsTop = v) } },
             subtitle = stringResource(Res.string.setting_home_rows_position_sub),
         )
+        ChoiceRow(
+            stringResource(Res.string.setting_home_row_focus), io.github.thecodingdad.gamelodge.data.settings.RowFocus.entries, settings.homeRowFocus,
+            label = { stringResource(if (it == io.github.thecodingdad.gamelodge.data.settings.RowFocus.PINNED) Res.string.setting_home_row_focus_pinned else Res.string.setting_home_row_focus_edge) },
+            onSelect = { v -> update { it.copy(homeRowFocus = v) } },
+            subtitle = stringResource(Res.string.setting_home_row_focus_sub),
+        )
         SectionHeader(stringResource(Res.string.home_rows_section))
         Text(stringResource(Res.string.home_rows_help), style = MaterialTheme.typography.bodyMedium, color = LauncherTheme.colors.onSurfaceMuted)
         // Game filters first, then app filters (their rows show landscape app tiles).

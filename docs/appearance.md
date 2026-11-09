@@ -27,6 +27,7 @@ filter's settings.
 | Extra info | None, play time, last played, progress (play time against the time to beat) |
 | Badges | Where an entry comes from (Android, PC, ROM, PC stream, Xbox), installed state |
 | Apps tab | Icons or banners |
+| Focus in a row (Home tab) | *Fixed* (default): the focus stays at the left and the tiles move, until the row's end; *Moves*: the focus moves first, the tiles only at the edge |
 
 **Y** shows a **live preview** of a tile with your settings.
 
