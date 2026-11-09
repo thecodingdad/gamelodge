@@ -244,7 +244,14 @@ fun StatusDot(color: Color, modifier: Modifier = Modifier) {
 
 /** A host's kind as an icon in its state's colour: a monitor for a PC, the Xbox logo for a console. */
 @Composable
-fun HostIcon(xbox: Boolean, color: Color, modifier: Modifier = Modifier, size: androidx.compose.ui.unit.Dp = 28.dp) {
+fun HostIcon(xbox: Boolean, color: Color, modifier: Modifier = Modifier, size: androidx.compose.ui.unit.Dp = 28.dp, busy: Boolean = false) {
+    // Waking, shutting down or restarting: a spinner in the state's colour until the host follows.
+    if (busy) {
+        Box(modifier.size(size), contentAlignment = Alignment.Center) {
+            androidx.compose.material3.CircularProgressIndicator(color = color, strokeWidth = 3.dp, modifier = Modifier.size(size * 0.82f))
+        }
+        return
+    }
     androidx.compose.material3.Icon(
         if (xbox) org.jetbrains.compose.resources.vectorResource(io.github.thecodingdad.gamelodge.resources.Res.drawable.ic_xbox)
         else androidx.compose.material.icons.Icons.Filled.Monitor,

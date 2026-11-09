@@ -1,5 +1,6 @@
 package io.github.thecodingdad.gamelodge.ui.shell
 
+import androidx.compose.runtime.collectAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -56,13 +57,15 @@ fun HostCard(
     val c = io.github.thecodingdad.gamelodge.LocalContainer.current
     val scope = rememberCoroutineScope()
     var config by remember { mutableStateOf<HostConfigEntity?>(null) }
-    var message by remember { mutableStateOf<String?>(null) }
     var pickSleep by remember { mutableStateOf(false) }
     LaunchedEffect(host.uuid) {
-        message = null
         config = c.hostPower.config(host.uuid)
     }
-    val wakeSent = stringResource(Res.string.host_wake_sent)
+    val powering by io.github.thecodingdad.gamelodge.stream.PowerProgress.hosts.collectAsState()
+    val busy = host.uuid in powering
+    fun power(action: PowerAction) = io.github.thecodingdad.gamelodge.stream.PowerProgress.start(
+        c, host.uuid, host.name, io.github.thecodingdad.gamelodge.ui.screens.settings.powerExpect(action),
+    ) { c.hostPower.power(host.uuid, action) }
     val h = host
     val colors = LauncherTheme.colors
     Column(
@@ -70,7 +73,7 @@ fun HostCard(
             .background(colors.surfaceRaised).padding(14.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            io.github.thecodingdad.gamelodge.ui.components.HostIcon(h.uuid.startsWith("xbox:"), hostTint(listOf(h), HostStreamingColor, colors.success, colors.danger, colors.onSurfaceMuted), size = 24.dp)
+            io.github.thecodingdad.gamelodge.ui.components.HostIcon(h.uuid.startsWith("xbox:"), hostTint(listOf(h), HostStreamingColor, colors.success, colors.danger, colors.onSurfaceMuted), size = 24.dp, busy = busy)
             Column(Modifier.weight(1f)) {
                 Text(h.name, style = MaterialTheme.typography.titleMedium, color = colors.onSurface, maxLines = 1)
                 Text(
@@ -98,25 +101,29 @@ fun HostCard(
                 LauncherButton(
                     stringResource(Res.string.host_wake), icon = Icons.Filled.WbSunny, primary = true,
                     modifier = Modifier.restoreFocusIf(initialFocus),
-                    onClick = { scope.launch { c.hostPower.wake(h.uuid); message = wakeSent } },
+                    enabled = !busy,
+                    // The icon spins until the host answers (or the host's wake timeout is up).
+                    onClick = {
+                        io.github.thecodingdad.gamelodge.stream.PowerProgress.start(c, h.uuid, h.name, io.github.thecodingdad.gamelodge.stream.PowerProgress.Expect.ON) { c.hostPower.wake(h.uuid) }
+                    },
                 )
             } else {
                 config?.let { cfg ->
                     if (cfg.haSleepEntity != null) {
                         HoldToConfirmButton(
-                            stringResource(Res.string.power_sleep), { scope.launch { c.hostPower.power(h.uuid, PowerAction.SLEEP) } },
+                            stringResource(Res.string.power_sleep), { power(PowerAction.SLEEP) },
                             Modifier.restoreFocusIf(initialFocus), Icons.Filled.Bedtime,
                         )
                     }
                     if (cfg.haShutdownEntity != null) {
                         HoldToConfirmButton(
-                            stringResource(Res.string.power_shutdown), { scope.launch { c.hostPower.power(h.uuid, PowerAction.SHUTDOWN) } },
+                            stringResource(Res.string.power_shutdown), { power(PowerAction.SHUTDOWN) },
                             icon = Icons.Filled.PowerSettingsNew,
                         )
                     } else if (cfg.haSleepEntity == null && h.uuid.startsWith("xbox:")) {
                         // A console turns off (standby) through Xbox Live.
                         HoldToConfirmButton(
-                            stringResource(Res.string.xbox_turn_off), { scope.launch { c.hostPower.power(h.uuid, PowerAction.SHUTDOWN) } },
+                            stringResource(Res.string.xbox_turn_off), { power(PowerAction.SHUTDOWN) },
                             Modifier.restoreFocusIf(initialFocus), Icons.Filled.PowerSettingsNew,
                         )
                     }
@@ -151,7 +158,6 @@ fun HostCard(
                 },
             ) { pickSleep = false }
         }
-        message?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceMuted) }
     }
 }
 

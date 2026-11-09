@@ -737,7 +737,6 @@
     <string name="setting_ui_scale">Dimensione dell'interfaccia (schermo del dispositivo)</string>
 
     <!-- Host popup -->
-    <string name="host_wake_sent">Segnale di accensione inviato: l'host dovrebbe essere online a breve</string>
     <string name="host_state_streaming">In streaming: %1$s</string>
     <string name="host_state_online">Online</string>
     <string name="host_state_offline">Offline</string>
@@ -749,11 +748,7 @@
     <string name="host_info_auto_sleep">Sospendi dopo lo stream</string>
 
     <!-- Host wake feedback -->
-    <string name="host_waking">Accensione…</string>
-    <string name="host_wake_sending">Segnale di accensione inviato: in attesa della risposta dell'host…</string>
     <string name="host_wake_failed">Impossibile inviare il segnale di accensione: controlla il metodo di accensione nelle impostazioni dell'host</string>
-    <string name="host_wake_online">L'host è online</string>
-    <string name="host_wake_timeout">Nessuna risposta dall'host dopo 3 minuti</string>
 
     <!-- Status popups -->
     <string name="profile_picker_title">Profilo di streaming</string>
@@ -1715,4 +1710,5 @@
     <string name="xbox_signed_in">Accesso eseguito come</string>
     <string name="profiles_intro">Il profilo attivo vale per ogni streaming. Prima di avviare un gioco puoi cambiarlo nei dettagli del gioco (pulsante profilo o LB/RB).</string>
     <string name="xbox_dashboard_hint">Qui Guide è il tasto Xbox. Tieni premuto Start per il menu rapido (torna a GameLodge).</string>
+    <string name="host_power_no_response">%1$s non ha risposto in tempo</string>
 </resources>

@@ -737,7 +737,6 @@
     <string name="setting_ui_scale">UI size (device display)</string>
 
     <!-- Host popup -->
-    <string name="host_wake_sent">Wake signal sent – the host should be online shortly</string>
     <string name="host_state_streaming">Streaming: %1$s</string>
     <string name="host_state_online">Online</string>
     <string name="host_state_offline">Offline</string>
@@ -749,11 +748,7 @@
     <string name="host_info_auto_sleep">Sleep after stream</string>
 
     <!-- Host wake feedback -->
-    <string name="host_waking">Waking up…</string>
-    <string name="host_wake_sending">Wake signal sent – waiting for the host to answer…</string>
     <string name="host_wake_failed">Could not send the wake signal – check the wake method in the host settings</string>
-    <string name="host_wake_online">The host is online</string>
-    <string name="host_wake_timeout">No answer from the host after 3 minutes</string>
 
     <!-- Status popups -->
     <string name="profile_picker_title">Stream profile</string>
@@ -1715,4 +1710,5 @@
     <string name="xbox_signed_in">Signed in as</string>
     <string name="profiles_intro">The active profile is used for every stream. Before starting a game, you can switch it in the game's details (profile button or LB/RB).</string>
     <string name="xbox_dashboard_hint">Guide is the Xbox button here. Hold Start for the quick menu (back to GameLodge).</string>
+    <string name="host_power_no_response">%1$s did not respond in time</string>
 </resources>

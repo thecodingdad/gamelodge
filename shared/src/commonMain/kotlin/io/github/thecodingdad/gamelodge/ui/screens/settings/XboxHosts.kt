@@ -137,26 +137,24 @@ fun rememberXboxAdder(): XboxAdder {
 @Composable
 fun XboxHostCard(host: XboxHost, onConfig: (() -> Unit)?) {
     val c = io.github.thecodingdad.gamelodge.LocalContainer.current
-    val xbox = c.xbox
     val scope = rememberCoroutineScope()
-    var note by remember(host.console.id) { mutableStateOf<String?>(null) }
-    val wakeSentMsg = stringResource(Res.string.host_wake_sending)
-    val wakeOnlineMsg = stringResource(Res.string.host_wake_online)
-    val wakeTimeoutMsg = stringResource(Res.string.host_wake_timeout)
+    val powering by io.github.thecodingdad.gamelodge.stream.PowerProgress.hosts.collectAsState()
     XboxCard(
         host = host,
-        note = note,
+        busy = host.hostUuid in powering,
         onConfig = onConfig,
+        // Xbox Live or the Home Assistant actions (HostPower); the icon spins until the console follows.
         onWake = {
-            note = wakeSentMsg
-            scope.launch {
+            io.github.thecodingdad.gamelodge.stream.PowerProgress.start(c, host.hostUuid, host.console.name, io.github.thecodingdad.gamelodge.stream.PowerProgress.Expect.ON) {
                 c.hostPower.wake(host.hostUuid)
-                val timeout = c.hostPower.config(host.hostUuid).wakeTimeoutSeconds * 1000L
-                note = if (xbox.waitOn(host.console.id, timeout)) wakeOnlineMsg else wakeTimeoutMsg
             }
         },
-        onTurnOff = { scope.launch { if (xbox.turnOff(host.console.id)) xbox.watchPower(host.console.id, on = false) } },
-        onRemove = { scope.launch { xbox.remove(host.console.id) } },
+        onTurnOff = {
+            io.github.thecodingdad.gamelodge.stream.PowerProgress.start(c, host.hostUuid, host.console.name, io.github.thecodingdad.gamelodge.stream.PowerProgress.Expect.OFF) {
+                c.hostPower.power(host.hostUuid, io.github.thecodingdad.gamelodge.stream.PowerAction.SHUTDOWN)
+            }
+        },
+        onRemove = { scope.launch { c.xbox.remove(host.console.id) } },
     )
 }
 
@@ -272,7 +270,8 @@ private fun consoleType(type: String): String =
 @Composable
 private fun XboxCard(
     host: XboxHost,
-    note: String?,
+    /** A wake-up or turn-off is under way: the icon spins. */
+    busy: Boolean,
     /** Null where the settings page can't open (setup wizard). */
     onConfig: (() -> Unit)?,
     onWake: () -> Unit,
@@ -294,6 +293,7 @@ private fun XboxCard(
                     XboxPower.OFF -> colors.danger
                     XboxPower.UNKNOWN -> colors.onSurfaceMuted
                 },
+                busy = busy,
             )
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
@@ -317,11 +317,10 @@ private fun XboxCard(
         }
         io.github.thecodingdad.gamelodge.ui.components.ButtonRow(spacing = 10.dp) {
             if (onConfig != null) LauncherButton(stringResource(Res.string.host_settings), icon = Icons.Filled.Settings, onClick = onConfig)
-            if (power != XboxPower.ON) LauncherButton(stringResource(Res.string.host_wake), icon = Icons.Filled.Power, onClick = onWake)
+            if (power != XboxPower.ON) LauncherButton(stringResource(Res.string.host_wake), icon = Icons.Filled.Power, onClick = onWake, enabled = !busy)
             if (power == XboxPower.ON) HoldToConfirmButton(stringResource(Res.string.xbox_turn_off), onTurnOff, icon = Icons.Filled.PowerSettingsNew)
             HoldToConfirmButton(stringResource(Res.string.host_remove), onConfirmed = onRemove, icon = Icons.Filled.Delete)
         }
-        note?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceMuted) }
     }
 }
 

@@ -90,14 +90,9 @@ fun HostsSettings(
     }
 
     val c = io.github.thecodingdad.gamelodge.LocalContainer.current
-    val waking = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateListOf<String>() }
-    val notes = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateMapOf<String, String>() }
+    val powering by io.github.thecodingdad.gamelodge.stream.PowerProgress.hosts.collectAsState()
     val hostConfigList by androidx.compose.runtime.remember { c.database.hostConfigDao().observeAll() }.collectAsState(emptyList())
     val hostConfigs = hostConfigList.associateBy { it.hostUuid }
-    val wakeSentMsg = stringResource(Res.string.host_wake_sending)
-    val wakeFailedMsg = stringResource(Res.string.host_wake_failed)
-    val wakeOnlineMsg = stringResource(Res.string.host_wake_online)
-    val wakeTimeoutMsg = stringResource(Res.string.host_wake_timeout)
     val addTitle = stringResource(Res.string.host_add_title)
     val addedMsg = stringResource(Res.string.host_added)
     val invalidMsg = stringResource(Res.string.host_invalid_address)
@@ -126,28 +121,15 @@ fun HostsSettings(
                 host = host,
                 initialFocus = index == 0,
                 onPair = { startPairing(host) },
-                waking = host.uuid in waking && host.status != HostStatus.ONLINE,
-                note = notes[host.uuid],
+                busy = host.uuid in powering,
                 power = hostConfigs[host.uuid],
-                onPower = { action -> scope.launch { c.hostPower.power(host.uuid, action) } },
+                onPower = { action ->
+                    io.github.thecodingdad.gamelodge.stream.PowerProgress.start(c, host.uuid, host.name, powerExpect(action)) { c.hostPower.power(host.uuid, action) }
+                },
                 onWake = {
-                    // Uses the configured wake method (WoL and/or Home Assistant), with feedback
-                    // until the host answers.
-                    waking.add(host.uuid)
-                    notes[host.uuid] = wakeSentMsg
-                    scope.launch {
-                        val sent = c.hostPower.wake(host.uuid)
-                        if (!sent) {
-                            waking.remove(host.uuid)
-                            notes[host.uuid] = wakeFailedMsg
-                            return@launch
-                        }
-                        c.hosts.refreshAppLists()
-                        val online = kotlinx.coroutines.withTimeoutOrNull(180_000) {
-                            c.hosts.hosts.first { it[host.uuid]?.status == HostStatus.ONLINE }
-                        } != null
-                        waking.remove(host.uuid)
-                        notes[host.uuid] = if (online) wakeOnlineMsg else wakeTimeoutMsg
+                    // The configured wake method (WoL and/or Home Assistant); the icon spins until the host answers.
+                    io.github.thecodingdad.gamelodge.stream.PowerProgress.start(c, host.uuid, host.name, io.github.thecodingdad.gamelodge.stream.PowerProgress.Expect.ON) {
+                        c.hostPower.wake(host.uuid).also { if (it) c.hosts.refreshAppLists() }
                     }
                 },
                 onRemove = { removing = host },
@@ -255,8 +237,8 @@ fun HostsSettings(
 private fun HostCard(
     host: HostState,
     initialFocus: Boolean,
-    waking: Boolean,
-    note: String?,
+    /** A wake-up, shutdown or restart is under way: the icon spins. */
+    busy: Boolean,
     power: io.github.thecodingdad.gamelodge.data.db.HostConfigEntity?,
     onPower: (io.github.thecodingdad.gamelodge.stream.PowerAction) -> Unit,
     onPair: () -> Unit,
@@ -280,6 +262,7 @@ private fun HostCard(
                     host.status == HostStatus.OFFLINE -> colors.danger
                     else -> colors.onSurfaceMuted
                 },
+                busy = busy,
             )
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
@@ -317,8 +300,8 @@ private fun HostCard(
             )
             if (!online) {
                 LauncherButton(
-                    stringResource(if (waking) Res.string.host_waking else Res.string.host_wake), icon = Icons.Filled.Power,
-                    onClick = onWake, enabled = !waking, primary = waking,
+                    stringResource(Res.string.host_wake), icon = Icons.Filled.Power,
+                    onClick = onWake, enabled = !busy,
                 )
             }
             // Power actions (Home Assistant), only for a paired host that is on, when configured.
@@ -329,7 +312,6 @@ private fun HostCard(
             }
             if (host.paired) HoldToConfirmButton(stringResource(Res.string.host_remove), onConfirmed = onRemove, icon = Icons.Filled.Delete)
         }
-        note?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = if (waking) colors.accent else colors.onSurfaceMuted) }
         progress?.let { p ->
             Text(
                 when (p.step) {
@@ -371,4 +353,10 @@ private fun hostProgress(
     boxArt[host.uuid] != null -> boxArt.getValue(host.uuid).let { (d, t) -> HostProgress(HostProgress.Step.BOX_ART, d, t) }
     metadata != null && metadata.total > 0 -> HostProgress(HostProgress.Step.METADATA, metadata.done, metadata.total)
     else -> null
+}
+
+/** What a power action makes of the host. */
+internal fun powerExpect(action: io.github.thecodingdad.gamelodge.stream.PowerAction) = when (action) {
+    io.github.thecodingdad.gamelodge.stream.PowerAction.RESTART -> io.github.thecodingdad.gamelodge.stream.PowerProgress.Expect.RESTART
+    else -> io.github.thecodingdad.gamelodge.stream.PowerProgress.Expect.OFF
 }
