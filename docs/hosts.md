@@ -15,8 +15,13 @@ adds a console. The page also holds the [stream profiles](profiles.md).
 2. GameLodge shows a **PIN**. Open the host's web interface (Sunshine / Apollo / Vibepollo) and enter it.
 3. The host's apps appear in the library a few seconds later.
 
-The host card shows whether it's online and paired, with **Host settings**, **Restart**, **Shut down** and
-**Remove**.
+The host card shows whether it's online and paired, with **Host settings**, **Wake up**, **Restart**, **Shut
+down** and **Remove**. Its icon (a monitor for a PC, the Xbox logo for a console) is green while the host is
+online, red while it is off and blue while it streams; during a wake-up, shutdown or restart it turns into a
+spinner until the host follows – a notice says so if it doesn't in time. **Refresh** below the list reloads the
+PCs' app lists and the consoles' games.
+
+The status bar shows one host icon: the number of hosts online from two on, red when all are off.
 
 !!! tip "GameLodge on the PC too"
     If the PC also runs GameLodge for Windows, pair it under **Settings → Metadata & artwork → Add source**

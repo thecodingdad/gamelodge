@@ -24,7 +24,8 @@ and a desk PC.
 
 - **[Getting started](getting-started.md)** – install GameLodge and walk through the setup wizard
 - **[Library](library.md)** – where your games come from, filters, groups and collections
-- **[Streaming](streaming.md)** – hosts, pairing, wake-up, profiles and the VPN
+- **[Streaming](streaming.md)** – PC hosts, pairing, wake-up, profiles and the VPN
+- **[Xbox consoles](xbox.md)** – stream the games of your Xbox One or Series X|S
 - **[Controls](controls.md)** – controllers, button shortcuts, mouse emulation and the quick menu
 - **[Home Assistant](home-assistant.md)** – tiles, game actions and MQTT status
 - **[PC games](pc-games.md)** and **[Your PC as host](pc-host.md)** – the Windows app's stores, streaming host and pairing
@@ -38,5 +39,6 @@ and a desk PC.
 | Version | Android 10 or newer | Windows 10 or 11 (x64) |
 | Local games | Android apps and games, emulated ROMs | Steam, Epic, GOG, Xbox, EA, Ubisoft, Battle.net, Amazon and more, emulated ROMs, your own games |
 | Streaming client | Built in (Artemis) | Built in (Moonlight) |
+| Xbox home streaming | Built in | Built in (WebView2 player window) |
 | Streaming host | – | The PC shares its games with your other devices |
 | Home screen | Can replace the Android home app | Full-screen launcher, tray, autostart |

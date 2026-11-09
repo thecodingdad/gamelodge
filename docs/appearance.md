@@ -21,11 +21,11 @@ filter's settings.
 | Setting | Options |
 |---|---|
 | Tile size | Small, medium, large |
-| Tile shape | Portrait cover, landscape (16:9), square – apps stay landscape on the Home tab |
+| Tile shape | Portrait cover, landscape (16:9), square – apps stay landscape on the Home tab (with portrait tiles as wide as two of them) |
 | Corners | Sharp, slight, round |
 | Title | Off, below the tile, on the tile |
 | Extra info | None, play time, last played, progress (play time against the time to beat) |
-| Badges | Where an entry comes from (Android, PC, ROM, host), installed state |
+| Badges | Where an entry comes from (Android, PC, ROM, PC stream, Xbox), installed state |
 | Apps tab | Icons or banners |
 
 **Y** shows a **live preview** of a tile with your settings.

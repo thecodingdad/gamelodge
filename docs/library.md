@@ -16,7 +16,7 @@ stream – and the same game from several sources appears once.
 | ROM folders | Android | Games from your ROM folders, started with an installed emulator – see [Emulators & ROMs](emulators.md) |
 
 Games that aren't installed are dimmed; badges on the tiles show where a game comes from (Android, PC,
-ROM, host).
+ROM, streamed from a PC – a cloud – or from an Xbox – its logo).
 
 ## Navigating
 

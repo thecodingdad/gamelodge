@@ -39,12 +39,13 @@ keyboard work everywhere too. Streaming is built in, based on
 ## Features
 
 **One library**
-- Android apps and games, the games of your streaming hosts, PC store games (Steam, Epic, GOG, Xbox, EA, Ubisoft, Battle.net, Amazon, Playnite) and emulated ROMs side by side
+- Android apps and games, the games of your streaming hosts and Xbox consoles, PC store games (Steam, Epic, GOG, Xbox, EA, Ubisoft, Battle.net, Amazon, Playnite) and emulated ROMs side by side
 - Covers, backgrounds, logos and animated artwork from SteamGridDB and IGDB, a metadata editor for corrections
 - Smart filters, groups and collections, favourites, ratings, play time and statistics – synced between your devices through the host
 
 **Streaming**
 - Pairing, wake-up (Wake-on-LAN or Home Assistant) and auto sleep for your hosts, stream profiles for resolution, frame rate, bitrate and HDR
+- Xbox home streaming: your Xbox One or Series X|S as a host – its installed games in the library, wake-up, start, resume and quit, its dashboard as an app
 - Every controller passed through as its own gamepad, with per-controller vibration, motion and battery settings
 - Built-in WireGuard VPN that connects only when a host isn't reachable at home (Android)
 

@@ -30,8 +30,11 @@ started remotely otherwise waits at the profile selection.
 2. Sign in with the Microsoft account of the console.
 3. Choose the console.
 
-GameLodge reads the console's installed games with their store artwork and adds them to the library. A game you
-also have on a PC host becomes one tile with both ways to play: **Start with…** offers the PC and the Xbox.
+GameLodge reads the console's installed games with their store artwork and adds them to the library (again every
+15 minutes while the console is on, or at once with **Refresh** on the streaming hosts page). Backward-compatible
+Xbox 360 games get the platform *Xbox 360*. A game you also have on a PC host becomes one tile with both ways to
+play: **Start with…** offers the PC and the Xbox. Tiles show a cloud for PC streams and the Xbox logo for
+console streams.
 
 The sign-in is not part of a [backup](backup.md) – like pairings, it stays on the device. After a restore, sign
 in again; the console and its games are found again.

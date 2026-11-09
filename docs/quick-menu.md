@@ -20,7 +20,8 @@ The quick menu opens over everything – GameLodge, a game or a stream – with 
 
     ![Hosts](assets/screenshots/quick-menu-hosts.jpg)
 
-    Your hosts with wake-up, shut down, their settings and auto sleep.
+    Your streaming hosts – PCs and Xbox consoles – with wake up or shut down (the icon spins until the host
+    follows), auto sleep (the moon button with its time) and their settings (gear).
 
 === "Controllers"
 
