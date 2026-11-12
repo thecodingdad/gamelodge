@@ -106,7 +106,8 @@ VPN needed. If your router blocks it, forward the console's UDP ports **3074** a
 
 ## Windows
 
-The Windows app plays the stream in a window of its own (the Edge engine *WebView2* that Windows 10 and 11 bring).
+The Windows app plays the stream in a window of its own (the Edge engine *WebView2* that Windows 10 and 11 bring),
+named after the game and grouped with GameLodge on the taskbar.
 The launcher keeps reading the controllers while the stream is in front, so Guide and the quick menu work as
 usual.
 
