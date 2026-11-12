@@ -6,6 +6,7 @@
 // Usage: gamelodge-xbox-player.exe <player folder> <user data folder> [--windowed]
 
 #include <windows.h>
+#include <shobjidl.h>
 #include <shellscalingapi.h>
 #include <wrl.h>
 #include <string>
@@ -121,8 +122,14 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int) {
     wc.hInstance = instance;
     wc.lpszClassName = L"GameLodgeXboxPlayer";
     wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
-    wc.hIcon = LoadIconW(instance, MAKEINTRESOURCEW(1));
+    // GameLodge's icon (an .ico the launcher writes), so the window looks like the launcher's.
+    const wchar_t* iconPath = _wgetenv(L"GAMELODGE_ICON");
+    HICON bigIcon = iconPath ? (HICON)LoadImageW(nullptr, iconPath, IMAGE_ICON, GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON), LR_LOADFROMFILE) : nullptr;
+    HICON smallIcon = iconPath ? (HICON)LoadImageW(nullptr, iconPath, IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_LOADFROMFILE) : nullptr;
+    wc.hIcon = bigIcon;
     RegisterClassW(&wc);
+    // One taskbar button with the launcher (before any window is created), like its Moonlight streams.
+    if (const wchar_t* appId = _wgetenv(L"GAMELODGE_APPID")) SetCurrentProcessExplicitAppUserModelID(appId);
 
     // Full screen on the monitor GameLodge's window is on (the primary one as fallback).
     POINT cursor;
@@ -134,8 +141,11 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int) {
     RECT r = mi.rcMonitor;
     DWORD style = windowed ? WS_OVERLAPPEDWINDOW : WS_POPUP;
     if (windowed) { r.left += 100; r.top += 100; r.right = r.left + 1280; r.bottom = r.top + 720; }
-    window = CreateWindowExW(0, wc.lpszClassName, L"GameLodge – Xbox", style | WS_VISIBLE,
+    const wchar_t* title = _wgetenv(L"GAMELODGE_TITLE");
+    window = CreateWindowExW(0, wc.lpszClassName, title ? title : L"GameLodge", style | WS_VISIBLE,
         r.left, r.top, r.right - r.left, r.bottom - r.top, nullptr, nullptr, instance, nullptr);
+    if (bigIcon) SendMessageW(window, WM_SETICON, ICON_BIG, (LPARAM)bigIcon);
+    if (smallIcon) SendMessageW(window, WM_SETICON, ICON_SMALL, (LPARAM)smallIcon);
     SetForegroundWindow(window);
 
     std::wstring args = L"--autoplay-policy=no-user-gesture-required --disable-features=msSmartScreenProtection";

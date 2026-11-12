@@ -42,17 +42,37 @@ class XboxPlayer(private val scope: CoroutineScope) {
 
     @Volatile private var process: Process? = null
 
+    /** The launcher's icon as an .ico (a PNG inside, which Windows reads since Vista) for the player window. */
+    private fun streamIcon(): File? = runCatching {
+        val file = File(io.github.thecodingdad.gamelodge.desktop.dataDirectory(), "cache/stream-icon.ico")
+        if (!file.isFile) {
+            file.parentFile.mkdirs()
+            val png = XboxPlayer::class.java.getResourceAsStream("/icon.png")!!.use { it.readBytes() }
+            val header = java.nio.ByteBuffer.allocate(22).order(java.nio.ByteOrder.LITTLE_ENDIAN)
+                .putShort(0).putShort(1).putShort(1)                 // ICONDIR: reserved, type icon, one image
+                .put(0).put(0).put(0).put(0)                         // 256 x 256 (0 = 256), no palette, reserved
+                .putShort(1).putShort(32).putInt(png.size).putInt(22) // planes, bit depth, size, offset
+            file.writeBytes(header.array() + png)
+        }
+        file
+    }.onFailure { Log.w("Xbox player icon not written", it) }.getOrNull()
+
     /** The player of a running stream is still there (Guide brought the launcher to the front): back to it. */
     fun focus(): Boolean {
         val p = process?.takeIf { it.isAlive } ?: return false
         return io.github.thecodingdad.gamelodge.desktop.games.GameWindow.focus(setOf(p.pid()))
     }
 
-    fun start(stream: XboxStreamController, onEnded: () -> Unit) {
+    fun start(stream: XboxStreamController, title: String? = null, onEnded: () -> Unit) {
         check(available) { "Xbox player missing (${exe.path})" }
         val data = File(io.github.thecodingdad.gamelodge.desktop.dataDirectory(), "xbox-player")
         data.mkdirs()
-        val p = ProcessBuilder(exe.path, base.path, data.path).redirectError(ProcessBuilder.Redirect.DISCARD).start()
+        val builder = ProcessBuilder(exe.path, base.path, data.path).redirectError(ProcessBuilder.Redirect.DISCARD)
+        // Part of the launcher, like the Moonlight streams: its taskbar button, the game's name and the launcher's icon.
+        builder.environment()["GAMELODGE_APPID"] = io.github.thecodingdad.gamelodge.desktop.TaskbarIdentity.APP_ID
+        builder.environment()["GAMELODGE_TITLE"] = (title?.let { "$it – GameLodge" } ?: "GameLodge")
+        streamIcon()?.let { builder.environment()["GAMELODGE_ICON"] = it.path }
+        val p = builder.start()
         process = p
         val writer = p.outputStream.bufferedWriter(Charsets.UTF_8)
         stream.send = { text ->

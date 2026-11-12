@@ -40,7 +40,7 @@ class DesktopLaunches(
 ) : LaunchPlatform {
     override suspend fun startXboxStream(entry: LibraryEntry, target: LaunchTargetEntity, stream: io.github.thecodingdad.gamelodge.xbox.XboxStreamController) {
         val player = xboxPlayer ?: error("No Xbox player")
-        player.start(stream) {
+        player.start(stream, title = entry.item.title) {
             target.hostUuid?.let(onXboxEnded)
             onStreamEnded()
             onGameEnded()
