@@ -1713,4 +1713,7 @@
     <string name="setting_home_row_focus_pinned">Fixe</string>
     <string name="setting_home_row_focus_edge">Se déplace</string>
     <string name="setting_home_row_focus_sub">Fixe : le focus reste à gauche et les tuiles défilent, jusqu'à la fin de la rangée. Se déplace : le focus se déplace d'abord, les tuiles seulement au bord.</string>
+    <string name="combo_forward_sub_app">Les boutons des combinaisons atteignent aussi le jeu ou le stream. Désactivé : ils n'exécutent que l'action ; une pression courte d'une combinaison maintenue atteint encore GameLodge et son stream.</string>
+    <string name="input_shortcut_app">Raccourci du menu rapide</string>
+    <string name="input_shortcut_sub_app">Ouvre le menu rapide dans GameLodge et par-dessus le stream, toujours avec Ctrl, Alt ou Maj.</string>
 </resources>

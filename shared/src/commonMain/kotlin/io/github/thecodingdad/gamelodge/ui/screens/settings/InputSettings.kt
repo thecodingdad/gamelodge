@@ -93,8 +93,15 @@ fun InputSettings(settings: LauncherSettings, update: ((LauncherSettings) -> Lau
         SectionHeader(stringResource(Res.string.input_keyboard_section))
         Text(stringResource(Res.string.input_keyboard_intro), style = MaterialTheme.typography.bodySmall, color = LauncherTheme.colors.onSurfaceMuted)
         NavRow(
-            stringResource(Res.string.input_shortcut), { recordingShortcut = true },
-            subtitle = stringResource(if (platform.hasButtonCombos) Res.string.input_shortcut_sub else Res.string.input_shortcut_sub_pc),
+            // Android without the accessibility service: only in GameLodge and its stream.
+            stringResource(if (platform.hasButtonCombos && !platform.hasSystemwideCombos) Res.string.input_shortcut_app else Res.string.input_shortcut), { recordingShortcut = true },
+            subtitle = stringResource(
+                when {
+                    !platform.hasButtonCombos -> Res.string.input_shortcut_sub_pc
+                    platform.hasSystemwideCombos -> Res.string.input_shortcut_sub
+                    else -> Res.string.input_shortcut_sub_app
+                },
+            ),
             trailing = shortcut?.let { shortcutDisplayName(it) } ?: off,
         )
         if (platform.hasDisconnectShortcut) {

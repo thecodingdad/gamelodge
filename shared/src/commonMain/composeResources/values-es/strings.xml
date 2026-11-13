@@ -1713,4 +1713,7 @@
     <string name="setting_home_row_focus_pinned">Fijo</string>
     <string name="setting_home_row_focus_edge">Se mueve</string>
     <string name="setting_home_row_focus_sub">Fijo: el foco queda a la izquierda y se mueven los mosaicos, hasta el final de la fila. Se mueve: primero se mueve el foco, los mosaicos solo en el borde.</string>
+    <string name="combo_forward_sub_app">Los botones de las combinaciones también llegan al juego o al stream. Desactivado: solo ejecutan la acción; una pulsación corta de una combinación de mantener aún llega a GameLodge y a su stream.</string>
+    <string name="input_shortcut_app">Atajo del menú rápido</string>
+    <string name="input_shortcut_sub_app">Abre el menú rápido en GameLodge y sobre el stream, siempre con Ctrl, Alt o Mayús.</string>
 </resources>

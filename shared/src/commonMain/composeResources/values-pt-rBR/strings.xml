@@ -1713,4 +1713,7 @@
     <string name="setting_home_row_focus_pinned">Fixo</string>
     <string name="setting_home_row_focus_edge">Move-se</string>
     <string name="setting_home_row_focus_sub">Fixo: o foco fica à esquerda e os blocos se movem, até o fim da fileira. Move-se: primeiro move-se o foco, os blocos só na borda.</string>
+    <string name="combo_forward_sub_app">Os botões das combinações também chegam ao jogo ou ao stream. Desligado: eles só executam a ação; um toque curto de uma combinação de segurar ainda chega ao GameLodge e ao seu stream.</string>
+    <string name="input_shortcut_app">Atalho do menu rápido</string>
+    <string name="input_shortcut_sub_app">Abre o menu rápido no GameLodge e sobre o stream, sempre com Ctrl, Alt ou Shift.</string>
 </resources>

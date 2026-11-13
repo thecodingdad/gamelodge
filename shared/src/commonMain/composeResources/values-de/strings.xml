@@ -1711,4 +1711,7 @@
     <string name="setting_home_row_focus_pinned">Fest</string>
     <string name="setting_home_row_focus_edge">Wandert</string>
     <string name="setting_home_row_focus_sub">Fest: Der Fokus bleibt links und die Kacheln bewegen sich, bis zum Ende der Reihe. Wandert: Erst wandert der Fokus, die Kacheln erst am Rand.</string>
+    <string name="combo_forward_sub_app">Die Tasten der Kombinationen kommen zusätzlich beim Spiel oder Stream an. Aus: sie lösen nur die Aktion aus; ein kurzer Druck einer Halte-Kombination kommt in GameLodge und im Stream trotzdem an.</string>
+    <string name="input_shortcut_app">Schnellmenü-Kürzel</string>
+    <string name="input_shortcut_sub_app">Öffnet das Schnellmenü in GameLodge und über dem Stream, immer mit Strg, Alt oder Shift.</string>
 </resources>

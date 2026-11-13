@@ -172,6 +172,8 @@ class AndroidPlatformUi(private val context: Context) : PlatformUi {
 
     override val hasButtonCombos = true
 
+    override val hasSystemwideCombos get() = io.github.thecodingdad.gamelodge.BuildConfig.COMBO_SERVICE
+
     @Composable
     override fun ProfilesGroup(vm: io.github.thecodingdad.gamelodge.ui.LauncherViewModel, openProfile: (UUID?) -> Unit) {
         val profiles by vm.profiles.collectAsState()

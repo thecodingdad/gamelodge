@@ -1713,4 +1713,7 @@
     <string name="setting_home_row_focus_pinned">Fixed</string>
     <string name="setting_home_row_focus_edge">Moves</string>
     <string name="setting_home_row_focus_sub">Fixed: the focus stays at the left and the tiles move, until the row's end. Moves: the focus moves first, the tiles only at the edge.</string>
+    <string name="combo_forward_sub_app">The combinations’ buttons also reach the game or stream. Off: they only run the action; a short press of a hold combination still reaches GameLodge and its stream.</string>
+    <string name="input_shortcut_app">Quick menu shortcut</string>
+    <string name="input_shortcut_sub_app">Opens the quick menu in GameLodge and over the stream, always with Ctrl, Alt or Shift.</string>
 </resources>

@@ -97,7 +97,9 @@ fun ControllerComboRows(
                 }
             },
             onSelect = onForward,
-            subtitle = if (subtitles) stringResource(Res.string.combo_forward_sub) else null,
+            subtitle = if (subtitles) {
+                stringResource(if (io.github.thecodingdad.gamelodge.ui.PlatformUi.current.hasSystemwideCombos) Res.string.combo_forward_sub else Res.string.combo_forward_sub_app)
+            } else null,
         )
     }
     val action = editing

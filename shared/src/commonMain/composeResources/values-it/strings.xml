@@ -1713,4 +1713,7 @@
     <string name="setting_home_row_focus_pinned">Fisso</string>
     <string name="setting_home_row_focus_edge">Si sposta</string>
     <string name="setting_home_row_focus_sub">Fisso: il focus resta a sinistra e scorrono i riquadri, fino alla fine della riga. Si sposta: prima si sposta il focus, i riquadri solo al bordo.</string>
+    <string name="combo_forward_sub_app">I tasti delle combinazioni raggiungono anche il gioco o lo stream. Disattivato: eseguono solo l'azione; una pressione breve di una combinazione a pressione prolungata raggiunge comunque GameLodge e il suo stream.</string>
+    <string name="input_shortcut_app">Scorciatoia del menu rapido</string>
+    <string name="input_shortcut_sub_app">Apre il menu rapido in GameLodge e sopra lo stream, sempre con Ctrl, Alt o Maiusc.</string>
 </resources>

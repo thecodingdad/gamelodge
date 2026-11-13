@@ -183,6 +183,9 @@ interface PlatformUi {
     /** Button combinations (Home, quick menu) exist here (Android). */
     val hasButtonCombos: Boolean get() = false
 
+    /** Button combinations also in other apps (Android's systemwide edition, through its accessibility service). */
+    val hasSystemwideCombos: Boolean get() = false
+
     /** Row on the settings overview that opens the device's own settings; nothing where there are none. */
     @Composable
     fun SystemSettingsRow()

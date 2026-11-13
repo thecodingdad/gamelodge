@@ -38,7 +38,7 @@ fun settingsTargetAvailable(target: SettingsTarget): Boolean = when (target) {
 }
 
 /** One searchable setting: its title, the page it is on and (optionally) the section there. */
-private class SearchEntry(val title: StringResource, val target: SettingsTarget, val section: StringResource? = null, val combos: Boolean = false, val device: Boolean = false)
+private class SearchEntry(val title: StringResource, val target: SettingsTarget, val section: StringResource? = null, val combos: Boolean = false, val device: Boolean = false, val systemwide: Boolean = false)
 
 private fun page(id: SettingsPageId, vararg titles: StringResource, section: StringResource? = null, device: Boolean = false) =
     titles.map { SearchEntry(it, SettingsTarget.Page(id), section, device = device) }
@@ -172,8 +172,10 @@ private val settingsIndex: List<SearchEntry> = buildList {
     // Layout and combinations are set per controller (its dialog on the controllers page).
     listOf(Res.string.setting_button_layout, Res.string.setting_hint_bar)
         .forEach { add(SearchEntry(it, SettingsTarget.Controllers)) }
-    listOf(Res.string.combo_section, Res.string.combo_home, Res.string.combo_quick_menu, Res.string.combo_forward, Res.string.combo_service)
+    listOf(Res.string.combo_section, Res.string.combo_home, Res.string.combo_quick_menu, Res.string.combo_forward)
         .forEach { add(SearchEntry(it, SettingsTarget.Controllers, combos = true)) }
+    // The accessibility service only exists in Android's systemwide edition.
+    add(SearchEntry(Res.string.combo_service, SettingsTarget.Controllers, combos = true, systemwide = true))
     add(SearchEntry(Res.string.controller_section_mouse, SettingsTarget.ControllerPage(ControllerSection.MOUSE)))
     listOf(Res.string.setting_controller_attach, Res.string.odin_mapping_section, Res.string.odin_mapping_all)
         .forEach { add(SearchEntry(it, SettingsTarget.Controllers)) }
@@ -211,6 +213,7 @@ fun SettingsSearchResults(query: String, onOpen: (SettingsTarget, String?) -> Un
     val hits = settingsIndex.withIndex().mapNotNull { (index, e) ->
         if (!settingsTargetAvailable(e.target)) return@mapNotNull null
         if (e.combos && !platform.hasButtonCombos) return@mapNotNull null
+        if (e.systemwide && !platform.hasSystemwideCombos) return@mapNotNull null
         if (e.device && !platform.deviceDisplayOptions) return@mapNotNull null
         val isPage = pageTitles.any { it.first == e.target && it.second == e.title }
         // A page's keywords find the page itself; its settings only by their own words.
