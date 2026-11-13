@@ -1,0 +1,74 @@
+name: Bug report
+description: Something doesn't work as described.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time! Please check the [FAQ](https://thecodingdad.github.io/gamelodge/faq/) and the
+        [open issues](https://github.com/thecodingdad/gamelodge/issues) first.
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Android – GameLodge-<version>.apk
+        - Android – GameLodge-Systemwide-<version>.apk
+        - Windows
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: GameLodge version
+      description: Settings → About
+      placeholder: "1.1.0"
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and OS
+      placeholder: "AYN Odin 2 Portal, Android 13 · Windows 11 24H2"
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Library, artwork & metadata
+        - Streaming from a PC (Sunshine / Apollo / Vibepollo)
+        - Streaming from an Xbox
+        - Controllers, shortcuts & quick menu
+        - Home Assistant
+        - Your PC as host (Windows)
+        - Setup wizard, settings & backup
+        - Something else
+    validations:
+      required: true
+  - type: input
+    id: host
+    attributes:
+      label: Host (streaming problems)
+      description: Host software and version, or your Xbox model
+      placeholder: "Vibepollo 1.4 on Windows 11 · Xbox One S"
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: Steps to reproduce, what you expected and what happened instead.
+      placeholder: |
+        1. Open …
+        2. Press …
+        Expected: …
+        Instead: …
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Screenshots or logs
+      description: |
+        A screenshot or short video helps a lot. Logs: `%LOCALAPPDATA%\GameLodge\logs\launcher.log` (Windows) or
+        `adb logcat` (Android). Remove anything private before posting.

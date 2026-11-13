@@ -107,6 +107,13 @@ the [moonlight-qt fork](https://github.com/thecodingdad/moonlight-qt).
 | `artemis/` | [Artemis fork](https://github.com/thecodingdad/moonlight-android) with the changes for GameLodge (submodule) |
 | `moonlight-qt/` | [Moonlight PC fork](https://github.com/thecodingdad/moonlight-qt) with the changes for GameLodge (submodule) |
 
+## Contributing
+
+Contributions are welcome – bug reports, ideas, translations and code. Report bugs and suggest features through
+the [issue forms](https://github.com/thecodingdad/gamelodge/issues/new/choose), ask questions in
+[Discussions](https://github.com/thecodingdad/gamelodge/discussions), and see [CONTRIBUTING.md](CONTRIBUTING.md)
+for building, the project layout and the guidelines for pull requests.
+
 ## Credits
 
 GameLodge stands on the work of [Moonlight](https://moonlight-stream.org),
