@@ -3,7 +3,7 @@
     <!-- Only what the manifest and Android XML need; everything else is in shared/composeResources. -->
     <string name="quick_menu">Schnellmenü</string>
     <string name="combo_service_label">GameLodge-Tastenkombinationen</string>
-    <string name="combo_service_description">Erkennt deine eingestellten Controller-Tastenkombinationen in jeder App und im Stream (zurück zu GameLodge, Schnellmenü, Maus-Emulation). In der Maus-Emulation tippt und wischt er an der Zeigerposition. Gelesen werden nur Controller-Tasten, nichts vom Bildschirminhalt.</string>
+    <string name="combo_service_description">Erkennt deine eingestellten Controller-Tastenkombinationen in jeder App und im Stream (zurück zu GameLodge, Schnellmenü, Maus-Emulation) und gibt Tasten einer Tastatur, die Android sonst selbst nutzt (Alt+Tab, Windows-Taste), an den gestreamten PC weiter. In der Maus-Emulation tippt und wischt er an der Zeigerposition. Gelesen werden nur Controller- und Tastaturtasten, nichts vom Bildschirminhalt.</string>
     <string name="keep_alive_channel">Hintergrundaufgaben</string>
     <!-- Artemis' accessibility service: passes keys Android keeps (Esc, Windows key …) of a real keyboard to the stream. -->
     <string name="keyboard_service_label">GameLodge-Tastatur im Stream</string>

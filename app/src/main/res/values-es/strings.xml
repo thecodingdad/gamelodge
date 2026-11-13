@@ -2,7 +2,7 @@
 <resources>
     <string name="quick_menu">Menú rápido</string>
     <string name="combo_service_label">GameLodge combos</string>
-    <string name="combo_service_description">Detecta las combinaciones de botones del mando que configuraste en todas las apps y en el stream (volver a GameLodge, menú rápido, emulación de ratón). En la emulación de ratón toca y desliza donde está el puntero. Solo se leen los botones del mando, nada de la pantalla.</string>
+    <string name="combo_service_description">Detecta las combinaciones de botones del mando que configuraste en todas las apps y en el stream (volver a GameLodge, menú rápido, emulación de ratón) y pasa al PC del stream las teclas de un teclado que Android usaría por sí mismo (Alt+Tab, la tecla Windows). En la emulación de ratón toca y desliza donde está el puntero. Solo se leen los botones del mando y las teclas, nada de la pantalla.</string>
     <string name="keep_alive_channel">Tareas en segundo plano</string>
     <string name="keyboard_service_label">Teclado de GameLodge en el stream</string>
     <string name="pointer_on">Emulación de ratón activada</string>

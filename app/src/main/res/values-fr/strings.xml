@@ -2,7 +2,7 @@
 <resources>
     <string name="quick_menu">Menu rapide</string>
     <string name="combo_service_label">GameLodge combos</string>
-    <string name="combo_service_description">Détecte les combinaisons de boutons de manette que vous avez configurées dans toutes les apps et dans le stream (retour à GameLodge, menu rapide, émulation de souris). En émulation de souris, il touche et glisse à l\'emplacement du pointeur. Seuls les boutons de la manette sont lus, rien à l\'écran.</string>
+    <string name="combo_service_description">Détecte les combinaisons de boutons de manette que vous avez configurées dans toutes les apps et dans le stream (retour à GameLodge, menu rapide, émulation de souris) et transmet au PC du stream les touches d\'un clavier qu\'Android utiliserait lui-même (Alt+Tab, touche Windows). En émulation de souris, il touche et glisse à l\'emplacement du pointeur. Seuls les boutons de la manette et les touches sont lus, rien à l\'écran.</string>
     <string name="keep_alive_channel">Tâches en arrière-plan</string>
     <string name="keyboard_service_label">Clavier GameLodge dans le stream</string>
     <string name="pointer_on">Émulation de souris activée</string>

@@ -77,13 +77,12 @@ accessibility settings:
 
 ![Accessibility services](assets/screenshots/accessibility.jpg)
 
-- **GameLodge combos** – the button shortcuts in every app. The service only reads controller buttons,
-  nothing on the screen.
-- **GameLodge keyboard in the stream** (systemwide edition too) – optional: passes keys of a hardware keyboard that Android would
-  otherwise use itself (e.g. Alt+Tab, the Windows key) to the streamed PC.
+- **GameLodge combos** – the button shortcuts in every app. In the stream it also passes keys of a hardware
+  keyboard that Android would otherwise use itself (e.g. Alt+Tab, the Windows key) to the streamed PC. The service
+  only reads controller and keyboard keys, nothing on the screen.
 
 !!! note "Installed outside an app store"
-    Android greys these services out until restricted settings are allowed: open GameLodge's app info,
+    Android greys the service out until restricted settings are allowed: open GameLodge's app info,
     menu (⋮) → **Allow restricted settings**, then enable the service.
 
 ## Touch, mouse & keyboard

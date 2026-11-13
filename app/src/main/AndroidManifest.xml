@@ -139,5 +139,7 @@
             </intent-filter>
         </receiver>
 
+        <!-- Artemis' keyboard accessibility service: GameLodge's own service passes the keyboard to the stream. -->
+        <service android:name="com.limelight.KeyboardAccessibilityService" tools:node="remove" />
     </application>
 </manifest>

@@ -2,7 +2,7 @@
 <resources>
     <string name="quick_menu">Menu rapido</string>
     <string name="combo_service_label">GameLodge combos</string>
-    <string name="combo_service_description">Rileva le combinazioni di tasti del controller impostate in ogni app e nello stream (torna a GameLodge, menu rapido, emulazione del mouse). Nell\'emulazione del mouse tocca e scorre dove si trova il puntatore. Vengono letti solo i tasti del controller, nulla dello schermo.</string>
+    <string name="combo_service_description">Rileva le combinazioni di tasti del controller impostate in ogni app e nello stream (torna a GameLodge, menu rapido, emulazione del mouse) e passa al PC dello stream i tasti di una tastiera che Android userebbe da sé (Alt+Tab, il tasto Windows). Nell\'emulazione del mouse tocca e scorre dove si trova il puntatore. Vengono letti solo i tasti del controller e della tastiera, nulla dello schermo.</string>
     <string name="keep_alive_channel">Attività in background</string>
     <string name="keyboard_service_label">Tastiera di GameLodge nello stream</string>
     <string name="pointer_on">Emulazione del mouse attiva</string>

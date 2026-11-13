@@ -27,12 +27,34 @@ class ComboAccessibilityService : AccessibilityService() {
             // In another app a held-back short press can't be handed on: hold buttons pass at once.
             ButtonCombos.handle(event, canHoldBack = io.github.thecodingdad.gamelodge.CurrentActivity.resumed() != null) { action, controller ->
                 AndroidCombos.run(this, action, controller)
-            }
+            } ||
+            streamKey(event)
+
+    /**
+     * A hardware keyboard's keys go straight to the streamed PC while the stream is in front, also those
+     * Android would take itself (Alt+Tab, the Windows key, Home …). Volume and power stay with Android.
+     */
+    private fun streamKey(event: KeyEvent): Boolean {
+        val game = com.limelight.Game.instance ?: return false
+        if (!game.connected || io.github.thecodingdad.gamelodge.CurrentActivity.resumed() !== game) return false
+        val device = event.device ?: return false
+        if (device.keyboardType != android.view.InputDevice.KEYBOARD_TYPE_ALPHABETIC) return false
+        if (event.keyCode in SYSTEM_KEYS) return false
+        // Some tablets report Esc (scan code 1) as Back.
+        val e = if (event.scanCode == 1) KeyEvent(event.action, KeyEvent.KEYCODE_ESCAPE) else event
+        return when (event.action) {
+            KeyEvent.ACTION_DOWN -> { game.handleKeyDown(e); true }
+            KeyEvent.ACTION_UP -> { game.handleKeyUp(e); true }
+            else -> false
+        }
+    }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) = Unit
     override fun onInterrupt() = Unit
 
     companion object {
+        private val SYSTEM_KEYS = setOf(KeyEvent.KEYCODE_VOLUME_UP, KeyEvent.KEYCODE_VOLUME_DOWN, KeyEvent.KEYCODE_VOLUME_MUTE, KeyEvent.KEYCODE_POWER)
+
         @Volatile var instance: ComboAccessibilityService? = null
             private set
 
