@@ -3,7 +3,9 @@
 ## Install
 
 Download the latest version from the
-[releases page](https://github.com/thecodingdad/gamelodge/releases/latest).
+[releases page](https://github.com/thecodingdad/gamelodge/releases/latest). GameLodge is free software under the
+[GPL-3.0](https://github.com/thecodingdad/gamelodge/blob/main/LICENSE); what it stores and sends is described under
+[Privacy](privacy.md).
 
 === "Android"
 

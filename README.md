@@ -77,7 +77,7 @@ See the [documentation](https://thecodingdad.github.io/gamelodge/) for every fea
 Get the latest version from the [releases](https://github.com/thecodingdad/gamelodge/releases/latest):
 
 - **Android** (Android 10 or newer):
-  - `GameLodge-<version>.apk` – for most devices; controller button combinations work in GameLodge and its streams
+  - `GameLodge-<version>.apk` – for most devices, no accessibility services; controller button combinations work in GameLodge and its streams
   - `GameLodge-Systemwide-<version>.apk` – the same app with an accessibility service, so the combinations work in every app (e.g. on handhelds like the AYN Odin 2 Portal); Google Play Protect may block installing it from a file
 - **Windows**: `GameLodge-Setup-<version>.exe` – Windows 10 or 11 (x64)
 
@@ -115,6 +115,11 @@ GameLodge stands on the work of [Moonlight](https://moonlight-stream.org),
 [Sunshine](https://github.com/LizardByte/Sunshine), [Apollo](https://github.com/ClassicOldSong/Apollo)
 and [Vibepollo](https://github.com/Nonary/Vibepollo). Artwork and metadata come from [SteamGridDB](https://www.steamgriddb.com) and
 [IGDB](https://www.igdb.com).
+
+## Privacy
+
+No account, no telemetry, no ads: GameLodge only talks to the services you set up yourself. What goes where:
+[Privacy](https://thecodingdad.github.io/gamelodge/privacy/).
 
 ## License
 

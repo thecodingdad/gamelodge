@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Standard edition: no accessibility service at all. Play Protect blocks file installs of apps that declare
+     one; Artemis brings its keyboard service (system keys in the stream), which only the systemwide edition keeps. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <application>
+        <service android:name="com.limelight.KeyboardAccessibilityService" tools:node="remove" />
+    </application>
+</manifest>

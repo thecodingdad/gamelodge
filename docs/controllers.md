@@ -79,7 +79,7 @@ accessibility settings:
 
 - **GameLodge combos** – the button shortcuts in every app. The service only reads controller buttons,
   nothing on the screen.
-- **GameLodge keyboard in the stream** – optional: passes keys of a hardware keyboard that Android would
+- **GameLodge keyboard in the stream** (systemwide edition too) – optional: passes keys of a hardware keyboard that Android would
   otherwise use itself (e.g. Alt+Tab, the Windows key) to the streamed PC.
 
 !!! note "Installed outside an app store"
